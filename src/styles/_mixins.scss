@@ -1,0 +1,12 @@
+@mixin focus-ring {
+  outline: 0;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+@mixin panel-header-label {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

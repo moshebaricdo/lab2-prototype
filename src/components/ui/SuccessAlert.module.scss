@@ -1,0 +1,63 @@
+.root {
+  width: 100%;
+  border-radius: 4px;
+  background: var(--ds-background-success-extra-light);
+}
+
+.row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  width: 16px;
+  color: var(--ds-text-success-primary-fixed);
+  font-size: 13px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.message {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: var(--font-weight-normal);
+  line-height: 1.64;
+  white-space: nowrap;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.closeButton:hover {
+  background: var(--ds-background-success-light);
+}
+
+.closeButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.closeIcon {
+  width: 18px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.25;
+  text-align: center;
+}

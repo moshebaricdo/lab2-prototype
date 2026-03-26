@@ -1,0 +1,76 @@
+.content {
+  z-index: 50;
+  animation: tooltip-fade-in 120ms ease-out;
+}
+
+.tooltip {
+  display: flex;
+  align-items: center;
+}
+
+.top,
+.bottom {
+  flex-direction: column;
+}
+
+.body {
+  display: flex;
+  min-width: 64px;
+  max-width: 256px;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 4px;
+  background: var(--foreground);
+  padding: 4px 12px;
+  box-shadow: 0 8px 12px 0 rgb(0 0 0 / 12%), 0 0 12px 0 rgb(0 0 0 / 12%);
+}
+
+.text {
+  margin: 0;
+  color: var(--primary-foreground);
+  font-size: 14px;
+  font-weight: var(--font-weight-normal);
+  line-height: 1.54;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.arrow {
+  width: 0;
+  height: 0;
+}
+
+.rightArrow {
+  border-top: 3px solid transparent;
+  border-right: 4px solid var(--foreground);
+  border-bottom: 3px solid transparent;
+}
+
+.leftArrow {
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-left: 4px solid var(--foreground);
+}
+
+.topArrow {
+  border-right: 3px solid transparent;
+  border-bottom: 4px solid var(--foreground);
+  border-left: 3px solid transparent;
+}
+
+.bottomArrow {
+  border-top: 4px solid var(--foreground);
+  border-right: 3px solid transparent;
+  border-left: 3px solid transparent;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

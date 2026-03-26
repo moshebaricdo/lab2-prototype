@@ -1,0 +1,148 @@
+.root {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drawerContainer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 30;
+}
+
+.messagesArea {
+  min-height: 0;
+  flex: 1;
+  padding: 0;
+}
+
+.messagesWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 8px 8px;
+}
+
+.messageBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.messageRow {
+  display: flex;
+}
+
+.messageRowUser {
+  justify-content: flex-end;
+  padding-left: 20px;
+}
+
+.messageRowAssistant {
+  padding-right: 20px;
+}
+
+.messageBubble {
+  max-width: 100%;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.messageBubbleUser {
+  background: var(--ds-background-neutral-secondary);
+  border-bottom-right-radius: 0;
+}
+
+.messageBubbleAssistant {
+  background: var(--ds-background-brand-aqua-extra-light);
+  border-bottom-left-radius: 0;
+}
+
+.messageText {
+  margin: 0;
+  font-size: 14px;
+  white-space: pre-line;
+}
+
+.actionRowWrap {
+  height: 24px;
+}
+
+.inputSection {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  background: var(--ds-background-neutral-secondary);
+  padding: 8px;
+}
+
+.inputCard {
+  border: 1px solid var(--ds-borders-neutral-strong);
+  border-radius: 4px;
+  background: var(--background);
+  padding: 8px;
+  transition: box-shadow 0.2s ease;
+}
+
+.inputCard:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.textarea {
+  min-height: 40px;
+  border: 0;
+  padding: 0;
+  resize: none;
+}
+
+.textarea:focus-visible {
+  box-shadow: none;
+}
+
+.textarea::placeholder {
+  color: var(--ds-text-neutral-placeholder);
+}
+
+.inputActions {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sendButtonRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sendButton {
+  width: 24px;
+  height: 24px;
+  transition: background-color 0.2s ease;
+}
+
+.sendButtonEnabled {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.sendButtonEnabled:hover {
+  background: var(--ds-background-brand-purple-strong);
+  color: var(--primary-foreground);
+}
+
+.sendButtonDisabled {
+  background: var(--muted);
+  cursor: not-allowed;
+}
+
+.sendIcon {
+  width: 12px;
+  height: 12px;
+}

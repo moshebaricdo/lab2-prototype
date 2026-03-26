@@ -1,0 +1,29 @@
+.root {
+  display: inline-flex;
+  height: 24px;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--ds-background-success-light);
+  padding: 2px 12px 2px 8px;
+  gap: 2px;
+}
+
+.icon {
+  width: 16px;
+  color: var(--ds-text-success-primary-fixed);
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.label {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  line-height: 1.76;
+  text-transform: uppercase;
+  white-space: nowrap;
+}

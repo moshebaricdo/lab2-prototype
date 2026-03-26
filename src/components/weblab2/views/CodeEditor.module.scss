@@ -1,0 +1,239 @@
+.root {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  flex-direction: column;
+  background: var(--background);
+}
+
+.tabsRow {
+  display: flex;
+  padding-top: 8px;
+  padding-bottom: 4px;
+}
+
+.tabsRowCollapsed {
+  gap: 4px;
+  padding-left: 4px;
+  padding-right: 0;
+}
+
+.tabsRowExpanded {
+  gap: 8px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.tab {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  padding: 2px 8px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.tabActive {
+  background: var(--accent);
+}
+
+.tabIdle {
+  background: var(--ds-background-neutral-secondary);
+}
+
+.tabIdle:hover {
+  background: var(--ds-background-neutral-tertiary);
+}
+
+.contentWrap {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.contentPad {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  padding-top: 4px;
+  padding-bottom: 8px;
+}
+
+.contentPadCollapsed {
+  padding-left: 4px;
+  padding-right: 0;
+}
+
+.contentPadExpanded {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.lineLayout {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  gap: 4px;
+  padding-top: 1px;
+}
+
+.tabIconWrap {
+  display: flex;
+  width: 12px;
+  height: 14px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.tabIcon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.tabIconActive {
+  color: var(--accent-foreground);
+}
+
+.tabIconInactive {
+  color: var(--muted-foreground);
+}
+
+.tabName {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.64;
+  white-space: nowrap;
+}
+
+.tabNameActive {
+  color: var(--accent-foreground);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tabNameInactive {
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.tabClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.tabClose:hover {
+  background: rgb(0 0 0 / 10%);
+}
+
+.tabCloseIcon {
+  width: 13px;
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.lineNumbers {
+  min-width: 32px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.lineNumbersColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.lineNumberCell {
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.lineNumberCell:hover {
+  background: rgb(240 242 245 / 50%);
+}
+
+.lineNumberCellActive {
+  border-color: var(--border);
+  background: var(--ds-background-neutral-secondary);
+}
+
+.lineNumberText {
+  margin: 0;
+  padding-right: 4px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 21.56px;
+  text-align: right;
+}
+
+.lineNumberTextActive {
+  color: var(--foreground);
+}
+
+.lineNumberTextInactive {
+  color: var(--muted-foreground);
+}
+
+.codeColumn {
+  flex: 1;
+  overflow: auto;
+}
+
+.codeLines {
+  display: inline-flex;
+  min-width: 100%;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.codeLineCell {
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.codeLineCell:hover {
+  background: rgb(240 242 245 / 50%);
+}
+
+.codeLineCellActive {
+  border-color: var(--border);
+  background: var(--ds-background-neutral-secondary);
+}
+
+.codeLineText {
+  margin: 0;
+  padding-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 21.56px;
+  color: var(--foreground);
+  white-space: pre;
+}
+
+.emptySelection {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+}

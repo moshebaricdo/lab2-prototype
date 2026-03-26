@@ -1,0 +1,68 @@
+.root {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.header {
+  position: relative;
+  display: flex;
+  height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+  padding: 0 8px;
+}
+
+.headerLabel {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.contentRow {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.codePanel {
+  display: flex;
+  min-width: 0;
+}
+
+.codePanelFill {
+  flex: 1;
+}
+
+.codePanelFixed {
+  flex-shrink: 0;
+}
+
+.fileManagerRail {
+  width: 200px;
+  flex-shrink: 0;
+  transition: width 0.2s ease;
+}
+
+.fileManagerRailCollapsed {
+  width: 32px;
+}
+
+.editorArea {
+  flex: 1;
+  min-width: 0;
+}
+
+.previewPanel {
+  flex: 1;
+  min-width: 0;
+}

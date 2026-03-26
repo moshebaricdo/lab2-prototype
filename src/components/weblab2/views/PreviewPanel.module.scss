@@ -1,0 +1,172 @@
+.root {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+}
+
+.controlBar {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--ds-background-neutral-secondary);
+  padding: 0 8px;
+}
+
+.controlInner {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+}
+
+.urlWrap {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+}
+
+.urlBox {
+  display: flex;
+  width: 100%;
+  min-height: 24px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--ds-borders-neutral-strong);
+  border-radius: 4px;
+  background: var(--background);
+  padding: 0 2px;
+}
+
+.urlDisplay {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 12px;
+  line-height: 1.64;
+  text-align: left;
+  padding: 0 6px;
+}
+
+.urlDisplay:hover {
+  background: var(--ds-background-neutral-secondary);
+}
+
+.urlDisplay:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.urlForm {
+  min-width: 0;
+  flex: 1;
+}
+
+.urlInput {
+  width: 100%;
+  flex: 1;
+  min-width: 0;
+  border: 2px solid var(--ring);
+  border-radius: 2px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 12px;
+  line-height: 1.64;
+  padding: 0 8px;
+  outline: none;
+}
+
+.rightActions {
+  display: flex;
+  height: 24px;
+  align-items: center;
+  gap: 8px;
+}
+
+.segmentWrap {
+  display: flex;
+}
+
+.previewBody {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  background: var(--background);
+}
+
+.previewCenter {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+}
+
+.previewFrame {
+  width: 100%;
+  height: 100%;
+  transition: all 0.2s ease;
+}
+
+.mobileFrame {
+  max-width: 375px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(41 47 54 / 80%);
+  padding: 16px;
+}
+
+.modal {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--background);
+}
+
+.scaleUp {
+  animation: preview-scale-up 0.2s ease-out;
+}
+
+.scaleDown {
+  animation: preview-scale-down 0.2s ease-out;
+}
+
+@keyframes preview-scale-up {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes preview-scale-down {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}

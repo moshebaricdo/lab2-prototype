@@ -8,4 +8,13 @@
   Run `npm i` to install the dependencies.
 
   Run `npm run dev` to start the development server.
+
+  ## Design Tokens
+
+  Run `npm run token:generate` to regenerate `src/styles/tokens.css` from semantic token JSON.
+
+  The command resolves token files in this order:
+  - `WL2_LIGHT_TOKENS_PATH` / `WL2_DARK_TOKENS_PATH` environment variables
+  - `tokens/semantic/light.tokens.json` and `tokens/semantic/dark.tokens.json`
+  - the original desktop export paths used during migration
   

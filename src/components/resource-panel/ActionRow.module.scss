@@ -1,0 +1,40 @@
+.root {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 20px;
+}
+
+.leftActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rightActions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.prompt {
+  margin: 0;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: 12px;
+  font-weight: var(--font-weight-normal);
+  line-height: 1.64;
+  white-space: nowrap;
+}
+
+.feedbackActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.feedbackActive {
+  background: var(--ds-background-brand-teal-extra-light);
+  color: var(--ds-text-brand-teal-primary);
+}

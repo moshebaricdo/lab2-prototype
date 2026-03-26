@@ -1,0 +1,86 @@
+.root {
+  background: var(--accent);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 50px;
+  padding: 0 8px;
+}
+
+.leftGroup {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.logoWrap {
+  display: flex;
+  align-items: center;
+  padding-right: 12px;
+}
+
+.logoBox {
+  width: 36px;
+  height: 36px;
+}
+
+.centerGroup {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.title {
+  color: #fff;
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+.subtitle {
+  color: rgb(255 255 255 / 70%);
+  font-size: 12px;
+  margin: 0;
+}
+
+.rightGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.userButton {
+  border-color: var(--ds-borders-neutral-light);
+  background: transparent;
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.userButton:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
+.userChevron {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+}
+
+.rightIconButton {
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.rightIconButton:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
+.iconGlyph {
+  width: 14px;
+  height: 14px;
+}

@@ -1,61 +1,64 @@
-"use client";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import { ReactNode } from "react";
+import styles from "./Tooltip.module.scss";
 
-import * as React from "react";
-import * as TooltipPrimitive from "@radix-ui/react-tooltip@1.1.8";
-
-import { cn } from "./utils";
-
-function TooltipProvider({
-  delayDuration = 0,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-  return (
-    <TooltipPrimitive.Provider
-      data-slot="tooltip-provider"
-      delayDuration={delayDuration}
-      {...props}
-    />
-  );
+interface TooltipProps {
+  children: ReactNode;
+  content: string;
+  position?: "top" | "right" | "bottom" | "left";
+  delayDuration?: number;
+  sideOffset?: number;
 }
 
-function Tooltip({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return (
-    <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
-    </TooltipProvider>
-  );
-}
-
-function TooltipTrigger({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
-}
-
-function TooltipContent({
-  className,
-  sideOffset = 0,
+export function Tooltip({
   children,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  content,
+  position = "top",
+  delayDuration = 0,
+  sideOffset = 6,
+}: TooltipProps) {
+  const arrowByPosition = {
+    right: styles.rightArrow,
+    left: styles.leftArrow,
+    top: styles.topArrow,
+    bottom: styles.bottomArrow,
+  }[position];
+
   return (
-    <TooltipPrimitive.Portal>
-      <TooltipPrimitive.Content
-        data-slot="tooltip-content"
-        sideOffset={sideOffset}
-        className={cn(
-          "bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-        <TooltipPrimitive.Arrow className="bg-primary fill-primary z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
-      </TooltipPrimitive.Content>
-    </TooltipPrimitive.Portal>
+    <TooltipPrimitive.Provider delayDuration={delayDuration}>
+      <TooltipPrimitive.Root>
+        <TooltipPrimitive.Trigger asChild>
+          {children}
+        </TooltipPrimitive.Trigger>
+        <TooltipPrimitive.Portal>
+          <TooltipPrimitive.Content
+            side={position}
+            sideOffset={sideOffset}
+            className={styles.content}
+          >
+            <div
+              className={`${styles.tooltip} ${
+                position === "top"
+                  ? styles.top
+                  : position === "bottom"
+                    ? styles.bottom
+                    : ""
+              }`}
+              data-name="Tooltip"
+            >
+              {(position === "right" || position === "bottom") && (
+                <span className={`${styles.arrow} ${arrowByPosition}`} />
+              )}
+              <div className={styles.body}>
+                <p className={styles.text}>{content}</p>
+              </div>
+              {(position === "left" || position === "top") && (
+                <span className={`${styles.arrow} ${arrowByPosition}`} />
+              )}
+            </div>
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Portal>
+      </TooltipPrimitive.Root>
+    </TooltipPrimitive.Provider>
   );
 }
-
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };

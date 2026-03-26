@@ -1,0 +1,207 @@
+.root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.drawerWrap {
+  position: relative;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.drawerContent {
+  position: relative;
+  width: 100%;
+  background: var(--background);
+}
+
+.scrollFrame {
+  height: 100%;
+  padding: 8px;
+}
+
+.scrollContent {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  border-radius: 4px;
+  background: var(--background);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 4px;
+  background: var(--ds-background-neutral-secondary);
+  padding: 12px;
+}
+
+.heading {
+  margin: 0;
+  color: var(--foreground);
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.28;
+}
+
+.text {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.54;
+}
+
+.textStrong {
+  font-weight: var(--font-weight-semibold);
+}
+
+.list {
+  margin: 0;
+  padding-left: 21px;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.54;
+}
+
+.nestedList {
+  margin: 0;
+  padding-left: 21px;
+  list-style: disc;
+}
+
+.listItem {
+  margin: 0;
+}
+
+.stepHeader {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 4px;
+  color: var(--foreground);
+}
+
+.stepIcon {
+  width: 16px;
+  font-size: 13px;
+}
+
+.stepTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.54;
+}
+
+.resizeHandle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  display: flex;
+  height: 12px;
+  align-items: flex-end;
+  cursor: ns-resize;
+}
+
+.resizeBar {
+  width: 100%;
+  background: var(--border);
+  transition: height 0.15s ease;
+}
+
+.resizeBarActive {
+  height: 3px;
+}
+
+.resizeBarIdle {
+  height: 0;
+}
+
+.bottomBorder {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: var(--border);
+  pointer-events: none;
+}
+
+.toggleWrap {
+  position: relative;
+  margin-bottom: -1px;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  background: var(--background);
+  padding: 4px 4px 4px;
+  pointer-events: auto;
+}
+
+.toggleWrapOpen {
+  margin-top: -1px;
+  padding-top: 0;
+}
+
+.toggleBorder {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
+  pointer-events: none;
+}
+
+.toggleButton {
+  position: relative;
+  display: flex;
+  min-width: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  border-radius: 4px;
+  padding: 2px 8px;
+  color: var(--foreground);
+  text-align: center;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.toggleButton:hover {
+  background: var(--ds-background-neutral-secondary);
+}
+
+.toggleButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.toggleIcon {
+  width: 16px;
+  font-size: 13px;
+}
+
+.toggleLabel {
+  margin: 0;
+  flex: 1;
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.64;
+}

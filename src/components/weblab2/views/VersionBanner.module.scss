@@ -1,0 +1,64 @@
+.root {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--ds-background-warning-extra-light);
+  padding: 8px 12px;
+}
+
+.content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  width: 16px;
+  color: var(--ds-text-warning-primary-fixed);
+  font-size: 13px;
+  text-align: center;
+}
+
+.message {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 12px;
+  line-height: 1.64;
+  white-space: nowrap;
+}
+
+.version {
+  font-weight: var(--font-weight-semibold);
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  transition: background-color 0.2s ease;
+}
+
+.closeButton:hover {
+  background: var(--ds-background-warning-light);
+}
+
+.closeButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.closeIcon {
+  width: 18px;
+  font-size: 12px;
+  text-align: center;
+}

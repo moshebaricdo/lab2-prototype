@@ -1,0 +1,28 @@
+.root {
+  min-height: 0;
+  flex: 1;
+  padding: 12px;
+}
+
+.card {
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 6px;
+  background: var(--background);
+  padding: 12px;
+}
+
+.title {
+  margin: 0 0 6px;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.body {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}

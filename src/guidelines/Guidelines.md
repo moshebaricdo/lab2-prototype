@@ -1,420 +1,171 @@
-# Web Lab 2 UI Prototype - Development Guidelines
+# Lab2 UI Prototype - Development Guidelines
 
 ## Overview
-This is a fully interactive prototype of Web Lab 2, designed for testing small, iterative features and conducting user tests. The prototype features a resource panel/sidebar on the left and a main workspace on the right, with comprehensive state management and interactive components.
+
+This repository is a **Lab2 frame/base**, not a Web Lab-only codebase.
+
+Today it powers a Web Lab 2 prototype, but the architecture should support additional Lab2-powered environments (for example Python Lab, Music Lab, and future Lab2 experiences) with minimal structural churn.
+
+When making changes, optimize for:
+
+- reuse across multiple Lab2 environments
+- clear separation between shared frame UI and lab-specific features
+- stable styling primitives and tokens
 
 ---
 
-## Design System & Styling
+## Canonical App Structure
 
-### CSS Variables Architecture
-**CRITICAL:** All styling must use CSS variables defined in `/styles/globals.css`. This ensures:
-- Consistent design system adherence across all components
-- Easy theme updates by modifying the CSS file
-- Centralized control over colors, spacing, typography, borders, and radius
+Use these directories intentionally:
 
-### Color Tokens
-Use these CSS variables for all color styling:
-```css
---background, --foreground
---card, --card-foreground
---primary, --primary-foreground
---secondary, --secondary-foreground
---accent, --accent-foreground
---muted, --muted-foreground
---destructive, --destructive-foreground
---border, --input, --input-background
---ring (focus state)
+```text
+src/
+  components/
+    weblab2/views/         # Workspace/editor surfaces (current Web Lab implementation)
+    resource-panel/        # Left rail shell + panel views
+    ui/                    # Shared atomic UI primitives
+    ui/header/             # Header-specific UI components
+    icons/                 # Reusable icon components
+  hooks/                   # App-level state hooks
+  styles/                  # Tokens, globals, and SCSS helpers
+  types/                   # Shared type contracts
+  guidelines/              # This document
 ```
 
-**Color Reference:**
-- **Accent/Brand Color:** `#0093a4` (Teal) - Used for active states, highlights, focus rings
-- **Primary:** `#9657c7` (Purple) - Primary buttons and CTAs
-- **Borders:** `#d4dae1`, `#b7c1cb` - Different border contexts
-- **Backgrounds:** `#f0f2f5`, `#dfe3e9`, `#e0f8f9` - Various background layers
+### Naming Intent
 
-### Typography System
-**DO NOT** add Tailwind font size, weight, or line-height classes unless explicitly changing typography!
-
-**Font Families:**
-- **Heading:** `var(--font-heading)` - 'Barlow Semi Condensed' (600 weight only)
-- **Body:** `var(--font-body)` - 'Figtree' (400, 500, 600 weights)
-- **Code/Monospace:** `var(--font-mono)` - 'Google Sans Code' (for code editor only)
-
-**Typography Scale:**
-```css
---text-h1: 48px
---text-h2: 34px
---text-h3: 28px
---text-h4: 24px
---text-base: 16px
---text-label: 12px
-```
-
-**Font Weights:**
-```css
---font-weight-semibold: 600
---font-weight-medium: 500
---font-weight-normal: 400
-```
-
-**Usage Example:**
-```tsx
-style={{
-  fontFamily: "var(--font-body)",
-  fontWeight: "var(--font-weight-semibold)",
-}}
-```
-
-### Focus States
-**Brand Focus State:** All interactive elements use a consistent focus state:
-- **2px teal outline/ring** with **2px offset**
-- Implementation: `focus-visible:ring-2 focus-visible:ring-[#0093a4] focus-visible:ring-offset-2`
-- Use `focus-within:` for container elements (like input wrappers)
-
-### Spacing & Layout
-- Use Tailwind spacing classes (p-2, gap-4, etc.)
-- Border radius: `rounded-[4px]` for buttons/inputs, `rounded-[8px]` for cards/modals
-- Transitions: Always add `transition-colors` for hover states
+- `weblab2/views` is currently Web Lab implementation detail.
+- Shared shell pieces belong in `resource-panel`, `ui`, `ui/header`, or `icons`.
+- As new labs are introduced, create lab-specific feature directories without reworking shared frame primitives.
 
 ---
 
-## Icon System
+## Styling System (SCSS-First)
 
-### FontAwesome 7 (NOT Lucide)
-**IMPORTANT:** This project uses FontAwesome 7 icons exclusively.
+### Source of Truth
 
-**Import Pattern:**
-```tsx
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faIconName } from "@fortawesome/free-solid-svg-icons";
-// OR
-import { faIconName } from "@fortawesome/free-brands-svg-icons";
-```
+Design tokens and globals are layered:
 
-**Usage:**
-```tsx
-<FontAwesomeIcon icon={faIconName} className="w-4 h-4" />
-```
+1. `src/styles/tokens.css` (generated design token variables; do not hand-edit)
+2. `src/styles/globals.css` (semantic aliases, typography, global base styles)
+3. SCSS module files (`*.module.scss`) for component-level styling
+4. SCSS helpers (`src/styles/_tokens.scss`, `src/styles/_mixins.scss`)
 
-**Common Icons:**
-- Navigation: `faChevronDown`, `faChevronLeft`, `faChevronRight`, `faBars`
-- Actions: `faPlus`, `faSave`, `faDownload`, `faEraser`, `faRotate`
-- Views: `faCode`, `faEye`, `faColumns`
-- Files: `faFileCode`, `faFolder`, `faFile`, `faImage`
-- UI: `faXmark`, `faGear`, `faCircleInfo`, `faClipboardCheck`
+### Required Rules
 
----
+- Prefer **SCSS modules** for new component styling.
+- Use token variables (`var(--ds-...)` and semantic aliases like `var(--primary)`), never hard-coded color literals unless explicitly justified.
+- Keep styles colocated with components (`Component.tsx` + `Component.module.scss`).
+- Use shared mixins where appropriate (for example `focus-ring` from `_mixins.scss`).
 
-## Component Architecture
+### Tailwind Guidance
 
-### Directory Structure
-```
-/components         - Custom reusable components
-/components/ui      - ShadCN UI components (DO NOT MODIFY structure)
-/components/figma   - Protected Figma components (DO NOT MODIFY)
-/imports            - Imported Figma design components
-/styles             - Global CSS and design tokens
-```
-
-### Key Components
-
-#### 1. Sidebar Navigation System (`/App.tsx`)
-- **6 Tab States:** Info, Validation, AI Tutor, Version History, Teacher Resources, Settings
-- **Active State Indicator:** 1px left border with accent color
-- **Tab Icons:** FontAwesome icons with color transitions
-- **Active:** `text-accent` | **Inactive:** `text-[#69788a]`
-- **Background:** Active = `bg-white` | Inactive = `bg-[#f0f2f5]`
-
-#### 2. File Manager (`/components/FileManager.tsx`)
-- Collapsible sidebar (200px → 32px)
-- Nested folder structure with expand/collapse
-- File type icons (HTML, CSS, JS, etc.)
-- Dropdown menu for new file creation
-- Context menu support (right-click)
-
-#### 3. Code Editor (`/components/CodeEditor.tsx`)
-- Tab-based file management
-- Drag-and-drop tab reordering
-- Close buttons on tabs (X icon)
-- Empty state with "Create new file" CTA
-- Syntax highlighting via CSS classes
-- Uses `Google Sans Code` font (monospace)
-
-#### 4. Create File Modal (`/components/CreateFileModal.tsx`)
-- File name input with brand focus state
-- File type dropdown (HTML, CSS, JS, MD, TXT, CSV)
-- Dropdown button shows selected file type icon
-- Dynamic button label: "Create [name.extension]"
-- Keyboard shortcuts: Enter to create, Escape to close
-
-#### 5. AI Chat (`/App.tsx` - ai-tutor tab)
-- Message history with user/assistant roles
-- Action row for each AI message (copy, download, thumbs up/down)
-- Input with "Add File" button and AI indicator
-- Auto-scrolling chat area
-- Purple send button (enabled only when input has text)
-
-#### 6. Version History (`/components/VersionHistory.tsx`)
-- List of saved versions with timestamps
-- Version selection (highlights selected)
-- Current version vs historical versions
-- Save version form (description + button)
-- Restore/Cancel buttons for historical versions
-
-#### 7. Validation Panel (`/components/ValidationPanel.tsx`)
-- Animated test results
-- Status icons (success, error, warning, loading)
-- Collapsible test groups
-- Progress indicators
-
-#### 8. Preview Panel (`/components/PreviewPanel.tsx`)
-- URL bar with click-to-edit functionality
-- Device size toggles (desktop, mobile, tablet)
-- Fullscreen mode
-- Refresh/reload controls
-
-#### 9. Resizable Panels (`/components/ResizableHandle.tsx`)
-- Vertical drag handles between panels
-- Min/max width constraints
-- Split view 50/50 by default
-- Smooth resize transitions
-
-#### 10. Settings Panel (`/components/SettingsPanel.tsx`)
-- Slides up from bottom
-- Overlay with backdrop
-- Persistent across tab switches
+- Tailwind is part of the toolchain and still exists for base/theme plumbing.
+- For **new component UI styling**, do not rely on long utility-class composition as the primary approach.
+- If touching legacy utility-heavy markup, prefer incremental migration to module classes instead of large risky rewrites.
 
 ---
 
-## State Management
+## Typography & Interaction Standards
 
-### Core State Variables (from `/App.tsx`)
-```tsx
-// Navigation
-const [activeTab, setActiveTab] = useState("info");
+### Typography
 
-// File Management
-const [openFolders, setOpenFolders] = useState<Set<string>>(new Set(["My Project"]));
-const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
-const [openFiles, setOpenFiles] = useState<FileItem[]>([]);
+- Heading font: `var(--font-heading)`
+- Body font: `var(--font-body)`
+- Mono/code font: `var(--font-mono)`
+- Weights: `var(--font-weight-normal|medium|semibold)`
+- Sizes: semantic tokens in `globals.css` (for example `--text-h1`, `--text-base`, `--text-label`)
 
-// View Modes
-const [viewMode, setViewMode] = useState<"code" | "preview" | "split">("code");
-const [isFileManagerCollapsed, setIsFileManagerCollapsed] = useState(false);
+### Focus and Accessibility
 
-// UI State
-const [isCreateFileModalOpen, setIsCreateFileModalOpen] = useState(false);
-const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+- Every interactive element must expose a visible focus style.
+- Preferred ring color is tokenized via `var(--ring)`.
+- Ensure keyboard behavior is preserved for buttons, menus, dialogs, and list interactions.
 
-// Resizing
-const [sidebarWidth, setSidebarWidth] = useState(400); // 56px tabs + 344px content
-const [splitViewCodeWidth, setSplitViewCodeWidth] = useState<number | null>(null);
+### Icons
 
-// AI Chat
-const [chatMessages, setChatMessages] = useState([...]);
-const [chatInput, setChatInput] = useState("");
-
-// Version History
-const [selectedHistoryVersion, setSelectedHistoryVersion] = useState("current");
-const [versionDescription, setVersionDescription] = useState("");
-```
-
-### State Flow Patterns
-1. **File Selection:** FileManager → openFile() → setSelectedFile() + update openFiles
-2. **Tab Switching:** Sidebar tabs → setActiveTab() → conditional panel render
-3. **View Modes:** Workspace header → setViewMode() → panel visibility logic
-4. **Modal Triggers:** Multiple entry points → setIsCreateFileModalOpen(true)
+- Use FontAwesome-based patterns already established in the repo.
+- Reusable custom icons belong under `src/components/icons`.
 
 ---
 
-## Testing & Iteration Best Practices
+## Component Architecture Rules
 
-### When Testing New Features
-1. **Preserve Existing State:** Don't remove working state management
-2. **Use CSS Variables:** Always reference design tokens from globals.css
-3. **Test Focus States:** Ensure 2px teal ring on all interactive elements
-4. **Check Responsiveness:** Test sidebar collapse, panel resizing, split view
-5. **Verify Icons:** Confirm FontAwesome icons render correctly
-6. **Typography Check:** Ensure no hard-coded font sizes/weights (unless intentional)
+### Shared vs Lab-Specific
 
-### What You Can Change
-✅ Add new sidebar tabs and panels
-✅ Extend file types and syntax highlighting
-✅ Add new modal dialogs (follow CreateFileModal pattern)
-✅ Enhance AI chat features
-✅ Add validation rules/tests
-✅ Customize preview panel features
+- Shared frame components:
+  - `src/components/resource-panel`
+  - `src/components/ui`
+  - `src/components/ui/header`
+  - `src/components/icons`
+- Current Web Lab-specific workspace views:
+  - `src/components/weblab2/views`
 
-### What to Preserve
-❌ Do NOT modify `/components/ui/*` (ShadCN components)
-❌ Do NOT modify `/components/figma/*` (Protected)
-❌ Do NOT change CSS variable names in globals.css
-❌ Do NOT replace FontAwesome with other icon libraries
-❌ Do NOT hard-code colors (use CSS variables)
-❌ Do NOT override typography scale (use variables)
+When adding a feature, ask:
 
----
+1. Could this be used by multiple Lab2 environments?
+2. If yes, place in shared directories and keep APIs generic.
+3. If no, keep it within lab-specific folders and avoid leaking assumptions into shared primitives.
 
-## Common Patterns & Snippets
+### State Management
 
-### Button Pattern (Primary)
-```tsx
-<button className="bg-[#9657c7] box-border content-stretch flex gap-[8px] items-center justify-center min-w-[40px] px-[16px] py-[8px] relative rounded-[4px] shrink-0 hover:bg-[#6c468a] active:bg-[#9657c7] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0093a4] focus-visible:ring-offset-2">
-  <p className="leading-[21.56px] not-italic relative shrink-0 text-[14px] text-center text-white"
-     style={{ fontFamily: "var(--font-body)", fontWeight: "var(--font-weight-semibold)" }}>
-    Button Text
-  </p>
-</button>
-```
+Keep `App.tsx` as orchestration/composition and move behavior into hooks:
 
-### Input Field Pattern
-```tsx
-<div className="bg-white relative rounded-[4px] shrink-0 w-full focus-within:outline-none focus-within:ring-2 focus-within:ring-[#0093a4] focus-within:ring-offset-2">
-  <div aria-hidden="true" className="absolute border border-[#b7c1cb] border-solid inset-0 pointer-events-none rounded-[4px]" />
-  <div className="size-full">
-    <div className="box-border content-stretch flex gap-[10px] items-start px-[12px] py-[8px] relative w-full">
-      <input
-        type="text"
-        placeholder="Placeholder text"
-        className="basis-0 flex flex-col grow justify-center leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[16px] bg-transparent border-0 outline-none placeholder:text-[#b7c1cb] text-[#292f36] leading-[23.68px]"
-        style={{ fontFamily: "var(--font-body)", fontWeight: "var(--font-weight-normal)" }}
-      />
-    </div>
-  </div>
-</div>
-```
+- `useLayoutState`
+- `useFileWorkspaceState`
+- `useChatState`
+- `useVersionHistoryState`
 
-### Sidebar Tab Pattern
-```tsx
-<button
-  onClick={() => setActiveTab("tab-name")}
-  className={`h-14 flex items-center justify-center border-b border-[#d4dae1] relative transition-colors hover:bg-white ${
-    activeTab === "tab-name" ? "bg-white" : "bg-[#f0f2f5]"
-  }`}
->
-  <FontAwesomeIcon
-    icon={faIconName}
-    className={`text-[18px] transition-colors ${
-      activeTab === "tab-name" ? "text-accent" : "text-[#69788a] group-hover:text-[#576575]"
-    }`}
-  />
-  {activeTab === "tab-name" && (
-    <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />
-  )}
-</button>
-```
+Prefer typed props and small, explicit interfaces over broad untyped objects.
 
 ---
 
-## Keyboard Shortcuts & Interactions
+## Implementation Checklist
 
-### Implemented Shortcuts
-- **Enter:** Submit forms (create file, send chat message)
-- **Escape:** Close modals and dialogs
-- **Click outside:** Close dropdowns and context menus
+Before merging UI work:
 
-### Drag & Drop
-- **File Tabs:** Reorderable via drag-and-drop
-- **Panel Handles:** Draggable resize handles with constraints
-
-### Click Interactions
-- **File Manager:** Single click to open file
-- **Tabs:** Click to switch, click X to close
-- **Dropdown:** Click to open, click outside to close
-- **Preview URL Bar:** Click to edit URL
+1. Styling uses tokens + SCSS modules (no new hard-coded color system).
+2. Shared vs lab-specific placement is intentional.
+3. Focus states and keyboard interactions are preserved.
+4. `npm run typecheck` passes.
+5. `npm run build` passes.
+6. Imports reference current folders (no legacy paths).
 
 ---
 
-## User Testing Considerations
+## Repository Hygiene
 
-### Performance
-- File structure limited to ~20 files for prototype speed
-- Chat history capped at recent messages
-- Version history shows 7 versions max
-
-### Mock Data
-- File content is static (stored in component state)
-- Version timestamps are hardcoded labels
-- AI responses are pre-defined (not connected to real API)
-
-### Known Limitations
-- No actual file system persistence
-- No real backend/database
-- Settings panel doesn't save preferences
-- Preview doesn't execute real code
+- Keep `.DS_Store` out of source control.
+- Keep build artifacts ignored unless release process explicitly requires tracking them.
+- Keep lockfile tracked for reproducible installs.
 
 ---
 
-## Quick Start for New Features
+## Migration Notes (Current)
 
-### Adding a New Sidebar Panel
-1. Add icon import and state check in `/App.tsx`
-2. Add tab button in sidebar with active/inactive states
-3. Add conditional content panel with `{activeTab === "new-tab" && <Content />}`
-4. Update header label in workspace header section
-5. Test tab switching and state persistence
+Recent organization cleanup established:
 
-### Adding a New Modal
-1. Create component in `/components/[ModalName].tsx`
-2. Follow `CreateFileModal.tsx` pattern:
-   - Use brand focus states
-   - Include backdrop overlay
-   - Add enter/escape keyboard handlers
-   - Use CSS variables for all styling
-3. Add state in `/App.tsx`: `const [isModalOpen, setIsModalOpen] = useState(false)`
-4. Render at bottom of App component
-5. Wire up trigger buttons
+- `TopNavigation` + `LevelProgressBubbles` in `src/components/ui/header`
+- resource panel views in `src/components/resource-panel/views`
+- shared atoms (`AppButton`, `Tooltip`, `SuccessAlert`) in `src/components/ui`
+- AI tutor icon in `src/components/icons`
+- legacy/deprecated files removed
 
-### Extending File Types
-1. Update `FileType` type in relevant components
-2. Add icon mapping in `FILE_TYPE_ICONS`
-3. Update file extension mapping
-4. Add syntax highlighting CSS if needed
+Do not reintroduce removed legacy paths or compatibility shims unless there is a concrete migration need.
 
 ---
 
-## Troubleshooting
+## Quick Decision Guide
 
-### Common Issues
-
-**Typography not matching design:**
-- ✓ Check that you're using CSS variables: `fontFamily: "var(--font-body)"`
-- ✓ Don't use Tailwind font classes unless explicitly changing typography
-- ✓ Verify font imports in globals.css
-
-**Focus states not showing:**
-- ✓ Add `focus-visible:ring-2 focus-visible:ring-[#0093a4] focus-visible:ring-offset-2`
-- ✓ For input wrappers, use `focus-within:` variant
-- ✓ Check z-index if ring is hidden behind other elements
-
-**Icons not rendering:**
-- ✓ Import from correct package (`free-solid-svg-icons` vs `free-brands-svg-icons`)
-- ✓ Use `<FontAwesomeIcon icon={faIconName} />` component
-- ✓ Don't use Lucide icons
-
-**State not persisting:**
-- ✓ Check that state is defined at App level for cross-component features
-- ✓ Verify state update functions are passed down correctly
-- ✓ Use `useEffect` to sync state when needed
-
-**Styling inconsistencies:**
-- ✓ Always use CSS variables instead of hard-coded colors
-- ✓ Check globals.css for available design tokens
-- ✓ Follow existing component patterns for layout
+- **Need a new reusable button/input/tooltip variant?** -> `src/components/ui`
+- **Need a new sidebar tab panel?** -> `src/components/resource-panel/views`
+- **Need workspace/editor behavior for current Web Lab?** -> `src/components/weblab2/views`
+- **Need behavior used across many surfaces?** -> hook in `src/hooks` + typed contract in `src/types`
+- **Need new styling values?** -> tokens pipeline first, then semantic aliasing
 
 ---
 
-## Contact & Support
+## Versioning
 
-For questions or clarifications about this prototype:
-- Review this guidelines document first
-- Check existing component implementations for patterns
-- Refer to `/styles/globals.css` for design tokens
-- Look at `/App.tsx` for state management examples
-
----
-
-**Last Updated:** Sunday, October 19, 2025
-**Version:** 1.0
-**Status:** Ready for team remix and user testing
+**Last Updated:** March 25, 2026  
+**Status:** Active baseline for Lab2-powered prototypes
