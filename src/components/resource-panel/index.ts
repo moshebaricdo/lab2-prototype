@@ -1,5 +1,5 @@
 export { Sidebar } from "./Sidebar";
-export type { SidebarTab } from "./Sidebar";
+export type { SidebarTab, SidebarProps } from "./Sidebar";
 
 export { ContinueButton } from "./ContinueButton";
 export { InstructionsDrawer } from "./InstructionsDrawer";

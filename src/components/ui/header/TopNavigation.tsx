@@ -4,35 +4,54 @@ import {
   faBars,
   faCircleQuestion,
 } from "@fortawesome/free-solid-svg-icons";
+import { Link } from "react-router-dom";
 import { AppButton } from "../AppButton";
 import { LevelProgressBubbles } from "./LevelProgressBubbles";
 import { Logo } from "../../icons/Logo";
 import styles from "./TopNavigation.module.scss";
 
-export function TopNavigation() {
+export interface TopNavigationProps {
+  title?: string;
+  subtitle?: string;
+  currentLevel?: number;
+  totalLevels?: number;
+  completedLevels?: number[];
+}
+
+export function TopNavigation({
+  title = "Lesson #: Lesson Title",
+  subtitle = "Saved a few seconds ago",
+  currentLevel = 9,
+  totalLevels = 10,
+  completedLevels = [1, 2, 3],
+}: TopNavigationProps) {
   return (
     <div className={styles.root}>
       <div className={styles.leftGroup}>
         <div className={styles.logoWrap}>
-          <div className={styles.logoBox}>
+          <Link
+            to="/levels"
+            className={styles.logoBox}
+            aria-label="Go to levels page"
+          >
             <Logo />
-          </div>
+          </Link>
         </div>
       </div>
 
       <div className={styles.centerGroup}>
         <div className={styles.textCenter}>
           <p className={styles.title}>
-            Lesson #: Lesson Title
+            {title}
           </p>
           <p className={styles.subtitle}>
-            Saved a few seconds ago
+            {subtitle}
           </p>
         </div>
         <LevelProgressBubbles
-          currentLevel={9}
-          totalLevels={10}
-          completedLevels={[1, 2, 3]}
+          currentLevel={currentLevel}
+          totalLevels={totalLevels}
+          completedLevels={completedLevels}
         />
       </div>
 
