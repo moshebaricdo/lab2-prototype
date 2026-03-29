@@ -3,14 +3,25 @@ import {
   type ReactNode,
   forwardRef,
 } from "react";
+import { FaIcon, type FaIconSize } from "../icons/FaIcon";
+import type { FaIconName } from "../../icons/faProRegularCodepoints";
 import styles from "./AppButton.module.scss";
 
 type ButtonVariant = "primary" | "secondary" | "tertiary";
 type ButtonTone = "purple" | "black" | "white" | "gray";
 type ButtonSize = "l" | "m" | "s" | "xs";
 
+const BUTTON_ICON_SIZE: Record<ButtonSize, FaIconSize> = {
+  l: "l",
+  m: "m",
+  s: "s",
+  xs: "xs",
+};
+
 interface AppButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** Prefer \`iconName\` for new code (FA7 Pro webfont). \`icon\` wins when both are set. */
   icon?: ReactNode;
+  iconName?: FaIconName;
   iconPosition?: "start" | "end";
   variant?: ButtonVariant;
   tone?: ButtonTone;
@@ -45,6 +56,7 @@ export const AppButton = forwardRef<HTMLButtonElement, AppButtonProps>(
       className = "",
       disabled,
       icon,
+      iconName,
       iconPosition = "start",
       variant = "secondary",
       tone = "black",
@@ -55,7 +67,12 @@ export const AppButton = forwardRef<HTMLButtonElement, AppButtonProps>(
     },
     ref,
   ) => {
-    const iconOnly = Boolean(icon && !children);
+    const resolvedIcon =
+      icon ??
+      (iconName ? (
+        <FaIcon name={iconName} size={BUTTON_ICON_SIZE[size]} />
+      ) : null);
+    const iconOnly = Boolean(resolvedIcon && !children);
 
     return (
       <button
@@ -76,15 +93,15 @@ export const AppButton = forwardRef<HTMLButtonElement, AppButtonProps>(
         disabled={disabled}
         {...props}
       >
-        {icon && iconPosition === "start" ? (
+        {resolvedIcon && iconPosition === "start" ? (
           <span className={styles.iconWrap} aria-hidden="true">
-            {icon}
+            {resolvedIcon}
           </span>
         ) : null}
         {children ? <span className={styles.label}>{children}</span> : null}
-        {icon && iconPosition === "end" ? (
+        {resolvedIcon && iconPosition === "end" ? (
           <span className={styles.iconWrap} aria-hidden="true">
-            {icon}
+            {resolvedIcon}
           </span>
         ) : null}
       </button>
@@ -95,3 +112,4 @@ export const AppButton = forwardRef<HTMLButtonElement, AppButtonProps>(
 AppButton.displayName = "AppButton";
 
 export type { AppButtonProps, ButtonVariant, ButtonTone, ButtonSize };
+export type { FaIconName } from "../../icons/faProRegularCodepoints";

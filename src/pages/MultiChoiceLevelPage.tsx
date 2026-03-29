@@ -1,5 +1,11 @@
 import { MultiChoiceWorkspace } from "../components/assessment/multi";
+import { multiChoiceLevelLinks } from "./levelTypeLinks";
 
 export function MultiChoiceLevelPage() {
-  return <MultiChoiceWorkspace />;
+  return (
+    <MultiChoiceWorkspace
+      levelLinks={multiChoiceLevelLinks}
+      currentLevelPath="/levels/multi"
+    />
+  );
 }

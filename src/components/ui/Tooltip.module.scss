@@ -54,12 +54,12 @@
 
 .topArrow {
   border-right: 3px solid transparent;
-  border-bottom: 4px solid var(--foreground);
+  border-top: 4px solid var(--foreground);
   border-left: 3px solid transparent;
 }
 
 .bottomArrow {
-  border-top: 4px solid var(--foreground);
+  border-bottom: 4px solid var(--foreground);
   border-right: 3px solid transparent;
   border-left: 3px solid transparent;
 }

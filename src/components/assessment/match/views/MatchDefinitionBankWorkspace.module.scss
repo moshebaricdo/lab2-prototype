@@ -1,0 +1,226 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.workspace {
+  align-items: flex-start;
+  background: var(--ds-background-neutral-secondary);
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  margin: 0 auto;
+  max-width: 980px;
+  width: 100%;
+}
+
+.matchGrid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin-top: 20px;
+}
+
+.termsColumn,
+.slotsColumn,
+.promptsColumn {
+  display: grid;
+  gap: 8px;
+  grid-template-rows: repeat(4, minmax(72px, 1fr));
+}
+
+.promptsColumnOver {
+  background: color-mix(in srgb, var(--ds-background-brand-teal-extra-light) 45%, transparent);
+  border-radius: var(--radius);
+  outline: 1px dashed var(--ds-borders-brand-teal-primary);
+  outline-offset: 4px;
+}
+
+.termCard,
+.slotCard,
+.promptCard {
+  align-items: center;
+  border-radius: var(--radius);
+  display: flex;
+  min-height: 72px;
+}
+
+.termCard {
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-borders-neutral-primary);
+  color: var(--ds-text-brand-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  justify-content: center;
+  padding: 12px;
+}
+
+.slotCard {
+  background: var(--card);
+  border: 1px dashed var(--border);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  justify-content: center;
+  text-align: center;
+}
+
+.slotCard:focus-visible {
+  @include focus-ring;
+}
+
+.slotCardFilled {
+  border-style: solid;
+}
+
+.slotCardLocked {
+  cursor: default;
+}
+
+.slotCardMatched {
+  background: var(--ds-background-brand-teal-extra-light);
+  border-color: var(--ds-borders-brand-teal-primary);
+}
+
+.slotCardOver {
+  border-color: var(--ds-borders-brand-teal-primary);
+  box-shadow: inset 0 0 0 1px var(--ds-borders-brand-teal-primary);
+}
+
+.slotPlaceholder {
+  color: var(--ds-text-neutral-placeholder);
+}
+
+.slotCardCorrect {
+  background: var(--ds-background-success-extra-light);
+  border-color: var(--ds-borders-success-primary);
+  color: var(--ds-text-success-primary);
+}
+
+.slotCardIncorrect {
+  background: var(--ds-background-error-extra-light);
+  border-color: var(--ds-borders-error-primary);
+  color: var(--ds-text-error-primary-fixed);
+}
+
+.promptCard {
+  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  cursor: grab;
+  gap: 12px;
+  text-align: center;
+  padding: 12px;
+}
+
+.promptCard:hover {
+  border: 1px solid var(--ds-borders-neutral-strong);
+}
+
+.promptCardCompact {
+  min-height: 100%;
+  width: 100%;
+  background: var(--ds-background-neutral-primary);
+  border: none;
+}
+
+.promptCardCompact:not(.promptCardCorrect):not(.promptCardIncorrect):hover {
+  background: var(--ds-background-brand-teal-extra-light);
+  border: none;
+}
+
+.promptCardCompact.promptCardCorrect {
+  border: 0px solid var(--ds-borders-success-primary);
+}
+
+.promptCardCompact.promptCardIncorrect {
+  border: 0px solid var(--ds-borders-error-primary);
+}
+
+.promptCard:focus-visible {
+  @include focus-ring;
+}
+
+.promptCardDragging {
+  opacity: 0.6;
+}
+
+.promptCardCorrect {
+  background: var(--ds-background-success-extra-light);
+  border-color: var(--ds-borders-success-primary);
+  color: var(--ds-text-success-primary);
+}
+
+.promptCardIncorrect {
+  background: var(--ds-background-error-extra-light);
+  border-color: var(--ds-borders-error-primary);
+  color: var(--ds-text-error-primary-fixed);
+}
+
+.promptHandle {
+  color: var(--ds-text-neutral-quaternary);
+  flex-shrink: 0;
+}
+
+.promptText {
+  flex: 1;
+  font-size: var(--text-sm);
+  line-height: 1.35;
+}
+
+.dragOverlayCard {
+  align-items: center;
+  text-align: center;
+  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--ds-borders-neutral-strong);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  cursor: grabbing;
+  display: flex;
+  gap: 12px;
+  min-height: 100%;
+  max-width: 320px;
+  padding: 12px;
+}
+
+.termCardMatched {
+  background: var(--ds-background-brand-teal-extra-light);
+  border-color: var(--ds-borders-brand-teal-primary);
+}
+
+.termCardCorrect {
+  background: var(--ds-background-success-extra-light);
+  border-color: var(--ds-borders-success-primary);
+  color: var(--ds-text-success-primary);
+}
+
+.termCardIncorrect {
+  background: var(--ds-background-error-extra-light);
+  border-color: var(--ds-borders-error-primary);
+  color: var(--ds-text-error-primary-fixed);
+}
+
+.partialFeedback {
+  color: var(--muted-foreground);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  margin: 0;
+}
+
+@media (max-width: 960px) {
+  .matchGrid {
+    gap: 12px;
+    grid-template-columns: 1fr;
+  }
+
+  .termsColumn,
+  .slotsColumn,
+  .promptsColumn {
+    grid-template-rows: none;
+  }
+}

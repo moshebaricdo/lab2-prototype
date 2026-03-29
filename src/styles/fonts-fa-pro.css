@@ -1,0 +1,11 @@
+/**
+ * Licensed Font Awesome 7 Pro Solid (webfont, weight 900).
+ * File: src/assets/fonts/font-awesome-7-pro-solid-900.otf
+ */
+@font-face {
+  font-family: "Font Awesome 7 Pro";
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("../assets/fonts/font-awesome-7-pro-solid-900.otf") format("opentype");
+}

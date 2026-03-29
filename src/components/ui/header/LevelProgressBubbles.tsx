@@ -1,3 +1,12 @@
+import { Link } from "react-router-dom";
+import type { ReactNode } from "react";
+import { Tooltip } from "../Tooltip";
+
+export interface LevelProgressLink {
+  name: string;
+  path: string;
+}
+
 interface BubbleProps {
   state:
     | "not-started"
@@ -5,12 +14,36 @@ interface BubbleProps {
     | "in-progress"
     | "current";
   levelNumber?: number;
+  to?: string;
+  label: string;
 }
 
-function Bubble({ state, levelNumber }: BubbleProps) {
+function Bubble({ state, levelNumber, to, label }: BubbleProps) {
+  const bubbleClassName = "group relative cursor-pointer";
+  const bubbleProps = {
+    "aria-label": label,
+    className: `${bubbleClassName} ${state === "current" ? "size-[24.81px]" : "shrink-0 size-[15px]"}`,
+  };
+
+  const BubbleWrapper = ({ children }: { children: ReactNode }) => {
+    if (to) {
+      return (
+        <Link to={to} {...bubbleProps}>
+          {children}
+        </Link>
+      );
+    }
+
+    return (
+      <button type="button" {...bubbleProps}>
+        {children}
+      </button>
+    );
+  };
+
   if (state === "current" && levelNumber) {
     return (
-      <button className="group relative size-[24.81px] cursor-pointer">
+      <BubbleWrapper>
         <div className="absolute inset-[1.84%_1.92%_2%_1.92%]">
           <svg
             className="block size-full"
@@ -37,7 +70,7 @@ function Bubble({ state, levelNumber }: BubbleProps) {
             </div>
           </div>
         </div>
-      </button>
+      </BubbleWrapper>
     );
   }
 
@@ -56,7 +89,7 @@ function Bubble({ state, levelNumber }: BubbleProps) {
   }
 
   return (
-    <button className="group relative shrink-0 size-[15px] cursor-pointer">
+    <BubbleWrapper>
       <div className="absolute flex inset-[6.667%] items-center justify-center pointer-events-none">
         <div className="flex-none scale-y-[-100%] size-[13px]">
           <div className="relative size-full">
@@ -77,21 +110,58 @@ function Bubble({ state, levelNumber }: BubbleProps) {
           </div>
         </div>
       </div>
-    </button>
+    </BubbleWrapper>
   );
 }
 
 interface LevelProgressBubblesProps {
-  currentLevel: number;
-  totalLevels: number;
-  completedLevels: number[];
+  currentLevel?: number;
+  totalLevels?: number;
+  completedLevels?: number[];
+  levelLinks?: LevelProgressLink[];
+  currentLevelPath?: string;
+  completedLevelPaths?: string[];
 }
 
 export function LevelProgressBubbles({
-  currentLevel,
-  totalLevels,
-  completedLevels,
+  currentLevel = 1,
+  totalLevels = 1,
+  completedLevels = [],
+  levelLinks,
+  currentLevelPath,
+  completedLevelPaths,
 }: LevelProgressBubblesProps) {
+  const isLinkMode = Boolean(levelLinks && levelLinks.length > 0);
+  const resolvedLevelLinks = isLinkMode ? levelLinks ?? [] : [];
+  const resolvedTotalLevels = isLinkMode
+    ? resolvedLevelLinks.length
+    : totalLevels;
+  const linkModeCurrentLevel = isLinkMode
+    ? resolvedLevelLinks.findIndex(
+        (levelLink) => levelLink.path === currentLevelPath,
+      ) + 1
+    : currentLevel;
+  const resolvedCurrentLevel = isLinkMode
+    ? Math.max(1, Math.min(resolvedTotalLevels, linkModeCurrentLevel || currentLevel))
+    : currentLevel;
+
+  const completedLevelsSet = new Set<number>(
+    isLinkMode
+      ? resolvedLevelLinks.reduce<number[]>((result, levelLink, index) => {
+          if (completedLevelPaths?.includes(levelLink.path)) {
+            result.push(index + 1);
+            return result;
+          }
+
+          if (!completedLevelPaths && index < resolvedCurrentLevel - 1) {
+            result.push(index + 1);
+          }
+
+          return result;
+        }, [])
+      : completedLevels,
+  );
+
   const getBubbleState = (
     index: number,
   ):
@@ -99,34 +169,51 @@ export function LevelProgressBubbles({
     | "completed"
     | "in-progress"
     | "current" => {
-    if (index === currentLevel - 1) return "current";
-    if (completedLevels.includes(index + 1)) return "completed";
-    if (index === currentLevel) return "in-progress";
+    if (index === resolvedCurrentLevel - 1) return "current";
+    if (completedLevelsSet.has(index + 1)) return "completed";
+    if (index === resolvedCurrentLevel) return "in-progress";
     return "not-started";
   };
+
+  const getBubbleLabel = (index: number) =>
+    isLinkMode ? resolvedLevelLinks[index].name : `Level ${index + 1}`;
 
   return (
     <div className="bg-[#f0f2f5] h-[36px] relative rounded-[4px] shrink-0">
       <div className="content-stretch flex h-[36px] items-center overflow-clip relative rounded-[inherit]">
         <div className="box-border content-stretch flex gap-[3px] items-center px-[6px] py-[2px] relative shrink-0">
-          {Array.from({ length: totalLevels }).map(
+          {Array.from({ length: resolvedTotalLevels }).map(
             (_, index) => {
               const state = getBubbleState(index);
+              const label = getBubbleLabel(index);
+              const to = isLinkMode ? resolvedLevelLinks[index].path : undefined;
               return (
                 <div
                   key={index}
                   className="flex items-center justify-center relative shrink-0"
                 >
-                  {state === "current" ? (
-                    <div className="flex items-center scale-y-[-100%]">
+                  <Tooltip
+                    content={label}
+                    position="top"
+                    sideOffset={8}
+                  >
+                    {state === "current" ? (
+                      <div className="flex items-center scale-y-[-100%]">
+                        <Bubble
+                          state={state}
+                          levelNumber={resolvedCurrentLevel}
+                          to={to}
+                          label={label}
+                        />
+                      </div>
+                    ) : (
                       <Bubble
                         state={state}
-                        levelNumber={currentLevel}
+                        to={to}
+                        label={label}
                       />
-                    </div>
-                  ) : (
-                    <Bubble state={state} />
-                  )}
+                    )}
+                  </Tooltip>
                 </div>
               );
             },

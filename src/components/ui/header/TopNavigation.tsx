@@ -6,7 +6,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import { AppButton } from "../AppButton";
-import { LevelProgressBubbles } from "./LevelProgressBubbles";
+import {
+  LevelProgressBubbles,
+  type LevelProgressLink,
+} from "./LevelProgressBubbles";
 import { Logo } from "../../icons/Logo";
 import styles from "./TopNavigation.module.scss";
 
@@ -16,6 +19,9 @@ export interface TopNavigationProps {
   currentLevel?: number;
   totalLevels?: number;
   completedLevels?: number[];
+  levelLinks?: LevelProgressLink[];
+  currentLevelPath?: string;
+  completedLevelPaths?: string[];
 }
 
 export function TopNavigation({
@@ -24,6 +30,9 @@ export function TopNavigation({
   currentLevel = 9,
   totalLevels = 10,
   completedLevels = [1, 2, 3],
+  levelLinks,
+  currentLevelPath,
+  completedLevelPaths,
 }: TopNavigationProps) {
   return (
     <div className={styles.root}>
@@ -52,6 +61,9 @@ export function TopNavigation({
           currentLevel={currentLevel}
           totalLevels={totalLevels}
           completedLevels={completedLevels}
+          levelLinks={levelLinks}
+          currentLevelPath={currentLevelPath}
+          completedLevelPaths={completedLevelPaths}
         />
       </div>
 

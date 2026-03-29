@@ -6,6 +6,7 @@ import { initialChatMessages } from "../../../../data/weblab2";
 import { useChatState } from "../../../../hooks/useChatState";
 import { useLayoutState } from "../../../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState";
+import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import styles from "./LevelGroupWorkspace.module.scss";
 
 type MatchAssignments = Record<string, string | null>;
@@ -17,7 +18,17 @@ function buildInitialAssignments(promptIds: string[]) {
   }, {});
 }
 
-export function LevelGroupWorkspace() {
+interface LevelGroupWorkspaceProps {
+  levelLinks?: LevelProgressLink[];
+  currentLevelPath?: string;
+  completedLevelPaths?: string[];
+}
+
+export function LevelGroupWorkspace({
+  levelLinks,
+  currentLevelPath,
+  completedLevelPaths,
+}: LevelGroupWorkspaceProps = {}) {
   const {
     activeTab,
     setActiveTab,
@@ -105,6 +116,9 @@ export function LevelGroupWorkspace() {
         currentLevel: level.metadata.levelPosition,
         totalLevels: level.metadata.totalLevelsInScript,
         completedLevels: [1, 2, 3, 4, 5],
+        levelLinks,
+        currentLevelPath,
+        completedLevelPaths,
       }}
       sidebarProps={{
         activeTab,
@@ -125,6 +139,7 @@ export function LevelGroupWorkspace() {
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showContinueButton: false,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));

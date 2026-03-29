@@ -59,4 +59,5 @@ The generator resolves token files in this order:
 
 - Guidelines: `src/guidelines/Guidelines.md`
 - Architecture overview: `src/ARCHITECTURE.md`
+- Level type overviews: `src/guidelines/level-types/README.md`
   

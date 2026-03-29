@@ -1,6 +1,4 @@
 import { ButtonHTMLAttributes } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { AppButton } from "../ui/AppButton";
 import styles from "./ContinueButton.module.scss";
 
@@ -18,7 +16,7 @@ export function ContinueButton({
       tone="purple"
       size="s"
       fullWidth
-      icon={<FontAwesomeIcon icon={faArrowRight} className={styles.icon} />}
+      iconName="arrow-right"
       iconPosition="end"
       className={`${styles.root} ${className}`}
       disabled={disabled}

@@ -47,6 +47,7 @@ export interface SidebarProps {
   showAiTutorTab?: boolean;
   showHistoryTab?: boolean;
   showTeacherResourcesTab?: boolean;
+  showContinueButton?: boolean;
 }
 
 export function Sidebar({
@@ -71,6 +72,7 @@ export function Sidebar({
   showAiTutorTab = true,
   showHistoryTab = true,
   showTeacherResourcesTab = false,
+  showContinueButton = true,
 }: SidebarProps) {
   useEffect(() => {
     const validTabs: SidebarTab[] = [];
@@ -271,9 +273,11 @@ export function Sidebar({
         )}
         {activeTab === "classroom" && <TeacherResourcesPanel />}
 
-        <div className={styles.continueBar}>
-          <ContinueButton />
-        </div>
+        {showContinueButton && (
+          <div className={styles.continueBar}>
+            <ContinueButton />
+          </div>
+        )}
 
         {isSettingsOpen && (
           <SettingsPanel

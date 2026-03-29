@@ -11,6 +11,7 @@ import { useChatState } from "../hooks/useChatState";
 import { useFileWorkspaceState } from "../hooks/useFileWorkspaceState";
 import { useLayoutState } from "../hooks/useLayoutState";
 import { useVersionHistoryState } from "../hooks/useVersionHistoryState";
+import { webLab2LevelLinks } from "./levelTypeLinks";
 
 export function WebLab2LevelPage() {
   const {
@@ -62,6 +63,8 @@ export function WebLab2LevelPage() {
           currentLevel: 9,
           totalLevels: 10,
           completedLevels: [1, 2, 3],
+          levelLinks: webLab2LevelLinks,
+          currentLevelPath: "/levels/weblab2",
         }}
         sidebarProps={{
           activeTab,

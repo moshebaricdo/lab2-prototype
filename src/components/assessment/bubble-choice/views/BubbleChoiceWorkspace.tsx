@@ -7,9 +7,20 @@ import { initialChatMessages } from "../../../../data/weblab2";
 import { useChatState } from "../../../../hooks/useChatState";
 import { useLayoutState } from "../../../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState";
+import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import styles from "./BubbleChoiceWorkspace.module.scss";
 
-export function BubbleChoiceWorkspace() {
+interface BubbleChoiceWorkspaceProps {
+  levelLinks?: LevelProgressLink[];
+  currentLevelPath?: string;
+  completedLevelPaths?: string[];
+}
+
+export function BubbleChoiceWorkspace({
+  levelLinks,
+  currentLevelPath,
+  completedLevelPaths,
+}: BubbleChoiceWorkspaceProps = {}) {
   const navigate = useNavigate();
   const {
     activeTab,
@@ -47,6 +58,9 @@ export function BubbleChoiceWorkspace() {
         currentLevel: level.metadata.levelPosition,
         totalLevels: level.metadata.totalLevelsInScript,
         completedLevels: [1, 2, 3, 4, 5, 6],
+        levelLinks,
+        currentLevelPath,
+        completedLevelPaths,
       }}
       sidebarProps={{
         activeTab,
@@ -67,6 +81,7 @@ export function BubbleChoiceWorkspace() {
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showContinueButton: false,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));
