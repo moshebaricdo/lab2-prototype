@@ -51,6 +51,10 @@ export const levelGroupLevelLinks: LevelProgressLink[] = [
     path: "/levels/levelgroup-scroll",
   },
   {
+    name: "Survey-style: sticky footer (scroll inside card)",
+    path: "/levels/levelgroup-scroll-sticky-footer",
+  },
+  {
     name: "Quiz-style: step through with in-level progress",
     path: "/levels/levelgroup-stepped",
   },
@@ -69,5 +73,6 @@ export const levelGroupLevelLinks: LevelProgressLink[] = [
 ];
 
 export const bubbleChoiceLevelLinks: LevelProgressLink[] = [
+  { name: "With image cards", path: "/levels/bubble-choice-images" },
   { name: "Choose-your-path selector", path: "/levels/bubble-choice" },
 ];

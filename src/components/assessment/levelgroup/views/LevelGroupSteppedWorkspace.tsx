@@ -311,6 +311,8 @@ export function LevelGroupSteppedWorkspace({
         setShowSaveSuccessAlert,
         showHistoryTab: false,
         showContinueButton: false,
+        collapsible: true,
+        showInstructionsDrawer: false,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));
@@ -606,7 +608,7 @@ export function LevelGroupSteppedWorkspace({
                         setGroupTeacherReveal((previous) => !previous)
                       }
                     >
-                      {groupTeacherReveal ? "Hide answer" : "Reveal answer"}
+                      {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
                     </AppButton>
                     {isSubmitted ? (
                       <p className={styles.groupFooterSummary}>

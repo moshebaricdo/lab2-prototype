@@ -25,18 +25,30 @@ interface LevelGroupScrollWorkspaceProps {
   completedLevelPaths?: string[];
   /** Overrides Lab2 shell subtitle under the title. */
   shellSubtitle?: string;
+  /**
+   * When true, the assessment card fills the main viewport height, only the question
+   * area scrolls, and the bottom row (reveal / submit) stays pinned to the bottom of the card.
+   */
+  stickyFooter?: boolean;
 }
 
 const DEFAULT_SHELL_SUBTITLE =
   "All questions on one page — scroll to review, submit once.";
+
+const STICKY_FOOTER_SHELL_SUBTITLE =
+  "All questions in one card — scroll inside; footer stays visible.";
 
 export function LevelGroupScrollWorkspace({
   payload,
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
-  shellSubtitle = DEFAULT_SHELL_SUBTITLE,
+  shellSubtitle,
+  stickyFooter = false,
 }: LevelGroupScrollWorkspaceProps) {
+  const resolvedShellSubtitle =
+    shellSubtitle ??
+    (stickyFooter ? STICKY_FOOTER_SHELL_SUBTITLE : DEFAULT_SHELL_SUBTITLE);
   const {
     activeTab,
     setActiveTab,
@@ -100,11 +112,29 @@ export function LevelGroupScrollWorkspace({
     }
   };
 
+  const scrollGroupSections = steps.map((block, index) => (
+    <div key={block.blockId} className={styles.scrollGroupSection}>
+      <LevelGroupEmbeddedBlock
+        block={block}
+        stepIndex={index}
+        totalSteps={steps.length}
+        flowLevel={level}
+        isSubmitted={isSubmitted}
+        flow={state}
+        setSelectedMulti={setSelectedMulti}
+        setFreeText={setFreeText}
+        setMatchAssignments={setMatchAssignments}
+        layout="scrollGroup"
+        groupTeacherReveal={surveyMode ? false : groupTeacherReveal}
+      />
+    </div>
+  ));
+
   return (
     <Lab2Shell
       topNavigationProps={{
         title: `${level.metadata.lessonName} - ${level.name}`,
-        subtitle: shellSubtitle,
+        subtitle: resolvedShellSubtitle,
         currentLevel: level.metadata.levelPosition,
         totalLevels: level.metadata.totalLevelsInScript,
         completedLevels: [1, 2, 3, 4, 5],
@@ -132,20 +162,52 @@ export function LevelGroupScrollWorkspace({
         setShowSaveSuccessAlert,
         showHistoryTab: false,
         showContinueButton: false,
+        collapsible: true,
+        showInstructionsDrawer: false,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));
       }}
     >
-      <main className={styles.workspace}>
-        <div className={styles.stack}>
-          <div className={styles.scrollGroupCard}>
+      <main
+        className={[
+          styles.workspace,
+          stickyFooter ? styles.workspaceSticky : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <div
+          className={[
+            styles.stack,
+            stickyFooter ? styles.stackSticky : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <div
+            className={[
+              styles.scrollGroupCard,
+              stickyFooter ? styles.scrollGroupCardSticky : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
             {showIntro && introConfig ? (
               <>
-                <LevelGroupAssessmentIntro
-                  intro={introConfig}
-                  assessmentTitle={assessmentHeaderTitle}
-                />
+                {stickyFooter ? (
+                  <div className={styles.scrollGroupCardBody}>
+                    <LevelGroupAssessmentIntro
+                      intro={introConfig}
+                      assessmentTitle={assessmentHeaderTitle}
+                    />
+                  </div>
+                ) : (
+                  <LevelGroupAssessmentIntro
+                    intro={introConfig}
+                    assessmentTitle={assessmentHeaderTitle}
+                  />
+                )}
                 <AssessmentBottomRow
                   flushTop
                   showLeft={true}
@@ -190,26 +252,13 @@ export function LevelGroupScrollWorkspace({
               </>
             ) : (
               <>
-                {steps.map((block, index) => (
-                  <div
-                    key={block.blockId}
-                    className={styles.scrollGroupSection}
-                  >
-                    <LevelGroupEmbeddedBlock
-                      block={block}
-                      stepIndex={index}
-                      totalSteps={steps.length}
-                      flowLevel={level}
-                      isSubmitted={isSubmitted}
-                      flow={state}
-                      setSelectedMulti={setSelectedMulti}
-                      setFreeText={setFreeText}
-                      setMatchAssignments={setMatchAssignments}
-                      layout="scrollGroup"
-                      groupTeacherReveal={surveyMode ? false : groupTeacherReveal}
-                    />
+                {stickyFooter ? (
+                  <div className={styles.scrollGroupCardBody}>
+                    {scrollGroupSections}
                   </div>
-                ))}
+                ) : (
+                  scrollGroupSections
+                )}
 
                 <AssessmentBottomRow
                   flushTop
@@ -233,7 +282,7 @@ export function LevelGroupScrollWorkspace({
                             setGroupTeacherReveal((previous) => !previous)
                           }
                         >
-                          {groupTeacherReveal ? "Hide answer" : "Reveal answer"}
+                          {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
                         </AppButton>
                         {isSubmitted ? (
                           <p className={styles.groupFooterSummary}>

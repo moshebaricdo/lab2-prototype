@@ -1,57 +1,44 @@
-import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppButton } from "../../../ui/AppButton";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
-import { mockBubbleChoiceLevel } from "../../../../data/assessment";
-import { initialChatMessages } from "../../../../data/weblab2";
-import { useChatState } from "../../../../hooks/useChatState";
-import { useLayoutState } from "../../../../hooks/useLayoutState";
-import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState";
+import {
+  mockBubbleChoiceLevel,
+  type BubbleChoiceLevelPayload,
+} from "../../../../data/assessment";
+import type { BubbleChoiceOptionLabelStyle } from "../../../../data/assessment/bubbleChoice";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import styles from "./BubbleChoiceWorkspace.module.scss";
+
+function labelForOptionIndex(
+  index: number,
+  style: BubbleChoiceOptionLabelStyle | undefined,
+): string {
+  const resolved = style ?? "letter";
+  if (resolved === "number") return String(index + 1);
+  return String.fromCharCode(65 + index);
+}
 
 interface BubbleChoiceWorkspaceProps {
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
   completedLevelPaths?: string[];
+  /** Defaults to the text-only mock level. */
+  payload?: BubbleChoiceLevelPayload;
 }
 
 export function BubbleChoiceWorkspace({
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
+  payload = mockBubbleChoiceLevel,
 }: BubbleChoiceWorkspaceProps = {}) {
   const navigate = useNavigate();
-  const {
-    activeTab,
-    setActiveTab,
-    isSettingsOpen,
-    setIsSettingsOpen,
-    sidebarWidth,
-    setSidebarWidth,
-  } = useLayoutState();
-  const { chatMessages, setChatMessages, chatInput, setChatInput } =
-    useChatState(initialChatMessages);
-  const {
-    selectedHistoryVersion,
-    setSelectedHistoryVersion,
-    showRestoreSuccessAlert,
-    setShowRestoreSuccessAlert,
-    showSaveSuccessAlert,
-    setShowSaveSuccessAlert,
-    handleSaveVersion,
-    handleRestoreVersion,
-  } = useVersionHistoryState();
 
-  const { level } = mockBubbleChoiceLevel;
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
-  const selectedOption = useMemo(
-    () => level.options.find((option) => option.id === selectedOptionId) ?? null,
-    [level.options, selectedOptionId],
-  );
+  const { level } = payload;
+  const optionLabelStyle = level.optionLabelStyle;
 
   return (
     <Lab2Shell
+      hideResourcePanel
       topNavigationProps={{
         title: `${level.metadata.lessonName} - ${level.name}`,
         subtitle: "Draft bubble choice level on Lab2 shell",
@@ -62,84 +49,53 @@ export function BubbleChoiceWorkspace({
         currentLevelPath,
         completedLevelPaths,
       }}
-      sidebarProps={{
-        activeTab,
-        setActiveTab,
-        sidebarWidth,
-        isSettingsOpen,
-        setIsSettingsOpen,
-        chatMessages,
-        setChatMessages,
-        chatInput,
-        setChatInput,
-        selectedHistoryVersion,
-        setSelectedHistoryVersion,
-        onSaveVersion: handleSaveVersion,
-        onRestoreVersion: handleRestoreVersion,
-        showRestoreSuccessAlert,
-        setShowRestoreSuccessAlert,
-        showSaveSuccessAlert,
-        setShowSaveSuccessAlert,
-        showHistoryTab: false,
-        showContinueButton: false,
-      }}
-      onResize={(delta) => {
-        setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));
-      }}
     >
-      <main className={styles.workspace}>
-        <div className={styles.card}>
-          <p className={styles.eyebrow}>Bubble Choice</p>
-          <h1 className={styles.title}>{level.name}</h1>
-          <p className={styles.prompt}>{level.prompt}</p>
+      <main className={styles.page}>
+        <div className={styles.inner}>
+          <header className={styles.header}>
+            <h1 className={styles.title}>{level.name}</h1>
+            <p className={styles.prompt}>{level.prompt}</p>
+          </header>
 
-          <div className={styles.grid}>
-            {level.options.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className={[
-                  styles.optionCard,
-                  selectedOptionId === option.id ? styles.optionSelected : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => setSelectedOptionId(option.id)}
-              >
-                <p className={styles.optionTitle}>{option.title}</p>
-                <p className={styles.optionDescription}>{option.description}</p>
-                <p className={styles.optionMeta}>
-                  Estimated time: {option.estimatedMinutes} minutes
-                </p>
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.footer}>
-            <p className={styles.selectionLabel}>
-              Selected path:{" "}
-              <span className={styles.selectionValue}>
-                {selectedOption ? selectedOption.title : "None yet"}
-              </span>
-            </p>
-            <div className={styles.actionRow}>
-              <AppButton
-                variant="secondary"
-                onClick={() => setSelectedOptionId(null)}
-                disabled={!selectedOptionId}
-              >
-                Clear choice
-              </AppButton>
-              <AppButton
-                onClick={() => {
-                  if (!selectedOption) return;
-                  navigate(selectedOption.levelPath);
-                }}
-                disabled={!selectedOption}
-              >
-                Continue to selected level
-              </AppButton>
-            </div>
+          <div className={styles.cardsRegion}>
+            <ul className={styles.optionsGrid}>
+              {level.options.map((option, index) => (
+                <li key={option.id} className={styles.optionItem}>
+                  <button
+                    type="button"
+                    className={styles.optionCard}
+                    aria-label={
+                      option.image
+                        ? `${labelForOptionIndex(index, optionLabelStyle)}. ${option.title}. ${option.description}`
+                        : `${labelForOptionIndex(index, optionLabelStyle)}. ${option.title}`
+                    }
+                    onClick={() => navigate(option.levelPath)}
+                  >
+                    {option.image ? (
+                      <div className={styles.optionImageWrap}>
+                        <img
+                          src={option.image.src}
+                          alt=""
+                          className={styles.optionImage}
+                          loading="lazy"
+                          decoding="async"
+                          title={option.image.alt}
+                        />
+                      </div>
+                    ) : null}
+                    <span className={styles.optionLabel} aria-hidden>
+                      {labelForOptionIndex(index, optionLabelStyle)}
+                    </span>
+                    <div className={styles.optionCardBody}>
+                      <p className={styles.optionTitle}>{option.title}</p>
+                      <p className={styles.optionDescription}>
+                        {option.description}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </main>

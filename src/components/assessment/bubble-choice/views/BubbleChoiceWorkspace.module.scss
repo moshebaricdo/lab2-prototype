@@ -1,31 +1,46 @@
 @use "../../../../styles/_mixins.scss" as *;
 
-.workspace {
-  align-items: flex-start;
+.page {
   background: var(--ds-background-neutral-secondary);
+  box-sizing: border-box;
   display: flex;
   flex: 1;
-  justify-content: center;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
   overflow-y: auto;
-  padding: 32px;
+  padding: 64px 32px 48px;
+  width: 100%;
 }
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
+.inner {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0;
   margin: 0 auto;
-  max-width: 900px;
-  padding: 30px;
+  max-width: 1280px;
+  min-height: 0;
+  width: 100%;
 }
 
-.eyebrow {
-  color: var(--muted-foreground);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.06em;
-  margin: 0;
-  text-transform: uppercase;
+.header {
+  flex-shrink: 0;
+  margin: 0 auto;
+  max-width: 40rem;
+  padding-bottom: 64px;
+  text-align: center;
+  width: 100%;
+}
+
+.cardsRegion {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  justify-content: flex-start;
+  min-height: 0;
+  width: 100%;
 }
 
 .title {
@@ -33,7 +48,7 @@
   font-family: var(--font-heading);
   font-size: var(--text-h3);
   font-weight: var(--font-weight-semibold);
-  margin: 8px 0 0;
+  margin: 0;
 }
 
 .prompt {
@@ -41,72 +56,111 @@
   margin: 12px 0 0;
 }
 
-.grid {
+.optionsGrid {
   display: grid;
   gap: 14px;
-  grid-template-columns: 1fr 1fr;
-  margin-top: 22px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .optionsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .optionsGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.optionItem {
+  display: flex;
+  margin: 0;
+  min-width: 0;
 }
 
 .optionCard {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-card);
   cursor: pointer;
-  padding: 16px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
   text-align: left;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.optionImageWrap {
+  aspect-ratio: 16 / 10;
+  background: var(--muted);
+  flex-shrink: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.optionImage {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.optionCardBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 16px;
 }
 
 .optionCard:focus-visible {
   @include focus-ring;
 }
 
-.optionSelected {
-  border-color: var(--ring);
-  box-shadow: inset 0 0 0 1px var(--ring);
+.optionCard:hover {
+  border-color: var(--ds-borders-neutral-strong);
+  transform: translateY(-4px);
+}
+
+.optionLabel {
+  align-items: center;
+  background: var(--ds-background-brand-teal-primary);
+  border-radius: 0px 0px 0px 8px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  color: var(--ds-text-neutral-white-fixed);
+  display: inline-flex;
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  height: 26px;
+  justify-content: center;
+  margin: 0;
+  min-width: 26px;
+  padding: 0 7px;
+  pointer-events: none;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  width: fit-content;
+  z-index: 2;
 }
 
 .optionTitle {
   color: var(--foreground);
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   font-weight: var(--font-weight-semibold);
   margin: 0;
 }
 
 .optionDescription {
   color: var(--muted-foreground);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   margin: 8px 0 0;
-}
-
-.optionMeta {
-  color: var(--ds-text-brand-teal-primary-fixed);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-medium);
-  margin: 12px 0 0;
-}
-
-.footer {
-  align-items: center;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  margin-top: 22px;
-  padding-top: 16px;
-}
-
-.selectionLabel {
-  color: var(--muted-foreground);
-  margin: 0;
-}
-
-.selectionValue {
-  color: var(--foreground);
-  font-weight: var(--font-weight-medium);
-}
-
-.actionRow {
-  display: flex;
-  gap: 10px;
 }

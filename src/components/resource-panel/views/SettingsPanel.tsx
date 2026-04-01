@@ -6,6 +6,8 @@ import styles from "./SettingsPanel.module.scss";
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Inline sits in the sidebar column; floating is a fixed card when the sidebar is collapsed. */
+  variant?: "inline" | "floating";
 }
 
 interface SettingsField {
@@ -19,13 +21,24 @@ const SETTINGS_FIELDS: SettingsField[] = [
   { label: "Theme", value: "Light" },
 ];
 
-export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
+export function SettingsPanel({
+  isOpen,
+  onClose,
+  variant = "inline",
+}: SettingsPanelProps) {
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div className={styles.root}>
+    <div
+      className={[
+        styles.root,
+        variant === "floating" ? styles.rootFloating : styles.rootInline,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className={styles.header}>
         <div className={styles.headerSide} aria-hidden="true" />
         <p className={styles.title}>settings</p>

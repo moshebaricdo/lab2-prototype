@@ -1,10 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { BubbleChoiceImagesLevelPage } from "./pages/BubbleChoiceImagesLevelPage";
 import { BubbleChoiceLevelPage } from "./pages/BubbleChoiceLevelPage";
 import { FreeResponseLevelPage } from "./pages/FreeResponseLevelPage";
 import { FreeResponseMarkdownLevelPage } from "./pages/FreeResponseMarkdownLevelPage";
 import { FreeResponseRevealLevelPage } from "./pages/FreeResponseRevealLevelPage";
 import { FreeResponseUploadLevelPage } from "./pages/FreeResponseUploadLevelPage";
 import { LevelGroupScrollLevelPage } from "./pages/LevelGroupScrollLevelPage";
+import { LevelGroupScrollStickyFooterLevelPage } from "./pages/LevelGroupScrollStickyFooterLevelPage";
 import { LevelGroupSteppedDotsLevelPage } from "./pages/LevelGroupSteppedDotsLevelPage";
 import { LevelGroupSteppedIntroLevelPage } from "./pages/LevelGroupSteppedIntroLevelPage";
 import { LevelGroupSurveyIntroLevelPage } from "./pages/LevelGroupSurveyIntroLevelPage";
@@ -83,6 +85,10 @@ export default function App() {
         element={<LevelGroupScrollLevelPage />}
       />
       <Route
+        path="/levels/levelgroup-scroll-sticky-footer"
+        element={<LevelGroupScrollStickyFooterLevelPage />}
+      />
+      <Route
         path="/levels/levelgroup-stepped"
         element={<LevelGroupSteppedLevelPage />}
       />
@@ -99,6 +105,10 @@ export default function App() {
         element={<LevelGroupSurveyIntroLevelPage />}
       />
       <Route path="/levels/bubble-choice" element={<BubbleChoiceLevelPage />} />
+      <Route
+        path="/levels/bubble-choice-images"
+        element={<BubbleChoiceImagesLevelPage />}
+      />
       <Route path="*" element={<Navigate to="/levels" replace />} />
     </Routes>
   );

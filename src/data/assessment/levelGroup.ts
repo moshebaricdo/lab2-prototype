@@ -206,6 +206,15 @@ export const mockLevelGroupScroll: LevelGroupFlowPayload = {
   },
 };
 
+/** Same questions as scroll-all; used for the sticky-footer layout demo. */
+export const mockLevelGroupScrollStickyFooter: LevelGroupFlowPayload = {
+  level: {
+    ...mockLevelGroupScroll.level,
+    id: 42043,
+    name: "Unit survey (sticky footer)",
+  },
+};
+
 export const mockLevelGroupStepped: LevelGroupFlowPayload = {
   level: {
     id: 42042,

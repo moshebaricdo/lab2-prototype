@@ -103,7 +103,7 @@ export const mockFreeResponseLevelMarkdownOnly: FreeResponseLevelPayload = {
     name: "Scenario — open response",
     type: "FreeResponse",
     stem: {
-      description: `### Scenario
+      description: `**Scenario**
 
 You are reviewing a partner project in a shared document. Your classmate missed a citation on one paragraph.
 

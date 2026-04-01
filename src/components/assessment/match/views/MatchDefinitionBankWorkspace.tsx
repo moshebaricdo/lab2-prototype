@@ -562,6 +562,8 @@ export function MatchDefinitionBankWorkspace({
         setShowSaveSuccessAlert,
         showHistoryTab: false,
         showContinueButton: false,
+        collapsible: true,
+        showInstructionsDrawer: false,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));

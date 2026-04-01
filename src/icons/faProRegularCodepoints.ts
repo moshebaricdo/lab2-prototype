@@ -1,7 +1,7 @@
 /**
  * Unicode codepoints (hex, no "0x") for Font Awesome 7 Pro Solid webfont.
- * Generated from @fortawesome/free-solid-svg-icons, free-regular-svg-icons, and free-brands-svg-icons
- * metadata (same codepoints FA uses across styles). Regenerate: `npm run generate:fa-codepoints`.
+ * Base set from @fortawesome/free-solid-svg-icons, free-regular-svg-icons, and free-brands-svg-icons
+ * plus `PRO_SOLID_ONLY_OVERRIDES` in generate-fa-codepoints.mjs (Pro-only glyphs). Regenerate: `npm run generate:fa-codepoints`.
  */
 export const FA_PRO_REGULAR_CODEPOINTS = {
   "0": "30",
@@ -74,11 +74,13 @@ export const FA_PRO_REGULAR_CODEPOINTS = {
   "arrow-down-wide-short": "f160",
   "arrow-down-z-a": "f881",
   "arrow-left": "f060",
+  "arrow-left-from-line": "f344",
   "arrow-left-long": "f177",
   "arrow-pointer": "f245",
   "arrow-right": "f061",
   "arrow-right-arrow-left": "f0ec",
   "arrow-right-from-bracket": "f08b",
+  "arrow-right-from-line": "f343",
   "arrow-right-long": "f178",
   "arrow-right-to-bracket": "f090",
   "arrow-right-to-city": "e4b3",

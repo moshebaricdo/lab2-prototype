@@ -624,6 +624,8 @@ export function MultiChoiceWorkspace({
         setShowSaveSuccessAlert,
         showHistoryTab: false,
         showContinueButton: false,
+        collapsible: true,
+        showInstructionsDrawer: false,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) =>

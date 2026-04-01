@@ -20,6 +20,41 @@
   width: 100%;
 }
 
+/* Scroll-all variant: card fills main area; questions scroll; footer stays at bottom of card. */
+.workspaceSticky {
+  align-items: center;
+  flex-direction: column;
+  /* Override .workspace justify-content: center so the card grows from the top, not vertically centered. */
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.stackSticky {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  flex-shrink: 1;
+  margin: 0 auto;
+  max-width: 920px;
+  min-height: 0;
+  width: 100%;
+}
+
+.scrollGroupCardSticky {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scrollGroupCardBody {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 .scrollGroupCard {
   background: var(--card);
   border: 1px solid var(--border);

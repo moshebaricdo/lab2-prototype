@@ -6,6 +6,20 @@
   background: var(--sidebar);
 }
 
+/* When only the rail is visible, `.tabRail` already has border-right — drop root's to avoid a 2px edge. */
+.rootCollapsed {
+  border-right: none;
+}
+
+/* Collapsed sidebar: fixed card aligned to rail (56px) + 16px gap; 16px from viewport bottom */
+.settingsFloatingWrap {
+  position: fixed;
+  z-index: 50;
+  bottom: 16px;
+  left: calc(56px + 16px);
+  pointer-events: auto;
+}
+
 .tabRail {
   display: flex;
   width: 56px;
@@ -16,9 +30,28 @@
 .railTopSpacer {
   display: flex;
   height: 40px;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   border-bottom: 1px solid var(--border);
+}
+
+.railCollapseButton {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: var(--ds-background-neutral-primary);
+  cursor: pointer;
+  color: var(--ds-text-neutral-quaternary);
+  transition: background-color 0.2s ease;
+}
+
+.railCollapseButton:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ring);
 }
 
 .tabButton {

@@ -14,6 +14,8 @@ interface AiTutorPanelProps {
   setChatMessages: (messages: ChatMessage[]) => void;
   chatInput: string;
   setChatInput: (input: string) => void;
+  /** When false, the instructions drawer is not shown (e.g. assessment levels). Default true. */
+  showInstructionsDrawer?: boolean;
 }
 
 export function AiTutorPanel({
@@ -21,6 +23,7 @@ export function AiTutorPanel({
   setChatMessages,
   chatInput,
   setChatInput,
+  showInstructionsDrawer = true,
 }: AiTutorPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
@@ -28,9 +31,15 @@ export function AiTutorPanel({
   const [drawerHeight, setDrawerHeight] = useState(0);
   const [drawerIsOpen, setDrawerIsOpen] = useState(true);
 
-  const topPadding = drawerIsOpen ? drawerHeight + 40 : 40;
+  const topPadding =
+    showInstructionsDrawer && drawerIsOpen ? drawerHeight + 40 : 40;
 
   useEffect(() => {
+    if (!showInstructionsDrawer) {
+      setMaxDrawerHeight(null);
+      return;
+    }
+
     const calculateMaxHeight = () => {
       if (containerRef.current && inputRef.current) {
         const containerHeight = containerRef.current.clientHeight;
@@ -43,7 +52,7 @@ export function AiTutorPanel({
     calculateMaxHeight();
     window.addEventListener("resize", calculateMaxHeight);
     return () => window.removeEventListener("resize", calculateMaxHeight);
-  }, []);
+  }, [showInstructionsDrawer]);
 
   const handleSendMessage = () => {
     if (chatInput.trim()) {
@@ -106,13 +115,15 @@ export function AiTutorPanel({
 
   return (
     <div className={styles.root} ref={containerRef}>
-      <div className={styles.drawerContainer}>
-        <InstructionsDrawer
-          maxHeight={maxDrawerHeight}
-          onHeightChange={setDrawerHeight}
-          onOpenChange={setDrawerIsOpen}
-        />
-      </div>
+      {showInstructionsDrawer && (
+        <div className={styles.drawerContainer}>
+          <InstructionsDrawer
+            maxHeight={maxDrawerHeight}
+            onHeightChange={setDrawerHeight}
+            onOpenChange={setDrawerIsOpen}
+          />
+        </div>
+      )}
 
       <ScrollArea className={styles.messagesArea}>
         <div className={styles.messagesWrap} style={{ paddingTop: `${topPadding}px` }}>

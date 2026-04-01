@@ -35,6 +35,7 @@ export {
   levelGroupMatchToPayload,
   levelGroupMultiToPayload,
   mockLevelGroupScroll,
+  mockLevelGroupScrollStickyFooter,
   mockLevelGroupStepped,
   mockLevelGroupSteppedWithIntro,
   mockLevelGroupSurveyWithIntro,
@@ -44,5 +45,7 @@ export {
 } from "./levelGroup";
 export {
   mockBubbleChoiceLevel,
+  mockBubbleChoiceLevelWithImages,
   type BubbleChoiceLevelPayload,
+  type BubbleChoiceOptionLabelStyle,
 } from "./bubbleChoice";

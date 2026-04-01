@@ -34,7 +34,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   margin: 0 auto;
-  max-width: 720px;
+  max-width: 920px;
   width: 100%;
 }
 
@@ -135,7 +135,7 @@
 }
 
 .promptCard {
-  align-items: flex-start;
+  align-items: center;
   padding: 12px 12px 12px 24px;
 }
 
@@ -145,7 +145,7 @@
 }
 
 .termCardAlignStart {
-  align-items: flex-start;
+  align-items: center;
 }
 
 .promptCardAlignCenter {

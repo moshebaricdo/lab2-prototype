@@ -13,6 +13,7 @@ import {
 import { Tooltip } from "../ui/Tooltip";
 import { AppButton } from "../ui/AppButton";
 import { AiTutorIcon } from "../icons/AiTutorIcon";
+import { FaIcon } from "../icons/FaIcon";
 import { ValidationPanel } from "./views/ValidationPanel";
 import { VersionHistory } from "./views/VersionHistory";
 import { AiTutorPanel } from "./views/AiTutorPanel";
@@ -20,7 +21,7 @@ import { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
 import { ContinueButton } from "./ContinueButton";
 import { SettingsPanel } from "./views/SettingsPanel";
 import type { ChatMessage } from "../../types/chat";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./Sidebar.module.scss";
 
 export type SidebarTab = "checklist" | "ai-tutor" | "history" | "classroom";
@@ -48,6 +49,15 @@ export interface SidebarProps {
   showHistoryTab?: boolean;
   showTeacherResourcesTab?: boolean;
   showContinueButton?: boolean;
+  /**
+   * When true, sidebar can be collapsed to a narrow strip (assessment levels). Disabled for Web Lab 2.
+   * When true, the sidebar also starts collapsed by default.
+   */
+  collapsible?: boolean;
+  /** When false, the AI Tutor instructions drawer is hidden. Default true (Web Lab 2). */
+  showInstructionsDrawer?: boolean;
+  /** Fires when `collapsible && isCollapsed` changes (for shell chrome such as resize handle). */
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 export function Sidebar({
@@ -73,7 +83,25 @@ export function Sidebar({
   showHistoryTab = true,
   showTeacherResourcesTab = false,
   showContinueButton = true,
+  collapsible = false,
+  showInstructionsDrawer = true,
+  onCollapsedChange,
 }: SidebarProps) {
+  const [isCollapsed, setIsCollapsed] = useState(() => Boolean(collapsible));
+
+  useEffect(() => {
+    if (!collapsible) {
+      setIsCollapsed(false);
+    }
+  }, [collapsible]);
+
+  const onCollapsedChangeRef = useRef(onCollapsedChange);
+  onCollapsedChangeRef.current = onCollapsedChange;
+
+  useEffect(() => {
+    onCollapsedChangeRef.current?.(Boolean(collapsible && isCollapsed));
+  }, [collapsible, isCollapsed]);
+
   useEffect(() => {
     const validTabs: SidebarTab[] = [];
 
@@ -94,31 +122,70 @@ export function Sidebar({
     showValidationTab,
   ]);
 
+  const panelHidden = collapsible && isCollapsed;
+  const railWidth = 56;
+
+  const isTabActive = (tab: SidebarTab) => !panelHidden && activeTab === tab;
+
   return (
     <div
-      className={styles.root}
-      style={{ width: `${sidebarWidth}px` }}
+      className={[styles.root, panelHidden ? styles.rootCollapsed : ""]
+        .filter(Boolean)
+        .join(" ")}
+      style={{
+        width: panelHidden ? `${railWidth}px` : `${sidebarWidth}px`,
+      }}
     >
       <div className={styles.tabRail}>
-        <div className={styles.railTopSpacer} />
+        <div className={styles.railTopSpacer}>
+          {collapsible && (
+            <Tooltip
+              content={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              position="right"
+            >
+              <button
+                type="button"
+                className={styles.railCollapseButton}
+                onClick={() => {
+                  setIsCollapsed((prev) => {
+                    const next = !prev;
+                    if (next) {
+                      setIsSettingsOpen(false);
+                    }
+                    return next;
+                  });
+                }}
+                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <FaIcon
+                  name={
+                    isCollapsed ? "arrow-right-from-line" : "arrow-left-from-line"
+                  }
+                  size="s"
+                  className="text-[#69788a] transition-colors hover:text-[#576575]"
+                />
+              </button>
+            </Tooltip>
+          )}
+        </div>
 
         {showValidationTab && (
           <Tooltip content="Validation" position="right">
             <button
               onClick={() => setActiveTab("checklist")}
               className={`${styles.tabButton} ${
-                activeTab === "checklist" ? styles.tabActive : ""
+                isTabActive("checklist") ? styles.tabActive : ""
               }`}
             >
               <FontAwesomeIcon
                 icon={faClipboardCheck}
                 className={`text-[18px] transition-colors ${
-                  activeTab === "checklist"
+                  isTabActive("checklist")
                     ? "text-accent"
                     : "text-[#69788a] group-hover:text-[#576575]"
                 }`}
               />
-              {activeTab === "checklist" && (
+              {isTabActive("checklist") && (
                 <>
                   <div className={styles.tabActiveAccent} />
                   <div className={styles.tabActiveMask} />
@@ -133,14 +200,14 @@ export function Sidebar({
             <button
               onClick={() => setActiveTab("ai-tutor")}
               className={`${styles.tabButton} ${
-                activeTab === "ai-tutor" ? styles.tabActive : ""
+                isTabActive("ai-tutor") ? styles.tabActive : ""
               }`}
             >
               <AiTutorIcon
                 className="w-[22px] h-[22px] transition-colors"
-                color={activeTab === "ai-tutor" ? "#0093a4" : "#69788a"}
+                color={isTabActive("ai-tutor") ? "#0093a4" : "#69788a"}
               />
-              {activeTab === "ai-tutor" && (
+              {isTabActive("ai-tutor") && (
                 <>
                   <div className={styles.tabActiveAccent} />
                   <div className={styles.tabActiveMask} />
@@ -155,18 +222,18 @@ export function Sidebar({
             <button
               onClick={() => setActiveTab("history")}
               className={`${styles.tabButton} ${
-                activeTab === "history" ? styles.tabActive : ""
+                isTabActive("history") ? styles.tabActive : ""
               }`}
             >
               <FontAwesomeIcon
                 icon={faClockRotateLeft}
                 className={`text-[18px] transition-colors ${
-                  activeTab === "history"
+                  isTabActive("history")
                     ? "text-accent"
                     : "text-[#69788a] group-hover:text-[#576575]"
                 }`}
               />
-              {activeTab === "history" && (
+              {isTabActive("history") && (
                 <>
                   <div className={styles.tabActiveAccent} />
                   <div className={styles.tabActiveMask} />
@@ -181,18 +248,18 @@ export function Sidebar({
             <button
               onClick={() => setActiveTab("classroom")}
               className={`${styles.tabButton} ${
-                activeTab === "classroom" ? styles.tabActive : ""
+                isTabActive("classroom") ? styles.tabActive : ""
               }`}
             >
               <FontAwesomeIcon
                 icon={faPersonChalkboard}
                 className={`text-[18px] transition-colors ${
-                  activeTab === "classroom"
+                  isTabActive("classroom")
                     ? "text-accent"
                     : "text-[#69788a] group-hover:text-[#576575]"
                 }`}
               />
-              {activeTab === "classroom" && (
+              {isTabActive("classroom") && (
                 <>
                   <div className={styles.tabActiveAccent} />
                   <div className={styles.tabActiveMask} />
@@ -231,61 +298,74 @@ export function Sidebar({
         </div>
       </div>
 
-      <div className={styles.content}>
-        <div className={styles.panelHeader}>
-          <div />
-          <label className={styles.panelHeaderLabel}>
-            {activeTab === "checklist" && "VALIDATION"}
-            {activeTab === "ai-tutor" && "AI TUTOR"}
-            {activeTab === "history" && "VERSION HISTORY"}
-            {activeTab === "classroom" && "TEACHER RESOURCES"}
-          </label>
-          {activeTab === "ai-tutor" ? (
-            <div className="flex gap-1">
-              <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faDownload} />} />
-              <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faEraser} />} />
-            </div>
-          ) : (
+      {!panelHidden && (
+        <div className={styles.content}>
+          <div className={styles.panelHeader}>
             <div />
+            <label className={styles.panelHeaderLabel}>
+              {activeTab === "checklist" && "VALIDATION"}
+              {activeTab === "ai-tutor" && "AI TUTOR"}
+              {activeTab === "history" && "VERSION HISTORY"}
+              {activeTab === "classroom" && "TEACHER RESOURCES"}
+            </label>
+            {activeTab === "ai-tutor" ? (
+              <div className="flex gap-1">
+                <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faDownload} />} />
+                <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faEraser} />} />
+              </div>
+            ) : (
+              <div />
+            )}
+          </div>
+
+          {activeTab === "checklist" && <ValidationPanel />}
+          {activeTab === "ai-tutor" && (
+            <AiTutorPanel
+              chatMessages={chatMessages}
+              setChatMessages={setChatMessages}
+              chatInput={chatInput}
+              setChatInput={setChatInput}
+              showInstructionsDrawer={showInstructionsDrawer}
+            />
+          )}
+          {activeTab === "history" && (
+            <VersionHistory
+              selectedVersion={selectedHistoryVersion}
+              onVersionChange={setSelectedHistoryVersion}
+              onSaveVersion={onSaveVersion}
+              onRestoreVersion={onRestoreVersion}
+              showRestoreSuccessAlert={showRestoreSuccessAlert}
+              setShowRestoreSuccessAlert={setShowRestoreSuccessAlert}
+              showSaveSuccessAlert={showSaveSuccessAlert}
+              setShowSaveSuccessAlert={setShowSaveSuccessAlert}
+            />
+          )}
+          {activeTab === "classroom" && <TeacherResourcesPanel />}
+
+          {showContinueButton && (
+            <div className={styles.continueBar}>
+              <ContinueButton />
+            </div>
+          )}
+
+          {isSettingsOpen && (
+            <SettingsPanel
+              isOpen={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+            />
           )}
         </div>
+      )}
 
-        {activeTab === "checklist" && <ValidationPanel />}
-        {activeTab === "ai-tutor" && (
-          <AiTutorPanel
-            chatMessages={chatMessages}
-            setChatMessages={setChatMessages}
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-          />
-        )}
-        {activeTab === "history" && (
-          <VersionHistory
-            selectedVersion={selectedHistoryVersion}
-            onVersionChange={setSelectedHistoryVersion}
-            onSaveVersion={onSaveVersion}
-            onRestoreVersion={onRestoreVersion}
-            showRestoreSuccessAlert={showRestoreSuccessAlert}
-            setShowRestoreSuccessAlert={setShowRestoreSuccessAlert}
-            showSaveSuccessAlert={showSaveSuccessAlert}
-            setShowSaveSuccessAlert={setShowSaveSuccessAlert}
-          />
-        )}
-        {activeTab === "classroom" && <TeacherResourcesPanel />}
-
-        {showContinueButton && (
-          <div className={styles.continueBar}>
-            <ContinueButton />
-          </div>
-        )}
-
-        {isSettingsOpen && (
+      {panelHidden && isSettingsOpen && (
+        <div className={styles.settingsFloatingWrap}>
           <SettingsPanel
             isOpen={isSettingsOpen}
+            variant="floating"
             onClose={() => setIsSettingsOpen(false)}
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

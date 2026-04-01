@@ -34,10 +34,18 @@ add(solid);
 add(brands);
 add(regular);
 
-const sorted = Object.keys(out)
+/** Glyphs present in the Pro Solid webfont but not in free SVG packages (verify against `font-awesome-7-pro-solid-900.otf`). */
+const PRO_SOLID_ONLY_OVERRIDES = {
+  "arrow-left-from-line": "f344",
+  "arrow-right-from-line": "f343",
+};
+
+const merged = { ...out, ...PRO_SOLID_ONLY_OVERRIDES };
+
+const sorted = Object.keys(merged)
   .sort()
   .reduce((acc, k) => {
-    acc[k] = out[k];
+    acc[k] = merged[k];
     return acc;
   }, {});
 
@@ -47,8 +55,8 @@ const lines = Object.entries(sorted).map(
 
 const header = `/**
  * Unicode codepoints (hex, no "0x") for Font Awesome 7 Pro Solid webfont.
- * Generated from @fortawesome/free-solid-svg-icons, free-regular-svg-icons, and free-brands-svg-icons
- * metadata (same codepoints FA uses across styles). Regenerate: \`npm run generate:fa-codepoints\`.
+ * Base set from @fortawesome/free-solid-svg-icons, free-regular-svg-icons, and free-brands-svg-icons
+ * plus \`PRO_SOLID_ONLY_OVERRIDES\` in generate-fa-codepoints.mjs (Pro-only glyphs). Regenerate: \`npm run generate:fa-codepoints\`.
  */
 `;
 

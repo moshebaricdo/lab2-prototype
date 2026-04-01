@@ -1,5 +1,8 @@
 export { Sidebar } from "./Sidebar";
 export type { SidebarTab, SidebarProps } from "./Sidebar";
+/** Alias for the resource / sidebar chrome (same component as `Sidebar`). */
+export { Sidebar as ResourcePanel } from "./Sidebar";
+export type { SidebarProps as ResourcePanelProps } from "./Sidebar";
 
 export { ContinueButton } from "./ContinueButton";
 export { InstructionsDrawer } from "./InstructionsDrawer";
