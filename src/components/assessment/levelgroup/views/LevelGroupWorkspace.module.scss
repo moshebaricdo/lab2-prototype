@@ -6,13 +6,242 @@
   display: flex;
   flex: 1;
   justify-content: center;
+  /* Lets this flex child scroll only its content; avoids huge empty scroll past the card. */
+  min-height: 0;
+  min-width: 0;
   overflow-y: auto;
   padding: 32px;
 }
 
 .stack {
+  flex-shrink: 0;
   margin: 0 auto;
   max-width: 920px;
+  width: 100%;
+}
+
+.scrollGroupCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Single vertical rhythm between blocks: section padding only (card footer uses flushTop bottom row). */
+.scrollGroupSection {
+  padding-bottom: 24px;
+  padding-top: 8px;
+}
+
+.scrollGroupSection:not(:first-child) {
+  border-top: 1px solid var(--border);
+}
+
+/* AssessmentStemSection root uses margin-top: 8px; inside scroll sections that stacks with dividers / padding. */
+.scrollGroupSection :global(main) > :first-child {
+  margin-top: 0;
+}
+
+.steppedCardHeader {
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px 14px;
+}
+
+.steppedCardBody {
+  padding-bottom: 24px;
+}
+
+.steppedCardBodyNoHeader {
+  padding-bottom: 24px;
+}
+
+.stepStatusSrOnly {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.steppedFooterThreeCol {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 12px 16px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  margin-top: 0;
+  padding: 16px 24px;
+}
+
+.steppedFooterThreeColLeft {
+  align-items: center;
+  display: flex;
+  justify-self: start;
+  min-height: 40px;
+  min-width: 0;
+}
+
+.steppedFooterThreeColCenter {
+  justify-self: center;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.steppedFooterThreeColRight {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  justify-self: end;
+  min-height: 40px;
+}
+
+/* Timed post-intro: stable digit widths */
+.tabularFigures {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Single footer row: Back | timer + track + step | Next */
+.steppedTimedFooterRow {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 12px 16px;
+  grid-template-columns: minmax(0, auto) 1fr minmax(0, auto);
+  margin-top: 0;
+  padding: 16px 24px;
+}
+
+.steppedTimedFooterStart {
+  justify-self: start;
+  min-width: 0;
+}
+
+.steppedTimedFooterEnd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  justify-self: end;
+  min-width: 0;
+}
+
+.steppedTimedFooterChrome {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  justify-content: center;
+  min-width: 0;
+}
+
+.steppedTimedTrackWrap {
+  flex: 0 1 280px;
+  max-width: 280px;
+  min-width: 0;
+  width: 100%;
+}
+
+.steppedTimedStepLabel {
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.steppedTimedTimer {
+  align-items: center;
+  color: var(--foreground);
+  display: inline-flex;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.steppedTimedTimerIcon {
+  color: var(--muted-foreground);
+}
+
+.introScreen {
+  padding: 0 0 24px;
+}
+
+.introHeaderBand {
+  padding: 24px 24px 0px;
+}
+
+.introEyebrow {
+  color: var(--muted-foreground);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.introTitle {
+  color: var(--foreground);
+  font-family: var(--font-heading);
+  font-size: var(--text-h4);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+  margin: 8px 0 0;
+}
+
+.introBody {
+  padding: 16px 24px 0;
+}
+
+.introBodyParagraph {
+  color: var(--foreground);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.introBodyParagraph + .introBodyParagraph {
+  margin-top: 14px;
+}
+
+.introFooterStats {
+  align-items: center;
+  color: var(--ds-text-neutral-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+.introFooterStat {
+  align-items: center;
+  display: inline-flex;
+  font-size: var(--text-sm);
+  gap: 6px;
+}
+
+.introFooterStatIcon {
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.groupFooterLeft {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.groupFooterSummary {
+  color: var(--muted-foreground);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  margin: 0;
+  max-width: min(40ch, 100%);
 }
 
 .section {
@@ -184,26 +413,4 @@
 
 .statusIncorrect {
   color: var(--ds-text-error-primary-fixed);
-}
-
-.footer {
-  align-items: center;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  display: flex;
-  justify-content: space-between;
-  margin-top: 16px;
-  padding: 16px 20px;
-}
-
-.footerText {
-  font-size: var(--text-base);
-  font-weight: var(--font-weight-medium);
-  margin: 0;
-}
-
-.footerActions {
-  display: flex;
-  gap: 10px;
 }

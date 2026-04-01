@@ -6,6 +6,8 @@ import styles from "./AssessmentStemSection.module.scss";
 export interface AssessmentStemSectionProps {
   /** Short label above the stem (e.g. “Multiple choice”, “Free response”). */
   eyebrow: string;
+  /** Appended to the eyebrow line (e.g. level-group step counter styling). */
+  eyebrowClassName?: string;
   /** Plain-text heading when the prompt is a single sentence. */
   question?: string;
   /** Markdown body — supplemental to \`question\`, or the full prompt when \`question\` is omitted. */
@@ -20,13 +22,22 @@ export interface AssessmentStemSectionProps {
  */
 export function AssessmentStemSection({
   eyebrow,
+  eyebrowClassName,
   question,
   description,
   children,
 }: AssessmentStemSectionProps) {
   return (
     <div className={styles.root}>
-      <p className={styles.eyebrow}>{eyebrow}</p>
+      {eyebrow.trim() ? (
+        <p
+          className={[styles.eyebrow, eyebrowClassName ?? ""]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {eyebrow}
+        </p>
+      ) : null}
       {question ? <h1 className={styles.question}>{question}</h1> : null}
       {description ? (
         <div

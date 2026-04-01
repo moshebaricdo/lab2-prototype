@@ -2,22 +2,25 @@
 
 ## Purpose
 
-Prototype of a matching assessment level on the Lab2 shell: learners map terms to definition rows using drag-and-drop (with click-to-assign fallback), submit feedback, sounds, teacher reveal, and Continue navigation consistent with multi-choice and free-response demos.
+Prototype matching assessment levels on the Lab2 shell: learners map terms to definitions using either a **card-slot definition bank** or **connector** (two fixed columns with curved lines). Submit feedback, sounds, teacher reveal, and Continue navigation align with multi-choice and free-response demos.
 
-## Route
+## Routes
 
-- `/levels/match`
+Bubble navigation and demos are listed in `src/pages/levelTypeLinks.ts` (`matchLevelLinks`):
 
-Bubble navigation for this demo is defined in `src/pages/levelTypeLinks.ts` (`matchLevelLinks`).
+- `/levels/match-definition-bank` — card-slot bank + definition rows
+- `/levels/match-connector` — connector lines (text-focused default)
+- `/levels/match-connector-images` — connector with image-rich cards
+- `/levels/match-connector-code` — connector with code / output blocks
 
 ## Key Files
 
 - `src/components/assessment/shared/AssessmentStemSection.tsx` — eyebrow, optional `stem.question`, optional markdown `stem.description`, then task UI
 - `src/components/assessment/shared/AssessmentBottomRow.tsx` — footer row (Reveal answer left; Submit / Try again / Continue + feedback right)
-- `src/pages/MatchLevelPage.tsx`
-- `src/components/assessment/match/views/MatchWorkspace.tsx`
-- `src/components/assessment/match/views/MatchWorkspace.module.scss`
-- `src/data/assessment/match.ts` — payload types and demo fixture
+- `src/components/assessment/match/views/MatchDefinitionBankWorkspace.tsx` (+ `.module.scss`) — bank + row slots
+- `src/components/assessment/match/views/MatchConnectorWorkspace.tsx` (+ `.module.scss`) — two columns, SVG connectors, keyboard + pointer
+- `src/pages/MatchDefinitionBankLevelPage.tsx`, `MatchConnectorLevelPage.tsx`, `MatchConnectorImageLevelPage.tsx`, `MatchConnectorCodeLevelPage.tsx`
+- `src/data/assessment/match.ts` — payload types and demo fixtures
 - `src/assets/audio/success-sound.mp3` / `error-sound.mp3` — played on submit (all correct / any incorrect)
 - `src/components/ui/AppButton.tsx` — `iconName` for Reveal / Hide answer (FA7 Pro Solid via `FaIcon`)
 
@@ -35,39 +38,32 @@ Markdown-enabled. Use when the question needs rich formatting, inline code, list
 
 Rendering rules match multi-choice and free-response (`see multi-choice.md` stem table).
 
-## Student UX (interaction)
+## Student UX (definition bank)
 
-- **Drag-and-drop:** Terms are draggable chips; each definition row has a drop zone. **One term per row**; assigning a term to a row removes it from any other row.
-- **Click fallback:** Click a term to select it, then click a row’s drop zone to assign (same one-term-per-row rules).
-- **Clear all:** Secondary control in the task toolbar clears all assignments (only when not submitted and not in teacher reveal).
-- **Submit:** Enabled when every row has a term and **Reveal answer** is not active. **Submit** is disabled while the teacher key is visible.
+- Terms live in a **bank**; each definition row has a **slot**. Drag or click to assign; **one term per row**.
+- **Clear all** in the task toolbar when not submitted and not in teacher reveal.
+- **Submit** when every row is filled and **Reveal answer** is not active.
+
+## Student UX (connector)
+
+- Fixed **left column (terms)** and **right column (definitions)**. Learners connect pairs with curved lines (pointer or keyboard).
+- **Clear all** and **Submit** follow the same footer rules as other assessment types.
 
 ## Student UX (submit and feedback)
 
 - **Sounds:** `success-sound.mp3` when all matches are correct; `error-sound.mp3` when any are wrong.
-- **All correct**
-  - Rows show success styling on drop zones; **Correct** in the status column.
-  - Bottom bar: **“Nice work!”** and a primary **Continue** button (next route in `matchLevelLinks` or `/levels` after the last demo).
-- **Any incorrect**
-  - Wrong rows show error styling on the assigned term in the drop zone; **Incorrect** in the status column.
-  - Bottom bar: short copy **“X of Y matches are correct.”** and **Try again** (clears assignments and attempt state).
-  - **Continue** is not shown until all rows are correct.
-- **Teacher tools:** **Reveal answer** / **Hide answer** fills each row with the correct term and success styling (terms pool empty). Submit is disabled while revealed. Same pattern as multi-choice reveal.
+- **All correct** — success styling; bottom bar **“Nice work!”** and **Continue** (next route in `matchLevelLinks` or `/levels` after the last demo).
+- **Any incorrect** — error styling where applicable; **Try again** until all correct; **Continue** only after a fully correct attempt.
+- **Teacher tools:** **Reveal answer** / **Hide answer** shows the key in the live UI; Submit disabled while revealed (same pattern as multi-choice).
 
 ## Teacher answer key
 
 - **Reveal** is integrated into the student UI (no separate collapsible card below the workspace).
-- The **body** is the live rows: each definition shows the correct **term** in the drop zone with success styling. See `teacher-answer-key.md` for the shared pattern.
+- The **body** is the live task surface with correct pairings highlighted. See `teacher-answer-key.md` for the shared pattern.
 
 ## Data shape
 
-`MatchLevelPayload` (`src/data/assessment/match.ts`):
-
-- `level.stem.question` — optional plain-text heading.
-- `level.stem.description` — optional markdown.
-- `level.question.terms[]` — `{ id, text }`.
-- `level.question.prompts[]` — `{ id, text, correctTermId }` (definition rows).
-- `level.metadata` — lesson name, level position, totals (for shell title and nav).
+`MatchLevelPayload` (`src/data/assessment/match.ts`): terms and prompts may include rich `contentBlocks` (text, code, image) for connector variants; optional `columnFlex` and `cardAlignment` for layout. See `match.ts` for the full type.
 
 ## Known gaps
 

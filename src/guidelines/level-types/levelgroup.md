@@ -2,29 +2,26 @@
 
 ## Purpose
 
-Prototype of a grouped assessment experience where multiple question types appear on one page and submit together.
+Grouped assessment experiences where multiple question types (multi, free response, match) are composed from the same workspace components used by standalone levels, with a single submit for the whole group.
 
-## Route
+## Routes
 
-- `/levels/levelgroup`
+- `/levels/levelgroup-scroll` — all questions visible on one page; submit once.
+- `/levels/levelgroup-stepped` — one question at a time with in-level progress (Question *n* of *total*); submit on the last step.
 
 ## Key Files
 
-- `src/pages/LevelGroupLevelPage.tsx`
-- `src/components/assessment/levelgroup/views/LevelGroupWorkspace.tsx`
-- `src/components/assessment/levelgroup/views/LevelGroupWorkspace.module.scss`
-- `src/data/assessment/levelGroup.ts`
+- `src/pages/LevelGroupScrollLevelPage.tsx`, `src/pages/LevelGroupSteppedLevelPage.tsx`
+- `src/components/assessment/levelgroup/views/LevelGroupScrollWorkspace.tsx`, `LevelGroupSteppedWorkspace.tsx`
+- `src/components/assessment/levelgroup/views/LevelGroupFlowBlocks.tsx` (shared state + `LevelGroupEmbeddedBlock`)
+- `src/components/assessment/levelgroup/views/LevelGroupWorkspace.module.scss` (layout shell shared by scroll/stepped)
+- `src/data/assessment/levelGroup.ts` (`LevelGroupFlowPayload`, `mockLevelGroupScroll`, `mockLevelGroupStepped`, payload mappers)
 
 ## Current UX Behavior
 
-- Renders three sections in one flow:
-  - multi-choice
-  - free response
-  - match
-- Single footer action submits all sections at once
-- Shows aggregate "sections met expectations" summary
-- Includes full reset for quick replay
-- Teacher answer presentation in this prototype has not been updated to match the newer **inline reveal** pattern; see `teacher-answer-key.md` for current direction vs. legacy card-under-workspace reference.
+- Each block maps to `MultiChoiceWorkspace`, `FreeResponseWorkspace`, or `MatchConnectorWorkspace` in **embedded** mode (no per-section shell submit; group footer submits).
+- Scroll variant: stacked blocks + aggregate summary after submit.
+- Stepped variant: progress chrome + Next/Back; after submit, all blocks render for review.
 
 ## Teacher Answer Key Content
 
@@ -34,11 +31,7 @@ Prototype of a grouped assessment experience where multiple question types appea
 
 ## Current Data Shape
 
-- `LevelGroupPayload`
-  - `level.questions.multi`
-  - `level.questions.freeResponse`
-  - `level.questions.match`
-  - `level.metadata`
+- `LevelGroupFlowPayload` — `level.steps`: ordered `LevelGroupQuestionBlock[]` (multi, freeResponse, or match).
 
 ## Known Gaps
 

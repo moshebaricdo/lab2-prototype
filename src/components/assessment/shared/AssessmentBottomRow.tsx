@@ -30,6 +30,11 @@ export interface AssessmentBottomRowProps {
    * are not supported for this level type). `left` is ignored when `showLeft` is false.
    */
   showLeft?: boolean;
+  /**
+   * When true, removes the row’s top margin so it sits flush under preceding content
+   * (e.g. level-group card footer — avoids doubling with section padding above).
+   */
+  flushTop?: boolean;
 }
 
 /**
@@ -40,6 +45,7 @@ export function AssessmentBottomRow({
   left,
   right,
   showLeft = true,
+  flushTop = false,
 }: AssessmentBottomRowProps) {
   const renderLeft = showLeft && left != null;
 
@@ -48,6 +54,7 @@ export function AssessmentBottomRow({
       className={[
         styles.bottomRow,
         !renderLeft ? styles.bottomRowRightOnly : "",
+        flushTop ? styles.bottomRowFlushTop : "",
       ]
         .filter(Boolean)
         .join(" ")}

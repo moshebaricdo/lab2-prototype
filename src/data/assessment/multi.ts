@@ -61,6 +61,11 @@ export interface MultiChoiceLevelPayload {
       type: "list" | "grid";
       columns?: 2 | 3 | 4;
     };
+    /**
+     * Reflection / survey: no graded key. Hides Reveal answer; Submit always succeeds and
+     * offers Continue (any selection, including none). Omit `correctAnswerId` / `correctAnswerIds`.
+     */
+    surveyMode?: boolean;
     metadata: {
       lessonName: string;
       levelPosition: number;
@@ -346,7 +351,7 @@ export const mockMultiChoiceArrayListLevel: MultiChoiceLevelPayload = {
   },
 };
 
-// Level 6: Multi-select, no max — "select all that apply" reflection / survey style
+// Level 6: Multi-select, no max — "select all that apply" reflection / survey style (no correct answers)
 export const mockMultiChoiceAllThatApplyLevel: MultiChoiceLevelPayload = {
   level: {
     id: 42006,
@@ -357,7 +362,7 @@ export const mockMultiChoiceAllThatApplyLevel: MultiChoiceLevelPayload = {
         "Which of the following did you learn something new about in this unit? (Select all that apply.)",
     },
     selectionMode: "multiple",
-    correctAnswerIds: ["a", "c", "e"],
+    surveyMode: true,
     answers: [
       {
         id: "a",

@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type SetStateAction,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -33,6 +39,19 @@ interface MultiChoiceWorkspaceProps {
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
   completedLevelPaths?: string[];
+  /** Renders only the assessment card (no Lab2 shell). Used inside level groups. */
+  embedded?: boolean;
+  /** Parent submitted the whole group — show graded feedback for this block. */
+  groupSubmitted?: boolean;
+  controlledSelectedIds?: string[];
+  onControlledSelectedIdsChange?: (ids: string[]) => void;
+  /** Level group scroll: no inner card; counter in stem eyebrow. */
+  embeddedInScrollGroup?: boolean;
+  /** Level group stepped: same flat surface as scroll; type label in stem eyebrow. */
+  embeddedInSteppedGroup?: boolean;
+  embeddedStepEyebrow?: string;
+  /** When set in an embedded level group, parent controls reveal for all blocks. */
+  groupTeacherReveal?: boolean;
 }
 
 function arraysEqualAsSets(a: string[], b: string[]): boolean {
@@ -107,6 +126,14 @@ export function MultiChoiceWorkspace({
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
+  embedded = false,
+  groupSubmitted = false,
+  controlledSelectedIds,
+  onControlledSelectedIdsChange,
+  embeddedInScrollGroup = false,
+  embeddedInSteppedGroup = false,
+  embeddedStepEyebrow,
+  groupTeacherReveal,
 }: MultiChoiceWorkspaceProps) {
   const navigate = useNavigate();
   const {
@@ -131,14 +158,39 @@ export function MultiChoiceWorkspace({
   } = useVersionHistoryState();
 
   const { level } = payload;
+  const isSurveyLevel = level.surveyMode === true;
   const isMultiSelect = level.selectionMode === "multiple";
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const isEmbeddedControlled = Boolean(
+    embedded &&
+      controlledSelectedIds !== undefined &&
+      onControlledSelectedIdsChange,
+  );
+  const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
+  const selectedIds = isEmbeddedControlled
+    ? controlledSelectedIds!
+    : internalSelectedIds;
+  const setSelectedIds = (updater: SetStateAction<string[]>) => {
+    if (isEmbeddedControlled) {
+      const next =
+        typeof updater === "function"
+          ? updater(controlledSelectedIds!)
+          : updater;
+      onControlledSelectedIdsChange!(next);
+    } else {
+      setInternalSelectedIds(updater);
+    }
+  };
   const [hoveredAnswerId, setHoveredAnswerId] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isTeacherAnswerRevealed, setIsTeacherAnswerRevealed] = useState(false);
   const [persistedWrongAnswerIds, setPersistedWrongAnswerIds] = useState<
     string[]
   >([]);
+
+  const teacherRevealActive =
+    embedded && groupTeacherReveal !== undefined
+      ? groupTeacherReveal
+      : isTeacherAnswerRevealed;
 
   useEffect(() => {
     setPersistedWrongAnswerIds([]);
@@ -158,26 +210,38 @@ export function MultiChoiceWorkspace({
   }, [levelLinks, currentLevelPath]);
 
   const correctIds = useMemo(() => {
+    if (isSurveyLevel) {
+      return [];
+    }
     if (isMultiSelect) {
       return level.correctAnswerIds ?? [];
     }
     return level.correctAnswerId ? [level.correctAnswerId] : [];
   }, [
+    isSurveyLevel,
     isMultiSelect,
     level.correctAnswerId,
     level.correctAnswerIds,
   ]);
 
-  const displayedIds = isTeacherAnswerRevealed ? correctIds : selectedIds;
+  const displayedIds = isSurveyLevel
+    ? selectedIds
+    : teacherRevealActive
+      ? correctIds
+      : selectedIds;
 
   const isCorrect = useMemo(() => {
-    if (isTeacherAnswerRevealed) return false;
+    if (isSurveyLevel) {
+      return true;
+    }
+    if (teacherRevealActive) return false;
     if (isMultiSelect) {
       return arraysEqualAsSets(selectedIds, correctIds);
     }
     return selectedIds[0] === level.correctAnswerId;
   }, [
-    isTeacherAnswerRevealed,
+    isSurveyLevel,
+    teacherRevealActive,
     isMultiSelect,
     selectedIds,
     correctIds,
@@ -185,7 +249,10 @@ export function MultiChoiceWorkspace({
   ]);
 
   const canSubmit = useMemo(() => {
-    if (isTeacherAnswerRevealed) return false;
+    if (isSurveyLevel) {
+      return !teacherRevealActive;
+    }
+    if (teacherRevealActive) return false;
     if (isMultiSelect) {
       const required = level.requiredSelectionCount;
       if (required !== undefined) {
@@ -195,14 +262,17 @@ export function MultiChoiceWorkspace({
     }
     return Boolean(selectedIds[0]);
   }, [
-    isTeacherAnswerRevealed,
+    isSurveyLevel,
+    teacherRevealActive,
     isMultiSelect,
     level.requiredSelectionCount,
     selectedIds,
   ]);
 
+  const isAnswerLocked = embedded ? Boolean(groupSubmitted) : isSubmitted;
+
   const toggleMulti = (id: string) => {
-    if (isSubmitted || isTeacherAnswerRevealed) return;
+    if (isAnswerLocked || teacherRevealActive) return;
     const max = level.maxSelectionCount;
     setSelectedIds((previous) => {
       if (previous.includes(id)) {
@@ -223,20 +293,22 @@ export function MultiChoiceWorkspace({
     isMultiSelect &&
     level.maxSelectionCount !== undefined &&
     selectedIds.length >= level.maxSelectionCount &&
-    !isSubmitted &&
-    !isTeacherAnswerRevealed;
+    !isAnswerLocked &&
+    !teacherRevealActive;
 
-  const showInlineFeedback = isSubmitted && !isTeacherAnswerRevealed;
+  const showInlineFeedback = isAnswerLocked && !teacherRevealActive;
   const showWrongSelectionHighlights =
     showInlineFeedback && !isCorrect;
 
   const handleSubmitAnswer = () => {
-    if (!canSubmit || isTeacherAnswerRevealed) {
+    if (embedded || !canSubmit || teacherRevealActive) {
       return;
     }
-    const correct = isMultiSelect
-      ? arraysEqualAsSets(selectedIds, correctIds)
-      : selectedIds[0] === level.correctAnswerId;
+    const correct =
+      isSurveyLevel ||
+      (isMultiSelect
+        ? arraysEqualAsSets(selectedIds, correctIds)
+        : selectedIds[0] === level.correctAnswerId);
     playFeedbackSound(correct ? successSoundUrl : errorSoundUrl);
     setIsSubmitted(true);
   };
@@ -259,50 +331,29 @@ export function MultiChoiceWorkspace({
     setIsSubmitted(false);
   };
 
-  return (
-    <Lab2Shell
-      topNavigationProps={{
-        title: `${level.metadata.lessonName} - ${level.name}`,
-        subtitle: "Draft assessment level on Lab2 shell",
-        currentLevel: level.metadata.levelPosition,
-        totalLevels: level.metadata.totalLevelsInScript,
-        completedLevels: [1, 2],
-        levelLinks,
-        currentLevelPath,
-        completedLevelPaths,
-      }}
-      sidebarProps={{
-        activeTab,
-        setActiveTab,
-        sidebarWidth,
-        isSettingsOpen,
-        setIsSettingsOpen,
-        chatMessages,
-        setChatMessages,
-        chatInput,
-        setChatInput,
-        selectedHistoryVersion,
-        setSelectedHistoryVersion,
-        onSaveVersion: handleSaveVersion,
-        onRestoreVersion: handleRestoreVersion,
-        showRestoreSuccessAlert,
-        setShowRestoreSuccessAlert,
-        showSaveSuccessAlert,
-        setShowSaveSuccessAlert,
-        showHistoryTab: false,
-        showContinueButton: false,
-      }}
-      onResize={(delta) => {
-        setSidebarWidth((prev) =>
-          Math.max(300, Math.min(600, prev + delta))
-        );
-      }}
-    >
-      <main className={styles.workspace}>
-        <div className={styles.card}>
+  const embeddedFlatInParent =
+    embedded && (embeddedInScrollGroup || embeddedInSteppedGroup);
+
+  const stemEyebrow =
+    embeddedFlatInParent && embeddedStepEyebrow
+      ? embeddedStepEyebrow
+      : embedded && !embeddedFlatInParent
+        ? ""
+        : isSurveyLevel
+          ? "Survey"
+          : isMultiSelect
+            ? "Multiple response"
+            : "Multiple choice";
+
+  const useStepCounterEyebrowStyle =
+    embeddedInScrollGroup && !embeddedInSteppedGroup;
+
+  const cardContents = (
+    <>
           <AssessmentStemSection
-            eyebrow={
-              isMultiSelect ? "Multiple response" : "Multiple choice"
+            eyebrow={stemEyebrow}
+            eyebrowClassName={
+              useStepCounterEyebrowStyle ? styles.stepCounterEyebrow : undefined
             }
             question={level.stem.question}
             description={level.stem.description}
@@ -325,19 +376,24 @@ export function MultiChoiceWorkspace({
               {level.answers.map((answer, answerIndex) => {
                 const checked = displayedIds.includes(answer.id);
                 const isRevealedCorrect =
-                  isTeacherAnswerRevealed && correctIds.includes(answer.id);
+                  !isSurveyLevel &&
+                  teacherRevealActive &&
+                  correctIds.includes(answer.id);
                 const selectionCapped =
                   isMultiSelect && atSelectionCap && !checked;
                 const isIncorrectSelection =
+                  !isSurveyLevel &&
                   showWrongSelectionHighlights &&
                   selectedIds.includes(answer.id) &&
                   !correctIds.includes(answer.id);
                 const isSubmittedCorrectHighlight =
+                  !isSurveyLevel &&
                   showInlineFeedback &&
                   isCorrect &&
                   correctIds.includes(answer.id) &&
                   selectedIds.includes(answer.id);
                 const showPersistentWrongMark =
+                  !isSurveyLevel &&
                   persistedWrongAnswerIds.includes(answer.id) &&
                   !isIncorrectSelection;
                 const showCheckedStyle =
@@ -355,7 +411,7 @@ export function MultiChoiceWorkspace({
                       isRevealedCorrect || isSubmittedCorrectHighlight
                         ? styles.answerOptionRevealedCorrect
                         : "",
-                      isSubmitted ? styles.answerOptionLocked : "",
+                      isAnswerLocked ? styles.answerOptionLocked : "",
                       selectionCapped ? styles.answerOptionSelectionCapped : "",
                       isSubmittedCorrectHighlight
                         ? styles.answerOptionCorrectShimmer
@@ -376,14 +432,14 @@ export function MultiChoiceWorkspace({
                         value={answer.id}
                         checked={checked}
                         disabled={
-                          isSubmitted ||
-                          isTeacherAnswerRevealed ||
+                          isAnswerLocked ||
+                          teacherRevealActive ||
                           selectionCapped
                         }
                         tabIndex={0}
                         hovered={
-                          !isSubmitted &&
-                          !isTeacherAnswerRevealed &&
+                          !isAnswerLocked &&
+                          !teacherRevealActive &&
                           !selectionCapped &&
                           hoveredAnswerId === answer.id
                         }
@@ -394,11 +450,11 @@ export function MultiChoiceWorkspace({
                         name={`multi-choice-${level.id}`}
                         value={answer.id}
                         checked={checked}
-                        disabled={isSubmitted || isTeacherAnswerRevealed}
+                        disabled={isAnswerLocked || teacherRevealActive}
                         tabIndex={0}
                         hovered={
-                          !isSubmitted &&
-                          !isTeacherAnswerRevealed &&
+                          !isAnswerLocked &&
+                          !teacherRevealActive &&
                           hoveredAnswerId === answer.id
                         }
                         onChange={() => setSingle(answer.id)}
@@ -439,63 +495,143 @@ export function MultiChoiceWorkspace({
             </fieldset>
           </AssessmentStemSection>
 
-          <AssessmentBottomRow
-            left={
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                iconPosition="start"
-                iconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
-                size="m"
-                onClick={() => {
-                  setHoveredAnswerId(null);
-                  setIsTeacherAnswerRevealed((current) => !current);
-                }}
-              >
-                {isTeacherAnswerRevealed ? "Hide answer" : "Reveal answer"}
-              </AppButton>
-            }
-            right={
-              <>
-                {showInlineFeedback && isCorrect && (
-                  <AssessmentSuccessFeedback />
-                )}
-                {isSubmitted && isCorrect && (
+          {!embeddedFlatInParent ? (
+            <AssessmentBottomRow
+              left={
+                embedded || isSurveyLevel ? undefined : (
                   <AppButton
-                    variant="primary"
+                    variant="secondary"
+                    tone="gray"
+                    iconPosition="start"
+                    iconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
                     size="m"
-                    tone="purple"
-                    onClick={() => navigate(continuePath)}
+                    onClick={() => {
+                      setHoveredAnswerId(null);
+                      setIsTeacherAnswerRevealed((current) => !current);
+                    }}
                   >
-                    Continue
+                    {isTeacherAnswerRevealed ? "Hide answer" : "Reveal answer"}
                   </AppButton>
-                )}
-                {isSubmitted && !isCorrect && (
-                  <AppButton
-                    variant="primary"
-                    tone="purple"
-                    size="m"
-                    onClick={resetAfterSubmit}
-                  >
-                    Try again
-                  </AppButton>
-                )}
-                {!isSubmitted && (
-                  <AppButton
-                    variant="primary"
-                    size="m"
-                    tone="purple"
-                    onClick={handleSubmitAnswer}
-                    disabled={!canSubmit || isTeacherAnswerRevealed}
-                  >
-                    Submit answer
-                  </AppButton>
-                )}
-              </>
-            }
-          />
-        </div>
-      </main>
+                )
+              }
+              right={
+                embedded ? (
+                  <>
+                    {showInlineFeedback && isCorrect && (
+                      <AssessmentSuccessFeedback>
+                        {isSurveyLevel
+                          ? "Thanks for your responses!"
+                          : "Nice work!"}
+                      </AssessmentSuccessFeedback>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {showInlineFeedback && isCorrect && (
+                      <AssessmentSuccessFeedback>
+                        {isSurveyLevel ? "Thanks for your responses!" : "Nice work!"}
+                      </AssessmentSuccessFeedback>
+                    )}
+                    {isSubmitted && isCorrect && (
+                      <AppButton
+                        variant="primary"
+                        size="m"
+                        tone="purple"
+                        onClick={() => navigate(continuePath)}
+                      >
+                        Continue
+                      </AppButton>
+                    )}
+                    {isSubmitted && !isCorrect && (
+                      <AppButton
+                        variant="primary"
+                        tone="purple"
+                        size="m"
+                        onClick={resetAfterSubmit}
+                      >
+                        Try again
+                      </AppButton>
+                    )}
+                    {!isSubmitted && (
+                      <AppButton
+                        variant="primary"
+                        size="m"
+                        tone="purple"
+                        onClick={handleSubmitAnswer}
+                        disabled={!canSubmit || teacherRevealActive}
+                      >
+                        Submit answer
+                      </AppButton>
+                    )}
+                  </>
+                )
+              }
+            />
+          ) : null}
+    </>
+  );
+
+  const mainBody = (
+    <main
+      className={[
+        embedded ? styles.workspaceEmbedded : styles.workspace,
+        embeddedFlatInParent ? styles.workspaceEmbeddedScrollGroup : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {embeddedFlatInParent ? (
+        cardContents
+      ) : (
+        <div className={styles.card}>{cardContents}</div>
+      )}
+    </main>
+  );
+
+  if (embedded) {
+    return mainBody;
+  }
+
+  return (
+    <Lab2Shell
+      topNavigationProps={{
+        title: `${level.metadata.lessonName} - ${level.name}`,
+        subtitle: "Draft assessment level on Lab2 shell",
+        currentLevel: level.metadata.levelPosition,
+        totalLevels: level.metadata.totalLevelsInScript,
+        completedLevels: [1, 2],
+        levelLinks,
+        currentLevelPath,
+        completedLevelPaths,
+      }}
+      sidebarProps={{
+        activeTab,
+        setActiveTab,
+        sidebarWidth,
+        isSettingsOpen,
+        setIsSettingsOpen,
+        chatMessages,
+        setChatMessages,
+        chatInput,
+        setChatInput,
+        selectedHistoryVersion,
+        setSelectedHistoryVersion,
+        onSaveVersion: handleSaveVersion,
+        onRestoreVersion: handleRestoreVersion,
+        showRestoreSuccessAlert,
+        setShowRestoreSuccessAlert,
+        showSaveSuccessAlert,
+        setShowSaveSuccessAlert,
+        showHistoryTab: false,
+        showContinueButton: false,
+      }}
+      onResize={(delta) => {
+        setSidebarWidth((prev) =>
+          Math.max(300, Math.min(600, prev + delta))
+        );
+      }}
+    >
+      {mainBody}
     </Lab2Shell>
   );
 }

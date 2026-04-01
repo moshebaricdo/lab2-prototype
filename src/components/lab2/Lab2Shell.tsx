@@ -23,9 +23,9 @@ export function Lab2Shell({
   topNavigationProps,
 }: Lab2ShellProps) {
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-background">
       <TopNavigation {...topNavigationProps} />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <Sidebar {...sidebarProps} />
         <ResizableHandle onResize={onResize} />
         {children}

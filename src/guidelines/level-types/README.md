@@ -27,6 +27,6 @@ Use these docs as handoff context for follow-up threads.
 - `/levels/weblab2`
 - `/levels/multi` (and other multi-choice demo routes — see `multi-choice.md`)
 - `/levels/free-response` (and `/levels/free-response-reveal`, `/levels/free-response-markdown`, `/levels/free-response-upload` — see `free-response.md`)
-- `/levels/match`
-- `/levels/levelgroup`
+- `/levels/match-definition-bank`, `/levels/match-connector`, `/levels/match-connector-images`, `/levels/match-connector-code` (see `match.md`)
+- `/levels/levelgroup-scroll`, `/levels/levelgroup-stepped` (see `levelgroup.md`)
 - `/levels/bubble-choice`

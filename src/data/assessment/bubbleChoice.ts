@@ -54,7 +54,7 @@ export const mockBubbleChoiceLevel: BubbleChoiceLevelPayload = {
         title: "Vocabulary Match",
         description:
           "Match key terms to definitions to reinforce core vocabulary.",
-        levelPath: "/levels/match",
+        levelPath: "/levels/match-connector",
         estimatedMinutes: 4,
       },
       {
@@ -62,7 +62,7 @@ export const mockBubbleChoiceLevel: BubbleChoiceLevelPayload = {
         title: "Full Challenge Set",
         description:
           "Complete a mixed set with multiple interaction types in one page.",
-        levelPath: "/levels/levelgroup",
+        levelPath: "/levels/levelgroup-scroll",
         estimatedMinutes: 8,
       },
     ],

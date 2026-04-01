@@ -39,12 +39,33 @@ export const freeResponseLevelLinks: LevelProgressLink[] = [
 ];
 
 export const matchLevelLinks: LevelProgressLink[] = [
-  { name: "Vocabulary match challenge", path: "/levels/match" },
   { name: "Card-slot definition bank", path: "/levels/match-definition-bank" },
+  { name: "Connector lines", path: "/levels/match-connector" },
+  { name: "Connector — image cards", path: "/levels/match-connector-images" },
+  { name: "Connector — code & output", path: "/levels/match-connector-code" },
 ];
 
 export const levelGroupLevelLinks: LevelProgressLink[] = [
-  { name: "Mixed assessment checkpoint", path: "/levels/levelgroup" },
+  {
+    name: "Survey-style: all questions on one page",
+    path: "/levels/levelgroup-scroll",
+  },
+  {
+    name: "Quiz-style: step through with in-level progress",
+    path: "/levels/levelgroup-stepped",
+  },
+  {
+    name: "Quiz-style: dots in footer, no top bar",
+    path: "/levels/levelgroup-stepped-dots",
+  },
+  {
+    name: "Quiz-style: intro screen, then stepped progress",
+    path: "/levels/levelgroup-stepped-intro",
+  },
+  {
+    name: "Survey-style: intro, then all questions on one page",
+    path: "/levels/levelgroup-survey-intro",
+  },
 ];
 
 export const bubbleChoiceLevelLinks: LevelProgressLink[] = [

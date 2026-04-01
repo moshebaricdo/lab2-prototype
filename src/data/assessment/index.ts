@@ -18,13 +18,29 @@ export {
   type FreeResponseTeacherAnswer,
 } from "./freeResponse";
 export {
-  mockMatchLevel,
+  getMatchCardAccessibilityLabel,
+  mockMatchConnectorCodeLevel,
+  mockMatchConnectorImageLevel,
   mockMatchDefinitionBankLevel,
+  mockMatchLevel,
+  type MatchCardAlignment,
+  type MatchCardContentAlign,
+  type MatchColumnFlex,
   type MatchLevelPayload,
+  type MatchPrompt,
+  type MatchTerm,
 } from "./match";
 export {
-  mockLevelGroup,
-  type LevelGroupPayload,
+  levelGroupFreeToPayload,
+  levelGroupMatchToPayload,
+  levelGroupMultiToPayload,
+  mockLevelGroupScroll,
+  mockLevelGroupStepped,
+  mockLevelGroupSteppedWithIntro,
+  mockLevelGroupSurveyWithIntro,
+  type LevelGroupAssessmentIntro,
+  type LevelGroupFlowPayload,
+  type LevelGroupQuestionBlock,
 } from "./levelGroup";
 export {
   mockBubbleChoiceLevel,

@@ -10,6 +10,25 @@
   padding: 32px;
 }
 
+.workspaceEmbedded {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.workspaceEmbedded .card {
+  max-width: none;
+}
+
+.workspaceEmbeddedScrollGroup {
+  width: 100%;
+}
+
+.stepCounterEyebrow {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);

@@ -11,7 +11,7 @@ Prototype of a multiple-choice / multiple-response assessment level on the Lab2 
 - `/levels/multi-authoring-code` — text question, image answer options
 - `/levels/multi-authoring-media` — description-only stem, **multiple response** (checkboxes, select two)
 - `/levels/multi-authoring-arraylist` — description-only stem with embedded code block
-- `/levels/multi-all-that-apply` — multi-select reflection survey *(select all that apply)*, no selection cap
+- `/levels/multi-all-that-apply` — multi-select **survey** *(select all that apply)*, `surveyMode: true` (no graded key, Reveal answer hidden, Submit always continues)
 
 ## Key Files
 
@@ -37,6 +37,15 @@ Prototype of a multiple-choice / multiple-response assessment level on the Lab2 
 Optional `requiredSelectionCount` (e.g. `2`) keeps Submit disabled until exactly that many options are selected.
 
 Optional `maxSelectionCount` caps how many options can be checked at once: when the cap is reached, remaining options are disabled until the user unchecks one. Omit `maxSelectionCount` for unlimited selection (e.g. “select all that apply” where the student may check every option).
+
+## Survey mode (`surveyMode`)
+
+Use for **reflection / ungraded** multi-select (e.g. end-of-unit survey). Set `surveyMode: true` and omit `correctAnswerId` / `correctAnswerIds`.
+
+- **Reveal answer** is hidden (no keyed responses).
+- **Submit** is always enabled (including **zero** selections).
+- After submit: success sound, **“Thanks for your responses!”**, and **Continue** — no incorrect state, wrong marks, or Try again.
+- Stem eyebrow shows **Survey** instead of Multiple response.
 
 ## Automatic option letters (A, B, C, …)
 
@@ -88,7 +97,7 @@ Prefer `answer.text` for short plain-text options. Use `contentBlocks` when an o
   - Chosen correct option(s) use success (green) styling instead of the default teal “selected” look; a check glyph appears.
   - A short shimmer animation runs on those option cards.
   - Bottom bar: **“Nice work!”** and a primary **Continue** button that navigates to the next route in the demo `levelLinks` chain (or `/levels` after the last demo).
-- **Incorrect answer**
+- **Incorrect answer** *(graded levels only; not used when `surveyMode` is true)*
   - Incorrect selected options show error styling and an ✕ mark; there is **no** separate incorrect message line beside **Try again** (options carry the feedback).
   - **Try again** clears the attempt and selection; options the learner had wrongly selected keep a **muted ✕** so prior mistakes remain visible across retries (accumulated until they submit correctly or change level).
   - **Continue** is not shown until they answer correctly.

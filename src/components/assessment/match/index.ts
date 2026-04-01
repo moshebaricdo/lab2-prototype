@@ -1,1 +1,1 @@
-export { MatchWorkspace, MatchDefinitionBankWorkspace } from "./views";
+export { MatchDefinitionBankWorkspace, MatchConnectorWorkspace } from "./views";

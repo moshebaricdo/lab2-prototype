@@ -19,11 +19,28 @@
   width: 100%;
 }
 
+.taskToolbar {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.instruction {
+  color: var(--muted-foreground);
+  flex: 1;
+  font-size: var(--text-label);
+  margin: 0;
+  min-width: min(100%, 240px);
+}
+
 .matchGrid {
   display: grid;
   gap: 8px;
   grid-template-columns: 1fr 1fr 1fr;
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .termsColumn,
@@ -32,13 +49,6 @@
   display: grid;
   gap: 8px;
   grid-template-rows: repeat(4, minmax(72px, 1fr));
-}
-
-.promptsColumnOver {
-  background: color-mix(in srgb, var(--ds-background-brand-teal-extra-light) 45%, transparent);
-  border-radius: var(--radius);
-  outline: 1px dashed var(--ds-borders-brand-teal-primary);
-  outline-offset: 4px;
 }
 
 .termCard,
@@ -89,7 +99,12 @@
 
 .slotCardOver {
   border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: inset 0 0 0 1px var(--ds-borders-brand-teal-primary);
+  background: var(--ds-background-brand-teal-extra-light);
+}
+
+.slotCardSelected {
+  border-color: var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 1px var(--ds-borders-brand-teal-primary);
 }
 
 .slotPlaceholder {
@@ -148,6 +163,11 @@
 
 .promptCardDragging {
   opacity: 0.6;
+}
+
+.promptCardSelected {
+  border-color: var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 1px var(--ds-borders-brand-teal-primary);
 }
 
 .promptCardCorrect {

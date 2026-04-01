@@ -4,9 +4,15 @@ import { FreeResponseLevelPage } from "./pages/FreeResponseLevelPage";
 import { FreeResponseMarkdownLevelPage } from "./pages/FreeResponseMarkdownLevelPage";
 import { FreeResponseRevealLevelPage } from "./pages/FreeResponseRevealLevelPage";
 import { FreeResponseUploadLevelPage } from "./pages/FreeResponseUploadLevelPage";
-import { LevelGroupLevelPage } from "./pages/LevelGroupLevelPage";
+import { LevelGroupScrollLevelPage } from "./pages/LevelGroupScrollLevelPage";
+import { LevelGroupSteppedDotsLevelPage } from "./pages/LevelGroupSteppedDotsLevelPage";
+import { LevelGroupSteppedIntroLevelPage } from "./pages/LevelGroupSteppedIntroLevelPage";
+import { LevelGroupSurveyIntroLevelPage } from "./pages/LevelGroupSurveyIntroLevelPage";
+import { LevelGroupSteppedLevelPage } from "./pages/LevelGroupSteppedLevelPage";
 import { LevelsIndexPage } from "./pages/LevelsIndexPage";
-import { MatchLevelPage } from "./pages/MatchLevelPage";
+import { MatchConnectorCodeLevelPage } from "./pages/MatchConnectorCodeLevelPage";
+import { MatchConnectorImageLevelPage } from "./pages/MatchConnectorImageLevelPage";
+import { MatchConnectorLevelPage } from "./pages/MatchConnectorLevelPage";
 import { MatchDefinitionBankLevelPage } from "./pages/MatchDefinitionBankLevelPage";
 import { MultiChoiceAllThatApplyLevelPage } from "./pages/MultiChoiceAllThatApplyLevelPage";
 import { MultiChoiceAuthoringArrayListLevelPage } from "./pages/MultiChoiceAuthoringArrayListLevelPage";
@@ -56,12 +62,42 @@ export default function App() {
         path="/levels/free-response-upload"
         element={<FreeResponseUploadLevelPage />}
       />
-      <Route path="/levels/match" element={<MatchLevelPage />} />
       <Route
         path="/levels/match-definition-bank"
         element={<MatchDefinitionBankLevelPage />}
       />
-      <Route path="/levels/levelgroup" element={<LevelGroupLevelPage />} />
+      <Route
+        path="/levels/match-connector"
+        element={<MatchConnectorLevelPage />}
+      />
+      <Route
+        path="/levels/match-connector-images"
+        element={<MatchConnectorImageLevelPage />}
+      />
+      <Route
+        path="/levels/match-connector-code"
+        element={<MatchConnectorCodeLevelPage />}
+      />
+      <Route
+        path="/levels/levelgroup-scroll"
+        element={<LevelGroupScrollLevelPage />}
+      />
+      <Route
+        path="/levels/levelgroup-stepped"
+        element={<LevelGroupSteppedLevelPage />}
+      />
+      <Route
+        path="/levels/levelgroup-stepped-dots"
+        element={<LevelGroupSteppedDotsLevelPage />}
+      />
+      <Route
+        path="/levels/levelgroup-stepped-intro"
+        element={<LevelGroupSteppedIntroLevelPage />}
+      />
+      <Route
+        path="/levels/levelgroup-survey-intro"
+        element={<LevelGroupSurveyIntroLevelPage />}
+      />
       <Route path="/levels/bubble-choice" element={<BubbleChoiceLevelPage />} />
       <Route path="*" element={<Navigate to="/levels" replace />} />
     </Routes>

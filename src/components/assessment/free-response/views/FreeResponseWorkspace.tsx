@@ -5,6 +5,7 @@ import {
   useState,
   type ChangeEvent,
   type DragEvent,
+  type SetStateAction,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppButton } from "../../../ui/AppButton";
@@ -31,6 +32,15 @@ interface FreeResponseWorkspaceProps {
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
   completedLevelPaths?: string[];
+  embedded?: boolean;
+  groupSubmitted?: boolean;
+  controlledResponseText?: string;
+  onControlledResponseTextChange?: (text: string) => void;
+  embeddedInScrollGroup?: boolean;
+  embeddedInSteppedGroup?: boolean;
+  embeddedStepEyebrow?: string;
+  /** When set in an embedded level group, parent controls reveal for all blocks. */
+  groupTeacherReveal?: boolean;
 }
 
 export function FreeResponseWorkspace({
@@ -38,6 +48,14 @@ export function FreeResponseWorkspace({
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
+  embedded = false,
+  groupSubmitted = false,
+  controlledResponseText,
+  onControlledResponseTextChange,
+  embeddedInScrollGroup = false,
+  embeddedInSteppedGroup = false,
+  embeddedStepEyebrow,
+  groupTeacherReveal,
 }: FreeResponseWorkspaceProps = {}) {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,21 +85,47 @@ export function FreeResponseWorkspace({
   const allowFileUpload = level.allowFileUpload === true;
   const teacherAnswer = level.teacherAnswer;
 
-  const [responseText, setResponseText] = useState("");
+  const isEmbeddedControlled = Boolean(
+    embedded &&
+      controlledResponseText !== undefined &&
+      onControlledResponseTextChange,
+  );
+  const [internalResponseText, setInternalResponseText] = useState("");
+  const responseText = isEmbeddedControlled
+    ? controlledResponseText!
+    : internalResponseText;
+  const setResponseText = (updater: SetStateAction<string>) => {
+    if (isEmbeddedControlled) {
+      const next =
+        typeof updater === "function"
+          ? updater(controlledResponseText!)
+          : updater;
+      onControlledResponseTextChange!(next);
+    } else {
+      setInternalResponseText(updater);
+    }
+  };
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [isTeacherAnswerRevealed, setIsTeacherAnswerRevealed] =
     useState(false);
 
+  const teacherRevealActive =
+    embedded && groupTeacherReveal !== undefined
+      ? groupTeacherReveal
+      : isTeacherAnswerRevealed;
+
   useEffect(() => {
-    setResponseText("");
+    if (!isEmbeddedControlled) {
+      setResponseText("");
+    }
     setIsSubmitted(false);
     setAttachedFile(null);
     setIsTeacherAnswerRevealed(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }, [level.id]);
+  }, [level.id, isEmbeddedControlled]);
 
   const continuePath = useMemo(() => {
     if (!levelLinks?.length || !currentLevelPath) {
@@ -110,8 +154,10 @@ export function FreeResponseWorkspace({
     return meetsMinimumLength;
   }, [allowFileUpload, meetsMinimumLength, hasFile]);
 
+  const isAnswerLocked = embedded ? Boolean(groupSubmitted) : isSubmitted;
+
   const inputDisabled =
-    isSubmitted || (revealAnswerEnabled && isTeacherAnswerRevealed);
+    isAnswerLocked || (revealAnswerEnabled && teacherRevealActive);
 
   const rubricCriteria =
     teacherAnswer?.rubricCriteria?.filter(Boolean) ?? [];
@@ -145,49 +191,26 @@ export function FreeResponseWorkspace({
     }
   };
 
-  return (
-    <Lab2Shell
-      topNavigationProps={{
-        title: `${level.metadata.lessonName} - ${level.name}`,
-        subtitle: "Draft assessment level on Lab2 shell",
-        currentLevel: level.metadata.levelPosition,
-        totalLevels: level.metadata.totalLevelsInScript,
-        completedLevels: [1, 2, 3],
-        levelLinks,
-        currentLevelPath,
-        completedLevelPaths,
-      }}
-      sidebarProps={{
-        activeTab,
-        setActiveTab,
-        sidebarWidth,
-        isSettingsOpen,
-        setIsSettingsOpen,
-        chatMessages,
-        setChatMessages,
-        chatInput,
-        setChatInput,
-        selectedHistoryVersion,
-        setSelectedHistoryVersion,
-        onSaveVersion: handleSaveVersion,
-        onRestoreVersion: handleRestoreVersion,
-        showRestoreSuccessAlert,
-        setShowRestoreSuccessAlert,
-        showSaveSuccessAlert,
-        setShowSaveSuccessAlert,
-        showHistoryTab: false,
-        showContinueButton: false,
-      }}
-      onResize={(delta) => {
-        setSidebarWidth((prev) =>
-          Math.max(300, Math.min(600, prev + delta))
-        );
-      }}
-    >
-      <main className={styles.workspace}>
-        <div className={styles.card}>
+  const embeddedFlatInParent =
+    embedded && (embeddedInScrollGroup || embeddedInSteppedGroup);
+
+  const stemEyebrow =
+    embeddedFlatInParent && embeddedStepEyebrow
+      ? embeddedStepEyebrow
+      : embedded && !embeddedFlatInParent
+        ? ""
+        : "Free response";
+
+  const useStepCounterEyebrowStyle =
+    embeddedInScrollGroup && !embeddedInSteppedGroup;
+
+  const cardContents = (
+    <>
           <AssessmentStemSection
-            eyebrow="Free response"
+            eyebrow={stemEyebrow}
+            eyebrowClassName={
+              useStepCounterEyebrowStyle ? styles.stepCounterEyebrow : undefined
+            }
             question={level.stem.question}
             description={level.stem.description}
           >
@@ -255,9 +278,7 @@ export function FreeResponseWorkspace({
             </div>
           </AssessmentStemSection>
 
-          {revealAnswerEnabled &&
-          isTeacherAnswerRevealed &&
-          teacherAnswer ? (
+          {revealAnswerEnabled && teacherRevealActive && teacherAnswer ? (
             <div
               className={styles.inlineTeacherAnswer}
               aria-label="Teacher answer key"
@@ -289,30 +310,30 @@ export function FreeResponseWorkspace({
             </div>
           ) : null}
 
-          <AssessmentBottomRow
-            showLeft={revealAnswerEnabled}
-            left={
-              revealAnswerEnabled ? (
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  iconPosition="start"
-                  iconName={
-                    isTeacherAnswerRevealed ? "eye-slash" : "eye"
-                  }
-                  size="m"
-                  onClick={() =>
-                    setIsTeacherAnswerRevealed((current) => !current)
-                  }
-                >
-                  {isTeacherAnswerRevealed ? "Hide answer" : "Reveal answer"}
-                </AppButton>
-              ) : null
-            }
-            right={
-              <>
-                {isSubmitted && (
-                  <>
+          {!embeddedFlatInParent ? (
+            <AssessmentBottomRow
+              showLeft={!embedded && revealAnswerEnabled}
+              left={
+                !embedded && revealAnswerEnabled ? (
+                  <AppButton
+                    variant="secondary"
+                    tone="gray"
+                    iconPosition="start"
+                    iconName={
+                      isTeacherAnswerRevealed ? "eye-slash" : "eye"
+                    }
+                    size="m"
+                    onClick={() =>
+                      setIsTeacherAnswerRevealed((current) => !current)
+                    }
+                  >
+                    {isTeacherAnswerRevealed ? "Hide answer" : "Reveal answer"}
+                  </AppButton>
+                ) : null
+              }
+              right={
+                embedded ? (
+                  isAnswerLocked ? (
                     <span className={styles.submittedTag} role="status">
                       <FaIcon
                         name="check"
@@ -321,35 +342,112 @@ export function FreeResponseWorkspace({
                       />
                       Submitted
                     </span>
-                    <AppButton
-                      variant="primary"
-                      size="m"
-                      tone="purple"
-                      onClick={() => navigate(continuePath)}
-                    >
-                      Continue
-                    </AppButton>
+                  ) : null
+                ) : (
+                  <>
+                    {isSubmitted && (
+                      <>
+                        <span className={styles.submittedTag} role="status">
+                          <FaIcon
+                            name="check"
+                            size="xs"
+                            className={styles.submittedTagIcon}
+                          />
+                          Submitted
+                        </span>
+                        <AppButton
+                          variant="primary"
+                          size="m"
+                          tone="purple"
+                          onClick={() => navigate(continuePath)}
+                        >
+                          Continue
+                        </AppButton>
+                      </>
+                    )}
+                    {!isSubmitted && (
+                      <AppButton
+                        variant="primary"
+                        size="m"
+                        tone="purple"
+                        onClick={() => setIsSubmitted(true)}
+                        disabled={
+                          !canSubmit ||
+                          (revealAnswerEnabled && teacherRevealActive)
+                        }
+                      >
+                        Submit response
+                      </AppButton>
+                    )}
                   </>
-                )}
-                {!isSubmitted && (
-                  <AppButton
-                    variant="primary"
-                    size="m"
-                    tone="purple"
-                    onClick={() => setIsSubmitted(true)}
-                    disabled={
-                      !canSubmit ||
-                      (revealAnswerEnabled && isTeacherAnswerRevealed)
-                    }
-                  >
-                    Submit response
-                  </AppButton>
-                )}
-              </>
-            }
-          />
-        </div>
-      </main>
+                )
+              }
+            />
+          ) : null}
+    </>
+  );
+
+  const mainBody = (
+    <main
+      className={[
+        embedded ? styles.workspaceEmbedded : styles.workspace,
+        embeddedFlatInParent ? styles.workspaceEmbeddedScrollGroup : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {embeddedFlatInParent ? (
+        cardContents
+      ) : (
+        <div className={styles.card}>{cardContents}</div>
+      )}
+    </main>
+  );
+
+  if (embedded) {
+    return mainBody;
+  }
+
+  return (
+    <Lab2Shell
+      topNavigationProps={{
+        title: `${level.metadata.lessonName} - ${level.name}`,
+        subtitle: "Draft assessment level on Lab2 shell",
+        currentLevel: level.metadata.levelPosition,
+        totalLevels: level.metadata.totalLevelsInScript,
+        completedLevels: [1, 2, 3],
+        levelLinks,
+        currentLevelPath,
+        completedLevelPaths,
+      }}
+      sidebarProps={{
+        activeTab,
+        setActiveTab,
+        sidebarWidth,
+        isSettingsOpen,
+        setIsSettingsOpen,
+        chatMessages,
+        setChatMessages,
+        chatInput,
+        setChatInput,
+        selectedHistoryVersion,
+        setSelectedHistoryVersion,
+        onSaveVersion: handleSaveVersion,
+        onRestoreVersion: handleRestoreVersion,
+        showRestoreSuccessAlert,
+        setShowRestoreSuccessAlert,
+        showSaveSuccessAlert,
+        setShowSaveSuccessAlert,
+        showHistoryTab: false,
+        showContinueButton: false,
+      }}
+      onResize={(delta) => {
+        setSidebarWidth((prev) =>
+          Math.max(300, Math.min(600, prev + delta))
+        );
+      }}
+    >
+      {mainBody}
     </Lab2Shell>
   );
 }
