@@ -21,6 +21,8 @@ interface CodeEditorProps {
   onReorderFiles: (files: FileItem[]) => void;
   isFileManagerCollapsed?: boolean;
   onCreateFile?: () => void;
+  /** When true (file-drop experiment), tabs set the same native drag payload as the file manager for AI Tutor. */
+  enableDragToTutor?: boolean;
 }
 
 interface DraggableTabProps {
@@ -31,6 +33,7 @@ interface DraggableTabProps {
   onCloseFile: (file: FileItem) => void;
   moveTab: (dragIndex: number, hoverIndex: number) => void;
   getFileIcon: (file: FileItem) => IconDefinition;
+  enableDragToTutor?: boolean;
 }
 
 const ItemType = {
@@ -45,8 +48,25 @@ function DraggableTab({
   onCloseFile,
   moveTab,
   getFileIcon,
+  enableDragToTutor = false,
 }: DraggableTabProps) {
   const ref = useRef<HTMLDivElement>(null);
+
+  const handleTabDragStart = (event: React.DragEvent<HTMLDivElement>) => {
+    if (!enableDragToTutor) {
+      return;
+    }
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData(
+      "application/x-weblab-file",
+      JSON.stringify({
+        name: file.name,
+        path: file.name,
+        type: file.type,
+      }),
+    );
+    // Avoid text/plain so react-dnd-html5-backend doesn't cancel drop (native TEXT match).
+  };
 
   const [{ isDragging }, drag] = useDrag({
     type: ItemType.TAB,
@@ -80,7 +100,10 @@ function DraggableTab({
     <div
       ref={ref}
       onClick={() => onFileSelect(file)}
+      onDragStart={handleTabDragStart}
       className={`${styles.tab} ${
+        enableDragToTutor ? styles.tabDragToTutor : ""
+      } ${
         selectedFile?.name === file.name ? styles.tabActive : styles.tabIdle
       } ${isDragging ? "opacity-50" : "opacity-100"}`}
     >
@@ -126,6 +149,7 @@ export function CodeEditor({
   onReorderFiles,
   isFileManagerCollapsed = false,
   onCreateFile,
+  enableDragToTutor = false,
 }: CodeEditorProps) {
   const [activeLine, setActiveLine] = useState<number>(0);
   const [localOpenFiles, setLocalOpenFiles] =
@@ -306,6 +330,7 @@ export function CodeEditor({
                 onCloseFile={onCloseFile}
                 moveTab={moveTab}
                 getFileIcon={getFileIcon}
+                enableDragToTutor={enableDragToTutor}
               />
             ))}
           </div>

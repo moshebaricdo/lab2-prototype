@@ -1,13 +1,19 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faArrowUp } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faArrowUp, faPaperclip } from "@fortawesome/free-solid-svg-icons";
 import { useRef, useEffect, useState } from "react";
 import { ScrollArea } from "../../ui/scroll-area";
 import { Textarea } from "../../ui/textarea";
 import { AppButton } from "../../ui/AppButton";
+import { FileChip } from "../../ui/FileChip";
+import { faIconForFileName, fileExtensionLabelFromName } from "../../ui/fileChipMeta";
+import { FaIcon } from "../../icons/FaIcon";
 import { ActionRow } from "../ActionRow";
 import { InstructionsDrawer } from "../InstructionsDrawer";
+import type { InstructionsDrawerVisualCue } from "../InstructionsDrawer";
 import type { ChatMessage } from "../../../types/chat";
 import styles from "./AiTutorPanel.module.scss";
+
+export type AiTutorInputExperiment = "default" | "clarified-send" | "file-drop";
 
 interface AiTutorPanelProps {
   chatMessages: ChatMessage[];
@@ -16,6 +22,57 @@ interface AiTutorPanelProps {
   setChatInput: (input: string) => void;
   /** When false, the instructions drawer is not shown (e.g. assessment levels). Default true. */
   showInstructionsDrawer?: boolean;
+  instructionsDrawerInitialHeightRatio?: number;
+  instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
+  autoSeedConversationOnMount?: boolean;
+  inputExperiment?: AiTutorInputExperiment;
+}
+
+const SEEDED_USER_MESSAGE =
+  "Can you help me improve this page while keeping my brand styling consistent?";
+
+function buildSeededConversation(firstUserMessage: string): ChatMessage[] {
+  return [
+    {
+      role: "user",
+      content: firstUserMessage,
+    },
+    {
+      role: "assistant",
+      content:
+        "I can help you with that! Let me create a solution for you.\n\nI've analyzed your request and here's what I'll build:\n• A responsive layout with proper spacing\n• Interactive elements with hover states\n• Accessible form controls with proper labels\n• Mobile-optimized design that works on all screen sizes\n\nThe page will follow your existing design system and brand colors. Would you like me to proceed?",
+    },
+    {
+      role: "user",
+      content:
+        "Yes, that sounds great! Can you make the button colors match my brand identity? I want to make sure everything is consistent with the purple and teal color scheme we're using throughout the app.",
+    },
+    {
+      role: "assistant",
+      content:
+        "Absolutely! I've updated the button styling to use your brand colors from the design pack:\n\n• Primary buttons: #9657c7 (purple) with hover state #6c468a\n• Secondary buttons: #0093a4 (teal) for accents and CTAs\n• Focus states: 2px teal ring (#0093a4) with 2px offset for accessibility\n• Disabled states: Light gray (#d4dae1) to indicate inactive controls\n\nAll buttons now match your brand identity and include proper transition effects for smooth interactions. I've also ensured the contrast ratios meet WCAG accessibility standards.",
+    },
+    {
+      role: "user",
+      content:
+        "Perfect! One more thing - can you add some validation to the form fields? I want to make sure users enter valid email addresses and that required fields aren't left empty.",
+    },
+    {
+      role: "assistant",
+      content:
+        "Great idea! I've added comprehensive form validation:\n\n**Email Validation:**\n• Checks for valid email format (name@domain.com)\n• Shows error message if format is incorrect\n• Real-time validation as user types\n\n**Required Fields:**\n• All required fields marked with asterisks\n• Form can't be submitted until all required fields are filled\n• Clear error messages appear below each field\n• Fields highlight in red when there's an error\n\n**User Experience:**\n• Submit button is disabled until form is valid\n• Success message appears after successful submission\n• Form clears after submission for new entries\n\nThe validation follows best practices and provides helpful feedback to guide users through completing the form correctly.",
+    },
+    {
+      role: "user",
+      content:
+        "This is looking really good! How do I make the page responsive so it works well on mobile devices too?",
+    },
+    {
+      role: "assistant",
+      content:
+        "Good news - I've already made the page fully responsive! Here's what adapts at different screen sizes:\n\n**Mobile (< 768px):**\n• Single column layout for better readability\n• Larger touch targets (minimum 44px) for buttons and inputs\n• Simplified navigation with hamburger menu\n• Stacked form fields with full-width inputs\n• Adjusted font sizes for mobile viewing\n\n**Tablet (768px - 1024px):**\n• Two-column grid where appropriate\n• Optimized spacing for tablet viewport\n• Touch-friendly interactive elements\n\n**Desktop (> 1024px):**\n• Multi-column layouts for efficient use of space\n• Hover states and detailed interactions\n• Maximum width constraint (1200px) for readability\n\nI've tested the design at common breakpoints and it provides an optimal experience on all devices. You can test it by resizing your browser window or using the device preview toggle in the toolbar!",
+    },
+  ];
 }
 
 export function AiTutorPanel({
@@ -24,12 +81,19 @@ export function AiTutorPanel({
   chatInput,
   setChatInput,
   showInstructionsDrawer = true,
+  instructionsDrawerInitialHeightRatio,
+  instructionsDrawerVisualCue = "none",
+  autoSeedConversationOnMount = false,
+  inputExperiment = "default",
 }: AiTutorPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
+  const dragDepthRef = useRef(0);
   const [maxDrawerHeight, setMaxDrawerHeight] = useState<number | null>(null);
   const [drawerHeight, setDrawerHeight] = useState(0);
   const [drawerIsOpen, setDrawerIsOpen] = useState(true);
+  const [isDragOverInput, setIsDragOverInput] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
 
   const topPadding =
     showInstructionsDrawer && drawerIsOpen ? drawerHeight + 40 : 40;
@@ -54,63 +118,72 @@ export function AiTutorPanel({
     return () => window.removeEventListener("resize", calculateMaxHeight);
   }, [showInstructionsDrawer]);
 
+  useEffect(() => {
+    if (autoSeedConversationOnMount && chatMessages.length === 0) {
+      setChatMessages(buildSeededConversation(SEEDED_USER_MESSAGE));
+    }
+  }, [autoSeedConversationOnMount, chatMessages.length, setChatMessages]);
+
+  const fileDropEnabled = inputExperiment === "file-drop";
+
+  const isFileDragEvent = (event: React.DragEvent<HTMLElement>) =>
+    Array.from(event.dataTransfer.types).includes("application/x-weblab-file");
+
+  const formatUserMessage = () => {
+    const trimmedMessage = chatInput.trim();
+    if (!trimmedMessage && attachedFiles.length === 0) {
+      return null;
+    }
+
+    if (attachedFiles.length === 0) {
+      return trimmedMessage;
+    }
+
+    const attachmentPrefix = `Attached files: ${attachedFiles.join(", ")}`;
+    return trimmedMessage ? `${attachmentPrefix}\n\n${trimmedMessage}` : attachmentPrefix;
+  };
+
   const handleSendMessage = () => {
-    if (chatInput.trim()) {
+    const userMessage = formatUserMessage();
+    if (userMessage) {
       const isFirstMessage = chatMessages.length === 0;
 
       if (isFirstMessage) {
-        setChatMessages([
-          {
-            role: "user",
-            content: chatInput,
-          },
-          {
-            role: "assistant",
-            content:
-              "I can help you with that! Let me create a solution for you.\n\nI've analyzed your request and here's what I'll build:\n• A responsive layout with proper spacing\n• Interactive elements with hover states\n• Accessible form controls with proper labels\n• Mobile-optimized design that works on all screen sizes\n\nThe page will follow your existing design system and brand colors. Would you like me to proceed?",
-          },
-          {
-            role: "user",
-            content:
-              "Yes, that sounds great! Can you make the button colors match my brand identity? I want to make sure everything is consistent with the purple and teal color scheme we're using throughout the app.",
-          },
-          {
-            role: "assistant",
-            content:
-              "Absolutely! I've updated the button styling to use your brand colors from the design pack:\n\n• Primary buttons: #9657c7 (purple) with hover state #6c468a\n• Secondary buttons: #0093a4 (teal) for accents and CTAs\n• Focus states: 2px teal ring (#0093a4) with 2px offset for accessibility\n• Disabled states: Light gray (#d4dae1) to indicate inactive controls\n\nAll buttons now match your brand identity and include proper transition effects for smooth interactions. I've also ensured the contrast ratios meet WCAG accessibility standards.",
-          },
-          {
-            role: "user",
-            content:
-              "Perfect! One more thing - can you add some validation to the form fields? I want to make sure users enter valid email addresses and that required fields aren't left empty.",
-          },
-          {
-            role: "assistant",
-            content:
-              "Great idea! I've added comprehensive form validation:\n\n**Email Validation:**\n• Checks for valid email format (name@domain.com)\n• Shows error message if format is incorrect\n• Real-time validation as user types\n\n**Required Fields:**\n• All required fields marked with asterisks\n• Form can't be submitted until all required fields are filled\n• Clear error messages appear below each field\n• Fields highlight in red when there's an error\n\n**User Experience:**\n• Submit button is disabled until form is valid\n• Success message appears after successful submission\n• Form clears after submission for new entries\n\nThe validation follows best practices and provides helpful feedback to guide users through completing the form correctly.",
-          },
-          {
-            role: "user",
-            content:
-              "This is looking really good! How do I make the page responsive so it works well on mobile devices too?",
-          },
-          {
-            role: "assistant",
-            content:
-              "Good news - I've already made the page fully responsive! Here's what adapts at different screen sizes:\n\n**Mobile (< 768px):**\n• Single column layout for better readability\n• Larger touch targets (minimum 44px) for buttons and inputs\n• Simplified navigation with hamburger menu\n• Stacked form fields with full-width inputs\n• Adjusted font sizes for mobile viewing\n\n**Tablet (768px - 1024px):**\n• Two-column grid where appropriate\n• Optimized spacing for tablet viewport\n• Touch-friendly interactive elements\n\n**Desktop (> 1024px):**\n• Multi-column layouts for efficient use of space\n• Hover states and detailed interactions\n• Maximum width constraint (1200px) for readability\n\nI've tested the design at common breakpoints and it provides an optimal experience on all devices. You can test it by resizing your browser window or using the device preview toggle in the toolbar!",
-          },
-        ]);
+        setChatMessages(buildSeededConversation(userMessage));
       } else {
         setChatMessages([
           ...chatMessages,
           {
             role: "user",
-            content: chatInput,
+            content: userMessage,
           },
         ]);
       }
       setChatInput("");
+      setAttachedFiles([]);
+      setIsDragOverInput(false);
+      dragDepthRef.current = 0;
     }
+  };
+
+  const mergeAttachedFile = (fileLabel: string) => {
+    setAttachedFiles((prev) => {
+      if (prev.includes(fileLabel)) {
+        return prev;
+      }
+      return [...prev, fileLabel];
+    });
+  };
+
+  const removeAttachedFile = (fileLabel: string) => {
+    setAttachedFiles((prev) => prev.filter((file) => file !== fileLabel));
+  };
+
+  const isClarified = inputExperiment === "clarified-send";
+
+  const attachmentDisplayName = (pathOrName: string) => {
+    const i = pathOrName.lastIndexOf("/");
+    return i >= 0 ? pathOrName.slice(i + 1) : pathOrName;
   };
 
   return (
@@ -121,6 +194,8 @@ export function AiTutorPanel({
             maxHeight={maxDrawerHeight}
             onHeightChange={setDrawerHeight}
             onOpenChange={setDrawerIsOpen}
+            initialHeightRatio={instructionsDrawerInitialHeightRatio}
+            visualCue={instructionsDrawerVisualCue}
           />
         </div>
       )}
@@ -167,8 +242,111 @@ export function AiTutorPanel({
         </div>
       </ScrollArea>
 
-      <div className={styles.inputSection} ref={inputRef}>
-        <div className={styles.inputCard}>
+      <div
+        className={`${styles.inputSection} ${
+          isClarified ? styles.inputSectionClarified : ""
+        }`}
+        ref={inputRef}
+      >
+        <div className={styles.inputComposer}
+          onDragEnter={(event) => {
+            if (!fileDropEnabled || !isFileDragEvent(event)) {
+              return;
+            }
+            event.preventDefault();
+            dragDepthRef.current += 1;
+            setIsDragOverInput(true);
+          }}
+          onDragOver={(event) => {
+            if (!fileDropEnabled || !isFileDragEvent(event)) {
+              return;
+            }
+            event.preventDefault();
+            // Stop propagation so react-dnd's global handler on window can't
+            // override dropEffect to "none" (which suppresses the drop event).
+            event.stopPropagation();
+            event.dataTransfer.dropEffect = "copy";
+            setIsDragOverInput(true);
+          }}
+          onDragLeave={(event) => {
+            if (!fileDropEnabled || !isFileDragEvent(event)) {
+              return;
+            }
+            event.preventDefault();
+            dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+            if (dragDepthRef.current === 0) {
+              setIsDragOverInput(false);
+            }
+          }}
+          onDrop={(event) => {
+            if (!fileDropEnabled || !isFileDragEvent(event)) {
+              return;
+            }
+            event.preventDefault();
+            dragDepthRef.current = 0;
+            setIsDragOverInput(false);
+
+            const rawData = event.dataTransfer.getData("application/x-weblab-file");
+            if (!rawData) {
+              return;
+            }
+
+            try {
+              const parsed = JSON.parse(rawData) as { path?: string; name?: string };
+              const fileLabel = parsed.path || parsed.name;
+              if (fileLabel) {
+                mergeAttachedFile(fileLabel);
+              }
+            } catch (error) {
+              console.error("Unable to parse dropped file payload", error);
+            }
+          }}
+        >
+          {fileDropEnabled && attachedFiles.length > 0 && (
+            <div className={styles.attachmentRow}>
+              {attachedFiles.map((fileLabel) => (
+                <FileChip
+                  key={fileLabel}
+                  fileName={attachmentDisplayName(fileLabel)}
+                  nameTitle={fileLabel}
+                  extensionLabel={fileExtensionLabelFromName(fileLabel)}
+                  iconName={faIconForFileName(fileLabel)}
+                  onRemove={() => removeAttachedFile(fileLabel)}
+                />
+              ))}
+              {isDragOverInput && (
+                <div className={styles.attachmentAddSlot} aria-hidden>
+                  <FontAwesomeIcon
+                    icon={faPlus}
+                    className={styles.attachmentAddSlotIcon}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {fileDropEnabled &&
+            isDragOverInput &&
+            attachedFiles.length === 0 && (
+            <div
+              className={styles.dropHelperText}
+              role="status"
+              aria-live="polite"
+            >
+              <FontAwesomeIcon
+                icon={faPaperclip}
+                className={styles.dropHelperIcon}
+                aria-hidden
+              />
+              <span>Drop to add file as context</span>
+            </div>
+          )}
+
+          <div
+            className={`${styles.inputCard} ${
+              fileDropEnabled && isDragOverInput ? styles.inputCardDropActive : ""
+            }`}
+          >
           <Textarea
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
@@ -178,34 +356,56 @@ export function AiTutorPanel({
                 handleSendMessage();
               }
             }}
-            placeholder="Type something..."
+            placeholder={
+              isClarified
+                ? "Message AI Tutor..."
+                : "Type something..."
+            }
             className={styles.textarea}
           />
           <div className={styles.inputActions}>
             <AppButton
               variant="secondary"
-              tone="black"
+              tone="gray"
               size="xs"
               icon={<FontAwesomeIcon icon={faPlus} />}
             >
               Add File
             </AppButton>
             <div className={styles.sendButtonRow}>
-              <AppButton
-                variant="primary"
-                tone="purple"
-                size="xs"
-                icon={<FontAwesomeIcon icon={faArrowUp} className={styles.sendIcon} />}
-                className={`${styles.sendButton} ${
-                  chatInput.trim()
-                    ? styles.sendButtonEnabled
-                    : styles.sendButtonDisabled
-                }`}
-                disabled={!chatInput.trim()}
-                onClick={handleSendMessage}
-                aria-label="Send message"
-              />
+              {isClarified ? (
+                <button
+                  type="button"
+                  className={`${styles.sendButtonTeal} ${
+                    formatUserMessage()
+                      ? styles.sendButtonTealEnabled
+                      : styles.sendButtonTealDisabled
+                  }`}
+                  disabled={!formatUserMessage()}
+                  onClick={handleSendMessage}
+                  aria-label="Send message"
+                >
+                  <FaIcon name="arrow-up" size="xs" />
+                  Send
+                </button>
+              ) : (
+                <AppButton
+                  variant="primary"
+                  tone="purple"
+                  size="xs"
+                  icon={<FontAwesomeIcon icon={faArrowUp} className={styles.sendIcon} />}
+                  className={`${styles.sendButton} ${
+                    formatUserMessage()
+                      ? styles.sendButtonEnabled
+                      : styles.sendButtonDisabled
+                  }`}
+                  disabled={!formatUserMessage()}
+                  onClick={handleSendMessage}
+                  aria-label="Send message"
+                />
+              )}
             </div>
+          </div>
           </div>
         </div>
       </div>

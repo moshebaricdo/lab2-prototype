@@ -140,6 +140,14 @@
   border-radius: 4px;
 }
 
+[data-draggable-file="true"] {
+  cursor: grab;
+}
+
+[data-draggable-file="true"]:active {
+  cursor: grabbing;
+}
+
 .rowButton:hover {
   background: var(--ds-background-neutral-tertiary);
 }

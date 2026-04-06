@@ -1,6 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { BubbleChoiceImagesLevelPage } from "./pages/BubbleChoiceImagesLevelPage";
 import { BubbleChoiceLevelPage } from "./pages/BubbleChoiceLevelPage";
+import { CodeRefFreeResponseLevelPage } from "./pages/CodeRefFreeResponseLevelPage";
+import { CodeRefLevelGroupLevelPage } from "./pages/CodeRefLevelGroupLevelPage";
+import { CodeRefMultiChoiceLevelPage } from "./pages/CodeRefMultiChoiceLevelPage";
 import { FreeResponseLevelPage } from "./pages/FreeResponseLevelPage";
 import { FreeResponseMarkdownLevelPage } from "./pages/FreeResponseMarkdownLevelPage";
 import { FreeResponseRevealLevelPage } from "./pages/FreeResponseRevealLevelPage";
@@ -22,7 +25,11 @@ import { MultiChoiceAuthoringCodeLevelPage } from "./pages/MultiChoiceAuthoringC
 import { MultiChoiceAuthoringLevelPage } from "./pages/MultiChoiceAuthoringLevelPage";
 import { MultiChoiceAuthoringMediaLevelPage } from "./pages/MultiChoiceAuthoringMediaLevelPage";
 import { MultiChoiceLevelPage } from "./pages/MultiChoiceLevelPage";
+import { WebLab2DrawerFadeLevelPage } from "./pages/WebLab2DrawerFadeLevelPage";
+import { WebLab2DrawerInlineLinkLevelPage } from "./pages/WebLab2DrawerInlineLinkLevelPage";
+import { WebLab2FileDropLevelPage } from "./pages/WebLab2FileDropLevelPage";
 import { WebLab2LevelPage } from "./pages/WebLab2LevelPage";
+import { WebLab2SendAffordanceLevelPage } from "./pages/WebLab2SendAffordanceLevelPage";
 
 export default function App() {
   return (
@@ -30,6 +37,22 @@ export default function App() {
       <Route path="/" element={<Navigate to="/levels" replace />} />
       <Route path="/levels" element={<LevelsIndexPage />} />
       <Route path="/levels/weblab2" element={<WebLab2LevelPage />} />
+      <Route
+        path="/levels/weblab2-send-affordance"
+        element={<WebLab2SendAffordanceLevelPage />}
+      />
+      <Route
+        path="/levels/weblab2-file-drop"
+        element={<WebLab2FileDropLevelPage />}
+      />
+      <Route
+        path="/levels/weblab2-drawer-fade"
+        element={<WebLab2DrawerFadeLevelPage />}
+      />
+      <Route
+        path="/levels/weblab2-drawer-inline-link"
+        element={<WebLab2DrawerInlineLinkLevelPage />}
+      />
       <Route path="/levels/multi" element={<MultiChoiceLevelPage />} />
       <Route
         path="/levels/multi-authoring"
@@ -103,6 +126,18 @@ export default function App() {
       <Route
         path="/levels/levelgroup-survey-intro"
         element={<LevelGroupSurveyIntroLevelPage />}
+      />
+      <Route
+        path="/levels/multi-code-ref"
+        element={<CodeRefMultiChoiceLevelPage />}
+      />
+      <Route
+        path="/levels/free-response-code-ref"
+        element={<CodeRefFreeResponseLevelPage />}
+      />
+      <Route
+        path="/levels/levelgroup-code-ref"
+        element={<CodeRefLevelGroupLevelPage />}
       />
       <Route path="/levels/bubble-choice" element={<BubbleChoiceLevelPage />} />
       <Route

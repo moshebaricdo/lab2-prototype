@@ -19,8 +19,10 @@ import { useChatState } from "../../../../hooks/useChatState";
 import { useLayoutState } from "../../../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
+import type { CodePanelConfig } from "../../../../data/assessment/codePanel";
 import {
   AssessmentBottomRow,
+  AssessmentCodeRefLayout,
   AssessmentStemSection,
 } from "../../shared";
 import { FaIcon } from "@/icons";
@@ -29,6 +31,7 @@ import styles from "./FreeResponseWorkspace.module.scss";
 
 interface FreeResponseWorkspaceProps {
   payload?: FreeResponseLevelPayload;
+  codePanel?: CodePanelConfig;
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
   completedLevelPaths?: string[];
@@ -45,6 +48,7 @@ interface FreeResponseWorkspaceProps {
 
 export function FreeResponseWorkspace({
   payload = mockFreeResponseLevel,
+  codePanel,
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
@@ -408,11 +412,21 @@ export function FreeResponseWorkspace({
     return mainBody;
   }
 
+  const shellContent = codePanel ? (
+    <AssessmentCodeRefLayout codePanel={codePanel}>
+      {cardContents}
+    </AssessmentCodeRefLayout>
+  ) : (
+    mainBody
+  );
+
   return (
     <Lab2Shell
       topNavigationProps={{
         title: `${level.metadata.lessonName} - ${level.name}`,
-        subtitle: "Draft assessment level on Lab2 shell",
+        subtitle: codePanel
+          ? "Code reference — split layout"
+          : "Draft assessment level on Lab2 shell",
         currentLevel: level.metadata.levelPosition,
         totalLevels: level.metadata.totalLevelsInScript,
         completedLevels: [1, 2, 3],
@@ -449,7 +463,7 @@ export function FreeResponseWorkspace({
         );
       }}
     >
-      {mainBody}
+      {shellContent}
     </Lab2Shell>
   );
 }

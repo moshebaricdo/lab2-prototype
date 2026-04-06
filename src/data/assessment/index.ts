@@ -49,3 +49,15 @@ export {
   type BubbleChoiceLevelPayload,
   type BubbleChoiceOptionLabelStyle,
 } from "./bubbleChoice";
+export {
+  type CodePanelConfig,
+  type CodePanelFile,
+} from "./codePanel";
+export {
+  mockCodeRefFreeResponse,
+  mockCodeRefLevelGroup,
+  mockCodeRefMultiChoice,
+  type FreeResponseCodeRefPayload,
+  type LevelGroupCodeRefPayload,
+  type MultiChoiceCodeRefPayload,
+} from "./codeRefMocks";

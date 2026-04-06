@@ -35,6 +35,14 @@
   transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
+.tabDragToTutor {
+  cursor: grab;
+}
+
+.tabDragToTutor:active {
+  cursor: grabbing;
+}
+
 .tab:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--ring);

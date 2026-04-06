@@ -107,7 +107,18 @@ Prefer `answer.text` for short plain-text options. Use `contentBlocks` when an o
 
 `optionLayout.type` is `"list"` (default, stacked) or `"grid"` with optional `columns` (`2` | `3` | `4`). Use grid for short options, images, or code snippets; use list for longer text.
 
+## Code Reference Panel Layout
+
+When `codePanel` is provided alongside the multi-choice payload, the workspace switches from a centered single-column card to a **two-column split layout**: a read-only code viewer on the left and the assessment card on the right, separated by a resizable handle.
+
+| Demo | Path |
+|------|------|
+| Code reference panel (AP CS trace) | `/levels/multi-code-ref` |
+
+**Data shape:** `MultiChoiceCodeRefPayload` extends `MultiChoiceLevelPayload` with `codePanel: CodePanelConfig`. See `src/data/assessment/codePanel.ts` for the `CodePanelConfig` / `CodePanelFile` types and `src/data/assessment/codeRefMocks.ts` for mock payloads.
+
 ## Known gaps
 
 - No API submission or scoring persistence.
 - No partial credit for multi-select (all-or-nothing match against `correctAnswerIds`).
+- Code reference panel: no editable mode, no line highlighting, no responsive breakpoint (stacked layout on narrow viewports).

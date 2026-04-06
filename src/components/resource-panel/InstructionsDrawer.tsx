@@ -8,23 +8,58 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./InstructionsDrawer.module.scss";
 
+export type InstructionsDrawerVisualCue = "none" | "fade" | "inline-link";
+
 interface InstructionsDrawerProps {
   maxHeight?: number | null;
   onHeightChange?: (height: number) => void;
   onOpenChange?: (isOpen: boolean) => void;
+  initialHeightRatio?: number;
+  visualCue?: InstructionsDrawerVisualCue;
 }
 
 export function InstructionsDrawer({
   maxHeight: propMaxHeight,
   onHeightChange,
   onOpenChange,
+  initialHeightRatio,
+  visualCue = "none",
 }: InstructionsDrawerProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [height, setHeight] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
   const [isHoveringHandle, setIsHoveringHandle] = useState(false);
   const [contentMaxHeight, setContentMaxHeight] = useState<number | null>(null);
+  const [hasUserResized, setHasUserResized] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const getUpperLimit = () => {
+    const viewportFallback = typeof window !== "undefined" ? window.innerHeight - 200 : 600;
+    const containerMax = propMaxHeight || viewportFallback;
+    const contentMax = contentMaxHeight || viewportFallback;
+    return Math.max(150, Math.min(containerMax, contentMax));
+  };
+
+  const updateOverflowState = () => {
+    if (!scrollRef.current) {
+      return;
+    }
+
+    const element = scrollRef.current;
+    const overflow = element.scrollHeight - element.clientHeight > 1;
+    const atBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 1;
+    setHasOverflow(overflow);
+    setIsScrolledToBottom(atBottom);
+  };
+
+  const clampHeight = (value: number) => {
+    const upperLimit = getUpperLimit();
+    const minimumHeight = Math.min(150, upperLimit);
+    return Math.max(minimumHeight, Math.min(value, upperLimit));
+  };
 
   useEffect(() => {
     onOpenChange?.(isOpen);
@@ -37,24 +72,71 @@ export function InstructionsDrawer({
   }, [height, isOpen, onHeightChange]);
 
   useEffect(() => {
-    if (isOpen && contentRef.current && contentMaxHeight === null) {
+    if (!isOpen || !contentRef.current) {
+      return;
+    }
+
+    const measure = () => {
+      if (!contentRef.current) {
+        return;
+      }
       const measuredHeight = contentRef.current.scrollHeight + 16;
       setContentMaxHeight(measuredHeight);
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(contentRef.current);
+
+    return () => observer.disconnect();
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || hasUserResized || initialHeightRatio === undefined) {
+      return;
     }
-  }, [isOpen, contentMaxHeight]);
+
+    const viewportFallback = typeof window !== "undefined" ? window.innerHeight - 200 : 600;
+    const containerMax = propMaxHeight || viewportFallback;
+    const targetHeight = containerMax * initialHeightRatio;
+    const nextHeight = clampHeight(targetHeight);
+
+    if (Math.abs(nextHeight - height) > 1) {
+      setHeight(nextHeight);
+      onHeightChange?.(nextHeight);
+    }
+  }, [hasUserResized, height, initialHeightRatio, isOpen, onHeightChange, propMaxHeight, contentMaxHeight]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const upperLimit = getUpperLimit();
+    if (height > upperLimit) {
+      setHeight(upperLimit);
+      onHeightChange?.(upperLimit);
+    }
+  }, [contentMaxHeight, height, isOpen, onHeightChange, propMaxHeight]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    updateOverflowState();
+  }, [height, isOpen, contentMaxHeight]);
 
   const handleMouseDown = (event: React.MouseEvent) => {
     event.preventDefault();
     setIsResizing(true);
+    setHasUserResized(true);
     const startY = event.clientY;
     const startHeight = height;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaY = moveEvent.clientY - startY;
-      const containerMax = propMaxHeight || window.innerHeight - 200;
-      const contentMax = contentMaxHeight || window.innerHeight - 200;
-      const upperLimit = Math.min(containerMax, contentMax);
-      const nextHeight = Math.max(150, Math.min(startHeight + deltaY, upperLimit));
+      const nextHeight = clampHeight(startHeight + deltaY);
       setHeight(nextHeight);
       onHeightChange?.(nextHeight);
     };
@@ -69,13 +151,21 @@ export function InstructionsDrawer({
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const shouldShowFade = visualCue === "fade" && hasOverflow && !isScrolledToBottom;
+  const canExpandInline = visualCue === "inline-link" && hasOverflow && height < getUpperLimit() - 1;
+
   return (
     <div className={styles.root}>
       {isOpen ? (
         <div className={styles.drawerWrap}>
           <div className={styles.drawerContent} style={{ height: `${height}px` }}>
             <div className={styles.scrollFrame}>
-              <div ref={contentRef} className={styles.scrollContent}>
+              <div
+                ref={scrollRef}
+                className={styles.scrollContent}
+                onScroll={updateOverflowState}
+              >
+                <div ref={contentRef}>
                 <section className={styles.card}>
                   <h2 className={styles.heading}>
                     Style Your Webpage to Match Your Brand Identity
@@ -146,8 +236,26 @@ export function InstructionsDrawer({
                     </li>
                   </ul>
                 </section>
+                </div>
               </div>
+              {shouldShowFade && <div className={styles.scrollFade} aria-hidden="true" />}
             </div>
+            {canExpandInline && (
+              <div className={styles.inlineExpandWrap}>
+                <button
+                  type="button"
+                  className={styles.inlineExpandButton}
+                  onClick={() => {
+                    setHasUserResized(true);
+                    const nextHeight = getUpperLimit();
+                    setHeight(nextHeight);
+                    onHeightChange?.(nextHeight);
+                  }}
+                >
+                  Read more
+                </button>
+              </div>
+            )}
 
             <div
               onMouseDown={handleMouseDown}

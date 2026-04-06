@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
 import { FaIcon } from "../../../icons/FaIcon";
-import { AssessmentBottomRow } from "../../shared";
+import { AssessmentBottomRow, AssessmentCodeRefLayout } from "../../shared";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
+import type { CodePanelConfig } from "../../../../data/assessment/codePanel";
 import type { LevelGroupFlowPayload } from "../../../../data/assessment/levelGroup";
 import { initialChatMessages } from "../../../../data/weblab2";
 import { useChatState } from "../../../../hooks/useChatState";
@@ -20,6 +21,7 @@ import styles from "./LevelGroupWorkspace.module.scss";
 
 interface LevelGroupScrollWorkspaceProps {
   payload: LevelGroupFlowPayload;
+  codePanel?: CodePanelConfig;
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
   completedLevelPaths?: string[];
@@ -40,6 +42,7 @@ const STICKY_FOOTER_SHELL_SUBTITLE =
 
 export function LevelGroupScrollWorkspace({
   payload,
+  codePanel,
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
@@ -130,11 +133,176 @@ export function LevelGroupScrollWorkspace({
     </div>
   ));
 
+  const scrollGroupCardContent = (
+    <>
+      {showIntro && introConfig ? (
+        <>
+          {stickyFooter ? (
+            <div className={styles.scrollGroupCardBody}>
+              <LevelGroupAssessmentIntro
+                intro={introConfig}
+                assessmentTitle={assessmentHeaderTitle}
+              />
+            </div>
+          ) : (
+            <LevelGroupAssessmentIntro
+              intro={introConfig}
+              assessmentTitle={assessmentHeaderTitle}
+            />
+          )}
+          <AssessmentBottomRow
+            flushTop
+            showLeft={true}
+            left={
+              <div
+                className={styles.introFooterStats}
+                aria-label={`${steps.length} questions, ${introConfig.timeMinutes} minutes allowed`}
+              >
+                <span className={styles.introFooterStat}>
+                  <FaIcon
+                    name="circle-question"
+                    size="s"
+                    className={styles.introFooterStatIcon}
+                    aria-hidden
+                  />
+                  <span>{steps.length} questions</span>
+                </span>
+                <span className={styles.introFooterStat}>
+                  <FaIcon
+                    name="clock"
+                    size="s"
+                    className={styles.introFooterStatIcon}
+                    aria-hidden
+                  />
+                  <span>{introConfig.timeMinutes} min</span>
+                </span>
+              </div>
+            }
+            right={
+              <AppButton
+                variant="primary"
+                tone="purple"
+                size="m"
+                iconPosition="end"
+                iconName="arrow-right"
+                onClick={() => setAssessmentStarted(true)}
+              >
+                {surveyMode ? "Begin survey" : "Begin assessment"}
+              </AppButton>
+            }
+          />
+        </>
+      ) : (
+        <>
+          {stickyFooter ? (
+            <div className={styles.scrollGroupCardBody}>
+              {scrollGroupSections}
+            </div>
+          ) : (
+            scrollGroupSections
+          )}
+
+          <AssessmentBottomRow
+            flushTop
+            showLeft={surveyMode ? isSubmitted : true}
+            left={
+              surveyMode ? (
+                isSubmitted ? (
+                  <p className={styles.groupFooterSummary}>
+                    Thank you for your feedback.
+                  </p>
+                ) : null
+              ) : (
+                <div className={styles.groupFooterLeft}>
+                  <AppButton
+                    variant="secondary"
+                    tone="gray"
+                    iconPosition="start"
+                    iconName={groupTeacherReveal ? "eye-slash" : "eye"}
+                    size="m"
+                    onClick={() =>
+                      setGroupTeacherReveal((previous) => !previous)
+                    }
+                  >
+                    {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
+                  </AppButton>
+                  {isSubmitted ? (
+                    <p className={styles.groupFooterSummary}>
+                      {`${metCount} of ${steps.length} questions met expectations.`}
+                    </p>
+                  ) : null}
+                </div>
+              )
+            }
+            right={
+              isSubmitted ? (
+                <AppButton variant="secondary" onClick={handleStartOver}>
+                  Start over
+                </AppButton>
+              ) : (
+                <AppButton
+                  variant="primary"
+                  size="m"
+                  tone="purple"
+                  onClick={() => setIsSubmitted(true)}
+                  disabled={!canSubmit}
+                >
+                  {surveyMode ? "Submit responses" : "Submit"}
+                </AppButton>
+              )
+            }
+          />
+        </>
+      )}
+    </>
+  );
+
+  const mainArea = (
+    <main
+      className={[
+        styles.workspace,
+        stickyFooter ? styles.workspaceSticky : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <div
+        className={[
+          styles.stack,
+          stickyFooter ? styles.stackSticky : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <div
+          className={[
+            styles.scrollGroupCard,
+            stickyFooter ? styles.scrollGroupCardSticky : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {scrollGroupCardContent}
+        </div>
+      </div>
+    </main>
+  );
+
+  const shellContent = codePanel ? (
+    <AssessmentCodeRefLayout codePanel={codePanel}>
+      {scrollGroupCardContent}
+    </AssessmentCodeRefLayout>
+  ) : (
+    mainArea
+  );
+
   return (
     <Lab2Shell
       topNavigationProps={{
         title: `${level.metadata.lessonName} - ${level.name}`,
-        subtitle: resolvedShellSubtitle,
+        subtitle: codePanel
+          ? "Code reference — split layout"
+          : resolvedShellSubtitle,
         currentLevel: level.metadata.levelPosition,
         totalLevels: level.metadata.totalLevelsInScript,
         completedLevels: [1, 2, 3, 4, 5],
@@ -169,152 +337,7 @@ export function LevelGroupScrollWorkspace({
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));
       }}
     >
-      <main
-        className={[
-          styles.workspace,
-          stickyFooter ? styles.workspaceSticky : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <div
-          className={[
-            styles.stack,
-            stickyFooter ? styles.stackSticky : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          <div
-            className={[
-              styles.scrollGroupCard,
-              stickyFooter ? styles.scrollGroupCardSticky : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            {showIntro && introConfig ? (
-              <>
-                {stickyFooter ? (
-                  <div className={styles.scrollGroupCardBody}>
-                    <LevelGroupAssessmentIntro
-                      intro={introConfig}
-                      assessmentTitle={assessmentHeaderTitle}
-                    />
-                  </div>
-                ) : (
-                  <LevelGroupAssessmentIntro
-                    intro={introConfig}
-                    assessmentTitle={assessmentHeaderTitle}
-                  />
-                )}
-                <AssessmentBottomRow
-                  flushTop
-                  showLeft={true}
-                  left={
-                    <div
-                      className={styles.introFooterStats}
-                      aria-label={`${steps.length} questions, ${introConfig.timeMinutes} minutes allowed`}
-                    >
-                      <span className={styles.introFooterStat}>
-                        <FaIcon
-                          name="circle-question"
-                          size="s"
-                          className={styles.introFooterStatIcon}
-                          aria-hidden
-                        />
-                        <span>{steps.length} questions</span>
-                      </span>
-                      <span className={styles.introFooterStat}>
-                        <FaIcon
-                          name="clock"
-                          size="s"
-                          className={styles.introFooterStatIcon}
-                          aria-hidden
-                        />
-                        <span>{introConfig.timeMinutes} min</span>
-                      </span>
-                    </div>
-                  }
-                  right={
-                    <AppButton
-                      variant="primary"
-                      tone="purple"
-                      size="m"
-                      iconPosition="end"
-                      iconName="arrow-right"
-                      onClick={() => setAssessmentStarted(true)}
-                    >
-                      {surveyMode ? "Begin survey" : "Begin assessment"}
-                    </AppButton>
-                  }
-                />
-              </>
-            ) : (
-              <>
-                {stickyFooter ? (
-                  <div className={styles.scrollGroupCardBody}>
-                    {scrollGroupSections}
-                  </div>
-                ) : (
-                  scrollGroupSections
-                )}
-
-                <AssessmentBottomRow
-                  flushTop
-                  showLeft={surveyMode ? isSubmitted : true}
-                  left={
-                    surveyMode ? (
-                      isSubmitted ? (
-                        <p className={styles.groupFooterSummary}>
-                          Thank you for your feedback.
-                        </p>
-                      ) : null
-                    ) : (
-                      <div className={styles.groupFooterLeft}>
-                        <AppButton
-                          variant="secondary"
-                          tone="gray"
-                          iconPosition="start"
-                          iconName={groupTeacherReveal ? "eye-slash" : "eye"}
-                          size="m"
-                          onClick={() =>
-                            setGroupTeacherReveal((previous) => !previous)
-                          }
-                        >
-                          {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
-                        </AppButton>
-                        {isSubmitted ? (
-                          <p className={styles.groupFooterSummary}>
-                            {`${metCount} of ${steps.length} questions met expectations.`}
-                          </p>
-                        ) : null}
-                      </div>
-                    )
-                  }
-                  right={
-                    isSubmitted ? (
-                      <AppButton variant="secondary" onClick={handleStartOver}>
-                        Start over
-                      </AppButton>
-                    ) : (
-                      <AppButton
-                        variant="primary"
-                        size="m"
-                        tone="purple"
-                        onClick={() => setIsSubmitted(true)}
-                        disabled={!canSubmit}
-                      >
-                        {surveyMode ? "Submit responses" : "Submit"}
-                      </AppButton>
-                    )
-                  }
-                />
-              </>
-            )}
-          </div>
-        </div>
-      </main>
+      {shellContent}
     </Lab2Shell>
   );
 }

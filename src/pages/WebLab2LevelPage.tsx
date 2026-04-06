@@ -12,8 +12,24 @@ import { useFileWorkspaceState } from "../hooks/useFileWorkspaceState";
 import { useLayoutState } from "../hooks/useLayoutState";
 import { useVersionHistoryState } from "../hooks/useVersionHistoryState";
 import { webLab2LevelLinks } from "./levelTypeLinks";
+import type { InstructionsDrawerVisualCue } from "../components/resource-panel/InstructionsDrawer";
+import type { AiTutorInputExperiment } from "../components/resource-panel/views/AiTutorPanel";
 
-export function WebLab2LevelPage() {
+interface WebLab2LevelPageProps {
+  currentLevelPath?: string;
+  instructionsDrawerInitialHeightRatio?: number;
+  instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
+  autoSeedTutorConversation?: boolean;
+  aiTutorInputExperiment?: AiTutorInputExperiment;
+}
+
+export function WebLab2LevelPage({
+  currentLevelPath = "/levels/weblab2",
+  instructionsDrawerInitialHeightRatio,
+  instructionsDrawerVisualCue = "none",
+  autoSeedTutorConversation = false,
+  aiTutorInputExperiment = "default",
+}: WebLab2LevelPageProps = {}) {
   const {
     activeTab,
     setActiveTab,
@@ -64,7 +80,7 @@ export function WebLab2LevelPage() {
           totalLevels: 10,
           completedLevels: [1, 2, 3],
           levelLinks: webLab2LevelLinks,
-          currentLevelPath: "/levels/weblab2",
+          currentLevelPath,
         }}
         sidebarProps={{
           activeTab,
@@ -84,6 +100,10 @@ export function WebLab2LevelPage() {
           setShowRestoreSuccessAlert,
           showSaveSuccessAlert,
           setShowSaveSuccessAlert,
+          instructionsDrawerInitialHeightRatio,
+          instructionsDrawerVisualCue,
+          autoSeedConversationOnMount: autoSeedTutorConversation,
+          aiTutorInputExperiment,
         }}
         onResize={(delta) => {
           setSidebarWidth((prev) =>
@@ -106,6 +126,7 @@ export function WebLab2LevelPage() {
           isFileManagerCollapsed={isFileManagerCollapsed}
           setIsFileManagerCollapsed={setIsFileManagerCollapsed}
           setIsCreateFileModalOpen={setIsCreateFileModalOpen}
+          enableFileDragToTutor={aiTutorInputExperiment === "file-drop"}
           selectedHistoryVersion={selectedHistoryVersion}
           showSavedTag={showSavedTag}
           onReturnToCurrentVersion={handleReturnToCurrentVersion}

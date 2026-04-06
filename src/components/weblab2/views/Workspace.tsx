@@ -32,6 +32,7 @@ interface WorkspaceProps {
   isFileManagerCollapsed: boolean;
   setIsFileManagerCollapsed: (collapsed: boolean) => void;
   setIsCreateFileModalOpen: (open: boolean) => void;
+  enableFileDragToTutor?: boolean;
   selectedHistoryVersion: string;
   showSavedTag: boolean;
   onReturnToCurrentVersion: () => void;
@@ -52,6 +53,7 @@ export function Workspace({
   isFileManagerCollapsed,
   setIsFileManagerCollapsed,
   setIsCreateFileModalOpen,
+  enableFileDragToTutor = false,
   selectedHistoryVersion,
   showSavedTag,
   onReturnToCurrentVersion,
@@ -120,6 +122,7 @@ export function Workspace({
                   setIsFileManagerCollapsed(!isFileManagerCollapsed)
                 }
                 onNewFile={() => setIsCreateFileModalOpen(true)}
+                enableDragToTutor={enableFileDragToTutor}
               />
             </div>
 
@@ -132,6 +135,7 @@ export function Workspace({
                 onReorderFiles={handleReorderFiles}
                 isFileManagerCollapsed={isFileManagerCollapsed}
                 onCreateFile={() => setIsCreateFileModalOpen(true)}
+                enableDragToTutor={enableFileDragToTutor}
               />
             </div>
           </div>

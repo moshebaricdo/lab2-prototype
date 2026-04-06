@@ -3,16 +3,6 @@
   animation: tooltip-fade-in 120ms ease-out;
 }
 
-.tooltip {
-  display: flex;
-  align-items: center;
-}
-
-.top,
-.bottom {
-  flex-direction: column;
-}
-
 .body {
   display: flex;
   min-width: 64px;
@@ -36,32 +26,7 @@
 }
 
 .arrow {
-  width: 0;
-  height: 0;
-}
-
-.rightArrow {
-  border-top: 3px solid transparent;
-  border-right: 4px solid var(--foreground);
-  border-bottom: 3px solid transparent;
-}
-
-.leftArrow {
-  border-top: 3px solid transparent;
-  border-bottom: 3px solid transparent;
-  border-left: 4px solid var(--foreground);
-}
-
-.topArrow {
-  border-right: 3px solid transparent;
-  border-top: 4px solid var(--foreground);
-  border-left: 3px solid transparent;
-}
-
-.bottomArrow {
-  border-bottom: 4px solid var(--foreground);
-  border-right: 3px solid transparent;
-  border-left: 3px solid transparent;
+  fill: var(--foreground);
 }
 
 @keyframes tooltip-fade-in {

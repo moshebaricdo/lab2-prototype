@@ -2,6 +2,19 @@ import type { LevelProgressLink } from "../components/ui/header/LevelProgressBub
 
 export const webLab2LevelLinks: LevelProgressLink[] = [
   { name: "Default workspace", path: "/levels/weblab2" },
+  {
+    name: "Clarified chat send affordance",
+    path: "/levels/weblab2-send-affordance",
+  },
+  {
+    name: "File drag-drop into tutor",
+    path: "/levels/weblab2-file-drop",
+  },
+  { name: "50% drawer + fade cue", path: "/levels/weblab2-drawer-fade" },
+  {
+    name: "50% drawer + inline read more",
+    path: "/levels/weblab2-drawer-inline-link",
+  },
 ];
 
 export const multiChoiceLevelLinks: LevelProgressLink[] = [
@@ -26,6 +39,10 @@ export const multiChoiceLevelLinks: LevelProgressLink[] = [
     name: "Select all that apply (reflection)",
     path: "/levels/multi-all-that-apply",
   },
+  {
+    name: "Code reference panel (AP CS trace)",
+    path: "/levels/multi-code-ref",
+  },
 ];
 
 export const freeResponseLevelLinks: LevelProgressLink[] = [
@@ -36,6 +53,10 @@ export const freeResponseLevelLinks: LevelProgressLink[] = [
     path: "/levels/free-response-markdown",
   },
   { name: "File upload option", path: "/levels/free-response-upload" },
+  {
+    name: "Code reference panel (AP CS trace)",
+    path: "/levels/free-response-code-ref",
+  },
 ];
 
 export const matchLevelLinks: LevelProgressLink[] = [
@@ -69,6 +90,10 @@ export const levelGroupLevelLinks: LevelProgressLink[] = [
   {
     name: "Survey-style: intro, then all questions on one page",
     path: "/levels/levelgroup-survey-intro",
+  },
+  {
+    name: "Code reference panel (AP CS quiz)",
+    path: "/levels/levelgroup-code-ref",
   },
 ];
 

@@ -23,7 +23,8 @@ Bubble navigation for these demos is defined in `src/pages/levelTypeLinks.ts` (`
 - `src/pages/FreeResponseUploadLevelPage.tsx`
 - `src/components/assessment/free-response/views/FreeResponseWorkspace.tsx`
 - `src/components/assessment/free-response/views/FreeResponseWorkspace.module.scss`
-- `src/components/assessment/free-response/views/UploadedFileChip.tsx` + `UploadedFileChip.module.scss` — file attachment chip UI under the drop zone
+- `src/components/ui/FileChip.tsx` + `FileChip.module.scss` — shared file attachment chip (teal icon rail, filename, extension, remove; image thumbnail variant when applicable)
+- `src/components/assessment/free-response/views/UploadedFileChip.tsx` — wraps `FileChip` for `File` uploads (image preview when supported)
 - `src/components/assessment/shared/AssessmentStemSection.tsx` — eyebrow, optional `stem.question`, optional markdown `stem.description`, then task UI
 - `src/components/assessment/shared/AssessmentBottomRow.tsx` — footer row; `showLeft={false}` when this level type should not show teacher tools in the footer (default free-response demos omit the left cluster except when `revealAnswerEnabled` is true)
 - `src/data/assessment/freeResponse.ts` — payload types and demo fixtures
@@ -58,7 +59,24 @@ Exported mocks in `freeResponse.ts`:
 - `mockFreeResponseLevelMarkdownOnly` — description-only stem.
 - `mockFreeResponseLevelFileUpload` — `allowFileUpload: true`.
 
+## Code Reference Panel Layout
+
+When `codePanel` is provided alongside the level payload, the workspace switches from a centered single-column card to a **two-column split layout**: a read-only code viewer on the left and the assessment (stem + textarea + footer) on the right, separated by a resizable handle.
+
+| Demo | Path |
+|------|------|
+| Code reference panel (AP CS trace) | `/levels/free-response-code-ref` |
+
+**Key files:**
+- `src/components/assessment/shared/CodeReferencePanel.tsx` — lightweight read-only code viewer (line numbers, syntax highlighting, file tabs).
+- `src/components/assessment/shared/AssessmentCodeRefLayout.tsx` — split-pane wrapper using `ResizableHandle`.
+- `src/data/assessment/codePanel.ts` — `CodePanelConfig` / `CodePanelFile` types.
+- `src/data/assessment/codeRefMocks.ts` — mock payloads combining `codePanel` with existing level types.
+
+**Data shape:** `FreeResponseCodeRefPayload` extends `FreeResponseLevelPayload` with `codePanel: CodePanelConfig`. The `codePanel.files` array provides one or more files shown in the code viewer; `stemPosition` controls whether the stem text appears above or inline (default `"inline"`).
+
 ## Known Gaps
 
 - No API submission, persistence, or rubric-based scoring.
 - File handling is local UI only (no upload pipeline).
+- Code reference panel: no editable mode, no line highlighting, no responsive breakpoint (stacked layout on narrow viewports).

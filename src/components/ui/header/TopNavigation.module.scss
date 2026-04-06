@@ -1,11 +1,12 @@
 .root {
-  background: var(--accent);
-  border-bottom: 1px solid var(--border);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 50px;
   padding: 0 8px;
+  background: var(--accent);
+  border-bottom: 1px solid var(--border);
 }
 
 .leftGroup {
@@ -25,16 +26,30 @@
   height: 36px;
 }
 
-.centerGroup {
+.centerSpacer {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  min-width: 0;
 }
 
-.textCenter {
-  text-align: left;
+.bubbleCenter {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.bubbleWrap {
+  position: relative;
+}
+
+.levelHeading {
+  position: absolute;
+  right: calc(100% + 16px);
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: right;
+  white-space: nowrap;
 }
 
 .title {
@@ -42,12 +57,18 @@
   font-size: 14px;
   font-weight: var(--font-weight-semibold);
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .subtitle {
   color: rgb(255 255 255 / 70%);
   font-size: 12px;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rightGroup {

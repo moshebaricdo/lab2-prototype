@@ -31,6 +31,7 @@ interface FileManagerProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onNewFile?: () => void;
+  enableDragToTutor?: boolean;
 }
 
 export function FileManager({
@@ -42,6 +43,7 @@ export function FileManager({
   collapsed = false,
   onToggleCollapse,
   onNewFile,
+  enableDragToTutor = false,
 }: FileManagerProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(
     null,
@@ -83,6 +85,8 @@ export function FileManager({
       const isHovered = hoveredItem === itemPath;
       const hasChildren =
         item.children && item.children.length > 0;
+      const isDraggableFile =
+        enableDragToTutor && item.type !== "folder" && !hasChildren;
       const showConnector = level > 0;
       const isLast = idx === items.length - 1;
 
@@ -120,9 +124,26 @@ export function FileManager({
             <button
               type="button"
               className={`${styles.rowButton} ${isHovered ? styles.rowHovered : ""}`}
+              draggable={isDraggableFile}
+              data-draggable-file={isDraggableFile ? "true" : undefined}
               style={{
                 paddingLeft: `${paddingLeft}px`,
                 gap: level === 0 ? "10px" : "8px",
+              }}
+              onDragStart={(event) => {
+                if (!isDraggableFile) {
+                  return;
+                }
+                event.dataTransfer.effectAllowed = "copy";
+                event.dataTransfer.setData(
+                  "application/x-weblab-file",
+                  JSON.stringify({
+                    name: item.name,
+                    path: itemPath,
+                    type: item.type,
+                  }),
+                );
+                event.dataTransfer.setData("text/plain", itemPath);
               }}
               onClick={(e) => {
                 e.stopPropagation();

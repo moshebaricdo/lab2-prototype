@@ -27,8 +27,10 @@ import { useLayoutState } from "../../../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState";
 import errorSoundUrl from "@/assets/audio/error-sound.mp3";
 import successSoundUrl from "@/assets/audio/success-sound.mp3";
+import type { CodePanelConfig } from "../../../../data/assessment/codePanel";
 import {
   AssessmentBottomRow,
+  AssessmentCodeRefLayout,
   AssessmentStemSection,
   AssessmentSuccessFeedback,
 } from "../../shared";
@@ -36,6 +38,7 @@ import styles from "./MultiChoiceWorkspace.module.scss";
 
 interface MultiChoiceWorkspaceProps {
   payload?: MultiChoiceLevelPayload;
+  codePanel?: CodePanelConfig;
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
   completedLevelPaths?: string[];
@@ -123,6 +126,7 @@ function playFeedbackSound(src: string) {
 
 export function MultiChoiceWorkspace({
   payload = mockMultiChoiceLevel,
+  codePanel,
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
@@ -592,11 +596,21 @@ export function MultiChoiceWorkspace({
     return mainBody;
   }
 
+  const shellContent = codePanel ? (
+    <AssessmentCodeRefLayout codePanel={codePanel}>
+      {cardContents}
+    </AssessmentCodeRefLayout>
+  ) : (
+    mainBody
+  );
+
   return (
     <Lab2Shell
       topNavigationProps={{
         title: `${level.metadata.lessonName} - ${level.name}`,
-        subtitle: "Draft assessment level on Lab2 shell",
+        subtitle: codePanel
+          ? "Code reference — split layout"
+          : "Draft assessment level on Lab2 shell",
         currentLevel: level.metadata.levelPosition,
         totalLevels: level.metadata.totalLevelsInScript,
         completedLevels: [1, 2],
@@ -633,7 +647,7 @@ export function MultiChoiceWorkspace({
         );
       }}
     >
-      {mainBody}
+      {shellContent}
     </Lab2Shell>
   );
 }

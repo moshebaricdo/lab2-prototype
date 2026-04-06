@@ -48,8 +48,10 @@ export function TopNavigation({
         </div>
       </div>
 
-      <div className={styles.centerGroup}>
-        <div className={styles.textCenter}>
+      <div className={styles.centerSpacer} />
+
+      <div className={styles.bubbleCenter}>
+        <div className={styles.levelHeading}>
           <p className={styles.title}>
             {title}
           </p>
@@ -57,14 +59,16 @@ export function TopNavigation({
             {subtitle}
           </p>
         </div>
-        <LevelProgressBubbles
-          currentLevel={currentLevel}
-          totalLevels={totalLevels}
-          completedLevels={completedLevels}
-          levelLinks={levelLinks}
-          currentLevelPath={currentLevelPath}
-          completedLevelPaths={completedLevelPaths}
-        />
+        <div className={styles.bubbleWrap}>
+          <LevelProgressBubbles
+            currentLevel={currentLevel}
+            totalLevels={totalLevels}
+            completedLevels={completedLevels}
+            levelLinks={levelLinks}
+            currentLevelPath={currentLevelPath}
+            completedLevelPaths={completedLevelPaths}
+          />
+        </div>
       </div>
 
       <div className={styles.rightGroup}>

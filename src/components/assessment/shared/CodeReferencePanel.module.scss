@@ -1,0 +1,182 @@
+.root {
+  background: var(--ds-background-neutral-primary);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ---------- Panel header ---------- */
+
+.panelHeader {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 10px 14px;
+}
+
+.panelHeaderLabel {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  gap: 6px;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.panelHeaderLabelIcon {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.panelHeaderActions {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+/* ---------- Tab row — matches WebLab2 CodeEditor chip tabs ---------- */
+
+.tabsRow {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+}
+
+.tab {
+  align-items: center;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  padding: 2px 8px;
+  transition: background-color 0.2s ease;
+}
+
+.tab:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+  outline: none;
+}
+
+.tabActive {
+  background: var(--accent);
+}
+
+.tabIdle {
+  background: transparent;
+}
+
+.tabIdle:hover {
+  background: var(--ds-background-neutral-tertiary);
+}
+
+/* Icon wrapper — fixed size for alignment */
+.tabIconWrap {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  height: 14px;
+  justify-content: center;
+  width: 12px;
+}
+
+.tabIcon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.tabIconActive {
+  color: var(--accent-foreground);
+}
+
+.tabIconInactive {
+  color: var(--muted-foreground);
+}
+
+.tabName {
+  font-size: 12px;
+  line-height: 1.64;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.tabNameActive {
+  color: var(--accent-foreground);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tabNameInactive {
+  color: var(--ds-text-neutral-tertiary);
+}
+
+/* ---------- Code area ---------- */
+
+.codeArea {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Line numbers */
+.lineNumbers {
+  flex-shrink: 0;
+  min-width: 40px;
+  overflow: hidden;
+  padding: 12px 0;
+  user-select: none;
+}
+
+.lineNumbersInner {
+  display: flex;
+  flex-direction: column;
+}
+
+.lineNumberCell {
+  line-height: 21px;
+  padding: 0 8px 0 12px;
+}
+
+.lineNumberText {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 21px;
+  margin: 0;
+  text-align: right;
+}
+
+/* Code content */
+.codeScroll {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 9px 16px 12px 0;
+}
+
+.codeScrollInner {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 100%;
+}
+
+.codeLine {
+  line-height: 21px;
+}
+
+.codeLineText {
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 21px;
+  margin: 0;
+  white-space: pre;
+}

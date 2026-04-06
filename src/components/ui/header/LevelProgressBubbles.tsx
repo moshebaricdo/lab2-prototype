@@ -1,3 +1,4 @@
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 import { Tooltip } from "../Tooltip";
@@ -181,44 +182,39 @@ export function LevelProgressBubbles({
   return (
     <div className="bg-[#f0f2f5] h-[36px] relative rounded-[4px] shrink-0">
       <div className="content-stretch flex h-[36px] items-center overflow-clip relative rounded-[inherit]">
-        <div className="box-border content-stretch flex gap-[3px] items-center px-[6px] py-[2px] relative shrink-0">
-          {Array.from({ length: resolvedTotalLevels }).map(
-            (_, index) => {
-              const state = getBubbleState(index);
-              const label = getBubbleLabel(index);
-              const to = isLinkMode ? resolvedLevelLinks[index].path : undefined;
-              return (
-                <div
-                  key={index}
-                  className="flex items-center justify-center relative shrink-0"
-                >
-                  <Tooltip
-                    content={label}
-                    position="top"
-                    sideOffset={8}
+        <TooltipPrimitive.Provider delayDuration={0}>
+          <div className="box-border content-stretch flex gap-[3px] items-center px-[6px] py-[2px] relative shrink-0">
+            {Array.from({ length: resolvedTotalLevels }).map(
+              (_, index) => {
+                const state = getBubbleState(index);
+                const label = getBubbleLabel(index);
+                const to = isLinkMode ? resolvedLevelLinks[index].path : undefined;
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-center relative shrink-0"
                   >
-                    {state === "current" ? (
-                      <div className="flex items-center scale-y-[-100%]">
+                    <Tooltip
+                      content={label}
+                      position="top"
+                      sideOffset={8}
+                      withProvider={false}
+                    >
+                      <div className={state === "current" ? "flex items-center scale-y-[-100%]" : "flex items-center"}>
                         <Bubble
                           state={state}
-                          levelNumber={resolvedCurrentLevel}
+                          levelNumber={state === "current" ? resolvedCurrentLevel : undefined}
                           to={to}
                           label={label}
                         />
                       </div>
-                    ) : (
-                      <Bubble
-                        state={state}
-                        to={to}
-                        label={label}
-                      />
-                    )}
-                  </Tooltip>
-                </div>
-              );
-            },
-          )}
-        </div>
+                    </Tooltip>
+                  </div>
+                );
+              },
+            )}
+          </div>
+        </TooltipPrimitive.Provider>
       </div>
       <div
         aria-hidden="true"

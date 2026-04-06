@@ -17,10 +17,12 @@ import { FaIcon } from "../icons/FaIcon";
 import { ValidationPanel } from "./views/ValidationPanel";
 import { VersionHistory } from "./views/VersionHistory";
 import { AiTutorPanel } from "./views/AiTutorPanel";
+import type { AiTutorInputExperiment } from "./views/AiTutorPanel";
 import { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
 import { ContinueButton } from "./ContinueButton";
 import { SettingsPanel } from "./views/SettingsPanel";
 import type { ChatMessage } from "../../types/chat";
+import type { InstructionsDrawerVisualCue } from "./InstructionsDrawer";
 import { useEffect, useRef, useState } from "react";
 import styles from "./Sidebar.module.scss";
 
@@ -56,6 +58,10 @@ export interface SidebarProps {
   collapsible?: boolean;
   /** When false, the AI Tutor instructions drawer is hidden. Default true (Web Lab 2). */
   showInstructionsDrawer?: boolean;
+  instructionsDrawerInitialHeightRatio?: number;
+  instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
+  autoSeedConversationOnMount?: boolean;
+  aiTutorInputExperiment?: AiTutorInputExperiment;
   /** Fires when `collapsible && isCollapsed` changes (for shell chrome such as resize handle). */
   onCollapsedChange?: (collapsed: boolean) => void;
 }
@@ -85,6 +91,10 @@ export function Sidebar({
   showContinueButton = true,
   collapsible = false,
   showInstructionsDrawer = true,
+  instructionsDrawerInitialHeightRatio,
+  instructionsDrawerVisualCue = "none",
+  autoSeedConversationOnMount = false,
+  aiTutorInputExperiment = "default",
   onCollapsedChange,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(() => Boolean(collapsible));
@@ -326,6 +336,10 @@ export function Sidebar({
               chatInput={chatInput}
               setChatInput={setChatInput}
               showInstructionsDrawer={showInstructionsDrawer}
+              instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
+              instructionsDrawerVisualCue={instructionsDrawerVisualCue}
+              autoSeedConversationOnMount={autoSeedConversationOnMount}
+              inputExperiment={aiTutorInputExperiment}
             />
           )}
           {activeTab === "history" && (
