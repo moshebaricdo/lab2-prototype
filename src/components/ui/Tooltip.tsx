@@ -10,6 +10,8 @@ interface TooltipProps {
   sideOffset?: number;
   /** When false, render only Root/Content; wrap the tree in TooltipPrimitive.Provider yourself. */
   withProvider?: boolean;
+  /** When true, the tooltip body won't act as a hover target (prevents hover traps in dense layouts). */
+  disableHoverableContent?: boolean;
 }
 
 export function Tooltip({
@@ -19,9 +21,10 @@ export function Tooltip({
   delayDuration = 0,
   sideOffset = 6,
   withProvider = true,
+  disableHoverableContent = false,
 }: TooltipProps) {
   const root = (
-    <TooltipPrimitive.Root>
+    <TooltipPrimitive.Root disableHoverableContent={disableHoverableContent}>
       <TooltipPrimitive.Trigger asChild>
         {children}
       </TooltipPrimitive.Trigger>

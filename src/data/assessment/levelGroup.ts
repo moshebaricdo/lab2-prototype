@@ -4,6 +4,7 @@ import type {
 } from "./freeResponse";
 import type { MatchLevelPayload } from "./match";
 import type { MultiChoiceLevelPayload } from "./multi";
+import type { CodePanelConfig } from "./codePanel";
 
 export interface LevelGroupMultiQuestion {
   id: string;
@@ -30,15 +31,26 @@ export interface LevelGroupMatchQuestion {
   prompts: Array<{ id: string; text: string; correctTermId: string }>;
 }
 
+interface LevelGroupQuestionBlockBase {
+  blockId: string;
+  /** Optional code-space shown alongside this specific question block. */
+  codePanel?: CodePanelConfig;
+}
+
 /** One question in an ordered levelgroup flow (scroll-all or stepped). */
 export type LevelGroupQuestionBlock =
-  | { kind: "multi"; blockId: string; question: LevelGroupMultiQuestion }
-  | {
+  | ({
+      kind: "multi";
+      question: LevelGroupMultiQuestion;
+    } & LevelGroupQuestionBlockBase)
+  | ({
       kind: "freeResponse";
-      blockId: string;
       question: LevelGroupFreeResponseQuestion;
-    }
-  | { kind: "match"; blockId: string; question: LevelGroupMatchQuestion };
+    } & LevelGroupQuestionBlockBase)
+  | ({
+      kind: "match";
+      question: LevelGroupMatchQuestion;
+    } & LevelGroupQuestionBlockBase);
 
 /** Optional “before you begin” screen for stepped levelgroups (header-track UI). */
 export interface LevelGroupAssessmentIntro {
@@ -250,7 +262,33 @@ You will see a mix of formats—multiple choice, short written responses, and a 
 Read each item carefully. When you are ready, use Begin assessment to start; the timer for this attempt begins at that moment.`,
       timeMinutes: 30,
     },
-    steps: levelGroupFlowSteps,
+    steps: levelGroupFlowSteps.map((step) =>
+      step.blockId === "block-m2"
+        ? {
+            ...step,
+            codePanel: {
+              files: [
+                {
+                  name: "photo-post-check.js",
+                  language: "javascript",
+                  content: [
+                    "function shouldPostPhoto(consentGiven, identifiablePeople) {",
+                    "  if (identifiablePeople > 0 && !consentGiven) {",
+                    "    return false;",
+                    "  }",
+                    "  return true;",
+                    "}",
+                    "",
+                    "console.log(shouldPostPhoto(false, 3));",
+                  ].join("\n"),
+                },
+              ],
+              stemPosition: "inline",
+              defaultWidthRatio: 0.5,
+            },
+          }
+        : step,
+    ),
   },
 };
 

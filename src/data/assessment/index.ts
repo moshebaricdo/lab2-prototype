@@ -23,6 +23,8 @@ export {
   mockMatchConnectorImageLevel,
   mockMatchDefinitionBankLevel,
   mockMatchLevel,
+  mockMatchSwipeCardsLevel,
+  mockMatchSwipeCodeLevel,
   type MatchCardAlignment,
   type MatchCardContentAlign,
   type MatchColumnFlex,
@@ -54,9 +56,11 @@ export {
   type CodePanelFile,
 } from "./codePanel";
 export {
+  mockCodeRefEditable,
   mockCodeRefFreeResponse,
   mockCodeRefLevelGroup,
   mockCodeRefMultiChoice,
+  mockCodeRefMultiFile,
   type FreeResponseCodeRefPayload,
   type LevelGroupCodeRefPayload,
   type MultiChoiceCodeRefPayload,

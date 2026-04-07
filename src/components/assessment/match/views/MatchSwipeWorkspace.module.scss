@@ -1,0 +1,477 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.workspace {
+  align-items: flex-start;
+  background: var(--ds-background-neutral-secondary);
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  margin: 0 auto;
+  max-width: 980px;
+  width: 100%;
+}
+
+.taskToolbar {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.instruction {
+  color: var(--muted-foreground);
+  flex: 1;
+  font-size: var(--text-label);
+  margin: 0;
+  min-width: min(100%, 240px);
+}
+
+.swipeBoard {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 20px;
+}
+
+.deck {
+  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.deckHeader {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto 1fr auto;
+  margin-bottom: 10px;
+}
+
+.deckTitleGroup {
+  text-align: center;
+}
+
+.deckTitle {
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+  text-align: center;
+}
+
+.deckCounter {
+  color: var(--muted-foreground);
+  font-size: var(--text-label);
+  text-align: center;
+}
+
+.deckCardStack {
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  flex: 1;
+  min-height: 140px;
+  touch-action: pan-y;
+}
+
+.deckCardStack.deckCardMatched {
+  background: var(--ds-background-brand-teal-extra-light);
+  border-color: var(--ds-borders-brand-teal-primary);
+}
+
+.deckCard {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  grid-area: 1 / 1;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+}
+
+.deckCardActive {
+  visibility: visible;
+}
+
+.deckCardHidden {
+  visibility: hidden;
+}
+
+.cardBlocks {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+  width: 100%;
+}
+
+/* When a card contains a code snippet, pin content to top */
+.deckCard:has(.cardCodeNumbered) {
+  justify-content: flex-start;
+}
+
+.cardText {
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-base);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.cardCodeNumbered {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto 1fr;
+  text-align: left;
+  width: 100%;
+}
+
+.lineNumbers {
+  color: var(--muted-foreground);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  text-align: right;
+  user-select: none;
+}
+
+.cardCode {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0;
+  text-align: left;
+  white-space: pre;
+}
+
+.cardCode code {
+  font-family: inherit;
+}
+
+.cardImageWrap {
+  margin: 0;
+}
+
+.cardImage {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: block;
+  max-height: 140px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.cardCaption {
+  color: var(--muted-foreground);
+  font-size: var(--text-label);
+  margin-top: 6px;
+}
+
+.deckStatus {
+  color: var(--foreground);
+  margin-left: 4px;
+}
+
+.deckStatusMuted {
+  color: var(--muted-foreground);
+  margin-left: 4px;
+}
+
+/* ── Connector merge zone ─────────────────────────────────────── */
+
+.connectorZone {
+  height: 100px;
+  margin-top: 0;
+  padding-top: 20px;
+  position: relative;
+}
+
+.connectorSvg {
+  display: block;
+  height: 100%;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+.connectorBtnWrap {
+  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  left: 50%;
+  min-width: 280px;
+  position: absolute;
+  top: 65%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  overflow: hidden;
+}
+
+.connectorBtnContent {
+  align-items: center;
+  padding: 8px;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.connectorBtnContent > button {
+  flex: 1;
+}
+
+.connectorProgress {
+  color: var(--ds-text-neutral-tertiary);
+  background: var(--ds-background-neutral-primary);
+  font-size: var(--text-sm);
+  padding: 6px;
+  text-align: center;
+}
+
+
+.summarySection {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  margin-top: 40px;
+  overflow: hidden;
+}
+
+.summaryToggle {
+  align-items: center;
+  background: var(--ds-background-neutral-secondary);
+  border: 0;
+  color: var(--foreground);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto;
+  padding: 12px;
+  padding-left: 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.summaryToggleTitle {
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.summaryToggleRight {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.summaryToggleMetaButton {
+  color: var(--muted-foreground);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: var(--text-label);
+  margin: 0;
+  padding: 0;
+}
+
+.summaryGridWrapOpen {
+  border-top: 1px solid var(--border);
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 16px;
+}
+
+.summaryColumn {
+  min-width: 0;
+}
+
+.summaryHeading {
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 8px;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.summaryCards {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.summaryCard {
+  align-items: start;
+  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 4px 0px;
+  grid-template-columns: auto 1fr auto;
+  padding: 8px 10px;
+}
+
+.summaryCardMatched {
+  background: var(--ds-background-brand-teal-extra-light);
+  border-color: var(--ds-borders-brand-teal-primary);
+}
+
+.summaryCardCorrect {
+  background: var(--ds-background-success-extra-light, #f0fdf4);
+  border-color: var(--ds-borders-success-primary, #22c55e);
+}
+
+.summaryCardIncorrect {
+  background: var(--ds-background-error-extra-light, #fef2f2);
+  border-color: var(--ds-borders-error-primary, #ef4444);
+}
+
+.summaryPrimary {
+  color: var(--foreground);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-medium);
+  grid-column: 1 / 3;
+  line-height: 1.35;
+}
+
+.summarySecondary {
+  color: var(--muted-foreground);
+  font-size: var(--text-label);
+  grid-column: 1 / 3;
+  line-height: 1.35;
+}
+
+.summaryCodeRow {
+  align-items: start;
+  display: grid;
+  gap: 0px;
+  grid-column: 1 / 3;
+  grid-template-columns: auto 1fr;
+  min-width: 0;
+}
+
+.summaryLabel {
+  color: var(--foreground);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+  min-width: 1.5em;
+  padding-top: 4px;
+}
+
+.summaryCodeBlock {
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  margin: 0;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 4px 8px;
+  white-space: pre;
+}
+
+.summaryCodeBlock code {
+  font-family: inherit;
+}
+
+.summaryStateCorrect,
+.summaryStateIncorrect {
+  display: inline-flex;
+  grid-column: 3;
+  grid-row: 1 / 3;
+  justify-self: end;
+  align-self: center;
+}
+
+.summaryStateCorrect {
+  color: var(--ds-text-success-primary);
+}
+
+.summaryStateIncorrect {
+  color: var(--ds-text-error-primary);
+}
+
+.partialFeedback {
+  color: var(--muted-foreground);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  margin: 0;
+}
+
+.visuallyHidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+@media (max-width: 880px) {
+  .swipeBoard {
+    grid-template-columns: 1fr;
+  }
+
+  .connectorZone {
+    height: auto;
+    margin-top: 14px;
+  }
+
+  .connectorSvg {
+    display: none;
+  }
+
+  .connectorBtnWrap {
+    left: auto;
+    position: static;
+    top: auto;
+    transform: none;
+    width: fit-content;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace {
+    padding: 16px;
+  }
+
+  .deckCard {
+    min-height: 150px;
+  }
+}

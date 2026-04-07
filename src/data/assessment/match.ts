@@ -75,6 +75,10 @@ export interface MatchLevelPayload {
     question: {
       terms: MatchTerm[];
       prompts: MatchPrompt[];
+      /** Label for the terms deck. Defaults to "Term". */
+      termLabel?: string;
+      /** Label for the prompts/definitions deck. Defaults to "Definition". */
+      promptLabel?: string;
       /** Optional column width ratio. Omit for default (slightly wider definitions). */
       columnFlex?: MatchColumnFlex;
       /**
@@ -372,6 +376,318 @@ export const mockMatchConnectorCodeLevel: MatchLevelPayload = {
       lessonName: "JavaScript warm-up",
       levelPosition: 3,
       totalLevelsInScript: 4,
+    },
+  },
+};
+
+/** Swipe-card demo: code snippets ↔ console output. */
+export const mockMatchSwipeCodeLevel: MatchLevelPayload = {
+  level: {
+    id: 42009,
+    name: "Code ↔ output swipe deck",
+    type: "Match",
+    stem: {
+      question:
+        "Match each Python code snippet with the output it would print.",
+      description:
+        "Imagine running each snippet in a Python shell. Swipe through the **code** deck and the **output** deck, then tap **Match current pair** when you find a match.",
+    },
+    question: {
+      termLabel: "Code snippet",
+      promptLabel: "Output",
+      terms: [
+        {
+          id: "sc-t1",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "def greet(names):\n    for name in names:\n        if len(name) > 4:\n            print(f'Hello, {name}!')\n        else:\n            print(f'Hi, {name}!')\n\ngreet(['Ada', 'Grace', 'Alan', 'Margaret'])",
+            },
+          ],
+        },
+        {
+          id: "sc-t2",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "matrix = [[1, 2], [3, 4], [5, 6]]\nflat = []\nfor row in matrix:\n    for val in row:\n        if val % 2 == 0:\n            flat.append(val * 10)\nprint(flat)",
+            },
+          ],
+        },
+        {
+          id: "sc-t3",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "counts = {}\nfor ch in 'banana':\n    counts[ch] = counts.get(ch, 0) + 1\nfor k, v in sorted(counts.items()):\n    print(f'{k}: {v}')",
+            },
+          ],
+        },
+        {
+          id: "sc-t4",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "def fibonacci(n):\n    a, b = 0, 1\n    result = []\n    while a < n:\n        result.append(a)\n        a, b = b, a + b\n    return result\n\nprint(fibonacci(50))",
+            },
+          ],
+        },
+        {
+          id: "sc-t5",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "words = ['apple', 'Banana', 'cherry', 'Date']\nsorted_words = sorted(words, key=lambda w: w.lower())\nfor i, word in enumerate(sorted_words, 1):\n    print(f'{i}. {word}')",
+            },
+          ],
+        },
+        {
+          id: "sc-t6",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "class Counter:\n    def __init__(self):\n        self.value = 0\n    def increment(self, amount=1):\n        self.value += amount\n        return self.value\n\nc = Counter()\nprint(c.increment())\nprint(c.increment(5))\nprint(c.increment())",
+            },
+          ],
+        },
+        {
+          id: "sc-t7",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "data = [3, 7, 2, 9, 4, 1, 8, 5]\nabove_avg = [\n    x for x in data\n    if x > sum(data) / len(data)\n]\nprint(f'avg={sum(data)/len(data):.1f}')\nprint(f'above: {above_avg}')",
+            },
+          ],
+        },
+        {
+          id: "sc-t8",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "def parse_csv(text):\n    rows = text.strip().split('\\n')\n    header = rows[0].split(',')\n    records = []\n    for row in rows[1:]:\n        vals = row.split(',')\n        records.append(dict(zip(header, vals)))\n    return records\n\ncsv = 'name,age\\nAli,25\\nBea,30'\nfor r in parse_csv(csv):\n    print(r)",
+            },
+          ],
+        },
+        {
+          id: "sc-t9",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "from functools import reduce\n\nnums = [1, 2, 3, 4, 5]\nsquared = list(map(lambda x: x**2, nums))\nevens = list(filter(lambda x: x % 2 == 0, squared))\ntotal = reduce(lambda a, b: a + b, evens)\nprint(f'squared: {squared}')\nprint(f'evens:   {evens}')\nprint(f'total:   {total}')",
+            },
+          ],
+        },
+        {
+          id: "sc-t10",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "python",
+              code: "def deep_flatten(lst):\n    result = []\n    for item in lst:\n        if isinstance(item, list):\n            result.extend(deep_flatten(item))\n        else:\n            result.append(item)\n    return result\n\nnested = [1, [2, [3, 4]], [5, [6, [7]]]]\nprint(deep_flatten(nested))",
+            },
+          ],
+        },
+      ],
+      prompts: [
+        {
+          id: "sc-p1",
+          correctTermId: "sc-t1",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "text",
+              code: "Hi, Ada!\nHello, Grace!\nHi, Alan!\nHello, Margaret!",
+            },
+          ],
+        },
+        {
+          id: "sc-p2",
+          correctTermId: "sc-t2",
+          contentBlocks: [
+            { type: "code", language: "text", code: "[20, 40, 60]" },
+          ],
+        },
+        {
+          id: "sc-p3",
+          correctTermId: "sc-t3",
+          contentBlocks: [
+            { type: "code", language: "text", code: "a: 3\nb: 1\nn: 2" },
+          ],
+        },
+        {
+          id: "sc-p4",
+          correctTermId: "sc-t4",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "text",
+              code: "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34]",
+            },
+          ],
+        },
+        {
+          id: "sc-p5",
+          correctTermId: "sc-t5",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "text",
+              code: "1. apple\n2. Banana\n3. cherry\n4. Date",
+            },
+          ],
+        },
+        {
+          id: "sc-p6",
+          correctTermId: "sc-t6",
+          contentBlocks: [
+            { type: "code", language: "text", code: "1\n6\n7" },
+          ],
+        },
+        {
+          id: "sc-p7",
+          correctTermId: "sc-t7",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "text",
+              code: "avg=4.9\nabove: [7, 9, 8, 5]",
+            },
+          ],
+        },
+        {
+          id: "sc-p8",
+          correctTermId: "sc-t8",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "text",
+              code: "{'name': 'Ali', 'age': '25'}\n{'name': 'Bea', 'age': '30'}",
+            },
+          ],
+        },
+        {
+          id: "sc-p9",
+          correctTermId: "sc-t9",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "text",
+              code: "squared: [1, 4, 9, 16, 25]\nevens:   [4, 16]\ntotal:   20",
+            },
+          ],
+        },
+        {
+          id: "sc-p10",
+          correctTermId: "sc-t10",
+          contentBlocks: [
+            {
+              type: "code",
+              language: "text",
+              code: "[1, 2, 3, 4, 5, 6, 7]",
+            },
+          ],
+        },
+      ],
+    },
+    metadata: {
+      lessonName: "Python fundamentals",
+      levelPosition: 5,
+      totalLevelsInScript: 6,
+    },
+  },
+};
+
+/** Swipe-card demo: optimized for smaller screens with high item counts. */
+export const mockMatchSwipeCardsLevel: MatchLevelPayload = {
+  level: {
+    id: 42008,
+    name: "Swipe match deck",
+    type: "Match",
+    stem: {
+      question:
+        "Swipe through term and definition cards, then pair the two cards currently in view.",
+      description:
+        "This demo tests a **small-screen matching flow** with 10 pairs. Instead of showing every item at once, you rotate through a term deck and a definition deck, then tap **Match current pair** to lock in that pairing.",
+    },
+    question: {
+      terms: [
+        { id: "sw-t1", text: "Variable" },
+        { id: "sw-t2", text: "Function" },
+        { id: "sw-t3", text: "Loop" },
+        { id: "sw-t4", text: "Conditional" },
+        { id: "sw-t5", text: "Array" },
+        { id: "sw-t6", text: "Object" },
+        { id: "sw-t7", text: "Parameter" },
+        { id: "sw-t8", text: "Argument" },
+        { id: "sw-t9", text: "Return value" },
+        { id: "sw-t10", text: "Boolean" },
+      ],
+      prompts: [
+        {
+          id: "sw-p1",
+          text: "A named container that stores a value you can update or read later.",
+          correctTermId: "sw-t1",
+        },
+        {
+          id: "sw-p2",
+          text: "Reusable code that performs a task when it is called.",
+          correctTermId: "sw-t2",
+        },
+        {
+          id: "sw-p3",
+          text: "A structure that repeats a block of code until a condition is met.",
+          correctTermId: "sw-t3",
+        },
+        {
+          id: "sw-p4",
+          text: "Logic that chooses between different paths based on true/false checks.",
+          correctTermId: "sw-t4",
+        },
+        {
+          id: "sw-p5",
+          text: "An ordered list of values stored under one name.",
+          correctTermId: "sw-t5",
+        },
+        {
+          id: "sw-p6",
+          text: "A grouped collection of key-value pairs that describes one entity.",
+          correctTermId: "sw-t6",
+        },
+        {
+          id: "sw-p7",
+          text: "A named input listed in a function definition.",
+          correctTermId: "sw-t7",
+        },
+        {
+          id: "sw-p8",
+          text: "The actual value passed into a function when it is called.",
+          correctTermId: "sw-t8",
+        },
+        {
+          id: "sw-p9",
+          text: "The value a function sends back after it runs.",
+          correctTermId: "sw-t9",
+        },
+        {
+          id: "sw-p10",
+          text: "A data type with only two possible values: true or false.",
+          correctTermId: "sw-t10",
+        },
+      ],
+    },
+    metadata: {
+      lessonName: "CS Fundamentals vocabulary",
+      levelPosition: 4,
+      totalLevelsInScript: 5,
     },
   },
 };

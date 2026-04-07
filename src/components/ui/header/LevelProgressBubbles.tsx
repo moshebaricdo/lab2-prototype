@@ -182,7 +182,7 @@ export function LevelProgressBubbles({
   return (
     <div className="bg-[#f0f2f5] h-[36px] relative rounded-[4px] shrink-0">
       <div className="content-stretch flex h-[36px] items-center overflow-clip relative rounded-[inherit]">
-        <TooltipPrimitive.Provider delayDuration={0}>
+        <TooltipPrimitive.Provider delayDuration={0} skipDelayDuration={300}>
           <div className="box-border content-stretch flex gap-[3px] items-center px-[6px] py-[2px] relative shrink-0">
             {Array.from({ length: resolvedTotalLevels }).map(
               (_, index) => {
@@ -199,6 +199,7 @@ export function LevelProgressBubbles({
                       position="top"
                       sideOffset={8}
                       withProvider={false}
+                      disableHoverableContent
                     >
                       <div className={state === "current" ? "flex items-center scale-y-[-100%]" : "flex items-center"}>
                         <Bubble

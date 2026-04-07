@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
 import { FaIcon } from "../../../icons/FaIcon";
-import { AssessmentBottomRow } from "../../shared";
+import { AssessmentBottomRow, CodeReferencePanel } from "../../shared";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
-import type { LevelGroupFlowPayload } from "../../../../data/assessment/levelGroup";
+import type {
+  LevelGroupFlowPayload,
+  LevelGroupQuestionBlock,
+} from "../../../../data/assessment/levelGroup";
 import { initialChatMessages } from "../../../../data/weblab2";
 import { useChatState } from "../../../../hooks/useChatState";
 import { useLayoutState } from "../../../../hooks/useLayoutState";
@@ -51,6 +54,9 @@ export function LevelGroupSteppedWorkspace({
   progressVariant = "headerTrack",
   shellSubtitle = DEFAULT_SHELL_SUBTITLE,
 }: LevelGroupSteppedWorkspaceProps) {
+  const stripCodePanel = (block: LevelGroupQuestionBlock): LevelGroupQuestionBlock =>
+    block.codePanel ? { ...block, codePanel: undefined } : block;
+
   const {
     activeTab,
     setActiveTab,
@@ -131,6 +137,9 @@ export function LevelGroupSteppedWorkspace({
   ]);
 
   const currentBlock = steps[activeStep];
+  const currentBlockCodePanel =
+    !isSubmitted && currentBlock?.kind === "multi" ? currentBlock.codePanel : undefined;
+  const hasActiveCodeStep = Boolean(currentBlockCodePanel);
   const currentComplete = currentBlock
     ? isBlockComplete(currentBlock, state)
     : false;
@@ -319,7 +328,14 @@ export function LevelGroupSteppedWorkspace({
       }}
     >
       <main className={styles.workspace}>
-        <div className={styles.stack}>
+        <div
+          className={[
+            styles.stack,
+            hasActiveCodeStep ? styles.stackWithCode : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           <div className={styles.scrollGroupCard}>
             {showIntro && introConfig ? (
               <>
@@ -422,7 +438,7 @@ export function LevelGroupSteppedWorkspace({
                     className={styles.scrollGroupSection}
                   >
                     <LevelGroupEmbeddedBlock
-                      block={block}
+                      block={stripCodePanel(block)}
                       stepIndex={index}
                       totalSteps={total}
                       flowLevel={level}
@@ -449,7 +465,7 @@ export function LevelGroupSteppedWorkspace({
                     }
                   >
                     <LevelGroupEmbeddedBlock
-                      block={currentBlock}
+                      block={stripCodePanel(currentBlock)}
                       stepIndex={activeStep}
                       totalSteps={total}
                       flowLevel={level}
@@ -666,6 +682,14 @@ export function LevelGroupSteppedWorkspace({
               </>
             )}
           </div>
+          {hasActiveCodeStep ? (
+            <aside className={styles.steppedCodeCard}>
+              <CodeReferencePanel
+                files={currentBlockCodePanel!.files}
+                eyebrow="Reference code"
+              />
+            </aside>
+          ) : null}
         </div>
       </main>
     </Lab2Shell>

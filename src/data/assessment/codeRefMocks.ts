@@ -5,6 +5,8 @@ import {
   mockCodePanelMultiChoice,
   mockCodePanelFreeResponse,
   mockCodePanelLevelGroup,
+  mockCodePanelMultiFile,
+  mockCodePanelEditable,
   type CodePanelConfig,
 } from "./codePanel";
 
@@ -56,7 +58,7 @@ export const mockCodeRefMultiChoice: MultiChoiceCodeRefPayload = {
 };
 
 // ---------------------------------------------------------------------------
-// Free-response: AP CS A — explain code behavior
+// Free-response: AP CS Principles — Python trace output
 // ---------------------------------------------------------------------------
 
 export const mockCodeRefFreeResponse: FreeResponseCodeRefPayload = {
@@ -67,29 +69,107 @@ export const mockCodeRefFreeResponse: FreeResponseCodeRefPayload = {
     type: "FreeResponse",
     stem: {
       question:
-        "Trace through the program and explain the output of the main method.",
+        "Trace through the program and explain the output of the final `print` call.",
       description:
-        "In your response, show the value of `max` after each iteration of the loop in `largestRowTotal`. Then state the final printed value and explain why that row has the largest total.",
+        "In your response, show the value of `max_total` after each iteration of the loop in `largest_row_total`. Then state the final printed value and explain why that row has the largest total.",
     },
     question: {
       placeholder:
-        "Trace the values of max after each iteration and explain the final output…",
+        "Trace the values of max_total after each iteration and explain the final output…",
       minCharacters: 80,
     },
     revealAnswerEnabled: true,
     teacherAnswer: {
       exemplar:
-        "After row 0: max = 5+1+3 = 9. After row 1: total = 9+0+2 = 11, which is > 9, so max = 11. After row 2: total = 4+7+6 = 17, which is > 11, so max = 17. The output is 17 because the third row {4, 7, 6} has the largest sum.",
+        "After row 0: max_total = 5+1+3 = 9. After row 1: current = 9+0+2 = 11, which is > 9, so max_total = 11. After row 2: current = 4+7+6 = 17, which is > 11, so max_total = 17. The output is 17 because the third row [4, 7, 6] has the largest sum.",
       rubricCriteria: [
         "Correctly computes the row totals (9, 11, 17).",
-        "Shows max updating when a larger total is found.",
+        "Shows max_total updating when a larger total is found.",
         "States the final output is 17.",
         "Explains that the third row has the largest total.",
       ],
     },
     metadata: {
-      lessonName: "AP CS A — 2D Arrays",
+      lessonName: "AP CS Principles — Lists & Iteration",
       levelPosition: 5,
+      totalLevelsInScript: 8,
+    },
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Multi-choice: multi-file web project — which CSS class is toggled?
+// ---------------------------------------------------------------------------
+
+export const mockCodeRefMultiFile: MultiChoiceCodeRefPayload = {
+  codePanel: mockCodePanelMultiFile,
+  level: {
+    id: 49003,
+    name: "Toggle Visibility",
+    type: "Multi",
+    stem: {
+      question:
+        'After clicking the "Toggle" button once, what CSS classes are applied to the `#message` element?',
+      description:
+        "Review all three files. Pay attention to the initial HTML classes and how the JavaScript event handler modifies them.",
+    },
+    answers: [
+      {
+        id: "a",
+        contentBlocks: [
+          { type: "code", code: 'class="hidden visible"' },
+        ],
+      },
+      {
+        id: "b",
+        contentBlocks: [{ type: "code", code: 'class="visible"' }],
+      },
+      {
+        id: "c",
+        contentBlocks: [{ type: "code", code: 'class="hidden"' }],
+      },
+      {
+        id: "d",
+        contentBlocks: [
+          { type: "code", code: 'class=""' },
+        ],
+      },
+    ],
+    correctAnswerId: "b",
+    metadata: {
+      lessonName: "Web Development — DOM Manipulation",
+      levelPosition: 2,
+      totalLevelsInScript: 6,
+    },
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Multi-choice: editable Python — predict the output
+// ---------------------------------------------------------------------------
+
+export const mockCodeRefEditable: MultiChoiceCodeRefPayload = {
+  codePanel: mockCodePanelEditable,
+  level: {
+    id: 49004,
+    name: "Fibonacci Output",
+    type: "Multi",
+    stem: {
+      question:
+        "Read (or edit) the program, then predict: what does the **second** `print` statement output?",
+      description:
+        "The program generates a Fibonacci sequence of length 7, then prints the sum of all values in that sequence. You can modify the code to experiment before answering.",
+    },
+    answers: [
+      { id: "a", contentBlocks: [{ type: "code", code: "13" }] },
+      { id: "b", contentBlocks: [{ type: "code", code: "20" }] },
+      { id: "c", contentBlocks: [{ type: "code", code: "33" }] },
+      { id: "d", contentBlocks: [{ type: "code", code: "12" }] },
+    ],
+    correctAnswerId: "b",
+    metadata: {
+      lessonName: "AP CS Principles — Functions & Sequences",
+      levelPosition: 4,
       totalLevelsInScript: 8,
     },
   },

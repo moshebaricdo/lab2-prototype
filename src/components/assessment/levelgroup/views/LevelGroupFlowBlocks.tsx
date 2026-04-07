@@ -232,6 +232,7 @@ export function LevelGroupEmbeddedBlock({
     return wrapStepped(
       <MultiChoiceWorkspace
         embedded
+        codePanel={block.codePanel}
         embeddedInScrollGroup={scrollGroup}
         embeddedInSteppedGroup={steppedTypeOnly}
         embeddedStepEyebrow={embeddedStepEyebrowForChild}

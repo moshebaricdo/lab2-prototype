@@ -289,7 +289,10 @@ export function LevelGroupScrollWorkspace({
   );
 
   const shellContent = codePanel ? (
-    <AssessmentCodeRefLayout codePanel={codePanel}>
+    <AssessmentCodeRefLayout
+      codePanel={codePanel}
+      stickyCodePanel
+    >
       {scrollGroupCardContent}
     </AssessmentCodeRefLayout>
   ) : (

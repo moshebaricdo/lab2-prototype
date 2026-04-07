@@ -20,6 +20,30 @@
   width: 100%;
 }
 
+.stackWithCode {
+  align-items: stretch;
+  display: flex;
+  gap: 16px;
+  max-width: 1280px;
+}
+
+.stackWithCode .scrollGroupCard {
+  flex: 1 1 0%;
+  min-width: 420px;
+}
+
+.steppedCodeCard {
+  align-self: stretch;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 320px;
+  overflow: hidden;
+}
+
 /* Scroll-all variant: card fills main area; questions scroll; footer stays at bottom of card. */
 .workspaceSticky {
   align-items: center;
@@ -160,7 +184,7 @@
 
 .steppedTimedFooterEnd {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 12px;
   justify-content: flex-end;
   justify-self: end;
@@ -170,16 +194,16 @@
 .steppedTimedFooterChrome {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 12px 16px;
   justify-content: center;
   min-width: 0;
 }
 
 .steppedTimedTrackWrap {
-  flex: 0 1 280px;
-  max-width: 280px;
-  min-width: 0;
+  flex: 1 1 220px;
+  max-width: none;
+  min-width: 120px;
   width: 100%;
 }
 

@@ -46,45 +46,139 @@ export const mockCodePanelMultiChoice: CodePanelConfig = {
 };
 
 // ---------------------------------------------------------------------------
-// Free-response: AP CS A — explain / trace output
+// Free-response: AP CS Principles — Python trace output
 // ---------------------------------------------------------------------------
 
 export const mockCodePanelFreeResponse: CodePanelConfig = {
   files: [
     {
-      name: "MatrixSum.java",
-      language: "java",
+      name: "matrix_sum.py",
+      language: "python",
       content: [
-        "public class MatrixSum {",
+        "def row_total(matrix, row):",
+        "    total = 0",
+        "    for col in range(len(matrix[row])):",
+        "        total += matrix[row][col]",
+        "    return total",
         "",
-        "  public static int rowTotal(int[][] matrix, int row) {",
-        "    int sum = 0;",
-        "    for (int col = 0; col < matrix[row].length; col++) {",
-        "      sum += matrix[row][col];",
-        "    }",
-        "    return sum;",
-        "  }",
         "",
-        "  public static int largestRowTotal(int[][] matrix) {",
-        "    int max = rowTotal(matrix, 0);",
-        "    for (int r = 1; r < matrix.length; r++) {",
-        "      int total = rowTotal(matrix, r);",
-        "      if (total > max) {",
-        "        max = total;",
-        "      }",
-        "    }",
-        "    return max;",
-        "  }",
+        "def largest_row_total(matrix):",
+        "    max_total = row_total(matrix, 0)",
+        "    for r in range(1, len(matrix)):",
+        "        current = row_total(matrix, r)",
+        "        if current > max_total:",
+        "            max_total = current",
+        "    return max_total",
         "",
-        "  public static void main(String[] args) {",
-        "    int[][] grid = {",
-        "      { 5, 1, 3 },",
-        "      { 9, 0, 2 },",
-        "      { 4, 7, 6 }",
-        "    };",
-        "    System.out.println(largestRowTotal(grid));",
-        "  }",
+        "",
+        "grid = [",
+        "    [5, 1, 3],",
+        "    [9, 0, 2],",
+        "    [4, 7, 6],",
+        "]",
+        "",
+        "print(largest_row_total(grid))",
+      ].join("\n"),
+    },
+  ],
+  stemPosition: "inline",
+};
+
+// ---------------------------------------------------------------------------
+// Multi-choice: multi-file web project (HTML + CSS + JS)
+// ---------------------------------------------------------------------------
+
+export const mockCodePanelMultiFile: CodePanelConfig = {
+  files: [
+    {
+      name: "index.html",
+      language: "html",
+      content: [
+        '<!DOCTYPE html>',
+        '<html lang="en">',
+        "<head>",
+        '  <link rel="stylesheet" href="style.css">',
+        "</head>",
+        "<body>",
+        '  <div id="app">',
+        '    <h1 class="title">Hello World</h1>',
+        '    <button id="toggle">Toggle</button>',
+        '    <p id="message" class="hidden">Now you see me!</p>',
+        "  </div>",
+        '  <script src="app.js"></script>',
+        "</body>",
+        "</html>",
+      ].join("\n"),
+    },
+    {
+      name: "style.css",
+      language: "css",
+      content: [
+        ".title {",
+        "  color: #1a1a2e;",
+        "  font-family: sans-serif;",
         "}",
+        "",
+        ".hidden {",
+        "  display: none;",
+        "}",
+        "",
+        ".visible {",
+        "  display: block;",
+        "  color: #16213e;",
+        "  font-weight: bold;",
+        "}",
+      ].join("\n"),
+    },
+    {
+      name: "app.js",
+      language: "javascript",
+      content: [
+        'const btn = document.getElementById("toggle");',
+        'const msg = document.getElementById("message");',
+        "",
+        'btn.addEventListener("click", function () {',
+        '  if (msg.classList.contains("hidden")) {',
+        '    msg.classList.remove("hidden");',
+        '    msg.classList.add("visible");',
+        "  } else {",
+        '    msg.classList.remove("visible");',
+        '    msg.classList.add("hidden");',
+        "  }",
+        "});",
+      ].join("\n"),
+    },
+  ],
+  stemPosition: "inline",
+};
+
+// ---------------------------------------------------------------------------
+// Multi-choice: editable Python — predict the output
+// ---------------------------------------------------------------------------
+
+export const mockCodePanelEditable: CodePanelConfig = {
+  files: [
+    {
+      name: "fibonacci.py",
+      language: "python",
+      content: [
+        "def fibonacci(n):",
+        "    if n <= 0:",
+        '        return "Input must be positive"',
+        "    if n == 1:",
+        "        return [0]",
+        "    if n == 2:",
+        "        return [0, 1]",
+        "",
+        "    seq = [0, 1]",
+        "    for i in range(2, n):",
+        "        seq.append(seq[i - 1] + seq[i - 2])",
+        "    return seq",
+        "",
+        "",
+        "result = fibonacci(7)",
+        "print(result)",
+        "print(sum(result))",
       ].join("\n"),
     },
   ],

@@ -39,6 +39,8 @@ import styles from "./MultiChoiceWorkspace.module.scss";
 interface MultiChoiceWorkspaceProps {
   payload?: MultiChoiceLevelPayload;
   codePanel?: CodePanelConfig;
+  codePanelEditable?: boolean;
+  onCodeContentChange?: (fileIndex: number, content: string) => void;
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
   completedLevelPaths?: string[];
@@ -88,8 +90,12 @@ function renderAnswerContentBlock(
   }
 
   if (block.type === "code") {
+    const isSingleLineCode = !block.code.includes("\n");
     return (
-      <pre key={key} className={styles.answerCodeBlock}>
+      <pre
+        key={key}
+        className={`${styles.answerCodeBlock} ${isSingleLineCode ? styles.answerCodeBlockSingleLine : ""}`}
+      >
         <code>{block.code}</code>
       </pre>
     );
@@ -127,6 +133,8 @@ function playFeedbackSound(src: string) {
 export function MultiChoiceWorkspace({
   payload = mockMultiChoiceLevel,
   codePanel,
+  codePanelEditable,
+  onCodeContentChange,
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
@@ -592,12 +600,24 @@ export function MultiChoiceWorkspace({
     </main>
   );
 
+  if (embedded && codePanel) {
+    return (
+      <AssessmentCodeRefLayout codePanel={codePanel} embedded>
+        {cardContents}
+      </AssessmentCodeRefLayout>
+    );
+  }
+
   if (embedded) {
     return mainBody;
   }
 
   const shellContent = codePanel ? (
-    <AssessmentCodeRefLayout codePanel={codePanel}>
+    <AssessmentCodeRefLayout
+      codePanel={codePanel}
+      editable={codePanelEditable}
+      onContentChange={onCodeContentChange}
+    >
       {cardContents}
     </AssessmentCodeRefLayout>
   ) : (

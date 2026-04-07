@@ -1,9 +1,11 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { BubbleChoiceImagesLevelPage } from "./pages/BubbleChoiceImagesLevelPage";
 import { BubbleChoiceLevelPage } from "./pages/BubbleChoiceLevelPage";
+import { CodeRefEditableLevelPage } from "./pages/CodeRefEditableLevelPage";
 import { CodeRefFreeResponseLevelPage } from "./pages/CodeRefFreeResponseLevelPage";
 import { CodeRefLevelGroupLevelPage } from "./pages/CodeRefLevelGroupLevelPage";
 import { CodeRefMultiChoiceLevelPage } from "./pages/CodeRefMultiChoiceLevelPage";
+import { CodeRefMultiFileLevelPage } from "./pages/CodeRefMultiFileLevelPage";
 import { FreeResponseLevelPage } from "./pages/FreeResponseLevelPage";
 import { FreeResponseMarkdownLevelPage } from "./pages/FreeResponseMarkdownLevelPage";
 import { FreeResponseRevealLevelPage } from "./pages/FreeResponseRevealLevelPage";
@@ -19,6 +21,8 @@ import { MatchConnectorCodeLevelPage } from "./pages/MatchConnectorCodeLevelPage
 import { MatchConnectorImageLevelPage } from "./pages/MatchConnectorImageLevelPage";
 import { MatchConnectorLevelPage } from "./pages/MatchConnectorLevelPage";
 import { MatchDefinitionBankLevelPage } from "./pages/MatchDefinitionBankLevelPage";
+import { MatchSwipeCodeLevelPage } from "./pages/MatchSwipeCodeLevelPage";
+import { MatchSwipeLevelPage } from "./pages/MatchSwipeLevelPage";
 import { MultiChoiceAllThatApplyLevelPage } from "./pages/MultiChoiceAllThatApplyLevelPage";
 import { MultiChoiceAuthoringArrayListLevelPage } from "./pages/MultiChoiceAuthoringArrayListLevelPage";
 import { MultiChoiceAuthoringCodeLevelPage } from "./pages/MultiChoiceAuthoringCodeLevelPage";
@@ -104,6 +108,14 @@ export default function App() {
         element={<MatchConnectorCodeLevelPage />}
       />
       <Route
+        path="/levels/match-swipe-cards"
+        element={<MatchSwipeLevelPage />}
+      />
+      <Route
+        path="/levels/match-swipe-code"
+        element={<MatchSwipeCodeLevelPage />}
+      />
+      <Route
         path="/levels/levelgroup-scroll"
         element={<LevelGroupScrollLevelPage />}
       />
@@ -130,6 +142,14 @@ export default function App() {
       <Route
         path="/levels/multi-code-ref"
         element={<CodeRefMultiChoiceLevelPage />}
+      />
+      <Route
+        path="/levels/multi-code-ref-multifile"
+        element={<CodeRefMultiFileLevelPage />}
+      />
+      <Route
+        path="/levels/multi-code-ref-editable"
+        element={<CodeRefEditableLevelPage />}
       />
       <Route
         path="/levels/free-response-code-ref"

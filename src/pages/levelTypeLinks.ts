@@ -43,6 +43,14 @@ export const multiChoiceLevelLinks: LevelProgressLink[] = [
     name: "Code reference panel (AP CS trace)",
     path: "/levels/multi-code-ref",
   },
+  {
+    name: "Code ref — multi-file (HTML/CSS/JS)",
+    path: "/levels/multi-code-ref-multifile",
+  },
+  {
+    name: "Code ref — editable (predict output)",
+    path: "/levels/multi-code-ref-editable",
+  },
 ];
 
 export const freeResponseLevelLinks: LevelProgressLink[] = [
@@ -64,6 +72,8 @@ export const matchLevelLinks: LevelProgressLink[] = [
   { name: "Connector lines", path: "/levels/match-connector" },
   { name: "Connector — image cards", path: "/levels/match-connector-images" },
   { name: "Connector — code & output", path: "/levels/match-connector-code" },
+  { name: "Swipe cards (small-screen demo)", path: "/levels/match-swipe-cards" },
+  { name: "Swipe cards — code ↔ output", path: "/levels/match-swipe-code" },
 ];
 
 export const levelGroupLevelLinks: LevelProgressLink[] = [
