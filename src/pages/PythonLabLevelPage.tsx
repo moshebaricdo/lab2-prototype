@@ -12,6 +12,7 @@ import { useVersionHistoryState } from "../hooks/useVersionHistoryState";
 import { usePropsOverride } from "../hooks/usePropsOverride";
 import type { DevPanelField } from "../components/lab2/dev";
 import type { InstructionsDrawerVisualCue } from "../components/lab2/resource-panel/InstructionsDrawer";
+import { PythonLabInstructions } from "../components/lab2/resource-panel/PythonLabInstructions";
 import { pythonLabLevelLinks } from "./levelTypeLinks";
 
 const pythonLabDevFields: DevPanelField[] = [
@@ -147,6 +148,7 @@ export function PythonLabLevelPage() {
         instructionsDrawerVisualCue: resolvedVisualCue,
         autoSeedConversationOnMount:
           resolved.autoSeedTutorConversation as boolean,
+        instructionsContent: <PythonLabInstructions />,
         devPanelFields: pythonLabDevFields,
         devPanelOverrideResult: overrideResult,
       }}
