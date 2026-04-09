@@ -1,4 +1,4 @@
-import svgPaths from "../../imports/svg-lnv1h8eepy";
+import svgPaths from "../../../imports/svg-lnv1h8eepy";
 
 export function AiBot() {
   return (

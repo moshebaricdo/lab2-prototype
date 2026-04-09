@@ -7,6 +7,7 @@ Use these docs as handoff context for follow-up threads.
 ## Included Level Types
 
 - [Web Lab 2](./weblab2.md)
+- [Python Lab](./pythonlab.md)
 - [Multi-choice](./multi-choice.md)
 - [Free response](./free-response.md)
 - [Match](./match.md)
@@ -24,6 +25,7 @@ Use these docs as handoff context for follow-up threads.
 ## Routes Snapshot
 
 - `/levels` -> categorized level index
+- `/levels/pythonlab`
 - `/levels/weblab2`
 - `/levels/multi` (and other multi-choice demo routes — see `multi-choice.md`)
 - `/levels/free-response` (and `/levels/free-response-reveal`, `/levels/free-response-markdown`, `/levels/free-response-upload` — see `free-response.md`)

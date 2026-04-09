@@ -1,4 +1,4 @@
-import svgPaths from "../../imports/svg-oc64z9syjk";
+import svgPaths from "../../../imports/svg-oc64z9syjk";
 
 interface AiTutorIconProps {
   className?: string;

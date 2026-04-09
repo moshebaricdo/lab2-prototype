@@ -28,7 +28,7 @@ import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState
 import errorSoundUrl from "@/assets/audio/error-sound.mp3";
 import successSoundUrl from "@/assets/audio/success-sound.mp3";
 import type { CodePanelConfig } from "../../../../data/assessment/codePanel";
-import type { DevPanelField } from "../../../dev";
+import type { DevPanelField } from "../../../lab2/dev";
 import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,

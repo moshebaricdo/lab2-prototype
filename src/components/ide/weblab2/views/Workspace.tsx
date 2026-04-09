@@ -5,16 +5,17 @@ import {
   faEye,
   faColumns,
 } from "@fortawesome/free-solid-svg-icons";
-import { FileManager } from "./FileManager";
-import { CodeEditor } from "./CodeEditor";
+import { FileManager } from "../../shared/FileManager";
+import { CodeEditor } from "../../shared/CodeEditor";
+import { PanelHeader } from "../../../ui/PanelHeader";
 import { PreviewPanel } from "./PreviewPanel";
-import { ResizableHandle } from "./ResizableHandle";
+import { ResizableHandle } from "../../../ui/ResizableHandle";
 import { VersionBanner } from "./VersionBanner";
 import { SavedTag } from "./SavedTag";
 import { SegmentedControl, type SegmentedOption } from "./SegmentedControl";
-import { versionLabels } from "../../../data/weblab2";
-import type { FileItem } from "../../../types/file";
-import type { ViewMode } from "../../../types/ui";
+import { versionLabels } from "../../../../data/weblab2";
+import type { FileItem } from "../../../../types/file";
+import type { ViewMode } from "../../../../types/ui";
 import styles from "./Workspace.module.scss";
 
 interface WorkspaceProps {
@@ -70,17 +71,17 @@ export function Workspace({
 
   return (
     <div className={styles.root}>
-      <div className={styles.header}>
-        <SegmentedControl
-          options={viewModeOptions}
-          value={viewMode}
-          onChange={setViewMode}
-        />
-        <label className={styles.headerLabel}>
-          WORKSPACE
-        </label>
-        {showSavedTag ? <SavedTag /> : <div />}
-      </div>
+      <PanelHeader
+        label="WORKSPACE"
+        left={
+          <SegmentedControl
+            options={viewModeOptions}
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+        right={showSavedTag ? <SavedTag /> : undefined}
+      />
 
       {selectedHistoryVersion !== "current" && (
         <VersionBanner

@@ -9,8 +9,8 @@ import {
   faExpand,
   faCompress,
 } from "@fortawesome/free-solid-svg-icons";
-import { EmptyState } from "./EmptyState";
-import { AppButton } from "../../ui/AppButton";
+import { EmptyState } from "../../shared/EmptyState";
+import { AppButton } from "../../../ui/AppButton";
 import { SegmentedControl, type SegmentedOption } from "./SegmentedControl";
 import styles from "./PreviewPanel.module.scss";
 

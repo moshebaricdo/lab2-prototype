@@ -2,7 +2,7 @@ import { Lab2Shell } from "../components/lab2/Lab2Shell";
 import {
   Workspace,
   CreateFileModal,
-} from "../components/weblab2/views";
+} from "../components/ide/weblab2/views";
 import {
   fileStructure,
   initialChatMessages,
@@ -12,11 +12,11 @@ import { useFileWorkspaceState } from "../hooks/useFileWorkspaceState";
 import { useLayoutState } from "../hooks/useLayoutState";
 import { useVersionHistoryState } from "../hooks/useVersionHistoryState";
 import { usePropsOverride } from "../hooks/usePropsOverride";
-import type { DevPanelField } from "../components/dev";
+import type { DevPanelField } from "../components/lab2/dev";
 import { webLab2LevelLinks } from "./levelTypeLinks";
-import type { InstructionsDrawerVisualCue } from "../components/resource-panel/InstructionsDrawer";
-import type { AiTutorInputExperiment } from "../components/resource-panel/views/AiTutorPanel";
-import type { RubricData } from "../components/resource-panel/views/RubricPanel";
+import type { InstructionsDrawerVisualCue } from "../components/lab2/resource-panel/InstructionsDrawer";
+import type { AiTutorInputExperiment } from "../components/lab2/resource-panel/views/AiTutorPanel";
+import type { RubricData } from "../components/lab2/resource-panel/views/RubricPanel";
 
 const webLab2DevFields: DevPanelField[] = [
   {

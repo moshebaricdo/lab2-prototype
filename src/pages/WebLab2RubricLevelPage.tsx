@@ -1,5 +1,5 @@
 import { WebLab2LevelPage } from "./WebLab2LevelPage";
-import type { RubricData } from "../components/resource-panel/views/RubricPanel";
+import type { RubricData } from "../components/lab2/resource-panel/views/RubricPanel";
 
 const evidenceLevels = [
   {

@@ -3,7 +3,7 @@ import {
   type ReactNode,
   forwardRef,
 } from "react";
-import { FaIcon, type FaIconSize } from "../icons/FaIcon";
+import { FaIcon, type FaIconSize } from "./icons/FaIcon";
 import type { FaIconName } from "../../icons/faProRegularCodepoints";
 import styles from "./AppButton.module.scss";
 

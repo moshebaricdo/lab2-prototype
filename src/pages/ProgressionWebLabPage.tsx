@@ -4,7 +4,7 @@ import { Lab2Shell } from "../components/lab2/Lab2Shell";
 import {
   Workspace,
   CreateFileModal,
-} from "../components/weblab2/views";
+} from "../components/ide/weblab2/views";
 import {
   fileStructure,
   initialChatMessages,
@@ -13,7 +13,7 @@ import { useChatState } from "../hooks/useChatState";
 import { useFileWorkspaceState } from "../hooks/useFileWorkspaceState";
 import { useLayoutState } from "../hooks/useLayoutState";
 import { useVersionHistoryState } from "../hooks/useVersionHistoryState";
-import { PortfolioInstructions } from "../components/resource-panel/ProgressionInstructions";
+import { PortfolioInstructions } from "../components/lab2/resource-panel/ProgressionInstructions";
 import { sampleProgressionLinks } from "./levelTypeLinks";
 
 const indexHtmlFile = fileStructure[0]?.children?.find(

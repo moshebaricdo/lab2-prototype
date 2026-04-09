@@ -13,7 +13,7 @@
 }
 
 .container {
-  max-width: 960px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .sectionHeading {
-  font-family: var(--text-label);
+  font-family: var(--font-body);
   font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
@@ -75,10 +75,11 @@
 /* ── Level-type card ── */
 
 .card {
-  border-radius: var(--radius-card);
+  border-radius: var(--radius);
   border: 1px solid var(--ds-borders-neutral-primary);
   background: var(--ds-background-neutral-secondary);
-  padding: 20px;
+  padding: 16px;
+  padding-right: 20px;
 }
 
 .cardHeader {
@@ -159,18 +160,15 @@
   display: grid;
   gap: 12px;
   grid-template-columns: 1fr auto;
-  padding: 12px;
-  padding-left: 16px;
+  padding: 16px;
   text-align: left;
   width: 100%;
 }
 
 .variantsToggleTitle {
-  color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-h5);
   font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .variantsToggleRight {

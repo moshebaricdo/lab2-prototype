@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import { AppButton } from "../../ui/AppButton";
+import { AppButton } from "../../../ui/AppButton";
 import styles from "./SettingsPanel.module.scss";
 
 interface SettingsPanelProps {

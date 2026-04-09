@@ -20,7 +20,7 @@ import { useLayoutState } from "../../../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import type { CodePanelConfig } from "../../../../data/assessment/codePanel";
-import type { DevPanelField } from "../../../dev";
+import type { DevPanelField } from "../../../lab2/dev";
 import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,

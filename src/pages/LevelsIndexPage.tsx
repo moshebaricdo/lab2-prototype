@@ -16,6 +16,7 @@ import {
   levelGroupLevelLinks,
   matchLevelLinks,
   multiChoiceLevelLinks,
+  pythonLabLevelLinks,
   sampleProgressionLinks,
   webLab2LevelLinks,
 } from "./levelTypeLinks";
@@ -45,6 +46,11 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
         levelType: "Web Lab 2",
         description: "Current full-featured prototype environment.",
         pages: webLab2LevelLinks,
+      },
+      {
+        levelType: "Python Lab",
+        description: "Python coding environment with console output.",
+        pages: pythonLabLevelLinks,
       },
     ],
   },
@@ -91,6 +97,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/match-definition-bank": "Match",
   "/levels/match-connector": "Match",
   "/levels/match-swipe-cards": "Match",
+  "/levels/pythonlab": "Python Lab",
   "/levels/weblab2": "Web Lab 2",
   "/levels/levelgroup": "Levelgroup",
   "/levels/bubble-choice": "Bubble choice",

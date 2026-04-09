@@ -10,7 +10,7 @@ import {
   LevelProgressBubbles,
   type LevelProgressLink,
 } from "./LevelProgressBubbles";
-import { Logo } from "../../icons/Logo";
+import { Logo } from "../icons/Logo";
 import styles from "./TopNavigation.module.scss";
 
 export interface TopNavigationProps {

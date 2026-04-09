@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AppButton, type FaIconName } from "../ui/AppButton";
+import { AppButton, type FaIconName } from "../../ui/AppButton";
 import type {
   Annotation,
   AnnotationTool,
   DrawingShape,
   UseAnnotationsResult,
-} from "../../hooks/useAnnotations";
-import { downloadAnnotatedScreenshot } from "../../utils/captureAnnotatedScreenshot";
+} from "../../../hooks/useAnnotations";
+import { downloadAnnotatedScreenshot } from "../../../utils/captureAnnotatedScreenshot";
 import styles from "./AnnotationOverlay.module.scss";
 
 /* ─── Popover for comment pins ─── */

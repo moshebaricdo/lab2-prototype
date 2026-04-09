@@ -1,0 +1,62 @@
+.root {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Body (editor + console) ───────────────────────────── */
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Editor pane — reuses shared CodeEditor + FileManager ─ */
+
+.editorPane {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fileManagerRail {
+  width: 200px;
+  flex-shrink: 0;
+  transition: width 0.2s ease;
+}
+
+.fileManagerRailCollapsed {
+  width: 32px;
+}
+
+.editorArea {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Console pane ──────────────────────────────────────── */
+
+.consolePane {
+  flex: 1;
+  min-height: 60px;
+  background: var(--ds-background-neutral-primary);
+}
+
+.consoleContent {
+  padding: 8px 12px;
+}
+
+.consoleLine {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ds-text-neutral-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}

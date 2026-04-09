@@ -7,9 +7,9 @@ import {
   faArrowRotateLeft,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
-import { Tooltip } from "../../ui/Tooltip";
-import { ScrollArea } from "../../ui/scroll-area";
-import { SuccessAlert } from "../../ui/SuccessAlert";
+import { Tooltip } from "../../../ui/Tooltip";
+import { ScrollArea } from "../../../ui/scroll-area";
+import { SuccessAlert } from "../../../ui/SuccessAlert";
 import styles from "./VersionHistory.module.scss";
 
 interface VersionItem {

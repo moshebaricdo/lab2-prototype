@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { ScrollArea } from "../../ui/scroll-area";
-import { AppButton } from "../../ui/AppButton";
-import { FaIcon } from "../../icons/FaIcon";
+import { ScrollArea } from "../../../ui/scroll-area";
+import { AppButton } from "../../../ui/AppButton";
+import { FaIcon } from "../../../ui/icons/FaIcon";
 import styles from "./RubricPanel.module.scss";
 
 export interface RubricCategory {

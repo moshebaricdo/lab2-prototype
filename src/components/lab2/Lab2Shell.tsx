@@ -3,14 +3,14 @@ import { useState } from "react";
 import {
   Sidebar,
   type SidebarProps,
-} from "../resource-panel";
+} from "./resource-panel";
 import {
   TopNavigation,
   type TopNavigationProps,
 } from "../ui/header/TopNavigation";
-import { ResizableHandle } from "../weblab2/views";
+import { ResizableHandle } from "../ui/ResizableHandle";
 import { useAnnotations } from "../../hooks/useAnnotations";
-import { AnnotationOverlay } from "../dev/AnnotationOverlay";
+import { AnnotationOverlay } from "./dev/AnnotationOverlay";
 
 type Lab2ShellProps =
   | {

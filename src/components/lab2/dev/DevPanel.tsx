@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { PropsOverrideResult } from "../../hooks/usePropsOverride";
+import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import type { DevPanelField } from "./types";
 import { DevPanelFieldRow } from "./DevPanelFields";
 import styles from "./DevPanel.module.scss";

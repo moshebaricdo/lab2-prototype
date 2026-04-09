@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { AppButton } from "../../ui/AppButton";
+import { AppButton } from "../../../ui/AppButton";
 import styles from "./SegmentedControl.module.scss";
 
 export interface SegmentedOption<T extends string> {

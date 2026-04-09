@@ -128,29 +128,6 @@
   overflow: hidden;
 }
 
-.panelHeader {
-  position: relative;
-  display: flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  background: var(--sidebar);
-  padding: 0 8px;
-  flex-shrink: 0;
-}
-
-.panelHeaderLabel {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--muted-foreground);
-  font-size: 12px;
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 .continueBar {
   border-top: 1px solid var(--border);
   background: var(--sidebar);

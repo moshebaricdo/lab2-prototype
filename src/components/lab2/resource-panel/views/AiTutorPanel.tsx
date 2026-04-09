@@ -1,16 +1,16 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faArrowUp, faPaperclip } from "@fortawesome/free-solid-svg-icons";
 import { useRef, useEffect, useState } from "react";
-import { ScrollArea } from "../../ui/scroll-area";
-import { Textarea } from "../../ui/textarea";
-import { AppButton } from "../../ui/AppButton";
-import { FileChip } from "../../ui/FileChip";
-import { faIconForFileName, fileExtensionLabelFromName } from "../../ui/fileChipMeta";
-import { FaIcon } from "../../icons/FaIcon";
+import { ScrollArea } from "../../../ui/scroll-area";
+import { Textarea } from "../../../ui/textarea";
+import { AppButton } from "../../../ui/AppButton";
+import { FileChip } from "../../../ui/FileChip";
+import { faIconForFileName, fileExtensionLabelFromName } from "../../../ui/fileChipMeta";
+import { FaIcon } from "../../../ui/icons/FaIcon";
 import { ActionRow } from "../ActionRow";
 import { InstructionsDrawer } from "../InstructionsDrawer";
 import type { InstructionsDrawerVisualCue } from "../InstructionsDrawer";
-import type { ChatMessage } from "../../../types/chat";
+import type { ChatMessage } from "../../../../types/chat";
 import styles from "./AiTutorPanel.module.scss";
 
 export type AiTutorInputExperiment = "default" | "clarified-send" | "file-drop";

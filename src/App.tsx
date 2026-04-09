@@ -32,6 +32,7 @@ import { MultiChoiceLevelPage } from "./pages/MultiChoiceLevelPage";
 import { WebLab2DrawerFadeLevelPage } from "./pages/WebLab2DrawerFadeLevelPage";
 import { WebLab2DrawerInlineLinkLevelPage } from "./pages/WebLab2DrawerInlineLinkLevelPage";
 import { WebLab2FileDropLevelPage } from "./pages/WebLab2FileDropLevelPage";
+import { PythonLabLevelPage } from "./pages/PythonLabLevelPage";
 import { WebLab2LevelPage } from "./pages/WebLab2LevelPage";
 import { WebLab2RubricLevelPage } from "./pages/WebLab2RubricLevelPage";
 import {
@@ -50,6 +51,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/levels" replace />} />
       <Route path="/levels" element={<LevelsIndexPage />} />
+      <Route path="/levels/pythonlab" element={<PythonLabLevelPage />} />
       <Route path="/levels/weblab2" element={<WebLab2LevelPage />} />
       <Route
         path="/levels/weblab2-send-affordance"

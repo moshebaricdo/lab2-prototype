@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import {
   type FaIconName,
   getFaCodepoint,
-} from "../../icons/faProRegularCodepoints";
+} from "../../../icons/faProRegularCodepoints";
 import styles from "./FaIcon.module.scss";
 
 export type FaIconSize = "inherit" | "xs" | "s" | "m" | "l";

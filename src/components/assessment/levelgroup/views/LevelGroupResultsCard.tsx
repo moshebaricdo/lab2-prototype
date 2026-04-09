@@ -1,4 +1,4 @@
-import { FaIcon } from "../../../icons/FaIcon";
+import { FaIcon } from "../../../ui/icons/FaIcon";
 import { AppButton } from "../../../ui/AppButton";
 import type { LevelGroupQuestionBlock } from "../../../../data/assessment/levelGroup";
 import {

@@ -10,7 +10,9 @@ The app is organized around a thin `App.tsx` orchestrator that composes major UI
 src/
 ├── App.tsx
 ├── data/
-│   └── weblab2/
+│   ├── weblab2/
+│   │   └── mockData.ts
+│   └── pythonlab/
 │       └── mockData.ts
 ├── hooks/
 │   ├── useChatState.ts
@@ -18,42 +20,58 @@ src/
 │   ├── useLayoutState.ts
 │   └── useVersionHistoryState.ts
 ├── components/
-│   ├── weblab2/
-│   │   └── views/
-│   │       ├── Workspace.tsx
-│   │       ├── CodeEditor.tsx
-│   │       ├── FileManager.tsx
-│   │       ├── PreviewPanel.tsx
-│   │       ├── CreateFileModal.tsx
-│   │       ├── ResizableHandle.tsx
-│   │       ├── EmptyState.tsx
-│   │       ├── VersionBanner.tsx
-│   │       ├── SavedTag.tsx
-│   │       ├── SegmentedControl.tsx
-│   │       ├── FileContextMenu.tsx
-│   │       └── FileManagerDropdown.tsx
-│   ├── resource-panel/
-│   │   ├── Sidebar.tsx
-│   │   ├── ContinueButton.tsx
-│   │   ├── InstructionsDrawer.tsx
-│   │   ├── ActionRow.tsx
-│   │   └── views/
-│   │       ├── InstructionsPanel.tsx
-│   │       ├── ValidationPanel.tsx
-│   │       ├── AiTutorPanel.tsx
-│   │       ├── VersionHistory.tsx
-│   │       ├── TeacherResourcesPanel.tsx
-│   │       └── SettingsPanel.tsx
-│   ├── ui/
+│   ├── ui/                         # Universal primitives
 │   │   ├── AppButton.tsx
 │   │   ├── Tooltip.tsx
 │   │   ├── SuccessAlert.tsx
-│   │   └── header/
-│   │       ├── TopNavigation.tsx
-│   │       └── LevelProgressBubbles.tsx
-│   └── icons/
-│       ├── AiTutorIcon.tsx
-│       └── Logo.tsx
+│   │   ├── PanelHeader.tsx
+│   │   ├── ResizableHandle.tsx
+│   │   ├── header/
+│   │   │   ├── TopNavigation.tsx
+│   │   │   └── LevelProgressBubbles.tsx
+│   │   └── icons/
+│   │       ├── FaIcon.tsx
+│   │       ├── AiTutorIcon.tsx
+│   │       └── Logo.tsx
+│   ├── lab2/                       # Lab2 frame — shared by ALL level types
+│   │   ├── Lab2Shell.tsx
+│   │   ├── resource-panel/
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── ContinueButton.tsx
+│   │   │   ├── InstructionsDrawer.tsx
+│   │   │   ├── ActionRow.tsx
+│   │   │   └── views/
+│   │   │       ├── InstructionsPanel.tsx
+│   │   │       ├── ValidationPanel.tsx
+│   │   │       ├── AiTutorPanel.tsx
+│   │   │       ├── VersionHistory.tsx
+│   │   │       ├── TeacherResourcesPanel.tsx
+│   │   │       └── SettingsPanel.tsx
+│   │   └── dev/
+│   │       ├── AnnotationOverlay.tsx
+│   │       ├── DevPanel.tsx
+│   │       └── DevPanelFields.tsx
+│   ├── ide/                        # IDE lab environments
+│   │   ├── shared/                 # Shared between IDE labs
+│   │   │   ├── CodeEditor.tsx
+│   │   │   ├── FileManager.tsx
+│   │   │   ├── EmptyState.tsx
+│   │   │   ├── FileContextMenu.tsx
+│   │   │   └── FileManagerDropdown.tsx
+│   │   ├── weblab2/views/
+│   │   │   ├── Workspace.tsx
+│   │   │   ├── PreviewPanel.tsx
+│   │   │   ├── CreateFileModal.tsx
+│   │   │   ├── VersionBanner.tsx
+│   │   │   ├── SavedTag.tsx
+│   │   │   └── SegmentedControl.tsx
+│   │   └── pythonlab/views/
+│   │       └── PythonWorkspace.tsx
+│   └── assessment/                 # Assessment level types (unchanged)
+│       ├── shared/
+│       ├── multi/
+│       ├── match/
+│       └── ...
 └── types/
 ```
 
@@ -62,8 +80,8 @@ src/
 `App.tsx` composes:
 
 1. `TopNavigation` from `components/ui/header`
-2. `Sidebar` from `components/resource-panel`
-3. `Workspace` and `CreateFileModal` from `components/weblab2/views`
+2. `Sidebar` from `components/lab2/resource-panel`
+3. `Workspace` and `CreateFileModal` from `components/ide/weblab2/views`
 
 This keeps feature rendering close to feature folders while the hooks layer keeps cross-cutting state logic isolated.
 
@@ -78,18 +96,20 @@ This keeps feature rendering close to feature folders while the hooks layer keep
 
 ## Migration Notes
 
-- Legacy panel paths under `components/panels` are replaced by `components/resource-panel/views`.
+- Legacy panel paths under `components/panels` are replaced by `components/lab2/resource-panel/views`.
 - Header components moved to `components/ui/header`.
 - Shared atoms moved to `components/ui`.
-- AI tutor icon moved to `components/icons`.
+- Icon components moved to `components/ui/icons`.
+- Dev tools (annotation overlay, dev panel) moved to `components/lab2/dev`.
 - Deprecated UI pieces (`SaveVersionPopover`, `VersionTag`, `TertiaryIconButton`) are removed.
 
 ## Adding New UI
 
-- Add workspace/editor-related views under `components/weblab2/views`.
-- Add sidebar tabs/panel content under `components/resource-panel` and `components/resource-panel/views`.
+- Add shared code-editor features (file tree, tabs, syntax highlighting) under `components/ide/shared`.
+- Add lab-specific workspace chrome under `components/ide/<labname>/views`.
+- Add sidebar tabs/panel content under `components/lab2/resource-panel/views`.
 - Add reusable primitives under `components/ui`.
-- Add icon-only assets under `components/icons`.
+- Add icon-only assets under `components/ui/icons`.
 
 ## Verification Checklist
 

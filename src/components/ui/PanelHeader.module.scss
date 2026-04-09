@@ -1,0 +1,30 @@
+.root {
+  position: relative;
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ds-background-neutral-primary);
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.borderBottom {
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.borderTop {
+  border-top: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}

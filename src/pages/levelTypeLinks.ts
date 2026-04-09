@@ -113,6 +113,10 @@ export const bubbleChoiceLevelLinks: LevelProgressLink[] = [
   { name: "Choose-your-path selector", path: "/levels/bubble-choice" },
 ];
 
+export const pythonLabLevelLinks: LevelProgressLink[] = [
+  { name: "Default workspace", path: "/levels/pythonlab" },
+];
+
 export const sampleProgressionLinks: LevelProgressLink[] = [
   { name: "Build Your Portfolio", path: "/levels/progression-weblab" },
   { name: "Design Reflection", path: "/levels/progression-free-response" },

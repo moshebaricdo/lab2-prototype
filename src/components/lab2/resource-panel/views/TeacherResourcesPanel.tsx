@@ -1,4 +1,4 @@
-import { ScrollArea } from "../../ui/scroll-area";
+import { ScrollArea } from "../../../ui/scroll-area";
 import styles from "./TeacherResourcesPanel.module.scss";
 
 export function TeacherResourcesPanel() {

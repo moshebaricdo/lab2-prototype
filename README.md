@@ -2,7 +2,7 @@
 
 This repository is a Lab2 frame/base for interactive coding-lab experiences.
 
-It currently powers a Web Lab 2 prototype, and is being structured so additional Lab2-powered environments (for example Python Lab or Music Lab) can reuse the same shell, UI primitives, and architecture patterns.
+It currently powers **Web Lab 2** and **Python Lab** prototypes, and is structured so additional Lab2-powered environments (for example Music Lab) can reuse the same shell, UI primitives, and architecture patterns.
 
 ## What This Project Is For
 
@@ -12,11 +12,11 @@ It currently powers a Web Lab 2 prototype, and is being structured so additional
 
 ## Current Architecture Snapshot
 
-- Lab-specific workspace views: `src/components/weblab2/views`
-- Shared frame/panel components: `src/components/resource-panel`
-- Shared UI primitives: `src/components/ui` and `src/components/ui/header`
-- Icons: `src/components/icons`
-- Environment-specific data: `src/data/weblab2`
+- Universal primitives: `src/components/ui` (includes `header/`, `icons/`, `ResizableHandle`)
+- Lab2 frame: `src/components/lab2` (Lab2Shell, `resource-panel/`, `dev/`)
+- Shared IDE editor: `src/components/ide/shared`
+- Lab-specific workspaces: `src/components/ide/weblab2/views`, `src/components/ide/pythonlab/views`
+- Environment-specific data: `src/data/weblab2`, `src/data/pythonlab`
 
 ## Quick Start
 

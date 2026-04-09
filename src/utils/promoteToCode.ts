@@ -34,7 +34,7 @@ const PATH_TO_WORKSPACE: Record<string, WorkspaceMapping> = {
   },
   "/levels/weblab2": {
     component: "Workspace",
-    importPath: "../components/weblab2",
+    importPath: "../components/ide/weblab2",
     linksVar: "webLab2LevelLinks",
   },
   "/levels/levelgroup-scroll": {

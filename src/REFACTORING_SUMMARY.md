@@ -11,19 +11,18 @@ The organization refactor is complete and build health is green:
 
 ### Feature Grouping
 
-- Workspace/editor surfaces moved to `src/components/weblab2/views`
-- Sidebar/panel ecosystem moved to `src/components/resource-panel`
-- Shared atomic components moved to `src/components/ui`
-- Header-specific components moved to `src/components/ui/header`
-- AI tutor icon moved to `src/components/icons`
+- Universal primitives in `src/components/ui` (includes `icons/`, `header/`, `ResizableHandle`)
+- Lab2 frame in `src/components/lab2` (Lab2Shell, resource-panel, dev tools)
+- IDE shared editor in `src/components/ide/shared`
+- IDE lab workspaces in `src/components/ide/weblab2/views` and `src/components/ide/pythonlab/views`
 
 ### App Composition
 
 `App.tsx` now imports from the grouped modules:
 
 - `TopNavigation` from `components/ui/header/TopNavigation`
-- `Sidebar` from `components/resource-panel`
-- `Workspace`, `CreateFileModal`, `ResizableHandle` from `components/weblab2/views`
+- `Sidebar` from `components/lab2/resource-panel`
+- `Workspace`, `CreateFileModal` from `components/ide/weblab2/views`
 
 ### Hook Extraction
 
@@ -44,12 +43,16 @@ State and event logic were split into focused hooks:
 
 Use this as the canonical destination map when creating new code:
 
-- `src/components/weblab2/views`: code workspace and editor surfaces
-- `src/components/resource-panel`: sidebar shell and related panel controls
-- `src/components/resource-panel/views`: tab panel views
 - `src/components/ui`: reusable design-system-style atoms
 - `src/components/ui/header`: top navigation/header-only pieces
-- `src/components/icons`: standalone icon components
+- `src/components/ui/icons`: standalone icon components
+- `src/components/lab2`: Lab2 frame shell (Lab2Shell, resource panel, dev tools)
+- `src/components/lab2/resource-panel`: sidebar shell and related panel controls
+- `src/components/lab2/resource-panel/views`: tab panel views
+- `src/components/lab2/dev`: dev panel, annotation overlay
+- `src/components/ide/shared`: shared code editor components
+- `src/components/ide/weblab2/views`: Web Lab 2 workspace and editor surfaces
+- `src/components/ide/pythonlab/views`: Python Lab workspace surfaces
 
 ## Follow-Up Hygiene
 

@@ -21,11 +21,16 @@ Use these directories intentionally:
 ```text
 src/
   components/
-    weblab2/views/         # Workspace/editor surfaces (current Web Lab implementation)
-    resource-panel/        # Left rail shell + panel views
-    ui/                    # Shared atomic UI primitives
+    ui/                    # Universal primitives (buttons, tooltips, etc.)
     ui/header/             # Header-specific UI components
-    icons/                 # Reusable icon components
+    ui/icons/              # Reusable icon components (FaIcon, AiTutorIcon, Logo)
+    lab2/                  # Lab2 frame — shared by ALL level types
+    lab2/resource-panel/   # Left rail shell + panel views
+    lab2/dev/              # Dev panel, annotation overlay
+    ide/shared/            # Shared code-editor components (CodeEditor, FileManager, EmptyState)
+    ide/weblab2/views/     # Web Lab-specific workspace chrome (preview, split view, etc.)
+    ide/pythonlab/views/   # Python Lab-specific workspace chrome (console, run)
+    assessment/            # Assessment level types
   hooks/                   # App-level state hooks
   styles/                  # Tokens, globals, and SCSS helpers
   types/                   # Shared type contracts
@@ -34,9 +39,11 @@ src/
 
 ### Naming Intent
 
-- `weblab2/views` is currently Web Lab implementation detail.
-- Shared shell pieces belong in `resource-panel`, `ui`, `ui/header`, or `icons`.
-- As new labs are introduced, create lab-specific feature directories without reworking shared frame primitives.
+- `ui/` contains all universal primitives: buttons, tooltips, icons, panel headers, etc.
+- `lab2/` groups the Lab2 frame shell (`Lab2Shell`, resource panel, dev tools) shared across all Lab2 level types.
+- `ide/shared/` contains shared editor components (CodeEditor, FileManager, EmptyState) used by IDE-type labs.
+- `ide/weblab2/views` and `ide/pythonlab/views` hold lab-specific workspace composition.
+- As new IDE labs are introduced, add `ide/<labname>/views/` and reuse shared components from `ide/shared/`.
 
 ---
 
@@ -85,7 +92,7 @@ Design tokens and globals are layered:
 ### Icons
 
 - Use FontAwesome-based patterns already established in the repo.
-- Reusable custom icons belong under `src/components/icons`.
+- Reusable custom icons belong under `src/components/ui/icons`.
 
 ---
 
@@ -93,13 +100,19 @@ Design tokens and globals are layered:
 
 ### Shared vs Lab-Specific
 
-- Shared frame components:
-  - `src/components/resource-panel`
-  - `src/components/ui`
-  - `src/components/ui/header`
-  - `src/components/icons`
-- Current Web Lab-specific workspace views:
-  - `src/components/weblab2/views`
+- Universal primitives:
+  - `src/components/ui` (buttons, tooltips, panel headers, ResizableHandle)
+  - `src/components/ui/header` (top navigation, level progress)
+  - `src/components/ui/icons` (FaIcon, AiTutorIcon, Logo)
+- Lab2 frame (shared by ALL level types):
+  - `src/components/lab2` (Lab2Shell)
+  - `src/components/lab2/resource-panel` (sidebar, panel views)
+  - `src/components/lab2/dev` (dev panel, annotation overlay)
+- IDE shared components:
+  - `src/components/ide/shared` (code editor, file manager, empty state)
+- Lab-specific workspace views:
+  - `src/components/ide/weblab2/views` (Web Lab 2)
+  - `src/components/ide/pythonlab/views` (Python Lab)
 
 When adding a feature, ask:
 
@@ -146,9 +159,10 @@ Before merging UI work:
 Recent organization cleanup established:
 
 - `TopNavigation` + `LevelProgressBubbles` in `src/components/ui/header`
-- resource panel views in `src/components/resource-panel/views`
+- resource panel views in `src/components/lab2/resource-panel/views`
 - shared atoms (`AppButton`, `Tooltip`, `SuccessAlert`) in `src/components/ui`
-- AI tutor icon in `src/components/icons`
+- icon components in `src/components/ui/icons`
+- dev tools in `src/components/lab2/dev`
 - legacy/deprecated files removed
 
 Do not reintroduce removed legacy paths or compatibility shims unless there is a concrete migration need.
@@ -158,8 +172,11 @@ Do not reintroduce removed legacy paths or compatibility shims unless there is a
 ## Quick Decision Guide
 
 - **Need a new reusable button/input/tooltip variant?** -> `src/components/ui`
-- **Need a new sidebar tab panel?** -> `src/components/resource-panel/views`
-- **Need workspace/editor behavior for current Web Lab?** -> `src/components/weblab2/views`
+- **Need a new icon component?** -> `src/components/ui/icons`
+- **Need a new sidebar tab panel?** -> `src/components/lab2/resource-panel/views`
+- **Need shared code editor / file manager features?** -> `src/components/ide/shared`
+- **Need Web Lab-specific workspace chrome?** -> `src/components/ide/weblab2/views`
+- **Need Python Lab-specific workspace chrome?** -> `src/components/ide/pythonlab/views`
 - **Need behavior used across many surfaces?** -> hook in `src/hooks` + typed contract in `src/types`
 - **Need new styling values?** -> tokens pipeline first, then semantic aliasing
 

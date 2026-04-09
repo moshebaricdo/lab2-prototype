@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
-import { FaIcon } from "../../../icons/FaIcon";
+import { FaIcon } from "../../../ui/icons/FaIcon";
 import { AssessmentBottomRow, CodeReferencePanel } from "../../shared";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import type {

@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { faThumbsUp, faThumbsDown } from "@fortawesome/free-regular-svg-icons";
 import { useState } from "react";
-import { AppButton } from "../ui/AppButton";
+import { AppButton } from "../../ui/AppButton";
 import styles from "./ActionRow.module.scss";
 
 interface ActionRowProps {

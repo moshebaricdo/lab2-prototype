@@ -1,5 +1,5 @@
 import { ButtonHTMLAttributes } from "react";
-import { AppButton } from "../ui/AppButton";
+import { AppButton } from "../../ui/AppButton";
 import styles from "./ContinueButton.module.scss";
 
 interface ContinueButtonProps

@@ -14,12 +14,13 @@ import {
   faRotateLeft,
   faBookmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { Tooltip } from "../ui/Tooltip";
-import { Modal } from "../ui/Modal";
-import modalStyles from "../ui/Modal.module.scss";
-import { AppButton } from "../ui/AppButton";
-import { AiTutorIcon } from "../icons/AiTutorIcon";
-import { FaIcon } from "../icons/FaIcon";
+import { PanelHeader } from "../../ui/PanelHeader";
+import { Tooltip } from "../../ui/Tooltip";
+import { Modal } from "../../ui/Modal";
+import modalStyles from "../../ui/Modal.module.scss";
+import { AppButton } from "../../ui/AppButton";
+import { AiTutorIcon } from "../../ui/icons/AiTutorIcon";
+import { FaIcon } from "../../ui/icons/FaIcon";
 import { ValidationPanel } from "./views/ValidationPanel";
 import { VersionHistory } from "./views/VersionHistory";
 import { AiTutorPanel } from "./views/AiTutorPanel";
@@ -31,10 +32,10 @@ import { ContinueButton } from "./ContinueButton";
 import { SettingsPanel } from "./views/SettingsPanel";
 import { DevPanelContent } from "../dev";
 import type { DevPanelField } from "../dev";
-import type { PropsOverrideResult } from "../../hooks/usePropsOverride";
-import type { UseAnnotationsResult } from "../../hooks/useAnnotations";
-import { useSavedVariants } from "../../hooks/useSavedVariants";
-import type { ChatMessage } from "../../types/chat";
+import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
+import type { UseAnnotationsResult } from "../../../hooks/useAnnotations";
+import { useSavedVariants } from "../../../hooks/useSavedVariants";
+import type { ChatMessage } from "../../../types/chat";
 import type { InstructionsDrawerVisualCue } from "./InstructionsDrawer";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -564,30 +565,27 @@ export function Sidebar({
 
       {!panelHidden && (
         <div className={styles.content}>
-          <div className={styles.panelHeader}>
-            <div />
-            <label className={styles.panelHeaderLabel}>
-              {activeTab === "checklist" && "VALIDATION"}
-              {activeTab === "ai-tutor" && "AI TUTOR"}
-              {activeTab === "history" && "VERSION HISTORY"}
-              {activeTab === "classroom" && "TEACHER RESOURCES"}
-              {activeTab === "rubric" && "RUBRIC"}
-              {activeTab === "dev" && "DEV PANEL"}
-            </label>
-            {activeTab === "ai-tutor" && (
-              <div className="flex gap-1">
-                <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faDownload} />} />
-                <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faEraser} />} />
-              </div>
-            )}
-            {activeTab === "dev" && devPanelOverrideResult ? (
-              <DevPanelHeaderActions
-                overrideResult={devPanelOverrideResult}
-              />
-            ) : activeTab !== "ai-tutor" ? (
-              <div />
-            ) : null}
-          </div>
+          <PanelHeader
+            label={
+              (activeTab === "checklist" && "VALIDATION") ||
+              (activeTab === "ai-tutor" && "AI TUTOR") ||
+              (activeTab === "history" && "VERSION HISTORY") ||
+              (activeTab === "classroom" && "TEACHER RESOURCES") ||
+              (activeTab === "rubric" && "RUBRIC") ||
+              (activeTab === "dev" && "DEV PANEL") ||
+              ""
+            }
+            right={
+              activeTab === "ai-tutor" ? (
+                <div className="flex gap-1">
+                  <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faDownload} />} />
+                  <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faEraser} />} />
+                </div>
+              ) : activeTab === "dev" && devPanelOverrideResult ? (
+                <DevPanelHeaderActions overrideResult={devPanelOverrideResult} />
+              ) : undefined
+            }
+          />
 
           {activeTab === "checklist" && <ValidationPanel />}
           {activeTab === "ai-tutor" && (
