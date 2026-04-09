@@ -14,7 +14,10 @@
 }
 
 .stack {
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
+  gap: 12px;
   margin: 0 auto;
   max-width: 920px;
   width: 100%;
@@ -161,6 +164,15 @@
   min-height: 40px;
 }
 
+.steppedSubmittedFooterRow {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+}
+
 /* Timed post-intro: stable digit widths */
 .tabularFigures {
   font-variant-numeric: tabular-nums;
@@ -172,7 +184,7 @@
   border-top: 1px solid var(--border);
   display: grid;
   gap: 12px 16px;
-  grid-template-columns: minmax(0, auto) 1fr minmax(0, auto);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   margin-top: 0;
   padding: 16px 24px;
 }

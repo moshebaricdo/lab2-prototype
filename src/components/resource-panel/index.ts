@@ -14,3 +14,9 @@ export { InstructionsPanel } from "./views/InstructionsPanel";
 
 export { AiTutorPanel } from "./views/AiTutorPanel";
 export { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
+export { RubricPanel } from "./views/RubricPanel";
+export type {
+  RubricData,
+  RubricCategory,
+  RubricSubmissionStatus,
+} from "./views/RubricPanel";

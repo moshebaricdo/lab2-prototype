@@ -8,7 +8,7 @@ import type { FaIconName } from "../../icons/faProRegularCodepoints";
 import styles from "./AppButton.module.scss";
 
 type ButtonVariant = "primary" | "secondary" | "tertiary";
-type ButtonTone = "purple" | "black" | "white" | "gray";
+type ButtonTone = "purple" | "black" | "white" | "gray" | "teal";
 type ButtonSize = "l" | "m" | "s" | "xs";
 
 const BUTTON_ICON_SIZE: Record<ButtonSize, FaIconSize> = {
@@ -47,6 +47,7 @@ const TONE_CLASS: Record<ButtonTone, string> = {
   black: styles.toneBlack,
   white: styles.toneWhite,
   gray: styles.toneGray,
+  teal: styles.toneTeal,
 };
 
 export const AppButton = forwardRef<HTMLButtonElement, AppButtonProps>(

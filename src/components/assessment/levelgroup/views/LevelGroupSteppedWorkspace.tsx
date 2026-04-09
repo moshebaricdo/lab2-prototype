@@ -15,12 +15,12 @@ import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles"
 import {
   allBlocksComplete,
   blockMeetsExpectations,
-  countSectionsMet,
   isBlockComplete,
   LevelGroupEmbeddedBlock,
   useLevelGroupFlowState,
 } from "./LevelGroupFlowBlocks";
 import { LevelGroupAssessmentIntro } from "./LevelGroupAssessmentIntro";
+import { LevelGroupResultsCard } from "./LevelGroupResultsCard";
 import styles from "./LevelGroupWorkspace.module.scss";
 import flowStyles from "./LevelGroupFlow.module.scss";
 
@@ -144,12 +144,6 @@ export function LevelGroupSteppedWorkspace({
     ? isBlockComplete(currentBlock, state)
     : false;
   const canSubmitFinal = allBlocksComplete(steps, state);
-  const metCount = countSectionsMet(
-    steps,
-    state,
-    isSubmitted,
-    level.surveyMode,
-  );
   const isLast = activeStep >= total - 1;
 
   const assessmentHeaderTitle =
@@ -199,11 +193,7 @@ export function LevelGroupSteppedWorkspace({
   );
 
   const forwardActions =
-    !currentBlock && !isSubmitted ? null : isSubmitted ? (
-      <AppButton variant="secondary" onClick={handleStartOver}>
-        Start over
-      </AppButton>
-    ) : !isLast ? (
+    !currentBlock && !isSubmitted ? null : isSubmitted ? null : !isLast ? (
       <AppButton
         variant="primary"
         tone="purple"
@@ -336,6 +326,27 @@ export function LevelGroupSteppedWorkspace({
             .filter(Boolean)
             .join(" ")}
         >
+          {isSubmitted && !showIntro && (
+            <LevelGroupResultsCard
+              steps={steps}
+              flow={state}
+              surveyMode={level.surveyMode}
+              assessmentTitle={assessmentHeaderTitle}
+              onStartOver={handleStartOver}
+              attemptLabel={
+                introConfig?.attempts
+                  ? `1 of ${introConfig.attempts}`
+                  : undefined
+              }
+              elapsedTime={
+                introConfig && countdownSeconds !== null
+                  ? formatCountdown(
+                      introConfig.timeMinutes * 60 - countdownSeconds,
+                    )
+                  : undefined
+              }
+            />
+          )}
           <div className={styles.scrollGroupCard}>
             {showIntro && introConfig ? (
               <>
@@ -360,6 +371,19 @@ export function LevelGroupSteppedWorkspace({
                         />
                         <span>{total} questions</span>
                       </span>
+                      {introConfig.attempts != null && (
+                        <span className={styles.introFooterStat}>
+                          <FaIcon
+                            name="rotate-right"
+                            size="s"
+                            className={styles.introFooterStatIcon}
+                            aria-hidden
+                          />
+                          <span>
+                            {introConfig.attempts} attempt{introConfig.attempts === 1 ? "" : "s"}
+                          </span>
+                        </span>
+                      )}
                       <span className={styles.introFooterStat}>
                         <FaIcon
                           name="clock"
@@ -435,6 +459,7 @@ export function LevelGroupSteppedWorkspace({
               ? steps.map((block, index) => (
                   <div
                     key={block.blockId}
+                    id={`results-q-${block.blockId}`}
                     className={styles.scrollGroupSection}
                   >
                     <LevelGroupEmbeddedBlock
@@ -485,15 +510,10 @@ export function LevelGroupSteppedWorkspace({
                 ) : null}
 
             {isBottomDots ? (
+              !isSubmitted ? (
               <div className={styles.steppedFooterThreeCol}>
                 <div className={styles.steppedFooterThreeColLeft}>
-                  {!isSubmitted ? (
-                    backButton
-                  ) : (
-                    <p className={styles.groupFooterSummary}>
-                      {`${metCount} of ${total} questions met expectations.`}
-                    </p>
-                  )}
+                  {backButton}
                 </div>
                 <div className={styles.steppedFooterThreeColCenter}>
                   {dotProgress}
@@ -502,18 +522,15 @@ export function LevelGroupSteppedWorkspace({
                   {forwardActions}
                 </div>
               </div>
+              ) : null
             ) : usePostIntroTimedLayout ? (
+              !isSubmitted ? (
               <div
                 className={styles.steppedTimedFooterRow}
                 aria-live="polite"
                 aria-atomic="true"
               >
                 <div className={styles.steppedTimedFooterStart}>
-                  {isSubmitted ? (
-                    <p className={styles.groupFooterSummary}>
-                      {`${metCount} of ${total} questions met expectations.`}
-                    </p>
-                  ) : (
                     <AppButton
                       variant="secondary"
                       tone="gray"
@@ -525,7 +542,6 @@ export function LevelGroupSteppedWorkspace({
                     >
                       Back
                     </AppButton>
-                  )}
                 </div>
                 <div className={styles.steppedTimedFooterChrome}>
                   <span className={styles.steppedTimedTimer}>
@@ -548,14 +564,10 @@ export function LevelGroupSteppedWorkspace({
                         flowStyles.linearTrackFixed,
                       ].join(" ")}
                       role="progressbar"
-                      aria-valuenow={isSubmitted ? total : activeStep + 1}
+                      aria-valuenow={activeStep + 1}
                       aria-valuemin={1}
                       aria-valuemax={total}
-                      aria-label={
-                        isSubmitted
-                          ? `All ${total} questions complete`
-                          : `Question ${activeStep + 1} of ${total}`
-                      }
+                      aria-label={`Question ${activeStep + 1} of ${total}`}
                     >
                       <div
                         className={flowStyles.linearFill}
@@ -569,17 +581,11 @@ export function LevelGroupSteppedWorkspace({
                       styles.tabularFigures,
                     ].join(" ")}
                   >
-                    {isSubmitted
-                      ? `All ${total}`
-                      : `${activeStep + 1} of ${total}`}
+                    {`${activeStep + 1} of ${total}`}
                   </span>
                 </div>
                 <div className={styles.steppedTimedFooterEnd}>
-                  {isSubmitted ? (
-                    <AppButton variant="secondary" onClick={handleStartOver}>
-                      Start over
-                    </AppButton>
-                  ) : currentBlock ? (
+                  {currentBlock ? (
                     <>
                       {!isLast ? (
                         <AppButton
@@ -608,7 +614,9 @@ export function LevelGroupSteppedWorkspace({
                   ) : null}
                 </div>
               </div>
+              ) : null
             ) : (
+              !isSubmitted ? (
               <AssessmentBottomRow
                 flushTop
                 showLeft={true}
@@ -626,19 +634,10 @@ export function LevelGroupSteppedWorkspace({
                     >
                       {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
                     </AppButton>
-                    {isSubmitted ? (
-                      <p className={styles.groupFooterSummary}>
-                        {`${metCount} of ${total} questions met expectations.`}
-                      </p>
-                    ) : null}
                   </div>
                 }
                 right={
-                  isSubmitted ? (
-                    <AppButton variant="secondary" onClick={handleStartOver}>
-                      Start over
-                    </AppButton>
-                  ) : currentBlock ? (
+                  currentBlock ? (
                     <>
                       <AppButton
                         variant="secondary"
@@ -678,6 +677,7 @@ export function LevelGroupSteppedWorkspace({
                   ) : null
                 }
               />
+              ) : null
             )}
               </>
             )}

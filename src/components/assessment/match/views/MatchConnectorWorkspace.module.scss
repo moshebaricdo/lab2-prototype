@@ -60,11 +60,13 @@
 .board {
   margin-top: 24px;
   position: relative;
+  touch-action: none;
 }
 
 .svgOverlay {
   height: 100%;
   inset: 0;
+  overflow: visible;
   pointer-events: none;
   position: absolute;
   width: 100%;

@@ -20,6 +20,8 @@ import { useLayoutState } from "../../../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import type { CodePanelConfig } from "../../../../data/assessment/codePanel";
+import type { DevPanelField } from "../../../dev";
+import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
   AssessmentCodeRefLayout,
@@ -44,7 +46,19 @@ interface FreeResponseWorkspaceProps {
   embeddedStepEyebrow?: string;
   /** When set in an embedded level group, parent controls reveal for all blocks. */
   groupTeacherReveal?: boolean;
+  /** Hide the dev panel tab in the sidebar. */
+  hideDevPanel?: boolean;
 }
+
+const freeResponseDevFields: DevPanelField[] = [
+  { key: "level.stem.question", label: "Question", type: "text", group: "Stem" },
+  { key: "level.stem.description", label: "Description (markdown)", type: "textarea", group: "Stem", rows: 5 },
+  { key: "level.question.placeholder", label: "Placeholder text", type: "text", group: "Input" },
+  { key: "level.question.minCharacters", label: "Min characters", type: "number", min: 0, max: 500, group: "Input" },
+  { key: "level.revealAnswerEnabled", label: "Reveal answer", type: "boolean", group: "Behavior" },
+  { key: "level.allowFileUpload", label: "Allow file upload", type: "boolean", group: "Behavior" },
+  { key: "level.metadata.lessonName", label: "Lesson name", type: "text", group: "Metadata" },
+];
 
 export function FreeResponseWorkspace({
   payload = mockFreeResponseLevel,
@@ -60,9 +74,17 @@ export function FreeResponseWorkspace({
   embeddedInSteppedGroup = false,
   embeddedStepEyebrow,
   groupTeacherReveal,
+  hideDevPanel = false,
 }: FreeResponseWorkspaceProps = {}) {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const overrideResult = usePropsOverride(
+    payload as unknown as Record<string, unknown>,
+  );
+  const resolvedPayload = (
+    embedded ? payload : overrideResult.props
+  ) as unknown as FreeResponseLevelPayload;
   const {
     activeTab,
     setActiveTab,
@@ -84,7 +106,7 @@ export function FreeResponseWorkspace({
     handleRestoreVersion,
   } = useVersionHistoryState();
 
-  const { level } = payload;
+  const { level } = resolvedPayload;
   const revealAnswerEnabled = level.revealAnswerEnabled === true;
   const allowFileUpload = level.allowFileUpload === true;
   const teacherAnswer = level.teacherAnswer;
@@ -456,6 +478,10 @@ export function FreeResponseWorkspace({
         showContinueButton: false,
         collapsible: true,
         showInstructionsDrawer: false,
+        ...(!hideDevPanel && {
+          devPanelFields: freeResponseDevFields,
+          devPanelOverrideResult: overrideResult,
+        }),
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) =>

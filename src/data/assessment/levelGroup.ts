@@ -3,13 +3,20 @@ import type {
   FreeResponseTeacherAnswer,
 } from "./freeResponse";
 import type { MatchLevelPayload } from "./match";
-import type { MultiChoiceLevelPayload } from "./multi";
+import type {
+  MultiChoiceAnswerContentBlock,
+  MultiChoiceLevelPayload,
+} from "./multi";
 import type { CodePanelConfig } from "./codePanel";
 
 export interface LevelGroupMultiQuestion {
   id: string;
   prompt: string;
-  answers: Array<{ id: string; text: string }>;
+  answers: Array<{
+    id: string;
+    text?: string;
+    contentBlocks?: MultiChoiceAnswerContentBlock[];
+  }>;
   /** Required for graded quizzes. Omit when the level uses `surveyMode`. */
   correctAnswerId?: string;
 }
@@ -61,6 +68,8 @@ export interface LevelGroupAssessmentIntro {
   overviewContent: string;
   /** Total time allowed (minutes), shown next to question count above Begin. */
   timeMinutes: number;
+  /** Number of attempts allowed. Omit to hide the attempts badge. */
+  attempts?: number;
 }
 
 export interface LevelGroupFlowPayload {
@@ -388,7 +397,11 @@ export function levelGroupMultiToPayload(
       name: flowLevel.name,
       type: "Multi",
       stem: { question: q.prompt },
-      answers: q.answers.map((a) => ({ id: a.id, text: a.text })),
+      answers: q.answers.map((a) => ({
+        id: a.id,
+        ...(a.text != null ? { text: a.text } : {}),
+        ...(a.contentBlocks ? { contentBlocks: a.contentBlocks } : {}),
+      })),
       ...(survey
         ? { surveyMode: true as const }
         : { correctAnswerId: q.correctAnswerId! }),

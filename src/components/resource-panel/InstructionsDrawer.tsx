@@ -16,6 +16,7 @@ interface InstructionsDrawerProps {
   onOpenChange?: (isOpen: boolean) => void;
   initialHeightRatio?: number;
   visualCue?: InstructionsDrawerVisualCue;
+  children?: React.ReactNode;
 }
 
 export function InstructionsDrawer({
@@ -24,6 +25,7 @@ export function InstructionsDrawer({
   onOpenChange,
   initialHeightRatio,
   visualCue = "none",
+  children,
 }: InstructionsDrawerProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [height, setHeight] = useState(400);
@@ -166,6 +168,7 @@ export function InstructionsDrawer({
                 onScroll={updateOverflowState}
               >
                 <div ref={contentRef}>
+                {children ?? (<>
                 <section className={styles.card}>
                   <h2 className={styles.heading}>
                     Style Your Webpage to Match Your Brand Identity
@@ -236,6 +239,7 @@ export function InstructionsDrawer({
                     </li>
                   </ul>
                 </section>
+                </>)}
                 </div>
               </div>
               {shouldShowFade && <div className={styles.scrollFade} aria-hidden="true" />}

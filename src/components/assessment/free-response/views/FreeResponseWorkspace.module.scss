@@ -58,8 +58,9 @@
 }
 
 .textarea:disabled {
-  color: var(--ds-text-neutral-disabled);
+  color: var(--foreground);
   cursor: not-allowed;
+  opacity: 1;
 }
 
 .fileRow {

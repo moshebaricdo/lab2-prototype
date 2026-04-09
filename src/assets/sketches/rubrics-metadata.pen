@@ -1,0 +1,2235 @@
+{
+  "version": "2.10",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Previous Attempt (undone)",
+      "clip": true,
+      "width": 450,
+      "height": 320,
+      "fill": "#F1F5F9",
+      "layout": "vertical",
+      "padding": [
+        40,
+        50
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "xWWaT",
+          "name": "Header Card",
+          "clip": true,
+          "width": 350,
+          "fill": "#FFFFFF",
+          "cornerRadius": 6,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "S6d8p",
+              "name": "Status Accent",
+              "fill": "#D97706",
+              "width": 4,
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "ZY7XR",
+              "name": "Card Body",
+              "width": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "PPgEI",
+                  "name": "Title Bar",
+                  "width": "fill_container",
+                  "fill": "#F8FAFC",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#E2E8F0"
+                  },
+                  "padding": [
+                    10,
+                    10,
+                    10,
+                    12
+                  ],
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "FJKJA",
+                      "name": "Title Lead",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        2,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "eiUOv",
+                          "name": "Rubric Name",
+                          "fill": "#1E293B",
+                          "content": "Personal Portfolio Page",
+                          "lineHeight": 1.35,
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ShlgZ",
+                          "name": "Pill Row",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "iUx2y",
+                              "name": "Status Pill — Needs Revisions",
+                              "fill": "#FEF3C7",
+                              "cornerRadius": 999,
+                              "gap": 4,
+                              "padding": [
+                                2,
+                                8,
+                                2,
+                                6
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "Mqsun",
+                                  "name": "Warning Icon",
+                                  "width": 10,
+                                  "height": 10,
+                                  "iconFontName": "triangle-alert",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#D97706"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "CFiKk",
+                                  "name": "Pill Label",
+                                  "fill": "#1E293B",
+                                  "content": "NEEDS REVISIONS",
+                                  "lineHeight": 1.6,
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 0.4
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SP6xN",
+                      "name": "Nav Buttons",
+                      "gap": 4,
+                      "padding": [
+                        2,
+                        0,
+                        0,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "b7onh",
+                          "name": "Prev Button",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#F1F5F9",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "I4VqP",
+                              "name": "Chevron Left",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-left",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sHUud",
+                          "name": "Next Button",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#F1F5F9",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "DK5tA",
+                              "name": "Chevron Right",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-right",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "lol6y",
+                  "name": "Feedback Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": [
+                    10,
+                    14,
+                    14,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "BxC5u",
+                      "name": "Feedback Label Row",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "vXE9j",
+                          "name": "Feedback Label",
+                          "fill": "#1E293B",
+                          "content": "TEACHER FEEDBACK",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.44
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Vfqsq",
+                      "name": "Feedback Body",
+                      "fill": "#64748B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Your page structure is clear and you met the checklist for headings, images, and an external stylesheet. Nice use of semantic HTML on the about section. Next time, double-check that every interactive element (like your nav links) has a visible focus state so keyboard users get the same clarity you gave the layout.",
+                      "lineHeight": 1.55,
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "r8mKx",
+      "x": 500,
+      "y": 0,
+      "name": "Current State",
+      "clip": true,
+      "width": 450,
+      "height": 1575,
+      "fill": "#F1F5F9",
+      "layout": "vertical",
+      "gap": 29,
+      "padding": [
+        40,
+        50
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "ySCjj",
+          "name": "Header Card — Current",
+          "clip": true,
+          "width": 350,
+          "fill": "#FFFFFF",
+          "cornerRadius": 6,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "rZ84A",
+              "name": "Card Body",
+              "width": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "1IGEZ",
+                  "name": "Title Bar",
+                  "width": "fill_container",
+                  "fill": "#F8FAFC",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#E2E8F0"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    10,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "uA8bO",
+                      "name": "Left Slot",
+                      "width": 32,
+                      "height": 28,
+                      "padding": [
+                        2,
+                        0,
+                        0,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "oL040",
+                          "name": "Prev Button",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#F1F5F9",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "chrGg",
+                              "name": "prevIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-left",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "AzfQq",
+                      "name": "Title Center",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": [
+                        2,
+                        4,
+                        0,
+                        4
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "WJYef",
+                          "name": "Rubric Name",
+                          "fill": "#1E293B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Personal Portfolio Page",
+                          "lineHeight": 1.35,
+                          "textAlign": "center",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "3SBAi",
+                          "name": "Pill Row",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "mOyqo",
+                              "name": "Status Pill",
+                              "fill": "#FEF3C7",
+                              "cornerRadius": 999,
+                              "gap": 4,
+                              "padding": [
+                                2,
+                                10,
+                                2,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "QtBbl",
+                                  "name": "pillIcon",
+                                  "width": 10,
+                                  "height": 10,
+                                  "iconFontName": "triangle-alert",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#D97706"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "2to97",
+                                  "name": "pillLabel",
+                                  "fill": "#1E293B",
+                                  "content": "NEEDS REVISIONS",
+                                  "lineHeight": 1.6,
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 0.44
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KLDAW",
+                      "name": "Right Slot",
+                      "width": 32,
+                      "height": 28,
+                      "padding": [
+                        2,
+                        0,
+                        0,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "qJpnX",
+                          "name": "Next Button",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#F1F5F9",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "iIcwj",
+                              "name": "nextIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-right",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "LAMzh",
+                  "name": "Feedback Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": [
+                    14,
+                    14,
+                    12,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "7iJFK",
+                      "name": "Label Row",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Mtlhm",
+                          "name": "Feedback Label",
+                          "fill": "#1E293B",
+                          "content": "Teacher feedback",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "tc0Ji",
+                      "name": "Feedback Body",
+                      "fill": "#64748B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Your page structure is clear and you met the checklist for headings, images, and an external stylesheet. Nice use of semantic HTML on the about section. Next time, double-check that every interactive element (like your nav links) has a visible focus state so keyboard users get the same clarity you gave the layout.",
+                      "lineHeight": 1.55,
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yIVxH",
+          "name": "Header Card — Current",
+          "clip": true,
+          "width": 350,
+          "fill": "#FFFFFF",
+          "cornerRadius": 6,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "x7zIr",
+              "name": "Card Body",
+              "width": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "7TjQ6",
+                  "name": "Title Bar",
+                  "width": "fill_container",
+                  "fill": "#F8FAFC",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#E2E8F0"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    10,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "rsHrv",
+                      "name": "Left Slot",
+                      "width": 32,
+                      "height": 28,
+                      "padding": [
+                        2,
+                        0,
+                        0,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "NJuSc",
+                          "name": "Prev Button",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#F1F5F9",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "7LHrK",
+                              "name": "prevIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-left",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TQf7e",
+                      "name": "Title Center",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": [
+                        2,
+                        4,
+                        0,
+                        4
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "AKIbk",
+                          "name": "Rubric Name",
+                          "fill": "#1E293B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Personal Portfolio Page",
+                          "lineHeight": 1.35,
+                          "textAlign": "center",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GfFth",
+                      "name": "Right Slot",
+                      "width": 32,
+                      "height": 28,
+                      "padding": [
+                        2,
+                        0,
+                        0,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "rfB8p",
+                          "name": "Next Button",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#F1F5F9",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "2aDGr",
+                              "name": "nextIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-right",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "8Nto4",
+                  "name": "Feedback Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": [
+                    14,
+                    14,
+                    12,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "wZTPp",
+                      "name": "Frame 1",
+                      "width": "fill_container",
+                      "height": 23,
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "mbJTt",
+                          "name": "Label Row",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "AqORX",
+                              "name": "Feedback Label",
+                              "fill": "#1E293B",
+                              "content": "Feedback: ",
+                              "lineHeight": 1.4,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "6Xnje",
+                          "name": "Pill Row",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "raoy9",
+                              "name": "Status Pill",
+                              "fill": "#FEF3C7",
+                              "cornerRadius": 999,
+                              "gap": 4,
+                              "padding": [
+                                2,
+                                10,
+                                2,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "efJKa",
+                                  "name": "pillIcon",
+                                  "width": 12,
+                                  "height": 12,
+                                  "iconFontName": "triangle-alert",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#D97706"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "pw8ZW",
+                                  "name": "pillLabel",
+                                  "rotation": -0.06955665522994992,
+                                  "fill": "#1E293B",
+                                  "content": "NEEDS REVISIONS",
+                                  "lineHeight": 1.6,
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 0.44
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "3gMCQ",
+                      "name": "Feedback Body",
+                      "fill": "#64748B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Your page structure is clear and you met the checklist for headings, images, and an external stylesheet. Nice use of semantic HTML on the about section. Next time, double-check that every interactive element (like your nav links) has a visible focus state so keyboard users get the same clarity you gave the layout.",
+                      "lineHeight": 1.55,
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "t7X73",
+          "name": "Header Card — Current",
+          "clip": true,
+          "width": 350,
+          "fill": "#FFFFFF",
+          "cornerRadius": 6,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "UA9jN",
+              "name": "Card Body",
+              "width": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "FcvAH",
+                  "name": "Title Bar",
+                  "width": "fill_container",
+                  "fill": "#F8FAFC",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#E2E8F0"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    10,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "3dZZH",
+                      "name": "Left Slot",
+                      "width": 32,
+                      "height": 28,
+                      "padding": [
+                        2,
+                        0,
+                        0,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Ib8KN",
+                          "name": "Prev Button",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#F1F5F9",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "rqt9C",
+                              "name": "prevIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-left",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "41iLd",
+                      "name": "Title Center",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": [
+                        2,
+                        4,
+                        0,
+                        4
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "DcFZ1",
+                          "name": "Rubric Name",
+                          "fill": "#1E293B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Personal Portfolio Page",
+                          "lineHeight": 1.35,
+                          "textAlign": "center",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ar6fS",
+                      "name": "Right Slot",
+                      "width": 32,
+                      "height": 28,
+                      "padding": [
+                        2,
+                        0,
+                        0,
+                        0
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "1wS38",
+                          "name": "Next Button",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#F1F5F9",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "UJ9kB",
+                              "name": "nextIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-right",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NOPSU",
+                  "name": "Feedback Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 9,
+                  "padding": 14,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "bcfzR",
+                      "name": "Frame 1",
+                      "width": "fill_container",
+                      "height": 23,
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "n4FVc",
+                          "name": "Pill Row",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "uVb2T",
+                              "name": "Status Pill",
+                              "fill": "#FEF3C7",
+                              "cornerRadius": 999,
+                              "gap": 4,
+                              "padding": [
+                                2,
+                                10,
+                                2,
+                                8
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "TXl9K",
+                                  "name": "pillIcon",
+                                  "width": 12,
+                                  "height": 12,
+                                  "iconFontName": "triangle-alert",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#D97706"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "nO0hd",
+                                  "name": "pillLabel",
+                                  "rotation": -0.06955665522994992,
+                                  "fill": "#1E293B",
+                                  "content": "NEEDS REVISIONS",
+                                  "lineHeight": 1.6,
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 0.44
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "4fJ1r",
+                      "name": "Feedback Body",
+                      "fill": "#64748B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Your page structure is clear and you met the checklist for headings, images, and an external stylesheet. Nice use of semantic HTML on the about section. Next time, double-check that every interactive element (like your nav links) has a visible focus state so keyboard users get the same clarity you gave the layout.",
+                      "lineHeight": 1.55,
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "lSpor",
+          "name": "Header Card — Current",
+          "clip": true,
+          "width": 350,
+          "fill": "#FFFFFF",
+          "cornerRadius": 6,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "8HjdN",
+              "name": "Card Body",
+              "width": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "o5dgD",
+                  "name": "Title Bar",
+                  "width": "fill_container",
+                  "fill": "#F8FAFC",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#E2E8F0"
+                  },
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": [
+                    10,
+                    8
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Lj6hB",
+                      "name": "Frame 2",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "g7bSA",
+                          "name": "Prev Button",
+                          "rotation": 0.26518235418974057,
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#F1F5F9",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "GAKBx",
+                              "name": "prevIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-left",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "utrSb",
+                          "name": "Rubric Name",
+                          "fill": "#1e293bb3",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "1 of 4",
+                          "lineHeight": 1.35,
+                          "textAlign": "center",
+                          "fontFamily": "Inter",
+                          "fontSize": 12
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZmpGB",
+                          "name": "Right Slot",
+                          "rotation": 0.26518235418974057,
+                          "height": 28,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "anSfD",
+                              "name": "Next Button",
+                              "width": 28,
+                              "height": 28,
+                              "fill": "#F1F5F9",
+                              "cornerRadius": 6,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#E2E8F0"
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "XC50h",
+                                  "name": "nextIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "chevron-right",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#64748B"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DglBQ",
+                      "name": "Title Center",
+                      "width": "fill_container",
+                      "gap": 6,
+                      "padding": [
+                        2,
+                        4,
+                        0,
+                        4
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Rn19C",
+                          "name": "Rubric Name",
+                          "fill": "#1E293B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Personal Portfolio...",
+                          "lineHeight": 1.35,
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yYQen",
+                          "name": "Status Pill",
+                          "fill": "#FEF3C7",
+                          "cornerRadius": 999,
+                          "gap": 4,
+                          "padding": [
+                            2,
+                            10,
+                            2,
+                            8
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "jl8xT",
+                              "name": "pillIcon",
+                              "width": 12,
+                              "height": 12,
+                              "iconFontName": "triangle-alert",
+                              "iconFontFamily": "lucide",
+                              "fill": "#D97706"
+                            },
+                            {
+                              "type": "text",
+                              "id": "FXQJC",
+                              "name": "pillLabel",
+                              "rotation": -0.06955665522994992,
+                              "fill": "#1E293B",
+                              "content": "NEEDS REVISIONS",
+                              "lineHeight": 1.6,
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600",
+                              "letterSpacing": 0.44
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "15S2j",
+                  "name": "Feedback Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": 14,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Q8ikl",
+                      "name": "Feedback Label",
+                      "fill": "#1E293B",
+                      "content": "Teacher feedback",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "EluR8",
+                      "name": "Feedback Body",
+                      "fill": "#64748B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Your page structure is clear and you met the checklist for headings, images, and an external stylesheet. Nice use of semantic HTML on the about section. Next time, double-check that every interactive element (like your nav links) has a visible focus state so keyboard users get the same clarity you gave the layout.",
+                      "lineHeight": 1.55,
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "PhzV3",
+          "name": "Header Card — Current",
+          "clip": true,
+          "width": 350,
+          "fill": "#FFFFFF",
+          "cornerRadius": 6,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "zPW3C",
+              "name": "Card Body",
+              "width": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "FDisf",
+                  "name": "Title Bar",
+                  "width": "fill_container",
+                  "fill": "#F8FAFC",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#E2E8F0"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "hVcsi",
+                      "name": "Title Center",
+                      "width": "fill_container",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "#e2e8f0ff"
+                      },
+                      "gap": 6,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Ybg3W",
+                          "name": "Rubric Name",
+                          "fill": "#1E293B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Functions",
+                          "lineHeight": 1.35,
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "TuONB",
+                          "name": "Status Pill",
+                          "fill": "#FEF3C7",
+                          "cornerRadius": 999,
+                          "gap": 4,
+                          "padding": [
+                            2,
+                            10,
+                            2,
+                            8
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "nD0bH",
+                              "name": "pillIcon",
+                              "width": 12,
+                              "height": 12,
+                              "iconFontName": "triangle-alert",
+                              "iconFontFamily": "lucide",
+                              "fill": "#D97706"
+                            },
+                            {
+                              "type": "text",
+                              "id": "vxxdM",
+                              "name": "pillLabel",
+                              "rotation": -0.06955665522994992,
+                              "fill": "#1E293B",
+                              "content": "NEEDS WORK",
+                              "lineHeight": 1.6,
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600",
+                              "letterSpacing": 0.44
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "N0za5",
+                  "name": "Feedback Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": 14,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "9IfNv",
+                      "name": "Feedback Label",
+                      "fill": "#1E293B",
+                      "content": "Teacher feedback",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "9mWXS",
+                      "name": "Feedback Body",
+                      "fill": "#64748B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Your page structure is clear and you met the checklist for headings, images, and an external stylesheet. Nice use of semantic HTML on the about section. Next time, double-check that every interactive element (like your nav links) has a visible focus state so keyboard users get the same clarity you gave the layout.",
+                      "lineHeight": 1.55,
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "unGuq",
+                  "name": "Title Bar",
+                  "width": "fill_container",
+                  "fill": "#F8FAFC",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "top": 1,
+                      "bottom": 1
+                    },
+                    "fill": "#E2E8F0"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "9CEDl",
+                      "name": "Frame 2",
+                      "width": "fill_container",
+                      "padding": [
+                        8,
+                        12
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "K7rWa",
+                          "name": "Prev Button",
+                          "rotation": 0.26518235418974057,
+                          "width": 24,
+                          "height": 24,
+                          "fill": "#ffffffff",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "615p4",
+                              "name": "prevIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-left",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "TM4CV",
+                          "name": "Rubric Name",
+                          "fill": "#1e293bb3",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Viewing 2 of 4",
+                          "lineHeight": 1.35,
+                          "textAlign": "center",
+                          "fontFamily": "Inter",
+                          "fontSize": 12
+                        },
+                        {
+                          "type": "frame",
+                          "id": "B1APM",
+                          "name": "Right Slot",
+                          "rotation": 0.26518235418974057,
+                          "height": 24,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Nkmpt",
+                              "name": "Next Button",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "#ffffffff",
+                              "cornerRadius": 6,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#E2E8F0"
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "jK5E5",
+                                  "name": "nextIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "chevron-right",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#64748B"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "5uEE6",
+      "x": 1034,
+      "y": 1636,
+      "name": "Header Card — Has Multiple",
+      "clip": true,
+      "width": 350,
+      "fill": "#FFFFFF",
+      "cornerRadius": 6,
+      "stroke": {
+        "align": "inside",
+        "thickness": 1,
+        "fill": "#E2E8F0"
+      },
+      "children": [
+        {
+          "type": "frame",
+          "id": "f1uKs",
+          "name": "Card Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "iGYGd",
+              "name": "Title Bar",
+              "width": "fill_container",
+              "fill": "#F8FAFC",
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "bottom": 1
+                },
+                "fill": "#E2E8F0"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "e5Vzr",
+                  "name": "Title Bar",
+                  "width": "fill_container",
+                  "fill": "#F8FAFC",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "top": 1,
+                      "bottom": 1
+                    },
+                    "fill": "#E2E8F0"
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Yd1Aj",
+                      "name": "Frame 2",
+                      "width": "fill_container",
+                      "padding": [
+                        8,
+                        12
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "NEU7D",
+                          "name": "Prev Button",
+                          "rotation": 0.26518235418974057,
+                          "width": 24,
+                          "height": 24,
+                          "fill": "#ffffffff",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E2E8F0"
+                          },
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "Fwx6Z",
+                              "name": "prevIcon",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "chevron-left",
+                              "iconFontFamily": "lucide",
+                              "fill": "#64748B"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "iI2Mu",
+                          "name": "Rubric Name",
+                          "fill": "#1e293bb3",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Viewing 2 of 4",
+                          "lineHeight": 1.35,
+                          "textAlign": "center",
+                          "fontFamily": "Inter",
+                          "fontSize": 12
+                        },
+                        {
+                          "type": "frame",
+                          "id": "J0lz5",
+                          "name": "Right Slot",
+                          "rotation": 0.26518235418974057,
+                          "height": 24,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "U6El7",
+                              "name": "Next Button",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "#ffffffff",
+                              "cornerRadius": 6,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#E2E8F0"
+                              },
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "Vulxi",
+                                  "name": "nextIcon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "iconFontName": "chevron-right",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#64748B"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Ivqmh",
+                  "name": "Title Center",
+                  "width": "fill_container",
+                  "fill": "#ffffffff",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#e2e8f0ff"
+                  },
+                  "gap": 6,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "fWebO",
+                      "name": "Rubric Name",
+                      "fill": "#1E293B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Functions",
+                      "lineHeight": 1.35,
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BIMG7",
+                      "name": "Status Pill",
+                      "fill": "#FEF3C7",
+                      "cornerRadius": 999,
+                      "gap": 4,
+                      "padding": [
+                        2,
+                        10,
+                        2,
+                        8
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "4F1KB",
+                          "name": "pillIcon",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "triangle-alert",
+                          "iconFontFamily": "lucide",
+                          "fill": "#D97706"
+                        },
+                        {
+                          "type": "text",
+                          "id": "CRyAd",
+                          "name": "pillLabel",
+                          "rotation": -0.06955665522994992,
+                          "fill": "#1E293B",
+                          "content": "NEEDS WORK",
+                          "lineHeight": 1.6,
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.44
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "9RW4h",
+              "name": "Feedback Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "8jnB6",
+                  "name": "Feedback Label",
+                  "fill": "#1E293B",
+                  "content": "Teacher feedback",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "CBkIf",
+                  "name": "Feedback Body",
+                  "fill": "#64748B",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Your page structure is clear and you met the checklist for headings, images, and an external stylesheet. Nice use of semantic HTML on the about section. Next time, double-check that every interactive element (like your nav links) has a visible focus state so keyboard users get the same clarity you gave the layout.",
+                  "lineHeight": 1.55,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal",
+                  "fontStyle": "italic"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "TeXZj",
+      "x": 1416,
+      "y": 1636,
+      "name": "Header Card — Single",
+      "clip": true,
+      "width": 350,
+      "fill": "#FFFFFF",
+      "cornerRadius": 6,
+      "stroke": {
+        "align": "inside",
+        "thickness": 1,
+        "fill": "#E2E8F0"
+      },
+      "children": [
+        {
+          "type": "frame",
+          "id": "Tz71U",
+          "name": "Card Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Zpb4P",
+              "name": "Title Bar",
+              "width": "fill_container",
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "bottom": 1
+                },
+                "fill": "#E2E8F0"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "kPAie",
+                  "name": "Title Center",
+                  "width": "fill_container",
+                  "fill": "#f8fafcff",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#e2e8f0ff"
+                  },
+                  "gap": 6,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "j27gt",
+                      "name": "Rubric Name",
+                      "fill": "#1E293B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Functions",
+                      "lineHeight": 1.35,
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pTMK9",
+                      "name": "Status Pill",
+                      "fill": "#FEF3C7",
+                      "cornerRadius": 999,
+                      "gap": 4,
+                      "padding": [
+                        2,
+                        10,
+                        2,
+                        8
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "gFCOi",
+                          "name": "pillIcon",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "triangle-alert",
+                          "iconFontFamily": "lucide",
+                          "fill": "#D97706"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Lux77",
+                          "name": "pillLabel",
+                          "rotation": -0.06955665522994992,
+                          "fill": "#1E293B",
+                          "content": "NEEDS WORK",
+                          "lineHeight": 1.6,
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.44
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HcSh4",
+              "name": "Feedback Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kv1Jy",
+                  "name": "Feedback Label",
+                  "fill": "#1E293B",
+                  "content": "Teacher feedback",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "zFF5l",
+                  "name": "Feedback Body",
+                  "fill": "#64748B",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Your page structure is clear and you met the checklist for headings, images, and an external stylesheet. Nice use of semantic HTML on the about section. Next time, double-check that every interactive element (like your nav links) has a visible focus state so keyboard users get the same clarity you gave the layout.",
+                  "lineHeight": 1.55,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal",
+                  "fontStyle": "italic"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lyRQz",
+      "x": 1798,
+      "y": 1636,
+      "name": "Header Card — Current",
+      "clip": true,
+      "width": 350,
+      "fill": "#FFFFFF",
+      "cornerRadius": 6,
+      "stroke": {
+        "align": "inside",
+        "thickness": 1,
+        "fill": "#E2E8F0"
+      },
+      "children": [
+        {
+          "type": "frame",
+          "id": "QImOv",
+          "name": "Card Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "YpIMO",
+              "name": "Title Bar",
+              "width": "fill_container",
+              "fill": "#F8FAFC",
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "bottom": 1
+                },
+                "fill": "#E2E8F0"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "CtiXu",
+                  "name": "Title Center",
+                  "width": "fill_container",
+                  "fill": "#ffffffff",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#e2e8f0ff"
+                  },
+                  "gap": 6,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Lo1tq",
+                      "name": "Rubric Name",
+                      "fill": "#1E293B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Functions",
+                      "lineHeight": 1.35,
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TiMb2",
+                      "name": "Status Pill",
+                      "fill": "#FEF3C7",
+                      "cornerRadius": 999,
+                      "gap": 4,
+                      "padding": [
+                        2,
+                        10,
+                        2,
+                        8
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "2PLur",
+                          "name": "pillIcon",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "triangle-alert",
+                          "iconFontFamily": "lucide",
+                          "fill": "#D97706"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Eev0j",
+                          "name": "pillLabel",
+                          "rotation": -0.06955665522994992,
+                          "fill": "#1E293B",
+                          "content": "NEEDS WORK",
+                          "lineHeight": 1.6,
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.44
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lbER5",
+              "name": "Feedback Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "5l3L6",
+                  "name": "Title Center",
+                  "width": "fill_container",
+                  "fill": "#ffffffff",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    }
+                  },
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "44OEP",
+                      "name": "Rubric Name",
+                      "fill": "#1E293B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Functions",
+                      "lineHeight": 1.35,
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "w5Ez0",
+                      "name": "Status Pill",
+                      "fill": "#FEF3C7",
+                      "cornerRadius": 999,
+                      "gap": 4,
+                      "padding": [
+                        2,
+                        10,
+                        2,
+                        8
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "0RMxI",
+                          "name": "pillIcon",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "triangle-alert",
+                          "iconFontFamily": "lucide",
+                          "fill": "#D97706"
+                        },
+                        {
+                          "type": "text",
+                          "id": "RDjNW",
+                          "name": "pillLabel",
+                          "rotation": -0.06955665522994992,
+                          "fill": "#1E293B",
+                          "content": "NEEDS WORK",
+                          "lineHeight": 1.6,
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.44
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "6Fb7I",
+                  "name": "Frame 3",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "J96jZ",
+                      "name": "Feedback Label",
+                      "fill": "#1E293B",
+                      "content": "Teacher feedback",
+                      "lineHeight": 1.4,
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gb59C",
+                      "name": "Feedback Body",
+                      "fill": "#64748B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Your page structure is clear and you met the checklist for headings, images, and an external stylesheet. Nice use of semantic HTML on the about section. Next time, double-check that every interactive element (like your nav links) has a visible focus state so keyboard users get the same clarity you gave the layout.",
+                      "lineHeight": 1.55,
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

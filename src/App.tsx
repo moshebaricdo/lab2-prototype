@@ -33,6 +33,16 @@ import { WebLab2DrawerFadeLevelPage } from "./pages/WebLab2DrawerFadeLevelPage";
 import { WebLab2DrawerInlineLinkLevelPage } from "./pages/WebLab2DrawerInlineLinkLevelPage";
 import { WebLab2FileDropLevelPage } from "./pages/WebLab2FileDropLevelPage";
 import { WebLab2LevelPage } from "./pages/WebLab2LevelPage";
+import { WebLab2RubricLevelPage } from "./pages/WebLab2RubricLevelPage";
+import {
+  ProgressionBranchColorPage,
+  ProgressionBranchLayoutPage,
+  ProgressionBranchMediaPage,
+} from "./pages/ProgressionBranchWebLabPage";
+import { ProgressionBubbleChoicePage } from "./pages/ProgressionBubbleChoicePage";
+import { ProgressionFreeResponsePage } from "./pages/ProgressionFreeResponsePage";
+import { ProgressionLevelGroupPage } from "./pages/ProgressionLevelGroupPage";
+import { ProgressionWebLabPage } from "./pages/ProgressionWebLabPage";
 import { WebLab2SendAffordanceLevelPage } from "./pages/WebLab2SendAffordanceLevelPage";
 
 export default function App() {
@@ -56,6 +66,10 @@ export default function App() {
       <Route
         path="/levels/weblab2-drawer-inline-link"
         element={<WebLab2DrawerInlineLinkLevelPage />}
+      />
+      <Route
+        path="/levels/weblab2-rubric"
+        element={<WebLab2RubricLevelPage />}
       />
       <Route path="/levels/multi" element={<MultiChoiceLevelPage />} />
       <Route
@@ -163,6 +177,34 @@ export default function App() {
       <Route
         path="/levels/bubble-choice-images"
         element={<BubbleChoiceImagesLevelPage />}
+      />
+      <Route
+        path="/levels/progression-weblab"
+        element={<ProgressionWebLabPage />}
+      />
+      <Route
+        path="/levels/progression-free-response"
+        element={<ProgressionFreeResponsePage />}
+      />
+      <Route
+        path="/levels/progression-bubble-choice"
+        element={<ProgressionBubbleChoicePage />}
+      />
+      <Route
+        path="/levels/progression-branch-color"
+        element={<ProgressionBranchColorPage />}
+      />
+      <Route
+        path="/levels/progression-branch-layout"
+        element={<ProgressionBranchLayoutPage />}
+      />
+      <Route
+        path="/levels/progression-branch-media"
+        element={<ProgressionBranchMediaPage />}
+      />
+      <Route
+        path="/levels/progression-levelgroup"
+        element={<ProgressionLevelGroupPage />}
       />
       <Route path="*" element={<Navigate to="/levels" replace />} />
     </Routes>

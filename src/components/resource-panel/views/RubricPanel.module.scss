@@ -1,0 +1,259 @@
+/* ── Layout ── */
+
+.root {
+  min-height: 0;
+  flex: 1;
+  padding: 8px;
+  padding-bottom: 0;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Nav card (multi-rubric pagination) ── */
+
+.navCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--ds-background-neutral-secondary);
+  padding: 8px 10px;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 6px;
+}
+
+.navLabel {
+  flex: 1;
+  min-width: 0;
+  color: var(--ds-text-neutral-secondary);
+  font-size: var(--text-label);
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* ── Header card ── */
+
+.headerCard {
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--ds-background-neutral-secondary);
+  padding: 12px;
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.rubricName {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  color: var(--foreground);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+}
+
+/* ── Status pills ── */
+
+.statusPill {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.6;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pillComplete {
+  background: var(--ds-background-success-primary);
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.pillNeedsRevisions {
+  background: var(--ds-background-warning-primary);
+  color: var(--ds-text-neutral-primary);
+}
+
+.pillDefault {
+  background: var(--ds-background-neutral-septenary);
+  color: #fff;
+}
+
+/* ── Feedback section ── */
+
+.feedbackSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+}
+
+.feedbackLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  display: none;
+}
+
+.feedbackLabel {
+  color: var(--ds-text-neutral-tertiary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.feedbackBody {
+  margin: 0;
+  color: var(--ds-text-neutral-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+/* ── Rubric table ── */
+
+.tableCard {
+  overflow: hidden;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 6px;
+  background: var(--background);
+}
+
+.tableHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  padding: 8px 12px;
+  background: var(--ds-background-neutral-secondary);
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.tableHeaderLabel {
+  margin: 0;
+  color: var(--ds-text-neutral-tertiary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Category rows ── */
+
+.categoryRow {
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.categoryRow:last-child {
+  border-bottom: 0;
+}
+
+.categoryHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: default;
+}
+
+.selectedMarker {
+  flex-shrink: 0;
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.markerSelected {
+  background: var(--ds-text-brand-teal-primary);
+  color: #fff;
+  font-size: 10px;
+}
+
+.markerUnselected {
+  border: 2px solid var(--ds-borders-neutral-strong);
+  background: var(--background);
+}
+
+.categoryInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.categoryTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.categoryTitleRow .categoryLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.categoryLabel {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.categoryLabelSelected {
+  color: var(--ds-text-brand-teal-primary);
+}
+
+.categoryDescription {
+  margin: 2px 0 0;
+  color: var(--ds-text-neutral-secondary);
+  font-size: var(--text-label);
+  line-height: 1.6;
+}
+
+/* ── Empty state ── */
+
+.emptyCard {
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 6px;
+  background: var(--background);
+  padding: 24px 14px;
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--muted-foreground);
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.emptyTitle {
+  margin: 0 0 4px;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.emptyBody {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}

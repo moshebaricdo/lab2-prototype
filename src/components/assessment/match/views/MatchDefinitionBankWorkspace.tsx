@@ -25,6 +25,8 @@ import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import errorSoundUrl from "@/assets/audio/error-sound.mp3";
 import successSoundUrl from "@/assets/audio/success-sound.mp3";
+import type { DevPanelField } from "../../../dev";
+import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
   AssessmentStemSection,
@@ -210,6 +212,14 @@ function PromptBankDropzone({
   );
 }
 
+const matchDevFields: DevPanelField[] = [
+  { key: "level.stem.question", label: "Question", type: "text", group: "Stem" },
+  { key: "level.stem.description", label: "Description (markdown)", type: "textarea", group: "Stem", rows: 5 },
+  { key: "level.question.termLabel", label: "Term column label", type: "text", group: "Labels" },
+  { key: "level.question.promptLabel", label: "Definition column label", type: "text", group: "Labels" },
+  { key: "level.metadata.lessonName", label: "Lesson name", type: "text", group: "Metadata" },
+];
+
 export function MatchDefinitionBankWorkspace({
   payload = mockMatchDefinitionBankLevel,
   levelLinks,
@@ -217,6 +227,11 @@ export function MatchDefinitionBankWorkspace({
   completedLevelPaths,
 }: MatchDefinitionBankWorkspaceProps = {}) {
   const navigate = useNavigate();
+
+  const overrideResult = usePropsOverride(
+    payload as unknown as Record<string, unknown>,
+  );
+  const resolvedPayload = overrideResult.props as unknown as MatchLevelPayload;
   const {
     activeTab,
     setActiveTab,
@@ -238,7 +253,7 @@ export function MatchDefinitionBankWorkspace({
     handleRestoreVersion,
   } = useVersionHistoryState();
 
-  const { level } = payload;
+  const { level } = resolvedPayload;
   const termIds = useMemo(
     () => level.question.terms.map((term) => term.id),
     [level.question.terms],
@@ -564,6 +579,8 @@ export function MatchDefinitionBankWorkspace({
         showContinueButton: false,
         collapsible: true,
         showInstructionsDrawer: false,
+        devPanelFields: matchDevFields,
+        devPanelOverrideResult: overrideResult,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));

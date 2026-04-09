@@ -9,6 +9,8 @@ import {
   type TopNavigationProps,
 } from "../ui/header/TopNavigation";
 import { ResizableHandle } from "../weblab2/views";
+import { useAnnotations } from "../../hooks/useAnnotations";
+import { AnnotationOverlay } from "../dev/AnnotationOverlay";
 
 type Lab2ShellProps =
   | {
@@ -27,6 +29,7 @@ type Lab2ShellProps =
 
 export function Lab2Shell(props: Lab2ShellProps) {
   const { children, topNavigationProps } = props;
+  const annotationsResult = useAnnotations();
 
   if (props.hideResourcePanel === true) {
     return (
@@ -35,6 +38,7 @@ export function Lab2Shell(props: Lab2ShellProps) {
         <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
           {children}
         </div>
+        <AnnotationOverlay annotations={annotationsResult} />
       </div>
     );
   }
@@ -52,6 +56,7 @@ export function Lab2Shell(props: Lab2ShellProps) {
       <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <Sidebar
           {...sidebarProps}
+          annotations={annotationsResult}
           onCollapsedChange={(collapsed) => {
             setSidebarCollapsed(collapsed);
             sidebarProps.onCollapsedChange?.(collapsed);
@@ -60,6 +65,7 @@ export function Lab2Shell(props: Lab2ShellProps) {
         {!resizeDisabled && <ResizableHandle onResize={onResize} />}
         {children}
       </div>
+      <AnnotationOverlay annotations={annotationsResult} />
     </div>
   );
 }

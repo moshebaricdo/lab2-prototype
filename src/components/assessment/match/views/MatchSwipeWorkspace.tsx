@@ -23,6 +23,8 @@ import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import errorSoundUrl from "@/assets/audio/error-sound.mp3";
 import successSoundUrl from "@/assets/audio/success-sound.mp3";
+import type { DevPanelField } from "../../../dev";
+import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
   AssessmentStemSection,
@@ -155,6 +157,14 @@ interface MatchSwipeWorkspaceProps {
   completedLevelPaths?: string[];
 }
 
+const matchSwipeDevFields: DevPanelField[] = [
+  { key: "level.stem.question", label: "Question", type: "text", group: "Stem" },
+  { key: "level.stem.description", label: "Description (markdown)", type: "textarea", group: "Stem", rows: 5 },
+  { key: "level.question.termLabel", label: "Term label", type: "text", group: "Labels" },
+  { key: "level.question.promptLabel", label: "Definition label", type: "text", group: "Labels" },
+  { key: "level.metadata.lessonName", label: "Lesson name", type: "text", group: "Metadata" },
+];
+
 export function MatchSwipeWorkspace({
   payload = mockMatchSwipeCardsLevel,
   levelLinks,
@@ -162,6 +172,11 @@ export function MatchSwipeWorkspace({
   completedLevelPaths,
 }: MatchSwipeWorkspaceProps = {}) {
   const navigate = useNavigate();
+
+  const overrideResult = usePropsOverride(
+    payload as unknown as Record<string, unknown>,
+  );
+  const resolvedPayload = overrideResult.props as unknown as MatchLevelPayload;
   const {
     activeTab,
     setActiveTab,
@@ -183,7 +198,7 @@ export function MatchSwipeWorkspace({
     handleRestoreVersion,
   } = useVersionHistoryState();
 
-  const { level } = payload;
+  const { level } = resolvedPayload;
   const instructionsId = useId();
 
   const terms = level.question.terms;
@@ -401,6 +416,8 @@ export function MatchSwipeWorkspace({
         showContinueButton: false,
         collapsible: true,
         showInstructionsDrawer: false,
+        devPanelFields: matchSwipeDevFields,
+        devPanelOverrideResult: overrideResult,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));

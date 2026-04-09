@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import {
   type FaIconName,
-  getFaProRegularCodepoint,
+  getFaCodepoint,
 } from "../../icons/faProRegularCodepoints";
 import styles from "./FaIcon.module.scss";
 
@@ -36,7 +36,7 @@ export function FaIcon({
   size = "m",
   style,
 }: FaIconProps) {
-  const hex = getFaProRegularCodepoint(name);
+  const hex = getFaCodepoint(name);
   const char = String.fromCodePoint(Number.parseInt(hex, 16));
 
   return (

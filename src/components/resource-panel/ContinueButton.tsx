@@ -3,11 +3,14 @@ import { AppButton } from "../ui/AppButton";
 import styles from "./ContinueButton.module.scss";
 
 interface ContinueButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement> {}
+  extends ButtonHTMLAttributes<HTMLButtonElement> {
+  label?: string;
+}
 
 export function ContinueButton({
   className = "",
   disabled,
+  label = "Continue to Level 10",
   ...props
 }: ContinueButtonProps) {
   return (
@@ -22,7 +25,7 @@ export function ContinueButton({
       disabled={disabled}
       {...props}
     >
-      <span className={styles.label}>Continue to Level 10</span>
+      <span className={styles.label}>{label}</span>
     </AppButton>
   );
 }

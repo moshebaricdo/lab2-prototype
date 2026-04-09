@@ -1,0 +1,122 @@
+---
+description: Design-system token and typography conventions for all styling work
+alwaysApply: true
+---
+
+# Design System Tokens
+
+All color and typography values in CSS, SCSS, and Tailwind must use design-system tokens defined in `src/styles/tokens.css` and `src/styles/globals.css`. Never hard-code values when a token exists.
+
+## Color: use `--ds-*` tokens, not mapped aliases
+
+`globals.css` defines shorthand aliases (`--foreground`, `--background`, `--card`, etc.) that map to `--ds-*` tokens. **Do not use the aliases in component styles.** Use the `--ds-*` tokens directly so the intent is explicit and grep-able.
+
+```css
+/* ❌ BAD — mapped alias hides the actual DS role */
+color: var(--foreground);
+background: var(--background);
+background: var(--card);
+color: var(--muted-foreground);
+border-color: var(--border);
+background: var(--sidebar);
+background: var(--accent);
+background: var(--destructive);
+
+/* ✅ GOOD — DS token is explicit */
+color: var(--ds-text-neutral-primary);
+background: var(--ds-background-neutral-primary);
+background: var(--ds-background-neutral-primary);
+color: var(--ds-text-neutral-quaternary);
+border-color: var(--ds-borders-neutral-primary);
+background: var(--ds-background-neutral-primary);
+background: var(--ds-background-brand-teal-primary);
+background: var(--ds-background-error-primary);
+```
+
+### Alias → DS token mapping (quick reference)
+
+| Alias | DS Token |
+|---|---|
+| `--foreground` | `--ds-text-neutral-primary` |
+| `--background` | `--ds-background-neutral-primary` |
+| `--card` / `--card-foreground` | `--ds-background-neutral-primary` / `--ds-text-neutral-primary` |
+| `--popover` / `--popover-foreground` | `--ds-background-neutral-primary` / `--ds-text-neutral-primary` |
+| `--primary` | `--ds-background-brand-purple-primary` |
+| `--primary-foreground` | `--ds-text-neutral-white-fixed` |
+| `--secondary` | `--ds-background-neutral-secondary` |
+| `--secondary-foreground` | `--ds-text-neutral-primary` |
+| `--muted` | `--ds-background-neutral-quaternary` |
+| `--muted-foreground` | `--ds-text-neutral-quaternary` |
+| `--accent` | `--ds-background-brand-teal-primary` |
+| `--accent-foreground` | `--ds-text-neutral-white-fixed` |
+| `--destructive` | `--ds-background-error-primary` |
+| `--destructive-foreground` | `--ds-text-neutral-white-fixed` |
+| `--border` | `--ds-borders-neutral-primary` |
+| `--input` / `--input-background` | `--ds-background-neutral-primary` |
+| `--ring` | `--ds-borders-brand-teal-primary` |
+| `--sidebar` | `--ds-background-neutral-primary` |
+| `--sidebar-foreground` | `--ds-text-neutral-primary` |
+
+## Color: no hardcoded hex values
+
+Never write raw hex like `#fff`, `#292F36`, `#69788a`, etc. Pick the matching `--ds-*` token.
+
+```css
+/* ❌ BAD */
+color: #fff;
+color: #292F36;
+
+/* ✅ GOOD */
+color: var(--ds-text-neutral-white-fixed);
+color: var(--ds-text-neutral-black-fixed);
+```
+
+## Typography: use size tokens
+
+Available font-size tokens (from `globals.css`):
+
+| Token | Value |
+|---|---|
+| `--text-h1` | 48px |
+| `--text-h2` | 34px |
+| `--text-h3` | 28px |
+| `--text-h4` | 24px |
+| `--text-base` | 16px |
+| `--text-label` | 12px |
+
+```css
+/* ❌ BAD */
+font-size: 12px;
+font-size: 16px;
+font-size: 24px;
+
+/* ✅ GOOD */
+font-size: var(--text-label);
+font-size: var(--text-base);
+font-size: var(--text-h4);
+```
+
+If a design truly requires a size not in this table (e.g. 14px, 20px), add a new token to `globals.css` (e.g. `--text-sm: 14px`) rather than hard-coding the value.
+
+## Typography: use weight and family tokens
+
+```css
+/* ❌ BAD */
+font-weight: 600;
+font-family: 'Figtree', sans-serif;
+
+/* ✅ GOOD */
+font-weight: var(--font-weight-semibold);
+font-family: var(--font-body);
+```
+
+Available weight tokens: `--font-weight-semibold` (600), `--font-weight-medium` (500), `--font-weight-normal` (400).
+Available family tokens: `--font-heading` (Barlow Semi Condensed), `--font-body` (Figtree), `--font-mono` (Google Sans Code).
+
+## SCSS files
+
+The SCSS token file `src/styles/_tokens.scss` and mixins in `src/styles/_mixins.scss` also contain mapped aliases. When writing new SCSS, prefer `var(--ds-*)` over the SCSS `$color-*` variables for the same reasons above.
+
+## When to use mapped aliases
+
+The **only** place mapped aliases belong is in `globals.css` itself (where they are defined) and in Tailwind utility classes (`bg-background`, `text-foreground`) which rely on the `@theme` block. In hand-written CSS/SCSS, always use the `--ds-*` form.

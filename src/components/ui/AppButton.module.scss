@@ -207,6 +207,27 @@
   color: var(--ds-text-neutral-tertiary);
 }
 
+.primary.toneTeal {
+  background: var(--accent);
+  color: #fff;
+}
+
+.primary.toneTeal.enabled:hover {
+  filter: brightness(1.1);
+}
+
+.primary.toneTeal.enabled:active {
+  filter: brightness(0.95);
+}
+
+.tertiary.toneTeal {
+  color: var(--accent);
+}
+
+.tertiary.toneTeal.enabled:hover {
+  background: var(--ds-background-neutral-quaternary);
+}
+
 .tertiary.disabled {
   color: var(--ds-text-neutral-disabled);
 }

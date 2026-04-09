@@ -28,6 +28,8 @@ import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import errorSoundUrl from "@/assets/audio/error-sound.mp3";
 import successSoundUrl from "@/assets/audio/success-sound.mp3";
+import type { DevPanelField } from "../../../dev";
+import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
   AssessmentStemSection,
@@ -160,6 +162,14 @@ interface MatchConnectorWorkspaceProps {
   groupTeacherReveal?: boolean;
 }
 
+const matchDevFields: DevPanelField[] = [
+  { key: "level.stem.question", label: "Question", type: "text", group: "Stem" },
+  { key: "level.stem.description", label: "Description (markdown)", type: "textarea", group: "Stem", rows: 5 },
+  { key: "level.question.termLabel", label: "Term column label", type: "text", group: "Labels" },
+  { key: "level.question.promptLabel", label: "Definition column label", type: "text", group: "Labels" },
+  { key: "level.metadata.lessonName", label: "Lesson name", type: "text", group: "Metadata" },
+];
+
 export function MatchConnectorWorkspace({
   payload = mockMatchLevel,
   levelLinks,
@@ -175,6 +185,13 @@ export function MatchConnectorWorkspace({
   groupTeacherReveal,
 }: MatchConnectorWorkspaceProps) {
   const navigate = useNavigate();
+
+  const overrideResult = usePropsOverride(
+    payload as unknown as Record<string, unknown>,
+  );
+  const resolvedPayload = (
+    embedded ? payload : overrideResult.props
+  ) as unknown as MatchLevelPayload;
   const {
     activeTab,
     setActiveTab,
@@ -196,7 +213,7 @@ export function MatchConnectorWorkspace({
     handleRestoreVersion,
   } = useVersionHistoryState();
 
-  const { level } = payload;
+  const { level } = resolvedPayload;
 
   const instructionsId = useId();
   const matchBoardId = useId();
@@ -271,6 +288,8 @@ export function MatchConnectorWorkspace({
   const termDotRefs = useRef<Record<string, HTMLElement | null>>({});
   const didDragRef = useRef(false);
   const dragHoverIdRef = useRef<string | null>(null);
+  const activeDragRef = useRef<typeof activeDrag>(null);
+  const dragCleanupRef = useRef<(() => void) | null>(null);
 
   /* ── Reset on payload change ─────────────────────────────────── */
 
@@ -278,18 +297,22 @@ export function MatchConnectorWorkspace({
     if (!isEmbeddedControlled) {
       setInternalAssignments(buildInitialAssignments(promptIds));
     }
-    setActiveDrag(null);
-    setDragPoint(null);
+    dragCleanupRef.current?.();
     setSelectedCard(null);
     setIsSubmitted(false);
     setIsTeacherAnswerRevealed(false);
   }, [level.id, promptIds, isEmbeddedControlled]);
 
   useEffect(() => {
-    setActiveDrag(null);
-    setDragPoint(null);
+    dragCleanupRef.current?.();
     setSelectedCard(null);
   }, [isSubmitted, teacherRevealActive, embedded, groupSubmitted]);
+
+  useEffect(() => {
+    return () => {
+      dragCleanupRef.current?.();
+    };
+  }, []);
 
   /* Escape clears selection when focus is inside the match board (avoids stealing Escape elsewhere). */
   useEffect(() => {
@@ -495,13 +518,12 @@ export function MatchConnectorWorkspace({
     [setAssignments],
   );
 
-  const handleCardClick = useCallback(
+  const assignTermToPromptRef = useRef(assignTermToPrompt);
+  assignTermToPromptRef.current = assignTermToPrompt;
+
+  const selectOrConnect = useCallback(
     (type: "prompt" | "term", id: string) => {
       if (interactionLocked) return;
-      if (didDragRef.current) {
-        didDragRef.current = false;
-        return;
-      }
 
       if (!selectedCard) {
         setSelectedCard({ type, id });
@@ -559,6 +581,18 @@ export function MatchConnectorWorkspace({
     [interactionLocked, selectedCard, assignTermToPrompt, level.question],
   );
 
+  const handleCardClick = useCallback(
+    (type: "prompt" | "term", id: string) => {
+      if (interactionLocked) return;
+      if (didDragRef.current) {
+        didDragRef.current = false;
+        return;
+      }
+      selectOrConnect(type, id);
+    },
+    [interactionLocked, selectOrConnect],
+  );
+
   const handleCardKeyDown = useCallback(
     (
       event: ReactKeyboardEvent<HTMLDivElement>,
@@ -577,7 +611,7 @@ export function MatchConnectorWorkspace({
 
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        handleCardClick(type, id);
+        selectOrConnect(type, id);
         return;
       }
 
@@ -624,7 +658,118 @@ export function MatchConnectorWorkspace({
         }
       }
     },
-    [interactionLocked, handleCardClick, level.question],
+    [interactionLocked, selectOrConnect, level.question],
+  );
+
+  /* ── Drag lifecycle (synchronous listener attachment) ────────── */
+
+  const beginDrag = useCallback(
+    (
+      info: {
+        type: "prompt" | "term";
+        id: string;
+        startX: number;
+        startY: number;
+      },
+      pointerId: number,
+    ) => {
+      dragCleanupRef.current?.();
+
+      activeDragRef.current = info;
+      didDragRef.current = false;
+      setActiveDrag(info);
+      setDragPoint({ x: info.startX, y: info.startY });
+
+      try {
+        boardRef.current?.setPointerCapture(pointerId);
+      } catch {
+        /* pointerId may already be invalid */
+      }
+
+      const onMove = (e: PointerEvent) => {
+        didDragRef.current = true;
+        const board = boardRef.current;
+        if (!board) return;
+        const rect = board.getBoundingClientRect();
+        setDragPoint({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        });
+
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const card = el?.closest<HTMLElement>("[data-match-card='true']");
+        const cardType = card?.dataset.cardType as
+          | "prompt"
+          | "term"
+          | undefined;
+        const cardId = card?.dataset.cardId;
+        const drag = activeDragRef.current;
+        const validTarget =
+          cardType && cardId && drag && cardType !== drag.type ? cardId : null;
+        if (validTarget !== dragHoverIdRef.current) {
+          dragHoverIdRef.current = validTarget;
+          setDragHoverTarget(
+            validTarget ? { type: cardType!, id: cardId! } : null,
+          );
+        }
+      };
+
+      const teardown = () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onCancel);
+        try {
+          boardRef.current?.releasePointerCapture(pointerId);
+        } catch {
+          /* capture may already be released */
+        }
+        activeDragRef.current = null;
+        dragHoverIdRef.current = null;
+        dragCleanupRef.current = null;
+        setDragHoverTarget(null);
+        setActiveDrag(null);
+        setDragPoint(null);
+      };
+
+      const onUp = (e: PointerEvent) => {
+        const drag = activeDragRef.current;
+        if (drag) {
+          const el = document.elementFromPoint(e.clientX, e.clientY);
+          const dotTarget = el?.closest<HTMLElement>(
+            "[data-connector-dot='true']",
+          );
+          const cardTarget = el?.closest<HTMLElement>(
+            "[data-match-card='true']",
+          );
+          const target = dotTarget || cardTarget;
+
+          if (target) {
+            const targetType = (dotTarget?.dataset.dotType ??
+              cardTarget?.dataset.cardType) as "prompt" | "term" | undefined;
+            const targetId =
+              dotTarget?.dataset.dotId ?? cardTarget?.dataset.cardId;
+            if (targetType && targetId && targetType !== drag.type) {
+              const promptId =
+                drag.type === "prompt" ? drag.id : targetId;
+              const termId =
+                drag.type === "term" ? drag.id : targetId;
+              assignTermToPromptRef.current(promptId, termId);
+            }
+          }
+        }
+        teardown();
+      };
+
+      const onCancel = () => {
+        teardown();
+      };
+
+      dragCleanupRef.current = teardown;
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onCancel);
+    },
+    [],
   );
 
   const handleCardPointerDown = useCallback(
@@ -645,11 +790,12 @@ export function MatchConnectorWorkspace({
       const origin = getNodeCenter(dotEl);
       if (!origin) return;
 
-      didDragRef.current = false;
-      setActiveDrag({ type, id, startX: origin.x, startY: origin.y });
-      setDragPoint(origin);
+      beginDrag(
+        { type, id, startX: origin.x, startY: origin.y },
+        event.pointerId,
+      );
     },
-    [interactionLocked, getNodeCenter],
+    [interactionLocked, getNodeCenter, beginDrag],
   );
 
   const handleDotPointerDown = useCallback(
@@ -663,79 +809,13 @@ export function MatchConnectorWorkspace({
       event.stopPropagation();
       const origin = getNodeCenter(event.currentTarget);
       if (!origin) return;
-      didDragRef.current = false;
-      setActiveDrag({ type, id, startX: origin.x, startY: origin.y });
-      setDragPoint(origin);
+      beginDrag(
+        { type, id, startX: origin.x, startY: origin.y },
+        event.pointerId,
+      );
     },
-    [interactionLocked, getNodeCenter],
+    [interactionLocked, getNodeCenter, beginDrag],
   );
-
-  useEffect(() => {
-    if (!activeDrag) return;
-
-    const handleMove = (event: PointerEvent) => {
-      didDragRef.current = true;
-      const board = boardRef.current;
-      if (!board) return;
-      const rect = board.getBoundingClientRect();
-      setDragPoint({
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-      });
-
-      const el = document.elementFromPoint(event.clientX, event.clientY);
-      const card = el?.closest<HTMLElement>("[data-match-card='true']");
-      const cardType = card?.dataset.cardType as
-        | "prompt"
-        | "term"
-        | undefined;
-      const cardId = card?.dataset.cardId;
-      const validTarget =
-        cardType && cardId && cardType !== activeDrag.type ? cardId : null;
-      if (validTarget !== dragHoverIdRef.current) {
-        dragHoverIdRef.current = validTarget;
-        setDragHoverTarget(
-          validTarget ? { type: cardType!, id: cardId! } : null,
-        );
-      }
-    };
-
-    const handleUp = (event: PointerEvent) => {
-      const targetEl = event.target as HTMLElement | null;
-      const dotTarget = targetEl?.closest<HTMLElement>(
-        "[data-connector-dot='true']",
-      );
-      const cardTarget = targetEl?.closest<HTMLElement>(
-        "[data-match-card='true']",
-      );
-      const target = dotTarget || cardTarget;
-
-      if (target && !interactionLocked) {
-        const targetType = (dotTarget?.dataset.dotType ??
-          cardTarget?.dataset.cardType) as "prompt" | "term" | undefined;
-        const targetId =
-          dotTarget?.dataset.dotId ?? cardTarget?.dataset.cardId;
-        if (targetType && targetId && targetType !== activeDrag.type) {
-          const promptId =
-            activeDrag.type === "prompt" ? activeDrag.id : targetId;
-          const termId =
-            activeDrag.type === "term" ? activeDrag.id : targetId;
-          assignTermToPrompt(promptId, termId);
-        }
-      }
-      dragHoverIdRef.current = null;
-      setDragHoverTarget(null);
-      setActiveDrag(null);
-      setDragPoint(null);
-    };
-
-    window.addEventListener("pointermove", handleMove);
-    window.addEventListener("pointerup", handleUp);
-    return () => {
-      window.removeEventListener("pointermove", handleMove);
-      window.removeEventListener("pointerup", handleUp);
-    };
-  }, [activeDrag, assignTermToPrompt, interactionLocked]);
 
   const handleSubmitMatches = () => {
     if (embedded || !allAssigned || teacherRevealActive) return;
@@ -1263,6 +1343,8 @@ export function MatchConnectorWorkspace({
         showContinueButton: false,
         collapsible: true,
         showInstructionsDrawer: false,
+        devPanelFields: matchDevFields,
+        devPanelOverrideResult: overrideResult,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));

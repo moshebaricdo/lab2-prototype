@@ -44,32 +44,28 @@
 }
 
 .title {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-family: var(--font-heading);
-  font-size: var(--text-h3);
+  font-size: var(--text-h2);
   font-weight: var(--font-weight-semibold);
   margin: 0;
 }
 
 .prompt {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-tertiary);
   margin: 12px 0 0;
 }
 
 .optionsGrid {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  justify-content: center;
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
+  max-width: 1080px;
   padding: 0;
   width: 100%;
-}
-
-@media (max-width: 1100px) {
-  .optionsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 520px) {
@@ -133,7 +129,7 @@
 .optionLabel {
   align-items: center;
   background: var(--ds-background-brand-teal-primary);
-  border-radius: 0px 0px 0px 8px;
+  border-radius: 4px;
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
   color: var(--ds-text-neutral-white-fixed);
   display: inline-flex;
@@ -146,8 +142,8 @@
   padding: 0 7px;
   pointer-events: none;
   position: absolute;
-  right: 0px;
-  top: 0px;
+  right: 8px;
+  top: 8px;
   width: fit-content;
   z-index: 2;
 }

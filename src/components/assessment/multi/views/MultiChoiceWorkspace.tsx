@@ -28,6 +28,8 @@ import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState
 import errorSoundUrl from "@/assets/audio/error-sound.mp3";
 import successSoundUrl from "@/assets/audio/success-sound.mp3";
 import type { CodePanelConfig } from "../../../../data/assessment/codePanel";
+import type { DevPanelField } from "../../../dev";
+import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
   AssessmentCodeRefLayout,
@@ -130,6 +132,50 @@ function playFeedbackSound(src: string) {
   });
 }
 
+const multiChoiceDevFields: DevPanelField[] = [
+  { key: "level.stem.question", label: "Question", type: "text", group: "Stem" },
+  { key: "level.stem.description", label: "Description (markdown)", type: "textarea", group: "Stem", rows: 5 },
+  {
+    key: "level.selectionMode",
+    label: "Selection mode",
+    type: "select",
+    group: "Behavior",
+    options: [
+      { label: "Single select", value: "single" },
+      { label: "Multiple select", value: "multiple" },
+    ],
+  },
+  { key: "level.surveyMode", label: "Survey mode (no grading)", type: "boolean", group: "Behavior" },
+  {
+    key: "level.optionLayout.type",
+    label: "Option layout",
+    type: "select",
+    group: "Layout",
+    options: [
+      { label: "List", value: "list" },
+      { label: "Grid", value: "grid" },
+    ],
+  },
+  {
+    key: "level.optionLayout.columns",
+    label: "Grid columns",
+    type: "select",
+    group: "Layout",
+    options: [
+      { label: "2", value: "2" },
+      { label: "3", value: "3" },
+      { label: "4", value: "4" },
+    ],
+    valueType: "number",
+  },
+  {
+    key: "level.metadata.lessonName",
+    label: "Lesson name",
+    type: "text",
+    group: "Metadata",
+  },
+];
+
 export function MultiChoiceWorkspace({
   payload = mockMultiChoiceLevel,
   codePanel,
@@ -148,6 +194,13 @@ export function MultiChoiceWorkspace({
   groupTeacherReveal,
 }: MultiChoiceWorkspaceProps) {
   const navigate = useNavigate();
+
+  const overrideResult = usePropsOverride(
+    payload as unknown as Record<string, unknown>,
+  );
+  const resolvedPayload = (
+    embedded ? payload : overrideResult.props
+  ) as unknown as MultiChoiceLevelPayload;
   const {
     activeTab,
     setActiveTab,
@@ -169,7 +222,7 @@ export function MultiChoiceWorkspace({
     handleRestoreVersion,
   } = useVersionHistoryState();
 
-  const { level } = payload;
+  const { level } = resolvedPayload;
   const isSurveyLevel = level.surveyMode === true;
   const isMultiSelect = level.selectionMode === "multiple";
   const isEmbeddedControlled = Boolean(
@@ -660,6 +713,8 @@ export function MultiChoiceWorkspace({
         showContinueButton: false,
         collapsible: true,
         showInstructionsDrawer: false,
+        devPanelFields: multiChoiceDevFields,
+        devPanelOverrideResult: overrideResult,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) =>

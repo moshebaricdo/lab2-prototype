@@ -1,0 +1,121 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.resultsCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 20px 24px;
+  width: 100%;
+}
+
+/* ── Horizontal layout ─────────────────────────────────────────── */
+
+.layout {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+/* ── Score ring ────────────────────────────────────────────────── */
+
+.scoreRing {
+  align-items: center;
+  border-radius: 50%;
+  display: flex;
+  flex-shrink: 0;
+  height: 56px;
+  justify-content: center;
+  position: relative;
+  width: 56px;
+}
+
+.scoreRingSvg {
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  transform: rotate(-90deg);
+  width: 100%;
+}
+
+.scoreRingBg {
+  fill: none;
+  stroke: var(--ds-background-neutral-tertiary);
+  stroke-width: 5;
+}
+
+.scoreRingFill {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 5;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.scoreRingFillSuccess {
+  stroke: var(--ds-background-success-primary);
+}
+
+.scoreRingFillPartial {
+  stroke: var(--ds-background-success-primary);
+}
+
+.scoreRingFillLow {
+  stroke: var(--ds-background-accent-warning-primary);
+}
+
+.scoreRingLabel {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-semibold);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Title / meta ──────────────────────────────────────────────── */
+
+.scoreBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.scoreHeadline {
+  color: var(--foreground);
+  font-family: var(--font-heading);
+  font-size: var(--text-h4);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.metaRow {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.metaItem {
+  align-items: center;
+  display: inline-flex;
+  font-size: var(--text-label);
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.metaIcon {
+  color: var(--ds-text-neutral-quaternary);
+}
+
+/* ── Actions ───────────────────────────────────────────────────── */
+
+.actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+  margin-left: auto;
+}

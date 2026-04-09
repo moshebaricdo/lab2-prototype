@@ -12,11 +12,11 @@ import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import {
   allBlocksComplete,
-  countSectionsMet,
   LevelGroupEmbeddedBlock,
   useLevelGroupFlowState,
 } from "./LevelGroupFlowBlocks";
 import { LevelGroupAssessmentIntro } from "./LevelGroupAssessmentIntro";
+import { LevelGroupResultsCard } from "./LevelGroupResultsCard";
 import styles from "./LevelGroupWorkspace.module.scss";
 
 interface LevelGroupScrollWorkspaceProps {
@@ -101,7 +101,6 @@ export function LevelGroupScrollWorkspace({
   const showIntro = Boolean(introConfig && !assessmentStarted);
 
   const canSubmit = allBlocksComplete(steps, state);
-  const metCount = countSectionsMet(steps, state, isSubmitted, surveyMode);
 
   const assessmentHeaderTitle =
     level.metadata.assessmentName ?? level.name;
@@ -116,7 +115,11 @@ export function LevelGroupScrollWorkspace({
   };
 
   const scrollGroupSections = steps.map((block, index) => (
-    <div key={block.blockId} className={styles.scrollGroupSection}>
+    <div
+      key={block.blockId}
+      id={isSubmitted ? `results-q-${block.blockId}` : undefined}
+      className={styles.scrollGroupSection}
+    >
       <LevelGroupEmbeddedBlock
         block={block}
         stepIndex={index}
@@ -167,6 +170,19 @@ export function LevelGroupScrollWorkspace({
                   />
                   <span>{steps.length} questions</span>
                 </span>
+                {introConfig.attempts != null && (
+                  <span className={styles.introFooterStat}>
+                    <FaIcon
+                      name="rotate-right"
+                      size="s"
+                      className={styles.introFooterStatIcon}
+                      aria-hidden
+                    />
+                    <span>
+                      {introConfig.attempts} attempt{introConfig.attempts === 1 ? "" : "s"}
+                    </span>
+                  </span>
+                )}
                 <span className={styles.introFooterStat}>
                   <FaIcon
                     name="clock"
@@ -202,44 +218,29 @@ export function LevelGroupScrollWorkspace({
             scrollGroupSections
           )}
 
-          <AssessmentBottomRow
-            flushTop
-            showLeft={surveyMode ? isSubmitted : true}
-            left={
-              surveyMode ? (
-                isSubmitted ? (
-                  <p className={styles.groupFooterSummary}>
-                    Thank you for your feedback.
-                  </p>
-                ) : null
-              ) : (
-                <div className={styles.groupFooterLeft}>
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    iconPosition="start"
-                    iconName={groupTeacherReveal ? "eye-slash" : "eye"}
-                    size="m"
-                    onClick={() =>
-                      setGroupTeacherReveal((previous) => !previous)
-                    }
-                  >
-                    {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
-                  </AppButton>
-                  {isSubmitted ? (
-                    <p className={styles.groupFooterSummary}>
-                      {`${metCount} of ${steps.length} questions met expectations.`}
-                    </p>
-                  ) : null}
-                </div>
-              )
-            }
-            right={
-              isSubmitted ? (
-                <AppButton variant="secondary" onClick={handleStartOver}>
-                  Start over
-                </AppButton>
-              ) : (
+          {!isSubmitted && (
+            <AssessmentBottomRow
+              flushTop
+              showLeft={!surveyMode}
+              left={
+                surveyMode ? null : (
+                  <div className={styles.groupFooterLeft}>
+                    <AppButton
+                      variant="secondary"
+                      tone="gray"
+                      iconPosition="start"
+                      iconName={groupTeacherReveal ? "eye-slash" : "eye"}
+                      size="m"
+                      onClick={() =>
+                        setGroupTeacherReveal((previous) => !previous)
+                      }
+                    >
+                      {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
+                    </AppButton>
+                  </div>
+                )
+              }
+              right={
                 <AppButton
                   variant="primary"
                   size="m"
@@ -249,9 +250,9 @@ export function LevelGroupScrollWorkspace({
                 >
                   {surveyMode ? "Submit responses" : "Submit"}
                 </AppButton>
-              )
-            }
-          />
+              }
+            />
+          )}
         </>
       )}
     </>
@@ -274,6 +275,15 @@ export function LevelGroupScrollWorkspace({
           .filter(Boolean)
           .join(" ")}
       >
+        {isSubmitted && !showIntro && (
+          <LevelGroupResultsCard
+            steps={steps}
+            flow={state}
+            surveyMode={surveyMode}
+            assessmentTitle={assessmentHeaderTitle}
+            onStartOver={handleStartOver}
+          />
+        )}
         <div
           className={[
             styles.scrollGroupCard,

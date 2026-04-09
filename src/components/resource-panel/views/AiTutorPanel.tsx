@@ -26,6 +26,7 @@ interface AiTutorPanelProps {
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
   autoSeedConversationOnMount?: boolean;
   inputExperiment?: AiTutorInputExperiment;
+  instructionsContent?: React.ReactNode;
 }
 
 const SEEDED_USER_MESSAGE =
@@ -85,6 +86,7 @@ export function AiTutorPanel({
   instructionsDrawerVisualCue = "none",
   autoSeedConversationOnMount = false,
   inputExperiment = "default",
+  instructionsContent,
 }: AiTutorPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
@@ -196,7 +198,9 @@ export function AiTutorPanel({
             onOpenChange={setDrawerIsOpen}
             initialHeightRatio={instructionsDrawerInitialHeightRatio}
             visualCue={instructionsDrawerVisualCue}
-          />
+          >
+            {instructionsContent}
+          </InstructionsDrawer>
         </div>
       )}
 

@@ -1,0 +1,327 @@
+/* ── Page shell ── */
+
+.page {
+  min-height: 100vh;
+  background: var(--secondary);
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--foreground) 8%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+  padding: 32px;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.pageTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-h2);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-primary);
+}
+
+.pageSubtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--muted-foreground);
+  margin: 8px 0 0;
+}
+
+/* ── Category sections ── */
+
+.categories {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeading {
+  font-family: var(--text-label);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.levelTypeGroup {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.levelTypeGroup:first-child {
+  margin-top: 0;
+}
+
+.sectionBody {
+  border-top: 1px solid var(--border);
+  padding: 16px;
+  background: var(--ds-background-neutral-primary);
+}
+
+.entryGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ── Level-type card ── */
+
+.card {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--ds-borders-neutral-primary);
+  background: var(--ds-background-neutral-secondary);
+  padding: 20px;
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.cardTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-primary);
+  margin-bottom: 4px;
+}
+
+.cardDescription {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.bubbleRow {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.bubble {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  background: var(--card);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ds-text-neutral-primary);
+  text-decoration: none;
+  transition: border-color 120ms, background 120ms, color 120ms;
+
+  &:hover {
+    border-color: var(--ds-borders-success-primary);
+    background: var(--ds-background-success-primary);
+    color: var(--ds-text-neutral-white-fixed);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+}
+
+/* ── Saved variants section ── */
+
+.variantsSection {
+  margin-top: 32px;
+}
+
+/* Match swipe “Full match list” expandable header */
+.variantsCard {
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.variantsToggle {
+  align-items: center;
+  background: var(--ds-background-neutral-primary);
+  border: 0;
+  color: var(--foreground);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto;
+  padding: 12px;
+  padding-left: 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.variantsToggleTitle {
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.variantsToggleRight {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.variantsToggleMetaButton {
+  color: var(--muted-foreground);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: var(--text-label);
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  text-align: right;
+
+  &:hover {
+    color: var(--foreground);
+  }
+}
+
+.variantsList {
+  background: var(--ds-background-neutral-secondary);
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.emptySectionText {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.variantRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  transition: background 120ms;
+
+  & + & {
+    border-top: 1px solid var(--border);
+  }
+}
+
+.variantInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.variantNameLink {
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 120ms;
+  text-transform: capitalize;
+
+
+  &:hover {
+    color: var(--ds-text-neutral-tertiary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ring);
+    border-radius: 0.25rem;
+  }
+}
+
+.variantMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.typePill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--ds-background-neutral-septenary);
+  padding: 1px 8px;
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-normal);
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.variantDate {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.variantActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Promote dialog ── */
+
+.promoteSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.promoteStepHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.promoteStepLabel {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+  margin: 0;
+
+  code {
+    color: var(--ds-background-brand-green-primary);
+  }
+}
+
+.codeBlock {
+  background: var(--foreground);
+  color: var(--card);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0;
+}

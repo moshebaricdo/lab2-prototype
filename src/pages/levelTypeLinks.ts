@@ -10,6 +10,7 @@ export const webLab2LevelLinks: LevelProgressLink[] = [
     name: "File drag-drop into tutor",
     path: "/levels/weblab2-file-drop",
   },
+  { name: "Rubric panel", path: "/levels/weblab2-rubric" },
   { name: "50% drawer + fade cue", path: "/levels/weblab2-drawer-fade" },
   {
     name: "50% drawer + inline read more",
@@ -110,4 +111,22 @@ export const levelGroupLevelLinks: LevelProgressLink[] = [
 export const bubbleChoiceLevelLinks: LevelProgressLink[] = [
   { name: "With image cards", path: "/levels/bubble-choice-images" },
   { name: "Choose-your-path selector", path: "/levels/bubble-choice" },
+];
+
+export const sampleProgressionLinks: LevelProgressLink[] = [
+  { name: "Build Your Portfolio", path: "/levels/progression-weblab" },
+  { name: "Design Reflection", path: "/levels/progression-free-response" },
+  { name: "Choose Your Path", path: "/levels/progression-bubble-choice" },
+  { name: "Practice Project", path: "/levels/progression-branch-color" },
+  { name: "HTML & CSS Checkpoint", path: "/levels/progression-levelgroup" },
+];
+
+/**
+ * All valid branch paths — the bubble choice level can land on any of these,
+ * and the header treats whichever one the student is on as "level 4".
+ */
+export const PROGRESSION_BRANCH_PATHS = [
+  "/levels/progression-branch-color",
+  "/levels/progression-branch-layout",
+  "/levels/progression-branch-media",
 ];

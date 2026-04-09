@@ -1,13 +1,25 @@
 import { Link } from "react-router-dom";
 import { Tooltip } from "../components/ui/Tooltip";
+import { Modal } from "../components/ui/Modal";
+import { AppButton } from "../components/ui/AppButton";
+import { useState, useCallback, type ReactNode } from "react";
+import {
+  useSavedVariants,
+  buildVariantUrl,
+} from "../hooks/useSavedVariants";
+import type { SavedVariant } from "../hooks/useSavedVariants";
+import { generatePromotedCode } from "../utils/promoteToCode";
+import type { PromotedCode } from "../utils/promoteToCode";
 import {
   bubbleChoiceLevelLinks,
   freeResponseLevelLinks,
   levelGroupLevelLinks,
   matchLevelLinks,
   multiChoiceLevelLinks,
+  sampleProgressionLinks,
   webLab2LevelLinks,
 } from "./levelTypeLinks";
+import styles from "./LevelsIndexPage.module.scss";
 
 interface LevelPage {
   name: string;
@@ -73,44 +85,308 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
   },
 ];
 
-export function LevelsIndexPage() {
+const PATH_TO_LEVEL_TYPE: Record<string, string> = {
+  "/levels/multi": "Multi-choice",
+  "/levels/free-response": "Free response",
+  "/levels/match-definition-bank": "Match",
+  "/levels/match-connector": "Match",
+  "/levels/match-swipe-cards": "Match",
+  "/levels/weblab2": "Web Lab 2",
+  "/levels/levelgroup": "Levelgroup",
+  "/levels/bubble-choice": "Bubble choice",
+  "/levels/progression": "Sample progression",
+};
+
+function levelTypeForPath(basePath: string): string {
+  if (PATH_TO_LEVEL_TYPE[basePath]) return PATH_TO_LEVEL_TYPE[basePath];
+  for (const [prefix, label] of Object.entries(PATH_TO_LEVEL_TYPE)) {
+    if (basePath.startsWith(prefix)) return label;
+  }
+  return basePath;
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
   return (
-    <main className="min-h-screen bg-[#f7f8fb] p-8">
-      <div className="mx-auto max-w-5xl">
-        <h1 className="text-3xl font-semibold text-[#1f2a35]">
-          Lab2 Level Types
-        </h1>
-        <p className="mt-2 text-[#5f6b7a]">
+    <AppButton
+      variant="secondary"
+      tone="black"
+      size="xs"
+      iconName={copied ? "check" : "clipboard"}
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+    >
+      {copied ? "Copied" : "Copy"}
+    </AppButton>
+  );
+}
+
+function PromoteDialog({
+  promoted,
+  onClose,
+}: {
+  promoted: PromotedCode;
+  onClose: () => void;
+}) {
+  return (
+    <Modal open title="Promote to code" onClose={onClose} size="l">
+      <div className={styles.promoteSteps}>
+        <section>
+          <div className={styles.promoteStepHeader}>
+            <p className={styles.promoteStepLabel}>
+              1. Create <code>src/pages/{promoted.pageFileName}</code>
+            </p>
+            <CopyButton text={promoted.pageCode} />
+          </div>
+          <pre className={styles.codeBlock}>{promoted.pageCode}</pre>
+        </section>
+        <section>
+          <div className={styles.promoteStepHeader}>
+            <p className={styles.promoteStepLabel}>
+              2. Add route to <code>App.tsx</code>
+            </p>
+            <CopyButton text={promoted.routeEntry} />
+          </div>
+          <pre className={styles.codeBlock}>{promoted.routeEntry}</pre>
+        </section>
+        <section>
+          <div className={styles.promoteStepHeader}>
+            <p className={styles.promoteStepLabel}>
+              3. Add link to <code>levelTypeLinks.ts</code>
+            </p>
+            <CopyButton text={promoted.linkEntry} />
+          </div>
+          <pre className={styles.codeBlock}>{promoted.linkEntry}</pre>
+        </section>
+      </div>
+    </Modal>
+  );
+}
+
+function formatTimestamp(ts: number) {
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function CollapsibleSectionCard({
+  title,
+  expanded,
+  onToggle,
+  children,
+}: {
+  title: string;
+  expanded: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section className={styles.variantsCard}>
+      <div className={styles.variantsToggle}>
+        <span className={styles.variantsToggleTitle}>{title}</span>
+        <div className={styles.variantsToggleRight}>
+          <button
+            type="button"
+            className={styles.variantsToggleMetaButton}
+            aria-expanded={expanded}
+            onClick={onToggle}
+          >
+            {expanded ? "Collapse section" : "Expand section"}
+          </button>
+          <AppButton
+            variant="secondary"
+            tone="gray"
+            size="xs"
+            iconName={expanded ? "chevron-up" : "chevron-down"}
+            aria-expanded={expanded}
+            aria-label={expanded ? `Collapse ${title}` : `Expand ${title}`}
+            onClick={onToggle}
+          />
+        </div>
+      </div>
+      {expanded ? <div className={styles.sectionBody}>{children}</div> : null}
+    </section>
+  );
+}
+
+function SavedVariantsSection() {
+  const { variants, deleteVariant } = useSavedVariants();
+  const [promoteTarget, setPromoteTarget] = useState<PromotedCode | null>(
+    null,
+  );
+  const [expanded, setExpanded] = useState(true);
+
+  const handlePromote = useCallback((v: SavedVariant) => {
+    const result = generatePromotedCode(v);
+    if (result) setPromoteTarget(result);
+  }, []);
+
+  return (
+    <div className={styles.variantsSection}>
+      {promoteTarget && (
+        <PromoteDialog
+          promoted={promoteTarget}
+          onClose={() => setPromoteTarget(null)}
+        />
+      )}
+      <CollapsibleSectionCard
+        title="Variants"
+        expanded={expanded}
+        onToggle={() => setExpanded((current) => !current)}
+      >
+        {variants.length === 0 ? (
+          <p className={styles.emptySectionText}>
+            No saved variants yet. Save a variant from a level page and it will show up here.
+          </p>
+        ) : (
+          <div className={styles.variantsList}>
+            {variants.map((v) => (
+              <div key={v.id} className={styles.variantRow}>
+                <div className={styles.variantInfo}>
+                  <Link
+                    to={buildVariantUrl(v.basePath, v.overrides)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.variantNameLink}
+                  >
+                    {v.name}
+                  </Link>
+                  <div className={styles.variantMeta}>
+                    <span className={styles.typePill}>
+                      {levelTypeForPath(v.basePath)}
+                    </span>
+                    <span className={styles.variantDate}>
+                      {formatTimestamp(v.savedAt)}
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.variantActions}>
+                  <Tooltip content="Open in new tab" position="top">
+                    <Link
+                      to={buildVariantUrl(v.basePath, v.overrides)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <AppButton
+                        variant="tertiary"
+                        tone="gray"
+                        size="xs"
+                        iconName="arrow-up-right-from-square"
+                        tabIndex={-1}
+                      />
+                    </Link>
+                  </Tooltip>
+                  <Tooltip content="Promote to code" position="top">
+                    <AppButton
+                      variant="tertiary"
+                      tone="gray"
+                      size="xs"
+                      iconName="code"
+                      onClick={() => handlePromote(v)}
+                    />
+                  </Tooltip>
+                  <Tooltip content="Delete" position="top">
+                    <AppButton
+                      variant="tertiary"
+                      tone="gray"
+                      size="xs"
+                      iconName="trash"
+                      onClick={() => deleteVariant(v.id)}
+                    />
+                  </Tooltip>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CollapsibleSectionCard>
+    </div>
+  );
+}
+
+export function LevelsIndexPage() {
+  const [sampleExpanded, setSampleExpanded] = useState(true);
+  const [levelTypesExpanded, setLevelTypesExpanded] = useState(true);
+
+  return (
+    <main className={styles.page}>
+      <div className={styles.container}>
+        <h1 className={styles.pageTitle}>Lab2 Level Types</h1>
+        <p className={styles.pageSubtitle}>
           Explore level types and jump directly into implemented page variants.
         </p>
 
-        <div className="mt-8 space-y-8">
-          {LEVEL_CATEGORIES.map((category) => (
-            <section key={category.title}>
-              <h2 className="text-xs uppercase tracking-wide text-[#5f6b7a]">
-                {category.title}
-              </h2>
-              <div className="mt-3 grid gap-4 md:grid-cols-2">
+        <SavedVariantsSection />
+
+        <div className={styles.categories}>
+          <CollapsibleSectionCard
+            title="Sample Progressions"
+            expanded={sampleExpanded}
+            onToggle={() => setSampleExpanded((current) => !current)}
+          >
+            <div className={styles.entryGrid}>
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div>
+                    <h3 className={styles.cardTitle}>
+                      Intro to HTML &amp; CSS
+                    </h3>
+                    <p className={styles.cardDescription}>
+                      Web Lab → Free Response → Bubble Choice → Practice Project → Checkpoint
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {sampleProgressionLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CollapsibleSectionCard>
+
+          <CollapsibleSectionCard
+            title="Level Types"
+            expanded={levelTypesExpanded}
+            onToggle={() => setLevelTypesExpanded((current) => !current)}
+          >
+            {LEVEL_CATEGORIES.map((category) => (
+              <section key={category.title} className={styles.levelTypeGroup}>
+                <h2 className={styles.sectionHeading}>{category.title}</h2>
+              <div className={styles.entryGrid}>
                 {category.entries.map((entry) => (
-                  <div
-                    key={entry.levelType}
-                    className="rounded-lg border border-[#d4dae1] bg-white p-5"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div key={entry.levelType} className={styles.card}>
+                    <div className={styles.cardHeader}>
                       <div>
-                        <h3 className="text-lg font-medium text-[#1f2a35]">
+                        <h3 className={styles.cardTitle}>
                           {entry.levelType}
                         </h3>
-                        <p className="mt-2 text-sm text-[#5f6b7a]">
+                        <p className={styles.cardDescription}>
                           {entry.description}
                         </p>
                       </div>
-                      <p className="text-xs uppercase tracking-wide text-[#7a8695]">
-                        {entry.pages.length} page
-                        {entry.pages.length === 1 ? "" : "s"}
-                      </p>
                     </div>
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <div className={styles.bubbleRow}>
                       {entry.pages.map((page, index) => (
                         <Tooltip
                           key={page.path}
@@ -121,7 +397,7 @@ export function LevelsIndexPage() {
                           <Link
                             to={page.path}
                             aria-label={`Open ${page.name}`}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#d4dae1] bg-white text-sm font-semibold text-[#1f2a35] transition-colors hover:border-[#3ea33e] hover:bg-[#3ea33e] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0093a4] focus-visible:ring-offset-2"
+                            className={styles.bubble}
                           >
                             {index + 1}
                           </Link>
@@ -131,8 +407,9 @@ export function LevelsIndexPage() {
                   </div>
                 ))}
               </div>
-            </section>
-          ))}
+              </section>
+            ))}
+          </CollapsibleSectionCard>
         </div>
       </div>
     </main>

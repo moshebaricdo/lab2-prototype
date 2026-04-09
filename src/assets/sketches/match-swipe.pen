@@ -4,14 +4,693 @@
     {
       "type": "frame",
       "id": "bi8Au",
-      "x": 0,
-      "y": 0,
-      "name": "Frame",
-      "clip": true,
-      "width": 800,
-      "height": 600,
-      "fill": "#FFFFFF",
-      "layout": "none"
+      "x": 4,
+      "y": -7,
+      "name": "Match Swipe Layout",
+      "width": 1100,
+      "fill": "#F7F8FB",
+      "layout": "vertical",
+      "gap": 16,
+      "padding": 24,
+      "children": [
+        {
+          "type": "frame",
+          "id": "lgR06",
+          "name": "canvasCard",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "cornerRadius": 12,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#D4DAE1"
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Dwz2x",
+              "name": "stemBlock",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HQpPA",
+                  "name": "eyebrowTxt",
+                  "fill": "#6B7280",
+                  "content": "MATCH",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 0.8
+                },
+                {
+                  "type": "text",
+                  "id": "O1k1S",
+                  "name": "questionTxt",
+                  "fill": "#1F2937",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Swipe through term and definition cards, then pair the two cards currently in view.",
+                  "lineHeight": 1.25,
+                  "fontFamily": "Inter",
+                  "fontSize": 24,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "iVhH0",
+                  "name": "descTxt",
+                  "fill": "#4B5563",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "This demo tests a small-screen matching flow with 10 pairs.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "aXgqJ",
+              "name": "toolbar",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kwfGW",
+                  "name": "instructionTxt",
+                  "fill": "#6B7280",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Swipe or step through term and definition cards, then lock in each pair with Match current pair.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "1IzEa",
+                  "name": "progressTxt",
+                  "fill": "#111827",
+                  "content": "4 / 10 pairs matched",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "0MhA3",
+              "name": "swipeBoard",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "SnjMx",
+                  "name": "termDeck",
+                  "width": "fill_container",
+                  "fill": "#F9FAFB",
+                  "cornerRadius": 10,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#D1D5DB"
+                  },
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "dtVLj",
+                      "name": "termHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "16tzw",
+                          "name": "termLeft",
+                          "fill": "#6B7280",
+                          "content": "◀",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "RBumH",
+                          "name": "termCenter",
+                          "fill": "#111827",
+                          "content": "Term   1 / 10",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "LfnjF",
+                          "name": "termRight",
+                          "fill": "#6B7280",
+                          "content": "▶",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KTNPQ",
+                      "name": "termCard",
+                      "width": "fill_container",
+                      "height": 170,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#D1D5DB"
+                      },
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "eXbsg",
+                          "name": "termCardTitle",
+                          "fill": "#111827",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "1: Variable",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "jYFNN",
+                          "name": "termCardMeta",
+                          "fill": "#6B7280",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Matched to definition 4",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sqDDD",
+                  "name": "defDeck",
+                  "width": "fill_container",
+                  "fill": "#F9FAFB",
+                  "cornerRadius": 10,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#D1D5DB"
+                  },
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "QmebF",
+                      "name": "defHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "VR8wM",
+                          "name": "defLeft",
+                          "fill": "#6B7280",
+                          "content": "◀",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "BCl5g",
+                          "name": "defCenter",
+                          "fill": "#111827",
+                          "content": "Definition   4 / 10",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZC5Lx",
+                          "name": "defRight",
+                          "fill": "#6B7280",
+                          "content": "▶",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Iankg",
+                      "name": "defCard",
+                      "width": "fill_container",
+                      "height": 170,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#D1D5DB"
+                      },
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "d244p",
+                          "name": "defCardTitle",
+                          "fill": "#111827",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "4: The value a function sends back after it runs.",
+                          "lineHeight": 1.35,
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "nqrUw",
+                          "name": "defCardMeta",
+                          "fill": "#6B7280",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Currently matched to term 1",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TSaSc",
+              "name": "connectorZone",
+              "width": "fill_container",
+              "height": 90,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "path",
+                  "id": "LkL6R",
+                  "x": 249,
+                  "y": 4,
+                  "name": "leftLine",
+                  "geometry": "M0 0l0 24q0 16 16 16l226 0q16 0 16 16",
+                  "fill": "#00000000",
+                  "width": 258,
+                  "height": 56,
+                  "stroke": {
+                    "thickness": 1.5,
+                    "join": "round",
+                    "cap": "round",
+                    "fill": "#0F766E"
+                  }
+                },
+                {
+                  "type": "path",
+                  "id": "C7OVv",
+                  "x": 505,
+                  "y": 4,
+                  "name": "rightLine",
+                  "geometry": "M258 0l0 24q0 16-16 16l-226 0q-16 0-16 16",
+                  "fill": "#00000000",
+                  "width": 258,
+                  "height": 56,
+                  "stroke": {
+                    "thickness": 1.5,
+                    "join": "round",
+                    "cap": "round",
+                    "fill": "#0F766E"
+                  }
+                },
+                {
+                  "type": "ellipse",
+                  "id": "skGlj",
+                  "x": 245,
+                  "y": 0,
+                  "name": "leftDot",
+                  "fill": "#0F766E",
+                  "width": 8,
+                  "height": 8
+                },
+                {
+                  "type": "ellipse",
+                  "id": "KYQPN",
+                  "x": 759,
+                  "y": 0,
+                  "name": "rightDot",
+                  "fill": "#0F766E",
+                  "width": 8,
+                  "height": 8
+                },
+                {
+                  "type": "frame",
+                  "id": "jMvmZ",
+                  "x": 418,
+                  "y": 54,
+                  "name": "matchBtnWrap",
+                  "width": 176,
+                  "height": 36,
+                  "fill": "#6D28D9",
+                  "cornerRadius": 8,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#5B21B6"
+                  },
+                  "gap": 6,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "LUCng",
+                      "name": "matchBtnIcon",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "link",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Y0vR3",
+                      "name": "matchBtnLabel",
+                      "fill": "#FFFFFF",
+                      "content": "Match Current Pair",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "ellipse",
+                  "id": "SZIiu",
+                  "x": 502,
+                  "y": 56,
+                  "name": "bottomDot",
+                  "fill": "#6D28D9",
+                  "width": 8,
+                  "height": 8
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jGGyP",
+              "name": "summarySection",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 10,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#D1D5DB"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "WEYRj",
+                  "name": "summaryHeader",
+                  "width": "fill_container",
+                  "fill": "#F9FAFB",
+                  "padding": [
+                    10,
+                    12
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cJ6iI",
+                      "name": "summaryEyebrow",
+                      "fill": "#6B7280",
+                      "content": "FULL MATCH LIST",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "600",
+                      "letterSpacing": 0.8
+                    },
+                    {
+                      "type": "frame",
+                      "id": "j6POC",
+                      "name": "summaryHeaderRight",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "qmzfB",
+                          "name": "summaryMeta",
+                          "fill": "#6B7280",
+                          "content": "Hide all terms and definitions",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "8SXxJ",
+                          "name": "summaryChevron",
+                          "fill": "#6B7280",
+                          "content": "▴",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "E4rdk",
+                  "name": "summaryBody",
+                  "width": "fill_container",
+                  "stroke": {
+                    "thickness": {
+                      "top": 1
+                    },
+                    "fill": "#D1D5DB"
+                  },
+                  "gap": 12,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "QrqOh",
+                      "name": "termCol",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XPfiV",
+                          "name": "termHeading",
+                          "fill": "#111827",
+                          "content": "Terms",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "XSh4O",
+                          "name": "termItem1",
+                          "width": "fill_container",
+                          "fill": "#F9FAFB",
+                          "cornerRadius": 8,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#D1D5DB"
+                          },
+                          "layout": "vertical",
+                          "gap": 4,
+                          "padding": [
+                            8,
+                            10
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "UPpVF",
+                              "name": "termItem1Primary",
+                              "fill": "#111827",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "1: Variable",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "T6SwR",
+                              "name": "termItem1Secondary",
+                              "fill": "#6B7280",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Unmatched",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GNLUF",
+                          "name": "termItem2",
+                          "width": "fill_container",
+                          "fill": "#ECFEFF",
+                          "cornerRadius": 8,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#0F766E"
+                          },
+                          "layout": "vertical",
+                          "gap": 4,
+                          "padding": [
+                            8,
+                            10
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "tlHwo",
+                              "name": "termItem2Primary",
+                              "fill": "#111827",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "2: Function",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "xdrKi",
+                              "name": "termItem2Secondary",
+                              "fill": "#0F766E",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "4: The value a function sends back...",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vivb9",
+                      "name": "defCol",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "U6lDK",
+                          "name": "defHeading",
+                          "fill": "#111827",
+                          "content": "Definitions",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "HD6Js",
+                          "name": "defItem1",
+                          "width": "fill_container",
+                          "fill": "#ECFEFF",
+                          "cornerRadius": 8,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#0F766E"
+                          },
+                          "layout": "vertical",
+                          "gap": 4,
+                          "padding": [
+                            8,
+                            10
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "RbokT",
+                              "name": "defItem1Primary",
+                              "fill": "#111827",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "4: The value a function sends back...",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "1ZLVB",
+                              "name": "defItem1Secondary",
+                              "fill": "#0F766E",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "2: Function",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }
