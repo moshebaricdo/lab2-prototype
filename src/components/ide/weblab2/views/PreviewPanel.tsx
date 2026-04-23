@@ -16,11 +16,12 @@ import styles from "./PreviewPanel.module.scss";
 
 interface PreviewPanelProps {
   hasContent?: boolean;
+  previewContent?: React.ReactNode;
 }
 
 type PreviewMode = "desktop" | "mobile";
 
-export function PreviewPanel({ hasContent = true }: PreviewPanelProps) {
+export function PreviewPanel({ hasContent = true, previewContent }: PreviewPanelProps) {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
   const [isUrlFocused, setIsUrlFocused] = useState(false);
   const [urlValue, setUrlValue] = useState("index.html");
@@ -188,7 +189,7 @@ export function PreviewPanel({ hasContent = true }: PreviewPanelProps) {
               previewMode === "mobile" ? styles.mobileFrame : ""
             }`}
           >
-            {renderWebsitePreview()}
+            {previewContent ?? renderWebsitePreview()}
           </div>
         </div>
       )}

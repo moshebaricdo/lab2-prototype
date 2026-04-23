@@ -125,6 +125,7 @@
 
 .rowOuter {
   position: relative;
+  display: flex;
   width: 100%;
   height: 24px;
 }
@@ -132,12 +133,19 @@
 .rowButton {
   position: relative;
   display: flex;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   height: 24px;
   align-items: center;
   cursor: pointer;
   padding-right: 8px;
   border-radius: 4px;
+  overflow: hidden;
+}
+
+.rowButtonNested {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 [data-draggable-file="true"] {
@@ -192,21 +200,29 @@
   font-size: 12px;
   line-height: 1.64;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
 }
 
 .fileNameSelected {
-  font-weight: var(--font-weight-semibold);
+  font-weight: 600;
 }
 
 .menuTrigger {
-  position: relative;
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 30;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 0;
   border-radius: 4px;
-  background: transparent;
+  background: var(--ds-background-neutral-tertiary);
   padding: 4px;
   transition: background-color 0.2s ease;
 }
@@ -224,6 +240,7 @@
 
 .childrenWrap {
   position: relative;
+  overflow: hidden;
 }
 
 .childrenConnector {

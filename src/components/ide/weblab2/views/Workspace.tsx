@@ -34,6 +34,7 @@ interface WorkspaceProps {
   setIsFileManagerCollapsed: (collapsed: boolean) => void;
   setIsCreateFileModalOpen: (open: boolean) => void;
   enableFileDragToTutor?: boolean;
+  previewContent?: React.ReactNode;
   selectedHistoryVersion: string;
   showSavedTag: boolean;
   onReturnToCurrentVersion: () => void;
@@ -55,6 +56,7 @@ export function Workspace({
   setIsFileManagerCollapsed,
   setIsCreateFileModalOpen,
   enableFileDragToTutor = false,
+  previewContent,
   selectedHistoryVersion,
   showSavedTag,
   onReturnToCurrentVersion,
@@ -169,7 +171,7 @@ export function Workspace({
             className={styles.previewPanel}
             style={viewMode === "split" ? { minWidth: "300px" } : undefined}
           >
-            <PreviewPanel hasContent={openFiles.length > 0} />
+            <PreviewPanel hasContent={openFiles.length > 0} previewContent={previewContent} />
           </div>
         )}
       </div>

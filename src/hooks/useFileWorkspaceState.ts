@@ -2,7 +2,12 @@ import { useCallback, useMemo, useState } from "react";
 import type { FileItem, FileKind } from "../types/file";
 import type { ViewMode } from "../types/ui";
 
-const DEFAULT_ROOT_FOLDER = "My Project";
+const FALLBACK_ROOT_FOLDER = "My Project";
+
+function getRootFolderName(tree?: FileItem[]): string {
+  const root = tree?.find((f) => f.type === "folder");
+  return root?.name ?? FALLBACK_ROOT_FOLDER;
+}
 const FILE_KIND_BY_INPUT: Record<string, FileKind> = {
   html: "html",
   css: "css",
@@ -16,9 +21,35 @@ function toFileKind(fileType: string): FileKind {
   return FILE_KIND_BY_INPUT[normalized] ?? "file";
 }
 
-export function useFileWorkspaceState() {
+function inferFileKind(fileName: string): FileKind {
+  const dot = fileName.lastIndexOf(".");
+  if (dot < 0) return "file";
+  const ext = fileName.slice(dot + 1).toLowerCase();
+  if (ext === "html" || ext === "htm") return "html";
+  if (ext === "css") return "css";
+  if (["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"].includes(ext)) return "image";
+  if (ext === "txt") return "text";
+  return "file";
+}
+
+function addToProjectRoot(tree: FileItem[], newFile: FileItem, rootName: string): FileItem[] {
+  return tree.map((node) => {
+    if (node.type === "folder" && node.name === rootName && node.children) {
+      const alreadyExists = node.children.some((c) => c.name === newFile.name);
+      if (alreadyExists) return node;
+      return { ...node, children: [...node.children, newFile] };
+    }
+    return node;
+  });
+}
+
+export function useFileWorkspaceState(initialFileStructure?: FileItem[]) {
+  const rootFolder = getRootFolderName(initialFileStructure);
+  const [fileStructureState, setFileStructureState] = useState<FileItem[] | null>(
+    initialFileStructure ? [...initialFileStructure] : null,
+  );
   const [openFolders, setOpenFolders] = useState<Set<string>>(
-    new Set([DEFAULT_ROOT_FOLDER]),
+    new Set([rootFolder]),
   );
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [openFiles, setOpenFiles] = useState<FileItem[]>([]);
@@ -71,8 +102,25 @@ export function useFileWorkspaceState() {
     setSelectedFile(newFile);
   }, []);
 
+  const addFileToProject = useCallback((fileName: string, fileType?: string) => {
+    const kind = fileType ? toFileKind(fileType) : inferFileKind(fileName);
+    const newFile: FileItem = { name: fileName, type: kind };
+
+    setFileStructureState((prev) => {
+      if (!prev) return prev;
+      return addToProjectRoot(prev, newFile, rootFolder);
+    });
+
+    setOpenFolders((prev) => {
+      const next = new Set(prev);
+      next.add(rootFolder);
+      return next;
+    });
+  }, [rootFolder]);
+
   return useMemo(
     () => ({
+      fileStructureState,
       openFolders,
       selectedFile,
       openFiles,
@@ -89,8 +137,10 @@ export function useFileWorkspaceState() {
       closeFile,
       handleReorderFiles,
       handleCreateFile,
+      addFileToProject,
     }),
     [
+      fileStructureState,
       openFolders,
       selectedFile,
       openFiles,
@@ -102,6 +152,7 @@ export function useFileWorkspaceState() {
       closeFile,
       handleReorderFiles,
       handleCreateFile,
+      addFileToProject,
     ],
   );
 }

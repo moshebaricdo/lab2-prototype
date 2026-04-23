@@ -14,14 +14,15 @@
   font-family: var(--font-body);
   font-weight: var(--font-weight-semibold);
   transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
+    background-color 0.05s ease-in,
+    border-color 0.05s ease-in,
+    color 0.05s ease-in,
+    transform 0.05s ease-in;
 }
 
 .root:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--ring);
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 .disabled {
@@ -30,6 +31,10 @@
 
 .enabled {
   cursor: pointer;
+}
+
+.root:active {
+  transform: scale(0.98);
 }
 
 .fullWidth {
@@ -71,7 +76,7 @@
   padding: 2px 8px;
   font-size: 12px;
   line-height: 1.64;
-  gap: 4px;
+  gap: 6px;
 }
 
 /* Icon-only size tokens */

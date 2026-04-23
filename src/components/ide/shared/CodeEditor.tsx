@@ -7,6 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faCss3 } from "@fortawesome/free-brands-svg-icons";
 import { ScrollArea } from "../../ui/scroll-area";
+import { AppButton } from "../../ui/AppButton";
 import type { FileItem } from "../../../types/file";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -152,22 +153,111 @@ export function CodeEditor({
   enableDragToTutor = false,
 }: CodeEditorProps) {
   const [activeLine, setActiveLine] = useState<number>(0);
+  const [hoveredLine, setHoveredLine] = useState<number | null>(null);
+  const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
+  const [codeScrollTop, setCodeScrollTop] = useState(0);
+  const isDraggingRef = useRef(false);
+  const dragAnchorRef = useRef<number>(0);
   const [localOpenFiles, setLocalOpenFiles] =
     useState(openFiles);
   const codeScrollRef = useRef<HTMLDivElement>(null);
   const lineNumbersScrollRef = useRef<HTMLDivElement>(null);
+  const codeLinesRef = useRef<HTMLDivElement>(null);
 
   // Update local state when openFiles prop changes
   if (openFiles !== localOpenFiles) {
     setLocalOpenFiles(openFiles);
   }
 
-  // Set first line as active when file changes
+  // Clear selection + reset active line when file changes
   useEffect(() => {
     if (selectedFile) {
       setActiveLine(0);
+      setSelectionRange(null);
     }
   }, [selectedFile]);
+
+  // Dismiss selection on Escape or click outside code area
+  useEffect(() => {
+    if (!selectionRange) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectionRange(null);
+    };
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-floating-bar]") || target.closest("[data-code-lines]") || target.closest("[data-line-numbers]")) return;
+      setSelectionRange(null);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, [selectionRange]);
+
+  // End drag on global mouseup (handles cases where mouse leaves the code area)
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      isDraggingRef.current = false;
+    };
+    document.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => document.removeEventListener("mouseup", handleGlobalMouseUp);
+  }, []);
+
+  const handleLineMouseDown = (lineIndex: number) => {
+    isDraggingRef.current = true;
+    dragAnchorRef.current = lineIndex;
+    setActiveLine(lineIndex);
+    setSelectionRange(null);
+  };
+
+  const handleLineMouseEnter = (lineIndex: number) => {
+    setHoveredLine(lineIndex);
+    if (isDraggingRef.current) {
+      if (lineIndex !== dragAnchorRef.current) {
+        setSelectionRange({ start: dragAnchorRef.current, end: lineIndex });
+      } else {
+        setSelectionRange(null);
+      }
+    }
+  };
+
+  const handleLineMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+
+  const isLineSelected = (lineIndex: number) => {
+    if (!selectionRange) return false;
+    const min = Math.min(selectionRange.start, selectionRange.end);
+    const max = Math.max(selectionRange.start, selectionRange.end);
+    return lineIndex >= min && lineIndex <= max;
+  };
+
+  const handleAddToTutor = () => {
+    if (!selectionRange || !selectedFile) return;
+    const start = Math.min(selectionRange.start, selectionRange.end) + 1;
+    const end = Math.max(selectionRange.start, selectionRange.end) + 1;
+    window.dispatchEvent(
+      new CustomEvent("weblab:add-to-tutor", {
+        detail: { fileName: selectedFile.name, startLine: start, endLine: end },
+      }),
+    );
+    setSelectionRange(null);
+  };
+
+  const getFloatingBarPosition = () => {
+    if (!selectionRange || !codeLinesRef.current || !codeScrollRef.current) {
+      return { top: 0, visible: false };
+    }
+    const endIdx = Math.max(selectionRange.start, selectionRange.end);
+    const lineEl = codeLinesRef.current.children[endIdx] as HTMLElement | undefined;
+    if (!lineEl) return { top: 0, visible: false };
+    const top = lineEl.offsetTop + lineEl.offsetHeight + 4 - codeScrollTop;
+    const containerHeight = codeScrollRef.current.clientHeight;
+    const visible = top > -10 && top < containerHeight;
+    return { top, visible };
+  };
 
   const getFileIcon = (file: FileItem) => {
     if (file.type === "css") {
@@ -191,75 +281,158 @@ export function CodeEditor({
       lineNumbersScrollRef.current.scrollTop =
         codeScrollRef.current.scrollTop;
     }
+    setCodeScrollTop(codeScrollRef.current?.scrollTop ?? 0);
   };
 
-  const applySyntaxHighlighting = (line: string) => {
-    // Simple syntax highlighting for HTML and CSS
-    let highlightedLine = line
-      // HTML Comments and DOCTYPE
+  // Placeholder characters used during regex passes to prevent later
+  // passes from matching inside already-wrapped tokens.
+  const PO = "\x01"; // span open:  \x01className\x02content\x03
+  const PM = "\x02";
+  const PC = "\x03";
+  const W = (cls: string, text: string) => `${PO}${cls}${PM}${text}${PC}`;
+  const unwrap = (s: string) =>
+    s.replace(
+      /\x01([^\x02]*)\x02([\s\S]*?)\x03/g,
+      '<span class="syntax-$1">$2</span>',
+    );
+
+  const highlightHTML = (line: string): string => {
+    if (/&lt;!--/.test(line) || /--&gt;/.test(line)) return unwrap(W("comment", line));
+    if (/&lt;!DOCTYPE/i.test(line)) return unwrap(W("comment", line));
+
+    const result = line
       .replace(
-        /(<!DOCTYPE[^>]*>)/g,
-        '<span class="syntax-comment">$1</span>',
+        /(&quot;)(.*?)(&quot;)/g,
+        (_m, q1, val, q2) => W("punctuation", q1) + W("string", val) + W("punctuation", q2),
       )
       .replace(
-        /(<!--[\s\S]*?-->)/g,
-        '<span class="syntax-comment">$1</span>',
-      )
-      // HTML Tags - match < (escaped <) and wrap tag name in span
-      .replace(
-        /(<\/?)([\w]+)/g,
-        '$1<span class="syntax-tag">$2</span>',
-      )
-      // HTML Attributes
-      .replace(
-        /\s([\w-]+)=/g,
-        ' <span class="syntax-attribute">$1</span>=',
-      )
-      // Strings (quoted values)
-      .replace(
-        /&quot;([^&]*)&quot;/g,
-        '&quot;<span class="syntax-string">$1</span>&quot;',
+        /(&#x27;)(.*?)(&#x27;)/g,
+        (_m, q1, val, q2) => W("punctuation", q1) + W("string", val) + W("punctuation", q2),
       )
       .replace(
-        /&#x27;([^&]*)&#x27;/g,
-        '&#x27;<span class="syntax-string">$1</span>&#x27;',
+        /(&lt;\/?)([\w-]+)/g,
+        (_m, bracket, tag) => W("punctuation", bracket) + W("tag", tag),
       )
-      // CSS Properties (simple pattern for color, background, etc.)
+      .replace(/(\/?&gt;)/g, W("punctuation", "$1"))
       .replace(
-        /\b(color|background|padding|margin|border|display|position|font-family|font-size|font-weight|line-height|text-align|width|height|max-width|gap|flex|grid|justify-content|align-items|transition|border-radius|box-shadow|cursor|opacity|overflow|z-index|top|left|right|bottom):/g,
-        '<span class="syntax-attribute">$1</span>:',
-      )
-      // CSS Values with units or keywords
-      .replace(
-        /:\s*([^;{}\"]+);/g,
-        ': <span class="syntax-string">$1</span>;',
+        /\s([\w-]+)(=)/g,
+        (_m, attr, eq) => " " + W("attribute", attr) + W("punctuation", eq),
       );
 
-    return highlightedLine;
+    return unwrap(result);
+  };
+
+  const highlightCSSLine = (line: string, inComment: boolean): { out: string; inComment: boolean } => {
+    if (inComment) {
+      const closed = /\*\//.test(line);
+      return { out: unwrap(W("comment", line)), inComment: !closed };
+    }
+
+    const trimmed = line.trimStart();
+
+    if (/^\/\*/.test(trimmed)) {
+      const closed = /\*\//.test(trimmed);
+      return { out: unwrap(W("comment", line)), inComment: !closed };
+    }
+
+    if (/^\/\//.test(trimmed)) {
+      return { out: unwrap(W("comment", line)), inComment: false };
+    }
+
+    // @-rules
+    if (/^@/.test(trimmed)) {
+      const r = line
+        .replace(/(@[\w-]+)/g, W("keyword", "$1"))
+        .replace(
+          /(&#x27;|&quot;)(.*?)\1/g,
+          (_m, q, val) => W("punctuation", q) + W("string", val) + W("punctuation", q),
+        );
+      return { out: unwrap(r), inComment: false };
+    }
+
+    // Property: value; lines
+    const propMatch = line.match(/^(\s*)([\w-]+)(\s*:\s*)(.+?)(;?\s*)$/);
+    if (propMatch) {
+      const [, indent, prop, colon, rawValue, semi] = propMatch;
+      const value = rawValue
+        .replace(
+          /(&#x27;|&quot;)(.*?)\1/g,
+          (_m, q, val) => W("punctuation", q) + W("string", val) + W("punctuation", q),
+        )
+        .replace(/(#[0-9a-fA-F]{3,8})\b/g, W("number", "$1"))
+        .replace(
+          /\b(\d+(?:\.\d+)?)(px|em|rem|%|vh|vw|s|ms|deg|fr|ch)?\b/g,
+          (_m, num, unit) => W("number", num) + (unit ? W("keyword", unit) : ""),
+        );
+      return {
+        out: unwrap(indent + W("property", prop) + W("punctuation", colon) + W("value", value) + W("punctuation", semi)),
+        inComment: false,
+      };
+    }
+
+    // Brace-only lines
+    if (/^\s*[{}]\s*$/.test(line)) {
+      return { out: unwrap(line.replace(/([{}])/g, W("punctuation", "$1"))), inComment: false };
+    }
+
+    // String continuations (e.g. multi-line grid-template-areas)
+    if (/^\s*(&quot;|&#x27;)/.test(line)) {
+      return {
+        out: unwrap(line.replace(/((&quot;|&#x27;).*?\2)/g, W("string", "$1"))),
+        inComment: false,
+      };
+    }
+
+    // Selector lines
+    if (trimmed && !/^}/.test(trimmed)) {
+      return {
+        out: unwrap(line.replace(/([.#:[\]()>,+~*=\w-]+)/g, W("selector", "$1"))),
+        inComment: false,
+      };
+    }
+
+    return { out: line, inComment: false };
+  };
+
+  const highlightAllLines = (lines: string[]): string[] => {
+    const fileType = selectedFile?.type;
+    if (fileType === "css") {
+      let inComment = false;
+      return lines.map((line) => {
+        const result = highlightCSSLine(line, inComment);
+        inComment = result.inComment;
+        return result.out;
+      });
+    }
+    return lines.map(highlightHTML);
   };
 
   const renderCodeLines = (code: string) => {
     const lines = code.split("\n");
+    const highlighted = highlightAllLines(lines);
 
     return (
       <div className={styles.lineLayout}>
         {/* Sticky Line Numbers Column */}
         <div ref={lineNumbersScrollRef} className={styles.lineNumbers} style={{ overflowY: "hidden" }}>
-          <div className={styles.lineNumbersColumn}>
+          <div className={styles.lineNumbersColumn} data-line-numbers>
             {lines.map((_, lineIndex) => (
               <div
                 key={`line-num-${lineIndex}`}
-                onClick={() => setActiveLine(lineIndex)}
+                onMouseDown={() => handleLineMouseDown(lineIndex)}
+                onMouseEnter={() => handleLineMouseEnter(lineIndex)}
+                onMouseUp={handleLineMouseUp}
+                onMouseLeave={() => setHoveredLine(null)}
                 className={`${styles.lineNumberCell} ${
-                  lineIndex === activeLine ? styles.lineNumberCellActive : ""
+                  isLineSelected(lineIndex)
+                    ? styles.lineNumberCellSelected
+                    : lineIndex === activeLine || lineIndex === hoveredLine
+                      ? styles.lineNumberCellActive
+                      : ""
                 }`}
               >
                 <p
-                  className={`${styles.lineNumberText} ${
-                    lineIndex === activeLine
-                      ? styles.lineNumberTextActive
-                      : styles.lineNumberTextInactive
-                  }`}
+                  className={`${styles.lineNumberText} ${styles.lineNumberTextDefault}`}
                 >
                   {lineIndex + 1}
                 </p>
@@ -269,30 +442,61 @@ export function CodeEditor({
         </div>
 
         {/* Scrollable Code Content Column */}
-        <div
-          ref={codeScrollRef}
-          className={styles.codeColumn}
-          onScroll={handleCodeScroll}
-        >
-          <div className={styles.codeLines}>
-            {lines.map((line, lineIndex) => (
-              <div
-                key={`code-line-${lineIndex}`}
-                onClick={() => setActiveLine(lineIndex)}
-                className={`${styles.codeLineCell} ${
-                  lineIndex === activeLine ? styles.codeLineCellActive : ""
-                }`}
-              >
-                <p
-                  className={styles.codeLineText}
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      applySyntaxHighlighting(line) || " ",
-                  }}
-                />
-              </div>
-            ))}
+        <div className={styles.codeColumnWrap}>
+          <div
+            ref={codeScrollRef}
+            className={styles.codeColumn}
+            onScroll={handleCodeScroll}
+          >
+            <div ref={codeLinesRef} className={styles.codeLines} data-code-lines>
+              {lines.map((line, lineIndex) => (
+                <div
+                  key={`code-line-${lineIndex}`}
+                  onMouseDown={() => handleLineMouseDown(lineIndex)}
+                  onMouseEnter={() => handleLineMouseEnter(lineIndex)}
+                  onMouseUp={handleLineMouseUp}
+                  onMouseLeave={() => setHoveredLine(null)}
+                  className={`${styles.codeLineCell} ${
+                    isLineSelected(lineIndex)
+                      ? styles.codeLineCellSelected
+                      : lineIndex === activeLine
+                        ? styles.codeLineCellActive
+                        : ""
+                  }`}
+                >
+                  <p
+                    className={styles.codeLineText}
+                    dangerouslySetInnerHTML={{
+                      __html: highlighted[lineIndex] || " ",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
+          {(() => {
+            if (!selectionRange) return null;
+            const { top, visible } = getFloatingBarPosition();
+            if (!visible) return null;
+            return (
+              <div
+                data-floating-bar
+                className={styles.floatingActionBar}
+                style={{ top }}
+              >
+                <AppButton
+                  variant="tertiary"
+                  tone="black"
+                  size="xs"
+                  iconName="message-code"
+                  onClick={handleAddToTutor}
+                >
+                  Add to AI Tutor Chat
+                </AppButton>
+              </div>
+            );
+          })()}
+          <div className={styles.codeColumnFade} />
         </div>
       </div>
     );

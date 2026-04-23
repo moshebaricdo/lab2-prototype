@@ -6,6 +6,7 @@ import {
   faChevronUp,
   faCaretUp,
 } from "@fortawesome/free-solid-svg-icons";
+import { AppButton } from "../../ui/AppButton";
 import styles from "./InstructionsDrawer.module.scss";
 
 export type InstructionsDrawerVisualCue = "none" | "fade" | "inline-link";
@@ -282,15 +283,16 @@ export function InstructionsDrawer({
 
       <div className={`${styles.toggleWrap} ${isOpen ? styles.toggleWrapOpen : ""}`}>
         <div aria-hidden="true" className={styles.toggleBorder} />
-        <button onClick={() => setIsOpen((prev) => !prev)} className={styles.toggleButton}>
-          <span className={styles.toggleIcon}>
-            <FontAwesomeIcon icon={faCircleInfo} />
-          </span>
-          <p className={styles.toggleLabel}>{isOpen ? "Hide Instructions" : "Show Instructions"}</p>
-          <span className={styles.toggleIcon}>
-            <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} />
-          </span>
-        </button>
+        <AppButton
+          variant="tertiary"
+          tone="black"
+          size="xs"
+          icon={<FontAwesomeIcon icon={faCircleInfo} />}
+          onClick={() => setIsOpen((prev) => !prev)}
+        >
+          {isOpen ? "Hide Instructions" : "Show Instructions"}{" "}
+          <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} />
+        </AppButton>
       </div>
     </div>
   );

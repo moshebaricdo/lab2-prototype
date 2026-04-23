@@ -107,6 +107,18 @@
   --ds-text-warning-primary: #F9CB28;
   --ds-text-warning-primary-fixed: #F9CB28;
   --ds-text-warning-secondary: #C88504;
+
+  /* Syntax highlighting — One Light inspired */
+  --ds-syntax-comment: #6A737D;
+  --ds-syntax-tag: #BE3030;
+  --ds-syntax-attribute: #945F10;
+  --ds-syntax-string: #22753F;
+  --ds-syntax-keyword: #7C3AED;
+  --ds-syntax-number: #0550AE;
+  --ds-syntax-punctuation: #5C6370;
+  --ds-syntax-selector: #1A7F85;
+  --ds-syntax-property: #BE3030;
+  --ds-syntax-value: #0550AE;
 }
 
 .dark {
@@ -217,4 +229,16 @@
   --ds-text-warning-primary: #FFFFFF;
   --ds-text-warning-primary-fixed: #FCDC48;
   --ds-text-warning-secondary: #DFE3E9;
+
+  /* Syntax highlighting — One Dark inspired */
+  --ds-syntax-comment: #7F848E;
+  --ds-syntax-tag: #E06C75;
+  --ds-syntax-attribute: #D19A66;
+  --ds-syntax-string: #98C379;
+  --ds-syntax-keyword: #C678DD;
+  --ds-syntax-number: #61AFEF;
+  --ds-syntax-punctuation: #ABB2BF;
+  --ds-syntax-selector: #56B6C2;
+  --ds-syntax-property: #E06C75;
+  --ds-syntax-value: #61AFEF;
 }

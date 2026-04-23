@@ -35,7 +35,7 @@ import type { DevPanelField } from "../dev";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import type { UseAnnotationsResult } from "../../../hooks/useAnnotations";
 import { useSavedVariants } from "../../../hooks/useSavedVariants";
-import type { ChatMessage } from "../../../types/chat";
+import type { ChatAttachment, ChatMessage } from "../../../types/chat";
 import type { InstructionsDrawerVisualCue } from "./InstructionsDrawer";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -84,6 +84,12 @@ export interface SidebarProps {
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
   autoSeedConversationOnMount?: boolean;
   aiTutorInputExperiment?: AiTutorInputExperiment;
+  /** Pre-attach files in the composer (shown as chips before sending). */
+  initialAttachedFiles?: string[];
+  /** Metadata for attached files (image src, timestamps). Keyed by file path. */
+  attachmentMeta?: Record<string, ChatAttachment>;
+  /** Callback to add a file to the project tree. */
+  onAddFileToProject?: (fileName: string) => void;
   /** Custom content for the instructions drawer (replaces default copy). */
   instructionsContent?: React.ReactNode;
   /** Fires when `collapsible && isCollapsed` changes (for shell chrome such as resize handle). */
@@ -235,6 +241,9 @@ export function Sidebar({
   instructionsDrawerVisualCue = "none",
   autoSeedConversationOnMount = false,
   aiTutorInputExperiment = "default",
+  initialAttachedFiles,
+  attachmentMeta,
+  onAddFileToProject,
   instructionsContent,
   onCollapsedChange,
   devPanelFields,
@@ -317,9 +326,7 @@ export function Sidebar({
 
   return (
     <div
-      className={[styles.root, panelHidden ? styles.rootCollapsed : ""]
-        .filter(Boolean)
-        .join(" ")}
+      className={styles.root}
       style={{
         width: panelHidden ? `${railWidth}px` : `${sidebarWidth}px`,
       }}
@@ -599,6 +606,9 @@ export function Sidebar({
               instructionsDrawerVisualCue={instructionsDrawerVisualCue}
               autoSeedConversationOnMount={autoSeedConversationOnMount}
               inputExperiment={aiTutorInputExperiment}
+              initialAttachedFiles={initialAttachedFiles}
+              attachmentMeta={attachmentMeta}
+              onAddFileToProject={onAddFileToProject}
               instructionsContent={instructionsContent}
             />
           )}

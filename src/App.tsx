@@ -45,6 +45,9 @@ import { ProgressionFreeResponsePage } from "./pages/ProgressionFreeResponsePage
 import { ProgressionLevelGroupPage } from "./pages/ProgressionLevelGroupPage";
 import { ProgressionWebLabPage } from "./pages/ProgressionWebLabPage";
 import { WebLab2SendAffordanceLevelPage } from "./pages/WebLab2SendAffordanceLevelPage";
+import { WebLab2FileChipActionLevelPage } from "./pages/WebLab2FileChipActionLevelPage";
+import { WebLab2TutorActionCardLevelPage } from "./pages/WebLab2TutorActionCardLevelPage";
+import { WebLab2DemoProjectLevelPage } from "./pages/WebLab2DemoProjectLevelPage";
 
 export default function App() {
   return (
@@ -72,6 +75,18 @@ export default function App() {
       <Route
         path="/levels/weblab2-rubric"
         element={<WebLab2RubricLevelPage />}
+      />
+      <Route
+        path="/levels/weblab2-file-chip-action"
+        element={<WebLab2FileChipActionLevelPage />}
+      />
+      <Route
+        path="/levels/weblab2-tutor-action-card"
+        element={<WebLab2TutorActionCardLevelPage />}
+      />
+      <Route
+        path="/levels/weblab2-demo-project"
+        element={<WebLab2DemoProjectLevelPage />}
       />
       <Route path="/levels/multi" element={<MultiChoiceLevelPage />} />
       <Route

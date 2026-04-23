@@ -1,63 +1,14 @@
+/* ================================================
+   Root & Layout
+   ================================================ */
+
 .root {
   display: flex;
   min-width: 0;
   height: 100%;
   flex: 1;
   flex-direction: column;
-  background: var(--background);
-}
-
-.tabsRow {
-  display: flex;
-  padding-top: 8px;
-  padding-bottom: 4px;
-}
-
-.tabsRowCollapsed {
-  gap: 4px;
-  padding-left: 4px;
-  padding-right: 0;
-}
-
-.tabsRowExpanded {
-  gap: 8px;
-  padding-left: 8px;
-  padding-right: 8px;
-}
-
-.tab {
-  display: flex;
-  cursor: pointer;
-  align-items: center;
-  gap: 8px;
-  border-radius: 4px;
-  padding: 2px 8px;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
-}
-
-.tabDragToTutor {
-  cursor: grab;
-}
-
-.tabDragToTutor:active {
-  cursor: grabbing;
-}
-
-.tab:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--ring);
-}
-
-.tabActive {
-  background: var(--accent);
-}
-
-.tabIdle {
-  background: var(--ds-background-neutral-secondary);
-}
-
-.tabIdle:hover {
-  background: var(--ds-background-neutral-tertiary);
+  background: var(--ds-background-neutral-primary);
 }
 
 .contentWrap {
@@ -83,7 +34,6 @@
 
 .contentPadExpanded {
   padding-left: 8px;
-  padding-right: 8px;
 }
 
 .lineLayout {
@@ -91,8 +41,66 @@
   min-width: 0;
   flex: 1;
   overflow: hidden;
-  gap: 4px;
+  gap: 12px;
   padding-top: 1px;
+  user-select: none;
+}
+
+/* ================================================
+   Tab Bar
+   ================================================ */
+
+.tabsRow {
+  display: flex;
+  padding-top: 8px;
+  padding-bottom: 4px;
+}
+
+.tabsRowCollapsed {
+  gap: 4px;
+  padding-left: 36px;
+  padding-right: 0;
+}
+
+.tabsRowExpanded {
+  gap: 6px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.tab {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  padding: 2px 8px;
+  transition: background-color 0.05s ease-in, opacity 0.05s ease-in;
+}
+
+.tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
+}
+
+.tabActive {
+  background: var(--ds-background-brand-teal-primary);
+}
+
+.tabIdle {
+  background: var(--ds-background-neutral-secondary);
+}
+
+.tabIdle:hover {
+  background: var(--ds-background-neutral-tertiary);
+}
+
+.tabDragToTutor {
+  cursor: grab;
+}
+
+.tabDragToTutor:active {
+  cursor: grabbing;
 }
 
 .tabIconWrap {
@@ -105,28 +113,27 @@
 }
 
 .tabIcon {
-  font-size: 12px;
+  font-size: var(--text-label);
   line-height: 1;
 }
 
 .tabIconActive {
-  color: var(--accent-foreground);
+  color: var(--ds-text-neutral-white-fixed);
 }
 
 .tabIconInactive {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 .tabName {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--text-label);
   line-height: 1.64;
   white-space: nowrap;
 }
 
 .tabNameActive {
-  color: var(--accent-foreground);
-  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-white-fixed);
 }
 
 .tabNameInactive {
@@ -138,21 +145,26 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 4px;
-  background: transparent;
-  transition: background-color 0.2s ease;
+  transition: opacity 0.05s ease-in;
+  opacity: 0.7;
 }
 
 .tabClose:hover {
-  background: rgb(0 0 0 / 10%);
+  opacity: 1;
+  cursor: pointer;
 }
 
 .tabCloseIcon {
   width: 13px;
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.25;
   text-align: center;
+  transform: translateY(0.5px);
 }
+
+/* ================================================
+   Line Numbers Column
+   ================================================ */
 
 .lineNumbers {
   min-width: 32px;
@@ -164,45 +176,57 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-top: 2px;
+  padding-top: 3px;
 }
 
 .lineNumberCell {
   cursor: pointer;
   border: 1px solid transparent;
-  border-radius: 4px;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.lineNumberCell:hover {
-  background: rgb(240 242 245 / 50%);
+.lineNumberCellActive .lineNumberText {
+  color: var(--ds-text-neutral-primary);
 }
 
-.lineNumberCellActive {
-  border-color: var(--border);
-  background: var(--ds-background-neutral-secondary);
+.lineNumberCellSelected .lineNumberText {
+  color: var(--ds-text-neutral-primary);
 }
 
 .lineNumberText {
   margin: 0;
   padding-right: 4px;
   font-family: var(--font-mono);
-  font-size: 14px;
-  line-height: 21.56px;
+  font-size: var(--text-code);
+  line-height: 20px;
   text-align: right;
 }
 
-.lineNumberTextActive {
-  color: var(--foreground);
+.lineNumberTextDefault {
+  color: var(--ds-text-neutral-quaternary);
 }
 
-.lineNumberTextInactive {
-  color: var(--muted-foreground);
+/* ================================================
+   Code Column & Lines
+   ================================================ */
+
+.codeColumnWrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
 }
 
 .codeColumn {
-  flex: 1;
+  height: 100%;
   overflow: auto;
+}
+
+.codeColumnFade {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 1;
+  width: 12px;
+  background: linear-gradient(to left, var(--ds-background-neutral-primary), transparent);
+  pointer-events: none;
 }
 
 .codeLines {
@@ -215,33 +239,59 @@
 .codeLineCell {
   cursor: pointer;
   border: 1px solid transparent;
-  border-radius: 4px;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  padding-left: 3px;
+  border-radius: 4px 0 0 4px;
 }
 
 .codeLineCell:hover {
-  background: rgb(240 242 245 / 50%);
+  background: color-mix(in srgb, var(--ds-background-neutral-secondary) 50%, transparent);
 }
 
 .codeLineCellActive {
-  border-color: var(--border);
-  background: var(--ds-background-neutral-secondary);
+  background: color-mix(in srgb, var(--ds-background-neutral-secondary) 50%, transparent);
+}
+
+.codeLineCellSelected {
+  background: color-mix(in srgb, var(--ds-background-neutral-secondary) 50%, transparent);
+}
+
+.codeLineCellSelected:hover {
+  background: color-mix(in srgb, var(--ds-background-neutral-secondary) 50%, transparent);
 }
 
 .codeLineText {
   margin: 0;
-  padding-left: 6px;
   font-family: var(--font-mono);
-  font-size: 14px;
-  line-height: 21.56px;
-  color: var(--foreground);
+  font-size: var(--text-code);
+  line-height: 20px;
+  color: var(--ds-text-neutral-primary);
   white-space: pre;
 }
+
+/* ================================================
+   Floating Action Bar (code selection → tutor)
+   ================================================ */
+
+.floatingActionBar {
+  position: absolute;
+  left: 0;
+  z-index: 99;
+  padding: 2px;
+  padding-top: 1px;
+  border-radius: 6px;
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-borders-neutral-primary);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+}
+
+/* ================================================
+   Empty States
+   ================================================ */
 
 .emptySelection {
   display: flex;
   height: 100%;
   align-items: center;
   justify-content: center;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }

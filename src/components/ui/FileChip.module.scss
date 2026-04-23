@@ -3,47 +3,53 @@
 /* Rectangular file chip (Figma: Upload / File) */
 .fileChip {
   align-items: stretch;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
   display: flex;
-  height: 48px;
+  height: 32px;
   max-width: min(100%, 280px);
-  overflow: visible; 
+  min-width: 0;
+  overflow: visible;
   position: relative;
+  transition: border-color 0.15s ease;
+}
+
+.fileChipAdded {
+  border-color: var(--ds-borders-brand-teal-light);
 }
 
 .iconRail {
   align-items: center;
   background: var(--ds-background-brand-teal-primary);
-  border-radius: 4px 0 0 4px;
+  border-radius: 3px 0 0 3px;
   display: flex;
   flex-shrink: 0;
   height: 100%;
   justify-content: center;
-  width: 48px;
+  width: 32px;
 }
 
 .iconGlyph {
   color: var(--ds-text-neutral-inverse);
-  font-size: 18px;
+  font-size: 13px;
 }
 
 .textBlock {
+  align-items: center;
   display: flex;
   flex: 1;
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: row;
+  gap: 4px;
   min-width: 0;
-  gap: 2px;
-  padding: 4px 10px 4px 8px;
+  padding: 0 8px;
 }
 
 .fileName {
-  color: var(--foreground);
-  font-size: var(--text-label);
+  color: var(--ds-text-neutral-primary);
+  font-size: 12px;
   font-weight: var(--font-weight-semibold);
-  line-height: 1.25;
+  line-height: 1;
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -51,34 +57,69 @@
 }
 
 .extension {
-  color: var(--muted-foreground);
-  font-size: 0.725rem;
+  color: var(--ds-text-neutral-quaternary);
+  flex-shrink: 0;
+  font-size: 12px;
   font-weight: var(--font-weight-normal);
-  line-height: 1.25;
+  line-height: 1;
   margin: 0;
+  white-space: nowrap;
 }
 
-/* Square image thumbnail chip (Figma: Upload / Image) */
-.imageChip {
+/* Image chip in container (add mode) — mirrors .fileChip layout */
+.imageChipContainer {
+  align-items: stretch;
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
-  flex-shrink: 0;
-  height: 48px;
+  display: flex;
+  height: 32px;
+  max-width: min(100%, 280px);
+  min-width: 0;
   overflow: visible;
   position: relative;
-  width: 48px;
+  transition: border-color 0.15s ease;
 }
 
-.imageChipImg {
-  border: 1px solid var(--border);
-  border-radius: 4px;
+.imageChipThumb {
+  border-radius: 3px 0 0 3px;
+  flex-shrink: 0;
+  height: 100%;
+  overflow: hidden;
+  width: 32px;
+}
+
+.imageChipThumb img {
   display: block;
   height: 100%;
   object-fit: cover;
   width: 100%;
 }
 
-/* Close control — dark circle, white x, overlaps top-right */
-.remove {
+/* Square image thumbnail chip (composer / static) */
+.imageChip {
+  border-radius: 4px;
+  flex-shrink: 0;
+  height: 32px;
+  overflow: visible;
+  position: relative;
+  width: 32px;
+  transition: box-shadow 0.15s ease;
+}
+
+.imageChipAdded {
+  box-shadow: none;
+}
+
+.imageChipImg {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+/* Remove button — dark circle overlapping top-right (composer only) */
+.actionButton {
   align-items: center;
   background: var(--ds-background-neutral-primary-inverse);
   border: none;
@@ -86,35 +127,56 @@
   cursor: pointer;
   display: flex;
   flex-shrink: 0;
-  height: 12px;
+  height: 14px;
   justify-content: center;
   padding: 0;
   position: absolute;
-  right: -6px;
-  top: 0px;
-  width: 12px;
+  right: -5px;
+  top: -5px;
+  width: 14px;
+  transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
-.remove:disabled {
+.actionButton:hover:not(:disabled) {
+  transform: scale(1.15);
+}
+
+.actionButton:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
 
-.remove:focus-visible {
+.actionButton:focus-visible {
   @include focus-ring;
 }
 
-.removeIcon {
+.actionIcon {
   color: var(--ds-text-neutral-inverse);
-  font-size: 8px;
+  font-size: 7px;
 }
 
-.fileChip .remove {
-  right: -6px;
-  transform: translateY(-50%);
+/* Inline "+ Add" button (inside chip, uses AppButton xs) */
+.inlineAddButton {
+  align-self: center;
+  margin-right: 3px;
+  margin-left: 3px;
+  flex-shrink: 0;
 }
 
-.imageChip .remove {
-  right: -6px;
-  transform: none;
+/* "Added" badge — green circle with check (replaces add button after click) */
+.addedBadge {
+  align-items: center;
+  align-self: center;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 24px;
+  justify-content: center;
+  margin-right: 3px;
+  margin-left: 3px;
+  width: 24px;
+}
+
+.addedBadgeIcon {
+  color: var(--ds-text-success-primary);
+  font-size: 12px;
 }

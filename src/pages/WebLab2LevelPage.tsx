@@ -7,6 +7,7 @@ import {
   fileStructure,
   initialChatMessages,
 } from "../data/weblab2";
+import type { ChatAttachment, ChatMessage } from "../types/chat";
 import { useChatState } from "../hooks/useChatState";
 import { useFileWorkspaceState } from "../hooks/useFileWorkspaceState";
 import { useLayoutState } from "../hooks/useLayoutState";
@@ -53,6 +54,8 @@ const webLab2DevFields: DevPanelField[] = [
       { label: "Default", value: "default" },
       { label: "Clarified send", value: "clarified-send" },
       { label: "File drop", value: "file-drop" },
+      { label: "File chip + add to project", value: "file-chip-action" },
+      { label: "Tutor action card", value: "tutor-action-card" },
     ],
     group: "Behavior",
   },
@@ -78,6 +81,20 @@ interface WebLab2LevelPageProps {
   aiTutorInputExperiment?: AiTutorInputExperiment;
   showRubricTab?: boolean;
   rubricData?: RubricData | RubricData[];
+  /** Override the default empty chat with a pre-seeded conversation. */
+  initialMessages?: ChatMessage[];
+  /** Pre-fill the chat input box with text. */
+  initialChatInput?: string;
+  /** Pre-attach files in the composer (shown as chips before sending). */
+  initialAttachedFiles?: string[];
+  /** Metadata for attached files (image src, timestamps). Keyed by file path. */
+  attachmentMeta?: Record<string, ChatAttachment>;
+  /** Custom file structure to replace the default mock data. */
+  fileStructureOverride?: import("../types/file").FileItem[];
+  /** Custom preview content rendered instead of the default mock website. */
+  previewContent?: React.ReactNode;
+  /** Hide the instructions drawer in the AI tutor panel. Default true. */
+  showInstructionsDrawer?: boolean;
 }
 
 export function WebLab2LevelPage({
@@ -88,6 +105,13 @@ export function WebLab2LevelPage({
   aiTutorInputExperiment = "default",
   showRubricTab = false,
   rubricData,
+  initialMessages,
+  initialChatInput,
+  initialAttachedFiles,
+  attachmentMeta,
+  fileStructureOverride,
+  previewContent,
+  showInstructionsDrawer,
 }: WebLab2LevelPageProps = {}) {
   const {
     activeTab,
@@ -98,6 +122,7 @@ export function WebLab2LevelPage({
     setSidebarWidth,
   } = useLayoutState();
   const {
+    fileStructureState,
     openFolders,
     selectedFile,
     openFiles,
@@ -113,9 +138,10 @@ export function WebLab2LevelPage({
     closeFile,
     handleReorderFiles,
     handleCreateFile,
-  } = useFileWorkspaceState();
+    addFileToProject,
+  } = useFileWorkspaceState(fileStructureOverride ?? fileStructure);
   const { chatMessages, setChatMessages, chatInput, setChatInput } =
-    useChatState(initialChatMessages);
+    useChatState(initialMessages ?? initialChatMessages, initialChatInput);
   const {
     selectedHistoryVersion,
     setSelectedHistoryVersion,
@@ -181,6 +207,10 @@ export function WebLab2LevelPage({
           autoSeedConversationOnMount:
             resolved.autoSeedTutorConversation as boolean,
           aiTutorInputExperiment: resolvedAiExperiment,
+          initialAttachedFiles,
+          attachmentMeta,
+          onAddFileToProject: addFileToProject,
+          showInstructionsDrawer,
           showRubricTab,
           rubricData,
           devPanelFields: webLab2DevFields,
@@ -195,7 +225,7 @@ export function WebLab2LevelPage({
         <Workspace
           viewMode={viewMode}
           setViewMode={setViewMode}
-          fileStructure={fileStructure}
+          fileStructure={fileStructureState ?? fileStructure}
           selectedFile={selectedFile}
           setSelectedFile={setSelectedFile}
           openFiles={openFiles}
@@ -208,6 +238,7 @@ export function WebLab2LevelPage({
           setIsFileManagerCollapsed={setIsFileManagerCollapsed}
           setIsCreateFileModalOpen={setIsCreateFileModalOpen}
           enableFileDragToTutor={resolvedAiExperiment === "file-drop"}
+          previewContent={previewContent}
           selectedHistoryVersion={selectedHistoryVersion}
           showSavedTag={showSavedTag}
           onReturnToCurrentVersion={handleReturnToCurrentVersion}

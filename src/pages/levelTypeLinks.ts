@@ -16,6 +16,18 @@ export const webLab2LevelLinks: LevelProgressLink[] = [
     name: "50% drawer + inline read more",
     path: "/levels/weblab2-drawer-inline-link",
   },
+  {
+    name: "File chip + add to project",
+    path: "/levels/weblab2-file-chip-action",
+  },
+  {
+    name: "Tutor action card (F2)",
+    path: "/levels/weblab2-tutor-action-card",
+  },
+  {
+    name: "Demo project (Coastal Brew)",
+    path: "/levels/weblab2-demo-project",
+  },
 ];
 
 export const multiChoiceLevelLinks: LevelProgressLink[] = [

@@ -9,7 +9,9 @@
   --text-h3: 28px;
   --text-h4: 24px;
   --text-base: 16px;
+  --text-code: 13px;
   --text-label: 12px;
+  --text-xs: 10px;
   --font-heading: 'Barlow Semi Condensed', sans-serif;
   --font-body: 'Figtree', sans-serif;
   --font-mono: 'Google Sans Code', 'Courier New', monospace;
@@ -173,29 +175,45 @@ html {
   font-size: var(--font-size);
 }
 
-/* Syntax highlighting colors for code editor */
+/* Syntax highlighting — colors driven by --ds-syntax-* tokens */
 .syntax-comment {
-  color: #69788a;
+  color: var(--ds-syntax-comment);
 }
 
 .syntax-tag {
-  color: #c12814;
+  color: var(--ds-syntax-tag);
 }
 
 .syntax-attribute {
-  color: #c88504;
+  color: var(--ds-syntax-attribute);
 }
 
 .syntax-string {
-  color: #286d29;
+  color: var(--ds-syntax-string);
 }
 
 .syntax-keyword {
-  color: #7c3aed;
+  color: var(--ds-syntax-keyword);
 }
 
 .syntax-number {
-  color: #0369a1;
+  color: var(--ds-syntax-number);
+}
+
+.syntax-punctuation {
+  color: var(--ds-syntax-punctuation);
+}
+
+.syntax-selector {
+  color: var(--ds-syntax-selector);
+}
+
+.syntax-property {
+  color: var(--ds-syntax-property);
+}
+
+.syntax-value {
+  color: var(--ds-syntax-value);
 }
 
 /* Fullscreen modal animation */

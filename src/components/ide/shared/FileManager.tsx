@@ -2,7 +2,6 @@ import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
-  faArrowLeft,
   faFolderOpen,
   faFolder,
   faFileCode,
@@ -19,6 +18,7 @@ import {
 } from "../../ui/popover";
 import { FileContextMenu } from "./FileContextMenu";
 import { FileManagerDropdown } from "./FileManagerDropdown";
+import { FaIcon } from "../../ui/icons/FaIcon";
 import type { FileItem } from "../../../types/file";
 import styles from "./FileManager.module.scss";
 
@@ -90,11 +90,14 @@ export function FileManager({
       const showConnector = level > 0;
       const isLast = idx === items.length - 1;
 
-      // Calculate indentation
-      // Level 0: 8px padding, 10px gap
-      // Level 1+: 28px base + 20px per additional level, 8px gap
-      const paddingLeft =
-        level === 0 ? 8 : 28 + (level - 1) * 20;
+      // totalIndent = where content (icon) starts, used for connector positioning.
+      // For nested items, the button's left edge aligns to the tree connector
+      // line so the hover fill touches it flush.
+      const totalIndent = level === 0 ? 8 : 28 + (level - 1) * 20;
+      const connectorPos = totalIndent - 14;
+      const indentMargin = level === 0 ? 0 : connectorPos;
+      const innerPadding = totalIndent - indentMargin;
+      const paddingLeft = totalIndent;
 
       return (
         <div key={itemPath} className={styles.treeItemWrap}>
@@ -123,11 +126,12 @@ export function FileManager({
           >
             <button
               type="button"
-              className={`${styles.rowButton} ${isHovered ? styles.rowHovered : ""}`}
+              className={`${styles.rowButton} ${level > 0 ? styles.rowButtonNested : ""} ${isHovered ? styles.rowHovered : ""}`}
               draggable={isDraggableFile}
               data-draggable-file={isDraggableFile ? "true" : undefined}
               style={{
-                paddingLeft: `${paddingLeft}px`,
+                marginLeft: `${indentMargin}px`,
+                paddingLeft: `${innerPadding}px`,
                 gap: level === 0 ? "10px" : "8px",
               }}
               onDragStart={(event) => {
@@ -233,7 +237,7 @@ export function FileManager({
                 style={{
                   left: `${paddingLeft + 6}px`, // Center of parent icon
                   top: 0,
-                  height: `${(item.children!.length - 1) * 26 + 12}px`, // Extend to center of last child (26px per item, stop at 12px center)
+                  height: `${(item.children!.length - 1) * 24 + 12}px`,
                 }}
               />
               {renderFileTree(
@@ -295,8 +299,10 @@ export function FileManager({
                 </PopoverTrigger>
                 <PopoverContent
                   className="w-auto p-0 border-0 shadow-none"
-                  align="end"
+                  align="start"
+                  side="bottom"
                   sideOffset={4}
+                  avoidCollisions={false}
                 >
                   <FileManagerDropdown
                     onNewFile={() => {
@@ -322,10 +328,7 @@ export function FileManager({
                 onClick={onToggleCollapse}
                 className={styles.iconBtn}
               >
-                <FontAwesomeIcon
-                  icon={faArrowLeft}
-                  className={styles.panelIcon}
-                />
+                <FaIcon name="arrow-left-to-line" size="s" className={styles.panelIcon} />
               </button>
             </div>
           </div>

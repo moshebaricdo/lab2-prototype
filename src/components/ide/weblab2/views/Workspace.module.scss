@@ -13,6 +13,7 @@
 }
 
 .codePanel {
+  position: relative;
   display: flex;
   min-width: 0;
 }
@@ -26,13 +27,17 @@
 }
 
 .fileManagerRail {
-  width: 200px;
+  width: 158px;
   flex-shrink: 0;
   transition: width 0.2s ease;
 }
 
 .fileManagerRailCollapsed {
-  width: 32px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: auto;
 }
 
 .editorArea {
