@@ -1,11 +1,12 @@
-import type { FileItem } from "../../types/file";
-import type { ChatMessage } from "../../types/chat";
+import type { ChatMessage } from "../../../../types/chat";
+import type { FileItem } from "../../../../types/file";
+import mainPy from "./files/main.py?raw";
 
 export const pythonFileStructure: FileItem[] = [
   {
     name: "main.py",
     type: "html",
-    content: 'print("Hello world!")',
+    content: mainPy,
   },
 ];
 

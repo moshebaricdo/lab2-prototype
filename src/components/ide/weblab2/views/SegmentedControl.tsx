@@ -1,12 +1,11 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { AppButton } from "../../../ui/AppButton";
+import type { FaIconName } from "../../../ui/AppButton";
 import styles from "./SegmentedControl.module.scss";
 
 export interface SegmentedOption<T extends string> {
   value: T;
   label: string;
-  icon: IconDefinition;
+  iconName: FaIconName;
   ariaLabel?: string;
   title?: string;
 }
@@ -47,7 +46,7 @@ export function SegmentedControl<T extends string>({
             size="xs"
             variant="tertiary"
             tone={isActive ? "white" : "black"}
-            icon={<FontAwesomeIcon icon={option.icon} className={styles.icon} />}
+            iconName={option.iconName}
             aria-pressed={isActive}
             aria-label={option.ariaLabel}
             title={option.title}

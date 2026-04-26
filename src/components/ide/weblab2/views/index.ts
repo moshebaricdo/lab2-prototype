@@ -1,6 +1,12 @@
 export { Workspace } from "./Workspace";
 export { CreateFileModal } from "./CreateFileModal";
+export { NameInputModal } from "./NameInputModal";
 export { PreviewPanel } from "./PreviewPanel";
+export type {
+  FilePreviewConfig,
+  ReactPreviewConfig,
+  WebLabPreviewConfig,
+} from "./PreviewPanel";
 export { VersionBanner } from "./VersionBanner";
 export { SavedTag } from "./SavedTag";
 export { SegmentedControl } from "./SegmentedControl";
@@ -12,5 +18,4 @@ export {
   FileManager,
   EmptyState,
   FileContextMenu,
-  FileManagerDropdown,
 } from "../../shared";

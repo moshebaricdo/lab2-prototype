@@ -2,4 +2,5 @@ export {
   pythonFileStructure,
   pythonInitialChatMessages,
   SAMPLE_PYTHON_OUTPUT,
-} from "./mockData";
+  SAMPLE_PYTHON_ERROR_OUTPUT,
+} from "./projects/default";

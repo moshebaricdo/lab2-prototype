@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planet Data — Stellar Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app" style="grid-template-rows: 48px 1fr; grid-template-areas: 'topbar topbar' 'sidebar main';">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="app-logo">&#x2728;</span>
+        <span class="app-name">Stellar Atlas</span>
+      </div>
+    </header>
+
+    <nav class="sidebar">
+      <div class="sidebar-heading">Navigation</div>
+      <a href="index.html" class="planet-item">
+        <span class="planet-label">&#x1F30D; Solar System</span>
+      </a>
+      <a href="facts.html" class="planet-item active" style="text-decoration:none">
+        <span class="planet-label">&#x1F4CA; Planet Data</span>
+      </a>
+    </nav>
+
+    <main class="data-view" style="grid-area: main; padding: 2rem; overflow: auto;">
+      <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Planet Comparison</h1>
+      <p style="color: rgba(255,255,255,0.35); font-size: 0.85rem; margin-bottom: 2rem;">Key metrics for all eight planets in our solar system.</p>
+
+      <table class="planet-table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); text-align: left;">
+            <th style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.35); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Planet</th>
+            <th style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.35); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Diameter</th>
+            <th style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.35); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Day Length</th>
+            <th style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.35); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Year</th>
+            <th style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.35); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Moons</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td style="padding: 0.6rem 1rem;"><span class="planet-dot" style="background:#b5b5b5; display:inline-block; vertical-align:middle; margin-right:0.4rem;"></span>Mercury</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">4,879 km</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">59 days</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">88 days</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">0</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td style="padding: 0.6rem 1rem;"><span class="planet-dot" style="background:#e8cda0; display:inline-block; vertical-align:middle; margin-right:0.4rem;"></span>Venus</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">12,104 km</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">243 days</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">225 days</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">0</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(77,166,255,0.04);">
+            <td style="padding: 0.6rem 1rem; color: #4da6ff;"><span class="planet-dot" style="background:#4da6ff; display:inline-block; vertical-align:middle; margin-right:0.4rem;"></span>Earth</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">12,756 km</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">24 hours</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">365 days</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">1</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td style="padding: 0.6rem 1rem;"><span class="planet-dot" style="background:#e85d3a; display:inline-block; vertical-align:middle; margin-right:0.4rem;"></span>Mars</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">6,792 km</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">24.6 hrs</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">687 days</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">2</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td style="padding: 0.6rem 1rem;"><span class="planet-dot" style="background:#c4956a; display:inline-block; vertical-align:middle; margin-right:0.4rem;"></span>Jupiter</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">142,984 km</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">9.9 hrs</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">11.9 yrs</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">95</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td style="padding: 0.6rem 1rem;"><span class="planet-dot" style="background:#e8d374; display:inline-block; vertical-align:middle; margin-right:0.4rem;"></span>Saturn</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">120,536 km</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">10.7 hrs</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">29.5 yrs</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">146</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td style="padding: 0.6rem 1rem;"><span class="planet-dot" style="background:#7ec8e3; display:inline-block; vertical-align:middle; margin-right:0.4rem;"></span>Uranus</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">51,118 km</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">17.2 hrs</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">84 yrs</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">28</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.6rem 1rem;"><span class="planet-dot" style="background:#3f54ba; display:inline-block; vertical-align:middle; margin-right:0.4rem;"></span>Neptune</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">49,528 km</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">16.1 hrs</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">165 yrs</td>
+            <td style="padding: 0.6rem 1rem; color: rgba(255,255,255,0.5);">16</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- TODO: add a size comparison visual when we learn JavaScript -->
+    </main>
+
+  </div>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
-export { PreviewPanel } from "./preview-panel";
+export { PreviewPanel } from "./PreviewPanel";
 export type {
   FilePreviewConfig,
   ReactPreviewConfig,
   WebLabPreviewConfig,
-} from "./preview-panel";
+} from "./types";
+
