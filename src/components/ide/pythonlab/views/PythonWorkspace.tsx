@@ -2,13 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import { FileManager } from "../../shared/FileManager";
-import { CodeEditor } from "../../shared/CodeEditor";
+import { CodeEditor } from "../../shared/code-editor";
 import { ResizableHandle } from "../../../ui/ResizableHandle";
 import { AppButton } from "../../../ui/AppButton";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { FileItem } from "../../../../types/file";
-import { SAMPLE_PYTHON_OUTPUT } from "../../../../data/pythonlab/mockData";
+import { SAMPLE_PYTHON_OUTPUT } from "../../../../data/pythonlab";
 import styles from "./PythonWorkspace.module.scss";
 
 interface PythonWorkspaceProps {

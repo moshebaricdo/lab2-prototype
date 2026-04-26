@@ -54,7 +54,7 @@
   min-height: inherit;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px 8px 16px;
+  padding: 8px 8px 8px 12px;
 }
 
 .title {
@@ -101,7 +101,7 @@
   width: 100%;
   flex-direction: column;
   gap: 2px;
-  padding: 0 8px;
+  padding: 0 6px;
 }
 
 .borderOverlay {
@@ -152,7 +152,12 @@
   cursor: grab;
 }
 
-[data-draggable-file="true"]:active {
+[data-draggable-tree-item="true"] {
+  cursor: grab;
+}
+
+[data-draggable-file="true"]:active,
+[data-draggable-tree-item="true"]:active {
   cursor: grabbing;
 }
 
@@ -167,6 +172,11 @@
 
 .rowHovered {
   background: var(--ds-background-neutral-tertiary);
+}
+
+.rowDropTarget {
+  background: var(--ds-background-brand-teal-extra-light);
+  box-shadow: inset 0 0 0 1px var(--ds-borders-brand-teal-primary);
 }
 
 .rowMain {
@@ -209,6 +219,16 @@
 
 .fileNameSelected {
   font-weight: 600;
+}
+
+/* ─── AI-change state: colored dot indicators ──────────── */
+
+.changeDot {
+  width: 7.5px;
+  height: 7.5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--ds-background-brand-aqua-strong);
 }
 
 .menuTrigger {

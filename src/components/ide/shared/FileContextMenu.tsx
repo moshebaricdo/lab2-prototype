@@ -1,11 +1,5 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPencil,
-  faDownload,
-  faTrash,
-  faBoxArchive,
-  faComment,
-} from "@fortawesome/free-solid-svg-icons";
+import { FaIcon } from "../../ui/icons/FaIcon";
+import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import styles from "./FileContextMenu.module.scss";
 
 interface FileContextMenuProps {
@@ -17,12 +11,12 @@ interface FileContextMenuProps {
 }
 
 function MenuItem({
-  icon,
+  iconName,
   label,
   onClick,
   destructive = false,
 }: {
-  icon: unknown;
+  iconName: FaIconName;
   label: string;
   onClick?: () => void;
   destructive?: boolean;
@@ -34,7 +28,7 @@ function MenuItem({
       onClick={onClick}
     >
       <span className={styles.itemIcon}>
-        <FontAwesomeIcon icon={icon as never} className="leading-[1.25]" />
+        <FaIcon name={iconName} size="s" />
       </span>
       <p className={styles.itemLabel}>{label}</p>
     </button>
@@ -51,24 +45,30 @@ export function FileContextMenu({
   return (
     <div className={styles.root} data-name="File Context Menu">
       <div className={styles.list}>
-        <MenuItem icon={faPencil} label="Rename" onClick={onRename} />
+        {onRename && (
+          <MenuItem iconName="pencil" label="Rename" onClick={onRename} />
+        )}
+        {onAddToChat && (
+          <MenuItem
+            iconName="comment"
+            label="Add to AI Tutor Chat"
+            onClick={onAddToChat}
+          />
+        )}
+        <MenuItem iconName="download" label="Download" onClick={onDownload} />
         <MenuItem
-          icon={faComment}
-          label="Add to AI Tutor Chat"
-          onClick={onAddToChat}
-        />
-        <MenuItem icon={faDownload} label="Download" onClick={onDownload} />
-        <MenuItem
-          icon={faBoxArchive}
+          iconName="backpack"
           label="Save to Backpack"
           onClick={onSaveToBackpack}
         />
-        <MenuItem
-          icon={faTrash}
-          label="Delete"
-          onClick={onDelete}
-          destructive
-        />
+        {onDelete && (
+          <MenuItem
+            iconName="trash"
+            label="Delete"
+            onClick={onDelete}
+            destructive
+          />
+        )}
       </div>
     </div>
   );

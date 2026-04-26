@@ -5,6 +5,10 @@ export interface FileItem {
   type: FileKind;
   children?: FileItem[];
   content?: string;
+  /** Prototype-only AI-modified content used for pending/accepted change previews. */
+  proposedContent?: string;
+  /** Prototype-only pending AI operation for accept/reject state. */
+  proposedStatus?: "new" | "modified" | "deleted";
   locked?: boolean;
 }
 

@@ -1,15 +1,4 @@
-import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPlus,
-  faFolderOpen,
-  faFolder,
-  faFileCode,
-  faFileLines,
-  faImage,
-  faEllipsisVertical,
-} from "@fortawesome/free-solid-svg-icons";
-import { faCss3 } from "@fortawesome/free-brands-svg-icons";
+import { useMemo, useState } from "react";
 import { ScrollArea } from "../../ui/scroll-area";
 import {
   Popover,
@@ -17,10 +6,14 @@ import {
   PopoverTrigger,
 } from "../../ui/popover";
 import { FileContextMenu } from "./FileContextMenu";
-import { FileManagerDropdown } from "./FileManagerDropdown";
+import { AppActionDropdown } from "../../ui/AppDropdown";
 import { FaIcon } from "../../ui/icons/FaIcon";
+import { AppButton } from "../../ui/AppButton";
+import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import type { FileItem } from "../../../types/file";
 import styles from "./FileManager.module.scss";
+
+const FILE_TREE_DRAG_MIME = "application/x-weblab-file-tree-item";
 
 interface FileManagerProps {
   fileStructure: FileItem[];
@@ -31,7 +24,56 @@ interface FileManagerProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onNewFile?: () => void;
+  onNewFolder?: () => void;
+  onRenameFile?: (file: FileItem, path: string) => void;
+  onAddFileToChat?: (file: FileItem, path: string) => void;
+  onDeleteFile?: (file: FileItem, path: string) => void;
+  onMoveItem?: (sourcePath: string, targetFolderPath: string) => true | string | void;
   enableDragToTutor?: boolean;
+  aiChangedFiles?: Record<string, "new" | "modified" | "deleted">;
+  /** Hide placeholder tree entries that are not backed by editable file content. */
+  showOnlyFilesWithContent?: boolean;
+}
+
+function hasFileContent(item: FileItem): boolean {
+  return "content" in item || "proposedContent" in item;
+}
+
+function filterFilesWithContent(items: FileItem[]): FileItem[] {
+  return items.flatMap((item) => {
+    if (item.type !== "folder") {
+      return hasFileContent(item) ? [item] : [];
+    }
+
+    const children = item.children ? filterFilesWithContent(item.children) : [];
+    const isNewEmptyFolder = !item.children || item.children.length === 0;
+    return children.length > 0 || isNewEmptyFolder ? [{ ...item, children }] : [];
+  });
+}
+
+function mimeTypeForFile(fileName: string, fileType: FileItem["type"]): string {
+  const extension = fileName.split(".").pop()?.toLowerCase();
+  if (extension === "html" || extension === "htm" || fileType === "html") return "text/html";
+  if (extension === "css" || fileType === "css") return "text/css";
+  if (extension === "js" || extension === "mjs") return "text/javascript";
+  if (extension === "json") return "application/json";
+  if (extension === "md" || extension === "txt" || fileType === "text") return "text/plain";
+  if (extension === "csv") return "text/csv";
+  return "text/plain";
+}
+
+function downloadFile(item: FileItem) {
+  if (typeof document === "undefined") return;
+  const content = item.proposedContent ?? item.content ?? "";
+  const blob = new Blob([content], { type: mimeTypeForFile(item.name, item.type) });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = item.name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 export function FileManager({
@@ -43,7 +85,14 @@ export function FileManager({
   collapsed = false,
   onToggleCollapse,
   onNewFile,
+  onNewFolder,
+  onRenameFile,
+  onAddFileToChat,
+  onDeleteFile,
+  onMoveItem,
   enableDragToTutor = false,
+  aiChangedFiles,
+  showOnlyFilesWithContent = false,
 }: FileManagerProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(
     null,
@@ -51,24 +100,38 @@ export function FileManager({
   const [openMenuPath, setOpenMenuPath] = useState<string | null>(
     null,
   );
-  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+  const [draggingPath, setDraggingPath] = useState<string | null>(null);
+  const [dropTargetPath, setDropTargetPath] = useState<string | null>(null);
+  const visibleFileStructure = useMemo(
+    () => showOnlyFilesWithContent
+      ? filterFilesWithContent(fileStructure)
+      : fileStructure,
+    [fileStructure, showOnlyFilesWithContent],
+  );
 
-  const getFileIcon = (item: FileItem, isOpen: boolean) => {
+  const getFileIconName = (item: FileItem, isOpen: boolean): FaIconName => {
     if (item.type === "folder") {
-      return isOpen ? faFolderOpen : faFolder;
+      return isOpen ? "folder-open" : "folder";
     }
     switch (item.type) {
       case "html":
-        return faFileCode;
+        return "file-code";
       case "css":
-        return faCss3;
+        return "file-brackets-curly";
       case "text":
-        return faFileLines;
+        return "file-lines";
       case "image":
-        return faImage;
+        return "image";
       default:
-        return faFileCode;
+        return "file-code";
     }
+  };
+
+  const canDropOnFolder = (sourcePath: string | null, targetPath: string) => {
+    if (!sourcePath || !onMoveItem) return false;
+    if (sourcePath === targetPath) return false;
+    if (targetPath.startsWith(`${sourcePath}/`)) return false;
+    return true;
   };
 
   const renderFileTree = (
@@ -87,6 +150,11 @@ export function FileManager({
         item.children && item.children.length > 0;
       const isDraggableFile =
         enableDragToTutor && item.type !== "folder" && !hasChildren;
+      const isDraggableTreeItem = Boolean(onMoveItem && parentPath);
+      const isFolderDropTarget =
+        item.type === "folder" && dropTargetPath === itemPath;
+      const aiChangeStatus = aiChangedFiles?.[item.name];
+      const isAiChanged = !!aiChangeStatus;
       const showConnector = level > 0;
       const isLast = idx === items.length - 1;
 
@@ -126,28 +194,81 @@ export function FileManager({
           >
             <button
               type="button"
-              className={`${styles.rowButton} ${level > 0 ? styles.rowButtonNested : ""} ${isHovered ? styles.rowHovered : ""}`}
-              draggable={isDraggableFile}
+              className={`${styles.rowButton} ${level > 0 ? styles.rowButtonNested : ""} ${isHovered ? styles.rowHovered : ""} ${isFolderDropTarget ? styles.rowDropTarget : ""}`}
+              draggable={isDraggableFile || isDraggableTreeItem}
               data-draggable-file={isDraggableFile ? "true" : undefined}
+              data-draggable-tree-item={isDraggableTreeItem ? "true" : undefined}
               style={{
                 marginLeft: `${indentMargin}px`,
                 paddingLeft: `${innerPadding}px`,
                 gap: level === 0 ? "10px" : "8px",
               }}
               onDragStart={(event) => {
-                if (!isDraggableFile) {
+                if (!isDraggableFile && !isDraggableTreeItem) {
                   return;
                 }
-                event.dataTransfer.effectAllowed = "copy";
-                event.dataTransfer.setData(
-                  "application/x-weblab-file",
-                  JSON.stringify({
-                    name: item.name,
-                    path: itemPath,
-                    type: item.type,
-                  }),
-                );
-                event.dataTransfer.setData("text/plain", itemPath);
+                setDraggingPath(itemPath);
+                event.dataTransfer.effectAllowed = isDraggableFile ? "copyMove" : "move";
+                if (isDraggableTreeItem) {
+                  event.dataTransfer.setData(
+                    FILE_TREE_DRAG_MIME,
+                    JSON.stringify({
+                      path: itemPath,
+                      name: item.name,
+                      type: item.type,
+                    }),
+                  );
+                }
+                if (isDraggableFile) {
+                  event.dataTransfer.setData(
+                    "application/x-weblab-file",
+                    JSON.stringify({
+                      name: item.name,
+                      path: itemPath,
+                      type: item.type,
+                    }),
+                  );
+                  event.dataTransfer.setData("text/plain", itemPath);
+                } else {
+                  event.dataTransfer.setData("text/plain", itemPath);
+                }
+              }}
+              onDragEnd={() => {
+                setDraggingPath(null);
+                setDropTargetPath(null);
+              }}
+              onDragOver={(event) => {
+                if (item.type !== "folder" || !canDropOnFolder(draggingPath, itemPath)) {
+                  return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                event.dataTransfer.dropEffect = "move";
+                setDropTargetPath(itemPath);
+              }}
+              onDragLeave={() => {
+                setDropTargetPath((current) => current === itemPath ? null : current);
+              }}
+              onDrop={(event) => {
+                if (item.type !== "folder") return;
+                const rawPayload = event.dataTransfer.getData(FILE_TREE_DRAG_MIME);
+                const sourcePath = draggingPath || (() => {
+                  try {
+                    return (JSON.parse(rawPayload) as { path?: string }).path ?? null;
+                  } catch {
+                    return null;
+                  }
+                })();
+
+                if (!canDropOnFolder(sourcePath, itemPath)) return;
+                event.preventDefault();
+                event.stopPropagation();
+                const result = onMoveItem?.(sourcePath, itemPath);
+                if (typeof result === "string") {
+                  console.warn(result);
+                }
+                setDraggingPath(null);
+                setDropTargetPath(null);
               }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -160,14 +281,15 @@ export function FileManager({
             >
               <div className={styles.rowMain}>
                 <div className={styles.fileIconWrap}>
-                  <FontAwesomeIcon
-                    icon={
-                      item.type === "css"
-                        ? faCss3
-                        : getFileIcon(item, isOpen)
-                    }
-                    className={styles.fileIcon}
-                  />
+                  {isAiChanged ? (
+                    <span className={styles.changeDot} />
+                  ) : (
+                    <FaIcon
+                      name={getFileIconName(item, isOpen)}
+                      size="s"
+                      className={styles.fileIcon}
+                    />
+                  )}
                 </div>
                 <p className={`${styles.fileName} ${isSelected ? styles.fileNameSelected : ""}`}>
                   {item.name}
@@ -190,8 +312,9 @@ export function FileManager({
                         }}
                         className={styles.menuTrigger}
                       >
-                        <FontAwesomeIcon
-                          icon={faEllipsisVertical}
+                        <FaIcon
+                          name="ellipsis-vertical"
+                          size="s"
                           className={styles.menuIcon}
                         />
                       </button>
@@ -202,26 +325,32 @@ export function FileManager({
                       sideOffset={4}
                     >
                       <FileContextMenu
-                        onRename={() => {
-                          console.log("Rename", item.name);
-                          setOpenMenuPath(null);
-                        }}
-                        onAddToChat={() => {
-                          console.log("Add to chat", item.name);
-                          setOpenMenuPath(null);
-                        }}
+                        onRename={onRenameFile
+                          ? () => {
+                              onRenameFile(item, itemPath);
+                              setOpenMenuPath(null);
+                            }
+                          : undefined}
+                        onAddToChat={onAddFileToChat
+                          ? () => {
+                              onAddFileToChat(item, itemPath);
+                              setOpenMenuPath(null);
+                            }
+                          : undefined}
                         onDownload={() => {
-                          console.log("Download", item.name);
+                          downloadFile(item);
                           setOpenMenuPath(null);
                         }}
                         onSaveToBackpack={() => {
                           console.log("Save to backpack", item.name);
                           setOpenMenuPath(null);
                         }}
-                        onDelete={() => {
-                          console.log("Delete", item.name);
-                          setOpenMenuPath(null);
-                        }}
+                        onDelete={onDeleteFile
+                          ? () => {
+                              onDeleteFile(item, itemPath);
+                              setOpenMenuPath(null);
+                            }
+                          : undefined}
                       />
                     </PopoverContent>
                   </Popover>
@@ -258,15 +387,13 @@ export function FileManager({
       <div className={styles.collapsedRoot}>
         {/* Panel Header with folder button - aligned with code editor tabs */}
         <div className={styles.collapsedHeader}>
-          <button
+          <AppButton
             onClick={onToggleCollapse}
-            className={styles.collapsedToggle}
-          >
-            <FontAwesomeIcon
-              icon={faFolder}
-              className={styles.collapsedIcon}
-            />
-          </button>
+            iconName="folder"
+            variant="secondary"
+            tone="gray"
+            size="xs"
+          />
         </div>
       </div>
     );
@@ -288,48 +415,36 @@ export function FileManager({
             </div>
 
             <div className={styles.headerActions}>
-              <Popover open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
-                <PopoverTrigger asChild>
-                  <button className={styles.iconBtn}>
-                    <FontAwesomeIcon
-                      icon={faPlus}
-                      className={styles.panelIcon}
-                    />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-auto p-0 border-0 shadow-none"
-                  align="start"
-                  side="bottom"
-                  sideOffset={4}
-                  avoidCollisions={false}
-                >
-                  <FileManagerDropdown
-                    onNewFile={() => {
-                      setIsAddMenuOpen(false);
-                      onNewFile?.();
-                    }}
-                    onNewFolder={() => {
-                      console.log("New folder");
-                      setIsAddMenuOpen(false);
-                    }}
-                    onDownload={() => {
-                      console.log("Download");
-                      setIsAddMenuOpen(false);
-                    }}
-                    onImportFromBackpack={() => {
-                      console.log("Import from backpack");
-                      setIsAddMenuOpen(false);
-                    }}
+              <AppActionDropdown
+                align="start"
+                side="bottom"
+                size="xs"
+                sideOffset={4}
+                trigger={
+                  <AppButton
+                    iconName="plus"
+                    variant="tertiary"
+                    tone="gray"
+                    size="xs"
                   />
-                </PopoverContent>
-              </Popover>
-              <button
+                }
+                items={[
+                  ...(onNewFile
+                    ? [{ id: "new-file", label: "New File", iconName: "file" as FaIconName, onSelect: onNewFile }]
+                    : []),
+                  ...(onNewFolder
+                    ? [{ id: "new-folder", label: "New Folder", iconName: "folder" as FaIconName, onSelect: onNewFolder }]
+                    : []),
+                  { id: "import-backpack", label: "Import from Backpack", iconName: "backpack" as FaIconName, onSelect: () => console.log("Import from backpack") },
+                ]}
+              />
+              <AppButton
                 onClick={onToggleCollapse}
-                className={styles.iconBtn}
-              >
-                <FaIcon name="arrow-left-to-line" size="s" className={styles.panelIcon} />
-              </button>
+                iconName="arrow-left-to-line"
+                variant="tertiary"
+                tone="gray"
+                size="xs"
+              />
             </div>
           </div>
         </div>
@@ -340,7 +455,7 @@ export function FileManager({
         <div className={styles.listContainer}>
           <div className="size-full">
             <div className={styles.listContent}>
-              {renderFileTree(fileStructure)}
+              {renderFileTree(visibleFileStructure)}
             </div>
           </div>
         </div>
