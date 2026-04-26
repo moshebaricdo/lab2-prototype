@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { AppButton } from "../../../ui/AppButton";
+import { useTutorApiSettings } from "../../../../hooks/useTutorApiSettings";
 import styles from "./SettingsPanel.module.scss";
 
 interface SettingsPanelProps {
@@ -26,6 +27,8 @@ export function SettingsPanel({
   onClose,
   variant = "inline",
 }: SettingsPanelProps) {
+  const { apiKey, setApiKey, hasApiKey } = useTutorApiSettings();
+
   if (!isOpen) {
     return null;
   }
@@ -65,6 +68,24 @@ export function SettingsPanel({
             </div>
           </div>
         ))}
+
+        <div className={styles.field}>
+          <p className={styles.label}>Tutor API key (prototype)</p>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(event) => setApiKey(event.target.value)}
+            placeholder="Stored for this browser session"
+            className={styles.input}
+            autoComplete="off"
+          />
+          <p className={styles.helpText}>
+            {hasApiKey
+              ? "Key is available for prototype tutor calls."
+              : "Optional for now. Mock tutor edits work without a key."}
+          </p>
+        </div>
+
       </div>
     </div>
   );

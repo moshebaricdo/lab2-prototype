@@ -11,9 +11,16 @@ import { useFileWorkspaceState } from "../hooks/useFileWorkspaceState";
 import { useVersionHistoryState } from "../hooks/useVersionHistoryState";
 import { usePropsOverride } from "../hooks/usePropsOverride";
 import type { DevPanelField } from "../components/lab2/dev";
+import { globalEditorDevFields } from "../components/lab2/dev";
+import {
+  EDITOR_READ_ONLY_STORAGE_KEY,
+  setEditorReadOnlyOverride,
+  useEditorReadOnlyOverride,
+} from "../hooks/useEditorReadOnly";
 import type { InstructionsDrawerVisualCue } from "../components/lab2/resource-panel/InstructionsDrawer";
 import { PythonLabInstructions } from "../components/lab2/resource-panel/PythonLabInstructions";
 import { pythonLabLevelLinks } from "./levelTypeLinks";
+import { defaultMockTutorConfig } from "../data/weblab2";
 
 const pythonLabDevFields: DevPanelField[] = [
   {
@@ -31,7 +38,6 @@ const pythonLabDevFields: DevPanelField[] = [
     type: "select",
     options: [
       { label: "None", value: "none" },
-      { label: "Fade", value: "fade" },
       { label: "Inline link", value: "inline-link" },
     ],
     group: "Layout",
@@ -54,6 +60,7 @@ const pythonLabDevFields: DevPanelField[] = [
     type: "text",
     group: "Header",
   },
+  ...globalEditorDevFields,
 ];
 
 export function PythonLabLevelPage() {
@@ -104,6 +111,7 @@ export function PythonLabLevelPage() {
 
   const overrideResult = usePropsOverride(defaults);
   const resolved = overrideResult.props;
+  const editorReadOnlyOverride = useEditorReadOnlyOverride();
 
   const resolvedVisualCue =
     resolved.instructionsDrawerVisualCue as InstructionsDrawerVisualCue;
@@ -146,11 +154,26 @@ export function PythonLabLevelPage() {
         instructionsDrawerInitialHeightRatio:
           resolved.instructionsDrawerInitialHeightRatio as number,
         instructionsDrawerVisualCue: resolvedVisualCue,
-        autoSeedConversationOnMount:
-          resolved.autoSeedTutorConversation as boolean,
+        mockTutorConfig: {
+          ...defaultMockTutorConfig,
+          seedOnMount: Boolean(resolved.autoSeedTutorConversation),
+        },
         instructionsContent: <PythonLabInstructions />,
         devPanelFields: pythonLabDevFields,
         devPanelOverrideResult: overrideResult,
+        devPanelSessionValues: {
+          [EDITOR_READ_ONLY_STORAGE_KEY]: editorReadOnlyOverride,
+        },
+        onDevPanelSessionValueChange: (key, value) => {
+          if (key === EDITOR_READ_ONLY_STORAGE_KEY) {
+            setEditorReadOnlyOverride(Boolean(value));
+          }
+        },
+        onDevPanelSessionValueReset: (key) => {
+          if (key === EDITOR_READ_ONLY_STORAGE_KEY) {
+            setEditorReadOnlyOverride(false);
+          }
+        },
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));

@@ -6,6 +6,7 @@ import {
   CreateFileModal,
 } from "../components/ide/weblab2/views";
 import {
+  DefaultProjectPreview,
   fileStructure,
   initialChatMessages,
 } from "../data/weblab2";
@@ -42,6 +43,7 @@ export function ProgressionBranchWebLabPage({
     setSidebarWidth,
   } = useLayoutState();
   const {
+    fileStructureState,
     openFolders,
     selectedFile,
     openFiles,
@@ -57,7 +59,8 @@ export function ProgressionBranchWebLabPage({
     closeFile,
     handleReorderFiles,
     handleCreateFile,
-  } = useFileWorkspaceState();
+    moveFileTreeItem,
+  } = useFileWorkspaceState(fileStructure);
   const { chatMessages, setChatMessages, chatInput, setChatInput } =
     useChatState(initialChatMessages);
   const {
@@ -128,7 +131,7 @@ export function ProgressionBranchWebLabPage({
         <Workspace
           viewMode={viewMode}
           setViewMode={setViewMode}
-          fileStructure={fileStructure}
+          fileStructure={fileStructureState ?? fileStructure}
           selectedFile={selectedFile}
           setSelectedFile={setSelectedFile}
           openFiles={openFiles}
@@ -140,6 +143,8 @@ export function ProgressionBranchWebLabPage({
           isFileManagerCollapsed={isFileManagerCollapsed}
           setIsFileManagerCollapsed={setIsFileManagerCollapsed}
           setIsCreateFileModalOpen={setIsCreateFileModalOpen}
+          onMoveFileTreeItem={moveFileTreeItem}
+          preview={{ kind: "react", content: <DefaultProjectPreview /> }}
           selectedHistoryVersion={selectedHistoryVersion}
           showSavedTag={showSavedTag}
           onReturnToCurrentVersion={handleReturnToCurrentVersion}

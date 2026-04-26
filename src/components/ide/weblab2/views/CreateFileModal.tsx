@@ -18,7 +18,7 @@ import styles from "./CreateFileModal.module.scss";
 interface CreateFileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (fileName: string, fileType: string) => void;
+  onCreate: (fileName: string, fileType: string) => true | string | void;
 }
 
 type FileType = "HTML" | "CSS" | "JS" | "MD" | "TXT" | "CSV";
@@ -168,7 +168,11 @@ export function CreateFileModal({
     }
 
     const fullFileName = getFullFileName();
-    onCreate(fullFileName, fileType);
+    const result = onCreate(fullFileName, fileType);
+    if (typeof result === "string") {
+      setError(result);
+      return;
+    }
     onClose();
   };
 

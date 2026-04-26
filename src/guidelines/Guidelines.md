@@ -32,6 +32,7 @@ src/
     ide/pythonlab/views/   # Python Lab-specific workspace chrome (console, run)
     assessment/            # Assessment level types
   hooks/                   # App-level state hooks
+  lib/tutor/               # Functional Tutor harness
   styles/                  # Tokens, globals, and SCSS helpers
   types/                   # Shared type contracts
   guidelines/              # This document
@@ -44,6 +45,7 @@ src/
 - `ide/shared/` contains shared editor components (CodeEditor, FileManager, EmptyState) used by IDE-type labs.
 - `ide/weblab2/views` and `ide/pythonlab/views` hold lab-specific workspace composition.
 - As new IDE labs are introduced, add `ide/<labname>/views/` and reuse shared components from `ide/shared/`.
+- `lib/tutor/` contains the functional Tutor harness for prompt, context, provider, validation, repair, and fallback behavior. See `src/guidelines/tutor-harness.md`.
 
 ---
 
@@ -177,6 +179,7 @@ Do not reintroduce removed legacy paths or compatibility shims unless there is a
 - **Need shared code editor / file manager features?** -> `src/components/ide/shared`
 - **Need Web Lab-specific workspace chrome?** -> `src/components/ide/weblab2/views`
 - **Need Python Lab-specific workspace chrome?** -> `src/components/ide/pythonlab/views`
+- **Need to tune Tutor prompts, model context, validation, repair, or provider config?** -> `src/lib/tutor` and `src/guidelines/tutor-harness.md`
 - **Need behavior used across many surfaces?** -> hook in `src/hooks` + typed contract in `src/types`
 - **Need new styling values?** -> tokens pipeline first, then semantic aliasing
 

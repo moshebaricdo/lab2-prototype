@@ -19,6 +19,7 @@ Use these docs as handoff context for follow-up threads.
 
 - All level types render inside the Lab2 shell (`TopNavigation` + resource panel + resizable main surface).
 - Assessment-focused levels currently run with AI Tutor visible and Version History hidden.
+- Web Lab 2's functional Tutor harness is documented in `../tutor-harness.md`.
 - All assessment flows are prototype-level and local-only (no backend submission yet).
 - Where teacher answers appear in this prototype, they use **inline reveal** from the assessment footer (see [multi-choice](./multi-choice.md) and [free response](./free-response.md)), not a separate collapsible card below the workspace. See [teacher answer key](./teacher-answer-key.md) for the legacy card pattern as reference only.
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { AppButton } from "../../ui/AppButton";
 import type { DevPanelField } from "./types";
 import styles from "./DevPanel.module.scss";
 
@@ -8,13 +9,15 @@ interface FieldProps {
   field: DevPanelField;
   value: unknown;
   isOverridden: boolean;
+  controlId: string;
   onChange: (value: unknown) => void;
   onReset: () => void;
 }
 
-function TextField({ field, value, onChange }: FieldProps) {
+function TextField({ field, value, controlId, onChange }: FieldProps) {
   return (
     <input
+      id={controlId}
       type="text"
       className={styles.input}
       value={(value as string) ?? ""}
@@ -24,7 +27,7 @@ function TextField({ field, value, onChange }: FieldProps) {
   );
 }
 
-function TextareaField({ field, value, onChange }: FieldProps) {
+function TextareaField({ field, value, controlId, onChange }: FieldProps) {
   const rows = field.type === "textarea" ? (field.rows ?? 3) : 3;
   const [previewing, setPreviewing] = useState(false);
   const text = (value as string) ?? "";
@@ -57,6 +60,7 @@ function TextareaField({ field, value, onChange }: FieldProps) {
         </div>
       ) : (
         <textarea
+          id={controlId}
           className={styles.textarea}
           value={text}
           onChange={(e) => onChange(e.target.value)}
@@ -68,12 +72,13 @@ function TextareaField({ field, value, onChange }: FieldProps) {
   );
 }
 
-function NumberField({ field, value, onChange }: FieldProps) {
+function NumberField({ field, value, controlId, onChange }: FieldProps) {
   const min = field.type === "number" ? field.min : undefined;
   const max = field.type === "number" ? field.max : undefined;
   const step = field.type === "number" ? field.step : undefined;
   return (
     <input
+      id={controlId}
       type="number"
       className={styles.input}
       value={(value as number) ?? ""}
@@ -85,12 +90,13 @@ function NumberField({ field, value, onChange }: FieldProps) {
   );
 }
 
-function SliderField({ field, value, onChange }: FieldProps) {
+function SliderField({ field, value, controlId, onChange }: FieldProps) {
   if (field.type !== "slider") return null;
   const numVal = (value as number) ?? field.min;
   return (
     <div className={styles.sliderWrap}>
       <input
+        id={controlId}
         type="range"
         className={styles.slider}
         value={numVal}
@@ -104,10 +110,11 @@ function SliderField({ field, value, onChange }: FieldProps) {
   );
 }
 
-function BooleanField({ value, onChange }: FieldProps) {
+function BooleanField({ value, controlId, onChange }: FieldProps) {
   return (
     <label className={styles.toggleLabel}>
       <input
+        id={controlId}
         type="checkbox"
         className={styles.toggle}
         checked={Boolean(value)}
@@ -118,10 +125,11 @@ function BooleanField({ value, onChange }: FieldProps) {
   );
 }
 
-function SelectField({ field, value, onChange }: FieldProps) {
+function SelectField({ field, value, controlId, onChange }: FieldProps) {
   if (field.type !== "select") return null;
   return (
     <select
+      id={controlId}
       className={styles.select}
       value={String(value ?? "")}
       onChange={(e) => {
@@ -147,24 +155,50 @@ const FIELD_COMPONENTS: Record<string, React.ComponentType<FieldProps>> = {
   select: SelectField,
 };
 
-export function DevPanelFieldRow({ field, value, isOverridden, onChange, onReset }: FieldProps) {
+type FieldRowProps = Omit<FieldProps, "controlId">;
+
+export function DevPanelFieldRow({
+  field,
+  value,
+  isOverridden,
+  onChange,
+  onReset,
+}: FieldRowProps) {
   const Component = FIELD_COMPONENTS[field.type];
   if (!Component) return null;
+  const controlId = `dev-panel-${field.key.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
   return (
-    <div className={`${styles.fieldRow} ${isOverridden ? styles.fieldOverridden : ""}`}>
+    <div className={styles.fieldRow}>
       <div className={styles.fieldHeader}>
-        <label className={styles.fieldLabel}>{field.label}</label>
+        <div className={styles.fieldTitle}>
+          <label className={styles.fieldLabel} htmlFor={controlId}>
+            {field.label}
+          </label>
+          {field.storage === "session" ? (
+            <span className={styles.storageBadge}>Session</span>
+          ) : null}
+        </div>
         {isOverridden && (
-          <button type="button" className={styles.resetButton} onClick={onReset}>
-            Reset
-          </button>
+          <AppButton
+            variant="tertiary"
+            tone="gray"
+            size="xs"
+            iconName="rotate-left"
+            className={styles.resetButton}
+            onClick={onReset}
+            aria-label={`Reset ${field.label}`}
+          />
         )}
       </div>
+      {field.description ? (
+        <p className={styles.fieldDescription}>{field.description}</p>
+      ) : null}
       <Component
         field={field}
         value={value}
         isOverridden={isOverridden}
+        controlId={controlId}
         onChange={onChange}
         onReset={onReset}
       />

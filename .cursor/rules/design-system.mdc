@@ -120,3 +120,10 @@ The SCSS token file `src/styles/_tokens.scss` and mixins in `src/styles/_mixins.
 ## When to use mapped aliases
 
 The **only** place mapped aliases belong is in `globals.css` itself (where they are defined) and in Tailwind utility classes (`bg-background`, `text-foreground`) which rely on the `@theme` block. In hand-written CSS/SCSS, always use the `--ds-*` form.
+
+
+## Components
+
+Always use shared and reusable components where available. Most importantly, always use the AppButton unless directed otherwise.
+
+Always use the new FAIcon component and do not import icons needed for a view individually at the top of the file.

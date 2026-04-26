@@ -107,3 +107,27 @@
   color: var(--foreground);
   text-align: center;
 }
+
+.input {
+  width: 100%;
+  border: 1px solid var(--ds-borders-neutral-strong);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.54;
+  padding: 5px 12px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 18%, transparent);
+}
+
+.helpText {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.45;
+}

@@ -9,7 +9,10 @@ export type DevPanelFieldType =
 export interface DevPanelFieldBase {
   key: string;
   label: string;
+  description?: string;
   group?: string;
+  /** URL-backed by default. Use session for values that should not be share-linked. */
+  storage?: "url" | "session";
 }
 
 export interface DevPanelTextField extends DevPanelFieldBase {

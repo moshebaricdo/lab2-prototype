@@ -25,7 +25,7 @@ export const webLab2LevelLinks: LevelProgressLink[] = [
     path: "/levels/weblab2-tutor-action-card",
   },
   {
-    name: "Demo project (Coastal Brew)",
+    name: "Demo Project (Stellar Atlas)",
     path: "/levels/weblab2-demo-project",
   },
 ];

@@ -17,6 +17,7 @@ It currently powers **Web Lab 2** and **Python Lab** prototypes, and is structur
 - Shared IDE editor: `src/components/ide/shared`
 - Lab-specific workspaces: `src/components/ide/weblab2/views`, `src/components/ide/pythonlab/views`
 - Environment-specific data: `src/data/weblab2`, `src/data/pythonlab`
+- Tutor harness: `src/lib/tutor`
 
 ## Quick Start
 
@@ -59,5 +60,6 @@ The generator resolves token files in this order:
 
 - Guidelines: `src/guidelines/Guidelines.md`
 - Architecture overview: `src/ARCHITECTURE.md`
+- Tutor harness: `src/guidelines/tutor-harness.md`
 - Level type overviews: `src/guidelines/level-types/README.md`
   

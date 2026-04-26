@@ -1,10 +1,8 @@
 import { WebLab2LevelPage } from "./WebLab2LevelPage";
 import {
   demoFileStructure,
-  demoChatMessages,
   demoRubrics,
-  DemoProjectPreview,
-} from "../data/weblab2/demoProjectData";
+} from "../data/weblab2/projects/demo-project";
 
 export function WebLab2DemoProjectLevelPage() {
   return (
@@ -12,10 +10,12 @@ export function WebLab2DemoProjectLevelPage() {
       currentLevelPath="/levels/weblab2-demo-project"
       showInstructionsDrawer={false}
       fileStructureOverride={demoFileStructure}
-      initialMessages={demoChatMessages}
+      useFilePreview={true}
+      showOnlyFilesWithContent
+      tutorMode={{ kind: "functional" }}
       showRubricTab
       rubricData={demoRubrics}
-      previewContent={<DemoProjectPreview />}
+      continueButtonPlacement="header"
     />
   );
 }

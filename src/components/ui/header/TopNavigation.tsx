@@ -10,6 +10,7 @@ import {
   LevelProgressBubbles,
   type LevelProgressLink,
 } from "./LevelProgressBubbles";
+import { ContinueButton } from "../../lab2/resource-panel/ContinueButton";
 import { Logo } from "../icons/Logo";
 import styles from "./TopNavigation.module.scss";
 
@@ -22,6 +23,9 @@ export interface TopNavigationProps {
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
   completedLevelPaths?: string[];
+  showContinueButton?: boolean;
+  onContinue?: () => void;
+  continueLabel?: string;
 }
 
 export function TopNavigation({
@@ -33,6 +37,9 @@ export function TopNavigation({
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
+  showContinueButton = false,
+  onContinue,
+  continueLabel,
 }: TopNavigationProps) {
   return (
     <div className={styles.root}>
@@ -51,24 +58,47 @@ export function TopNavigation({
       <div className={styles.centerSpacer} />
 
       <div className={styles.bubbleCenter}>
-        <div className={styles.levelHeading}>
-          <p className={styles.title}>
-            {title}
-          </p>
-          <p className={styles.subtitle}>
-            {subtitle}
-          </p>
-        </div>
-        <div className={styles.bubbleWrap}>
-          <LevelProgressBubbles
-            currentLevel={currentLevel}
-            totalLevels={totalLevels}
-            completedLevels={completedLevels}
-            levelLinks={levelLinks}
-            currentLevelPath={currentLevelPath}
-            completedLevelPaths={completedLevelPaths}
-          />
-        </div>
+        {showContinueButton ? (
+          <div className={styles.progressionContainer}>
+            <div className={styles.levelHeadingInline}>
+              <p className={styles.titleDark}>{title}</p>
+              <p className={styles.subtitleDark}>{subtitle}</p>
+            </div>
+            <div className={styles.bubbleWrap}>
+              <LevelProgressBubbles
+                currentLevel={currentLevel}
+                totalLevels={totalLevels}
+                completedLevels={completedLevels}
+                levelLinks={levelLinks}
+                currentLevelPath={currentLevelPath}
+                completedLevelPaths={completedLevelPaths}
+              />
+            </div>
+            <ContinueButton
+              fullWidth={false}
+              onClick={onContinue}
+              label={continueLabel ?? "Continue"}
+              className={styles.continueButton}
+            />
+          </div>
+        ) : (
+          <>
+            <div className={styles.levelHeading}>
+              <p className={styles.title}>{title}</p>
+              <p className={styles.subtitle}>{subtitle}</p>
+            </div>
+            <div className={styles.bubbleWrap}>
+              <LevelProgressBubbles
+                currentLevel={currentLevel}
+                totalLevels={totalLevels}
+                completedLevels={completedLevels}
+                levelLinks={levelLinks}
+                currentLevelPath={currentLevelPath}
+                completedLevelPaths={completedLevelPaths}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <div className={styles.rightGroup}>

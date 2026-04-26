@@ -19,6 +19,16 @@ src/
 │   ├── useFileWorkspaceState.ts
 │   ├── useLayoutState.ts
 │   └── useVersionHistoryState.ts
+├── lib/
+│   └── tutor/                      # Functional Tutor harness
+│       ├── tutorClient.ts
+│       ├── contextBuilder.ts
+│       ├── promptBuilder.ts
+│       ├── openAiProvider.ts
+│       ├── editValidator.ts
+│       ├── repairRunner.ts
+│       ├── fallbackTutor.ts
+│       └── types.ts
 ├── components/
 │   ├── ui/                         # Universal primitives
 │   │   ├── AppButton.tsx
@@ -39,11 +49,13 @@ src/
 │   │   │   ├── Sidebar.tsx
 │   │   │   ├── ContinueButton.tsx
 │   │   │   ├── InstructionsDrawer.tsx
-│   │   │   ├── ActionRow.tsx
 │   │   │   └── views/
 │   │   │       ├── InstructionsPanel.tsx
 │   │   │       ├── ValidationPanel.tsx
-│   │   │       ├── AiTutorPanel.tsx
+│   │   │       ├── ai-tutor/
+│   │   │       │   ├── AiTutorPanel.tsx
+│   │   │       │   ├── AiTutorComposer.tsx
+│   │   │       │   └── AiTutorMessageList.tsx
 │   │   │       ├── VersionHistory.tsx
 │   │   │       ├── TeacherResourcesPanel.tsx
 │   │   │       └── SettingsPanel.tsx
@@ -94,6 +106,12 @@ This keeps feature rendering close to feature folders while the hooks layer keep
 - `useChatState` for tutor messages/input
 - `useVersionHistoryState` for version selection/save/restore feedback
 
+## Tutor Harness
+
+Functional AI Tutor behavior is isolated under `src/lib/tutor`. `WebLab2LevelPage.tsx` calls `tutorClient()` and receives a stable `{ message, changes }` result used by the existing AI proposal state.
+
+The harness separates context building, prompt composition, provider transport, scratch workspace editing, whole-project validation, tool-loop retry, and fallback responses so each can be tuned independently. See `src/guidelines/tutor-harness.md` for the full request flow and safety model.
+
 ## Migration Notes
 
 - Legacy panel paths under `components/panels` are replaced by `components/lab2/resource-panel/views`.
@@ -108,6 +126,7 @@ This keeps feature rendering close to feature folders while the hooks layer keep
 - Add shared code-editor features (file tree, tabs, syntax highlighting) under `components/ide/shared`.
 - Add lab-specific workspace chrome under `components/ide/<labname>/views`.
 - Add sidebar tabs/panel content under `components/lab2/resource-panel/views`.
+- Add Tutor provider/prompt/context/validation changes under `lib/tutor`.
 - Add reusable primitives under `components/ui`.
 - Add icon-only assets under `components/ui/icons`.
 
