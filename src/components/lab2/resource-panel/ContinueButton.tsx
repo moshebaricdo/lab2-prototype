@@ -5,12 +5,14 @@ import styles from "./ContinueButton.module.scss";
 interface ContinueButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement> {
   label?: string;
+  fullWidth?: boolean;
 }
 
 export function ContinueButton({
   className = "",
   disabled,
   label = "Continue to Level 10",
+  fullWidth = true,
   ...props
 }: ContinueButtonProps) {
   return (
@@ -18,7 +20,7 @@ export function ContinueButton({
       variant="primary"
       tone="purple"
       size="s"
-      fullWidth
+      fullWidth={fullWidth}
       iconName="arrow-right"
       iconPosition="end"
       className={`${styles.root} ${className}`}

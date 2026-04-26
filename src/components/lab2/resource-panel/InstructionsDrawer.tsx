@@ -9,7 +9,7 @@ import {
 import { AppButton } from "../../ui/AppButton";
 import styles from "./InstructionsDrawer.module.scss";
 
-export type InstructionsDrawerVisualCue = "none" | "fade" | "inline-link";
+export type InstructionsDrawerVisualCue = "none" | "inline-link";
 
 interface InstructionsDrawerProps {
   maxHeight?: number | null;
@@ -24,7 +24,7 @@ export function InstructionsDrawer({
   maxHeight: propMaxHeight,
   onHeightChange,
   onOpenChange,
-  initialHeightRatio,
+  initialHeightRatio = 0.6,
   visualCue = "none",
   children,
 }: InstructionsDrawerProps) {
@@ -154,7 +154,7 @@ export function InstructionsDrawer({
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const shouldShowFade = visualCue === "fade" && hasOverflow && !isScrolledToBottom;
+  const shouldShowFade = hasOverflow && !isScrolledToBottom;
   const canExpandInline = visualCue === "inline-link" && hasOverflow && height < getUpperLimit() - 1;
 
   return (

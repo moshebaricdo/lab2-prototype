@@ -7,8 +7,6 @@ import {
   faTriangleExclamation,
   faGear,
   faCopyright,
-  faDownload,
-  faEraser,
   faSlidersH,
   faCopy,
   faRotateLeft,
@@ -23,8 +21,7 @@ import { AiTutorIcon } from "../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import { ValidationPanel } from "./views/ValidationPanel";
 import { VersionHistory } from "./views/VersionHistory";
-import { AiTutorPanel } from "./views/AiTutorPanel";
-import type { AiTutorInputExperiment } from "./views/AiTutorPanel";
+import { AiTutorPanel } from "./views/ai-tutor/AiTutorPanel";
 import { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
 import { RubricPanel } from "./views/RubricPanel";
 import type { RubricData } from "./views/RubricPanel";
@@ -35,10 +32,17 @@ import type { DevPanelField } from "../dev";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import type { UseAnnotationsResult } from "../../../hooks/useAnnotations";
 import { useSavedVariants } from "../../../hooks/useSavedVariants";
-import type { ChatAttachment, ChatMessage } from "../../../types/chat";
+import type { ChatMessage } from "../../../types/chat";
+import type {
+  AiTutorInputExperiment,
+  MockTutorConfig,
+  TutorContextFile,
+  TutorSubmitHandler,
+} from "../../../types/tutor";
 import type { InstructionsDrawerVisualCue } from "./InstructionsDrawer";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { defaultMockTutorConfig } from "../../../data/weblab2";
 import styles from "./Sidebar.module.scss";
 
 export type SidebarTab = "checklist" | "ai-tutor" | "history" | "classroom" | "rubric" | "dev";
@@ -82,21 +86,25 @@ export interface SidebarProps {
   showInstructionsDrawer?: boolean;
   instructionsDrawerInitialHeightRatio?: number;
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
-  autoSeedConversationOnMount?: boolean;
   aiTutorInputExperiment?: AiTutorInputExperiment;
-  /** Pre-attach files in the composer (shown as chips before sending). */
-  initialAttachedFiles?: string[];
-  /** Metadata for attached files (image src, timestamps). Keyed by file path. */
-  attachmentMeta?: Record<string, ChatAttachment>;
+  mockTutorConfig?: MockTutorConfig;
   /** Callback to add a file to the project tree. */
   onAddFileToProject?: (fileName: string) => void;
   /** Custom content for the instructions drawer (replaces default copy). */
   instructionsContent?: React.ReactNode;
+  availableTutorContextFiles?: TutorContextFile[];
+  onTutorSubmit?: TutorSubmitHandler;
+  onAcceptAiChanges?: () => void;
+  onRejectAiChanges?: () => void;
+  historyVersions?: React.ComponentProps<typeof VersionHistory>["versions"];
   /** Fires when `collapsible && isCollapsed` changes (for shell chrome such as resize handle). */
   onCollapsedChange?: (collapsed: boolean) => void;
   /** When provided, a Dev tab appears in the rail with live prop controls. */
   devPanelFields?: DevPanelField[];
   devPanelOverrideResult?: PropsOverrideResult<Record<string, unknown>>;
+  devPanelSessionValues?: Record<string, unknown>;
+  onDevPanelSessionValueChange?: (key: string, value: unknown) => void;
+  onDevPanelSessionValueReset?: (key: string) => void;
   /** Annotation mode state — passed down from Lab2Shell. */
   annotations?: UseAnnotationsResult;
 }
@@ -239,19 +247,30 @@ export function Sidebar({
   showInstructionsDrawer = true,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
-  autoSeedConversationOnMount = false,
   aiTutorInputExperiment = "default",
-  initialAttachedFiles,
-  attachmentMeta,
+  mockTutorConfig = defaultMockTutorConfig,
   onAddFileToProject,
   instructionsContent,
+  availableTutorContextFiles,
+  onTutorSubmit,
+  onAcceptAiChanges,
+  onRejectAiChanges,
+  historyVersions,
   onCollapsedChange,
   devPanelFields,
   devPanelOverrideResult,
+  devPanelSessionValues,
+  onDevPanelSessionValueChange,
+  onDevPanelSessionValueReset,
   annotations,
 }: SidebarProps) {
   const showDevTab = Boolean(devPanelFields && devPanelOverrideResult);
   const [isCollapsed, setIsCollapsed] = useState(() => Boolean(collapsible));
+  const [isTutorRequestRunning, setIsTutorRequestRunning] = useState(false);
+  const [clearTutorChatSignal, setClearTutorChatSignal] = useState(0);
+  const hasComposerContent = Boolean(
+    chatInput.trim() || mockTutorConfig?.initialAttachments?.length,
+  );
 
   useEffect(() => {
     if (!collapsible) {
@@ -293,6 +312,7 @@ export function Sidebar({
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (!showDevTab) return;
+      if (isTutorRequestRunning) return;
       if ((e.metaKey || e.ctrlKey) && e.key === ".") {
         e.preventDefault();
         if (activeTab === "dev") {
@@ -310,18 +330,27 @@ export function Sidebar({
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [showDevTab, activeTab, setActiveTab, showAiTutorTab, showValidationTab, collapsible, isCollapsed]);
+  }, [showDevTab, isTutorRequestRunning, activeTab, setActiveTab, showAiTutorTab, showValidationTab, collapsible, isCollapsed]);
 
   const panelHidden = collapsible && isCollapsed;
   const railWidth = 56;
 
   const isTabActive = (tab: SidebarTab) => !panelHidden && activeTab === tab;
+  const isTabDisabled = (tab: SidebarTab) =>
+    isTutorRequestRunning && tab !== "ai-tutor";
 
   const selectTab = (tab: SidebarTab) => {
+    if (isTabDisabled(tab)) return;
     setActiveTab(tab);
     if (collapsible && isCollapsed) {
       setIsCollapsed(false);
     }
+  };
+
+  const handleClearTutorChat = () => {
+    setChatMessages([]);
+    setChatInput("");
+    setClearTutorChatSignal((signal) => signal + 1);
   };
 
   return (
@@ -368,9 +397,10 @@ export function Sidebar({
           <Tooltip content="Validation" position="right">
             <button
               onClick={() => selectTab("checklist")}
+              disabled={isTabDisabled("checklist")}
               className={`${styles.tabButton} ${
                 isTabActive("checklist") ? styles.tabActive : ""
-              }`}
+              } ${isTabDisabled("checklist") ? styles.tabDisabled : ""}`}
             >
               <FontAwesomeIcon
                 icon={faClipboardCheck}
@@ -394,9 +424,10 @@ export function Sidebar({
           <Tooltip content="AI Tutor" position="right">
             <button
               onClick={() => selectTab("ai-tutor")}
+              disabled={isTabDisabled("ai-tutor")}
               className={`${styles.tabButton} ${
                 isTabActive("ai-tutor") ? styles.tabActive : ""
-              }`}
+              } ${isTabDisabled("ai-tutor") ? styles.tabDisabled : ""}`}
             >
               <AiTutorIcon
                 className="w-[22px] h-[22px] transition-colors"
@@ -416,9 +447,10 @@ export function Sidebar({
           <Tooltip content="Version History" position="right">
             <button
               onClick={() => selectTab("history")}
+              disabled={isTabDisabled("history")}
               className={`${styles.tabButton} ${
                 isTabActive("history") ? styles.tabActive : ""
-              }`}
+              } ${isTabDisabled("history") ? styles.tabDisabled : ""}`}
             >
               <FontAwesomeIcon
                 icon={faClockRotateLeft}
@@ -442,9 +474,10 @@ export function Sidebar({
           <Tooltip content="Teacher Resources" position="right">
             <button
               onClick={() => selectTab("classroom")}
+              disabled={isTabDisabled("classroom")}
               className={`${styles.tabButton} ${
                 isTabActive("classroom") ? styles.tabActive : ""
-              }`}
+              } ${isTabDisabled("classroom") ? styles.tabDisabled : ""}`}
             >
               <FontAwesomeIcon
                 icon={faPersonChalkboard}
@@ -468,9 +501,10 @@ export function Sidebar({
           <Tooltip content="Rubric" position="right">
             <button
               onClick={() => selectTab("rubric")}
+              disabled={isTabDisabled("rubric")}
               className={`${styles.tabButton} ${
                 isTabActive("rubric") ? styles.tabActive : ""
-              }`}
+              } ${isTabDisabled("rubric") ? styles.tabDisabled : ""}`}
             >
               <FaIcon
                 name="clipboard-list"
@@ -495,9 +529,10 @@ export function Sidebar({
           <Tooltip content="Dev Panel" position="right">
             <button
               onClick={() => selectTab("dev")}
+              disabled={isTabDisabled("dev")}
               className={`${styles.tabButton} ${
                 isTabActive("dev") ? styles.tabActive : ""
-              }`}
+              } ${isTabDisabled("dev") ? styles.tabDisabled : ""}`}
             >
               <FontAwesomeIcon
                 icon={faSlidersH}
@@ -585,8 +620,17 @@ export function Sidebar({
             right={
               activeTab === "ai-tutor" ? (
                 <div className="flex gap-1">
-                  <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faDownload} />} />
-                  <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faEraser} />} />
+                  <Tooltip content="Clear chat" position="bottom">
+                    <AppButton
+                      variant="tertiary"
+                      tone="gray"
+                      size="xs"
+                      iconName="eraser"
+                      onClick={handleClearTutorChat}
+                      disabled={chatMessages.length === 0 && !hasComposerContent && !isTutorRequestRunning}
+                      aria-label="Clear AI Tutor chat"
+                    />
+                  </Tooltip>
                 </div>
               ) : activeTab === "dev" && devPanelOverrideResult ? (
                 <DevPanelHeaderActions overrideResult={devPanelOverrideResult} />
@@ -604,16 +648,21 @@ export function Sidebar({
               showInstructionsDrawer={showInstructionsDrawer}
               instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
               instructionsDrawerVisualCue={instructionsDrawerVisualCue}
-              autoSeedConversationOnMount={autoSeedConversationOnMount}
               inputExperiment={aiTutorInputExperiment}
-              initialAttachedFiles={initialAttachedFiles}
-              attachmentMeta={attachmentMeta}
+              mockTutorConfig={mockTutorConfig}
               onAddFileToProject={onAddFileToProject}
               instructionsContent={instructionsContent}
+              availableContextFiles={availableTutorContextFiles}
+              onTutorSubmit={onTutorSubmit}
+              onAcceptAiChanges={onAcceptAiChanges}
+              onRejectAiChanges={onRejectAiChanges}
+              onRequestRunningChange={setIsTutorRequestRunning}
+              clearChatSignal={clearTutorChatSignal}
             />
           )}
           {activeTab === "history" && (
             <VersionHistory
+              versions={historyVersions}
               selectedVersion={selectedHistoryVersion}
               onVersionChange={setSelectedHistoryVersion}
               onSaveVersion={onSaveVersion}
@@ -633,7 +682,13 @@ export function Sidebar({
             />
           )}
           {activeTab === "dev" && devPanelFields && devPanelOverrideResult && (
-            <DevPanelContent fields={devPanelFields} overrideResult={devPanelOverrideResult} />
+            <DevPanelContent
+              fields={devPanelFields}
+              overrideResult={devPanelOverrideResult}
+              sessionValues={devPanelSessionValues}
+              onSessionValueChange={onDevPanelSessionValueChange}
+              onSessionValueReset={onDevPanelSessionValueReset}
+            />
           )}
 
           {showContinueButton && (

@@ -57,11 +57,61 @@
   padding: 0;
 }
 
+.messagesViewport > div {
+  height: 100%;
+  min-height: 100%;
+}
+
 .messagesWrap {
   display: flex;
+  min-height: 100%;
   flex-direction: column;
   gap: 10px;
   padding: 0 8px 8px;
+}
+
+.messagesWrapEmpty {
+  align-items: center;
+  justify-content: center;
+  padding-right: 24px;
+  padding-left: 24px;
+}
+
+.emptyState {
+  display: flex;
+  max-width: 340px;
+  flex-direction: column;
+  align-items: center;
+  color: var(--ds-text-neutral-secondary);
+  text-align: center;
+}
+
+.emptyStateIcon {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--ds-background-neutral-septenary);
+  color: var(--ds-text-neutral-inverse);
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.emptyStateTitle {
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+
+.emptyStateText {
+  color: var(--ds-text-neutral-secondary);
+  font-size: var(--text-label);
+  line-height: 1.6;
+  width: 80%;;
 }
 
 .messageBlock {
@@ -87,7 +137,7 @@
 .messageBubbleUser {
   background: var(--ds-background-neutral-secondary);
   border-bottom-right-radius: 0;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--ds-text-neutral-primary);
 }
 
 .messageBubbleAssistant {
@@ -102,6 +152,7 @@
   margin: 0;
   font-size: 14px;
   white-space: pre-line;
+  line-height: 1.5;
 }
 
 /* ─── Rich message content (replaces plain <p> for formatted messages) */
@@ -315,14 +366,36 @@
 /* ─── Input section ───────────────────────────────────── */
 
 .inputSection {
+  position: relative;
   flex-shrink: 0;
   border-top: 1px solid var(--border);
   background: var(--ds-background-neutral-secondary);
   padding: 8px;
 }
 
+.inputSectionDropActive {
+  border-top-color: transparent;
+}
+
+.inputSectionDropActive::before {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  z-index: 20;
+  height: 26px;
+  pointer-events: none;
+  background: var(--ds-background-neutral-secondary);
+  border-top: 1px solid var(--ds-borders-neutral-primary);
+  content: "";
+}
+
 .inputSectionClarified {
   border-top: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.inputSectionClarified.inputSectionDropActive {
+  border-top-color: transparent;
 }
 
 /* Wraps attachment row + input card; receives file-drop drag handlers. */
@@ -348,24 +421,29 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   border: 1px dashed var(--ds-borders-neutral-primary);
   border-radius: 4px;
 }
 
 .attachmentAddSlotIcon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   color: var(--ds-text-neutral-quaternary);
 }
 
 .dropHelperText {
+  position: absolute;
+  left: 2px;
+  bottom: calc(100% + 8px);
+  z-index: 25;
   display: flex;
   align-items: center;
   gap: 6px;
   margin: 0;
   padding: 0 2px;
+  pointer-events: none;
   animation: dropHelperIn 0.18s ease;
   font-family: var(--font-body);
   font-size: 12px;
@@ -411,10 +489,9 @@
   opacity: 0.7;
 }
 
-.inputCard:focus-within {
-  outline: 2px solid var(--ring);
+.inputCardKeyboardFocused {
+  outline: 2px solid var(--ds-borders-brand-teal-primary);
   outline-offset: 2px;
-  
 }
 
 /* ─── Textarea ────────────────────────────────────────── */
@@ -443,10 +520,109 @@
   justify-content: space-between;
 }
 
+.fileInput {
+  display: none;
+}
+
+.addFilePopover {
+  width: 280px;
+  padding: 8px;
+}
+
+.addFileMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.addFileMenuTitle {
+  margin: 0 0 4px;
+  padding: 0 4px;
+  color: var(--ds-text-neutral-tertiary);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.addFileMenuItem {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  grid-template-areas:
+    "icon name"
+    "icon path";
+  column-gap: 8px;
+  align-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 7px 8px;
+  text-align: left;
+}
+
+.addFileMenuItem:hover:not(:disabled) {
+  background: var(--ds-background-neutral-secondary);
+}
+
+.addFileMenuItem:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.addFileMenuIcon {
+  grid-area: icon;
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.addFileMenuName {
+  grid-area: name;
+  overflow: hidden;
+  color: var(--ds-text-neutral-primary);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.addFileMenuPath {
+  grid-area: path;
+  overflow: hidden;
+  color: var(--ds-text-neutral-tertiary);
+  font-size: 11px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.addFileMenuEmpty {
+  margin: 0;
+  padding: 8px;
+  color: var(--ds-text-neutral-tertiary);
+  font-size: 12px;
+}
+
 .sendButtonRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.modelSelectLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modelSelectText {
+  color: var(--ds-text-neutral-quaternary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-medium);
+}
+
+.modelDropdown {
+  min-width: 110px;
 }
 
 /* Default small send icon button (purple, icon-only) */
@@ -516,6 +692,18 @@
   background: var(--muted);
   color: var(--ds-text-neutral-disabled-inverse);
   cursor: not-allowed;
+}
+
+/* ─── Code-change accept / reject buttons ──────────── */
+
+.codeChangeActions {
+  display: flex;
+  gap: 8px;
+  margin-top: -8px;
+}
+
+.codeChangeActions > * {
+  flex: 1;
 }
 
 /* ─── In-stream attachment row (sent message chips) ──── */

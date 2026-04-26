@@ -12,7 +12,7 @@ import { ScrollArea } from "../../../ui/scroll-area";
 import { SuccessAlert } from "../../../ui/SuccessAlert";
 import styles from "./VersionHistory.module.scss";
 
-interface VersionItem {
+export interface VersionItem {
   id: string;
   label: string;
   description?: string;

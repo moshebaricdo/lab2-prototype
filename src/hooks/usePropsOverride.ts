@@ -59,6 +59,38 @@ function setNestedValue(
   };
 }
 
+function deleteNestedValue(
+  obj: Record<string, unknown>,
+  path: string,
+): Record<string, unknown> {
+  const keys = path.split(".");
+  const [head, ...rest] = keys;
+  const next = { ...obj };
+
+  if (rest.length === 0) {
+    delete next[head];
+    return next;
+  }
+
+  const child = next[head];
+  if (child === null || typeof child !== "object" || Array.isArray(child)) {
+    return next;
+  }
+
+  const nextChild = deleteNestedValue(
+    child as Record<string, unknown>,
+    rest.join("."),
+  );
+
+  if (Object.keys(nextChild).length === 0) {
+    delete next[head];
+  } else {
+    next[head] = nextChild;
+  }
+
+  return next;
+}
+
 function encode(overrides: Record<string, unknown>): string {
   return btoa(JSON.stringify(overrides));
 }
@@ -78,6 +110,7 @@ export interface PropsOverrideResult<T> {
   setValue: (path: string, value: unknown) => void;
   resetAll: () => void;
   resetKey: (path: string) => void;
+  resetKeys: (paths: string[]) => void;
   copyLink: () => void;
   hasOverrides: boolean;
 }
@@ -125,16 +158,7 @@ export function usePropsOverride<T extends Record<string, unknown>>(
     (path: string, value: unknown) => {
       const defaultVal = getNestedValue(defaults as Record<string, unknown>, path);
       if (value === defaultVal) {
-        const next = { ...overrides };
-        const keys = path.split(".");
-        if (keys.length === 1) {
-          delete next[keys[0]];
-        } else {
-          const cleaned = setNestedValue(next, path, undefined);
-          writeOverrides(cleaned);
-          return;
-        }
-        writeOverrides(next);
+        writeOverrides(deleteNestedValue(overrides, path));
         return;
       }
       const next = setNestedValue(overrides, path, value);
@@ -149,11 +173,17 @@ export function usePropsOverride<T extends Record<string, unknown>>(
 
   const resetKey = useCallback(
     (path: string) => {
-      const next = { ...overrides };
-      const keys = path.split(".");
-      if (keys.length === 1) {
-        delete next[keys[0]];
-      }
+      writeOverrides(deleteNestedValue(overrides, path));
+    },
+    [overrides, writeOverrides],
+  );
+
+  const resetKeys = useCallback(
+    (paths: string[]) => {
+      const next = paths.reduce(
+        (result, path) => deleteNestedValue(result, path),
+        overrides,
+      );
       writeOverrides(next);
     },
     [overrides, writeOverrides],
@@ -163,5 +193,15 @@ export function usePropsOverride<T extends Record<string, unknown>>(
     navigator.clipboard.writeText(window.location.href);
   }, []);
 
-  return { props, overrides, getValue, setValue, resetAll, resetKey, copyLink, hasOverrides };
+  return {
+    props,
+    overrides,
+    getValue,
+    setValue,
+    resetAll,
+    resetKey,
+    resetKeys,
+    copyLink,
+    hasOverrides,
+  };
 }

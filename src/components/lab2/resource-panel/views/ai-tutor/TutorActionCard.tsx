@@ -1,6 +1,6 @@
-import { AppButton } from "../../../ui/AppButton";
-import { FaIcon } from "../../../ui/icons/FaIcon";
-import { faIconForFileName } from "../../../ui/fileChipMeta";
+import { AppButton } from "../../../../ui/AppButton";
+import { FaIcon } from "../../../../ui/icons/FaIcon";
+import { faIconForFileName } from "../../../../ui/fileChipMeta";
 import styles from "./TutorActionCard.module.scss";
 
 interface TutorActionCardProps {

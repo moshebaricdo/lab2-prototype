@@ -10,10 +10,9 @@ export { PythonLabInstructions } from "./PythonLabInstructions";
 export { SettingsPanel } from "./views/SettingsPanel";
 export { ValidationPanel } from "./views/ValidationPanel";
 export { VersionHistory } from "./views/VersionHistory";
-export { ActionRow } from "./ActionRow";
 export { InstructionsPanel } from "./views/InstructionsPanel";
 
-export { AiTutorPanel } from "./views/AiTutorPanel";
+export { AiTutorPanel } from "./views/ai-tutor/AiTutorPanel";
 export { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
 export { RubricPanel } from "./views/RubricPanel";
 export type {
