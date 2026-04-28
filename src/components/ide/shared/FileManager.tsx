@@ -33,6 +33,7 @@ interface FileManagerProps {
   aiChangedFiles?: Record<string, "new" | "modified" | "deleted">;
   /** Hide placeholder tree entries that are not backed by editable file content. */
   showOnlyFilesWithContent?: boolean;
+  showRightBorder?: boolean;
 }
 
 function hasFileContent(item: FileItem): boolean {
@@ -93,6 +94,7 @@ export function FileManager({
   enableDragToTutor = false,
   aiChangedFiles,
   showOnlyFilesWithContent = false,
+  showRightBorder = true,
 }: FileManagerProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(
     null,
@@ -461,7 +463,9 @@ export function FileManager({
         </div>
       </ScrollArea>
 
-      <div aria-hidden="true" className={styles.borderOverlay} />
+      {showRightBorder && (
+        <div aria-hidden="true" className={styles.borderOverlay} />
+      )}
     </div>
   );
 }

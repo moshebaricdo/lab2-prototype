@@ -129,6 +129,7 @@ export function Workspace({
       enableDragToTutor={isViewingHistoryVersion ? false : enableFileDragToTutor}
       aiChangedFiles={aiChangedFiles}
       showOnlyFilesWithContent={showOnlyFilesWithContent}
+      showRightBorder={false}
     />
   );
 

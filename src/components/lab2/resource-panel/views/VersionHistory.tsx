@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
 import { AiTutorIcon } from "../../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../../ui/icons/FaIcon";
@@ -44,6 +44,8 @@ export function VersionHistory({
     () => new Set(),
   );
   const [versionDescription, setVersionDescription] = useState("");
+  const [isDescriptionKeyboardFocused, setIsDescriptionKeyboardFocused] = useState(false);
+  const lastFocusWasKeyboardRef = useRef(false);
 
   const selectedVersion = externalSelectedVersion ?? internalSelectedVersion;
 
@@ -51,6 +53,25 @@ export function VersionHistory({
     () => versions.find((item) => item.id === "current") ?? defaultVersions[0],
     [versions],
   );
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Tab") {
+        lastFocusWasKeyboardRef.current = true;
+      }
+    };
+    const handlePointerDown = () => {
+      lastFocusWasKeyboardRef.current = false;
+    };
+
+    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, []);
+
   const timelineEntries = useMemo(() => {
     const entries: Array<
       | { type: "version"; version: VersionItem }
@@ -191,36 +212,38 @@ export function VersionHistory({
               </div>
 
               <div className={styles.savePanel}>
-                <div className={styles.textareaWrap}>
-                  <textarea
-                    value={versionDescription}
-                    onChange={(event) => setVersionDescription(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (
-                        event.key === "Enter" &&
-                        (event.metaKey || event.ctrlKey) &&
-                        versionDescription.trim()
-                      ) {
-                        handleSaveVersion();
-                      }
-                    }}
-                    placeholder="Describe your changes"
-                    className={styles.textarea}
-                  />
-                </div>
+                <textarea
+                  value={versionDescription}
+                  onFocus={() => {
+                    setIsDescriptionKeyboardFocused(lastFocusWasKeyboardRef.current);
+                  }}
+                  onBlur={() => setIsDescriptionKeyboardFocused(false)}
+                  onChange={(event) => setVersionDescription(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter" &&
+                      (event.metaKey || event.ctrlKey) &&
+                      versionDescription.trim()
+                    ) {
+                      handleSaveVersion();
+                    }
+                  }}
+                  data-keyboard-focused={isDescriptionKeyboardFocused ? "true" : undefined}
+                  placeholder="Describe your changes"
+                  className={styles.textarea}
+                />
 
-                <button
+                <AppButton
+                  variant="secondary"
+                  tone="gray"
+                  size="s"
+                  fullWidth
+                  iconName="floppy-disk"
                   onClick={handleSaveVersion}
                   disabled={!versionDescription.trim()}
-                  className={`${styles.saveButton} ${
-                    !versionDescription.trim() ? styles.saveButtonDisabled : ""
-                  }`}
                 >
-                  <span className={styles.buttonIcon}>
-                    <FaIcon name="floppy-disk" size="s" />
-                  </span>
-                  <span>Save current version</span>
-                </button>
+                  Save current version
+                </AppButton>
               </div>
             </div>
           </div>
