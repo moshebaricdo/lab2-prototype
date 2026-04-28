@@ -31,10 +31,17 @@ interface RubricPanelProps {
   rubrics: RubricData[];
 }
 
+function getDefaultExpandedCategoryIds(rubric: RubricData | undefined) {
+  const selectedCategoryId = rubric?.selectedCategoryId;
+  return selectedCategoryId
+    ? new Set([selectedCategoryId])
+    : new Set<string>();
+}
+
 export function RubricPanel({ rubrics }: RubricPanelProps) {
   const [rubricIndex, setRubricIndex] = useState(0);
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<string>>(
-    () => new Set(),
+    () => getDefaultExpandedCategoryIds(rubrics[0]),
   );
   const rubric = rubrics[rubricIndex];
 
@@ -45,9 +52,7 @@ export function RubricPanel({ rubrics }: RubricPanelProps) {
   }, [rubrics]);
 
   useEffect(() => {
-    setExpandedCategoryIds(
-      rubric?.selectedCategoryId ? new Set([rubric.selectedCategoryId]) : new Set(),
-    );
+    setExpandedCategoryIds(getDefaultExpandedCategoryIds(rubric));
   }, [rubric?.selectedCategoryId, rubricIndex]);
 
   const selectedCategory = useMemo(() => {
