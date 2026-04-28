@@ -1,4 +1,11 @@
 .root {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+}
+
+.scrollArea {
   min-height: 0;
   flex: 1;
 }
@@ -11,9 +18,15 @@
   padding: 8px;
 }
 
-.alertWrap {
-  width: 100%;
-  margin-bottom: 8px;
+.toastWrap {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  z-index: 2;
 }
 
 .section {
@@ -21,7 +34,7 @@
 }
 
 .connector {
-  width: 20px;
+  width: 22px;
   height: 8px;
   border-right: 1px solid var(--ds-borders-neutral-primary);
 }
@@ -60,15 +73,15 @@
 .rowMain:focus-visible {
   outline: none;
   border-radius: 4px;
-  box-shadow: 0 0 0 2px var(--ring);
+  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
 }
 
 .radio {
   width: 18px;
   height: 18px;
-  border: 2px solid var(--foreground);
+  border: 2px solid var(--ds-text-neutral-primary);
   border-radius: 999px;
-  background: var(--background);
+  background: var(--ds-background-neutral-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -76,20 +89,20 @@
 }
 
 .radioSelected {
-  border-color: var(--accent);
+  border-color: var(--ds-background-brand-teal-primary);
 }
 
 .radioDot {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--ds-background-brand-teal-primary);
 }
 
 .label {
   margin: 0;
-  color: var(--foreground);
-  font-size: 14px;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
 }
@@ -102,7 +115,7 @@
   margin: 0;
   padding: 8px 12px;
   color: var(--ds-text-neutral-secondary);
-  font-size: 12px;
+  font-size: var(--text-label);
   line-height: 1.64;
 }
 
@@ -112,10 +125,10 @@
   gap: 4px;
   border: 1px solid var(--ds-borders-neutral-strong);
   border-radius: 4px;
-  background: var(--background);
+  background: var(--ds-background-neutral-primary);
   padding: 2px 8px;
-  color: var(--foreground);
-  font-size: 12px;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
   transition: background-color 0.2s ease;
 }
@@ -126,12 +139,22 @@
 
 .restoreButton:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--ring);
+  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
 }
 
 .autosaveIcon {
   color: var(--ds-text-neutral-placeholder);
-  font-size: 13px;
+  font-size: var(--text-code);
+}
+
+.aiSaveIcon {
+  color: var(--ds-text-neutral-placeholder);
+  font-size: var(--text-code);
+}
+
+.aiSaveIconSvg {
+  width: 1.2em;
+  height: 1.2em;
 }
 
 .savePanel {
@@ -141,14 +164,15 @@
 .textareaWrap {
   border: 1px solid var(--ds-borders-neutral-strong);
   border-radius: 4px;
-  background: var(--background);
+  background: var(--ds-background-neutral-primary);
   height: 70px;
   padding: 5px 10px;
   margin-bottom: 6px;
 }
 
-.textareaWrap:focus-within {
-  box-shadow: 0 0 0 2px var(--ring);
+.textareaWrap:has(.textarea:focus-visible) {
+  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline-offset: 2px;
 }
 
 .textarea {
@@ -157,8 +181,8 @@
   border: 0;
   background: transparent;
   resize: none;
-  color: var(--foreground);
-  font-size: 14px;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-sm);
   line-height: 1.54;
 }
 
@@ -179,10 +203,10 @@
   gap: 8px;
   border: 1px solid var(--ds-borders-neutral-strong);
   border-radius: 4px;
-  background: var(--background);
+  background: var(--ds-background-neutral-primary);
   padding: 5px 12px;
-  color: var(--foreground);
-  font-size: 14px;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
   transition: background-color 0.2s ease, opacity 0.2s ease;
 }
@@ -193,7 +217,7 @@
 
 .saveButton:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--ring);
+  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
 }
 
 .saveButtonDisabled {
@@ -203,31 +227,7 @@
 
 .toggleWrap {
   width: 100%;
-  padding: 4px 4px 4px 0;
-}
-
-.toggleButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: 0;
-  background: transparent;
-  border-radius: 4px;
-  padding: 2px 8px;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  font-weight: var(--font-weight-semibold);
-  transition: background-color 0.2s ease;
-  cursor: pointer;
-}
-
-.toggleButton:hover {
-  background: var(--ds-background-neutral-secondary);
-}
-
-.toggleButton:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--ring);
+  padding: 4px 4px 4px 8px;
 }
 
 .iconSmall {

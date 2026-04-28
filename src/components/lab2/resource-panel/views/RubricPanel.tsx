@@ -36,6 +36,7 @@ export function RubricPanel({ rubrics }: RubricPanelProps) {
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const rubric = rubrics[rubricIndex];
 
   useEffect(() => {
     setRubricIndex((i) =>
@@ -44,10 +45,10 @@ export function RubricPanel({ rubrics }: RubricPanelProps) {
   }, [rubrics]);
 
   useEffect(() => {
-    setExpandedCategoryIds(new Set());
-  }, [rubricIndex]);
-
-  const rubric = rubrics[rubricIndex];
+    setExpandedCategoryIds(
+      rubric?.selectedCategoryId ? new Set([rubric.selectedCategoryId]) : new Set(),
+    );
+  }, [rubric?.selectedCategoryId, rubricIndex]);
 
   const selectedCategory = useMemo(() => {
     if (!rubric) return undefined;

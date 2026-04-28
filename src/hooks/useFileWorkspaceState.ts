@@ -627,6 +627,7 @@ export function useFileWorkspaceState(
     const acceptedTree = acceptProposedContent(baseTree);
     preAiSnapshotRef.current = null;
     replaceFileStructure(acceptedTree);
+    return acceptedTree;
   }, [fileStructureState, initialFileStructure, replaceFileStructure]);
 
   const rejectAiProposal = useCallback(() => {

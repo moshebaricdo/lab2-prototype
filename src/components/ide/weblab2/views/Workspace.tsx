@@ -44,6 +44,7 @@ interface WorkspaceProps {
   onMoveFileTreeItem?: (sourcePath: string, targetFolderPath: string) => true | string | void;
   preview: WebLabPreviewConfig;
   selectedHistoryVersion: string;
+  selectedHistoryVersionLabel?: string;
   showSavedTag: boolean;
   onReturnToCurrentVersion: () => void;
   aiChangedFiles?: Record<string, "new" | "modified" | "deleted">;
@@ -74,6 +75,7 @@ export function Workspace({
   onMoveFileTreeItem,
   preview,
   selectedHistoryVersion,
+  selectedHistoryVersionLabel,
   showSavedTag,
   onReturnToCurrentVersion,
   aiChangedFiles,
@@ -107,6 +109,7 @@ export function Workspace({
     { value: "preview", label: "Preview", iconName: "eye" },
     { value: "split", label: "Split View", iconName: "table-columns" },
   ];
+  const isViewingHistoryVersion = selectedHistoryVersion !== "current";
 
   const renderExpandedFileManager = () => (
     <FileManager
@@ -117,13 +120,13 @@ export function Workspace({
       onToggleFolder={toggleFolder}
       collapsed={false}
       onToggleCollapse={() => handleFileManagerCollapseChange(true)}
-      onNewFile={() => setIsCreateFileModalOpen(true)}
-      onNewFolder={() => setIsCreateFolderModalOpen?.(true)}
-      onRenameFile={onRequestRenameFile}
-      onAddFileToChat={onAddFileToTutor}
-      onDeleteFile={onDeleteFile}
-      onMoveItem={onMoveFileTreeItem}
-      enableDragToTutor={enableFileDragToTutor}
+      onNewFile={isViewingHistoryVersion ? undefined : () => setIsCreateFileModalOpen(true)}
+      onNewFolder={isViewingHistoryVersion ? undefined : () => setIsCreateFolderModalOpen?.(true)}
+      onRenameFile={isViewingHistoryVersion ? undefined : onRequestRenameFile}
+      onAddFileToChat={isViewingHistoryVersion ? undefined : onAddFileToTutor}
+      onDeleteFile={isViewingHistoryVersion ? undefined : onDeleteFile}
+      onMoveItem={isViewingHistoryVersion ? undefined : onMoveFileTreeItem}
+      enableDragToTutor={isViewingHistoryVersion ? false : enableFileDragToTutor}
       aiChangedFiles={aiChangedFiles}
       showOnlyFilesWithContent={showOnlyFilesWithContent}
     />
@@ -148,6 +151,7 @@ export function Workspace({
       {selectedHistoryVersion !== "current" && (
         <VersionBanner
           versionLabel={
+            selectedHistoryVersionLabel ||
             versionLabels[selectedHistoryVersion] ||
             selectedHistoryVersion
           }
@@ -244,10 +248,11 @@ export function Workspace({
                 onCloseFile={closeFile}
                 onReorderFiles={handleReorderFiles}
                 isFileManagerCollapsed={isFileManagerCollapsed}
-                onCreateFile={() => setIsCreateFileModalOpen(true)}
-                enableDragToTutor={enableFileDragToTutor}
+                onCreateFile={isViewingHistoryVersion ? undefined : () => setIsCreateFileModalOpen(true)}
+                enableDragToTutor={isViewingHistoryVersion ? false : enableFileDragToTutor}
                 aiChangedFiles={aiChangedFiles}
                 onFileContentChange={onFileContentChange}
+                readOnly={isViewingHistoryVersion ? true : undefined}
               />
             </div>
           </div>

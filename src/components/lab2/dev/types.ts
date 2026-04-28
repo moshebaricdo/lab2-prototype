@@ -6,6 +6,8 @@ export type DevPanelFieldType =
   | "boolean"
   | "select";
 
+export type DevPanelFieldValues = Record<string, unknown>;
+
 export interface DevPanelFieldBase {
   key: string;
   label: string;
@@ -13,6 +15,8 @@ export interface DevPanelFieldBase {
   group?: string;
   /** URL-backed by default. Use session for values that should not be share-linked. */
   storage?: "url" | "session";
+  /** Hide fields that only apply when another control is enabled. */
+  visibleWhen?: (values: DevPanelFieldValues) => boolean;
 }
 
 export interface DevPanelTextField extends DevPanelFieldBase {

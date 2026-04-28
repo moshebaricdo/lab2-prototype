@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import { AppButton } from "../../ui/AppButton";
 import { ScrollArea } from "../../ui/scroll-area";
-import type { DevPanelField } from "./types";
+import type { DevPanelField, DevPanelFieldValues } from "./types";
 import { DevPanelFieldRow } from "./DevPanelFields";
 import styles from "./DevPanel.module.scss";
 
@@ -25,9 +25,20 @@ export function DevPanelContent<T extends Record<string, unknown>>({
     () => flattenKeys(overrideResult.overrides),
     [overrideResult.overrides],
   );
+  const fieldValues = useMemo<DevPanelFieldValues>(
+    () => ({
+      ...(overrideResult.props as Record<string, unknown>),
+      ...(sessionValues ?? {}),
+    }),
+    [overrideResult.props, sessionValues],
+  );
+  const visibleFields = useMemo(
+    () => fields.filter((field) => field.visibleWhen?.(fieldValues) ?? true),
+    [fieldValues, fields],
+  );
   const groups = useMemo(() => {
     const map = new Map<string, DevPanelField[]>();
-    for (const field of fields) {
+    for (const field of visibleFields) {
       const group = field.group ?? "General";
       if (!map.has(group)) map.set(group, []);
       map.get(group)!.push(field);
@@ -36,7 +47,7 @@ export function DevPanelContent<T extends Record<string, unknown>>({
       name,
       fields: groupFields,
     }));
-  }, [fields]);
+  }, [visibleFields]);
 
   const getFieldState = (field: DevPanelField) => {
     const isSessionField = field.storage === "session";
@@ -79,7 +90,7 @@ export function DevPanelContent<T extends Record<string, unknown>>({
 
   return (
     <ScrollArea className={styles.panelContent} viewportClassName={styles.panelViewport}>
-      {fields.length === 0 ? (
+      {visibleFields.length === 0 ? (
         <div className={styles.emptyStateCard}>
           <p className={styles.emptyStateTitle}>No dev controls yet</p>
           <p className={styles.emptyState}>

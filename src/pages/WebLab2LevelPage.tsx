@@ -31,11 +31,28 @@ import {
 } from "../hooks/useEditorReadOnly";
 import { webLab2LevelLinks } from "./levelTypeLinks";
 import type { InstructionsDrawerVisualCue } from "../components/lab2/resource-panel/InstructionsDrawer";
+import { MarkdownInstructions } from "../components/lab2/resource-panel/MarkdownInstructions";
 import type { RubricData } from "../components/lab2/resource-panel/views/RubricPanel";
 import { tutorClient } from "../lib/tutor/tutorClient";
 import type { FileItem } from "../types/file";
 import type { AiTutorInputExperiment, MockTutorConfig, TutorContextFile, TutorMode } from "../types/tutor";
 import type { WebLabPreviewConfig } from "../components/ide/weblab2/views/PreviewPanel";
+
+const INSTRUCTIONS_MARKDOWN_DEV_KEY = "instructionsMarkdown";
+
+function getInstructionsMarkdownStorageKey(currentLevelPath: string) {
+  return `weblab2:instructions-markdown:${currentLevelPath}`;
+}
+
+function readSessionInstructionsMarkdown(storageKey: string, fallback: string) {
+  if (typeof window === "undefined") return fallback;
+  return window.sessionStorage.getItem(storageKey) ?? fallback;
+}
+
+function writeSessionInstructionsMarkdown(storageKey: string, value: string) {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(storageKey, value);
+}
 
 const webLab2ChromeDevFields: DevPanelField[] = [
   {
@@ -74,15 +91,14 @@ const webLab2ResourcePanelDevFields: DevPanelField[] = [
     group: "Resource panel",
   },
   {
-    key: "instructionsDrawerVisualCue",
-    label: "Instructions cue",
-    description: "Choose whether the panel hints that instructions are available.",
-    type: "select",
-    options: [
-      { label: "None", value: "none" },
-      { label: "Inline link", value: "inline-link" },
-    ],
+    key: INSTRUCTIONS_MARKDOWN_DEV_KEY,
+    label: "Instructions markdown",
+    description: "Session-only markdown rendered inside the instructions drawer.",
+    type: "textarea",
+    rows: 8,
     group: "Resource panel",
+    storage: "session",
+    visibleWhen: (values) => Boolean(values.showInstructionsDrawer),
   },
   {
     key: "instructionsDrawerInitialHeightRatio",
@@ -175,6 +191,21 @@ function flattenTutorContextFiles(files: FileItem[], parentPath = ""): TutorCont
   });
 }
 
+function findFileByNameInTree(tree: FileItem[], name: string): FileItem | null {
+  for (const item of tree) {
+    if (item.name === name && item.type !== "folder") return item;
+    if (item.children) {
+      const found = findFileByNameInTree(item.children, name);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function mapFilesToTree(files: FileItem[], tree: FileItem[]) {
+  return files.map((file) => findFileByNameInTree(tree, file.name) ?? file);
+}
+
 interface WebLab2LevelPageProps {
   currentLevelPath?: string;
   instructionsDrawerInitialHeightRatio?: number;
@@ -190,6 +221,8 @@ interface WebLab2LevelPageProps {
   previewContent?: React.ReactNode | ((aiActive: boolean) => React.ReactNode);
   /** Hide the instructions drawer in the AI tutor panel. Default true. */
   showInstructionsDrawer?: boolean;
+  /** Optional markdown content to pre-seed the instructions drawer editor. */
+  instructionsMarkdown?: string;
   /** Where to render the Continue button: "sidebar" (bottom bar) or "header" (next to bubbles). */
   continueButtonPlacement?: "sidebar" | "header";
   /** When true, render preview from project file contents instead of custom React previewContent. */
@@ -210,6 +243,7 @@ export function WebLab2LevelPage({
   fileStructureOverride,
   previewContent,
   showInstructionsDrawer,
+  instructionsMarkdown = "",
   continueButtonPlacement = "sidebar",
   useFilePreview = false,
   showOnlyFilesWithContent = false,
@@ -288,10 +322,28 @@ export function WebLab2LevelPage({
 
   const overrideResult = usePropsOverride(defaults);
   const resolved = overrideResult.props;
+  const instructionsMarkdownStorageKey =
+    getInstructionsMarkdownStorageKey(currentLevelPath);
+  const [sessionInstructionsMarkdown, setSessionInstructionsMarkdown] = useState(
+    () => readSessionInstructionsMarkdown(
+      instructionsMarkdownStorageKey,
+      instructionsMarkdown,
+    ),
+  );
+  useEffect(() => {
+    setSessionInstructionsMarkdown(
+      readSessionInstructionsMarkdown(
+        instructionsMarkdownStorageKey,
+        instructionsMarkdown,
+      ),
+    );
+  }, [instructionsMarkdown, instructionsMarkdownStorageKey]);
   const resolvedTutorModeKind =
     resolved.tutorModeKind === "functional" ? "functional" : "mock";
   const {
     versions: historyVersions,
+    selectedHistoryFileStructure,
+    selectedHistoryVersionLabel,
     selectedHistoryVersion,
     setSelectedHistoryVersion,
     showSavedTag,
@@ -300,6 +352,7 @@ export function WebLab2LevelPage({
     showSaveSuccessAlert,
     setShowSaveSuccessAlert,
     handleSaveVersion,
+    handleSaveAiVersion,
     handleRestoreVersion,
     handleReturnToCurrentVersion,
   } = useVersionHistoryState(
@@ -307,6 +360,7 @@ export function WebLab2LevelPage({
       ? {
           getFileStructure: getCurrentFileStructure,
           onRestoreFileStructure: replaceFileStructure,
+          storageKey: `weblab2:version-history:${currentLevelPath}`,
         }
       : undefined,
   );
@@ -334,12 +388,22 @@ export function WebLab2LevelPage({
   const hasPendingAiChanges = !!aiChangedFiles && Object.keys(aiChangedFiles).length > 0;
   const isAiActive = hasPendingAiChanges || hasAcceptedChanges;
   const currentFileStructure = fileStructureState ?? fileStructureOverride ?? fileStructure;
+  const isViewingHistoryVersion =
+    selectedHistoryVersion !== "current" && Boolean(selectedHistoryFileStructure);
+  const visibleFileStructure = isViewingHistoryVersion && selectedHistoryFileStructure
+    ? selectedHistoryFileStructure
+    : currentFileStructure;
+  const visibleSelectedFile = selectedFile
+    ? findFileByNameInTree(visibleFileStructure, selectedFile.name) ?? selectedFile
+    : selectedFile;
+  const visibleOpenFiles = mapFilesToTree(openFiles, visibleFileStructure);
+  const visibleHasPendingAiChanges = isViewingHistoryVersion ? false : hasPendingAiChanges;
   const resolvedPreviewContent = typeof previewContent === "function"
     ? previewContent(isAiActive)
     : previewContent ?? <DefaultProjectPreview />;
   const previewHtmlFiles = useMemo(
-    () => getPreviewHtmlFiles(currentFileStructure, hasPendingAiChanges),
-    [currentFileStructure, hasPendingAiChanges],
+    () => getPreviewHtmlFiles(visibleFileStructure, visibleHasPendingAiChanges),
+    [visibleFileStructure, visibleHasPendingAiChanges],
   );
   useEffect(() => {
     if (!resolved.useFilePreview || previewHtmlFiles.length === 0) return;
@@ -351,8 +415,8 @@ export function WebLab2LevelPage({
   }, [previewHtmlFiles, previewPath, resolved.useFilePreview]);
   const previewSrcDoc = resolved.useFilePreview
     ? buildPreviewSrcDoc(
-        currentFileStructure,
-        hasPendingAiChanges,
+        visibleFileStructure,
+        visibleHasPendingAiChanges,
         previewPath,
       )
     : undefined;
@@ -403,6 +467,11 @@ export function WebLab2LevelPage({
     } satisfies ChatMessage;
   }, [additionalTutorPrompt, beginAiProposal, fileStructureOverride, fileStructureState]);
 
+  const handleAcceptAiChanges = useCallback(() => {
+    const acceptedFileStructure = acceptAiProposal();
+    handleSaveAiVersion(acceptedFileStructure);
+  }, [acceptAiProposal, handleSaveAiVersion]);
+
   const handleAddFileToTutor = useCallback((file: FileItem, path: string) => {
     setActiveTab("ai-tutor");
     window.setTimeout(() => {
@@ -419,6 +488,9 @@ export function WebLab2LevelPage({
 
   const resolvedVisualCue = resolved.instructionsDrawerVisualCue as InstructionsDrawerVisualCue;
   const resolvedAiExperiment = resolved.aiTutorInputExperiment as AiTutorInputExperiment;
+  const resolvedInstructionsContent = sessionInstructionsMarkdown.trim()
+    ? <MarkdownInstructions markdown={sessionInstructionsMarkdown} />
+    : undefined;
   const continueInHeader = resolved.continueButtonPlacement === "header";
   const resolvedMockTutorConfig: MockTutorConfig | undefined =
     resolvedTutorModeKind === "mock"
@@ -467,12 +539,13 @@ export function WebLab2LevelPage({
             resolved.instructionsDrawerInitialHeightRatio as number,
           showInstructionsDrawer: Boolean(resolved.showInstructionsDrawer),
           instructionsDrawerVisualCue: resolvedVisualCue,
+          instructionsContent: resolvedInstructionsContent,
           aiTutorInputExperiment: resolvedAiExperiment,
           mockTutorConfig: resolvedMockTutorConfig,
           onAddFileToProject: addFileToProject,
           availableTutorContextFiles,
           onTutorSubmit: resolvedTutorModeKind === "functional" ? handleTutorSubmit : undefined,
-          onAcceptAiChanges: resolvedTutorModeKind === "functional" ? acceptAiProposal : undefined,
+          onAcceptAiChanges: resolvedTutorModeKind === "functional" ? handleAcceptAiChanges : undefined,
           onRejectAiChanges: resolvedTutorModeKind === "functional" ? rejectAiProposal : undefined,
           showRubricTab,
           rubricData,
@@ -481,11 +554,19 @@ export function WebLab2LevelPage({
           devPanelOverrideResult: overrideResult,
           devPanelSessionValues: {
             additionalTutorPrompt,
+            [INSTRUCTIONS_MARKDOWN_DEV_KEY]: sessionInstructionsMarkdown,
             [EDITOR_READ_ONLY_STORAGE_KEY]: editorReadOnlyOverride,
           },
           onDevPanelSessionValueChange: (key, value) => {
             if (key === "additionalTutorPrompt") {
               setAdditionalTutorPrompt(String(value ?? ""));
+            } else if (key === INSTRUCTIONS_MARKDOWN_DEV_KEY) {
+              const nextValue = String(value ?? "");
+              setSessionInstructionsMarkdown(nextValue);
+              writeSessionInstructionsMarkdown(
+                instructionsMarkdownStorageKey,
+                nextValue,
+              );
             } else if (key === EDITOR_READ_ONLY_STORAGE_KEY) {
               setEditorReadOnlyOverride(Boolean(value));
             }
@@ -493,6 +574,11 @@ export function WebLab2LevelPage({
           onDevPanelSessionValueReset: (key) => {
             if (key === "additionalTutorPrompt") {
               resetAdditionalTutorPrompt();
+            } else if (key === INSTRUCTIONS_MARKDOWN_DEV_KEY) {
+              setSessionInstructionsMarkdown(instructionsMarkdown);
+              if (typeof window !== "undefined") {
+                window.sessionStorage.removeItem(instructionsMarkdownStorageKey);
+              }
             } else if (key === EDITOR_READ_ONLY_STORAGE_KEY) {
               setEditorReadOnlyOverride(false);
             }
@@ -507,10 +593,10 @@ export function WebLab2LevelPage({
         <Workspace
           viewMode={viewMode}
           setViewMode={setViewMode}
-          fileStructure={fileStructureState ?? fileStructureOverride ?? fileStructure}
-          selectedFile={selectedFile}
+          fileStructure={visibleFileStructure}
+          selectedFile={visibleSelectedFile}
           setSelectedFile={setSelectedFile}
-          openFiles={openFiles}
+          openFiles={visibleOpenFiles}
           openFolders={openFolders}
           toggleFolder={toggleFolder}
           openFile={openFile}
@@ -530,10 +616,11 @@ export function WebLab2LevelPage({
           onMoveFileTreeItem={moveFileTreeItem}
           preview={previewConfig}
           selectedHistoryVersion={selectedHistoryVersion}
+          selectedHistoryVersionLabel={selectedHistoryVersionLabel}
           showSavedTag={showSavedTag}
           onReturnToCurrentVersion={handleReturnToCurrentVersion}
-          aiChangedFiles={aiChangedFiles}
-          onFileContentChange={updateFileContent}
+          aiChangedFiles={isViewingHistoryVersion ? undefined : aiChangedFiles}
+          onFileContentChange={isViewingHistoryVersion ? undefined : updateFileContent}
         />
       </Lab2Shell>
 

@@ -33,16 +33,6 @@ const pythonLabDevFields: DevPanelField[] = [
     group: "Layout",
   },
   {
-    key: "instructionsDrawerVisualCue",
-    label: "Instructions cue",
-    type: "select",
-    options: [
-      { label: "None", value: "none" },
-      { label: "Inline link", value: "inline-link" },
-    ],
-    group: "Layout",
-  },
-  {
     key: "autoSeedTutorConversation",
     label: "Auto-seed tutor chat",
     type: "boolean",

@@ -1,160 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stellar Atlas</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar System Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <div class="app">
+<div id="app">
 
-    <!-- ===== TOP BAR ===== -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <span class="app-logo">&#x2728;</span>
-        <span class="app-name">Stellar Atlas</span>
-      </div>
-      <div class="topbar-right">
-        <span class="status-dot"></span>
-        <span class="status-label">Live Orbits</span>
-      </div>
-    </header>
-
-    <!-- ===== SIDEBAR: PLANET LIST ===== -->
-    <nav class="sidebar">
-      <div class="sidebar-heading">Planets</div>
-
-      <button class="planet-item">
-        <span class="planet-dot" style="background: #b5b5b5"></span>
-        <span class="planet-label">Mercury</span>
-        <span class="planet-dist">57.9M km</span>
-      </button>
-      <button class="planet-item">
-        <span class="planet-dot" style="background: #e8cda0"></span>
-        <span class="planet-label">Venus</span>
-        <span class="planet-dist">108.2M km</span>
-      </button>
-      <button class="planet-item active">
-        <span class="planet-dot" style="background: #4da6ff"></span>
-        <span class="planet-label">Earth</span>
-        <span class="planet-dist">149.6M km</span>
-      </button>
-      <button class="planet-item">
-        <span class="planet-dot" style="background: #e85d3a"></span>
-        <span class="planet-label">Mars</span>
-        <span class="planet-dist">227.9M km</span>
-      </button>
-      <button class="planet-item">
-        <span class="planet-dot" style="background: #c4956a"></span>
-        <span class="planet-label">Jupiter</span>
-        <span class="planet-dist">778.5M km</span>
-      </button>
-      <button class="planet-item">
-        <span class="planet-dot" style="background: #e8d374"></span>
-        <span class="planet-label">Saturn</span>
-        <span class="planet-dist">1.43B km</span>
-      </button>
-      <button class="planet-item">
-        <span class="planet-dot" style="background: #7ec8e3"></span>
-        <span class="planet-label">Uranus</span>
-        <span class="planet-dist">2.87B km</span>
-      </button>
-      <button class="planet-item">
-        <span class="planet-dot" style="background: #3f54ba"></span>
-        <span class="planet-label">Neptune</span>
-        <span class="planet-dist">4.5B km</span>
-      </button>
-
-      <div class="sidebar-footer">
-        <p>Built by Aaliyah M.</p>
-        <p>AP CS Principles — Period 3</p>
-      </div>
-    </nav>
-
-    <!-- ===== MAIN VIEWPORT ===== -->
-    <main class="viewport">
-      <div class="stars"></div>
-      <div class="stars stars-2"></div>
-
-      <div class="solar-system">
-        <div class="sun"></div>
-
-        <div class="orbit orbit-1">
-          <div class="planet mercury" title="Mercury"></div>
-        </div>
-        <div class="orbit orbit-2">
-          <div class="planet venus" title="Venus"></div>
-        </div>
-        <div class="orbit orbit-3">
-          <div class="planet earth" title="Earth">
-            <div class="moon"></div>
-          </div>
-        </div>
-        <div class="orbit orbit-4">
-          <div class="planet mars" title="Mars"></div>
-        </div>
-        <div class="orbit orbit-5">
-          <div class="planet jupiter" title="Jupiter"></div>
-        </div>
-        <div class="orbit orbit-6">
-          <div class="planet saturn" title="Saturn">
-            <div class="saturn-ring"></div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- ===== DETAIL PANEL ===== -->
-    <aside class="detail-panel">
-      <div class="detail-header">
-        <div class="detail-planet-dot" style="background: #4da6ff; box-shadow: 0 0 8px rgba(77,166,255,0.5)"></div>
-        <div>
-          <h2 class="detail-name">Earth</h2>
-          <p class="detail-type">Terrestrial Planet</p>
-        </div>
-      </div>
-
-      <div class="detail-stats">
-        <div class="stat">
-          <span class="stat-value">12,756 km</span>
-          <span class="stat-label">Diameter</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value">1</span>
-          <span class="stat-label">Moons</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value">365.25 d</span>
-          <span class="stat-label">Orbit</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value">15 °C</span>
-          <span class="stat-label">Avg Temp</span>
-        </div>
-      </div>
-
-      <div class="detail-body">
-        <p>
-          The only planet known to support life. Earth's atmosphere
-          and magnetic field protect us from solar radiation. 71% of
-          the surface is covered by water.
-        </p>
-      </div>
-
-      <div class="detail-tags">
-        <span class="tag">Habitable Zone</span>
-        <span class="tag">Atmosphere</span>
-        <span class="tag">Water</span>
-        <span class="tag">Magnetic Field</span>
-      </div>
-    </aside>
-
+  <!-- Left: planet list -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <h1>Our Solar System</h1>
+      <p>8 Planets &nbsp;·&nbsp; 1 Star</p>
+    </div>
+    <div id="planet-list"></div>
+    <div class="sidebar-footer">Avg. distance from Earth</div>
   </div>
 
+  <!-- Center: canvas -->
+  <div id="canvas-wrap">
+    <canvas id="solar-canvas"></canvas>
+    <div class="canvas-hint">Click a planet to explore</div>
+  </div>
+
+  <!-- Right: planet detail -->
+  <div id="info-panel">
+    <div class="info-inner" id="info-inner"></div>
+  </div>
+
+</div>
+
+<script src="main.js"></script>
 </body>
 </html>

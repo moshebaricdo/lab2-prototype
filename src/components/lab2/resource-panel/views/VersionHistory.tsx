@@ -1,12 +1,7 @@
 import { useMemo, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCloudArrowUp,
-  faAnglesDown,
-  faAnglesUp,
-  faArrowRotateLeft,
-  faSave,
-} from "@fortawesome/free-solid-svg-icons";
+import { AppButton } from "../../../ui/AppButton";
+import { AiTutorIcon } from "../../../ui/icons/AiTutorIcon";
+import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Tooltip } from "../../../ui/Tooltip";
 import { ScrollArea } from "../../../ui/scroll-area";
 import { SuccessAlert } from "../../../ui/SuccessAlert";
@@ -17,6 +12,8 @@ export interface VersionItem {
   label: string;
   description?: string;
   isAutoSave?: boolean;
+  isAiSave?: boolean;
+  createdAt?: string;
 }
 
 interface VersionHistoryProps {
@@ -43,7 +40,9 @@ export function VersionHistory({
   setShowSaveSuccessAlert,
 }: VersionHistoryProps) {
   const [internalSelectedVersion, setInternalSelectedVersion] = useState("current");
-  const [showAutoSaves, setShowAutoSaves] = useState(true);
+  const [expandedAutoSaveGroups, setExpandedAutoSaveGroups] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [versionDescription, setVersionDescription] = useState("");
 
   const selectedVersion = externalSelectedVersion ?? internalSelectedVersion;
@@ -52,21 +51,35 @@ export function VersionHistory({
     () => versions.find((item) => item.id === "current") ?? defaultVersions[0],
     [versions],
   );
-  const nonCurrentVersions = useMemo(
-    () =>
-      versions.filter(
-        (item) => item.id !== "current" && !item.isAutoSave && item.id !== "initial",
-      ),
-    [versions],
-  );
-  const initialVersion = useMemo(
-    () => versions.find((item) => item.id === "initial"),
-    [versions],
-  );
-  const autoSaveVersions = useMemo(
-    () => versions.filter((item) => item.isAutoSave),
-    [versions],
-  );
+  const timelineEntries = useMemo(() => {
+    const entries: Array<
+      | { type: "version"; version: VersionItem }
+      | { type: "autosaves"; id: string; versions: VersionItem[] }
+    > = [];
+    let pendingAutoSaves: VersionItem[] = [];
+
+    const flushAutoSaves = () => {
+      if (pendingAutoSaves.length === 0) return;
+      entries.push({
+        type: "autosaves",
+        id: pendingAutoSaves.map((version) => version.id).join(":"),
+        versions: pendingAutoSaves,
+      });
+      pendingAutoSaves = [];
+    };
+
+    for (const version of versions.filter((item) => item.id !== "current")) {
+      if (version.isAutoSave) {
+        pendingAutoSaves.push(version);
+      } else {
+        flushAutoSaves();
+        entries.push({ type: "version", version });
+      }
+    }
+
+    flushAutoSaves();
+    return entries;
+  }, [versions]);
 
   const handleVersionChange = (versionId: string) => {
     setInternalSelectedVersion(versionId);
@@ -85,6 +98,18 @@ export function VersionHistory({
   const handleRestoreVersion = (versionId: string) => {
     onRestoreVersion?.(versionId);
     setShowRestoreSuccessAlert?.(true);
+  };
+
+  const toggleAutoSaveGroup = (groupId: string) => {
+    setExpandedAutoSaveGroups((previous) => {
+      const next = new Set(previous);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
   };
 
   const renderVersionRow = (version: VersionItem) => {
@@ -112,14 +137,23 @@ export function VersionHistory({
                 className={styles.restoreButton}
               >
                 <span className={styles.iconSmall}>
-                  <FontAwesomeIcon icon={faArrowRotateLeft} />
+                  <FaIcon name="arrow-rotate-left" size="xs" />
                 </span>
                 <span>Restore</span>
               </button>
             ) : version.isAutoSave ? (
               <Tooltip content="Autosave version" position="top">
                 <span className={styles.autosaveIcon}>
-                  <FontAwesomeIcon icon={faCloudArrowUp} />
+                  <FaIcon name="cloud-arrow-up" size="s" />
+                </span>
+              </Tooltip>
+            ) : version.isAiSave ? (
+              <Tooltip content="AI Tutor save" position="top">
+                <span className={styles.aiSaveIcon}>
+                  <AiTutorIcon
+                    className={styles.aiSaveIconSvg}
+                    color="currentColor"
+                  />
                 </span>
               </Tooltip>
             ) : (
@@ -133,105 +167,113 @@ export function VersionHistory({
   };
 
   return (
-    <ScrollArea className={styles.root}>
-      <div className={styles.content}>
-        {showRestoreSuccessAlert ? (
-          <div className={styles.alertWrap}>
-            <SuccessAlert
-              message="Version successfully restored!"
-              onClose={() => setShowRestoreSuccessAlert?.(false)}
-            />
-          </div>
-        ) : null}
+    <div className={styles.root}>
+      <ScrollArea className={styles.scrollArea}>
+        <div className={styles.content}>
+          <div className={styles.section}>
+            <div className={styles.card}>
+              <div className={styles.row}>
+                <button
+                  onClick={() => handleVersionChange(currentVersion.id)}
+                  className={styles.rowMain}
+                >
+                  <span
+                    className={`${styles.radio} ${
+                      selectedVersion === currentVersion.id ? styles.radioSelected : ""
+                    }`}
+                  >
+                    {selectedVersion === currentVersion.id ? (
+                      <span className={styles.radioDot} />
+                    ) : null}
+                  </span>
+                  <p className={styles.label}>Current Version</p>
+                </button>
+              </div>
 
-        {showSaveSuccessAlert ? (
-          <div className={styles.alertWrap}>
+              <div className={styles.savePanel}>
+                <div className={styles.textareaWrap}>
+                  <textarea
+                    value={versionDescription}
+                    onChange={(event) => setVersionDescription(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "Enter" &&
+                        (event.metaKey || event.ctrlKey) &&
+                        versionDescription.trim()
+                      ) {
+                        handleSaveVersion();
+                      }
+                    }}
+                    placeholder="Describe your changes"
+                    className={styles.textarea}
+                  />
+                </div>
+
+                <button
+                  onClick={handleSaveVersion}
+                  disabled={!versionDescription.trim()}
+                  className={`${styles.saveButton} ${
+                    !versionDescription.trim() ? styles.saveButtonDisabled : ""
+                  }`}
+                >
+                  <span className={styles.buttonIcon}>
+                    <FaIcon name="floppy-disk" size="s" />
+                  </span>
+                  <span>Save current version</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {timelineEntries.map((entry) => {
+            if (entry.type === "version") {
+              return renderVersionRow(entry.version);
+            }
+
+            const isExpanded = expandedAutoSaveGroups.has(entry.id);
+            return (
+              <div key={entry.id}>
+                <div className={styles.section}>
+                  <div className={styles.connector} />
+                  <div className={styles.toggleWrap}>
+                    <AppButton
+                      variant="tertiary"
+                      tone="gray"
+                      size="xs"
+                      iconName={isExpanded ? "angles-up" : "angles-down"}
+                      onClick={() => toggleAutoSaveGroup(entry.id)}
+                    >
+                      {isExpanded ? "Hide" : "Show"} {entry.versions.length} auto-save
+                      {entry.versions.length === 1 ? "" : "s"}
+                    </AppButton>
+                  </div>
+                </div>
+
+                {isExpanded ? entry.versions.map(renderVersionRow) : null}
+              </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
+
+      {showSaveSuccessAlert || showRestoreSuccessAlert ? (
+        <div className={styles.toastWrap}>
+          {showSaveSuccessAlert ? (
             <SuccessAlert
               message="Successfully saved version."
               onClose={() => setShowSaveSuccessAlert?.(false)}
             />
-          </div>
-        ) : null}
+          ) : null}
 
-        <div className={styles.section}>
-          <div className={styles.card}>
-            <div className={styles.row}>
-              <button
-                onClick={() => handleVersionChange(currentVersion.id)}
-                className={styles.rowMain}
-              >
-                <span
-                  className={`${styles.radio} ${
-                    selectedVersion === currentVersion.id ? styles.radioSelected : ""
-                  }`}
-                >
-                  {selectedVersion === currentVersion.id ? (
-                    <span className={styles.radioDot} />
-                  ) : null}
-                </span>
-                <p className={styles.label}>Current Version</p>
-              </button>
-            </div>
-
-            <div className={styles.savePanel}>
-              <div className={styles.textareaWrap}>
-                <textarea
-                  value={versionDescription}
-                  onChange={(event) => setVersionDescription(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (
-                      event.key === "Enter" &&
-                      (event.metaKey || event.ctrlKey) &&
-                      versionDescription.trim()
-                    ) {
-                      handleSaveVersion();
-                    }
-                  }}
-                  placeholder="Describe your changes"
-                  className={styles.textarea}
-                />
-              </div>
-
-              <button
-                onClick={handleSaveVersion}
-                disabled={!versionDescription.trim()}
-                className={`${styles.saveButton} ${
-                  !versionDescription.trim() ? styles.saveButtonDisabled : ""
-                }`}
-              >
-                <span className={styles.buttonIcon}>
-                  <FontAwesomeIcon icon={faSave} />
-                </span>
-                <span>Save current version</span>
-              </button>
-            </div>
-          </div>
+          {showRestoreSuccessAlert ? (
+            <SuccessAlert
+              message="Version successfully restored!"
+              onClose={() => setShowRestoreSuccessAlert?.(false)}
+            />
+          ) : null}
         </div>
-
-        {nonCurrentVersions.map(renderVersionRow)}
-
-        {autoSaveVersions.length > 0 ? (
-          <div className={styles.section}>
-            <div className={styles.connector} />
-            <div className={styles.toggleWrap}>
-              <button
-                onClick={() => setShowAutoSaves((previous) => !previous)}
-                className={styles.toggleButton}
-              >
-                <span className={styles.iconSmall}>
-                  <FontAwesomeIcon icon={showAutoSaves ? faAnglesUp : faAnglesDown} />
-                </span>
-                <span>{showAutoSaves ? "Hide" : "Show"} {autoSaveVersions.length} auto-saves</span>
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {showAutoSaves ? autoSaveVersions.map(renderVersionRow) : null}
-
-        {initialVersion ? renderVersionRow(initialVersion) : null}
-      </div>
-    </ScrollArea>
+      ) : null}
+    </div>
   );
 }
 
