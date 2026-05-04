@@ -7,7 +7,7 @@ import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { ActionRow } from "./ActionRow";
 import { TutorActionCard } from "./TutorActionCard";
 import { ThinkingAnimation } from "./ThinkingAnimation";
-import type { ChatMessage } from "../../../../../types/chat";
+import type { ChatAttachment, ChatMessage, FileChange } from "../../../../../types/chat";
 import type { AiTutorInputExperiment } from "../../../../../types/tutor";
 import { copyTextToClipboard, FileChangesCard, renderMessageContent } from "./messageFormatting";
 import styles from "./AiTutorPanel.module.scss";
@@ -26,6 +26,14 @@ interface AiTutorMessageListProps {
   onMarkAttachmentAdded: (msgIndex: number, attachmentPath: string) => void;
   onActionCardUpdate: (msgIndex: number, newStatus: "added" | "dismissed") => void;
   onCodeChangeAction: (msgIndex: number, action: "accepted" | "rejected") => void;
+  onOpenFileChangeInEditor?: (change: FileChange) => void;
+  onOpenFileChangeInPreview?: (change: FileChange) => void;
+}
+
+function metadataLabelForAttachment(att: ChatAttachment) {
+  if (att.source === "code-reference") return att.timestamp;
+  if (att.source === "project") return undefined;
+  return att.timestamp ?? fileExtensionLabelFromName(att.fileName);
 }
 
 function MessageAttachments({
@@ -57,7 +65,7 @@ function MessageAttachments({
                 key={att.path}
                 fileName={att.fileName}
                 nameTitle={att.path}
-                extensionLabel={att.timestamp ?? ""}
+                extensionLabel={metadataLabelForAttachment(att)}
                 iconName={faIconForFileName(att.path)}
                 mode="static"
               />
@@ -74,7 +82,7 @@ function MessageAttachments({
                 key={att.path}
                 fileName={att.fileName}
                 nameTitle={att.path}
-                extensionLabel={att.timestamp ?? fileExtensionLabelFromName(att.fileName)}
+                extensionLabel={metadataLabelForAttachment(att)}
                 iconName={faIconForFileName(att.fileName)}
                 imageSrc={att.imageSrc}
                 mode="static"
@@ -94,7 +102,7 @@ function MessageAttachments({
                   key={att.path}
                   fileName={att.fileName}
                   nameTitle={att.path}
-                  extensionLabel={att.timestamp ?? fileExtensionLabelFromName(att.path)}
+                  extensionLabel={metadataLabelForAttachment(att)}
                   iconName={faIconForFileName(att.path)}
                   imageSrc={att.imageSrc}
                   mode={isUpload ? "add" : "static"}
@@ -115,7 +123,7 @@ function MessageAttachments({
                 key={att.path}
                 fileName={att.fileName}
                 nameTitle={att.path}
-                extensionLabel={att.timestamp ?? fileExtensionLabelFromName(att.path)}
+                extensionLabel={metadataLabelForAttachment(att)}
                 iconName={faIconForFileName(att.path)}
                 imageSrc={att.imageSrc}
                 mode="static"
@@ -134,7 +142,7 @@ function EmptyState() {
       <div className={styles.emptyStateIcon}>
         <FaIcon name="hands-clapping" size="l" />
       </div>
-      <h2 className={styles.emptyStateTitle}>Let&apos;s get started!</h2>
+      <h2 className={styles.emptyStateTitle}>How can I help?</h2>
       <p className={styles.emptyStateText}>
         You can ask AI Tutor to make changes to your project, for help with the level, or simply to discuss your ideas.
       </p>
@@ -156,6 +164,8 @@ export function AiTutorMessageList({
   onMarkAttachmentAdded,
   onActionCardUpdate,
   onCodeChangeAction,
+  onOpenFileChangeInEditor,
+  onOpenFileChangeInPreview,
 }: AiTutorMessageListProps) {
   const showTutorActionCards = inputExperiment === "tutor-action-card";
 
@@ -174,7 +184,11 @@ export function AiTutorMessageList({
           {showEmptyState && <EmptyState />}
 
           {chatMessages.map((msg, idx) => (
-            <div key={idx} className={styles.messageBlock}>
+            <div
+              key={idx}
+              className={styles.messageBlock}
+              data-tutor-message-index={idx}
+            >
               <MessageAttachments
                 msg={msg}
                 idx={idx}
@@ -199,6 +213,7 @@ export function AiTutorMessageList({
                     className={`${styles.messageRow} ${
                       msg.role === "user" ? styles.messageRowUser : styles.messageRowAssistant
                     }`}
+                    data-tutor-message-anchor={msg.role === "assistant" ? "assistant-reply-start" : undefined}
                   >
                     <div
                       className={`${styles.messageBubble} ${
@@ -210,7 +225,11 @@ export function AiTutorMessageList({
                       {renderMessageContent(msg.content)}
 
                       {msg.fileChanges && msg.fileChanges.length > 0 && (
-                        <FileChangesCard changes={msg.fileChanges} />
+                        <FileChangesCard
+                          changes={msg.fileChanges}
+                          onOpenFileInEditor={onOpenFileChangeInEditor}
+                          onOpenFileInPreview={onOpenFileChangeInPreview}
+                        />
                       )}
 
                       {msg.fileChanges && msg.codeChangeStatus === "pending" && (

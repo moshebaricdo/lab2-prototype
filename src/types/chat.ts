@@ -11,13 +11,17 @@ export interface ChatAttachment {
   /** Whether this file has been added to the project */
   addedToProject?: boolean;
   /** Where the file came from */
-  source?: "upload" | "project" | "code-reference";
+  source?: "upload" | "project" | "code-reference" | "preview-element";
   /** Optional text context sent to Tutor for project files or selected code. */
   content?: string;
   mimeType?: string;
   sizeBytes?: number;
   startLine?: number;
   endLine?: number;
+  previewPath?: string;
+  selector?: string;
+  elementId?: string;
+  tagName?: string;
 }
 
 export interface ActionCardData {
@@ -40,6 +44,8 @@ export interface ChatMessage {
   actionCard?: ActionCardData;
   /** Files the tutor created, modified, or deleted in this response. */
   fileChanges?: FileChange[];
+  /** Short AI-generated summary used when accepted changes create a history save. */
+  aiSaveTitle?: string;
   /** Accept/reject status for generated code changes. Shows action buttons when "pending". */
   codeChangeStatus?: "pending" | "accepted" | "rejected";
   /** When true, renders as a system-style alert instead of a chat bubble. */

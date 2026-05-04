@@ -22,6 +22,11 @@ const FILE_STATUS_ICON: Record<FileChange["status"], { name: "circle-plus" | "pe
   deleted: { name: "circle-trash", className: styles.fileChangesIconDeleted },
 };
 
+function pathBasename(path: string) {
+  const normalized = path.replace(/\\/g, "/");
+  return normalized.split("/").filter(Boolean).at(-1) ?? path;
+}
+
 export async function copyTextToClipboard(text: string) {
   if (navigator.clipboard?.writeText) {
     try {
@@ -97,17 +102,72 @@ function FileChangeDiffStat({ fc }: { fc: FileChange }) {
   );
 }
 
-export function FileChangesCard({ changes }: { changes: FileChange[] }) {
+function canOpenFileChangeInPreview(change: FileChange) {
+  return /\.(?:html|htm)$/i.test(change.fileName);
+}
+
+interface FileChangesCardProps {
+  changes: FileChange[];
+  onOpenFileInEditor?: (change: FileChange) => void;
+  onOpenFileInPreview?: (change: FileChange) => void;
+}
+
+export function FileChangesCard({
+  changes,
+  onOpenFileInEditor,
+  onOpenFileInPreview,
+}: FileChangesCardProps) {
   return (
     <div className={styles.fileChangesCard}>
       <div className={styles.fileChangesHeader}>Files modified</div>
       {changes.map((fc) => {
         const icon = FILE_STATUS_ICON[fc.status];
+        const canOpenInPreview = canOpenFileChangeInPreview(fc);
+        const displayFileName = pathBasename(fc.fileName);
+        const showActions = fc.status !== "deleted" && Boolean(
+          onOpenFileInEditor || (onOpenFileInPreview && canOpenInPreview),
+        );
         return (
-          <div key={fc.fileName} className={styles.fileChangesRow}>
+          <div
+            key={fc.fileName}
+            className={`${styles.fileChangesRow} ${showActions ? styles.fileChangesRowInteractive : ""}`}
+            tabIndex={showActions ? 0 : undefined}
+          >
             <FaIcon name={icon.name} size="xs" className={icon.className} />
-            <span className={styles.fileChangesName}>{fc.fileName}</span>
-            <FileChangeDiffStat fc={fc} />
+            <span className={styles.fileChangesName} title={fc.fileName}>
+              {displayFileName}
+            </span>
+            <span className={styles.fileChangesMeta}>
+              <span className={styles.fileChangesStatWrap}>
+                <FileChangeDiffStat fc={fc} />
+              </span>
+              {showActions && (
+                <span className={styles.fileChangesActions}>
+                  {onOpenFileInEditor && (
+                    <AppButton
+                      variant="tertiary"
+                      tone="gray"
+                      size="xs"
+                      iconName="code"
+                      aria-label={`Open ${displayFileName} in code editor`}
+                      title={`Open ${displayFileName} in code editor`}
+                      onClick={() => onOpenFileInEditor(fc)}
+                    />
+                  )}
+                  {onOpenFileInPreview && canOpenInPreview && (
+                    <AppButton
+                      variant="tertiary"
+                      tone="gray"
+                      size="xs"
+                      iconName="eye"
+                      aria-label={`Open ${displayFileName} in preview`}
+                      title={`Open ${displayFileName} in preview`}
+                      onClick={() => onOpenFileInPreview(fc)}
+                    />
+                  )}
+                </span>
+              )}
+            </span>
           </div>
         );
       })}

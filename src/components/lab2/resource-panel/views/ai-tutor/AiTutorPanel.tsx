@@ -10,11 +10,12 @@ import {
 } from "react";
 import { InstructionsDrawer } from "../../InstructionsDrawer";
 import type { InstructionsDrawerVisualCue } from "../../InstructionsDrawer";
-import type { ChatAttachment, ChatMessage } from "../../../../../types/chat";
+import type { ChatAttachment, ChatMessage, FileChange } from "../../../../../types/chat";
 import type {
   AiTutorInputExperiment,
   MockTutorConfig,
   TutorContextFile,
+  TutorRequestMode,
   TutorSubmitHandler,
 } from "../../../../../types/tutor";
 import { AiTutorComposer } from "./AiTutorComposer";
@@ -34,6 +35,17 @@ interface CodeAttachmentContext {
   fileName: string;
 }
 
+interface PreviewElementAttachmentDetail {
+  previewPath?: string;
+  tagName?: string;
+  id?: string;
+  classList?: string[];
+  selector?: string;
+  text?: string;
+  outerHTML?: string;
+  computedStyles?: Record<string, string>;
+}
+
 interface AiTutorPanelProps {
   chatMessages: ChatMessage[];
   setChatMessages: (messages: ChatMessage[]) => void;
@@ -47,11 +59,18 @@ interface AiTutorPanelProps {
   onAddFileToProject?: (fileName: string) => void;
   instructionsContent?: ReactNode;
   onTutorSubmit?: TutorSubmitHandler;
-  onAcceptAiChanges?: () => void;
+  onAcceptAiChanges?: (saveTitle?: string) => void;
   onRejectAiChanges?: () => void;
   availableContextFiles?: TutorContextFile[];
+  showModelSelector?: boolean;
+  tutorRequestMode: TutorRequestMode;
+  setTutorRequestMode: (mode: TutorRequestMode) => void;
+  hasPendingAiChanges?: boolean;
+  isRequestRunning?: boolean;
   onRequestRunningChange?: (isRunning: boolean) => void;
   clearChatSignal?: number;
+  onOpenFileChangeInEditor?: (change: FileChange) => void;
+  onOpenFileChangeInPreview?: (change: FileChange) => void;
 }
 
 function resolveSeedConversation(
@@ -73,6 +92,22 @@ function resolveMockResponse(
   return typeof response === "function" ? response(input, conversation) : response;
 }
 
+function truncatePreviewText(text: string) {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (normalized.length <= 32) return normalized;
+  return `${normalized.slice(0, 29)}...`;
+}
+
+function formatPreviewElementAttachmentName(detail: PreviewElementAttachmentDetail) {
+  const tagName = (detail.tagName || "element").toLowerCase();
+  const text = detail.text ? truncatePreviewText(detail.text) : "";
+
+  if (text) return `${tagName}: "${text}"`;
+  if (detail.id) return `${tagName}#${detail.id}`;
+  if (detail.classList?.[0]) return `${tagName}.${detail.classList[0]}`;
+  return `Selected ${tagName}`;
+}
+
 export function AiTutorPanel({
   chatMessages,
   setChatMessages,
@@ -89,8 +124,15 @@ export function AiTutorPanel({
   onAcceptAiChanges,
   onRejectAiChanges,
   availableContextFiles = [],
+  showModelSelector = true,
+  tutorRequestMode,
+  setTutorRequestMode,
+  hasPendingAiChanges = false,
+  isRequestRunning = false,
   onRequestRunningChange,
   clearChatSignal = 0,
+  onOpenFileChangeInEditor,
+  onOpenFileChangeInPreview,
 }: AiTutorPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
@@ -99,6 +141,8 @@ export function AiTutorPanel({
   const dragDepthRef = useRef(0);
   const requestSerialRef = useRef(0);
   const hasSeededOnMountRef = useRef(false);
+  const reportedLocalRunningRef = useRef(false);
+  const pendingAssistantScrollIndexRef = useRef<number | null>(null);
   const [maxDrawerHeight, setMaxDrawerHeight] = useState<number | null>(null);
   const [drawerHeight, setDrawerHeight] = useState(0);
   const [drawerIsOpen, setDrawerIsOpen] = useState(true);
@@ -122,6 +166,11 @@ export function AiTutorPanel({
     () => new Map(availableContextFiles.map((file) => [file.path, file])),
     [availableContextFiles],
   );
+  const topPadding =
+    showInstructionsDrawer && drawerIsOpen ? drawerHeight + 40 : showInstructionsDrawer ? 40 : 8;
+  const effectiveIsThinking = isThinking || isRequestRunning;
+  const previousChatMessageCountRef = useRef(chatMessages.length);
+  const previousEffectiveIsThinkingRef = useRef(effectiveIsThinking);
 
   const resetComposerState = useCallback(() => {
     setAttachedFiles([]);
@@ -133,9 +182,24 @@ export function AiTutorPanel({
   }, []);
 
   useEffect(() => {
-    onRequestRunningChange?.(isThinking);
-    return () => onRequestRunningChange?.(false);
+    if (isThinking) {
+      reportedLocalRunningRef.current = true;
+      onRequestRunningChange?.(true);
+      return;
+    }
+
+    if (reportedLocalRunningRef.current) {
+      reportedLocalRunningRef.current = false;
+      onRequestRunningChange?.(false);
+    }
   }, [isThinking, onRequestRunningChange]);
+
+  useEffect(() => () => {
+    if (reportedLocalRunningRef.current) {
+      reportedLocalRunningRef.current = false;
+      onRequestRunningChange?.(false);
+    }
+  }, [onRequestRunningChange]);
 
   useEffect(() => {
     if (clearChatSignal === 0) return;
@@ -146,30 +210,48 @@ export function AiTutorPanel({
     resetComposerState();
   }, [clearChatSignal, resetComposerState]);
 
-  const updateScrollFades = useCallback(() => {
-    const el = scrollWrapRef.current?.querySelector<HTMLElement>(
+  const getScrollViewport = useCallback(() => {
+    return scrollWrapRef.current?.querySelector<HTMLElement>(
       '[data-slot="scroll-area-viewport"]',
-    );
+    ) ?? null;
+  }, []);
+
+  const updateScrollFades = useCallback(() => {
+    const el = getScrollViewport();
     if (!el) return;
     setCanScrollUp(el.scrollTop > 2);
     setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 2);
-  }, []);
+  }, [getScrollViewport]);
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
-      const el = scrollWrapRef.current?.querySelector<HTMLElement>(
-        '[data-slot="scroll-area-viewport"]',
-      );
+      const el = getScrollViewport();
       if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     });
-  }, []);
+  }, [getScrollViewport]);
+
+  const scrollToAssistantReplyStart = useCallback((messageIndex: number) => {
+    requestAnimationFrame(() => {
+      const viewport = getScrollViewport();
+      const anchor = scrollWrapRef.current?.querySelector<HTMLElement>(
+        `[data-tutor-message-index="${messageIndex}"] [data-tutor-message-anchor="assistant-reply-start"]`,
+      );
+      if (!viewport || !anchor) return;
+
+      const viewportRect = viewport.getBoundingClientRect();
+      const anchorRect = anchor.getBoundingClientRect();
+      const nextTop = viewport.scrollTop + anchorRect.top - viewportRect.top - topPadding;
+      viewport.scrollTo({ top: nextTop, behavior: "smooth" });
+    });
+  }, [getScrollViewport, topPadding]);
 
   const appendTutorResponse = useCallback((response: ChatMessage) => {
     setIsThinking(false);
-    setChatMessages([...chatMessagesRef.current, response]);
+    const nextMessages = [...chatMessagesRef.current, response];
+    pendingAssistantScrollIndexRef.current = nextMessages.length - 1;
+    setChatMessages(nextMessages);
     setGeneratedTutorResponse(null);
-    setTimeout(scrollToBottom, 50);
-  }, [scrollToBottom, setChatMessages]);
+  }, [setChatMessages]);
 
   const handleThinkingComplete = useCallback(() => {
     setIsThinking(false);
@@ -187,9 +269,33 @@ export function AiTutorPanel({
   }, [appendTutorResponse, generatedTutorResponse, isThinking, onTutorSubmit]);
 
   useEffect(() => {
-    const el = scrollWrapRef.current?.querySelector<HTMLElement>(
-      '[data-slot="scroll-area-viewport"]',
-    );
+    const pendingIndex = pendingAssistantScrollIndexRef.current;
+    const previousMessageCount = previousChatMessageCountRef.current;
+    const wasThinking = previousEffectiveIsThinkingRef.current;
+    const latestMessageIndex = chatMessages.length - 1;
+    const latestMessage = chatMessages[latestMessageIndex];
+
+    previousChatMessageCountRef.current = chatMessages.length;
+    previousEffectiveIsThinkingRef.current = effectiveIsThinking;
+
+    if (pendingIndex !== null) {
+      pendingAssistantScrollIndexRef.current = null;
+      scrollToAssistantReplyStart(pendingIndex);
+      return;
+    }
+
+    if (
+      chatMessages.length > previousMessageCount &&
+      wasThinking &&
+      latestMessage?.role === "assistant" &&
+      !latestMessage.isAlert
+    ) {
+      scrollToAssistantReplyStart(latestMessageIndex);
+    }
+  }, [chatMessages, effectiveIsThinking, scrollToAssistantReplyStart]);
+
+  useEffect(() => {
+    const el = getScrollViewport();
     if (!el) return;
     updateScrollFades();
     el.addEventListener("scroll", updateScrollFades, { passive: true });
@@ -199,7 +305,7 @@ export function AiTutorPanel({
       el.removeEventListener("scroll", updateScrollFades);
       ro.disconnect();
     };
-  }, [updateScrollFades, chatMessages.length]);
+  }, [getScrollViewport, updateScrollFades, chatMessages.length]);
 
   useEffect(() => {
     if (!showInstructionsDrawer) {
@@ -274,17 +380,72 @@ export function AiTutorPanel({
     return () => window.removeEventListener("weblab:add-project-file-to-tutor", handler);
   }, []);
 
-  const topPadding =
-    showInstructionsDrawer && drawerIsOpen ? drawerHeight + 40 : showInstructionsDrawer ? 40 : 8;
-  const canSend = Boolean(chatInput.trim() || attachedFiles.length > 0);
-  const showEmptyState = chatMessages.length === 0 && !isThinking;
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<PreviewElementAttachmentDetail>).detail ?? {};
+      const previewPath = detail.previewPath ?? "preview";
+      const tagName = detail.tagName ?? "element";
+      const elementLabel = formatPreviewElementAttachmentName(detail);
+      const path = `preview-elements/${previewPath}#${detail.id || detail.selector || tagName}`;
+      const timestamp = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      const classSummary = detail.classList?.length
+        ? detail.classList.join(", ")
+        : "None";
+      const styleSummary = detail.computedStyles
+        ? Object.entries(detail.computedStyles)
+            .filter(([, value]) => Boolean(value))
+            .map(([property, value]) => `${property}: ${value}`)
+            .join("\n")
+        : "No computed styles captured.";
+
+      const attachment: ChatAttachment = {
+        fileName: elementLabel,
+        path,
+        imageSrc: null,
+        timestamp,
+        source: "preview-element",
+        previewPath,
+        selector: detail.selector,
+        elementId: detail.id,
+        tagName,
+        content: [
+          "Selected preview element",
+          `Page: ${previewPath}`,
+          `Selector: ${detail.selector ?? elementLabel}`,
+          `Tag: ${tagName}`,
+          `ID: ${detail.id || "None"}`,
+          `Classes: ${classSummary}`,
+          detail.text ? `Text: ${detail.text}` : "Text: None",
+          "Computed styles:",
+          styleSummary,
+          "Rendered HTML:",
+          detail.outerHTML || "No HTML snippet captured.",
+        ].join("\n"),
+      };
+
+      setUploadedAttachmentContexts((prev) => ({ ...prev, [path]: attachment }));
+      setAttachedFiles((prev) => prev.includes(path) ? prev : [...prev, path]);
+    };
+
+    window.addEventListener("weblab:add-preview-element-to-tutor", handler);
+    return () => window.removeEventListener("weblab:add-preview-element-to-tutor", handler);
+  }, []);
+
+  const canSend = Boolean(chatInput.trim() || attachedFiles.length > 0) &&
+    !effectiveIsThinking &&
+    !hasPendingAiChanges;
+  const showEmptyState = chatMessages.length === 0 && !effectiveIsThinking;
 
   const formatUserMessage = () => {
     const trimmedMessage = chatInput.trim();
     if (!trimmedMessage && attachedFiles.length === 0) return null;
     if (attachedFiles.length === 0) return trimmedMessage;
 
-    const attachmentPrefix = `Attached files: ${attachedFiles.join(", ")}`;
+    const attachedFileLabels = attachedFiles.map((filePath) => {
+      const attachment = uploadedAttachmentContexts[filePath];
+      return attachment?.fileName ?? filePath;
+    });
+    const attachmentPrefix = `Attached files: ${attachedFileLabels.join(", ")}`;
     return trimmedMessage ? `${attachmentPrefix}\n\n${trimmedMessage}` : attachmentPrefix;
   };
 
@@ -401,8 +562,9 @@ export function AiTutorPanel({
   };
 
   const handleCodeChangeAction = (msgIndex: number, action: "accepted" | "rejected") => {
+    const msg = chatMessages[msgIndex];
     if (action === "accepted") {
-      onAcceptAiChanges?.();
+      onAcceptAiChanges?.(msg?.aiSaveTitle);
     } else {
       onRejectAiChanges?.();
     }
@@ -415,8 +577,8 @@ export function AiTutorPanel({
       role: "assistant",
       content:
         action === "accepted"
-          ? "Aaliyah accepted this suggestion."
-          : "Aaliyah dismissed this suggestion.",
+          ? "You accepted this suggestion."
+          : "You dismissed this suggestion.",
       isAlert: true,
       alertVariant: action === "accepted" ? "accepted" : "rejected",
     };
@@ -425,6 +587,7 @@ export function AiTutorPanel({
   };
 
   const handleSendMessage = () => {
+    if (!canSend) return;
     const userMessage = formatUserMessage();
     if (!userMessage) return;
 
@@ -464,7 +627,7 @@ export function AiTutorPanel({
 
     if (onTutorSubmit) {
       setIsThinking(true);
-      onTutorSubmit(submittedContent, newMessages)
+      onTutorSubmit(submittedContent, newMessages, tutorRequestMode)
         .then((response) => {
           if (requestSerialRef.current !== requestId) return;
           setGeneratedTutorResponse(response ?? {
@@ -570,13 +733,15 @@ export function AiTutorPanel({
         showEmptyState={showEmptyState}
         topPadding={topPadding}
         chatMessages={chatMessages}
-        isThinking={isThinking}
+        isThinking={effectiveIsThinking}
         autoCompleteThinking={!onTutorSubmit}
         inputExperiment={inputExperiment}
         onThinkingComplete={handleThinkingComplete}
         onMarkAttachmentAdded={handleMarkAttachmentAdded}
         onActionCardUpdate={handleActionCardUpdate}
         onCodeChangeAction={handleCodeChangeAction}
+        onOpenFileChangeInEditor={onOpenFileChangeInEditor}
+        onOpenFileChangeInPreview={onOpenFileChangeInPreview}
       />
 
       <div ref={inputRef}>
@@ -589,6 +754,9 @@ export function AiTutorPanel({
           uploadedAttachmentContexts={uploadedAttachmentContexts}
           codeAttachmentTimestamps={codeAttachmentTimestamps}
           isDragOverInput={isDragOverInput}
+          showModelSelector={showModelSelector}
+          tutorRequestMode={tutorRequestMode}
+          setTutorRequestMode={setTutorRequestMode}
           fileInputRef={fileInputRef}
           canSend={canSend}
           onSend={handleSendMessage}

@@ -23,7 +23,6 @@ const sharedAttachmentsData: ChatAttachment[] = [
   {
     fileName: "index.html",
     path: "My Project/index.html",
-    timestamp: "12:56PM",
     source: "project",
   },
 ];

@@ -1,5 +1,6 @@
 import type { ChatMessage } from "../../types/chat";
 import type { FileItem } from "../../types/file";
+import type { TutorRequestMode } from "../../types/tutor";
 
 export type TutorFileStatus = "new" | "modified" | "deleted";
 
@@ -19,7 +20,33 @@ export interface TutorPatchChange {
 
 export interface TutorPatchResponse {
   message?: string;
+  saveTitle?: string;
   changes?: TutorPatchChange[];
+}
+
+export type TutorStructuredEditStrategy = "replace" | "searchReplace" | "delete";
+
+export interface TutorStructuredReplacement {
+  search: string;
+  replace: string;
+  replaceAll?: boolean;
+}
+
+export interface TutorStructuredEdit {
+  path: string;
+  strategy: TutorStructuredEditStrategy;
+  content?: string;
+  replacements?: TutorStructuredReplacement[];
+}
+
+export interface TutorStructuredEditResponse {
+  message?: string;
+  saveTitle?: string;
+  edits?: TutorStructuredEdit[];
+}
+
+export interface TutorGuidanceResponse {
+  message?: string;
 }
 
 export type TutorValidatedChange = {
@@ -34,6 +61,7 @@ export type TutorValidationResult =
   | {
       ok: true;
       message: string;
+      saveTitle?: string;
       changes: TutorValidatedChange[];
     }
   | {
@@ -43,6 +71,7 @@ export type TutorValidationResult =
 
 export type TutorEditResult = {
   message: string;
+  saveTitle?: string;
   changes: TutorValidatedChange[];
 };
 
@@ -51,6 +80,7 @@ export interface TutorRequest {
   conversation?: ChatMessage[];
   files: FileItem[];
   additionalSystemPrompt?: string;
+  requestMode?: TutorRequestMode;
 }
 
 export type TutorChatMessageContent =

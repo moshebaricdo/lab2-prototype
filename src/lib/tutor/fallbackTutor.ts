@@ -194,6 +194,7 @@ function getCannedLayoutEdit(message: string, files: FileItem[]): TutorEditResul
   return {
     message:
       "I interpreted the bottom detail panel as the planet fact panel and moved it into a right-side sidebar with a vertical layout. Review the diffs in `index.html` and `style.css`, then accept the changes if the layout feels right.",
+    saveTitle: "Move detail panel into sidebar layout",
     changes,
   };
 }
@@ -232,6 +233,7 @@ function getCannedPlanetClickEdit(message: string, files: FileItem[]): TutorEdit
   return {
     message:
       "I added a dedicated `script.js` file that stores details for each planet, listens for clicks on the planet list, updates the active state, and rewrites the existing detail panel instead of duplicating the Earth markup.",
+    saveTitle: "Add planet click interactions",
     changes,
   };
 }

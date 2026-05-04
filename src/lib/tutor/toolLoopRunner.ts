@@ -11,8 +11,11 @@ import type {
 } from "./types";
 import { TutorWorkspaceEditor } from "./workspaceEditor";
 
-const MAX_TOOL_LOOP_STEPS = 10;
+const MAX_TOOL_LOOP_STEPS = 14;
 const MAX_REPEATED_TOOL_FAILURES = 2;
+const MAX_HISTORY_TOOL_ARGUMENT_CHARS = 1200;
+const MAX_HISTORY_TOOL_RESULT_CONTENT_CHARS = 1200;
+const MAX_FAILURE_CONTENT_PREVIEW_CHARS = 1600;
 
 const fileTools: TutorToolDefinition[] = [
   {
@@ -123,8 +126,12 @@ const fileTools: TutorToolDefinition[] = [
         type: "object",
         properties: {
           message: { type: "string" },
+          saveTitle: {
+            type: ["string", "null"],
+            description: "Short commit-style summary for the accepted AI save. One sentence max, no markdown, under 72 characters.",
+          },
         },
-        required: ["message"],
+        required: ["message", "saveTitle"],
         additionalProperties: false,
       },
       strict: true,
@@ -147,6 +154,102 @@ function parseToolArguments(raw: string) {
 
 function toolResult(content: unknown) {
   return JSON.stringify(content);
+}
+
+function compactString(value: string, maxChars: number) {
+  if (value.length <= maxChars) return value;
+  const headLength = Math.floor(maxChars * 0.6);
+  const tailLength = maxChars - headLength;
+  return `${value.slice(0, headLength)}\n\n[... ${value.length - maxChars} chars omitted ...]\n\n${value.slice(-tailLength)}`;
+}
+
+function compactToolArgumentsForHistory(name: string, rawArguments: string) {
+  if (!rawArguments || rawArguments.length <= MAX_HISTORY_TOOL_ARGUMENT_CHARS) {
+    return rawArguments;
+  }
+
+  try {
+    const args = JSON.parse(rawArguments) as Record<string, unknown>;
+    const compacted: Record<string, unknown> = { ...args };
+    for (const key of ["content", "search", "replace"]) {
+      if (typeof compacted[key] === "string") {
+        compacted[key] = compactString(compacted[key], MAX_HISTORY_TOOL_ARGUMENT_CHARS);
+      }
+    }
+    compacted._historyCompacted = `Large ${name} arguments were compacted after execution; read the file again if exact current content is needed.`;
+    return JSON.stringify(compacted);
+  } catch {
+    return JSON.stringify({
+      _historyCompacted: `Large ${name} arguments were compacted after execution; original arguments were ${rawArguments.length} chars.`,
+    });
+  }
+}
+
+function compactAssistantMessageForHistory(message: TutorToolChatMessage): TutorToolChatMessage {
+  if (!message.tool_calls?.length) {
+    return message;
+  }
+
+  return {
+    ...message,
+    tool_calls: message.tool_calls.map((toolCall) => ({
+      ...toolCall,
+      function: {
+        ...toolCall.function,
+        arguments: compactToolArgumentsForHistory(
+          toolCall.function.name,
+          toolCall.function.arguments,
+        ),
+      },
+    })),
+  };
+}
+
+function compactToolResultContentForHistory(content: TutorToolChatMessage["content"]) {
+  if (typeof content !== "string" || content.length <= MAX_HISTORY_TOOL_RESULT_CONTENT_CHARS) {
+    return content;
+  }
+
+  try {
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    if (typeof parsed.content !== "string") {
+      return compactString(content, MAX_HISTORY_TOOL_RESULT_CONTENT_CHARS);
+    }
+
+    const originalContent = parsed.content;
+    const compacted = {
+      ...parsed,
+      contentPreview: compactString(originalContent, MAX_HISTORY_TOOL_RESULT_CONTENT_CHARS),
+      contentLength: originalContent.length,
+      content: undefined,
+      _historyCompacted: "Historical tool result content was compacted after the model consumed it once; call read_file again if exact content is needed.",
+    };
+    delete compacted.content;
+    return JSON.stringify(compacted);
+  } catch {
+    return compactString(content, MAX_HISTORY_TOOL_RESULT_CONTENT_CHARS);
+  }
+}
+
+function compactMessagesForRequest(messages: TutorToolChatMessage[]) {
+  let lastAssistantToolCallIndex = -1;
+  messages.forEach((message, index) => {
+    if (message.role === "assistant" && message.tool_calls?.length) {
+      lastAssistantToolCallIndex = index;
+    }
+  });
+
+  return messages.map((message, index) => {
+    const isPendingToolResult = lastAssistantToolCallIndex >= 0 && index > lastAssistantToolCallIndex;
+    if (isPendingToolResult || message.role !== "tool") {
+      return message;
+    }
+
+    return {
+      ...message,
+      content: compactToolResultContentForHistory(message.content),
+    };
+  });
 }
 
 function logTutorInfo(label: string, data: unknown) {
@@ -192,8 +295,10 @@ function buildToolFailureFeedback(
 
   if (name === "patch_file" && path) {
     try {
-      feedback.currentContent = workspace.readFile(path);
-      feedback.instruction = "The patch failed against the current file content. Use this currentContent to create a new exact patch, or use replace_file with the complete updated file.";
+      const currentContent = workspace.readFile(path);
+      feedback.currentContentPreview = compactString(currentContent, MAX_FAILURE_CONTENT_PREVIEW_CHARS);
+      feedback.currentContentLength = currentContent.length;
+      feedback.instruction = "The patch failed against the current file content. Use the preview to choose a smaller exact patch, or call read_file if more context is needed.";
     } catch {
       feedback.availableFiles = workspace.listFiles();
     }
@@ -243,11 +348,13 @@ function validateWorkspaceResult({
   files,
   message,
   responseMessage,
+  saveTitle,
 }: {
   workspace: TutorWorkspaceEditor;
   files: FileItem[];
   message: string;
   responseMessage: string;
+  saveTitle?: string;
 }) {
   const changes = workspace.getChanges();
   const validation = validateTutorChanges(
@@ -255,6 +362,7 @@ function validateWorkspaceResult({
     files,
     message,
     responseMessage,
+    saveTitle,
   );
   return validation;
 }
@@ -289,17 +397,19 @@ export async function runTutorToolLoop({
 
   for (let step = 0; step < MAX_TOOL_LOOP_STEPS; step += 1) {
     logTutorInfo("Step", { step: step + 1 });
-    const assistantMessage = await provider.requestToolStep(messages, fileTools);
+    const requestMessages = compactMessagesForRequest(messages);
+    const assistantMessage = await provider.requestToolStep(requestMessages, fileTools);
     if (!assistantMessage) {
       console.info("[TutorToolLoop] No API key; using fallback.");
       return { kind: "no-key" };
     }
 
-    messages.push({
+    const historyAssistantMessage = compactAssistantMessageForHistory({
       role: "assistant",
       content: assistantMessage.content ?? null,
       tool_calls: assistantMessage.tool_calls,
     });
+    messages.push(historyAssistantMessage);
 
     if (!assistantMessage.tool_calls?.length) {
       const responseMessage =
@@ -335,7 +445,14 @@ export async function runTutorToolLoop({
         if (name === "finish") {
           const responseMessage = String(args.message ?? "").trim() ||
             "I made a set of project edits for you to review.";
-          const validation = validateWorkspaceResult({ workspace, files, message, responseMessage });
+          const saveTitle = typeof args.saveTitle === "string" ? args.saveTitle : undefined;
+          const validation = validateWorkspaceResult({
+            workspace,
+            files,
+            message,
+            responseMessage,
+            saveTitle,
+          });
           if (!("errors" in validation)) {
             logTutorInfo("Validation passed", {
               changes: validation.changes.map((change) => `${change.status}:${change.fileName}`),
@@ -379,9 +496,9 @@ export async function runTutorToolLoop({
           failureCount,
           feedback: {
             ...feedback,
-            currentContent: typeof feedback.currentContent === "string"
-              ? `[${feedback.currentContent.length} chars]`
-              : feedback.currentContent,
+            currentContentPreview: typeof feedback.currentContentPreview === "string"
+              ? `[${feedback.currentContentPreview.length} chars]`
+              : feedback.currentContentPreview,
           },
         });
         messages.push({
@@ -390,10 +507,25 @@ export async function runTutorToolLoop({
           content: toolResult(feedback),
         });
         if (failureCount >= MAX_REPEATED_TOOL_FAILURES) {
+          const validation = validateWorkspaceResult({
+            workspace,
+            files,
+            message,
+            responseMessage:
+              "I made the requested project edit. Review the diff to confirm it looks right.",
+          });
+          if (!("errors" in validation)) {
+            logTutorInfo("Recovered valid changes after repeated tool failure", {
+              changes: validation.changes.map((change) => `${change.status}:${change.fileName}`),
+            });
+            return { kind: "ok", result: validation };
+          }
+          lastErrors = validation.errors;
           logTutorError("Stopping repeated tool failure", {
             name,
             failureCount,
             error: message,
+            validationErrors: validation.errors,
           });
           return {
             kind: "failed",

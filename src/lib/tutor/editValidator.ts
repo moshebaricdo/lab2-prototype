@@ -6,6 +6,7 @@ import type {
   TutorValidatedChange,
   TutorValidationResult,
 } from "./types";
+import { normalizeTutorSaveTitle } from "./saveTitle";
 
 interface FlatFile {
   fileName: string;
@@ -17,14 +18,15 @@ interface FlatFile {
 const PLACEHOLDER_PATTERN =
   /(\.\.\.|…)\s*(rest|remaining|same)|rest of (the )?(code|file)|unchanged|same as before|omitted for brevity/i;
 const INTERACTIVE_REQUEST_PATTERN =
-  /(click|clickable|tap|select|selected|interactive|javascript|\bjs\b|event listener|dynamic|update\s+(the\s+)?(detail|info|panel)|change\s+(the\s+)?(detail|info|panel))/i;
+  /\b(click|clickable|tap|select|selected|interactive|javascript|\bjs\b|event listener|dynamic|hover\w*|toggl\w*|open\w*|clos\w*|show\w*|hid\w*|dropdown|modal|submit|filter|sort|animate|animation)\b|update\s+(the\s+)?\w+\s+when/i;
+const REQUIRES_NEW_BEHAVIOR_PATTERN =
+  /\b(click|clickable|tap|select|selected|interactive|javascript|\bjs\b|event listener|dynamic|hover\w*|toggl\w*|dropdown|modal|submit|filter|sort|animate|animation)\b|\b(add|create|make|wire|implement)\b.{0,50}\b(open|close|show|hide|toggle|update)\b/i;
 const EDIT_REQUEST_PATTERN =
-  /\b(add|adjust|change|create|delete|edit|fix|hook up|implement|make|modify|move|remove|replace|resize|restyle|style|turn|update|wire)\b|sidebar|side\s*bar|layout|panel|button|clickable|interactive/i;
+  /\b(add|adjust|change|create|delete|edit|fix|hook up|implement|make|modify|move|remove|replace|resize|restyle|style|turn|update|wire)\b|sidebar|side\s*bar|layout|panel|button|clickable|interactive|responsive|mobile|menu/i;
 const JAVASCRIPT_SIGNAL_PATTERN =
   /<script\b|addEventListener|onclick\s*=|querySelector|getElementById|dataset|classList|function\s+\w+\s*\(|=>/i;
 const JAVASCRIPT_SIGNAL_COUNT_PATTERN =
   /<script\b|addEventListener|onclick\s*=|querySelector|getElementById|dataset|classList|function\s+\w+\s*\(|=>/gi;
-const DUPLICATION_REQUEST_PATTERN = /\b(duplicate|copy|clone|another|second)\b/i;
 
 function getEffectiveFileContent(file: FileItem) {
   return file.proposedStatus && file.proposedStatus !== "deleted"
@@ -61,30 +63,64 @@ function countOccurrences(content: string, search: string) {
   return count;
 }
 
-export function countChangedLines(before = "", after = "") {
-  const beforeLines = before.split("\n");
-  const afterLines = after.split("\n");
-  const max = Math.max(beforeLines.length, afterLines.length);
-  let added = 0;
-  let removed = 0;
+function splitDiffLines(content: string) {
+  if (!content) return [];
+  const withoutTerminalNewline = content.endsWith("\n")
+    ? content.slice(0, -1)
+    : content;
+  return withoutTerminalNewline ? withoutTerminalNewline.split("\n") : [];
+}
 
-  for (let index = 0; index < max; index += 1) {
-    const beforeLine = beforeLines[index];
-    const afterLine = afterLines[index];
-    if (beforeLine === afterLine) continue;
-    if (beforeLine != null && afterLine == null) {
-      removed += 1;
-    } else if (beforeLine == null && afterLine != null) {
-      added += 1;
-    } else {
-      added += 1;
-      removed += 1;
+function longestCommonSubsequenceLength(beforeLines: string[], afterLines: string[]) {
+  let previous = new Array(afterLines.length + 1).fill(0);
+  let current = new Array(afterLines.length + 1).fill(0);
+
+  for (let beforeIndex = 0; beforeIndex < beforeLines.length; beforeIndex += 1) {
+    for (let afterIndex = 0; afterIndex < afterLines.length; afterIndex += 1) {
+      current[afterIndex + 1] = beforeLines[beforeIndex] === afterLines[afterIndex]
+        ? previous[afterIndex] + 1
+        : Math.max(previous[afterIndex + 1], current[afterIndex]);
     }
+    const nextPrevious = current;
+    current = previous;
+    previous = nextPrevious;
+    current.fill(0);
   }
 
+  return previous[afterLines.length];
+}
+
+export function countChangedLines(before = "", after = "") {
+  const originalBeforeLines = splitDiffLines(before);
+  const originalAfterLines = splitDiffLines(after);
+  let start = 0;
+
+  while (
+    start < originalBeforeLines.length &&
+    start < originalAfterLines.length &&
+    originalBeforeLines[start] === originalAfterLines[start]
+  ) {
+    start += 1;
+  }
+
+  let beforeEnd = originalBeforeLines.length;
+  let afterEnd = originalAfterLines.length;
+  while (
+    beforeEnd > start &&
+    afterEnd > start &&
+    originalBeforeLines[beforeEnd - 1] === originalAfterLines[afterEnd - 1]
+  ) {
+    beforeEnd -= 1;
+    afterEnd -= 1;
+  }
+
+  const beforeLines = originalBeforeLines.slice(start, beforeEnd);
+  const afterLines = originalAfterLines.slice(start, afterEnd);
+  const unchangedLines = longestCommonSubsequenceLength(beforeLines, afterLines);
+
   return {
-    linesAdded: added,
-    linesRemoved: removed,
+    linesAdded: afterLines.length - unchangedLines,
+    linesRemoved: beforeLines.length - unchangedLines,
   };
 }
 
@@ -94,13 +130,6 @@ function hasPlaceholderContent(content = "") {
 
 function countPattern(content: string, pattern: RegExp) {
   return content.match(pattern)?.length ?? 0;
-}
-
-function countClassInMarkup(content: string, className: string) {
-  const escapedClassName = className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const matches = content.match(/class\s*=\s*["'][^"']*["']/gi) ?? [];
-  const classNamePattern = new RegExp(`\\b${escapedClassName}\\b`);
-  return matches.filter((match) => classNamePattern.test(match)).length;
 }
 
 function isJavaScriptFile(fileName: string) {
@@ -339,9 +368,8 @@ function validateRequestIntent(
   files: ReturnType<typeof buildFileMaps>,
 ) {
   const errors: string[] = [];
-  const asksForInteractivity =
-    INTERACTIVE_REQUEST_PATTERN.test(requestMessage) ||
-    INTERACTIVE_REQUEST_PATTERN.test(responseMessage ?? "");
+  const asksForInteractivity = REQUIRES_NEW_BEHAVIOR_PATTERN.test(requestMessage);
+  const responseMentionsInteractivity = INTERACTIVE_REQUEST_PATTERN.test(responseMessage ?? "");
 
   if (EDIT_REQUEST_PATTERN.test(requestMessage) && changes.length === 0) {
     errors.push("Request asks for a project edit, but the scratch workspace has no file changes.");
@@ -354,20 +382,7 @@ function validateRequestIntent(
     errors.push("Request asks for clickable or dynamic behavior, but the proposed changes do not add JavaScript or event handling.");
   }
 
-  if (asksForInteractivity && !DUPLICATION_REQUEST_PATTERN.test(requestMessage)) {
-    for (const change of changes) {
-      if (change.status === "deleted" || typeof change.content !== "string") continue;
-      if (!isHtmlFile(change.fileName)) continue;
-      const before = files.byName.get(change.fileName)?.content ?? files.byPath.get(change.fileName)?.content ?? "";
-      const beforeDetailPanels = countClassInMarkup(before, "detail-panel");
-      const afterDetailPanels = countClassInMarkup(change.content, "detail-panel");
-      if (beforeDetailPanels > 0 && afterDetailPanels > beforeDetailPanels) {
-        errors.push(`${change.fileName}: interactive update duplicates the detail panel markup instead of updating the existing panel.`);
-      }
-    }
-  }
-
-  if (asksForInteractivity) {
+  if (asksForInteractivity || responseMentionsInteractivity) {
     const finalFiles = buildFinalFiles(changes, files);
     const finalHtmlFiles = finalFiles.files.filter((file) => isHtmlFile(file.fileName));
     const changedJavaScriptFiles = changes
@@ -465,10 +480,11 @@ export function validateTutorPatchResponse(
       errors.push(`${change.fileName}: file does not exist.`);
       return;
     }
+    const validatedFileName = change.fileName.includes("/") ? existing.path : existing.fileName;
 
     if (change.status === "deleted") {
       validatedChanges.push({
-        fileName: existing.fileName,
+        fileName: validatedFileName,
         status: "deleted",
         ...countChangedLines(existing.content, ""),
       });
@@ -492,7 +508,7 @@ export function validateTutorPatchResponse(
       }
 
       validatedChanges.push({
-        fileName: existing.fileName,
+        fileName: validatedFileName,
         status: "modified",
         content: change.content,
         ...countChangedLines(existing.content, change.content),
@@ -516,7 +532,7 @@ export function validateTutorPatchResponse(
     }
 
     validatedChanges.push({
-      fileName: existing.fileName,
+      fileName: validatedFileName,
       status: "modified",
       content: applied.content,
       ...countChangedLines(existing.content, applied.content),
@@ -542,6 +558,7 @@ export function validateTutorPatchResponse(
     message: typeof parsed.message === "string" && parsed.message.trim()
       ? parsed.message
       : "I made a set of project edits for you to review. Take a look at the diffs and decide whether you want to keep them.",
+    saveTitle: normalizeTutorSaveTitle(parsed.saveTitle ?? parsed.message),
     changes: validatedChanges.filter((change) =>
       change.status !== "modified" || change.linesAdded || change.linesRemoved,
     ),
@@ -553,10 +570,12 @@ export function validateTutorChanges(
   files: FileItem[],
   requestMessage = "",
   responseMessage = "I made a set of project edits for you to review. Take a look at the diffs and decide whether you want to keep them.",
+  saveTitle?: string,
 ) {
   return validateTutorPatchResponse(
     {
       message: responseMessage,
+      saveTitle,
       changes,
     },
     files,

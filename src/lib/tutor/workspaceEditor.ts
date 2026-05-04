@@ -2,6 +2,8 @@ import type { FileItem, FileKind } from "../../types/file";
 import type { TutorValidatedChange } from "./types";
 import { countChangedLines } from "./editValidator";
 
+const NON_ROOT_WRAPPER_FOLDERS = new Set(["Plans"]);
+
 export interface TutorWorkspaceFile {
   path: string;
   fileName: string;
@@ -60,6 +62,7 @@ function flattenProjectFiles(files: FileItem[], parentPath = ""): TutorWorkspace
     parentPath === "" &&
     files.length === 1 &&
     files[0].type === "folder" &&
+    !NON_ROOT_WRAPPER_FOLDERS.has(files[0].name) &&
     files[0].children
   ) {
     return flattenProjectFiles(files[0].children);
@@ -90,6 +93,7 @@ export class TutorWorkspaceEditor {
     if (
       files.length === 1 &&
       files[0].type === "folder" &&
+      !NON_ROOT_WRAPPER_FOLDERS.has(files[0].name) &&
       files[0].children
     ) {
       this.rootFolderName = files[0].name;

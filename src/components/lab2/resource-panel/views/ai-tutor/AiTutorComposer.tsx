@@ -1,19 +1,35 @@
-import type { ChangeEvent, DragEvent, RefObject } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type RefObject,
+} from "react";
 import { Textarea } from "../../../../ui/textarea";
 import { AppButton } from "../../../../ui/AppButton";
-import { AppNativeSelect } from "../../../../ui/AppDropdown";
+import { AppActionDropdown } from "../../../../ui/AppDropdown";
 import { FileChip } from "../../../../ui/FileChip";
 import { faIconForFileName, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
-import {
-  TUTOR_CODE_MODEL_OPTIONS,
-  useTutorApiSettings,
-} from "../../../../../hooks/useTutorApiSettings";
+import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import { useKeyboardFocusWithin } from "../../../../../hooks/useKeyboardFocusWithin";
 import type { ChatAttachment } from "../../../../../types/chat";
-import type { AiTutorInputExperiment } from "../../../../../types/tutor";
+import type { AiTutorInputExperiment, TutorRequestMode } from "../../../../../types/tutor";
 import { attachmentDisplayName } from "./attachmentUtils";
 import styles from "./AiTutorPanel.module.scss";
+
+const TUTOR_MODE_OPTIONS = [
+  { label: "Auto", value: "auto", iconName: "sparkles" },
+  { label: "Build", value: "build", iconName: "wrench" },
+  { label: "Plan", value: "plan", iconName: "rectangle-list" },
+  { label: "Help", value: "help", iconName: "brain" },
+] satisfies Array<{
+  label: string;
+  value: TutorRequestMode;
+  iconName: FaIconName;
+}>;
 
 interface AiTutorComposerProps {
   inputExperiment: AiTutorInputExperiment;
@@ -24,6 +40,9 @@ interface AiTutorComposerProps {
   uploadedAttachmentContexts: Record<string, ChatAttachment>;
   codeAttachmentTimestamps: Record<string, string>;
   isDragOverInput: boolean;
+  showModelSelector?: boolean;
+  tutorRequestMode: TutorRequestMode;
+  setTutorRequestMode: (mode: TutorRequestMode) => void;
   fileInputRef: RefObject<HTMLInputElement | null>;
   canSend: boolean;
   onSend: () => void;
@@ -44,6 +63,9 @@ export function AiTutorComposer({
   uploadedAttachmentContexts,
   codeAttachmentTimestamps,
   isDragOverInput,
+  showModelSelector = true,
+  tutorRequestMode,
+  setTutorRequestMode,
   fileInputRef,
   canSend,
   onSend,
@@ -55,10 +77,50 @@ export function AiTutorComposer({
   onDrop,
 }: AiTutorComposerProps) {
   const isClarified = inputExperiment === "clarified-send";
-  const { codeModel, setCodeModel } = useTutorApiSettings();
   const { isKeyboardFocusWithin, focusWithinProps } =
     useKeyboardFocusWithin<HTMLDivElement>();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const shimmerTimeoutRef = useRef<number | null>(null);
+  const [isShimmering, setIsShimmering] = useState(false);
   const showDropHelper = isDragOverInput && attachedFiles.length === 0;
+
+  useEffect(() => {
+    const focusTutorInput = () => {
+      textareaRef.current?.focus();
+      setIsShimmering(false);
+      window.requestAnimationFrame(() => {
+        setIsShimmering(true);
+        if (shimmerTimeoutRef.current !== null) {
+          window.clearTimeout(shimmerTimeoutRef.current);
+        }
+        shimmerTimeoutRef.current = window.setTimeout(() => {
+          setIsShimmering(false);
+          shimmerTimeoutRef.current = null;
+        }, 4000);
+      });
+    };
+    window.addEventListener("weblab:focus-tutor-input", focusTutorInput);
+    return () => {
+      window.removeEventListener("weblab:focus-tutor-input", focusTutorInput);
+      if (shimmerTimeoutRef.current !== null) {
+        window.clearTimeout(shimmerTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const selectedTutorMode = TUTOR_MODE_OPTIONS.find(
+    (option) => option.value === tutorRequestMode,
+  ) ?? TUTOR_MODE_OPTIONS[0];
+  const tutorModeItems = useMemo(
+    () =>
+      TUTOR_MODE_OPTIONS.map((option) => ({
+        id: option.value,
+        label: option.label,
+        iconName: option.iconName,
+        onSelect: () => setTutorRequestMode(option.value),
+      })),
+    [setTutorRequestMode],
+  );
 
   return (
     <div
@@ -81,12 +143,16 @@ export function AiTutorComposer({
               const meta = uploadedAttachmentContexts[fileLabel] ?? attachmentMeta?.[fileLabel];
               const codeTimestamp = codeAttachmentTimestamps[fileLabel];
               const displayName = meta?.fileName ?? attachmentDisplayName(fileLabel);
+              const isFullProjectFile = !codeTimestamp && (!meta || meta.source === "project");
+              const metadataLabel = isFullProjectFile
+                ? undefined
+                : codeTimestamp ?? meta?.timestamp ?? fileExtensionLabelFromName(displayName);
               return (
                 <FileChip
                   key={fileLabel}
                   fileName={displayName}
                   nameTitle={fileLabel}
-                  extensionLabel={codeTimestamp ?? meta?.timestamp ?? fileExtensionLabelFromName(displayName)}
+                  extensionLabel={metadataLabel}
                   iconName={faIconForFileName(displayName)}
                   imageSrc={meta?.imageSrc}
                   onRemove={() => onRemoveAttachedFile(fileLabel)}
@@ -126,10 +192,13 @@ export function AiTutorComposer({
             isDragOverInput ? styles.inputCardDropActive : ""
           } ${
             isKeyboardFocusWithin ? styles.inputCardKeyboardFocused : ""
+          } ${
+            isShimmering ? styles.inputCardShimmer : ""
           }`}
           {...focusWithinProps}
         >
           <Textarea
+            ref={textareaRef}
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={(e) => {
@@ -161,17 +230,33 @@ export function AiTutorComposer({
               />
             </div>
             <div className={styles.sendButtonRow}>
-              <label className={styles.modelSelectLabel}>
-                <AppNativeSelect
-                  value={codeModel}
-                  onValueChange={setCodeModel}
-                  options={TUTOR_CODE_MODEL_OPTIONS}
+              {showModelSelector ? (
+                <AppActionDropdown
+                  items={tutorModeItems}
                   size="xs"
-                  tone="gray"
-                  className={styles.modelDropdown}
-                  aria-label="Tutor code model"
+                  align="end"
+                  listLabel="Tutor mode"
+                  trigger={
+                    <AppButton
+                      variant="secondary"
+                      tone="gray"
+                      size="xs"
+                      iconName={selectedTutorMode.iconName}
+                      className={styles.modelDropdown}
+                      aria-label={`Tutor mode: ${selectedTutorMode.label}`}
+                    >
+                      <span className={styles.modeTriggerContent}>
+                        <span>{selectedTutorMode.label}</span>
+                        <FaIcon
+                          name="chevron-down"
+                          size="xs"
+                          className={styles.modeTriggerChevron}
+                        />
+                      </span>
+                    </AppButton>
+                  }
                 />
-              </label>
+              ) : null}
               {isClarified ? (
                 <button
                   type="button"

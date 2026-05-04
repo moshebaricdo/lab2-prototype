@@ -14,9 +14,12 @@ export interface TutorContextFile {
   type?: string;
 }
 
+export type TutorRequestMode = "auto" | "build" | "plan" | "help";
+
 export type TutorSubmitHandler = (
   message: string,
   conversation: ChatMessage[],
+  requestMode?: TutorRequestMode,
 ) => Promise<ChatMessage | undefined>;
 
 export interface MockTutorConfig {

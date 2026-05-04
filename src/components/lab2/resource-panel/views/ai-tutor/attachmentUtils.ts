@@ -159,7 +159,6 @@ export function buildAttachmentsForSend({
         fileName: contextFile.fileName,
         path: contextFile.path,
         imageSrc: null,
-        timestamp: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
         source: "project" as const,
         content: contextFile.content,
       };
@@ -182,6 +181,10 @@ export function buildAttachmentsForSend({
         sizeBytes: meta?.sizeBytes,
         startLine: meta?.startLine,
         endLine: meta?.endLine,
+        previewPath: meta?.previewPath,
+        selector: meta?.selector,
+        elementId: meta?.elementId,
+        tagName: meta?.tagName,
       };
     });
 

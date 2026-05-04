@@ -61,6 +61,10 @@ export function buildConversationContext(conversation: ChatMessage[]) {
         sizeBytes: attachment.sizeBytes,
         startLine: attachment.startLine,
         endLine: attachment.endLine,
+        previewPath: attachment.previewPath,
+        selector: attachment.selector,
+        elementId: attachment.elementId,
+        tagName: attachment.tagName,
       })),
       codeChangeStatus: message.codeChangeStatus,
       fileChanges: message.fileChanges?.map((change) => ({
