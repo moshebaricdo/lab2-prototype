@@ -21,14 +21,14 @@
 .icon {
   width: 16px;
   color: var(--ds-text-warning-primary-fixed);
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
 }
 
 .message {
   margin: 0;
   color: var(--foreground);
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1.64;
   white-space: nowrap;
 }

@@ -1,18 +1,9 @@
-import { useState, useRef, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import {
-  faXmark,
-  faChevronDown,
-  faFileCode,
-  faFileLines,
-  faFileCsv,
-} from "@fortawesome/free-solid-svg-icons";
-import {
-  faCss3,
-  faJs,
-  faMarkdown,
-} from "@fortawesome/free-brands-svg-icons";
+import { useEffect, useState } from "react";
+import { AppActionDropdown } from "../../../ui/AppDropdown";
+import { AppButton } from "../../../ui/AppButton";
+import { Modal } from "../../../ui/Modal";
+import { FaIcon } from "../../../ui/icons/FaIcon";
+import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
 import styles from "./CreateFileModal.module.scss";
 
 interface CreateFileModalProps {
@@ -23,97 +14,65 @@ interface CreateFileModalProps {
 
 type FileType = "HTML" | "CSS" | "JS" | "MD" | "TXT" | "CSV";
 
-const FILE_TYPE_ICONS: Record<FileType, IconDefinition> = {
-  HTML: faFileCode,
-  CSS: faCss3,
-  JS: faJs,
-  MD: faMarkdown,
-  TXT: faFileLines,
-  CSV: faFileCsv,
+const FILE_TYPE_ICONS: Record<FileType, FaIconName> = {
+  HTML: "file-code",
+  CSS: "file-brackets-curly",
+  JS: "file-code",
+  MD: "file-lines",
+  TXT: "file-lines",
+  CSV: "file-csv",
 };
-
-function SeparatorHorizontal() {
-  return <div className={styles.separator} aria-hidden="true" />;
-}
 
 interface FileTypeDropdownProps {
   selectedType: FileType;
   isOpen: boolean;
-  onToggle: () => void;
+  onOpenChange: (open: boolean) => void;
   onSelect: (type: FileType) => void;
 }
 
 function FileTypeDropdown({
   selectedType,
   isOpen,
-  onToggle,
+  onOpenChange,
   onSelect,
 }: FileTypeDropdownProps) {
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        if (isOpen) {
-          onToggle();
-        }
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen, onToggle]);
-
   const fileTypes: FileType[] = ["HTML", "CSS", "JS", "MD", "TXT", "CSV"];
 
   return (
-    <div className={styles.dropdownRoot} ref={dropdownRef}>
-      <button
-        type="button"
-        onClick={onToggle}
-        className={styles.dropdownTrigger}
-      >
-        <div className={styles.dropdownValue}>
+    <AppActionDropdown
+      open={isOpen}
+      onOpenChange={onOpenChange}
+      align="start"
+      size="m"
+      menuWidth="var(--radix-popover-trigger-width)"
+      listLabel="File types"
+      trigger={
+        <button
+          type="button"
+          className={styles.dropdownTrigger}
+        >
           <span className={styles.dropdownValueText}>
-            <FontAwesomeIcon
-              icon={FILE_TYPE_ICONS[selectedType]}
+            <FaIcon
+              name={FILE_TYPE_ICONS[selectedType]}
+              size="s"
               className={styles.dropdownIcon}
             />
             {selectedType}
           </span>
-          <FontAwesomeIcon icon={faChevronDown} className={styles.chevronIcon} />
-        </div>
-      </button>
-
-      {isOpen && (
-        <div className={styles.dropdownMenu}>
-          <div className={styles.dropdownItems}>
-            {fileTypes.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => {
-                  onSelect(type);
-                  onToggle();
-                }}
-                className={styles.dropdownItem}
-              >
-                <FontAwesomeIcon
-                  icon={FILE_TYPE_ICONS[type]}
-                  className={styles.dropdownIcon}
-                />
-                <span>{type}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+          <FaIcon
+            name={isOpen ? "chevron-up" : "chevron-down"}
+            size="s"
+            className={styles.chevronIcon}
+          />
+        </button>
+      }
+      items={fileTypes.map((type) => ({
+        id: type,
+        label: type,
+        iconName: FILE_TYPE_ICONS[type],
+        onSelect: () => onSelect(type),
+      }))}
+    />
   );
 }
 
@@ -190,61 +149,50 @@ export function CreateFileModal({
   const createButtonLabel = fullFileName ? `Create ${fullFileName}` : "Create file";
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
-        <button
-          onClick={onClose}
-          className={styles.closeButton}
-          aria-label="Close dialog"
-        >
-          <FontAwesomeIcon icon={faXmark} />
-        </button>
-
-        <h3 className={styles.title}>Create a new file</h3>
-        <SeparatorHorizontal />
-
-        <p className={styles.description}>Give your new file a name and type.</p>
-
-        <div className={styles.inputRow}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>File name</label>
-            <input
-              type="text"
-              value={fileName}
-              onChange={(event) => {
-                setFileName(event.target.value);
-                setError("");
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder="Enter file name"
-              className={styles.textInput}
-              autoFocus
-            />
-            {error ? <p className={styles.errorText}>{error}</p> : null}
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>File type</label>
-            <FileTypeDropdown
-              selectedType={fileType}
-              isOpen={isDropdownOpen}
-              onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
-              onSelect={setFileType}
-            />
-          </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create a new file"
+      description="Give your new file a name and type."
+      footer={
+        <>
+          <AppButton variant="secondary" tone="gray" size="m" onClick={onClose}>
+            Cancel
+          </AppButton>
+          <AppButton variant="primary" tone="purple" size="m" onClick={handleCreate}>
+            {createButtonLabel}
+          </AppButton>
+        </>
+      }
+    >
+      <div className={styles.inputRow}>
+        <div className={styles.fieldGroup}>
+          <label className={styles.fieldLabel}>File name</label>
+          <input
+            type="text"
+            value={fileName}
+            onChange={(event) => {
+              setFileName(event.target.value);
+              setError("");
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter file name"
+            className={styles.textInput}
+            autoFocus
+          />
+          {error ? <p className={styles.errorText}>{error}</p> : null}
         </div>
 
-        <SeparatorHorizontal />
-
-        <div className={styles.actionsRow}>
-          <button onClick={onClose} className={styles.secondaryButton}>
-            Cancel
-          </button>
-          <button onClick={handleCreate} className={styles.primaryButton}>
-            {createButtonLabel}
-          </button>
+        <div className={styles.fieldGroup}>
+          <label className={styles.fieldLabel}>File type</label>
+          <FileTypeDropdown
+            selectedType={fileType}
+            isOpen={isDropdownOpen}
+            onOpenChange={setIsDropdownOpen}
+            onSelect={setFileType}
+          />
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

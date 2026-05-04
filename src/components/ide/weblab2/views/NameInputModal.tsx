@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { FaIcon } from "../../../ui/icons/FaIcon";
+import { AppButton } from "../../../ui/AppButton";
+import { Modal } from "../../../ui/Modal";
 import styles from "./CreateFileModal.module.scss";
 
 interface NameInputModalProps {
@@ -12,10 +13,6 @@ interface NameInputModalProps {
   initialValue?: string;
   onClose: () => void;
   onSubmit: (value: string) => true | string | void;
-}
-
-function SeparatorHorizontal() {
-  return <div className={styles.separator} aria-hidden="true" />;
 }
 
 export function NameInputModal({
@@ -63,51 +60,40 @@ export function NameInputModal({
   if (!isOpen) return null;
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
-        <button
-          onClick={onClose}
-          className={styles.closeButton}
-          aria-label="Close dialog"
-        >
-          <FaIcon name="xmark" size="s" />
-        </button>
-
-        <h3 className={styles.title}>{title}</h3>
-        <SeparatorHorizontal />
-
-        <p className={styles.description}>{description}</p>
-
-        <div className={styles.inputRow}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>{fieldLabel}</label>
-            <input
-              type="text"
-              value={value}
-              onChange={(event) => {
-                setValue(event.target.value);
-                setError("");
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              className={styles.textInput}
-              autoFocus
-            />
-            {error ? <p className={styles.errorText}>{error}</p> : null}
-          </div>
-        </div>
-
-        <SeparatorHorizontal />
-
-        <div className={styles.actionsRow}>
-          <button onClick={onClose} className={styles.secondaryButton}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      description={description}
+      footer={
+        <>
+          <AppButton variant="secondary" tone="gray" size="m" onClick={onClose}>
             Cancel
-          </button>
-          <button onClick={handleSubmit} className={styles.primaryButton}>
+          </AppButton>
+          <AppButton variant="primary" tone="purple" size="m" onClick={handleSubmit}>
             {confirmLabel}
-          </button>
+          </AppButton>
+        </>
+      }
+    >
+      <div className={styles.inputRow}>
+        <div className={styles.fieldGroup}>
+          <label className={styles.fieldLabel}>{fieldLabel}</label>
+          <input
+            type="text"
+            value={value}
+            onChange={(event) => {
+              setValue(event.target.value);
+              setError("");
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className={styles.textInput}
+            autoFocus
+          />
+          {error ? <p className={styles.errorText}>{error}</p> : null}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -1,15 +1,20 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { FileManager } from "../../shared/FileManager";
 import { CodeEditor } from "../../shared/code-editor";
-import { PanelHeader } from "../../../ui/PanelHeader";
+import { NewProjectEmptyState } from "./NewProjectEmptyState";
+import {
+  PlanActionBar,
+  PlanMarkdownPreview,
+  type PlanViewMode,
+} from "./plan-file";
 import { PreviewPanel } from "./PreviewPanel";
 import { ResizableHandle } from "../../../ui/ResizableHandle";
 import { VersionBanner } from "./VersionBanner";
-import { AiChangesBanner } from "./AiChangesBanner";
-import { SavedTag } from "./SavedTag";
 import { SegmentedControl, type SegmentedOption } from "./SegmentedControl";
+import { WorkspaceHeader } from "./WorkspaceHeader";
 import { versionLabels } from "../../../../data/weblab2";
 import type { FileItem } from "../../../../types/file";
+import type { TutorRequestMode } from "../../../../types/tutor";
 import type { ViewMode } from "../../../../types/ui";
 import type { WebLabPreviewConfig } from "./PreviewPanel";
 import styles from "./Workspace.module.scss";
@@ -19,6 +24,31 @@ const MIN_FILE_MANAGER_WIDTH = 128;
 const MAX_FILE_MANAGER_WIDTH = 320;
 const MIN_EDITOR_WIDTH = 300;
 const FILE_MANAGER_ANIMATION_MS = 220;
+
+function getPlanFileNames(items: FileItem[]): Set<string> {
+  const names = new Set<string>();
+  for (const item of items) {
+    if (item.type === "folder" && item.name === "Plans") {
+      for (const child of item.children ?? []) {
+        if (child.type !== "folder" && child.name.toLowerCase().endsWith(".md")) {
+          names.add(child.name);
+        }
+      }
+    }
+    if (item.children) {
+      for (const name of getPlanFileNames(item.children)) {
+        names.add(name);
+      }
+    }
+  }
+  return names;
+}
+
+function hasProjectFiles(items: FileItem[]): boolean {
+  return items.some((item) =>
+    item.children ? hasProjectFiles(item.children) : true
+  );
+}
 
 interface WorkspaceProps {
   viewMode: ViewMode;
@@ -36,19 +66,34 @@ interface WorkspaceProps {
   setIsFileManagerCollapsed: (collapsed: boolean) => void;
   setIsCreateFileModalOpen: (open: boolean) => void;
   setIsCreateFolderModalOpen?: (open: boolean) => void;
+  setIsCreatePlanModalOpen?: (open: boolean) => void;
   enableFileDragToTutor?: boolean;
   showOnlyFilesWithContent?: boolean;
   onRequestRenameFile?: (file: FileItem, path: string) => void;
   onAddFileToTutor?: (file: FileItem, path: string) => void;
   onDeleteFile?: (file: FileItem, path: string) => void;
   onMoveFileTreeItem?: (sourcePath: string, targetFolderPath: string) => true | string | void;
+  onStartWithTutor?: (prompt?: string, requestMode?: TutorRequestMode) => void;
+  onUploadStarterFiles?: (files: FileList) => Promise<true | string | void> | true | string | void;
+  starterUploadAccept?: string;
+  showNewProjectEmptyState?: boolean;
   preview: WebLabPreviewConfig;
   selectedHistoryVersion: string;
   selectedHistoryVersionLabel?: string;
-  showSavedTag: boolean;
   onReturnToCurrentVersion: () => void;
   aiChangedFiles?: Record<string, "new" | "modified" | "deleted">;
+  onAcceptAiChanges?: () => void;
+  onRejectAiChanges?: () => void;
+  builtPlanPaths?: Set<string>;
   onFileContentChange?: (fileName: string, content: string) => void;
+  showPlanActionBar?: boolean;
+  planFileName?: string;
+  isPlanBuilt?: boolean;
+  planStatusText?: string;
+  onBuildPlan?: () => void;
+  showBuildPlan?: boolean;
+  buildPlanDisabled?: boolean;
+  buildPlanRunning?: boolean;
 }
 
 export function Workspace({
@@ -67,19 +112,34 @@ export function Workspace({
   setIsFileManagerCollapsed,
   setIsCreateFileModalOpen,
   setIsCreateFolderModalOpen,
+  setIsCreatePlanModalOpen,
   enableFileDragToTutor = false,
   showOnlyFilesWithContent = false,
   onRequestRenameFile,
   onAddFileToTutor,
   onDeleteFile,
   onMoveFileTreeItem,
+  onStartWithTutor,
+  onUploadStarterFiles,
+  starterUploadAccept,
+  showNewProjectEmptyState = true,
   preview,
   selectedHistoryVersion,
   selectedHistoryVersionLabel,
-  showSavedTag,
   onReturnToCurrentVersion,
   aiChangedFiles,
+  onAcceptAiChanges,
+  onRejectAiChanges,
+  builtPlanPaths,
   onFileContentChange,
+  showPlanActionBar = false,
+  planFileName = "PROJECT_PLAN.md",
+  isPlanBuilt = false,
+  planStatusText,
+  onBuildPlan,
+  showBuildPlan = true,
+  buildPlanDisabled = false,
+  buildPlanRunning = false,
 }: WorkspaceProps) {
   const [splitViewCodeWidth, setSplitViewCodeWidth] = useState<number | null>(
     null
@@ -88,6 +148,7 @@ export function Workspace({
   const [fileManagerTransition, setFileManagerTransition] = useState<
     "collapsing" | "expanding" | null
   >(null);
+  const [planViewMode, setPlanViewMode] = useState<PlanViewMode>("preview");
 
   useEffect(() => {
     if (!fileManagerTransition) return;
@@ -110,6 +171,27 @@ export function Workspace({
     { value: "split", label: "Split View", iconName: "table-columns" },
   ];
   const isViewingHistoryVersion = selectedHistoryVersion !== "current";
+  const isEmptyProject = !hasProjectFiles(fileStructure);
+  const shouldShowNewProjectEmptyState =
+    isEmptyProject && showNewProjectEmptyState && !isViewingHistoryVersion;
+  const hasPendingAiChanges = !!aiChangedFiles && Object.keys(aiChangedFiles).length > 0;
+  const planFileNames = getPlanFileNames(fileStructure);
+  const isPlanOpen = planFileNames.has(selectedFile?.name ?? "") &&
+    openFiles.some((file) => file.name === selectedFile?.name);
+  const resolvedShowPlanActionBar = showPlanActionBar && isPlanOpen;
+  const editorOpenFiles = resolvedShowPlanActionBar
+    ? openFiles
+    : openFiles.filter((file) => !planFileNames.has(file.name));
+
+  const handleCloseEditorFile = (file: FileItem) => {
+    const remainingEditorOpenFiles = editorOpenFiles.filter((openFile) => openFile.name !== file.name);
+    closeFile(file);
+    if (remainingEditorOpenFiles.length === 0) {
+      setSelectedFile(null);
+    } else if (selectedFile?.name === file.name) {
+      setSelectedFile(remainingEditorOpenFiles[0]);
+    }
+  };
 
   const renderExpandedFileManager = () => (
     <FileManager
@@ -122,12 +204,14 @@ export function Workspace({
       onToggleCollapse={() => handleFileManagerCollapseChange(true)}
       onNewFile={isViewingHistoryVersion ? undefined : () => setIsCreateFileModalOpen(true)}
       onNewFolder={isViewingHistoryVersion ? undefined : () => setIsCreateFolderModalOpen?.(true)}
+      onNewPlan={isViewingHistoryVersion ? undefined : () => setIsCreatePlanModalOpen?.(true)}
       onRenameFile={isViewingHistoryVersion ? undefined : onRequestRenameFile}
       onAddFileToChat={isViewingHistoryVersion ? undefined : onAddFileToTutor}
       onDeleteFile={isViewingHistoryVersion ? undefined : onDeleteFile}
       onMoveItem={isViewingHistoryVersion ? undefined : onMoveFileTreeItem}
       enableDragToTutor={isViewingHistoryVersion ? false : enableFileDragToTutor}
       aiChangedFiles={aiChangedFiles}
+      builtPlanPaths={builtPlanPaths}
       showOnlyFilesWithContent={showOnlyFilesWithContent}
       showRightBorder={false}
     />
@@ -135,19 +219,18 @@ export function Workspace({
 
   return (
     <div className={styles.root}>
-      <PanelHeader
-        label="WORKSPACE"
-        left={
+      <WorkspaceHeader
+        left={shouldShowNewProjectEmptyState ? undefined : (
           <SegmentedControl
             options={viewModeOptions}
             value={viewMode}
             onChange={setViewMode}
           />
-        }
-        right={showSavedTag ? <SavedTag /> : undefined}
+        )}
+        aiChangesActive={hasPendingAiChanges}
+        onAcceptAiChanges={onAcceptAiChanges}
+        onRejectAiChanges={onRejectAiChanges}
       />
-
-      <AiChangesBanner visible={!!aiChangedFiles && Object.keys(aiChangedFiles).length > 0} />
 
       {selectedHistoryVersion !== "current" && (
         <VersionBanner
@@ -160,6 +243,15 @@ export function Workspace({
         />
       )}
 
+      {shouldShowNewProjectEmptyState ? (
+        <NewProjectEmptyState
+          isViewingHistoryVersion={isViewingHistoryVersion}
+          onCreateFile={() => setIsCreateFileModalOpen(true)}
+          onStartWithTutor={onStartWithTutor}
+          onUploadStarterFiles={onUploadStarterFiles}
+          starterUploadAccept={starterUploadAccept}
+        />
+      ) : (
       <div className={styles.contentRow}>
         {(viewMode === "code" || viewMode === "split") && (
           <div
@@ -191,6 +283,7 @@ export function Workspace({
                   onToggleFolder={toggleFolder}
                   collapsed
                   onToggleCollapse={() => handleFileManagerCollapseChange(false)}
+                  transparentCollapsedBackground={resolvedShowPlanActionBar}
                 />
               ) : (
                 <div
@@ -243,10 +336,10 @@ export function Workspace({
               } as CSSProperties}
             >
               <CodeEditor
-                openFiles={openFiles}
+                openFiles={editorOpenFiles}
                 selectedFile={selectedFile}
                 onFileSelect={setSelectedFile}
-                onCloseFile={closeFile}
+                onCloseFile={handleCloseEditorFile}
                 onReorderFiles={handleReorderFiles}
                 isFileManagerCollapsed={isFileManagerCollapsed}
                 onCreateFile={isViewingHistoryVersion ? undefined : () => setIsCreateFileModalOpen(true)}
@@ -254,6 +347,24 @@ export function Workspace({
                 aiChangedFiles={aiChangedFiles}
                 onFileContentChange={onFileContentChange}
                 readOnly={isViewingHistoryVersion ? true : undefined}
+                hideFileTabs={resolvedShowPlanActionBar}
+                planActionBar={resolvedShowPlanActionBar ? (
+                  <PlanActionBar
+                    viewMode={planViewMode}
+                    fileName={planFileName}
+                    isBuilt={isPlanBuilt}
+                    statusText={planStatusText}
+                    onViewModeChange={setPlanViewMode}
+                    onBuildPlan={onBuildPlan}
+                    showEditPlan={!hasPendingAiChanges}
+                    showBuildPlan={showBuildPlan && !hasPendingAiChanges}
+                    buildPlanDisabled={buildPlanDisabled}
+                    buildPlanRunning={buildPlanRunning}
+                  />
+                ) : undefined}
+                contentOverride={resolvedShowPlanActionBar && planViewMode === "preview"
+                  ? ({ code }) => <PlanMarkdownPreview markdown={code} />
+                  : undefined}
               />
             </div>
           </div>
@@ -298,6 +409,7 @@ export function Workspace({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

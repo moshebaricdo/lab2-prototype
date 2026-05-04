@@ -20,15 +20,54 @@
 }
 
 .contentPad {
+  --editor-content-pad-top: 8px;
+
+  position: relative;
   display: flex;
   flex: 1;
   overflow: hidden;
-  padding-top: 4px;
+  padding-top: var(--editor-content-pad-top);
   transition: padding-left 220ms ease, padding-right 220ms ease;
 }
 
+.contentPad::before,
+.contentPad::after {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  height: 24px;
+  pointer-events: none;
+  content: "";
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.contentPad::before {
+  top: var(--editor-content-pad-top);
+  background: linear-gradient(
+    to bottom,
+    var(--ds-background-neutral-primary),
+    transparent
+  );
+}
+
+.contentPad::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    var(--ds-background-neutral-primary),
+    transparent
+  );
+}
+
+.contentPadTopFadeVisible::before,
+.contentPadBottomFadeVisible::after {
+  opacity: 1;
+}
+
 .contentPadCollapsed {
-  padding-left: 4px;
+  padding-left: 0px;
   padding-right: 0;
 }
 
@@ -40,16 +79,68 @@
    Tab Bar
    ================================================ */
 
+.tabsViewport {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.tabsViewport::before,
+.tabsViewport::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 20px;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.tabsViewport::before {
+  left: 0;
+  background: linear-gradient(
+    to left,
+    rgb(0 0 0 / 0%),
+    var(--ds-background-neutral-primary)
+  );
+}
+
+.tabsViewport::after {
+  right: 0;
+  background: linear-gradient(
+    to right,
+    rgb(0 0 0 / 0%),
+    var(--ds-background-neutral-primary)
+  );
+}
+
+.tabsViewportStartFadeVisible::before,
+.tabsViewportFadeVisible::after {
+  opacity: 1;
+}
+
 .tabsRow {
   display: flex;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding-top: 8px;
-  padding-bottom: 4px;
+  height: 40px;
+  padding-bottom: 8px;
+  scrollbar-width: none;
   transition: padding-left 220ms ease, padding-right 220ms ease;
+}
+
+.tabsRow::-webkit-scrollbar {
+  display: none;
 }
 
 .tabsRowCollapsed {
   gap: 4px;
-  padding-left: 36px;
+  padding-left: 38px;
   padding-right: 0;
 }
 
@@ -59,8 +150,22 @@
   padding-right: 8px;
 }
 
+.planActionBar {
+  display: flex;
+  flex-shrink: 0;
+  min-height: 40px;
+  align-items: center;
+  padding: 0px 8px 0px 12px;
+  transition: padding-left 220ms ease;
+}
+
+.planActionBarCollapsed {
+  padding-left:38px;
+}
+
 .tab {
   display: flex;
+  flex: 0 0 auto;
   cursor: pointer;
   align-items: center;
   gap: 8px;

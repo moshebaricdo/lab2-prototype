@@ -47,6 +47,9 @@ export const editorTheme = EditorView.theme({
     backgroundColor: `${selectionBg} !important`,
   },
   ".cm-content ::selection": {
+    backgroundColor: selectionBg,
+  },
+  "&.cm-hasUserSelection .cm-activeLine": {
     backgroundColor: "transparent",
   },
   "&.cm-focused": {

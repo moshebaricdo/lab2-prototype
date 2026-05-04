@@ -46,3 +46,11 @@
   background: var(--ds-background-brand-teal-strong) !important;
   color: var(--ds-text-neutral-white-fixed) !important;
 }
+
+.segment.segmentDisabled,
+.segment.segmentDisabled:hover {
+  cursor: default;
+  border-color: var(--ds-borders-neutral-primary);
+  background: var(--ds-background-neutral-primary) !important;
+  color: var(--ds-text-neutral-disabled) !important;
+}

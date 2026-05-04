@@ -1,0 +1,349 @@
+.root {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex: 1;
+  overflow: auto;
+  background-color: var(--ds-background-neutral-secondary);
+}
+
+.intro {
+  display: flex;
+  width: 100%;
+  max-width: 920px;
+  min-height: min-content;
+  flex-direction: column;
+  gap: 32px;
+  margin: auto;
+  padding: 32px 32px 64px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 240px);
+  align-items: flex-end;
+  gap: 32px;
+}
+
+.illustration {
+  display: block;
+  width: 100%;
+  max-width: 210px;
+  height: auto;
+  justify-self: end;
+}
+
+.copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.heading {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+
+.description {
+  max-width: 560px;
+  margin: 0;
+  color: var(--ds-text-neutral-secondary);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+
+.startPathGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.startPathCard {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 18px;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: var(--radius-card);
+  background: var(--ds-background-neutral-primary);
+  padding: 20px;
+}
+
+.aiStartPathCard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: transparent;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-background-brand-aqua-extra-light), transparent),
+      var(--ds-background-neutral-primary) 44%
+    );
+}
+
+.aiStartPathCard::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--new-project-ai-glow-angle),
+    var(--ds-borders-brand-aqua-strong) 0deg,
+    var(--ds-borders-brand-aqua-strong) 246deg,
+    color-mix(
+      in srgb,
+      var(--ds-background-brand-aqua-primary),
+      var(--ds-borders-brand-aqua-strong)
+    ) 286deg,
+    var(--ds-background-brand-aqua-primary) 312deg,
+    color-mix(
+      in srgb,
+      var(--ds-background-brand-aqua-primary),
+      var(--ds-borders-brand-aqua-strong)
+    ) 338deg,
+    var(--ds-borders-brand-aqua-strong) 360deg
+  );
+  content: "";
+  filter: drop-shadow(0 0 5px color-mix(
+    in srgb,
+    var(--ds-borders-brand-aqua-strong),
+    var(--ds-background-brand-aqua-primary)
+  ));
+  mask:
+    linear-gradient(var(--ds-text-neutral-white-fixed) 0 0) content-box,
+    linear-gradient(var(--ds-text-neutral-white-fixed) 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: new-project-ai-border-spin 3s linear infinite;
+}
+
+.aiStartPathCard > * {
+  position: relative;
+  z-index: 1;
+}
+
+.startPathContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.startPathTitle {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+
+.startPathText {
+  margin: 0;
+  color: var(--ds-text-neutral-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.48;
+}
+
+.manualDropZone {
+  display: flex;
+  height: 132px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: auto;
+  border: 1px dashed var(--ds-borders-neutral-primary);
+  border-radius: 4px;
+  background: var(--ds-background-neutral-primary);
+  padding: 16px;
+  text-align: center;
+  transition:
+    background-color 0.05s ease-in,
+    border-color 0.05s ease-in;
+}
+
+.manualDropZoneActive {
+  border-color: var(--ds-borders-brand-teal-primary);
+  background: var(--ds-background-neutral-secondary);
+}
+
+.starterUploadInput {
+  display: none;
+}
+
+.manualUploadHint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.manualDropText {
+  margin: 0;
+  color: var(--ds-text-neutral-tertiary);
+  font-size: var(--text-label);
+  line-height: 1.4;
+}
+
+.manualBrowseButton {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ds-text-neutral-primary);
+  cursor: pointer;
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.manualBrowseButton:focus-visible {
+  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline-offset: 2px;
+}
+
+.manualBrowseButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.manualBrowseButton:hover {
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.startPathError {
+  margin: 0;
+  color: var(--ds-text-error-primary);
+  font-size: var(--text-label);
+  line-height: 1.4;
+}
+
+.aiPromptList {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.aiPromptButton {
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 4px;
+  background: var(--ds-background-neutral-primary);
+  color: inherit;
+  cursor: pointer;
+  padding: 12px;
+  text-align: left;
+  transition:
+    background-color 0.05s ease-in,
+    border-color 0.05s ease-in,
+    transform 0.05s ease-in;
+}
+
+.aiPromptButton:hover:not(:disabled) {
+  border-color: var(--ds-borders-brand-aqua-strong);
+  background: var(--ds-background-brand-aqua-extra-light);
+}
+
+.aiPromptButton:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.aiPromptButton:focus-visible {
+  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline-offset: 2px;
+}
+
+.aiPromptButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.aiPromptIcon {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-text-brand-aqua-secondary);
+}
+
+.aiPromptTitle,
+.aiPromptText {
+  display: block;
+}
+
+.aiPromptTitle {
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.aiPromptText {
+  color: var(--ds-text-neutral-tertiary);
+  font-size: var(--text-label);
+  line-height: 1.4;
+}
+
+@property --new-project-ai-glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes new-project-ai-border-spin {
+  from {
+    --new-project-ai-glow-angle: 0deg;
+  }
+
+  to {
+    --new-project-ai-glow-angle: 360deg;
+  }
+}
+
+@media (max-width: 760px) {
+  .intro {
+    padding: 32px 24px;
+  }
+
+  .hero,
+  .startPathGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .description {
+    max-width: none;
+  }
+}

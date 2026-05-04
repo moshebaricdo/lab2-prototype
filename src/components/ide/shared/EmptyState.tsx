@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import svgPaths from "../../../imports/svg-00g10p2d6o";
 import previewSvgPaths from "../../../imports/svg-fo45fcwvi9";
 import styles from "./EmptyState.module.scss";
@@ -459,15 +460,40 @@ interface EmptyStateProps {
   heading: string;
   description: string;
   type?: "code" | "preview";
+  actions?: ReactNode;
+  surface?: "primary" | "secondary";
+  imageSrc?: string;
+  imageAlt?: string;
 }
 
-export function EmptyState({ heading, description, type = "code" }: EmptyStateProps) {
+export function EmptyState({
+  heading,
+  description,
+  type = "code",
+  actions,
+  surface = "primary",
+  imageSrc,
+  imageAlt = "",
+}: EmptyStateProps) {
   return (
-    <div className={styles.root} data-name="Empty State">
+    <div
+      className={`${styles.root} ${surface === "secondary" ? styles.rootSecondary : ""}`}
+      data-name="Empty State"
+    >
       <div className={styles.center}>
         <div className={styles.inner}>
           <div className={styles.contentContainer} data-name="Container">
-            {type === "preview" ? <PreviewIllustration /> : <Illustration />}
+            {imageSrc ? (
+              <img
+                src={imageSrc}
+                alt={imageAlt}
+                className={styles.imageIllustration}
+              />
+            ) : type === "preview" ? (
+              <PreviewIllustration />
+            ) : (
+              <Illustration />
+            )}
             <div className={styles.textContainer} data-name="Text Container">
               <div className={styles.headingWrap}>
                 <p className={styles.heading}>{heading}</p>
@@ -475,6 +501,7 @@ export function EmptyState({ heading, description, type = "code" }: EmptyStatePr
               <div className={styles.descriptionWrap}>
                 <p className={styles.description}>{description}</p>
               </div>
+              {actions ? <div className={styles.actions}>{actions}</div> : null}
             </div>
           </div>
         </div>

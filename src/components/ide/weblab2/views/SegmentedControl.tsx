@@ -12,14 +12,16 @@ export interface SegmentedOption<T extends string> {
 
 interface SegmentedControlProps<T extends string> {
   options: SegmentedOption<T>[];
-  value: T;
+  value: T | null;
   onChange: (value: T) => void;
+  disabled?: boolean;
 }
 
 export function SegmentedControl<T extends string>({
   options,
   value,
   onChange,
+  disabled = false,
 }: SegmentedControlProps<T>) {
   return (
     <div className={styles.root}>
@@ -42,7 +44,9 @@ export function SegmentedControl<T extends string>({
         return (
           <AppButton
             key={option.value}
-            onClick={() => onChange(option.value)}
+            onClick={() => {
+              if (!disabled) onChange(option.value);
+            }}
             size="xs"
             variant="tertiary"
             tone={isActive ? "white" : "black"}
@@ -50,9 +54,10 @@ export function SegmentedControl<T extends string>({
             aria-pressed={isActive}
             aria-label={option.ariaLabel}
             title={option.title}
+            disabled={disabled}
             className={`${styles.segment} ${roundedClass} ${
               isActive ? styles.segmentActive : styles.segmentInactive
-            }`}
+            } ${disabled ? styles.segmentDisabled : ""}`}
           >
             {option.label}
           </AppButton>

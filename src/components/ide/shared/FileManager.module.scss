@@ -4,13 +4,17 @@
   max-width: 32px;
   flex-direction: column;
   overflow: clip;
-  background: var(--background);
+  background: var(--ds-background-neutral-primary);
   padding: 0 0 0 2px;
+}
+
+.collapsedRootTransparent {
+  background: transparent;
 }
 
 .collapsedHeader {
   display: flex;
-  padding: 8px 0 4px 4px;
+  padding: 8px 0 4px 6px;
 }
 
 .collapsedToggle {
@@ -102,6 +106,25 @@
   flex-direction: column;
   gap: 2px;
   padding: 0 6px;
+}
+
+.planSection {
+  padding-top: 2px;
+}
+
+.sectionHeader {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  padding: 8px 8px 8px 12px;
+}
+
+.emptyListText {
+  margin: 0;
+  padding: 4px 6px;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  line-height: 1.64;
 }
 
 .borderOverlay {
@@ -202,6 +225,18 @@
   color: var(--ds-text-neutral-tertiary);
   font-size: 12px;
   line-height: 1;
+}
+
+.planFileIconOutline {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--ds-text-neutral-tertiary);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.planFileIconBuilt {
+  color: var(--ds-text-neutral-tertiary);
 }
 
 .fileName {

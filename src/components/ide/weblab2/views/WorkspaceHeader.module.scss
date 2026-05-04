@@ -1,0 +1,234 @@
+/* ================================================
+   Workspace header — dual-state (idle / AI changes)
+   ================================================ */
+
+.root {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  background: var(--ds-background-neutral-primary);
+  padding: 0 8px;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    background-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rootAi {
+  background: var(--ds-background-brand-aqua-extra-light);
+}
+
+/* Slots */
+
+.left,
+.right {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+.right {
+  display: inline-grid;
+  grid-template-areas: "stack";
+  align-items: center;
+  justify-items: end;
+}
+
+/* Center label area uses grid stacking so both labels can crossfade in place */
+
+.center {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-areas: "stack";
+  place-items: center;
+  pointer-events: none;
+}
+
+.label {
+  display: inline-flex;
+  grid-area: stack;
+  align-items: center;
+  gap: 6px;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition:
+    opacity 220ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.labelAi {
+  text-transform: none;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
+  line-height: 1.25;
+  padding-block: 2px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--ds-text-brand-aqua-secondary), black 24%) 0%,
+    color-mix(in oklch, var(--ds-text-brand-aqua-secondary), black 18%) 44%,
+    color-mix(
+      in oklch,
+      var(--ds-text-brand-aqua-primary),
+      var(--ds-text-brand-aqua-secondary) 72%
+    ) 50%,
+    color-mix(in oklch, var(--ds-text-brand-aqua-secondary), black 18%) 56%,
+    color-mix(in oklch, var(--ds-text-brand-aqua-secondary), black 18%) 100%
+  );
+  background-size: 320% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: ai-label-gradient-sweep 3.8s linear infinite;
+}
+
+/* Right slot uses the same stacking pattern so the swap is in-place */
+
+.rightSlot {
+  display: inline-flex;
+  grid-area: stack;
+  align-items: center;
+  gap: 6px;
+  transition:
+    opacity 220ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hidden {
+  opacity: 0;
+  transform: translateY(-2px);
+  pointer-events: none;
+}
+
+/* ================================================
+   Shimmer sweep — two-pass entry animation
+   ================================================ */
+
+.shimmer {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.shimmer::before,
+.shimmer::after {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  content: "";
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Leading filament: narrow, sharp, brighter */
+.shimmer::before {
+  left: 0;
+  width: 18%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ds-background-brand-aqua-strong) 0%, transparent) 30%,
+    color-mix(in srgb, var(--ds-background-brand-aqua-strong) 65%, transparent) 50%,
+    color-mix(in srgb, var(--ds-background-brand-aqua-strong) 0%, transparent) 70%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  animation: ai-header-shimmer-lead 820ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Trailing wash: wider, softer, slightly delayed */
+.shimmer::after {
+  left: 0;
+  width: 38%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ds-background-brand-aqua-light) 0%, transparent) 25%,
+    color-mix(in srgb, var(--ds-background-brand-aqua-light) 60%, transparent) 50%,
+    color-mix(in srgb, var(--ds-background-brand-aqua-light) 0%, transparent) 75%,
+    transparent 100%
+  );
+  animation: ai-header-shimmer-trail 1080ms 80ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes ai-header-shimmer-lead {
+  0% {
+    opacity: 0;
+    transform: translateX(-160%) skewX(-16deg);
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 0.85;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(720%) skewX(-16deg);
+  }
+}
+
+@keyframes ai-header-shimmer-trail {
+  0% {
+    opacity: 0;
+    transform: translateX(-180%) skewX(-16deg);
+  }
+
+  18% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(620%) skewX(-16deg);
+  }
+}
+
+@keyframes ai-label-gradient-sweep {
+  from {
+    background-position: 145% 50%;
+  }
+
+  to {
+    background-position: -45% 50%;
+  }
+}
+
+/* ================================================
+   Reduced motion
+   ================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .label,
+  .rightSlot {
+    transition: none;
+  }
+
+  .labelAi {
+    animation: none;
+  }
+
+  .shimmer {
+    display: none;
+  }
+}

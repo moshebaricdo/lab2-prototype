@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import {
   EditorView,
   lineNumbers,
-  drawSelection,
   highlightActiveLine,
   highlightActiveLineGutter,
   ViewUpdate,
@@ -41,6 +40,16 @@ interface FloatingBarState {
   left: number;
   startLine: number;
   endLine: number;
+}
+
+const USER_SELECTION_CLASS = "cm-hasUserSelection";
+
+function syncUserSelectionClass(view: EditorView) {
+  const hasSelection = view.state.selection.ranges.some((range) => !range.empty);
+  view.dom.classList.toggle(
+    USER_SELECTION_CLASS,
+    hasSelection,
+  );
 }
 
 /**
@@ -109,6 +118,7 @@ export function CodeMirrorHost({
           update.geometryChanged ||
           update.viewportChanged
         ) {
+          syncUserSelectionClass(update.view);
           updateFloatingBar(update.view);
         }
         if (update.docChanged && !isReadOnly) {
@@ -125,7 +135,6 @@ export function CodeMirrorHost({
         EditorView.editorAttributes.of({
           class: isReadOnly ? "cm-readonly" : "cm-editable",
         }),
-        drawSelection(),
         ...(isReadOnly
           ? []
           : [highlightActiveLine(), highlightActiveLineGutter()]),
@@ -151,6 +160,7 @@ export function CodeMirrorHost({
     });
 
     viewRef.current = view;
+    syncUserSelectionClass(view);
 
     const scroller = view.scrollDOM;
     const onScroll = () => updateFloatingBar(view);

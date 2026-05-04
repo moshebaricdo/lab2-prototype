@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { faFileCode, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { faCss3 } from "@fortawesome/free-brands-svg-icons";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import emptyStateNoFilesOpen from "../../../../assets/empty-states/empty-state-no-files-open.svg";
 import type { FileItem } from "../../../../types/file";
 import { EmptyState } from "../EmptyState";
 import { CodeMirrorHost } from "./CodeMirrorHost";
@@ -29,6 +30,13 @@ interface CodeEditorProps {
   onFileContentChange?: (fileName: string, content: string) => void;
   /** Explicit read-only override. Defaults to undefined (auto-derived). */
   readOnly?: boolean;
+  planActionBar?: ReactNode;
+  hideFileTabs?: boolean;
+  contentOverride?: (props: {
+    code: string;
+    file: FileItem;
+    hasProposed: boolean;
+  }) => ReactNode;
 }
 
 interface DraggableTabProps {
@@ -174,13 +182,67 @@ export function CodeEditor({
   aiChangedFiles,
   onFileContentChange,
   readOnly,
+  planActionBar,
+  hideFileTabs = false,
+  contentOverride,
 }: CodeEditorProps) {
   const [localOpenFiles, setLocalOpenFiles] = useState(openFiles);
+  const [showTabsStartFade, setShowTabsStartFade] = useState(false);
+  const [showTabsEndFade, setShowTabsEndFade] = useState(false);
+  const [showEditorTopFade, setShowEditorTopFade] = useState(false);
+  const [showEditorBottomFade, setShowEditorBottomFade] = useState(false);
+  const tabsRowRef = useRef<HTMLDivElement>(null);
+  const contentPadRef = useRef<HTMLDivElement>(null);
   const devReadOnlyOverride = useEditorReadOnlyOverride();
 
   useEffect(() => {
     setLocalOpenFiles(openFiles);
   }, [openFiles]);
+
+  const updateTabsEndFade = useCallback(() => {
+    const tabsRow = tabsRowRef.current;
+    if (!tabsRow) {
+      setShowTabsEndFade(false);
+      return;
+    }
+
+    const maxScrollLeft = tabsRow.scrollWidth - tabsRow.clientWidth;
+    setShowTabsStartFade(maxScrollLeft > 1 && tabsRow.scrollLeft > 1);
+    setShowTabsEndFade(
+      maxScrollLeft > 1 && tabsRow.scrollLeft < maxScrollLeft - 1,
+    );
+  }, []);
+
+  useEffect(() => {
+    const tabsRow = tabsRowRef.current;
+    if (!tabsRow) return undefined;
+
+    updateTabsEndFade();
+    tabsRow.addEventListener("scroll", updateTabsEndFade);
+
+    const resizeObserver = new ResizeObserver(updateTabsEndFade);
+    resizeObserver.observe(tabsRow);
+
+    return () => {
+      tabsRow.removeEventListener("scroll", updateTabsEndFade);
+      resizeObserver.disconnect();
+    };
+  }, [isFileManagerCollapsed, localOpenFiles, updateTabsEndFade]);
+
+  const updateEditorFades = useCallback(() => {
+    const scroller = contentPadRef.current?.querySelector<HTMLElement>(".cm-scroller");
+    if (!scroller) {
+      setShowEditorTopFade(false);
+      setShowEditorBottomFade(false);
+      return;
+    }
+
+    const maxScrollTop = scroller.scrollHeight - scroller.clientHeight;
+    setShowEditorTopFade(maxScrollTop > 1 && scroller.scrollTop > 1);
+    setShowEditorBottomFade(
+      maxScrollTop > 1 && scroller.scrollTop < maxScrollTop - 1,
+    );
+  }, []);
 
   const moveTab = (dragIndex: number, hoverIndex: number) => {
     const newFiles = [...localOpenFiles];
@@ -203,48 +265,103 @@ export function CodeEditor({
     ? selectedOpenFile!.proposedContent!
     : selectedOpenFile?.content;
 
+  useEffect(() => {
+    const scroller = contentPadRef.current?.querySelector<HTMLElement>(".cm-scroller");
+    if (!scroller) {
+      updateEditorFades();
+      return undefined;
+    }
+
+    updateEditorFades();
+    scroller.addEventListener("scroll", updateEditorFades);
+
+    const resizeObserver = new ResizeObserver(updateEditorFades);
+    resizeObserver.observe(scroller);
+
+    return () => {
+      scroller.removeEventListener("scroll", updateEditorFades);
+      resizeObserver.disconnect();
+    };
+  }, [
+    isFileManagerCollapsed,
+    selectedCode,
+    selectedOpenFile?.name,
+    updateEditorFades,
+  ]);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className={styles.root}>
         {/* File Tabs */}
-        {localOpenFiles.length > 0 && (
+        {localOpenFiles.length > 0 && !hideFileTabs && (
           <div
-            className={`${styles.tabsRow} ${
-              isFileManagerCollapsed
-                ? styles.tabsRowCollapsed
-                : styles.tabsRowExpanded
+            className={`${styles.tabsViewport} ${
+              showTabsStartFade ? styles.tabsViewportStartFadeVisible : ""
+            } ${
+              showTabsEndFade ? styles.tabsViewportFadeVisible : ""
             }`}
           >
-            {localOpenFiles.map((file, idx) => (
-              <DraggableTab
-                key={`${file.name}-${idx}`}
-                file={file}
-                index={idx}
-                selectedFile={selectedFile}
-                onFileSelect={onFileSelect}
-                onCloseFile={onCloseFile}
-                moveTab={moveTab}
-                getFileIcon={getFileIcon}
-                enableDragToTutor={enableDragToTutor}
-                isAiChanged={!!(file.name && aiChangedFiles?.[file.name])}
-              />
-            ))}
+            <div
+              ref={tabsRowRef}
+              className={`${styles.tabsRow} ${
+                isFileManagerCollapsed
+                  ? styles.tabsRowCollapsed
+                  : styles.tabsRowExpanded
+              }`}
+            >
+              {localOpenFiles.map((file, idx) => (
+                <DraggableTab
+                  key={`${file.name}-${idx}`}
+                  file={file}
+                  index={idx}
+                  selectedFile={selectedFile}
+                  onFileSelect={onFileSelect}
+                  onCloseFile={onCloseFile}
+                  moveTab={moveTab}
+                  getFileIcon={getFileIcon}
+                  enableDragToTutor={enableDragToTutor}
+                  isAiChanged={!!(file.name && aiChangedFiles?.[file.name])}
+                />
+              ))}
+            </div>
           </div>
         )}
+
+        {planActionBar ? (
+          <div
+            className={`${styles.planActionBar} ${
+              isFileManagerCollapsed ? styles.planActionBarCollapsed : ""
+            }`}
+          >
+            {planActionBar}
+          </div>
+        ) : null}
 
         {/* Code Content */}
         <div className={styles.contentWrap}>
           {localOpenFiles.length === 0 ? (
             <EmptyState
               heading="No files open"
-              description="Create a new file or open one from the file manager to start coding your project."
+              description="Open a file from the file manager to start coding your project."
+              imageSrc={emptyStateNoFilesOpen}
             />
+          ) : selectedOpenFile && selectedCode != null && contentOverride ? (
+            contentOverride({
+              code: selectedCode,
+              file: selectedOpenFile,
+              hasProposed: Boolean(hasProposed),
+            })
           ) : selectedOpenFile && selectedCode != null ? (
             <div
+              ref={contentPadRef}
               className={`${styles.contentPad} ${
                 isFileManagerCollapsed
                   ? styles.contentPadCollapsed
                   : styles.contentPadExpanded
+              } ${
+                showEditorTopFade ? styles.contentPadTopFadeVisible : ""
+              } ${
+                showEditorBottomFade ? styles.contentPadBottomFadeVisible : ""
               }`}
             >
               <CodeMirrorHost
