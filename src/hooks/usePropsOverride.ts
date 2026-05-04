@@ -1,5 +1,9 @@
 import { useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
+import {
+  addLevelShareModeSearchParam,
+  type ActiveLevelShareMode,
+} from "./useLevelShareMode";
 
 const PARAM_KEY = "o";
 
@@ -92,15 +96,55 @@ function deleteNestedValue(
 }
 
 function encode(overrides: Record<string, unknown>): string {
-  return btoa(JSON.stringify(overrides));
+  const bytes = new TextEncoder().encode(JSON.stringify(overrides));
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
 }
 
 function decode(encoded: string): Record<string, unknown> {
   try {
-    return JSON.parse(atob(encoded));
+    const binary = atob(encoded);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
   } catch {
     return {};
   }
+}
+
+function buildAbsoluteRouteUrl(
+  location: ReturnType<typeof useLocation>,
+  searchParams: URLSearchParams,
+) {
+  const search = searchParams.toString();
+  const route = `${location.pathname}${search ? `?${search}` : ""}${location.hash}`;
+
+  if (typeof window === "undefined") return route;
+
+  if (window.location.hash.startsWith("#")) {
+    return `${window.location.origin}${window.location.pathname}${window.location.search}#${route}`;
+  }
+
+  return `${window.location.origin}${route}`;
+}
+
+type ExtraSearchParams = Record<string, string | null | undefined>;
+
+function applyExtraSearchParams(
+  searchParams: URLSearchParams,
+  extraSearchParams?: ExtraSearchParams,
+) {
+  if (!extraSearchParams) return searchParams;
+  for (const [key, value] of Object.entries(extraSearchParams)) {
+    if (value === null || value === undefined || value === "") {
+      searchParams.delete(key);
+    } else {
+      searchParams.set(key, value);
+    }
+  }
+  return searchParams;
 }
 
 export interface PropsOverrideResult<T> {
@@ -111,7 +155,11 @@ export interface PropsOverrideResult<T> {
   resetAll: () => void;
   resetKey: (path: string) => void;
   resetKeys: (paths: string[]) => void;
-  copyLink: () => void;
+  copyLink: (options?: { extraSearchParams?: ExtraSearchParams }) => void;
+  copyShareLink: (
+    mode?: ActiveLevelShareMode,
+    options?: { extraSearchParams?: ExtraSearchParams },
+  ) => void;
   hasOverrides: boolean;
 }
 
@@ -119,6 +167,7 @@ export function usePropsOverride<T extends Record<string, unknown>>(
   defaults: T,
 ): PropsOverrideResult<T> {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
   const overrides = useMemo<Record<string, unknown>>(() => {
     const raw = searchParams.get(PARAM_KEY);
@@ -189,9 +238,24 @@ export function usePropsOverride<T extends Record<string, unknown>>(
     [overrides, writeOverrides],
   );
 
-  const copyLink = useCallback(() => {
-    navigator.clipboard.writeText(window.location.href);
-  }, []);
+  const copyLink = useCallback((options: { extraSearchParams?: ExtraSearchParams } = {}) => {
+    const nextSearchParams = applyExtraSearchParams(
+      new URLSearchParams(searchParams),
+      options.extraSearchParams,
+    );
+    navigator.clipboard.writeText(buildAbsoluteRouteUrl(location, nextSearchParams));
+  }, [location, searchParams]);
+
+  const copyShareLink = useCallback((
+    mode: ActiveLevelShareMode = "locked",
+    options: { extraSearchParams?: ExtraSearchParams } = {},
+  ) => {
+    const shareSearchParams = applyExtraSearchParams(
+      addLevelShareModeSearchParam(searchParams, mode),
+      options.extraSearchParams,
+    );
+    navigator.clipboard.writeText(buildAbsoluteRouteUrl(location, shareSearchParams));
+  }, [location, searchParams]);
 
   return {
     props,
@@ -202,6 +266,7 @@ export function usePropsOverride<T extends Record<string, unknown>>(
     resetKey,
     resetKeys,
     copyLink,
+    copyShareLink,
     hasOverrides,
   };
 }

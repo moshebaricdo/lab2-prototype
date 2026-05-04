@@ -14,6 +14,10 @@ import { useChatState } from "../hooks/useChatState";
 import { useFileWorkspaceState } from "../hooks/useFileWorkspaceState";
 import { useLayoutState } from "../hooks/useLayoutState";
 import { useVersionHistoryState } from "../hooks/useVersionHistoryState";
+import {
+  useLevelShareMode,
+  type ShareModeConfig,
+} from "../hooks/useLevelShareMode";
 import { PortfolioInstructions } from "../components/lab2/resource-panel/ProgressionInstructions";
 import {
   sampleProgressionLinks,
@@ -34,6 +38,18 @@ export function ProgressionBranchWebLabPage({
   currentLevelPath,
 }: ProgressionBranchWebLabPageProps) {
   const navigate = useNavigate();
+  const shareMode = useLevelShareMode();
+  const shareModeConfig: ShareModeConfig = {
+    mode: shareMode,
+    flowCompletion:
+      shareMode === "flow"
+        ? {
+            title: "Task complete",
+            message: "Thanks, you have completed this shared task.",
+            buttonLabel: "Close",
+          }
+        : undefined,
+  };
   const {
     activeTab,
     setActiveTab,
@@ -66,7 +82,6 @@ export function ProgressionBranchWebLabPage({
   const {
     selectedHistoryVersion,
     setSelectedHistoryVersion,
-    showSavedTag,
     showRestoreSuccessAlert,
     setShowRestoreSuccessAlert,
     showSaveSuccessAlert,
@@ -91,6 +106,7 @@ export function ProgressionBranchWebLabPage({
   return (
     <>
       <Lab2Shell
+        shareModeConfig={shareModeConfig}
         topNavigationProps={{
           title,
           subtitle: "Saved a few seconds ago",
@@ -121,6 +137,8 @@ export function ProgressionBranchWebLabPage({
           onContinue: () => navigate("/levels/progression-levelgroup"),
           continueLabel: "Continue to checkpoint",
           instructionsContent: <PortfolioInstructions />,
+          showStudentLessonResource: true,
+          showDocumentationResource: true,
         }}
         onResize={(delta) => {
           setSidebarWidth((prev) =>
@@ -146,7 +164,6 @@ export function ProgressionBranchWebLabPage({
           onMoveFileTreeItem={moveFileTreeItem}
           preview={{ kind: "react", content: <DefaultProjectPreview /> }}
           selectedHistoryVersion={selectedHistoryVersion}
-          showSavedTag={showSavedTag}
           onReturnToCurrentVersion={handleReturnToCurrentVersion}
         />
       </Lab2Shell>

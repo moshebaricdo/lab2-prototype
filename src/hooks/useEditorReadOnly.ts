@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 /**
- * Session-storage key for the global "force read-only" dev toggle.
- * Stored as `"true"` when on; absent or anything else means off.
+ * Storage key used by URL overrides and mirrored into sessionStorage so shared
+ * editor components can subscribe to one global read-only state.
  */
 export const EDITOR_READ_ONLY_STORAGE_KEY = "devEditorReadOnly";
 
@@ -22,10 +22,8 @@ function readToggle(): boolean {
 /**
  * Subscribe to the global "force read-only" dev toggle.
  *
- * Backed by `sessionStorage[EDITOR_READ_ONLY_STORAGE_KEY]`. Re-renders the
- * caller when the value changes via `setEditorReadOnlyOverride`, the native
- * `storage` event (cross-tab), or any direct manipulation that dispatches
- * the custom change event.
+ * Pages should call `setEditorReadOnlyOverride` with their resolved URL-backed
+ * dev-panel value. The editor then re-renders from this shared mirror.
  */
 export function useEditorReadOnlyOverride(): boolean {
   const [value, setValue] = useState<boolean>(() => readToggle());
@@ -44,7 +42,7 @@ export function useEditorReadOnlyOverride(): boolean {
 }
 
 /**
- * Imperatively set the global read-only dev toggle. Used by the dev panel.
+ * Imperatively set the global read-only mirror.
  */
 export function setEditorReadOnlyOverride(next: boolean): void {
   if (typeof window === "undefined") return;

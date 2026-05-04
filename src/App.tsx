@@ -48,6 +48,7 @@ import { WebLab2SendAffordanceLevelPage } from "./pages/WebLab2SendAffordanceLev
 import { WebLab2FileChipActionLevelPage } from "./pages/WebLab2FileChipActionLevelPage";
 import { WebLab2TutorActionCardLevelPage } from "./pages/WebLab2TutorActionCardLevelPage";
 import { WebLab2DemoProjectLevelPage } from "./pages/WebLab2DemoProjectLevelPage";
+import { WebLab2BlankDemoProjectLevelPage } from "./pages/WebLab2BlankDemoProjectLevelPage";
 
 export default function App() {
   return (
@@ -87,6 +88,10 @@ export default function App() {
       <Route
         path="/levels/weblab2-demo-project"
         element={<WebLab2DemoProjectLevelPage />}
+      />
+      <Route
+        path="/levels/weblab2-demo-project-blank"
+        element={<WebLab2BlankDemoProjectLevelPage />}
       />
       <Route path="/levels/multi" element={<MultiChoiceLevelPage />} />
       <Route

@@ -3,10 +3,17 @@ import type { FileItem, FileKind } from "../types/file";
 import type { ViewMode } from "../types/ui";
 
 const FALLBACK_ROOT_FOLDER = "My Project";
+const NON_ROOT_WRAPPER_FOLDERS = new Set(["Plans"]);
+const PLAN_FOLDER_NAME = "Plans";
 type FileActionResult = true | string;
 
 function getRootFolderName(tree?: FileItem[]): string {
-  const root = tree?.find((f) => f.type === "folder");
+  const root =
+    tree?.length === 1 &&
+    tree[0]?.type === "folder" &&
+    !NON_ROOT_WRAPPER_FOLDERS.has(tree[0].name)
+      ? tree[0]
+      : undefined;
   return root?.name ?? FALLBACK_ROOT_FOLDER;
 }
 const FILE_KIND_BY_INPUT: Record<string, FileKind> = {
@@ -29,11 +36,19 @@ function inferFileKind(fileName: string): FileKind {
   if (ext === "html" || ext === "htm") return "html";
   if (ext === "css") return "css";
   if (["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"].includes(ext)) return "image";
-  if (ext === "txt") return "text";
+  if (ext === "txt" || ext === "md") return "text";
   return "file";
 }
 
 function addToProjectRoot(tree: FileItem[], newFile: FileItem, rootName: string): FileItem[] {
+  const rootExists = tree.some(
+    (node) => node.type === "folder" && node.name === rootName,
+  );
+  if (!rootExists) {
+    const alreadyExists = tree.some((node) => node.name === newFile.name);
+    return alreadyExists ? tree : [...tree, newFile];
+  }
+
   return tree.map((node) => {
     if (node.type === "folder" && node.name === rootName && node.children) {
       const alreadyExists = node.children.some((c) => c.name === newFile.name);
@@ -45,6 +60,16 @@ function addToProjectRoot(tree: FileItem[], newFile: FileItem, rootName: string)
 }
 
 function addFolderToProjectRoot(tree: FileItem[], folderName: string, rootName: string): FileItem[] {
+  const rootExists = tree.some(
+    (node) => node.type === "folder" && node.name === rootName,
+  );
+  if (!rootExists) {
+    const alreadyExists = tree.some((node) => node.name === folderName);
+    return alreadyExists
+      ? tree
+      : [...tree, { name: folderName, type: "folder", children: [] }];
+  }
+
   return tree.map((node) => {
     if (node.type === "folder" && node.name === rootName && node.children) {
       const alreadyExists = node.children.some((child) => child.name === folderName);
@@ -56,6 +81,53 @@ function addFolderToProjectRoot(tree: FileItem[], folderName: string, rootName: 
     }
     return node;
   });
+}
+
+function addPlanFileToTree(tree: FileItem[], newFile: FileItem, rootName: string): FileItem[] {
+  const addToPlanFolder = (items: FileItem[]): FileItem[] => {
+    const planFolderIndex = items.findIndex(
+      (item) => item.type === "folder" && item.name === PLAN_FOLDER_NAME,
+    );
+    if (planFolderIndex === -1) {
+      return [
+        ...items,
+        { name: PLAN_FOLDER_NAME, type: "folder", children: [newFile] },
+      ];
+    }
+
+    return items.map((item, index) => {
+      if (index !== planFolderIndex || item.type !== "folder") return item;
+      return {
+        ...item,
+        children: [...(item.children ?? []), newFile],
+      };
+    });
+  };
+
+  const rootExists = tree.some(
+    (node) => node.type === "folder" && node.name === rootName,
+  );
+  if (!rootExists) {
+    return addToPlanFolder(tree);
+  }
+
+  return tree.map((node) => {
+    if (node.type === "folder" && node.name === rootName && node.children) {
+      return { ...node, children: addToPlanFolder(node.children) };
+    }
+    return node;
+  });
+}
+
+function getPlanFileSiblings(tree: FileItem[], rootName: string): FileItem[] {
+  const root = tree.find(
+    (node) => node.type === "folder" && node.name === rootName,
+  );
+  const scope = root?.children ?? tree;
+  const planFolder = scope.find(
+    (item) => item.type === "folder" && item.name === PLAN_FOLDER_NAME,
+  );
+  return planFolder?.children ?? [];
 }
 
 function findFileByName(tree: FileItem[] | undefined, name: string): FileItem | null {
@@ -81,6 +153,10 @@ function findFileByPath(tree: FileItem[] | undefined, path: string, parentPath =
     }
   }
   return null;
+}
+
+function isOpenableFile(file: FileItem | null): file is FileItem {
+  return !!file && file.proposedStatus !== "deleted";
 }
 
 function findItemByPath(tree: FileItem[] | undefined, path: string, parentPath = ""): FileItem | null {
@@ -258,6 +334,25 @@ function cloneFileTree(tree: FileItem[]): FileItem[] {
   }));
 }
 
+function cloneFileTreeForStorage(tree: FileItem[]): FileItem[] {
+  return clearProposedContent(cloneFileTree(tree));
+}
+
+function readStoredFileStructure(storageKey?: string): FileItem[] | null {
+  if (!storageKey || typeof window === "undefined") return null;
+
+  try {
+    const raw = window.sessionStorage.getItem(storageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { fileStructure?: FileItem[] };
+    return Array.isArray(parsed.fileStructure)
+      ? cloneFileTreeForStorage(parsed.fileStructure)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function clearProposedContent(tree: FileItem[]): FileItem[] {
   return tree.map((item) => {
     if (item.children) {
@@ -353,6 +448,18 @@ function applyProposalToTree(
     });
   };
 
+  if (!parentPath) {
+    const hasRootFolder = next.some(
+      (item) => item.type === "folder" && item.name === rootName && item.children,
+    );
+    if (!hasRootFolder) {
+      return additions.reduce((currentChildren, change) => {
+        const pathParts = change.fileName.split("/").filter(Boolean);
+        return addProposalToChildren(currentChildren, pathParts, change);
+      }, next);
+    }
+  }
+
   return next.map((item) => {
     if (item.type !== "folder" || item.name !== rootName || !item.children) return item;
     const children = additions.reduce((currentChildren, change) => {
@@ -368,11 +475,15 @@ function applyProposalToTree(
 
 export function useFileWorkspaceState(
   initialFileStructure?: FileItem[],
-  options: { storageKey?: string } = {},
+  options: {
+    storageKey?: string;
+    initialViewMode?: ViewMode;
+    initialFileManagerCollapsed?: boolean;
+  } = {},
 ) {
   const storageKey = options.storageKey;
   const [fileStructureState, setFileStructureState] = useState<FileItem[] | null>(
-    () => initialFileStructure ? cloneFileTree(initialFileStructure) : null,
+    () => readStoredFileStructure(storageKey) ?? (initialFileStructure ? cloneFileTree(initialFileStructure) : null),
   );
   const rootFolder = getRootFolderName(fileStructureState ?? initialFileStructure);
   const initialFile = useMemo(
@@ -384,24 +495,46 @@ export function useFileWorkspaceState(
   );
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(initialFile);
   const [openFiles, setOpenFiles] = useState<FileItem[]>(initialFile ? [initialFile] : []);
-  const [viewMode, setViewMode] = useState<ViewMode>("code");
-  const [isFileManagerCollapsed, setIsFileManagerCollapsed] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    () => options.initialViewMode ?? "code",
+  );
+  const [isFileManagerCollapsed, setIsFileManagerCollapsed] = useState(
+    () => Boolean(options.initialFileManagerCollapsed),
+  );
   const [isCreateFileModalOpen, setIsCreateFileModalOpen] = useState(false);
   const preAiSnapshotRef = useRef<FileItem[] | null>(null);
 
   useEffect(() => {
     if (!storageKey || typeof window === "undefined") return;
-    window.sessionStorage.removeItem(storageKey);
-    window.localStorage.removeItem(storageKey);
-  }, [storageKey]);
+    if (!fileStructureState) return;
+
+    try {
+      window.sessionStorage.setItem(
+        storageKey,
+        JSON.stringify({ fileStructure: cloneFileTreeForStorage(fileStructureState) }),
+      );
+    } catch (error) {
+      console.warn("[useFileWorkspaceState] Unable to persist file structure", error);
+    }
+  }, [fileStructureState, storageKey]);
 
   const syncOpenStateToTree = useCallback((tree: FileItem[]) => {
-    setOpenFiles((prev) =>
-      prev.map((file) => findFileByName(tree, file.name) ?? file),
-    );
-    setSelectedFile((current) =>
-      current ? findFileByName(tree, current.name) ?? current : current,
-    );
+    setOpenFiles((prev) => {
+      const nextOpenFiles = prev.flatMap((file) => {
+        const syncedFile = findFileByName(tree, file.name);
+        return isOpenableFile(syncedFile) ? [syncedFile] : [];
+      });
+
+      setSelectedFile((current) => {
+        if (!current) return null;
+        const syncedSelectedFile = findFileByName(tree, current.name);
+        return isOpenableFile(syncedSelectedFile)
+          ? syncedSelectedFile
+          : nextOpenFiles[0] ?? null;
+      });
+
+      return nextOpenFiles;
+    });
   }, []);
 
   const replaceFileStructure = useCallback((nextTree: FileItem[]) => {
@@ -423,6 +556,7 @@ export function useFileWorkspaceState(
   }, []);
 
   const openFile = useCallback((file: FileItem) => {
+    if (!isOpenableFile(file)) return;
     setSelectedFile(file);
     setOpenFiles((prev) =>
       prev.some((existingFile) => existingFile.name === file.name)
@@ -452,7 +586,8 @@ export function useFileWorkspaceState(
 
     const baseTree = fileStructureState ?? initialFileStructure ?? [];
     const root = baseTree.find((node) => node.type === "folder" && node.name === rootFolder);
-    if (root?.children?.some((child) => child.name === trimmedName)) {
+    const siblings = root?.children ?? baseTree;
+    if (siblings.some((child) => child.name === trimmedName)) {
       return `A file or folder named ${trimmedName} already exists.`;
     }
 
@@ -484,7 +619,8 @@ export function useFileWorkspaceState(
 
     const baseTree = fileStructureState ?? initialFileStructure ?? [];
     const root = baseTree.find((node) => node.type === "folder" && node.name === rootFolder);
-    if (root?.children?.some((child) => child.name === trimmedName)) {
+    const siblings = root?.children ?? baseTree;
+    if (siblings.some((child) => child.name === trimmedName)) {
       return `A file or folder named ${trimmedName} already exists.`;
     }
 
@@ -494,6 +630,35 @@ export function useFileWorkspaceState(
       next.add(rootFolder);
       return next;
     });
+    return true;
+  }, [fileStructureState, initialFileStructure, replaceFileStructure, rootFolder]);
+
+  const handleCreatePlan = useCallback((planName: string): FileActionResult => {
+    const trimmedName = planName.trim();
+    if (!trimmedName) return "Please enter a plan name.";
+    if (hasInvalidPathCharacters(trimmedName)) return "Plan names cannot include slashes.";
+
+    const fullName = trimmedName.toLowerCase().endsWith(".md")
+      ? trimmedName
+      : `${trimmedName}.md`;
+    const baseTree = fileStructureState ?? initialFileStructure ?? [];
+    const siblings = getPlanFileSiblings(baseTree, rootFolder);
+    if (siblings.some((child) => child.name === fullName)) {
+      return `A plan named ${fullName} already exists.`;
+    }
+
+    const newFile: FileItem = {
+      name: fullName,
+      type: "text",
+      content: `# ${fullName.replace(/\.md$/i, "")}\n\nStatus: Planned\n\n## Project Goal\n\n`,
+    };
+    replaceFileStructure(addPlanFileToTree(baseTree, newFile, rootFolder));
+    setOpenFiles((prev) =>
+      prev.some((existingFile) => existingFile.name === newFile.name)
+        ? prev
+        : [...prev, newFile],
+    );
+    setSelectedFile(newFile);
     return true;
   }, [fileStructureState, initialFileStructure, replaceFileStructure, rootFolder]);
 
@@ -658,6 +823,7 @@ export function useFileWorkspaceState(
       handleReorderFiles,
       handleCreateFile,
       handleCreateFolder,
+      handleCreatePlan,
       addFileToProject,
       renameFile,
       deleteFile,
@@ -682,6 +848,7 @@ export function useFileWorkspaceState(
       handleReorderFiles,
       handleCreateFile,
       handleCreateFolder,
+      handleCreatePlan,
       addFileToProject,
       renameFile,
       deleteFile,

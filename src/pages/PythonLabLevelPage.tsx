@@ -15,7 +15,6 @@ import { globalEditorDevFields } from "../components/lab2/dev";
 import {
   EDITOR_READ_ONLY_STORAGE_KEY,
   setEditorReadOnlyOverride,
-  useEditorReadOnlyOverride,
 } from "../hooks/useEditorReadOnly";
 import type { InstructionsDrawerVisualCue } from "../components/lab2/resource-panel/InstructionsDrawer";
 import { PythonLabInstructions } from "../components/lab2/resource-panel/PythonLabInstructions";
@@ -97,14 +96,19 @@ export function PythonLabLevelPage() {
     autoSeedTutorConversation: false,
     title: "Python Lab: Intro Project",
     subtitle: "Saved a few seconds ago",
+    [EDITOR_READ_ONLY_STORAGE_KEY]: false,
   };
 
   const overrideResult = usePropsOverride(defaults);
   const resolved = overrideResult.props;
-  const editorReadOnlyOverride = useEditorReadOnlyOverride();
+  const resolvedEditorReadOnlyOverride = Boolean(resolved[EDITOR_READ_ONLY_STORAGE_KEY]);
 
   const resolvedVisualCue =
     resolved.instructionsDrawerVisualCue as InstructionsDrawerVisualCue;
+
+  useEffect(() => {
+    setEditorReadOnlyOverride(resolvedEditorReadOnlyOverride);
+  }, [resolvedEditorReadOnlyOverride]);
 
   useEffect(() => {
     if (openFiles.length === 0 && pythonFileStructure.length > 0) {
@@ -151,19 +155,6 @@ export function PythonLabLevelPage() {
         instructionsContent: <PythonLabInstructions />,
         devPanelFields: pythonLabDevFields,
         devPanelOverrideResult: overrideResult,
-        devPanelSessionValues: {
-          [EDITOR_READ_ONLY_STORAGE_KEY]: editorReadOnlyOverride,
-        },
-        onDevPanelSessionValueChange: (key, value) => {
-          if (key === EDITOR_READ_ONLY_STORAGE_KEY) {
-            setEditorReadOnlyOverride(Boolean(value));
-          }
-        },
-        onDevPanelSessionValueReset: (key) => {
-          if (key === EDITOR_READ_ONLY_STORAGE_KEY) {
-            setEditorReadOnlyOverride(false);
-          }
-        },
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));

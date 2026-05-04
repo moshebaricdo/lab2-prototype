@@ -28,6 +28,10 @@ export const webLab2LevelLinks: LevelProgressLink[] = [
     name: "Demo Project (Stellar Atlas)",
     path: "/levels/weblab2-demo-project",
   },
+  {
+    name: "Demo Project (No Starter Code)",
+    path: "/levels/weblab2-demo-project-blank",
+  },
 ];
 
 export const multiChoiceLevelLinks: LevelProgressLink[] = [

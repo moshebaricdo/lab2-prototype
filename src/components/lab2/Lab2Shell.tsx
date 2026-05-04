@@ -10,12 +10,20 @@ import {
 } from "../ui/header/TopNavigation";
 import { ResizableHandle } from "../ui/ResizableHandle";
 import { useAnnotations } from "../../hooks/useAnnotations";
+import {
+  useLevelShareMode,
+  type ShareModeConfig,
+} from "../../hooks/useLevelShareMode";
 import { AnnotationOverlay } from "./dev/AnnotationOverlay";
+import { Dialog } from "../ui/Dialog";
+import { AppButton } from "../ui/AppButton";
 
 type Lab2ShellProps =
   | {
       children: ReactNode;
       topNavigationProps?: TopNavigationProps;
+      /** Hides prototype-authoring chrome while preserving the level UI. */
+      shareModeConfig?: ShareModeConfig;
       /** No resource panel (e.g. bubble choice levels). */
       hideResourcePanel: true;
     }
@@ -24,39 +32,113 @@ type Lab2ShellProps =
       onResize: (delta: number) => void;
       sidebarProps: SidebarProps;
       topNavigationProps?: TopNavigationProps;
+      /** Hides prototype-authoring chrome while preserving the level UI. */
+      shareModeConfig?: ShareModeConfig;
       hideResourcePanel?: false;
     };
 
 export function Lab2Shell(props: Lab2ShellProps) {
   const { children, topNavigationProps } = props;
   const annotationsResult = useAnnotations();
+  const urlShareMode = useLevelShareMode();
+  const shareModeConfig = props.shareModeConfig ?? { mode: urlShareMode };
+  const shareMode = shareModeConfig.mode;
+  const isShareMode = shareMode !== "off";
+  const isLockedShareMode = shareMode === "locked";
+  const isFlowShareMode = shareMode === "flow";
+  const flowCompletion = shareModeConfig.flowCompletion;
+  const [isFlowCompletionOpen, setIsFlowCompletionOpen] = useState(false);
+
+  const shouldShowTopNavigationContinue =
+    isLockedShareMode
+      ? false
+      : isFlowShareMode
+        ? Boolean(topNavigationProps?.showContinueButton && flowCompletion)
+        : topNavigationProps?.showContinueButton;
+  const resolvedTopNavigationProps = {
+    ...topNavigationProps,
+    disableLogoLink: isShareMode || topNavigationProps?.disableLogoLink,
+    hideProgression: isLockedShareMode || topNavigationProps?.hideProgression,
+    disableProgressionLinks:
+      isFlowShareMode || topNavigationProps?.disableProgressionLinks,
+    showContinueButton: shouldShowTopNavigationContinue,
+    onContinue:
+      isFlowShareMode && shouldShowTopNavigationContinue
+        ? () => setIsFlowCompletionOpen(true)
+        : topNavigationProps?.onContinue,
+  };
+  const flowCompletionDialog = (
+    <Dialog
+      open={isFlowCompletionOpen}
+      onClose={() => setIsFlowCompletionOpen(false)}
+      title={flowCompletion?.title ?? "Task complete"}
+      footer={
+        <AppButton
+          variant="primary"
+          tone="purple"
+          size="s"
+          onClick={() => setIsFlowCompletionOpen(false)}
+        >
+          {flowCompletion?.buttonLabel ?? "Close"}
+        </AppButton>
+      }
+    >
+      <p>
+        {flowCompletion?.message ??
+          "Thanks, you have completed this shared level."}
+      </p>
+    </Dialog>
+  );
 
   if (props.hideResourcePanel === true) {
     return (
       <div className="relative flex h-screen flex-col overflow-hidden bg-background">
-        <TopNavigation {...topNavigationProps} />
+        <TopNavigation {...resolvedTopNavigationProps} />
         <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
           {children}
         </div>
-        <AnnotationOverlay annotations={annotationsResult} />
+        {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
+        {flowCompletionDialog}
       </div>
     );
   }
 
-  const { onResize, sidebarProps } = props;
+  const { onResize } = props;
+  const sidebarProps = isShareMode
+    ? {
+        ...props.sidebarProps,
+        showContinueButton: isLockedShareMode
+          ? false
+          : isFlowShareMode
+            ? Boolean(flowCompletion && props.sidebarProps.showContinueButton !== false)
+            : props.sidebarProps.showContinueButton,
+        onContinue:
+          isFlowShareMode && flowCompletion
+            ? () => setIsFlowCompletionOpen(true)
+            : props.sidebarProps.onContinue,
+        devPanelFields: undefined,
+        devPanelOverrideResult: undefined,
+        devPanelSessionValues: undefined,
+        onDevPanelSessionValueChange: undefined,
+        onDevPanelSessionValueReset: undefined,
+      }
+    : props.sidebarProps;
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
-    Boolean(sidebarProps.collapsible),
+    Boolean(
+      sidebarProps.collapsible &&
+        (sidebarProps.defaultCollapsed ?? sidebarProps.collapsible),
+    ),
   );
   const resizeDisabled =
     Boolean(sidebarProps.collapsible) && sidebarCollapsed;
 
   return (
     <div className="relative flex h-screen flex-col overflow-hidden bg-background">
-      <TopNavigation {...topNavigationProps} />
+      <TopNavigation {...resolvedTopNavigationProps} />
       <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <Sidebar
           {...sidebarProps}
-          annotations={annotationsResult}
+          annotations={isShareMode ? undefined : annotationsResult}
           onCollapsedChange={(collapsed) => {
             setSidebarCollapsed(collapsed);
             sidebarProps.onCollapsedChange?.(collapsed);
@@ -65,7 +147,8 @@ export function Lab2Shell(props: Lab2ShellProps) {
         {!resizeDisabled && <ResizableHandle onResize={onResize} />}
         {children}
       </div>
-      <AnnotationOverlay annotations={annotationsResult} />
+      {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
+      {flowCompletionDialog}
     </div>
   );
 }

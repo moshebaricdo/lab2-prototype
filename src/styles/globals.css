@@ -9,6 +9,7 @@
   --text-h3: 28px;
   --text-h4: 24px;
   --text-lg: 20px;
+  --text-icon: 18px;
   --text-base: 16px;
   --text-sm: 14px;
   --text-code: 13px;
@@ -40,7 +41,7 @@
   --input: var(--ds-background-neutral-primary);
   --input-background: var(--ds-background-neutral-primary);
   --ring: var(--ds-borders-brand-teal-primary);
-  --elevation-sm: 6px 6px 4px 0px rgb(0 0 0 / 40%);
+  --elevation-sm: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --chart-1: var(--ds-background-brand-teal-primary);
   --chart-2: var(--ds-background-brand-purple-primary);
   --chart-3: var(--ds-background-success-primary);

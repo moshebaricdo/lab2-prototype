@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
+import type { ActiveLevelShareMode } from "./useLevelShareMode";
 
 const STORAGE_KEY = "lab2-variants";
 
@@ -9,6 +10,8 @@ export interface SavedVariant {
   basePath: string;
   /** The override object (same shape written to the URL `?o=` param) */
   overrides: Record<string, unknown>;
+  /** Additional URL params that are not part of the dev override object. */
+  searchParams?: Record<string, string>;
   savedAt: number;
 }
 
@@ -53,13 +56,21 @@ export function useSavedVariants() {
   const variants = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   const saveVariant = useCallback(
-    (name: string, basePath: string, overrides: Record<string, unknown>) => {
+    (
+      name: string,
+      basePath: string,
+      overrides: Record<string, unknown>,
+      options: { searchParams?: Record<string, string> } = {},
+    ) => {
       const current = readVariants();
       const variant: SavedVariant = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         name,
         basePath,
         overrides,
+        ...(options.searchParams && Object.keys(options.searchParams).length > 0
+          ? { searchParams: options.searchParams }
+          : {}),
         savedAt: Date.now(),
       };
       writeVariants([variant, ...current]);
@@ -84,9 +95,42 @@ export function useSavedVariants() {
  * Path + query for React Router `Link` `to` (HashRouter: omit `#`; the router adds it).
  * Matches `usePropsOverride` search param `o`.
  */
-export function buildVariantUrl(basePath: string, overrides: Record<string, unknown>): string {
+export function buildVariantUrl(
+  basePath: string,
+  overrides: Record<string, unknown>,
+  options: {
+    searchParams?: Record<string, string>;
+    shareMode?: ActiveLevelShareMode;
+  } = {},
+): string {
   const path = basePath.startsWith("/") ? basePath : `/${basePath}`;
-  if (Object.keys(overrides).length === 0) return path;
-  const encoded = btoa(JSON.stringify(overrides));
-  return `${path}?o=${encodeURIComponent(encoded)}`;
+  const searchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(options.searchParams ?? {})) {
+    searchParams.set(key, value);
+  }
+
+  if (options.shareMode) {
+    searchParams.set("share", options.shareMode);
+  }
+
+  if (Object.keys(overrides).length > 0) {
+    searchParams.set("o", btoa(JSON.stringify(overrides)));
+  }
+
+  const search = searchParams.toString();
+  return search ? `${path}?${search}` : path;
+}
+
+export function buildVariantAbsoluteUrl(
+  basePath: string,
+  overrides: Record<string, unknown>,
+  options: {
+    searchParams?: Record<string, string>;
+    shareMode?: ActiveLevelShareMode;
+  } = {},
+): string {
+  const route = buildVariantUrl(basePath, overrides, options);
+  if (typeof window === "undefined") return route;
+  return `${window.location.origin}${window.location.pathname}${window.location.search}#${route}`;
 }

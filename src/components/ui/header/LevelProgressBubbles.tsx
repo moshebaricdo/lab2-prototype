@@ -16,6 +16,7 @@ interface BubbleProps {
   levelNumber?: number;
   to?: string;
   label: string;
+  readOnly?: boolean;
 }
 
 const circleClassByState: Record<Exclude<BubbleState, "current">, string> = {
@@ -24,7 +25,7 @@ const circleClassByState: Record<Exclude<BubbleState, "current">, string> = {
   "in-progress": styles.circleInProgress,
 };
 
-function Bubble({ state, levelNumber, to, label }: BubbleProps) {
+function Bubble({ state, levelNumber, to, label, readOnly = false }: BubbleProps) {
   const isCurrent = state === "current";
   const bubbleClass = isCurrent ? styles.bubbleCurrent : styles.bubble;
 
@@ -34,6 +35,13 @@ function Bubble({ state, levelNumber, to, label }: BubbleProps) {
         <Link to={to} className={bubbleClass} aria-label={label}>
           {children}
         </Link>
+      );
+    }
+    if (readOnly) {
+      return (
+        <span className={bubbleClass} aria-label={label}>
+          {children}
+        </span>
       );
     }
     return (
@@ -105,6 +113,7 @@ interface LevelProgressBubblesProps {
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
   completedLevelPaths?: string[];
+  readOnly?: boolean;
 }
 
 export function LevelProgressBubbles({
@@ -114,6 +123,7 @@ export function LevelProgressBubbles({
   levelLinks,
   currentLevelPath,
   completedLevelPaths,
+  readOnly = false,
 }: LevelProgressBubblesProps) {
   const isLinkMode = Boolean(levelLinks && levelLinks.length > 0);
   const resolvedLevelLinks = isLinkMode ? levelLinks ?? [] : [];
@@ -171,7 +181,7 @@ export function LevelProgressBubbles({
               (_, index) => {
                 const state = getBubbleState(index);
                 const label = getBubbleLabel(index);
-                const to = isLinkMode ? resolvedLevelLinks[index].path : undefined;
+                const to = isLinkMode && !readOnly ? resolvedLevelLinks[index].path : undefined;
                 return (
                   <div key={index} className={styles.bubbleItem}>
                     <Tooltip
@@ -187,6 +197,7 @@ export function LevelProgressBubbles({
                           levelNumber={state === "current" ? resolvedCurrentLevel : undefined}
                           to={to}
                           label={label}
+                          readOnly={readOnly}
                         />
                       </div>
                     </Tooltip>

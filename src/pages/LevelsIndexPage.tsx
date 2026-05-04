@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { Tooltip } from "../components/ui/Tooltip";
-import { Modal } from "../components/ui/Modal";
+import { Dialog } from "../components/ui/Dialog";
 import { AppButton } from "../components/ui/AppButton";
+import { AppActionDropdown } from "../components/ui/AppDropdown";
 import { useState, useCallback, type ReactNode } from "react";
 import {
   useSavedVariants,
+  buildVariantAbsoluteUrl,
   buildVariantUrl,
 } from "../hooks/useSavedVariants";
 import type { SavedVariant } from "../hooks/useSavedVariants";
@@ -139,7 +141,7 @@ function PromoteDialog({
   onClose: () => void;
 }) {
   return (
-    <Modal open title="Promote to code" onClose={onClose} size="l">
+    <Dialog open title="Promote to code" onClose={onClose} size="l">
       <div className={styles.promoteSteps}>
         <section>
           <div className={styles.promoteStepHeader}>
@@ -169,7 +171,7 @@ function PromoteDialog({
           <pre className={styles.codeBlock}>{promoted.linkEntry}</pre>
         </section>
       </div>
-    </Modal>
+    </Dialog>
   );
 }
 
@@ -235,6 +237,18 @@ function SavedVariantsSection() {
     if (result) setPromoteTarget(result);
   }, []);
 
+  const copyVariantShareLink = useCallback((
+    variant: SavedVariant,
+    shareMode: "locked" | "flow",
+  ) => {
+    navigator.clipboard.writeText(
+      buildVariantAbsoluteUrl(variant.basePath, variant.overrides, {
+        searchParams: variant.searchParams,
+        shareMode,
+      }),
+    );
+  }, []);
+
   return (
     <div className={styles.variantsSection}>
       {promoteTarget && (
@@ -258,7 +272,9 @@ function SavedVariantsSection() {
               <div key={v.id} className={styles.variantRow}>
                 <div className={styles.variantInfo}>
                   <Link
-                    to={buildVariantUrl(v.basePath, v.overrides)}
+                    to={buildVariantUrl(v.basePath, v.overrides, {
+                      searchParams: v.searchParams,
+                    })}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.variantNameLink}
@@ -277,7 +293,9 @@ function SavedVariantsSection() {
                 <div className={styles.variantActions}>
                   <Tooltip content="Open in new tab" position="top">
                     <Link
-                      to={buildVariantUrl(v.basePath, v.overrides)}
+                      to={buildVariantUrl(v.basePath, v.overrides, {
+                        searchParams: v.searchParams,
+                      })}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -290,6 +308,38 @@ function SavedVariantsSection() {
                       />
                     </Link>
                   </Tooltip>
+                  <AppActionDropdown
+                    size="xs"
+                    align="end"
+                    side="bottom"
+                    sideOffset={6}
+                    menuWidth={172}
+                    listLabel={`Share ${v.name}`}
+                    trigger={
+                      <AppButton
+                        variant="tertiary"
+                        tone="gray"
+                        size="xs"
+                        iconName="share-nodes"
+                        aria-label={`Share ${v.name}`}
+                        title="Share links"
+                      />
+                    }
+                    items={[
+                      {
+                        id: "locked-share",
+                        label: "Locked share link",
+                        iconName: "lock",
+                        onSelect: () => copyVariantShareLink(v, "locked"),
+                      },
+                      {
+                        id: "flow-share",
+                        label: "Flow share link",
+                        iconName: "diagram-project",
+                        onSelect: () => copyVariantShareLink(v, "flow"),
+                      },
+                    ]}
+                  />
                   <Tooltip content="Promote to code" position="top">
                     <AppButton
                       variant="tertiary"

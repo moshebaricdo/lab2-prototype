@@ -14,6 +14,10 @@ import { useChatState } from "../hooks/useChatState";
 import { useFileWorkspaceState } from "../hooks/useFileWorkspaceState";
 import { useLayoutState } from "../hooks/useLayoutState";
 import { useVersionHistoryState } from "../hooks/useVersionHistoryState";
+import {
+  useLevelShareMode,
+  type ShareModeConfig,
+} from "../hooks/useLevelShareMode";
 import { PortfolioInstructions } from "../components/lab2/resource-panel/ProgressionInstructions";
 import { sampleProgressionLinks } from "./levelTypeLinks";
 
@@ -23,6 +27,18 @@ const indexHtmlFile = fileStructure[0]?.children?.find(
 
 export function ProgressionWebLabPage() {
   const navigate = useNavigate();
+  const shareMode = useLevelShareMode();
+  const shareModeConfig: ShareModeConfig = {
+    mode: shareMode,
+    flowCompletion:
+      shareMode === "flow"
+        ? {
+            title: "Task complete",
+            message: "Thanks, you have completed this shared task.",
+            buttonLabel: "Close",
+          }
+        : undefined,
+  };
   const {
     activeTab,
     setActiveTab,
@@ -55,7 +71,6 @@ export function ProgressionWebLabPage() {
   const {
     selectedHistoryVersion,
     setSelectedHistoryVersion,
-    showSavedTag,
     showRestoreSuccessAlert,
     setShowRestoreSuccessAlert,
     showSaveSuccessAlert,
@@ -72,6 +87,7 @@ export function ProgressionWebLabPage() {
   return (
     <>
       <Lab2Shell
+        shareModeConfig={shareModeConfig}
         topNavigationProps={{
           title: "Intro to HTML & CSS: Build Your Portfolio",
           subtitle: "Saved a few seconds ago",
@@ -101,6 +117,8 @@ export function ProgressionWebLabPage() {
           onContinue: () => navigate("/levels/progression-free-response"),
           continueLabel: "Continue to next level",
           instructionsContent: <PortfolioInstructions />,
+          showStudentLessonResource: true,
+          showDocumentationResource: true,
         }}
         onResize={(delta) => {
           setSidebarWidth((prev) =>
@@ -126,7 +144,6 @@ export function ProgressionWebLabPage() {
           onMoveFileTreeItem={moveFileTreeItem}
           preview={{ kind: "react", content: <DefaultProjectPreview /> }}
           selectedHistoryVersion={selectedHistoryVersion}
-          showSavedTag={showSavedTag}
           onReturnToCurrentVersion={handleReturnToCurrentVersion}
         />
       </Lab2Shell>

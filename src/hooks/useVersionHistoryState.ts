@@ -74,6 +74,18 @@ function serializeFileTree(tree: FileItem[]) {
   return JSON.stringify(cloneFileTreeForSnapshot(tree));
 }
 
+function fileTreeHasProjectFiles(tree: FileItem[]): boolean {
+  return tree.some((item) =>
+    item.type === "folder"
+      ? fileTreeHasProjectFiles(item.children ?? [])
+      : true
+  );
+}
+
+function snapshotsHaveProjectFiles(snapshots: VersionSnapshot[]): boolean {
+  return snapshots.some((snapshot) => fileTreeHasProjectFiles(snapshot.fileStructure));
+}
+
 function readStoredSnapshots(storageKey: string): VersionSnapshot[] | null {
   if (typeof window === "undefined") return null;
 
@@ -96,20 +108,62 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     autosaveIntervalMs = DEFAULT_AUTOSAVE_INTERVAL_MS,
   } = options;
   const [selectedHistoryVersion, setSelectedHistoryVersion] = useState("current");
-  const [showSavedTag, setShowSavedTag] = useState(false);
   const [showRestoreSuccessAlert, setShowRestoreSuccessAlert] = useState(false);
   const [showSaveSuccessAlert, setShowSaveSuccessAlert] = useState(false);
   const getFileStructureRef = useRef(getFileStructure);
   const lastCheckedSignatureRef = useRef<string | null>(null);
   const versioningEnabled = Boolean(getFileStructure);
+  const initialStoredSnapshotsRef = useRef<VersionSnapshot[] | null>(null);
+  const initialHasProjectFilesRef = useRef(false);
   const [snapshots, setSnapshots] = useState<VersionSnapshot[]>(() => {
     if (!getFileStructure) return [];
     const storedSnapshots = storageKey ? readStoredSnapshots(storageKey) : null;
-    if (storedSnapshots) return storedSnapshots;
-    return [createSnapshot("initial", getFileStructure())];
+    initialStoredSnapshotsRef.current = storedSnapshots;
+    if (storedSnapshots) {
+      initialHasProjectFilesRef.current = snapshotsHaveProjectFiles(storedSnapshots);
+      return storedSnapshots;
+    }
+    const initialFileStructure = getFileStructure();
+    initialHasProjectFilesRef.current = fileTreeHasProjectFiles(initialFileStructure);
+    return [createSnapshot("initial", initialFileStructure)];
   });
+  const [hasProjectEverHadFiles, setHasProjectEverHadFiles] = useState(
+    () => initialHasProjectFilesRef.current,
+  );
+  const [hasRestoredInitialVersion, setHasRestoredInitialVersion] = useState(false);
 
   getFileStructureRef.current = getFileStructure;
+
+  useEffect(() => {
+    if (!versioningEnabled || !onRestoreFileStructure) return;
+    const storedSnapshots = initialStoredSnapshotsRef.current;
+    if (!storedSnapshots) return;
+
+    const latestChangedSnapshot = storedSnapshots.find((snapshot) => snapshot.kind !== "initial");
+    if (!latestChangedSnapshot) return;
+
+    const currentFileStructure = getFileStructureRef.current?.();
+    if (!currentFileStructure) return;
+
+    const currentSignature = serializeFileTree(currentFileStructure);
+    const latestSignature = serializeFileTree(latestChangedSnapshot.fileStructure);
+    if (currentSignature === latestSignature) {
+      initialStoredSnapshotsRef.current = null;
+      return;
+    }
+
+    const initialSnapshot = storedSnapshots.find((snapshot) => snapshot.kind === "initial");
+    const initialSignature = initialSnapshot ? serializeFileTree(initialSnapshot.fileStructure) : null;
+    if (initialSignature && currentSignature !== initialSignature) {
+      initialStoredSnapshotsRef.current = null;
+      return;
+    }
+
+    const restoredFileStructure = cloneFileTreeForSnapshot(latestChangedSnapshot.fileStructure);
+    onRestoreFileStructure(restoredFileStructure);
+    lastCheckedSignatureRef.current = latestSignature;
+    initialStoredSnapshotsRef.current = null;
+  }, [onRestoreFileStructure, versioningEnabled]);
 
   useEffect(() => {
     if (!versioningEnabled) return;
@@ -139,8 +193,16 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     const fileStructure = getFileStructureRef.current?.();
     if (fileStructure) {
       lastCheckedSignatureRef.current ??= serializeFileTree(fileStructure);
+      if (!hasProjectEverHadFiles && fileTreeHasProjectFiles(fileStructure)) {
+        setHasProjectEverHadFiles(true);
+      }
     }
-  }, [versioningEnabled]);
+  }, [getFileStructure, hasProjectEverHadFiles, versioningEnabled]);
+
+  useEffect(() => {
+    if (hasProjectEverHadFiles || !snapshotsHaveProjectFiles(snapshots)) return;
+    setHasProjectEverHadFiles(true);
+  }, [hasProjectEverHadFiles, snapshots]);
 
   const addSnapshot = useCallback((
     kind: Exclude<VersionSnapshotKind, "initial">,
@@ -151,6 +213,9 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     if (!fileStructure) return null;
 
     const snapshot = createSnapshot(kind, fileStructure, description);
+    if (fileTreeHasProjectFiles(fileStructure)) {
+      setHasProjectEverHadFiles(true);
+    }
     setSnapshots((previous) => sortSnapshots([...previous, snapshot]));
     lastCheckedSignatureRef.current = serializeFileTree(fileStructure);
     return snapshot;
@@ -174,19 +239,11 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
 
   const handleSaveVersion = useCallback((description: string) => {
     addSnapshot("manual", description.trim());
-
-    setShowSavedTag(true);
-    setTimeout(() => setShowSavedTag(false), 2500);
     setShowSaveSuccessAlert(true);
-    setTimeout(() => setShowSaveSuccessAlert(false), 2500);
   }, [addSnapshot]);
 
-  const handleSaveAiVersion = useCallback((fileStructure?: FileItem[]) => {
-    const snapshot = addSnapshot("ai", undefined, fileStructure);
-    if (!snapshot) return;
-
-    setShowSavedTag(true);
-    setTimeout(() => setShowSavedTag(false), 2500);
+  const handleSaveAiVersion = useCallback((fileStructure?: FileItem[], saveTitle?: string) => {
+    addSnapshot("ai", saveTitle?.trim(), fileStructure);
   }, [addSnapshot]);
 
   const handleRestoreVersion = useCallback((versionId: string) => {
@@ -195,11 +252,15 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
       const restoredFileStructure = cloneFileTreeForSnapshot(snapshot.fileStructure);
       onRestoreFileStructure?.(restoredFileStructure);
       lastCheckedSignatureRef.current = serializeFileTree(restoredFileStructure);
+
+      if (snapshot.kind === "initial") {
+        setHasRestoredInitialVersion(true);
+        setSnapshots([snapshot]);
+      }
     }
 
     setSelectedHistoryVersion("current");
     setShowRestoreSuccessAlert(true);
-    setTimeout(() => setShowRestoreSuccessAlert(false), 2500);
   }, [onRestoreFileStructure, snapshots]);
 
   const handleReturnToCurrentVersion = useCallback(() => {
@@ -232,15 +293,25 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
       selectedHistoryVersion,
     [selectedHistoryVersion, versions],
   );
+  const latestSavedAt = useMemo(
+    () => snapshots.find((snapshot) => snapshot.kind !== "initial")?.createdAt ??
+      snapshots.find((snapshot) => snapshot.kind === "initial")?.createdAt,
+    [snapshots],
+  );
+  const showNewProjectHistoryEmptyState =
+    versioningEnabled &&
+    !hasProjectEverHadFiles &&
+    !hasRestoredInitialVersion;
 
   return useMemo(
     () => ({
       versions,
       selectedHistoryFileStructure: selectedHistorySnapshot?.fileStructure,
       selectedHistoryVersionLabel,
+      latestSavedAt,
       selectedHistoryVersion,
+      showNewProjectHistoryEmptyState,
       setSelectedHistoryVersion,
-      showSavedTag,
       showRestoreSuccessAlert,
       setShowRestoreSuccessAlert,
       showSaveSuccessAlert,
@@ -254,10 +325,11 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
       versions,
       selectedHistorySnapshot,
       selectedHistoryVersionLabel,
+      latestSavedAt,
       selectedHistoryVersion,
+      showNewProjectHistoryEmptyState,
       showRestoreSuccessAlert,
       showSaveSuccessAlert,
-      showSavedTag,
       handleSaveVersion,
       handleSaveAiVersion,
       handleRestoreVersion,
