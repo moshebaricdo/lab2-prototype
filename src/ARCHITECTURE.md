@@ -11,7 +11,8 @@ src/
 ├── App.tsx
 ├── data/
 │   ├── weblab2/
-│   │   └── mockData.ts
+│   │   ├── index.ts
+│   │   └── projects/
 │   └── pythonlab/
 │       └── mockData.ts
 ├── hooks/
@@ -23,17 +24,26 @@ src/
 │   └── tutor/                      # Functional Tutor harness
 │       ├── tutorClient.ts
 │       ├── contextBuilder.ts
+│       ├── projectAnalyzer.ts
+│       ├── contextPacker.ts
 │       ├── promptBuilder.ts
 │       ├── openAiProvider.ts
+│       ├── requestIntent.ts
+│       ├── guidanceRunner.ts
+│       ├── planningRunner.ts
+│       ├── editSessionRunner.ts
+│       ├── atomicEditApplicator.ts
+│       ├── webProjectValidator.ts
 │       ├── editValidator.ts
-│       ├── repairRunner.ts
+│       ├── toolLoopRunner.ts
 │       ├── fallbackTutor.ts
+│       ├── saveTitle.ts
 │       └── types.ts
 ├── components/
 │   ├── ui/                         # Universal primitives
 │   │   ├── AppButton.tsx
 │   │   ├── Tooltip.tsx
-│   │   ├── SuccessAlert.tsx
+│   │   ├── AlertBanner.tsx
 │   │   ├── PanelHeader.tsx
 │   │   ├── ResizableHandle.tsx
 │   │   ├── header/
@@ -58,6 +68,7 @@ src/
 │   │   │       │   └── AiTutorMessageList.tsx
 │   │   │       ├── VersionHistory.tsx
 │   │   │       ├── TeacherResourcesPanel.tsx
+│   │   │       ├── ResourcesPanel.tsx
 │   │   │       └── SettingsPanel.tsx
 │   │   └── dev/
 │   │       ├── AnnotationOverlay.tsx
@@ -72,10 +83,11 @@ src/
 │   │   │   └── FileManagerDropdown.tsx
 │   │   ├── weblab2/views/
 │   │   │   ├── Workspace.tsx
+│   │   │   ├── WorkspaceHeader.tsx
+│   │   │   ├── NewProjectEmptyState.tsx
 │   │   │   ├── PreviewPanel.tsx
 │   │   │   ├── CreateFileModal.tsx
 │   │   │   ├── VersionBanner.tsx
-│   │   │   ├── SavedTag.tsx
 │   │   │   └── SegmentedControl.tsx
 │   │   └── pythonlab/views/
 │   │       └── PythonWorkspace.tsx
@@ -84,6 +96,8 @@ src/
 │       ├── multi/
 │       ├── match/
 │       └── ...
+├── assets/
+│   └── empty-states/                # Empty-state illustrations used by shared IDE surfaces
 └── types/
 ```
 
@@ -106,11 +120,21 @@ This keeps feature rendering close to feature folders while the hooks layer keep
 - `useChatState` for tutor messages/input
 - `useVersionHistoryState` for version selection/save/restore feedback
 
+`useFileWorkspaceState` accepts both single-folder project wrappers and rootless file trees. Rootless trees are used by blank Web Lab projects; new files, folders, and AI proposal additions are inserted at the top level until the user creates their own folders.
+
+The shared resource panel supports a Resources tab for contextual student-facing materials. It currently renders non-functional cards for associated lesson resources, lab documentation, and available walkthroughs based on booleans passed by the level page.
+
 ## Tutor Harness
 
-Functional AI Tutor behavior is isolated under `src/lib/tutor`. `WebLab2LevelPage.tsx` calls `tutorClient()` and receives a stable `{ message, changes }` result used by the existing AI proposal state.
+Functional AI Tutor behavior is isolated under `src/lib/tutor`. `WebLab2LevelPage.tsx` calls `tutorClient()` and receives a stable `{ message, saveTitle?, changes }` result used by the existing AI proposal state and AI version-history saves.
 
-The harness separates context building, prompt composition, provider transport, scratch workspace editing, whole-project validation, tool-loop retry, and fallback responses so each can be tuned independently. See `src/guidelines/tutor-harness.md` for the full request flow and safety model.
+The harness first resolves requests as guidance, planning, or edit. The composer defaults to hidden Auto mode, where the harness infers the route; a dev-controlled selector can expose Build, Plan, and Help overrides. Guidance covers no-edit learning, how-to, and project-navigation questions. Planning creates or revises a Markdown `Plans/PROJECT_PLAN.md` spec before code generation. Edit requests use a staged structured-edit path that analyzes and packs project context, applies atomic HTML/CSS/JS edits to a scratch workspace, validates the result, and runs compact repair passes. A bounded tool-loop runner remains as a fallback for edit requests. See `src/guidelines/tutor-harness.md` for the full request flow and safety model.
+
+Web Lab 2 adds UI behavior around the harness result: if functional Tutor returns code changes for an empty project, the page applies the proposal, expands the file manager, and switches to preview mode so the generated project is immediately visible. If the only change is `Plans/PROJECT_PLAN.md`, the page opens the plan in code view instead of switching to preview. Accepted plan files show a Build plan action in the editor chrome; building from that action switches to preview when code changes are proposed. The Tutor composer is disabled while an AI proposal is pending so the student must accept or reject first.
+
+## Empty States
+
+Shared IDE empty-state rendering lives in `src/components/ide/shared/EmptyState.tsx`. It supports the legacy generated illustration, preview illustration, and caller-provided image assets. Web Lab 2 uses `src/components/ide/weblab2/views/NewProjectEmptyState.tsx` for the workspace-level new-project flow when a functional-history project has never had files; this hides the workspace view switcher and avoids selecting code/preview/split until files exist. Once files have existed, deleting everything or restoring the initial version falls back to the normal empty workspace so prior versions remain reachable. The ordinary editor-level "No files open" state still appears when a non-empty project has no open tabs.
 
 ## Migration Notes
 

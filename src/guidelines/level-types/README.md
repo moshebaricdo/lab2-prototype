@@ -27,7 +27,7 @@ Use these docs as handoff context for follow-up threads.
 
 - `/levels` -> categorized level index
 - `/levels/pythonlab`
-- `/levels/weblab2`
+- `/levels/weblab2` (and Web Lab 2 variants such as `/levels/weblab2-demo-project` and `/levels/weblab2-demo-project-blank`; see `weblab2.md`)
 - `/levels/multi` (and other multi-choice demo routes — see `multi-choice.md`)
 - `/levels/free-response` (and `/levels/free-response-reveal`, `/levels/free-response-markdown`, `/levels/free-response-upload` — see `free-response.md`)
 - `/levels/match-definition-bank`, `/levels/match-connector`, `/levels/match-connector-images`, `/levels/match-connector-code` (see `match.md`)

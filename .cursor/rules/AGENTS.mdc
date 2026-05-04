@@ -81,6 +81,22 @@ Read `src/REFACTORING_SUMMARY.md` — documents what changed in the last reorg, 
 
 ---
 
+## Documentation Hygiene
+
+Before considering work complete, check whether the changes require documentation updates. Update docs in the same task when behavior, file ownership, placement guidance, architecture, routes, level-type UX, data shape, or known gaps changed.
+
+Common docs to check:
+
+- `src/ARCHITECTURE.md` for composition, state ownership, and major file/component changes.
+- `src/guidelines/Guidelines.md` for repo-wide placement, styling, and implementation guidance.
+- `src/guidelines/level-types/*.md` for level-specific routes, key files, UX behavior, data shapes, and known gaps.
+- `src/REFACTORING_SUMMARY.md` when moving files or changing directory ownership.
+- `src/guidelines/tutor-harness.md` when changing Tutor request flow, context, validation, proposal, or save behavior.
+
+If no doc update is needed, mention that the documentation impact was checked. If docs are updated, include them in verification/review.
+
+---
+
 ## Verification
 
 Always run before considering work complete:

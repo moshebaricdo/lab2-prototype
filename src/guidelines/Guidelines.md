@@ -45,7 +45,7 @@ src/
 - `ide/shared/` contains shared editor components (CodeEditor, FileManager, EmptyState) used by IDE-type labs.
 - `ide/weblab2/views` and `ide/pythonlab/views` hold lab-specific workspace composition.
 - As new IDE labs are introduced, add `ide/<labname>/views/` and reuse shared components from `ide/shared/`.
-- `lib/tutor/` contains the functional Tutor harness for prompt, context, provider, validation, repair, and fallback behavior. See `src/guidelines/tutor-harness.md`.
+- `lib/tutor/` contains the functional Tutor harness for guidance routing, project analysis, compact context packing, staged structured edits, validation, repair, tool-loop fallback, and save-title generation. See `src/guidelines/tutor-harness.md`.
 
 ---
 
@@ -63,7 +63,7 @@ Design tokens and globals are layered:
 ### Required Rules
 
 - Prefer **SCSS modules** for new component styling.
-- Use token variables (`var(--ds-...)` and semantic aliases like `var(--primary)`), never hard-coded color literals unless explicitly justified.
+- Use design-system token variables (`var(--ds-...)`) directly in component styles, never mapped aliases or hard-coded color literals unless explicitly justified.
 - Keep styles colocated with components (`Component.tsx` + `Component.module.scss`).
 - Use shared mixins where appropriate (for example `focus-ring` from `_mixins.scss`).
 
@@ -162,7 +162,7 @@ Recent organization cleanup established:
 
 - `TopNavigation` + `LevelProgressBubbles` in `src/components/ui/header`
 - resource panel views in `src/components/lab2/resource-panel/views`
-- shared atoms (`AppButton`, `Tooltip`, `SuccessAlert`) in `src/components/ui`
+- shared atoms (`AppButton`, `Tooltip`, `AlertBanner`) in `src/components/ui`
 - icon components in `src/components/ui/icons`
 - dev tools in `src/components/lab2/dev`
 - legacy/deprecated files removed
@@ -179,7 +179,7 @@ Do not reintroduce removed legacy paths or compatibility shims unless there is a
 - **Need shared code editor / file manager features?** -> `src/components/ide/shared`
 - **Need Web Lab-specific workspace chrome?** -> `src/components/ide/weblab2/views`
 - **Need Python Lab-specific workspace chrome?** -> `src/components/ide/pythonlab/views`
-- **Need to tune Tutor prompts, model context, validation, repair, or provider config?** -> `src/lib/tutor` and `src/guidelines/tutor-harness.md`
+- **Need to tune Tutor guidance, prompts, model context, validation, repair, tool fallback, or provider config?** -> `src/lib/tutor` and `src/guidelines/tutor-harness.md`
 - **Need behavior used across many surfaces?** -> hook in `src/hooks` + typed contract in `src/types`
 - **Need new styling values?** -> tokens pipeline first, then semantic aliasing
 
@@ -187,5 +187,5 @@ Do not reintroduce removed legacy paths or compatibility shims unless there is a
 
 ## Versioning
 
-**Last Updated:** March 25, 2026  
+**Last Updated:** April 29, 2026  
 **Status:** Active baseline for Lab2-powered prototypes
