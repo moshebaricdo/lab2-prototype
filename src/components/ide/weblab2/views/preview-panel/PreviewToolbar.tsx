@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { AppButton } from "../../../../ui/AppButton";
+import { Tooltip } from "../../../../ui/Tooltip";
 import { SegmentedControl, type SegmentedOption } from "../SegmentedControl";
 import {
   findPreviewHtmlFile,
@@ -28,6 +29,13 @@ interface PreviewToolbarProps {
   previewMode: PreviewMode;
   onPreviewModeChange: (mode: PreviewMode) => void;
   fileNavigation?: FileNavigationProps;
+  isDesignMode: boolean;
+  onToggleDesignMode: () => void;
+  showDesignModeControl?: boolean;
+  designModeDisabled?: boolean;
+  designModeDisabledReason?: string;
+  suppressDesignModeTooltip?: boolean;
+  previewModeDisabled?: boolean;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   onReload: () => void;
@@ -80,11 +88,19 @@ export function PreviewToolbar({
   previewMode,
   onPreviewModeChange,
   fileNavigation,
+  isDesignMode,
+  onToggleDesignMode,
+  showDesignModeControl = true,
+  designModeDisabled = false,
+  designModeDisabledReason,
+  suppressDesignModeTooltip = false,
+  previewModeDisabled = false,
   isFullscreen,
   onToggleFullscreen,
   onReload,
 }: PreviewToolbarProps) {
-  const currentPath = fileNavigation?.path ?? "index.html";
+  const isPreviewUnavailable = previewModeDisabled;
+  const currentPath = isPreviewUnavailable ? "" : fileNavigation?.path ?? "index.html";
   const [isUrlFocused, setIsUrlFocused] = useState(false);
   const [urlValue, setUrlValue] = useState(currentPath);
   const [urlError, setUrlError] = useState<string | null>(null);
@@ -156,6 +172,10 @@ export function PreviewToolbar({
 
   const handleUrlSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isPreviewUnavailable) {
+      setIsUrlFocused(false);
+      return;
+    }
     if (!fileNavigation) {
       setUrlValue((current) => normalizePreviewPath(current) ?? "index.html");
       setIsUrlFocused(false);
@@ -239,7 +259,7 @@ export function PreviewToolbar({
 
   const renderUrlBar = () => (
     <div className={styles.urlWrap}>
-      <div className={styles.urlBox}>
+      <div className={`${styles.urlBox} ${isPreviewUnavailable ? styles.urlBoxDisabled : ""}`}>
         <AppButton
           variant="tertiary"
           tone="gray"
@@ -248,7 +268,7 @@ export function PreviewToolbar({
           iconName="chevron-left"
           size="xs"
           onClick={handleBack}
-          disabled={!canGoBack}
+          disabled={isPreviewUnavailable || !canGoBack}
         />
         <AppButton
           variant="tertiary"
@@ -258,7 +278,7 @@ export function PreviewToolbar({
           iconName="chevron-right"
           size="xs"
           onClick={handleForward}
-          disabled={!canGoForward}
+          disabled={isPreviewUnavailable || !canGoForward}
         />
 
         <form className={styles.urlForm} onSubmit={handleUrlSubmit}>
@@ -270,7 +290,7 @@ export function PreviewToolbar({
               setUrlError(null);
             }}
             onFocus={() => {
-              if (fileNavigation) setIsUrlFocused(true);
+              if (fileNavigation && !isPreviewUnavailable) setIsUrlFocused(true);
             }}
             onBlur={() => {
               setUrlValue(currentPath);
@@ -278,13 +298,28 @@ export function PreviewToolbar({
               setIsUrlFocused(false);
             }}
             onKeyDown={handleUrlInputKeyDown}
-            placeholder="Enter a local path"
-            readOnly={!fileNavigation}
+            placeholder={isPreviewUnavailable ? "No files to preview" : "Enter a local path"}
+            readOnly={!fileNavigation || isPreviewUnavailable}
+            disabled={isPreviewUnavailable}
             className={`${styles.urlInput} ${
               isUrlFocused ? styles.urlInputEditing : ""
-            } ${!fileNavigation ? styles.urlInputReadOnly : ""}`}
-            aria-label={fileNavigation ? "Edit preview path" : "Preview path"}
-            title={fileNavigation ? "Edit preview path" : "Preview path"}
+            } ${!fileNavigation || isPreviewUnavailable ? styles.urlInputReadOnly : ""} ${
+              isPreviewUnavailable ? styles.urlInputDisabled : ""
+            }`}
+            aria-label={
+              isPreviewUnavailable
+                ? "No files to preview"
+                : fileNavigation
+                  ? "Edit preview path"
+                  : "Preview path"
+            }
+            title={
+              isPreviewUnavailable
+                ? "No files to preview"
+                : fileNavigation
+                  ? "Edit preview path"
+                  : "Preview path"
+            }
             role="combobox"
             aria-autocomplete="list"
             aria-expanded={filteredSuggestions.length > 0}
@@ -345,9 +380,24 @@ export function PreviewToolbar({
           title="Refresh preview"
           iconName="rotate"
           size="xs"
+          disabled={isPreviewUnavailable}
         />
       </div>
     </div>
+  );
+
+  const renderDesignModeButton = () => (
+    <AppButton
+      variant="secondary"
+      tone="gray"
+      onClick={onToggleDesignMode}
+      aria-label={isDesignMode ? "Turn off design select mode" : "Turn on design select mode"}
+      aria-pressed={isDesignMode}
+      iconName="palette"
+      size="xs"
+      disabled={designModeDisabled}
+      className={isDesignMode ? styles.designModeButtonActive : ""}
+    />
   );
 
   return (
@@ -355,11 +405,30 @@ export function PreviewToolbar({
       <div className={styles.controlInner}>
         {renderUrlBar()}
         <div className={styles.rightActions}>
+          {showDesignModeControl ? (
+            suppressDesignModeTooltip ? (
+              renderDesignModeButton()
+            ) : (
+              <Tooltip
+                content={
+                  designModeDisabled
+                    ? designModeDisabledReason ?? "Design select mode is unavailable"
+                    : isDesignMode
+                      ? "Exit design mode"
+                      : "Design mode"
+                }
+                position="bottom"
+              >
+                {renderDesignModeButton()}
+              </Tooltip>
+            )
+          ) : null}
           <div className={styles.segmentWrap}>
             <SegmentedControl<PreviewMode>
               options={PREVIEW_MODE_OPTIONS}
               value={previewMode}
               onChange={onPreviewModeChange}
+              disabled={previewModeDisabled}
             />
           </div>
           <AppButton

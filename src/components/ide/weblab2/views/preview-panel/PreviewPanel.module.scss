@@ -41,6 +41,10 @@
   background: var(--ds-background-neutral-primary);
 }
 
+.urlBoxDisabled {
+  border-color: var(--ds-borders-neutral-primary);
+}
+
 .urlForm {
   position: relative;
   display: flex;
@@ -83,6 +87,15 @@
 
 .urlInputReadOnly {
   cursor: default;
+}
+
+.urlInputDisabled,
+.urlInputDisabled:hover,
+.urlInputDisabled:focus-visible {
+  background: transparent;
+  color: var(--ds-text-neutral-quaternary);
+  cursor: default;
+  -webkit-text-fill-color: var(--ds-text-neutral-quaternary);
 }
 
 .suggestionPopover {
@@ -163,6 +176,18 @@
   display: flex;
 }
 
+.designModeButtonActive {
+  border-color: transparent !important;
+  background: var(--ds-background-brand-teal-primary) !important;
+  color: var(--ds-text-neutral-white-fixed) !important;
+}
+
+.designModeButtonActive:hover {
+  border-color: transparent !important;
+  background: var(--ds-background-brand-teal-strong) !important;
+  color: var(--ds-text-neutral-white-fixed) !important;
+}
+
 .previewBody {
   min-height: 0;
   flex: 1;
@@ -170,17 +195,63 @@
   background: var(--ds-background-neutral-primary);
 }
 
+.previewBody:has(.mobileFrame) {
+  background: var(--ds-background-neutral-primary);
+}
+
 .previewCenter {
   display: flex;
   width: 100%;
   height: 100%;
+  min-width: 0;
   justify-content: center;
 }
 
 .previewFrame {
+  position: relative;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   transition: all 0.2s ease;
+}
+
+.previewFrameEmpty {
+  display: flex;
+}
+
+.previewEmptyStateOffset {
+  display: flex;
+  min-height: 0;
+  width: 100%;
+  flex: 1;
+  transform: translateY(-10px);
+}
+
+.designModeSweep {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.designModeSweep::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -45%;
+  width: 40%;
+  animation: designModeSweep 0.72s ease-out both;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ds-background-brand-teal-primary) 10%, transparent) 25%,
+    color-mix(in srgb, var(--ds-background-brand-teal-primary) 28%, transparent) 50%,
+    color-mix(in srgb, var(--ds-background-brand-teal-primary) 10%, transparent) 75%,
+    transparent 100%
+  );
+  content: "";
+  transform: skewX(-14deg);
 }
 
 .iframeStack {
@@ -206,8 +277,49 @@
   pointer-events: none;
 }
 
+@keyframes designModeSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(0) skewX(-14deg);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(380%) skewX(-14deg);
+  }
+}
+
 .mobileFrame {
-  max-width: 375px;
+  flex: 0 1 auto;
+  max-width: 100%;
+  transition: none;
+}
+
+.mobileResizeHandleLeft,
+.mobileResizeHandleRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+}
+
+.mobileResizeHandleLeft {
+  left: 0;
+}
+
+.mobileResizeHandleRight {
+  right: 0;
+}
+
+.mobileResizeHandleLeft > div:first-child,
+.mobileResizeHandleRight > div:first-child {
+  left: -5px;
+  right: -5px;
+  width: 10px;
 }
 
 .overlay {

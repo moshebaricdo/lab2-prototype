@@ -10,12 +10,14 @@ const defaultProjectPreviewSrcDoc = indexHtml.replace(
   `<style data-preview-source="styles.css">\n${escapeStyleCloseTag(stylesCss)}\n</style>`,
 );
 
+const PREVIEW_IFRAME_SANDBOX = "allow-scripts allow-forms";
+
 export function DefaultProjectPreview() {
   return (
     <iframe
       title="Default project preview"
       srcDoc={defaultProjectPreviewSrcDoc}
-      sandbox="allow-scripts"
+      sandbox={PREVIEW_IFRAME_SANDBOX}
       style={{
         width: "100%",
         height: "100%",
