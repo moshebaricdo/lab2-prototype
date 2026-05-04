@@ -1,79 +1,73 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import { AppButton } from "./AppButton";
+import { FaIcon } from "./icons/FaIcon";
 import styles from "./Modal.module.scss";
 
 interface ModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   title: string;
-  size?: "s" | "m" | "l";
-  children: ReactNode;
+  description?: ReactNode;
+  children?: ReactNode;
   footer?: ReactNode;
 }
 
 export function Modal({
-  open,
+  isOpen,
   onClose,
   title,
-  size = "s",
+  description,
   children,
   footer,
 }: ModalProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+    if (!isOpen) return;
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (!open) return;
-    const html = document.documentElement;
-    const body = document.body;
-    const prevHtmlOverflow = html.style.overflow;
-    const prevBodyOverflow = body.style.overflow;
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    return () => {
-      html.style.overflow = prevHtmlOverflow;
-      body.style.overflow = prevBodyOverflow;
-    };
-  }, [open]);
-
-  if (!open) return null;
-
-  const sizeClass =
-    size === "s" ? styles.sizeS : size === "l" ? styles.sizeL : styles.sizeM;
+  if (!isOpen) return null;
 
   return createPortal(
-    <div className={styles.overlay} onMouseDown={onClose}>
+    <div className={styles.overlay}>
       <div
-        ref={panelRef}
-        className={`${styles.panel} ${sizeClass}`}
-        onMouseDown={(e) => e.stopPropagation()}
+        className={styles.modal}
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
       >
-        <div className={styles.header}>
-          <h2 className={styles.title}>{title}</h2>
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            icon={<FontAwesomeIcon icon={faXmark} />}
-            onClick={onClose}
-            aria-label="Close"
-          />
-        </div>
-        <div className={styles.body}>{children}</div>
-        {footer && <div className={styles.footer}>{footer}</div>}
+        <button
+          type="button"
+          onClick={onClose}
+          className={styles.closeButton}
+          aria-label="Close dialog"
+        >
+          <FaIcon name="xmark" size="s" />
+        </button>
+
+        <h3 id={titleId} className={styles.title}>{title}</h3>
+        <div className={styles.separator} aria-hidden="true" />
+
+        {description ? <p className={styles.description}>{description}</p> : null}
+
+        {children}
+
+        {footer && (
+          <>
+            <div className={styles.separator} aria-hidden="true" />
+            <div className={styles.actionsRow}>{footer}</div>
+          </>
+        )}
       </div>
     </div>,
     document.body,
   );
 }
+
+export type { ModalProps };

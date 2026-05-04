@@ -26,6 +26,7 @@
 .stackWithCode {
   align-items: stretch;
   display: flex;
+  flex-direction: row;
   gap: 16px;
   max-width: 1280px;
 }
@@ -33,6 +34,7 @@
 .stackWithCode .scrollGroupCard {
   flex: 1 1 0%;
   min-width: 420px;
+  width: auto;
 }
 
 .steppedCodeCard {

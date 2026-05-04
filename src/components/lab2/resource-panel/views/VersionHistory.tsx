@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
 import { AiTutorIcon } from "../../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../../ui/icons/FaIcon";
+import { Dialog } from "../../../ui/Dialog";
 import { Tooltip } from "../../../ui/Tooltip";
 import { ScrollArea } from "../../../ui/scroll-area";
-import { SuccessAlert } from "../../../ui/SuccessAlert";
+import { AlertBanner } from "../../../ui/AlertBanner";
 import styles from "./VersionHistory.module.scss";
 
 export interface VersionItem {
@@ -26,6 +27,7 @@ interface VersionHistoryProps {
   setShowRestoreSuccessAlert?: (show: boolean) => void;
   showSaveSuccessAlert?: boolean;
   setShowSaveSuccessAlert?: (show: boolean) => void;
+  showNewProjectEmptyState?: boolean;
 }
 
 export function VersionHistory({
@@ -38,6 +40,7 @@ export function VersionHistory({
   setShowRestoreSuccessAlert,
   showSaveSuccessAlert = false,
   setShowSaveSuccessAlert,
+  showNewProjectEmptyState = false,
 }: VersionHistoryProps) {
   const [internalSelectedVersion, setInternalSelectedVersion] = useState("current");
   const [expandedAutoSaveGroups, setExpandedAutoSaveGroups] = useState<Set<string>>(
@@ -45,6 +48,7 @@ export function VersionHistory({
   );
   const [versionDescription, setVersionDescription] = useState("");
   const [isDescriptionKeyboardFocused, setIsDescriptionKeyboardFocused] = useState(false);
+  const [showStartOverConfirm, setShowStartOverConfirm] = useState(false);
   const lastFocusWasKeyboardRef = useRef(false);
 
   const selectedVersion = externalSelectedVersion ?? internalSelectedVersion;
@@ -117,8 +121,19 @@ export function VersionHistory({
   };
 
   const handleRestoreVersion = (versionId: string) => {
+    if (versionId === "initial") {
+      setShowStartOverConfirm(true);
+      return;
+    }
+
     onRestoreVersion?.(versionId);
     setShowRestoreSuccessAlert?.(true);
+  };
+
+  const handleConfirmStartOver = () => {
+    onRestoreVersion?.("initial");
+    setShowRestoreSuccessAlert?.(true);
+    setShowStartOverConfirm(false);
   };
 
   const toggleAutoSaveGroup = (groupId: string) => {
@@ -139,9 +154,15 @@ export function VersionHistory({
       <div key={version.id} className={styles.section}>
         <div className={styles.connector} />
         <div className={styles.card}>
-          <div className={styles.row}>
+          <div
+            className={styles.row}
+            onClick={() => handleVersionChange(version.id)}
+          >
             <button
-              onClick={() => handleVersionChange(version.id)}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleVersionChange(version.id);
+              }}
               className={styles.rowMain}
             >
               <span className={`${styles.radio} ${isSelected ? styles.radioSelected : ""}`}>
@@ -154,7 +175,10 @@ export function VersionHistory({
 
             {isSelected ? (
               <button
-                onClick={() => handleRestoreVersion(version.id)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleRestoreVersion(version.id);
+                }}
                 className={styles.restoreButton}
               >
                 <span className={styles.iconSmall}>
@@ -189,113 +213,188 @@ export function VersionHistory({
 
   return (
     <div className={styles.root}>
-      <ScrollArea className={styles.scrollArea}>
-        <div className={styles.content}>
-          <div className={styles.section}>
-            <div className={styles.card}>
-              <div className={styles.row}>
-                <button
-                  onClick={() => handleVersionChange(currentVersion.id)}
-                  className={styles.rowMain}
-                >
-                  <span
-                    className={`${styles.radio} ${
-                      selectedVersion === currentVersion.id ? styles.radioSelected : ""
-                    }`}
-                  >
-                    {selectedVersion === currentVersion.id ? (
-                      <span className={styles.radioDot} />
-                    ) : null}
-                  </span>
-                  <p className={styles.label}>Current Version</p>
-                </button>
+      <ScrollArea
+        className={styles.scrollArea}
+        viewportClassName={styles.scrollViewport}
+      >
+        {showNewProjectEmptyState ? (
+          <div className={styles.emptyWrap}>
+            <div className={styles.emptyState}>
+              <div className={styles.emptyStateIcon}>
+                <FaIcon name="clock-rotate-left" size="l" />
               </div>
-
-              <div className={styles.savePanel}>
-                <textarea
-                  value={versionDescription}
-                  onFocus={() => {
-                    setIsDescriptionKeyboardFocused(lastFocusWasKeyboardRef.current);
-                  }}
-                  onBlur={() => setIsDescriptionKeyboardFocused(false)}
-                  onChange={(event) => setVersionDescription(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (
-                      event.key === "Enter" &&
-                      (event.metaKey || event.ctrlKey) &&
-                      versionDescription.trim()
-                    ) {
-                      handleSaveVersion();
-                    }
-                  }}
-                  data-keyboard-focused={isDescriptionKeyboardFocused ? "true" : undefined}
-                  placeholder="Describe your changes"
-                  className={styles.textarea}
-                />
-
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  size="s"
-                  fullWidth
-                  iconName="floppy-disk"
-                  onClick={handleSaveVersion}
-                  disabled={!versionDescription.trim()}
-                >
-                  Save current version
-                </AppButton>
-              </div>
+              <h2 className={styles.emptyStateTitle}>No version history yet</h2>
+              <p className={styles.emptyStateText}>
+                Version history will appear once files are created or added to this project.
+              </p>
             </div>
           </div>
-
-          {timelineEntries.map((entry) => {
-            if (entry.type === "version") {
-              return renderVersionRow(entry.version);
-            }
-
-            const isExpanded = expandedAutoSaveGroups.has(entry.id);
-            return (
-              <div key={entry.id}>
-                <div className={styles.section}>
-                  <div className={styles.connector} />
-                  <div className={styles.toggleWrap}>
-                    <AppButton
-                      variant="tertiary"
-                      tone="gray"
-                      size="xs"
-                      iconName={isExpanded ? "angles-up" : "angles-down"}
-                      onClick={() => toggleAutoSaveGroup(entry.id)}
+        ) : (
+          <div className={styles.content}>
+            <div className={styles.section}>
+              <div className={styles.card}>
+                <div
+                  className={styles.row}
+                  onClick={() => handleVersionChange(currentVersion.id)}
+                >
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleVersionChange(currentVersion.id);
+                    }}
+                    className={styles.rowMain}
+                  >
+                    <span
+                      className={`${styles.radio} ${
+                        selectedVersion === currentVersion.id ? styles.radioSelected : ""
+                      }`}
                     >
-                      {isExpanded ? "Hide" : "Show"} {entry.versions.length} auto-save
-                      {entry.versions.length === 1 ? "" : "s"}
-                    </AppButton>
-                  </div>
+                      {selectedVersion === currentVersion.id ? (
+                        <span className={styles.radioDot} />
+                      ) : null}
+                    </span>
+                    <p className={styles.label}>Current Version</p>
+                  </button>
                 </div>
 
-                {isExpanded ? entry.versions.map(renderVersionRow) : null}
+                <div className={styles.savePanel}>
+                  <textarea
+                    value={versionDescription}
+                    onFocus={() => {
+                      setIsDescriptionKeyboardFocused(lastFocusWasKeyboardRef.current);
+                    }}
+                    onBlur={() => setIsDescriptionKeyboardFocused(false)}
+                    onChange={(event) => setVersionDescription(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "Enter" &&
+                        (event.metaKey || event.ctrlKey) &&
+                        versionDescription.trim()
+                      ) {
+                        handleSaveVersion();
+                      }
+                    }}
+                    data-keyboard-focused={isDescriptionKeyboardFocused ? "true" : undefined}
+                    placeholder="Describe your changes"
+                    className={styles.textarea}
+                  />
+
+                  <AppButton
+                    variant="secondary"
+                    tone="gray"
+                    size="s"
+                    fullWidth
+                    iconName="floppy-disk"
+                    onClick={handleSaveVersion}
+                    disabled={!versionDescription.trim()}
+                  >
+                    Save current version
+                  </AppButton>
+                </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+
+            {timelineEntries.map((entry) => {
+              if (entry.type === "version") {
+                return renderVersionRow(entry.version);
+              }
+
+              const isExpanded = expandedAutoSaveGroups.has(entry.id);
+              return (
+                <div key={entry.id}>
+                  <div className={styles.section}>
+                    <div className={styles.connector} />
+                    <div className={styles.toggleWrap}>
+                      <AppButton
+                        variant="tertiary"
+                        tone="gray"
+                        size="xs"
+                        iconName={isExpanded ? "angles-up" : "angles-down"}
+                        onClick={() => toggleAutoSaveGroup(entry.id)}
+                      >
+                        {isExpanded ? "Hide" : "Show"} {entry.versions.length} auto-save
+                        {entry.versions.length === 1 ? "" : "s"}
+                      </AppButton>
+                    </div>
+                  </div>
+
+                  {isExpanded ? entry.versions.map(renderVersionRow) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </ScrollArea>
 
       {showSaveSuccessAlert || showRestoreSuccessAlert ? (
         <div className={styles.toastWrap}>
           {showSaveSuccessAlert ? (
-            <SuccessAlert
-              message="Successfully saved version."
-              onClose={() => setShowSaveSuccessAlert?.(false)}
-            />
+            <AlertBanner
+              duration={2500}
+              onDismiss={() => setShowSaveSuccessAlert?.(false)}
+              presentation="toast"
+              sentiment="success"
+              showIcon
+              size="xs"
+            >
+              Successfully saved version.
+            </AlertBanner>
           ) : null}
 
           {showRestoreSuccessAlert ? (
-            <SuccessAlert
-              message="Version successfully restored!"
-              onClose={() => setShowRestoreSuccessAlert?.(false)}
-            />
+            <AlertBanner
+              duration={2500}
+              onDismiss={() => setShowRestoreSuccessAlert?.(false)}
+              presentation="toast"
+              sentiment="success"
+              showIcon
+              size="xs"
+            >
+              Version successfully restored!
+            </AlertBanner>
           ) : null}
         </div>
       ) : null}
+
+      <Dialog
+        open={showStartOverConfirm}
+        title="Are you sure you want to start over?"
+        size="l"
+        onClose={() => setShowStartOverConfirm(false)}
+        decorativeIcon={<FaIcon name="clock-rotate-left" size="inherit" />}
+        decorativeIconClassName={styles.startOverIcon}
+        panelClassName={styles.startOverPanel}
+        headerClassName={styles.startOverHeader}
+        titleClassName={styles.startOverTitle}
+        bodyClassName={styles.startOverBody}
+        footerClassName={styles.startOverFooter}
+        closeButtonClassName={styles.startOverClose}
+        footer={
+          <>
+            <AppButton
+              variant="secondary"
+              tone="gray"
+              size="m"
+              onClick={() => setShowStartOverConfirm(false)}
+            >
+              Cancel
+            </AppButton>
+            <AppButton
+              variant="primary"
+              tone="purple"
+              size="m"
+              onClick={handleConfirmStartOver}
+            >
+              Start over
+            </AppButton>
+          </>
+        }
+      >
+        <p className={styles.startOverText}>
+          This will reset the workspace to its start state and remove all the code
+          you&apos;ve added or changed.
+        </p>
+      </Dialog>
     </div>
   );
 }

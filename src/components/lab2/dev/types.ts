@@ -4,9 +4,18 @@ export type DevPanelFieldType =
   | "number"
   | "slider"
   | "boolean"
-  | "select";
+  | "select"
+  | "file";
 
 export type DevPanelFieldValues = Record<string, unknown>;
+
+export interface DevPanelUploadedFile {
+  name: string;
+  path: string;
+  type: string;
+  size: number;
+  content: string;
+}
 
 export interface DevPanelFieldBase {
   key: string;
@@ -53,10 +62,21 @@ export interface DevPanelSelectField extends DevPanelFieldBase {
   valueType?: "string" | "number";
 }
 
+export interface DevPanelFileField extends DevPanelFieldBase {
+  type: "file";
+  accept?: string;
+  multiple?: boolean;
+  directory?: boolean;
+  buttonLabel?: string;
+  maxFiles?: number;
+  maxTotalSizeBytes?: number;
+}
+
 export type DevPanelField =
   | DevPanelTextField
   | DevPanelTextareaField
   | DevPanelNumberField
   | DevPanelSliderField
   | DevPanelBooleanField
-  | DevPanelSelectField;
+  | DevPanelSelectField
+  | DevPanelFileField;

@@ -9,10 +9,10 @@ export interface FileChipProps {
   /** Native tooltip; defaults to `fileName` (e.g. full path while `fileName` is basename). */
   nameTitle?: string;
   /**
-   * Second line — extension label (e.g. "HTML") in remove mode,
+   * Optional inline metadata — extension label (e.g. "HTML") in remove mode,
    * or timestamp (e.g. "12:56PM") in add mode.
    */
-  extensionLabel: string;
+  extensionLabel?: string;
   iconName: FaIconName;
   /**
    * `"remove"` shows an X button (pre-send composer chip).
@@ -45,6 +45,7 @@ export function FileChip({
   onImageError,
 }: FileChipProps) {
   const titleAttr = nameTitle ?? fileName;
+  const metadataLabel = extensionLabel?.trim();
   const isAdd = mode === "add";
 
   const removeButton = mode === "remove" ? (
@@ -124,7 +125,7 @@ export function FileChip({
         <p className={styles.fileName} title={titleAttr}>
           {fileName}
         </p>
-        <p className={styles.extension}>{extensionLabel}</p>
+        {metadataLabel ? <p className={styles.extension}>{metadataLabel}</p> : null}
       </div>
       {removeButton}
       {addButton}

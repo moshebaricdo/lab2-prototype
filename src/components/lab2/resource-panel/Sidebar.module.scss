@@ -2,7 +2,27 @@
   display: flex;
   height: 100%;
   flex-shrink: 0;
-  background: var(--sidebar);
+  background: var(--ds-background-neutral-primary);
+  overflow: hidden;
+  will-change: width;
+}
+
+.rootWidthAnimating {
+  transition: width 220ms ease;
+}
+
+.contentShell {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.contentFixedWidth {
+  display: flex;
+  height: 100%;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 /* Collapsed sidebar: fixed card aligned to rail (56px) + 16px gap; 16px from viewport bottom */
@@ -18,7 +38,7 @@
   display: flex;
   width: 56px;
   flex-direction: column;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--ds-borders-neutral-primary);
 }
 
 .railTopSpacer {
@@ -27,7 +47,7 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
 }
 
 .railCollapseButton {
@@ -40,12 +60,16 @@
   background: var(--ds-background-neutral-primary);
   cursor: pointer;
   color: var(--ds-text-neutral-quaternary);
-  transition: background-color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .railCollapseButton:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px var(--ring);
+  box-shadow: inset 0 0 0 2px var(--ds-borders-brand-teal-primary);
+}
+
+.railCollapseButton:hover {
+  color: var(--ds-text-neutral-secondary);
 }
 
 .tabButton {
@@ -55,7 +79,7 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   transition: background-color 0.2s ease;
   color: inherit;
@@ -63,7 +87,41 @@
 }
 
 .tabButton:hover {
-  background: var(--sidebar);
+  background: var(--ds-background-neutral-primary);
+}
+
+.tabRailCollapsed .tabButton {
+  background: var(--ds-background-neutral-primary);
+}
+
+.tabRailCollapsed .tabButton:hover,
+.tabRailCollapsed .tabDisabled,
+.tabRailCollapsed .tabDisabled:hover {
+  background: var(--ds-background-neutral-primary);
+}
+
+.railCollapseButton .tabIcon,
+.tabButton .tabIcon {
+  font-size: var(--text-icon);
+}
+
+.tabIcon {
+  color: var(--ds-text-neutral-quaternary);
+  transition: color 0.2s ease;
+}
+
+.tabButton:hover .tabIcon {
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.tabIconActive,
+.tabButton:hover .tabIconActive {
+  color: var(--ds-text-brand-teal-primary);
+}
+
+.aiTutorTabIcon {
+  width: 20px; /* Note intentional optical adjustment to match the icon size */
+  height: 20px; /* Note intentional optical adjustment to match the icon size */
 }
 
 .tabDisabled,
@@ -75,11 +133,11 @@
 
 .tabButton:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px var(--ring);
+  box-shadow: inset 0 0 0 2px var(--ds-borders-brand-teal-primary);
 }
 
 .tabActive {
-  background: var(--sidebar);
+  background: var(--ds-background-neutral-primary);
 }
 
 .tabActiveAccent {
@@ -88,7 +146,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: var(--accent);
+  background: var(--ds-background-brand-teal-primary);
 }
 
 .tabActiveMask {
@@ -98,7 +156,7 @@
   bottom: 0;
   z-index: 10;
   width: 2px;
-  background: var(--sidebar);
+  background: var(--ds-background-neutral-primary);
 }
 
 .devOverrideDot {
@@ -108,7 +166,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--destructive);
+  background: var(--ds-background-error-primary);
   border: 1.5px solid var(--ds-background-neutral-secondary);
 }
 
@@ -121,6 +179,7 @@
 }
 
 .content {
+  position: relative;
   display: flex;
   min-width: 0;
   flex: 1;
@@ -130,8 +189,8 @@
 }
 
 .continueBar {
-  border-top: 1px solid var(--border);
-  background: var(--sidebar);
+  border-top: 1px solid var(--ds-borders-neutral-primary);
+  background: var(--ds-background-neutral-primary);
   padding: 8px;
   flex-shrink: 0;
 }

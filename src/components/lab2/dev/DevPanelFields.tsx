@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AppButton } from "../../ui/AppButton";
-import type { DevPanelField } from "./types";
+import { AppNativeSelect } from "../../ui/AppDropdown";
+import type { DevPanelField, DevPanelUploadedFile } from "./types";
 import styles from "./DevPanel.module.scss";
 
 interface FieldProps {
@@ -128,21 +129,123 @@ function BooleanField({ value, controlId, onChange }: FieldProps) {
 function SelectField({ field, value, controlId, onChange }: FieldProps) {
   if (field.type !== "select") return null;
   return (
-    <select
+    <AppNativeSelect
       id={controlId}
-      className={styles.select}
       value={String(value ?? "")}
-      onChange={(e) => {
-        const raw = e.target.value;
+      onValueChange={(raw) => {
         onChange(field.valueType === "number" ? Number(raw) : raw);
       }}
-    >
-      {field.options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+      options={field.options}
+      placeholder=""
+      size="s"
+      tone="gray"
+      fullWidth
+    />
+  );
+}
+
+async function readUploadedFiles(
+  fileList: FileList,
+  options: { maxFiles?: number; maxTotalSizeBytes?: number } = {},
+): Promise<DevPanelUploadedFile[]> {
+  const files = Array.from(fileList);
+  if (options.maxFiles && files.length > options.maxFiles) {
+    throw new Error(`Upload up to ${options.maxFiles} files.`);
+  }
+
+  const totalBytes = files.reduce((total, file) => total + file.size, 0);
+  if (options.maxTotalSizeBytes && totalBytes > options.maxTotalSizeBytes) {
+    throw new Error("Uploaded files are too large.");
+  }
+
+  return Promise.all(files.map(async (file) => ({
+    name: file.name,
+    path: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
+    type: file.type,
+    size: file.size,
+    content: await file.text(),
+  })));
+}
+
+function FileUploadField({ field, value, controlId, onChange }: FieldProps) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isReading, setIsReading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  if (field.type !== "file") return null;
+  const uploadedFiles = Array.isArray((value as { files?: unknown[] } | undefined)?.files)
+    ? ((value as { files: DevPanelUploadedFile[] }).files)
+    : [];
+  const directoryProps = field.directory
+    ? ({ webkitdirectory: "", directory: "" } as Record<string, string>)
+    : {};
+
+  return (
+    <div className={styles.fileUploadWrap}>
+      <AppButton
+        variant="secondary"
+        tone="gray"
+        size="s"
+        iconName="upload"
+        className={styles.fileUploadButton}
+        onClick={() => inputRef.current?.click()}
+      >
+        {field.buttonLabel ?? "Upload files"}
+      </AppButton>
+      <input
+        ref={inputRef}
+        id={controlId}
+        type="file"
+        accept={field.accept}
+        multiple={field.multiple ?? field.directory ?? false}
+        className={styles.fileUploadInput}
+        tabIndex={-1}
+        onChange={(event) => {
+          const files = event.currentTarget.files;
+          if (!files || files.length === 0) return;
+          setIsReading(true);
+          setUploadError(null);
+          void readUploadedFiles(files, {
+            maxFiles: field.maxFiles,
+            maxTotalSizeBytes: field.maxTotalSizeBytes,
+          })
+            .then((uploaded) => {
+              try {
+                onChange({
+                  files: uploaded,
+                  uploadedAt: new Date().toISOString(),
+                });
+              } catch (error) {
+                console.error("[DevPanel] Starter file upload failed", error);
+                setUploadError("Unable to load those starter files. Try a smaller text-only project.");
+              }
+            })
+            .catch((error) => {
+              console.error("[DevPanel] Starter file read failed", error);
+              setUploadError(error instanceof Error
+                ? error.message
+                : "Unable to read those files. Try uploading text files only.");
+            })
+            .finally(() => setIsReading(false));
+          event.currentTarget.value = "";
+        }}
+        {...directoryProps}
+      />
+      {isReading ? (
+        <p className={styles.fileUploadSummary}>Loading starter files...</p>
+      ) : null}
+      {uploadError ? (
+        <p className={styles.fileUploadError} role="alert">
+          {uploadError}
+        </p>
+      ) : null}
+      {uploadedFiles.length > 0 ? (
+        <p className={styles.fileUploadSummary}>
+          Loaded {uploadedFiles.length} file{uploadedFiles.length === 1 ? "" : "s"}:{" "}
+          {uploadedFiles.slice(0, 5).map((file) => file.path).join(", ")}
+          {uploadedFiles.length > 5 ? `, and ${uploadedFiles.length - 5} more` : ""}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -153,6 +256,7 @@ const FIELD_COMPONENTS: Record<string, React.ComponentType<FieldProps>> = {
   slider: SliderField,
   boolean: BooleanField,
   select: SelectField,
+  file: FileUploadField,
 };
 
 type FieldRowProps = Omit<FieldProps, "controlId">;

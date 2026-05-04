@@ -1,220 +1,16 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faClipboardCheck,
-  faClockRotateLeft,
-  faPersonChalkboard,
-  faBook,
-  faTriangleExclamation,
-  faGear,
-  faCopyright,
-  faSlidersH,
-  faCopy,
-  faRotateLeft,
-  faBookmark,
-} from "@fortawesome/free-solid-svg-icons";
-import { PanelHeader } from "../../ui/PanelHeader";
-import { Tooltip } from "../../ui/Tooltip";
-import { Modal } from "../../ui/Modal";
-import modalStyles from "../../ui/Modal.module.scss";
-import { AppButton } from "../../ui/AppButton";
-import { AiTutorIcon } from "../../ui/icons/AiTutorIcon";
-import { FaIcon } from "../../ui/icons/FaIcon";
-import { ValidationPanel } from "./views/ValidationPanel";
-import { VersionHistory } from "./views/VersionHistory";
-import { AiTutorPanel } from "./views/ai-tutor/AiTutorPanel";
-import { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
-import { RubricPanel } from "./views/RubricPanel";
-import type { RubricData } from "./views/RubricPanel";
-import { ContinueButton } from "./ContinueButton";
 import { SettingsPanel } from "./views/SettingsPanel";
-import { DevPanelContent } from "../dev";
-import type { DevPanelField } from "../dev";
-import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
-import type { UseAnnotationsResult } from "../../../hooks/useAnnotations";
-import { useSavedVariants } from "../../../hooks/useSavedVariants";
-import type { ChatMessage } from "../../../types/chat";
-import type {
-  AiTutorInputExperiment,
-  MockTutorConfig,
-  TutorContextFile,
-  TutorSubmitHandler,
-} from "../../../types/tutor";
-import type { InstructionsDrawerVisualCue } from "./InstructionsDrawer";
+import { SidebarPanelContent } from "./SidebarPanelContent";
+import { SidebarTabRail } from "./SidebarTabRail";
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { defaultMockTutorConfig } from "../../../data/weblab2";
+import type { SidebarProps, SidebarTab } from "./Sidebar.types";
 import styles from "./Sidebar.module.scss";
 
-export type SidebarTab = "checklist" | "ai-tutor" | "history" | "classroom" | "rubric" | "dev";
+const OPEN_TUTOR_PANEL_EVENT = "weblab:open-tutor-panel";
+const TUTOR_PANEL_READY_EVENT = "weblab:tutor-panel-ready";
+const SIDEBAR_WIDTH_ANIMATION_MS = 220;
 
-export interface SidebarProps {
-  activeTab: SidebarTab;
-  setActiveTab: (tab: SidebarTab) => void;
-  sidebarWidth: number;
-  isSettingsOpen: boolean;
-  setIsSettingsOpen: (open: boolean) => void;
-  chatMessages: ChatMessage[];
-  setChatMessages: (messages: ChatMessage[]) => void;
-  chatInput: string;
-  setChatInput: (input: string) => void;
-  selectedHistoryVersion: string;
-  setSelectedHistoryVersion: (version: string) => void;
-  onSaveVersion?: (description: string) => void;
-  onRestoreVersion?: (versionId: string) => void;
-  showRestoreSuccessAlert?: boolean;
-  setShowRestoreSuccessAlert?: (show: boolean) => void;
-  showSaveSuccessAlert?: boolean;
-  setShowSaveSuccessAlert?: (show: boolean) => void;
-  showValidationTab?: boolean;
-  showAiTutorTab?: boolean;
-  showHistoryTab?: boolean;
-  showTeacherResourcesTab?: boolean;
-  showRubricTab?: boolean;
-  /** Single rubric or up to four per level; navigation shows when multiple. */
-  rubricData?: RubricData | RubricData[];
-  showContinueButton?: boolean;
-  /** Fires when the Continue button is clicked. */
-  onContinue?: () => void;
-  /** Override the default "Continue to Level 10" label. */
-  continueLabel?: string;
-  /**
-   * When true, sidebar can be collapsed to a narrow strip (assessment levels). Disabled for Web Lab 2.
-   * When true, the sidebar also starts collapsed by default.
-   */
-  collapsible?: boolean;
-  /** When false, the AI Tutor instructions drawer is hidden. Default true (Web Lab 2). */
-  showInstructionsDrawer?: boolean;
-  instructionsDrawerInitialHeightRatio?: number;
-  instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
-  aiTutorInputExperiment?: AiTutorInputExperiment;
-  mockTutorConfig?: MockTutorConfig;
-  /** Callback to add a file to the project tree. */
-  onAddFileToProject?: (fileName: string) => void;
-  /** Custom content for the instructions drawer (replaces default copy). */
-  instructionsContent?: React.ReactNode;
-  availableTutorContextFiles?: TutorContextFile[];
-  onTutorSubmit?: TutorSubmitHandler;
-  onAcceptAiChanges?: () => void;
-  onRejectAiChanges?: () => void;
-  historyVersions?: React.ComponentProps<typeof VersionHistory>["versions"];
-  /** Fires when `collapsible && isCollapsed` changes (for shell chrome such as resize handle). */
-  onCollapsedChange?: (collapsed: boolean) => void;
-  /** When provided, a Dev tab appears in the rail with live prop controls. */
-  devPanelFields?: DevPanelField[];
-  devPanelOverrideResult?: PropsOverrideResult<Record<string, unknown>>;
-  devPanelSessionValues?: Record<string, unknown>;
-  onDevPanelSessionValueChange?: (key: string, value: unknown) => void;
-  onDevPanelSessionValueReset?: (key: string) => void;
-  /** Annotation mode state — passed down from Lab2Shell. */
-  annotations?: UseAnnotationsResult;
-}
-
-function DevPanelHeaderActions({
-  overrideResult,
-}: {
-  overrideResult: PropsOverrideResult<Record<string, unknown>>;
-}) {
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveName, setSaveName] = useState("");
-  const [saved, setSaved] = useState(false);
-  const location = useLocation();
-  const { saveVariant } = useSavedVariants();
-
-  const handleSave = () => {
-    if (!saveName.trim()) return;
-    saveVariant(saveName.trim(), location.pathname, overrideResult.overrides);
-    setSaveName("");
-    setShowSaveModal(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
-  };
-
-  return (
-    <>
-      <Modal
-        open={showSaveModal}
-        onClose={() => setShowSaveModal(false)}
-        title="Save variant"
-        footer={
-          <>
-            <AppButton
-              variant="secondary"
-              tone="black"
-              size="s"
-              onClick={() => setShowSaveModal(false)}
-            >
-              Cancel
-            </AppButton>
-            <AppButton
-              variant="primary"
-              tone="purple"
-              size="s"
-              onClick={handleSave}
-              disabled={!saveName.trim()}
-            >
-              Save
-            </AppButton>
-          </>
-        }
-      >
-        <div className={modalStyles.fieldGroup}>
-          <label className={modalStyles.fieldLabel}>
-            Variant name
-            <input
-              className={modalStyles.fieldInput}
-              value={saveName}
-              onChange={(e) => setSaveName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSave();
-              }}
-              placeholder="e.g. Shorter stems, 2-col layout"
-              autoFocus
-            />
-          </label>
-          <p className={modalStyles.fieldHint}>
-            Saved to <strong>/levels</strong> index. You can promote to a code
-            page later.
-          </p>
-        </div>
-      </Modal>
-      <div className="flex gap-1">
-        <Tooltip content={saved ? "Saved!" : "Save variant"} position="bottom">
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            icon={<FontAwesomeIcon icon={faBookmark} />}
-            onClick={() => {
-              setSaveName("");
-              setShowSaveModal(true);
-            }}
-            disabled={!overrideResult.hasOverrides}
-          />
-        </Tooltip>
-        <Tooltip content="Copy link with overrides" position="bottom">
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            icon={<FontAwesomeIcon icon={faCopy} />}
-            onClick={() => overrideResult.copyLink()}
-            disabled={!overrideResult.hasOverrides}
-          />
-        </Tooltip>
-        <Tooltip content="Reset all overrides" position="bottom">
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            icon={<FontAwesomeIcon icon={faRotateLeft} />}
-            onClick={() => overrideResult.resetAll()}
-            disabled={!overrideResult.hasOverrides}
-          />
-        </Tooltip>
-      </div>
-    </>
-  );
-}
+export type { SidebarProps, SidebarTab } from "./Sidebar.types";
 
 export function Sidebar({
   activeTab,
@@ -239,11 +35,15 @@ export function Sidebar({
   showHistoryTab = true,
   showTeacherResourcesTab = false,
   showRubricTab = false,
+  showStudentLessonResource = false,
+  showDocumentationResource = false,
+  showWalkthroughResources = false,
   rubricData,
   showContinueButton = true,
   onContinue,
   continueLabel,
   collapsible = false,
+  defaultCollapsed,
   showInstructionsDrawer = true,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
@@ -255,22 +55,44 @@ export function Sidebar({
   onTutorSubmit,
   onAcceptAiChanges,
   onRejectAiChanges,
+  isTutorRequestRunning: externalTutorRequestRunning = false,
+  onTutorRequestRunningChange,
+  onOpenFileChangeInEditor,
+  onOpenFileChangeInPreview,
+  showTutorModelSelector = false,
+  tutorRequestMode = "auto",
+  setTutorRequestMode,
+  hasPendingAiChanges = false,
   historyVersions,
+  showNewProjectHistoryEmptyState = false,
   onCollapsedChange,
   devPanelFields,
   devPanelOverrideResult,
   devPanelSessionValues,
+  devPanelHasShareParams,
+  devPanelShareParams,
   onDevPanelSessionValueChange,
   onDevPanelSessionValueReset,
   annotations,
 }: SidebarProps) {
   const showDevTab = Boolean(devPanelFields && devPanelOverrideResult);
-  const [isCollapsed, setIsCollapsed] = useState(() => Boolean(collapsible));
-  const [isTutorRequestRunning, setIsTutorRequestRunning] = useState(false);
+  const showResourcesTab = Boolean(
+    showStudentLessonResource ||
+      showDocumentationResource ||
+      showWalkthroughResources,
+  );
+  const [isCollapsed, setIsCollapsed] = useState(() =>
+    Boolean(collapsible && (defaultCollapsed ?? collapsible)),
+  );
+  const [isWidthAnimating, setIsWidthAnimating] = useState(false);
+  const [panelTutorRequestRunning, setPanelTutorRequestRunning] = useState(false);
   const [clearTutorChatSignal, setClearTutorChatSignal] = useState(0);
+  const hasMountedCollapseStateRef = useRef(false);
   const hasComposerContent = Boolean(
     chatInput.trim() || mockTutorConfig?.initialAttachments?.length,
   );
+  const effectiveTutorRequestRunning =
+    panelTutorRequestRunning || externalTutorRequestRunning;
 
   useEffect(() => {
     if (!collapsible) {
@@ -278,11 +100,49 @@ export function Sidebar({
     }
   }, [collapsible]);
 
+  useEffect(() => {
+    if (!collapsible || defaultCollapsed === undefined) return;
+    setIsCollapsed(defaultCollapsed);
+  }, [collapsible, defaultCollapsed]);
+
+  useEffect(() => {
+    const openTutorPanel = () => {
+      if (!showAiTutorTab) return;
+      const needsSlideOpen = Boolean(collapsible && isCollapsed);
+      setActiveTab("ai-tutor");
+      if (collapsible) {
+        setIsCollapsed(false);
+      }
+      window.setTimeout(
+        () => window.dispatchEvent(new CustomEvent(TUTOR_PANEL_READY_EVENT)),
+        needsSlideOpen ? SIDEBAR_WIDTH_ANIMATION_MS : 0,
+      );
+    };
+
+    window.addEventListener(OPEN_TUTOR_PANEL_EVENT, openTutorPanel);
+    return () => window.removeEventListener(OPEN_TUTOR_PANEL_EVENT, openTutorPanel);
+  }, [collapsible, isCollapsed, setActiveTab, showAiTutorTab]);
+
   const onCollapsedChangeRef = useRef(onCollapsedChange);
   onCollapsedChangeRef.current = onCollapsedChange;
 
   useEffect(() => {
     onCollapsedChangeRef.current?.(Boolean(collapsible && isCollapsed));
+  }, [collapsible, isCollapsed]);
+
+  useEffect(() => {
+    if (!hasMountedCollapseStateRef.current) {
+      hasMountedCollapseStateRef.current = true;
+      return undefined;
+    }
+    if (!collapsible) return undefined;
+
+    setIsWidthAnimating(true);
+    const timeoutId = window.setTimeout(
+      () => setIsWidthAnimating(false),
+      SIDEBAR_WIDTH_ANIMATION_MS,
+    );
+    return () => window.clearTimeout(timeoutId);
   }, [collapsible, isCollapsed]);
 
   useEffect(() => {
@@ -293,6 +153,7 @@ export function Sidebar({
     if (showHistoryTab) validTabs.push("history");
     if (showTeacherResourcesTab) validTabs.push("classroom");
     if (showRubricTab) validTabs.push("rubric");
+    if (showResourcesTab) validTabs.push("resources");
     if (showDevTab) validTabs.push("dev");
 
     if (!validTabs.includes(activeTab) && validTabs.length > 0) {
@@ -307,12 +168,13 @@ export function Sidebar({
     showRubricTab,
     showValidationTab,
     showDevTab,
+    showResourcesTab,
   ]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (!showDevTab) return;
-      if (isTutorRequestRunning) return;
+      if (effectiveTutorRequestRunning) return;
       if ((e.metaKey || e.ctrlKey) && e.key === ".") {
         e.preventDefault();
         if (activeTab === "dev") {
@@ -330,21 +192,37 @@ export function Sidebar({
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [showDevTab, isTutorRequestRunning, activeTab, setActiveTab, showAiTutorTab, showValidationTab, collapsible, isCollapsed]);
+  }, [showDevTab, effectiveTutorRequestRunning, activeTab, setActiveTab, showAiTutorTab, showValidationTab, collapsible, isCollapsed]);
 
   const panelHidden = collapsible && isCollapsed;
   const railWidth = 56;
+  const panelContentWidth = Math.max(0, sidebarWidth - railWidth);
 
   const isTabActive = (tab: SidebarTab) => !panelHidden && activeTab === tab;
   const isTabDisabled = (tab: SidebarTab) =>
-    isTutorRequestRunning && tab !== "ai-tutor";
+    effectiveTutorRequestRunning && tab !== "ai-tutor";
 
   const selectTab = (tab: SidebarTab) => {
     if (isTabDisabled(tab)) return;
+    setIsSettingsOpen(false);
     setActiveTab(tab);
     if (collapsible && isCollapsed) {
       setIsCollapsed(false);
     }
+  };
+
+  const handleToggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      if (next) {
+        setIsSettingsOpen(false);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleSettings = () => {
+    setIsSettingsOpen(!isSettingsOpen);
   };
 
   const handleClearTutorChat = () => {
@@ -353,358 +231,103 @@ export function Sidebar({
     setClearTutorChatSignal((signal) => signal + 1);
   };
 
+  const handleTutorRequestRunningChange = (isRunning: boolean) => {
+    setPanelTutorRequestRunning(isRunning);
+    onTutorRequestRunningChange?.(isRunning);
+  };
+
   return (
     <div
-      className={styles.root}
+      className={`${styles.root} ${isWidthAnimating ? styles.rootWidthAnimating : ""}`}
       style={{
         width: panelHidden ? `${railWidth}px` : `${sidebarWidth}px`,
       }}
     >
-      <div className={styles.tabRail}>
-        <div className={styles.railTopSpacer}>
-          {collapsible && (
-            <Tooltip
-              content={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              position="right"
-            >
-              <button
-                type="button"
-                className={styles.railCollapseButton}
-                onClick={() => {
-                  setIsCollapsed((prev) => {
-                    const next = !prev;
-                    if (next) {
-                      setIsSettingsOpen(false);
-                    }
-                    return next;
-                  });
-                }}
-                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                <FaIcon
-                  name={
-                    isCollapsed ? "arrow-right-from-line" : "arrow-left-from-line"
-                  }
-                  size="s"
-                  className="text-[#69788a] transition-colors hover:text-[#576575]"
-                />
-              </button>
-            </Tooltip>
-          )}
-        </div>
+      <SidebarTabRail
+        collapsible={collapsible}
+        isCollapsed={isCollapsed}
+        isSettingsOpen={isSettingsOpen}
+        showValidationTab={showValidationTab}
+        showAiTutorTab={showAiTutorTab}
+        showHistoryTab={showHistoryTab}
+        showTeacherResourcesTab={showTeacherResourcesTab}
+        showRubricTab={showRubricTab}
+        showResourcesTab={showResourcesTab}
+        showDevTab={showDevTab}
+        devPanelHasOverrides={devPanelOverrideResult?.hasOverrides}
+        annotations={annotations}
+        isTabActive={isTabActive}
+        isTabDisabled={isTabDisabled}
+        onSelectTab={selectTab}
+        onToggleCollapse={handleToggleCollapse}
+        onToggleSettings={handleToggleSettings}
+      />
 
-        {showValidationTab && (
-          <Tooltip content="Validation" position="right">
-            <button
-              onClick={() => selectTab("checklist")}
-              disabled={isTabDisabled("checklist")}
-              className={`${styles.tabButton} ${
-                isTabActive("checklist") ? styles.tabActive : ""
-              } ${isTabDisabled("checklist") ? styles.tabDisabled : ""}`}
-            >
-              <FontAwesomeIcon
-                icon={faClipboardCheck}
-                className={`text-[18px] transition-colors ${
-                  isTabActive("checklist")
-                    ? "text-accent"
-                    : "text-[#69788a] group-hover:text-[#576575]"
-                }`}
-              />
-              {isTabActive("checklist") && (
-                <>
-                  <div className={styles.tabActiveAccent} />
-                  <div className={styles.tabActiveMask} />
-                </>
-              )}
-            </button>
-          </Tooltip>
-        )}
-
-        {showAiTutorTab && (
-          <Tooltip content="AI Tutor" position="right">
-            <button
-              onClick={() => selectTab("ai-tutor")}
-              disabled={isTabDisabled("ai-tutor")}
-              className={`${styles.tabButton} ${
-                isTabActive("ai-tutor") ? styles.tabActive : ""
-              } ${isTabDisabled("ai-tutor") ? styles.tabDisabled : ""}`}
-            >
-              <AiTutorIcon
-                className="w-[22px] h-[22px] transition-colors"
-                color={isTabActive("ai-tutor") ? "#0093a4" : "#69788a"}
-              />
-              {isTabActive("ai-tutor") && (
-                <>
-                  <div className={styles.tabActiveAccent} />
-                  <div className={styles.tabActiveMask} />
-                </>
-              )}
-            </button>
-          </Tooltip>
-        )}
-
-        {showHistoryTab && (
-          <Tooltip content="Version History" position="right">
-            <button
-              onClick={() => selectTab("history")}
-              disabled={isTabDisabled("history")}
-              className={`${styles.tabButton} ${
-                isTabActive("history") ? styles.tabActive : ""
-              } ${isTabDisabled("history") ? styles.tabDisabled : ""}`}
-            >
-              <FontAwesomeIcon
-                icon={faClockRotateLeft}
-                className={`text-[18px] transition-colors ${
-                  isTabActive("history")
-                    ? "text-accent"
-                    : "text-[#69788a] group-hover:text-[#576575]"
-                }`}
-              />
-              {isTabActive("history") && (
-                <>
-                  <div className={styles.tabActiveAccent} />
-                  <div className={styles.tabActiveMask} />
-                </>
-              )}
-            </button>
-          </Tooltip>
-        )}
-
-        {showTeacherResourcesTab && (
-          <Tooltip content="Teacher Resources" position="right">
-            <button
-              onClick={() => selectTab("classroom")}
-              disabled={isTabDisabled("classroom")}
-              className={`${styles.tabButton} ${
-                isTabActive("classroom") ? styles.tabActive : ""
-              } ${isTabDisabled("classroom") ? styles.tabDisabled : ""}`}
-            >
-              <FontAwesomeIcon
-                icon={faPersonChalkboard}
-                className={`text-[18px] transition-colors ${
-                  isTabActive("classroom")
-                    ? "text-accent"
-                    : "text-[#69788a] group-hover:text-[#576575]"
-                }`}
-              />
-              {isTabActive("classroom") && (
-                <>
-                  <div className={styles.tabActiveAccent} />
-                  <div className={styles.tabActiveMask} />
-                </>
-              )}
-            </button>
-          </Tooltip>
-        )}
-
-        {showRubricTab && (
-          <Tooltip content="Rubric" position="right">
-            <button
-              onClick={() => selectTab("rubric")}
-              disabled={isTabDisabled("rubric")}
-              className={`${styles.tabButton} ${
-                isTabActive("rubric") ? styles.tabActive : ""
-              } ${isTabDisabled("rubric") ? styles.tabDisabled : ""}`}
-            >
-              <FaIcon
-                name="clipboard-list"
-                size="m"
-                className={`text-[18px] transition-colors ${
-                  isTabActive("rubric")
-                    ? "text-accent"
-                    : "text-[#69788a] group-hover:text-[#576575]"
-                }`}
-              />
-              {isTabActive("rubric") && (
-                <>
-                  <div className={styles.tabActiveAccent} />
-                  <div className={styles.tabActiveMask} />
-                </>
-              )}
-            </button>
-          </Tooltip>
-        )}
-
-        {showDevTab && (
-          <Tooltip content="Dev Panel" position="right">
-            <button
-              onClick={() => selectTab("dev")}
-              disabled={isTabDisabled("dev")}
-              className={`${styles.tabButton} ${
-                isTabActive("dev") ? styles.tabActive : ""
-              } ${isTabDisabled("dev") ? styles.tabDisabled : ""}`}
-            >
-              <FontAwesomeIcon
-                icon={faSlidersH}
-                className={`text-[18px] transition-colors ${
-                  isTabActive("dev")
-                    ? "text-accent"
-                    : "text-[#69788a] group-hover:text-[#576575]"
-                }`}
-              />
-              {isTabActive("dev") && (
-                <>
-                  <div className={styles.tabActiveAccent} />
-                  <div className={styles.tabActiveMask} />
-                </>
-              )}
-              {devPanelOverrideResult?.hasOverrides && !isTabActive("dev") && (
-                <span className={styles.devOverrideDot} />
-              )}
-            </button>
-          </Tooltip>
-        )}
-
-        <div className="flex-1" />
-
-        <div className={styles.bottomButtons}>
-          {annotations && (
-            <Tooltip
-              content={
-                annotations.isActive ? "Exit annotation mode" : "Annotate"
-              }
-              position="right"
-            >
-              <AppButton
-                variant={annotations.isActive ? "primary" : "tertiary"}
-                tone={annotations.isActive ? "purple" : "gray"}
-                size="xs"
-                iconName="thumbtack"
-                onClick={() => annotations.setIsActive(!annotations.isActive)}
-                aria-label={
-                  annotations.isActive
-                    ? "Exit annotation mode"
-                    : "Start annotation mode"
-                }
-              />
-            </Tooltip>
-          )}
-          <Tooltip content="Documentation" position="right">
-            <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faBook} />} />
-          </Tooltip>
-          <Tooltip content="AI Usage Disclaimer" position="right">
-            <AppButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              icon={<FontAwesomeIcon icon={faTriangleExclamation} />}
-            />
-          </Tooltip>
-          <Tooltip content="Settings" position="right">
-            <AppButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              icon={<FontAwesomeIcon icon={faGear} />}
-            />
-          </Tooltip>
-          <Tooltip content="Copyright" position="right">
-            <AppButton variant="tertiary" tone="gray" size="xs" icon={<FontAwesomeIcon icon={faCopyright} />} />
-          </Tooltip>
+      <div
+        className={styles.contentShell}
+        aria-hidden={panelHidden}
+      >
+        <div
+          className={styles.contentFixedWidth}
+          style={{ width: `${panelContentWidth}px` }}
+        >
+          <SidebarPanelContent
+            activeTab={activeTab}
+            isSettingsOpen={panelHidden ? false : isSettingsOpen}
+            setIsSettingsOpen={setIsSettingsOpen}
+            chatMessages={chatMessages}
+            setChatMessages={setChatMessages}
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+            selectedHistoryVersion={selectedHistoryVersion}
+            setSelectedHistoryVersion={setSelectedHistoryVersion}
+            onSaveVersion={onSaveVersion}
+            onRestoreVersion={onRestoreVersion}
+            showRestoreSuccessAlert={showRestoreSuccessAlert}
+            setShowRestoreSuccessAlert={setShowRestoreSuccessAlert}
+            showSaveSuccessAlert={showSaveSuccessAlert}
+            setShowSaveSuccessAlert={setShowSaveSuccessAlert}
+            rubricData={rubricData}
+            showStudentLessonResource={showStudentLessonResource}
+            showDocumentationResource={showDocumentationResource}
+            showWalkthroughResources={showWalkthroughResources}
+            showContinueButton={showContinueButton}
+            onContinue={onContinue}
+            continueLabel={continueLabel}
+            showInstructionsDrawer={showInstructionsDrawer}
+            instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
+            instructionsDrawerVisualCue={instructionsDrawerVisualCue}
+            aiTutorInputExperiment={aiTutorInputExperiment}
+            mockTutorConfig={mockTutorConfig}
+            onAddFileToProject={onAddFileToProject}
+            instructionsContent={instructionsContent}
+            availableTutorContextFiles={availableTutorContextFiles}
+            onTutorSubmit={onTutorSubmit}
+            onAcceptAiChanges={onAcceptAiChanges}
+            onRejectAiChanges={onRejectAiChanges}
+            onOpenFileChangeInEditor={onOpenFileChangeInEditor}
+            onOpenFileChangeInPreview={onOpenFileChangeInPreview}
+            showTutorModelSelector={showTutorModelSelector}
+            tutorRequestMode={tutorRequestMode}
+            setTutorRequestMode={setTutorRequestMode ?? (() => undefined)}
+            hasPendingAiChanges={hasPendingAiChanges}
+            historyVersions={historyVersions}
+            showNewProjectHistoryEmptyState={showNewProjectHistoryEmptyState}
+            devPanelFields={devPanelFields}
+            devPanelOverrideResult={devPanelOverrideResult}
+            devPanelSessionValues={devPanelSessionValues}
+            devPanelHasShareParams={devPanelHasShareParams}
+            devPanelShareParams={devPanelShareParams}
+            onDevPanelSessionValueChange={onDevPanelSessionValueChange}
+            onDevPanelSessionValueReset={onDevPanelSessionValueReset}
+            hasComposerContent={hasComposerContent}
+            isTutorRequestRunning={effectiveTutorRequestRunning}
+            clearTutorChatSignal={clearTutorChatSignal}
+            onClearTutorChat={handleClearTutorChat}
+            onTutorRequestRunningChange={handleTutorRequestRunningChange}
+          />
         </div>
       </div>
-
-      {!panelHidden && (
-        <div className={styles.content}>
-          <PanelHeader
-            label={
-              (activeTab === "checklist" && "VALIDATION") ||
-              (activeTab === "ai-tutor" && "AI TUTOR") ||
-              (activeTab === "history" && "VERSION HISTORY") ||
-              (activeTab === "classroom" && "TEACHER RESOURCES") ||
-              (activeTab === "rubric" && "RUBRIC") ||
-              (activeTab === "dev" && "DEV PANEL") ||
-              ""
-            }
-            right={
-              activeTab === "ai-tutor" ? (
-                <div className="flex gap-1">
-                  <Tooltip content="Clear chat" position="bottom">
-                    <AppButton
-                      variant="tertiary"
-                      tone="gray"
-                      size="xs"
-                      iconName="eraser"
-                      onClick={handleClearTutorChat}
-                      disabled={chatMessages.length === 0 && !hasComposerContent && !isTutorRequestRunning}
-                      aria-label="Clear AI Tutor chat"
-                    />
-                  </Tooltip>
-                </div>
-              ) : activeTab === "dev" && devPanelOverrideResult ? (
-                <DevPanelHeaderActions overrideResult={devPanelOverrideResult} />
-              ) : undefined
-            }
-          />
-
-          {activeTab === "checklist" && <ValidationPanel />}
-          {activeTab === "ai-tutor" && (
-            <AiTutorPanel
-              chatMessages={chatMessages}
-              setChatMessages={setChatMessages}
-              chatInput={chatInput}
-              setChatInput={setChatInput}
-              showInstructionsDrawer={showInstructionsDrawer}
-              instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
-              instructionsDrawerVisualCue={instructionsDrawerVisualCue}
-              inputExperiment={aiTutorInputExperiment}
-              mockTutorConfig={mockTutorConfig}
-              onAddFileToProject={onAddFileToProject}
-              instructionsContent={instructionsContent}
-              availableContextFiles={availableTutorContextFiles}
-              onTutorSubmit={onTutorSubmit}
-              onAcceptAiChanges={onAcceptAiChanges}
-              onRejectAiChanges={onRejectAiChanges}
-              onRequestRunningChange={setIsTutorRequestRunning}
-              clearChatSignal={clearTutorChatSignal}
-            />
-          )}
-          {activeTab === "history" && (
-            <VersionHistory
-              versions={historyVersions}
-              selectedVersion={selectedHistoryVersion}
-              onVersionChange={setSelectedHistoryVersion}
-              onSaveVersion={onSaveVersion}
-              onRestoreVersion={onRestoreVersion}
-              showRestoreSuccessAlert={showRestoreSuccessAlert}
-              setShowRestoreSuccessAlert={setShowRestoreSuccessAlert}
-              showSaveSuccessAlert={showSaveSuccessAlert}
-              setShowSaveSuccessAlert={setShowSaveSuccessAlert}
-            />
-          )}
-          {activeTab === "classroom" && <TeacherResourcesPanel />}
-          {activeTab === "rubric" && rubricData && (
-            <RubricPanel
-              rubrics={
-                Array.isArray(rubricData) ? rubricData : [rubricData]
-              }
-            />
-          )}
-          {activeTab === "dev" && devPanelFields && devPanelOverrideResult && (
-            <DevPanelContent
-              fields={devPanelFields}
-              overrideResult={devPanelOverrideResult}
-              sessionValues={devPanelSessionValues}
-              onSessionValueChange={onDevPanelSessionValueChange}
-              onSessionValueReset={onDevPanelSessionValueReset}
-            />
-          )}
-
-          {showContinueButton && (
-            <div className={styles.continueBar}>
-              <ContinueButton onClick={onContinue} label={continueLabel} />
-            </div>
-          )}
-
-          {isSettingsOpen && (
-            <SettingsPanel
-              isOpen={isSettingsOpen}
-              onClose={() => setIsSettingsOpen(false)}
-            />
-          )}
-        </div>
-      )}
 
       {panelHidden && isSettingsOpen && (
         <div className={styles.settingsFloatingWrap}>

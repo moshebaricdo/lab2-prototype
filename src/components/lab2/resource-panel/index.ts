@@ -1,8 +1,8 @@
 export { Sidebar } from "./Sidebar";
-export type { SidebarTab, SidebarProps } from "./Sidebar";
+export type { SidebarTab, SidebarProps } from "./Sidebar.types";
 /** Alias for the resource / sidebar chrome (same component as `Sidebar`). */
 export { Sidebar as ResourcePanel } from "./Sidebar";
-export type { SidebarProps as ResourcePanelProps } from "./Sidebar";
+export type { SidebarProps as ResourcePanelProps } from "./Sidebar.types";
 
 export { ContinueButton } from "./ContinueButton";
 export { InstructionsDrawer } from "./InstructionsDrawer";
@@ -15,6 +15,7 @@ export { InstructionsPanel } from "./views/InstructionsPanel";
 export { AiTutorPanel } from "./views/ai-tutor/AiTutorPanel";
 export { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
 export { RubricPanel } from "./views/RubricPanel";
+export { ResourcesPanel } from "./views/ResourcesPanel";
 export type {
   RubricData,
   RubricCategory,

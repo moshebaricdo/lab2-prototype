@@ -1,6 +1,6 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faChevronDown } from "@fortawesome/free-solid-svg-icons";
+import { useEffect, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
+import { AppNativeSelect } from "../../../ui/AppDropdown";
 import { useTutorApiSettings } from "../../../../hooks/useTutorApiSettings";
 import styles from "./SettingsPanel.module.scss";
 
@@ -12,15 +12,34 @@ interface SettingsPanelProps {
 }
 
 interface SettingsField {
+  key: string;
   label: string;
   value: string;
+  options: string[];
 }
 
 const SETTINGS_FIELDS: SettingsField[] = [
-  { label: "Language", value: "English" },
-  { label: "Editor Font Size", value: "Small" },
-  { label: "Theme", value: "Light" },
+  {
+    key: "language",
+    label: "Language",
+    value: "English",
+    options: ["English"],
+  },
+  {
+    key: "editorFontSize",
+    label: "Editor Font Size",
+    value: "Small",
+    options: ["Small", "Medium", "Large"],
+  },
+  {
+    key: "theme",
+    label: "Theme",
+    value: "Light",
+    options: ["Light", "Dark"],
+  },
 ];
+
+const SETTINGS_PANEL_EXIT_ANIMATION_MS = 180;
 
 export function SettingsPanel({
   isOpen,
@@ -28,8 +47,25 @@ export function SettingsPanel({
   variant = "inline",
 }: SettingsPanelProps) {
   const { apiKey, setApiKey, hasApiKey } = useTutorApiSettings();
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [fieldValues, setFieldValues] = useState(() =>
+    Object.fromEntries(SETTINGS_FIELDS.map((field) => [field.key, field.value])),
+  );
 
-  if (!isOpen) {
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(
+      () => setShouldRender(false),
+      SETTINGS_PANEL_EXIT_ANIMATION_MS,
+    );
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen]);
+
+  if (variant === "floating" && !shouldRender) {
     return null;
   }
 
@@ -38,9 +74,12 @@ export function SettingsPanel({
       className={[
         styles.root,
         variant === "floating" ? styles.rootFloating : styles.rootInline,
+        isOpen ? styles.rootOpen : styles.rootClosed,
       ]
         .filter(Boolean)
         .join(" ")}
+      aria-hidden={!isOpen}
+      data-state={isOpen ? "open" : "closed"}
     >
       <div className={styles.header}>
         <div className={styles.headerSide} aria-hidden="true" />
@@ -49,7 +88,7 @@ export function SettingsPanel({
           variant="tertiary"
           size="xs"
           tone="gray"
-          icon={<FontAwesomeIcon icon={faXmark} />}
+          iconName="xmark"
           onClick={onClose}
           aria-label="Close settings"
           className={styles.closeButton}
@@ -58,14 +97,25 @@ export function SettingsPanel({
 
       <div className={styles.content}>
         {SETTINGS_FIELDS.map((field) => (
-          <div key={field.label} className={styles.field}>
+          <div key={field.key} className={styles.field}>
             <p className={styles.label}>{field.label}</p>
-            <div className={styles.select}>
-              <p className={styles.value}>{field.value}</p>
-              <span className={styles.icon}>
-                <FontAwesomeIcon icon={faChevronDown} />
-              </span>
-            </div>
+            <AppNativeSelect
+              value={fieldValues[field.key] ?? field.value}
+              onValueChange={(value) =>
+                setFieldValues((current) => ({
+                  ...current,
+                  [field.key]: value,
+                }))
+              }
+              options={field.options.map((option) => ({
+                value: option,
+                label: option,
+              }))}
+              placeholder=""
+              size="s"
+              tone="gray"
+              fullWidth
+            />
           </div>
         ))}
 

@@ -1,61 +1,72 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 interface ResizableHandleProps {
   onResize: (delta: number) => void;
   orientation?: "vertical" | "horizontal";
+  className?: string;
 }
 
 export function ResizableHandle({
   onResize,
   orientation = "vertical",
+  className = "",
 }: ResizableHandleProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const isDraggingRef = useRef(false);
   const startPosRef = useRef(0);
 
-  useEffect(() => {
-    if (!isDragging) return;
+  const getPointerPosition = (event: React.PointerEvent<HTMLDivElement>) =>
+    orientation === "vertical" ? event.clientX : event.clientY;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const delta =
-        orientation === "vertical"
-          ? e.clientX - startPosRef.current
-          : e.clientY - startPosRef.current;
-      startPosRef.current =
-        orientation === "vertical" ? e.clientX : e.clientY;
-      onResize(delta);
-    };
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    isDraggingRef.current = false;
+    setIsDragging(false);
+  };
 
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging, onResize, orientation]);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    isDraggingRef.current = true;
     setIsDragging(true);
-    startPosRef.current =
-      orientation === "vertical" ? e.clientX : e.clientY;
+    startPosRef.current = getPointerPosition(event);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+
+    const nextPosition = getPointerPosition(event);
+    const delta = nextPosition - startPosRef.current;
+    if (delta === 0) return;
+
+    startPosRef.current = nextPosition;
+    onResize(delta);
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    endDrag(event);
+  };
+
+  const handlePointerCancel = (event: React.PointerEvent<HTMLDivElement>) => {
+    endDrag(event);
   };
 
   return (
     <div
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      className={`relative shrink-0 ${
+      className={`relative shrink-0 touch-none ${
         orientation === "vertical"
           ? "w-0 cursor-col-resize"
           : "h-0 cursor-row-resize"
-      } ${isDragging ? "z-50" : "z-10"}`}
+      } ${isDragging ? "z-50" : "z-10"} ${className}`}
     >
       <div
         className={`absolute ${

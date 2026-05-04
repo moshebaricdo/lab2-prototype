@@ -1,9 +1,15 @@
 import { useMemo, useState } from "react";
 
 export function useLayoutState() {
-  const [activeTab, setActiveTab] = useState<"checklist" | "ai-tutor" | "history" | "classroom" | "rubric" | "dev">(
-    "ai-tutor",
-  );
+  const [activeTab, setActiveTab] = useState<
+    | "checklist"
+    | "ai-tutor"
+    | "history"
+    | "classroom"
+    | "rubric"
+    | "resources"
+    | "dev"
+  >("ai-tutor");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(400);
 

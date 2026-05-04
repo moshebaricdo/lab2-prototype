@@ -1,3 +1,4 @@
 export { DevPanelContent } from "./DevPanel";
-export type { DevPanelField } from "./types";
+export { DevPanelHeaderActions } from "./DevPanelHeaderActions";
+export type { DevPanelField, DevPanelUploadedFile } from "./types";
 export { globalEditorDevFields } from "./globalEditorDevFields";

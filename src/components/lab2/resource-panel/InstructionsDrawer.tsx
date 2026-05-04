@@ -28,6 +28,7 @@ export function InstructionsDrawer({
   visualCue = "none",
   children,
 }: InstructionsDrawerProps) {
+  const minimumContentHeight = 150;
   const [isOpen, setIsOpen] = useState(true);
   const [height, setHeight] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
@@ -35,6 +36,7 @@ export function InstructionsDrawer({
   const [contentMaxHeight, setContentMaxHeight] = useState<number | null>(null);
   const [hasUserResized, setHasUserResized] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
+  const [isScrolledFromTop, setIsScrolledFromTop] = useState(false);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -43,7 +45,7 @@ export function InstructionsDrawer({
     const viewportFallback = typeof window !== "undefined" ? window.innerHeight - 200 : 600;
     const containerMax = propMaxHeight || viewportFallback;
     const contentMax = contentMaxHeight || viewportFallback;
-    return Math.max(150, Math.min(containerMax, contentMax));
+    return Math.min(containerMax, contentMax);
   };
 
   const updateOverflowState = () => {
@@ -53,14 +55,16 @@ export function InstructionsDrawer({
 
     const element = scrollRef.current;
     const overflow = element.scrollHeight - element.clientHeight > 1;
+    const fromTop = element.scrollTop > 1;
     const atBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 1;
     setHasOverflow(overflow);
+    setIsScrolledFromTop(fromTop);
     setIsScrolledToBottom(atBottom);
   };
 
   const clampHeight = (value: number) => {
     const upperLimit = getUpperLimit();
-    const minimumHeight = Math.min(150, upperLimit);
+    const minimumHeight = Math.min(minimumContentHeight, upperLimit);
     return Math.max(minimumHeight, Math.min(value, upperLimit));
   };
 
@@ -154,7 +158,9 @@ export function InstructionsDrawer({
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const shouldShowFade = hasOverflow && !isScrolledToBottom;
+  const shouldShowTopFade = hasOverflow && isScrolledFromTop;
+  const shouldShowBottomFade = hasOverflow && !isScrolledToBottom;
+  const canResize = contentMaxHeight === null || contentMaxHeight > minimumContentHeight;
   const canExpandInline = visualCue === "inline-link" && hasOverflow && height < getUpperLimit() - 1;
 
   return (
@@ -243,7 +249,18 @@ export function InstructionsDrawer({
                 </>)}
                 </div>
               </div>
-              {shouldShowFade && <div className={styles.scrollFade} aria-hidden="true" />}
+              {shouldShowTopFade && (
+                <div
+                  className={`${styles.scrollFade} ${styles.scrollFadeTop}`}
+                  aria-hidden="true"
+                />
+              )}
+              {shouldShowBottomFade && (
+                <div
+                  className={`${styles.scrollFade} ${styles.scrollFadeBottom}`}
+                  aria-hidden="true"
+                />
+              )}
             </div>
             {canExpandInline && (
               <div className={styles.inlineExpandWrap}>
@@ -262,20 +279,22 @@ export function InstructionsDrawer({
               </div>
             )}
 
-            <div
-              onMouseDown={handleMouseDown}
-              onMouseEnter={() => setIsHoveringHandle(true)}
-              onMouseLeave={() => setIsHoveringHandle(false)}
-              className={styles.resizeHandle}
-            >
+            {canResize && (
               <div
-                className={`${styles.resizeBar} ${
-                  isHoveringHandle || isResizing
-                    ? styles.resizeBarActive
-                    : styles.resizeBarIdle
-                }`}
-              />
-            </div>
+                onMouseDown={handleMouseDown}
+                onMouseEnter={() => setIsHoveringHandle(true)}
+                onMouseLeave={() => setIsHoveringHandle(false)}
+                className={styles.resizeHandle}
+              >
+                <div
+                  className={`${styles.resizeBar} ${
+                    isHoveringHandle || isResizing
+                      ? styles.resizeBarActive
+                      : styles.resizeBarIdle
+                  }`}
+                />
+              </div>
+            )}
             <div className={styles.bottomBorder} />
           </div>
         </div>

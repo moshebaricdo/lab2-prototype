@@ -21,7 +21,7 @@ export function Tooltip({
   delayDuration = 0,
   sideOffset = 6,
   withProvider = true,
-  disableHoverableContent = false,
+  disableHoverableContent = true,
 }: TooltipProps) {
   const root = (
     <TooltipPrimitive.Root disableHoverableContent={disableHoverableContent}>

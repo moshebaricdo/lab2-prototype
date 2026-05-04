@@ -22,6 +22,7 @@ export function MarkdownInstructions({ markdown }: MarkdownInstructionsProps) {
           ul: ({ children }) => <ul className={styles.list}>{children}</ul>,
           ol: ({ children }) => <ol className={styles.list}>{children}</ol>,
           li: ({ children }) => <li className={styles.listItem}>{children}</li>,
+          hr: () => <hr className={styles.rule} />,
         }}
       >
         {markdown}

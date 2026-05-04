@@ -37,11 +37,27 @@
 .scrollFade {
   position: absolute;
   right: 8px;
-  bottom: 8px;
   left: 8px;
   height: 32px;
-  background: linear-gradient(to bottom, rgb(255 255 255 / 0%), var(--background) 85%);
   pointer-events: none;
+}
+
+.scrollFadeTop {
+  top: 8px;
+  background: linear-gradient(
+    to bottom,
+    var(--ds-background-neutral-primary) 15%,
+    rgb(255 255 255 / 0%)
+  );
+}
+
+.scrollFadeBottom {
+  bottom: 8px;
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0%),
+    var(--ds-background-neutral-primary) 85%
+  );
 }
 
 .inlineExpandWrap {
@@ -123,6 +139,11 @@
 
 .listItem {
   margin: 0;
+}
+
+.rule {
+  width: 100%;
+  margin: 8px 0;
 }
 
 .stepHeader {

@@ -1,5 +1,6 @@
 .content {
   z-index: 50;
+  pointer-events: none;
   animation: tooltip-fade-in 120ms ease-out;
 }
 
@@ -10,15 +11,15 @@
   flex-shrink: 0;
   align-items: center;
   border-radius: 4px;
-  background: var(--foreground);
+  background: var(--ds-background-neutral-black-fixed);
   padding: 4px 12px;
   box-shadow: 0 8px 12px 0 rgb(0 0 0 / 12%), 0 0 12px 0 rgb(0 0 0 / 12%);
 }
 
 .text {
   margin: 0;
-  color: var(--primary-foreground);
-  font-size: 14px;
+  color: var(--ds-text-neutral-white-fixed);
+  font-size: var(--text-sm);
   font-weight: var(--font-weight-normal);
   line-height: 1.54;
   text-align: center;
@@ -26,7 +27,7 @@
 }
 
 .arrow {
-  fill: var(--foreground);
+  fill: var(--ds-background-neutral-black-fixed);
 }
 
 @keyframes tooltip-fade-in {
