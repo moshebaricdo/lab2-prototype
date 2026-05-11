@@ -16,6 +16,12 @@ export interface TutorContextFile {
 
 export type TutorRequestMode = "auto" | "build" | "plan" | "help";
 
+export type TutorStartFlow = "composer" | "new-project-plan-questionnaire";
+
+export interface TutorStartOptions {
+  flow?: TutorStartFlow;
+}
+
 export type TutorSubmitHandler = (
   message: string,
   conversation: ChatMessage[],

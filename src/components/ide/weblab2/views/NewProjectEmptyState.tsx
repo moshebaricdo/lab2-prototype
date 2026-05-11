@@ -2,20 +2,22 @@ import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import emptyStateNewProject from "../../../../assets/empty-states/empty-state-new-project.svg";
 import { AppButton } from "../../../ui/AppButton";
 import { FaIcon } from "../../../ui/icons/FaIcon";
-import type { TutorRequestMode } from "../../../../types/tutor";
+import type { TutorRequestMode, TutorStartOptions } from "../../../../types/tutor";
 import styles from "./NewProjectEmptyState.module.scss";
 
 const DEFAULT_STARTER_UPLOAD_ACCEPT = ".html,.htm,.css,.js,.json,.txt,.md";
 
-const PLAN_WITH_TUTOR_PROMPT =
-  "Help me plan a new web project before we build. Ask me some guiding questions and create a plan that we can revise together.";
 const BUILD_WITH_TUTOR_PROMPT =
-  "Help me start this new project. I want to build a web app that...";
+  "Help me make a new project. I want to build a web app that...";
 
 interface NewProjectEmptyStateProps {
   isViewingHistoryVersion: boolean;
   onCreateFile: () => void;
-  onStartWithTutor?: (prompt?: string, requestMode?: TutorRequestMode) => void;
+  onStartWithTutor?: (
+    prompt?: string,
+    requestMode?: TutorRequestMode,
+    options?: TutorStartOptions,
+  ) => void;
   onUploadStarterFiles?: (files: FileList) => Promise<true | string | void> | true | string | void;
   starterUploadAccept?: string;
 }
@@ -76,10 +78,10 @@ export function NewProjectEmptyState({
           <div className={styles.copy}>
             <p className={styles.eyebrow}>New project</p>
             <h2 id="new-project-heading" className={styles.heading}>
-              How do you want to begin?
+              How do you want to start?
             </h2>
             <p className={styles.description}>
-              Start from a blank file tree, bring in starter files, or use AI Tutor to think through an idea before building.
+              Make your own files, add files from your computer, or ask AI Tutor to help turn your idea into a plan.
             </p>
           </div>
           <img
@@ -92,9 +94,9 @@ export function NewProjectEmptyState({
         <div className={styles.startPathGrid}>
           <article className={styles.startPathCard}>
             <div className={styles.startPathContent}>
-              <h3 className={styles.startPathTitle}>Set up the files yourself</h3>
+              <h3 className={styles.startPathTitle}>Start on your own</h3>
               <p className={styles.startPathText}>
-                Create the project structure one piece at a time, or upload starter files you already have.
+                Create a new file, or upload starter files you already have on your computer.
               </p>
             </div>
             <div
@@ -114,28 +116,32 @@ export function NewProjectEmptyState({
               }}
               onDrop={handleStarterDrop}
             >
-              <AppButton
-                variant="primary"
-                tone="purple"
-                size="s"
-                iconName="plus"
-                onClick={onCreateFile}
-                disabled={isViewingHistoryVersion}
-              >
-                Create file
-              </AppButton>
-              <div className={styles.manualUploadHint}>
-                <p className={styles.manualDropText}>
-                  {isUploadingStarterFiles ? "Uploading files..." : "You can also drag files here to upload."}
-                </p>
-                <button
-                  type="button"
-                  className={styles.manualBrowseButton}
+              <div className={styles.manualActions}>
+                <AppButton
+                  variant="primary"
+                  tone="purple"
+                  size="s"
+                  iconName="plus"
+                  onClick={onCreateFile}
+                  disabled={isViewingHistoryVersion}
+                >
+                  Create file
+                </AppButton>
+                <AppButton
+                  variant="secondary"
+                  tone="gray"
+                  size="s"
+                  iconName="file-arrow-up"
                   onClick={() => uploadInputRef.current?.click()}
                   disabled={isViewingHistoryVersion || !onUploadStarterFiles || isUploadingStarterFiles}
                 >
                   Browse files
-                </button>
+                </AppButton>
+              </div>
+              <div className={styles.manualUploadHint}>
+                <p className={styles.manualDropText}>
+                  {isUploadingStarterFiles ? "Adding files..." : "Or drag files here from your computer."}
+                </p>
               </div>
               <input
                 ref={uploadInputRef}
@@ -158,22 +164,25 @@ export function NewProjectEmptyState({
             <div className={styles.startPathContent}>
               <h3 className={styles.startPathTitle}>Start with AI Tutor</h3>
               <p className={styles.startPathText}>
-                Choose a thinking path when you want help shaping the idea, or a building path when you are ready for starter files.
+                Use AI Tutor to plan out your project, or start building with AI-generated code.
               </p>
             </div>
             <div className={styles.aiPromptList}>
               <button
                 type="button"
                 className={styles.aiPromptButton}
-                onClick={() => onStartWithTutor?.(PLAN_WITH_TUTOR_PROMPT, "auto")}
+                onClick={() =>
+                  onStartWithTutor?.(undefined, "plan", {
+                    flow: "new-project-plan-questionnaire",
+                  })
+                }
                 disabled={isViewingHistoryVersion || !onStartWithTutor}
               >
                 <span className={styles.aiPromptIcon} aria-hidden="true">
-                  <FaIcon name="message-lines" size="s" />
+                  <FaIcon name="lightbulb-on" size="s" />
                 </span>
                 <span>
-                  <span className={styles.aiPromptTitle}>Plan out your project</span>
-                  <span className={styles.aiPromptText}>Brainstorm ideas and create a plan.</span>
+                  <span className={styles.aiPromptTitle}>Help me create a plan for my idea</span>
                 </span>
               </button>
               <button
@@ -186,8 +195,7 @@ export function NewProjectEmptyState({
                   <FaIcon name="wand-magic-sparkles" size="s" />
                 </span>
                 <span>
-                  <span className={styles.aiPromptTitle}>Build your project</span>
-                  <span className={styles.aiPromptText}>Ask Tutor to generate a new project</span>
+                  <span className={styles.aiPromptTitle}>Help me make a starter project</span>
                 </span>
               </button>
             </div>

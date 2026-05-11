@@ -39,6 +39,11 @@
   padding: 10px;
 }
 
+.toolbarDropdownContent {
+  border-radius: 6px;
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 18%, transparent);
+}
+
 .popoverContent {
   display: flex;
   width: max-content;

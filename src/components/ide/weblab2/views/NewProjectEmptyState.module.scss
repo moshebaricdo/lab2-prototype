@@ -69,6 +69,9 @@
 }
 
 .startPathGrid {
+  --new-project-option-card-gap: 8px;
+  --new-project-option-card-height: 50px;
+
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
@@ -163,8 +166,9 @@
 }
 
 .manualDropZone {
+  box-sizing: border-box;
   display: flex;
-  height: 132px;
+  height: calc((var(--new-project-option-card-height) * 2) + var(--new-project-option-card-gap));
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -178,6 +182,14 @@
   transition:
     background-color 0.05s ease-in,
     border-color 0.05s ease-in;
+}
+
+.manualActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .manualDropZoneActive {
@@ -203,35 +215,6 @@
   line-height: 1.4;
 }
 
-.manualBrowseButton {
-  appearance: none;
-  -webkit-appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--ds-text-neutral-primary);
-  cursor: pointer;
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.4;
-  padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.manualBrowseButton:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
-  outline-offset: 2px;
-}
-
-.manualBrowseButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-.manualBrowseButton:hover {
-  color: var(--ds-text-neutral-tertiary);
-}
-
 .startPathError {
   margin: 0;
   color: var(--ds-text-error-primary);
@@ -241,16 +224,18 @@
 
 .aiPromptList {
   display: grid;
-  gap: 8px;
+  gap: var(--new-project-option-card-gap);
   margin-top: auto;
 }
 
 .aiPromptButton {
   appearance: none;
   -webkit-appearance: none;
+  box-sizing: border-box;
   display: flex;
   width: 100%;
-  align-items: flex-start;
+  min-height: var(--new-project-option-card-height);
+  align-items: center;
   gap: 10px;
   border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
@@ -294,21 +279,11 @@
   color: var(--ds-text-brand-aqua-secondary);
 }
 
-.aiPromptTitle,
-.aiPromptText {
-  display: block;
-}
-
 .aiPromptTitle {
+  display: block;
   color: var(--ds-text-neutral-primary);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.4;
-}
-
-.aiPromptText {
-  color: var(--ds-text-neutral-tertiary);
-  font-size: var(--text-label);
   line-height: 1.4;
 }
 

@@ -172,6 +172,23 @@
   gap: 8px;
 }
 
+.debugToggleWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.debugActivityDot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ds-background-neutral-primary);
+  border-radius: 999px;
+  background: var(--ds-background-error-primary);
+  pointer-events: none;
+}
+
 .segmentWrap {
   display: flex;
 }

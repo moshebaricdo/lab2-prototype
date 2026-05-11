@@ -36,6 +36,10 @@ interface PreviewToolbarProps {
   designModeDisabledReason?: string;
   suppressDesignModeTooltip?: boolean;
   previewModeDisabled?: boolean;
+  isDebugPanelOpen?: boolean;
+  hasDebugActivity?: boolean;
+  debugPanelDisabled?: boolean;
+  onToggleDebugPanel?: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   onReload: () => void;
@@ -95,6 +99,10 @@ export function PreviewToolbar({
   designModeDisabledReason,
   suppressDesignModeTooltip = false,
   previewModeDisabled = false,
+  isDebugPanelOpen = false,
+  hasDebugActivity = false,
+  debugPanelDisabled = false,
+  onToggleDebugPanel,
   isFullscreen,
   onToggleFullscreen,
   onReload,
@@ -400,11 +408,47 @@ export function PreviewToolbar({
     />
   );
 
+  const renderDebugPanelButton = () => {
+    if (!onToggleDebugPanel) return null;
+    const isDebugPanelUnavailable = isPreviewUnavailable || debugPanelDisabled;
+
+    return (
+      <Tooltip
+        content={
+          isDebugPanelUnavailable
+            ? "Debug panel is unavailable without preview content"
+            : isDebugPanelOpen
+              ? "Hide debug panel"
+              : "Debug panel"
+        }
+        position="bottom"
+      >
+        <span className={styles.debugToggleWrap}>
+          <AppButton
+            variant="secondary"
+            tone="gray"
+            onClick={onToggleDebugPanel}
+            aria-label={isDebugPanelOpen ? "Hide debug panel" : "Show debug panel"}
+            aria-pressed={isDebugPanelOpen}
+            iconName="bug"
+            size="xs"
+            disabled={isDebugPanelUnavailable}
+            className={isDebugPanelOpen ? styles.designModeButtonActive : ""}
+          />
+          {!isDebugPanelOpen && hasDebugActivity ? (
+            <span className={styles.debugActivityDot} aria-hidden="true" />
+          ) : null}
+        </span>
+      </Tooltip>
+    );
+  };
+
   return (
     <div className={styles.controlBar}>
       <div className={styles.controlInner}>
         {renderUrlBar()}
         <div className={styles.rightActions}>
+          {renderDebugPanelButton()}
           {showDesignModeControl ? (
             suppressDesignModeTooltip ? (
               renderDesignModeButton()

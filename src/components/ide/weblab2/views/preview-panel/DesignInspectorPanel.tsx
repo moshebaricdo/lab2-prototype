@@ -292,6 +292,8 @@ export function DesignInspectorPanel({
   const [activePopup, setActivePopup] = useState<PopupKind>(null);
   const [activeColorPicker, setActiveColorPicker] =
     useState<"color" | "backgroundColor" | "borderColor" | null>(null);
+  const [activeToolbarDropdown, setActiveToolbarDropdown] =
+    useState<PreviewDesignStyleProperty | null>(null);
   const [popupAnchorRect, setPopupAnchorRect] = useState<PopupAnchorRect | null>(null);
   const [popupAnchorDragOffset, setPopupAnchorDragOffset] = useState<DragOffset>({ x: 0, y: 0 });
   const [popupPosition, setPopupPosition] = useState<PopupPosition | null>(null);
@@ -308,6 +310,7 @@ export function DesignInspectorPanel({
   useEffect(() => {
     setActivePopup(null);
     setActiveColorPicker(null);
+    setActiveToolbarDropdown(null);
     setPopupAnchorRect(null);
     setPopupAnchorDragOffset({ x: 0, y: 0 });
     setPopupPosition(null);
@@ -494,6 +497,7 @@ export function DesignInspectorPanel({
     event: ReactMouseEvent<HTMLButtonElement>,
   ) => {
     setActiveColorPicker(null);
+    setActiveToolbarDropdown(null);
     const rect = event.currentTarget.getBoundingClientRect();
     setActivePopup((current) => {
       if (current === popup) {
@@ -532,6 +536,8 @@ export function DesignInspectorPanel({
     property: "color" | "backgroundColor" | "borderColor",
     options: { closeActivePopup?: boolean } = {},
   ) => {
+    setActiveToolbarDropdown(null);
+
     if (activeColorPicker === property) {
       setActiveColorPicker(null);
       return;
@@ -627,11 +633,29 @@ export function DesignInspectorPanel({
     iconName: FaIconName,
   ) => {
     const selectedOption = options.find((option) => option.value === computedStyles?.[property]);
+    const isDropdownOpen = activeToolbarDropdown === property;
 
     return (
       <AppActionDropdown
         size="xs"
         align="start"
+        side={popupPlacement === "above" ? "top" : "bottom"}
+        sideOffset={POPOVER_GAP}
+        open={isDropdownOpen}
+        onOpenChange={(isOpen) => {
+          if (isOpen) {
+            setActivePopup(null);
+            setActiveColorPicker(null);
+            setPopupAnchorRect(null);
+            setPopupAnchorDragOffset({ x: 0, y: 0 });
+            setPopupPosition(null);
+            setActiveToolbarDropdown(property);
+            return;
+          }
+
+          setActiveToolbarDropdown((current) => (current === property ? null : current));
+        }}
+        contentClassName={styles.toolbarDropdownContent}
         trigger={
           <AppButton
             variant="secondary"

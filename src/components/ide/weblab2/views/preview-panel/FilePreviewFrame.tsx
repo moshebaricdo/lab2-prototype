@@ -3,6 +3,7 @@ import type { PreviewDesignStylePatch } from "./types";
 import styles from "./PreviewPanel.module.scss";
 
 const PREVIEW_IFRAME_SANDBOX = "allow-scripts allow-forms";
+const PREVIEW_DEBUG_CONTROL_MESSAGE_TYPE = "weblab-preview:debug-control";
 
 export interface LivePreviewDesignEdit {
   serial: number;
@@ -17,6 +18,7 @@ interface FilePreviewFrameProps {
   designModeActive?: boolean;
   selectedSelector?: string;
   liveDesignEdit?: LivePreviewDesignEdit | null;
+  networkBlocked?: boolean;
 }
 
 export function FilePreviewFrame({
@@ -25,6 +27,7 @@ export function FilePreviewFrame({
   designModeActive = false,
   selectedSelector = "",
   liveDesignEdit = null,
+  networkBlocked = false,
 }: FilePreviewFrameProps) {
   const visibleIframeRef = useRef<HTMLIFrameElement>(null);
   const loadingIframeRef = useRef<HTMLIFrameElement>(null);
@@ -39,6 +42,13 @@ export function FilePreviewFrame({
       selectedSelector,
     }, "*");
   }, [designModeActive, selectedSelector]);
+
+  const postDebugControlState = useCallback((iframe: HTMLIFrameElement | null) => {
+    iframe?.contentWindow?.postMessage({
+      type: PREVIEW_DEBUG_CONTROL_MESSAGE_TYPE,
+      networkBlocked,
+    }, "*");
+  }, [networkBlocked]);
 
   useEffect(() => {
     if (srcDoc === visibleSrcDoc || srcDoc === loadingSrcDoc) return;
@@ -57,7 +67,14 @@ export function FilePreviewFrame({
   useEffect(() => {
     postDesignModeState(visibleIframeRef.current);
     postDesignModeState(loadingIframeRef.current);
-  }, [postDesignModeState, visibleSrcDoc, loadingSrcDoc, reloadKey]);
+    postDebugControlState(visibleIframeRef.current);
+    postDebugControlState(loadingIframeRef.current);
+  }, [postDebugControlState, postDesignModeState, visibleSrcDoc, loadingSrcDoc, reloadKey]);
+
+  useEffect(() => {
+    postDebugControlState(visibleIframeRef.current);
+    postDebugControlState(loadingIframeRef.current);
+  }, [postDebugControlState]);
 
   useEffect(() => {
     if (!liveDesignEdit) return;
@@ -80,7 +97,10 @@ export function FilePreviewFrame({
         srcDoc={visibleSrcDoc}
         className={styles.previewIframe}
         sandbox={PREVIEW_IFRAME_SANDBOX}
-        onLoad={() => postDesignModeState(visibleIframeRef.current)}
+        onLoad={() => {
+          postDesignModeState(visibleIframeRef.current);
+          postDebugControlState(visibleIframeRef.current);
+        }}
       />
       {loadingSrcDoc ? (
         <iframe
@@ -91,6 +111,7 @@ export function FilePreviewFrame({
           sandbox={PREVIEW_IFRAME_SANDBOX}
           onLoad={() => {
             postDesignModeState(loadingIframeRef.current);
+            postDebugControlState(loadingIframeRef.current);
             setVisibleSrcDoc(loadingSrcDoc);
             setLoadingSrcDoc(null);
           }}

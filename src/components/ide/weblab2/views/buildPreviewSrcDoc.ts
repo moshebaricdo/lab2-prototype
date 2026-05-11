@@ -95,6 +95,269 @@ function isHashOnlyHref(href: string) {
   return href.trim().startsWith("#");
 }
 
+const previewDebugRuntime = `
+<script>
+(() => {
+  if (window.__weblabPreviewDebugRuntimeInstalled) return;
+  Object.defineProperty(window, "__weblabPreviewDebugRuntimeInstalled", {
+    value: true,
+    configurable: false
+  });
+
+  const DEBUG_MESSAGE_TYPE = "weblab-preview:debug";
+  const DEBUG_CONTROL_MESSAGE_TYPE = "weblab-preview:debug-control";
+  const NETWORK_BLOCKED_MESSAGE = "Network activity is blocked in the debug panel.";
+  let requestSerial = 0;
+  let networkBlocked = false;
+
+  function now() {
+    return new Date().toISOString();
+  }
+
+  function nextRequestId() {
+    requestSerial += 1;
+    return "request-" + Date.now().toString(36) + "-" + requestSerial.toString(36);
+  }
+
+  function truncate(value, maxLength) {
+    const text = String(value ?? "");
+    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+  }
+
+  function formatConsoleValue(value) {
+    if (value instanceof Error) {
+      return value.stack || value.message || value.name;
+    }
+    if (typeof value === "string") return value;
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  function postDebug(event) {
+    window.parent.postMessage({ type: DEBUG_MESSAGE_TYPE, event }, "*");
+  }
+
+  function postBlockedNetworkError(id, start) {
+    postDebug({
+      kind: "network-error",
+      id,
+      durationMs: Math.round(performance.now() - start),
+      responseTime: now(),
+      error: NETWORK_BLOCKED_MESSAGE
+    });
+  }
+
+  function installConsoleCapture() {
+    const levels = ["log", "info", "warn", "error"];
+    for (const level of levels) {
+      const original = window.console && window.console[level];
+      if (typeof original !== "function") continue;
+      window.console[level] = function patchedConsoleMethod(...args) {
+        postDebug({
+          kind: "console",
+          level,
+          message: truncate(args.map(formatConsoleValue).join(" "), 2000),
+          timestamp: now()
+        });
+        return original.apply(this, args);
+      };
+    }
+
+    window.addEventListener("error", (event) => {
+      postDebug({
+        kind: "console",
+        level: "error",
+        message: truncate(event.message || "Uncaught error", 2000),
+        timestamp: now()
+      });
+    });
+
+    window.addEventListener("unhandledrejection", (event) => {
+      postDebug({
+        kind: "console",
+        level: "error",
+        message: truncate(formatConsoleValue(event.reason || "Unhandled promise rejection"), 2000),
+        timestamp: now()
+      });
+    });
+  }
+
+  function getFetchMethod(input, init) {
+    const requestMethod = input && typeof Request !== "undefined" && input instanceof Request
+      ? input.method
+      : "";
+    return String((init && init.method) || requestMethod || "GET").toUpperCase();
+  }
+
+  function getFetchUrl(input) {
+    if (typeof input === "string") return input;
+    if (input && typeof URL !== "undefined" && input instanceof URL) return input.href;
+    if (input && typeof Request !== "undefined" && input instanceof Request) return input.url;
+    return String(input || "");
+  }
+
+  async function getResponsePreview(response) {
+    const contentType = response.headers.get("content-type") || "";
+    if (
+      contentType &&
+      !/(json|text|xml|html|javascript|x-www-form-urlencoded)/i.test(contentType)
+    ) {
+      return "(" + contentType + " response)";
+    }
+
+    try {
+      return truncate(await response.clone().text(), 3000);
+    } catch {
+      return "";
+    }
+  }
+
+  function installFetchCapture() {
+    if (typeof window.fetch !== "function") return;
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async function patchedFetch(input, init) {
+      const id = nextRequestId();
+      const method = getFetchMethod(input, init);
+      const url = getFetchUrl(input);
+      const requestTime = now();
+      const start = performance.now();
+
+      postDebug({
+        kind: "network-start",
+        id,
+        method,
+        url,
+        requestTime
+      });
+
+      if (networkBlocked) {
+        postBlockedNetworkError(id, start);
+        throw new TypeError(NETWORK_BLOCKED_MESSAGE);
+      }
+
+      try {
+        const response = await originalFetch(input, init);
+        postDebug({
+          kind: "network-complete",
+          id,
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          durationMs: Math.round(performance.now() - start),
+          responseTime: now(),
+          responseBody: await getResponsePreview(response)
+        });
+        return response;
+      } catch (error) {
+        postDebug({
+          kind: "network-error",
+          id,
+          durationMs: Math.round(performance.now() - start),
+          responseTime: now(),
+          error: truncate(formatConsoleValue(error), 2000)
+        });
+        throw error;
+      }
+    };
+  }
+
+  function installXhrCapture() {
+    if (typeof window.XMLHttpRequest !== "function") return;
+    const originalOpen = XMLHttpRequest.prototype.open;
+    const originalSend = XMLHttpRequest.prototype.send;
+
+    XMLHttpRequest.prototype.open = function patchedXhrOpen(method, url, ...rest) {
+      this.__weblabDebugRequest = {
+        id: nextRequestId(),
+        method: String(method || "GET").toUpperCase(),
+        url: String(url || "")
+      };
+      return originalOpen.call(this, method, url, ...rest);
+    };
+
+    XMLHttpRequest.prototype.send = function patchedXhrSend(...args) {
+      const meta = this.__weblabDebugRequest || {
+        id: nextRequestId(),
+        method: "GET",
+        url: ""
+      };
+      const requestTime = now();
+      const start = performance.now();
+      let settled = false;
+
+      postDebug({
+        kind: "network-start",
+        id: meta.id,
+        method: meta.method,
+        url: meta.url,
+        requestTime
+      });
+
+      if (networkBlocked) {
+        window.setTimeout(() => {
+          postBlockedNetworkError(meta.id, start);
+          this.dispatchEvent(new ProgressEvent("error"));
+          this.dispatchEvent(new ProgressEvent("loadend"));
+        }, 0);
+        return undefined;
+      }
+
+      const finish = (isRequestError, errorMessage) => {
+        if (settled) return;
+        settled = true;
+        let responseBody = "";
+        try {
+          responseBody = truncate(this.responseText || "", 3000);
+        } catch {
+          responseBody = "";
+        }
+
+        if (isRequestError) {
+          postDebug({
+            kind: "network-error",
+            id: meta.id,
+            durationMs: Math.round(performance.now() - start),
+            responseTime: now(),
+            error: errorMessage
+          });
+          return;
+        }
+
+        postDebug({
+          kind: "network-complete",
+          id: meta.id,
+          status: this.status,
+          statusText: this.statusText,
+          ok: this.status >= 200 && this.status < 400,
+          durationMs: Math.round(performance.now() - start),
+          responseTime: now(),
+          responseBody
+        });
+      };
+
+      this.addEventListener("loadend", () => finish(false));
+      this.addEventListener("error", () => finish(true, "Network request failed"));
+      this.addEventListener("abort", () => finish(true, "Network request aborted"));
+      this.addEventListener("timeout", () => finish(true, "Network request timed out"));
+      return originalSend.apply(this, args);
+    };
+  }
+
+  installConsoleCapture();
+  installFetchCapture();
+  installXhrCapture();
+
+  window.addEventListener("message", (event) => {
+    const data = event.data || {};
+    if (data.type !== DEBUG_CONTROL_MESSAGE_TYPE) return;
+    networkBlocked = Boolean(data.networkBlocked);
+  });
+})();
+</script>`;
+
 function constrainProjectLinks(html: string) {
   return html.replace(/<a\b(?=[^>]*\bhref\s*=)([^>]*)>/gi, (tag) => {
     const hrefMatch = tag.match(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
@@ -652,6 +915,13 @@ function injectPreviewRuntime(html: string) {
   return `${html}\n${previewRuntime}`;
 }
 
+function injectPreviewDebugRuntime(html: string) {
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/<head([^>]*)>/i, `<head$1>\n${previewDebugRuntime}`);
+  }
+  return `${previewDebugRuntime}\n${html}`;
+}
+
 function isDeletedInPreview(file: FlatFile, useProposedContent: boolean) {
   return useProposedContent && file.item.proposedStatus === "deleted";
 }
@@ -735,5 +1005,5 @@ export function buildPreviewSrcDoc(
     },
   );
 
-  return injectPreviewRuntime(constrainProjectLinks(htmlWithInlinedScripts));
+  return injectPreviewRuntime(injectPreviewDebugRuntime(constrainProjectLinks(htmlWithInlinedScripts)));
 }

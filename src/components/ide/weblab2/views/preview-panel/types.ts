@@ -2,6 +2,66 @@ import type { ReactNode } from "react";
 import type { PreviewHtmlFile } from "../buildPreviewSrcDoc";
 
 export type PreviewMode = "desktop" | "mobile";
+export type PreviewDebugTab = "console" | "network";
+export type PreviewConsoleLevel = "log" | "info" | "warn" | "error";
+export type PreviewNetworkStatus =
+  | "pending"
+  | "success"
+  | "response-error"
+  | "request-error";
+
+export interface PreviewConsoleMessage {
+  id: string;
+  level: PreviewConsoleLevel;
+  message: string;
+  timestamp: string;
+}
+
+export interface PreviewNetworkRequest {
+  id: string;
+  method: string;
+  url: string;
+  requestTime: string;
+  responseTime?: string;
+  status: PreviewNetworkStatus;
+  statusCode?: number;
+  statusText?: string;
+  durationMs?: number;
+  responseBody?: string;
+  error?: string;
+}
+
+export type PreviewDebugEvent =
+  | {
+      kind: "console";
+      level: PreviewConsoleLevel;
+      message: string;
+      timestamp: string;
+    }
+  | {
+      kind: "network-start";
+      id: string;
+      method: string;
+      url: string;
+      requestTime: string;
+    }
+  | {
+      kind: "network-complete";
+      id: string;
+      status: number;
+      statusText: string;
+      ok: boolean;
+      durationMs: number;
+      responseTime: string;
+      responseBody: string;
+    }
+  | {
+      kind: "network-error";
+      id: string;
+      durationMs: number;
+      responseTime: string;
+      error: string;
+    };
 
 export type PreviewDesignStyleProperty =
   | "backgroundColor"

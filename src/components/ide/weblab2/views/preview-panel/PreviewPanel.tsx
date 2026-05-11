@@ -30,11 +30,21 @@ const FLOATING_TOOLBAR_MARGIN = 12;
 interface PreviewPanelProps {
   hasContent?: boolean;
   preview: WebLabPreviewConfig;
+  isDebugPanelOpen?: boolean;
+  hasDebugActivity?: boolean;
+  isNetworkBlocked?: boolean;
+  onToggleDebugPanel?: () => void;
+  onPreviewSessionReset?: () => void;
 }
 
 export function PreviewPanel({
   hasContent = true,
   preview,
+  isDebugPanelOpen = false,
+  hasDebugActivity = false,
+  isNetworkBlocked = false,
+  onToggleDebugPanel,
+  onPreviewSessionReset,
 }: PreviewPanelProps) {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
   const [reloadKey, setReloadKey] = useState(0);
@@ -212,6 +222,11 @@ export function PreviewPanel({
     }, 200);
   };
 
+  const handleReload = () => {
+    setReloadKey((current) => current + 1);
+    onPreviewSessionReset?.();
+  };
+
   const fileNavigation =
     preview.kind === "file"
       ? {
@@ -366,7 +381,11 @@ export function PreviewPanel({
       onToggleFullscreen={
         isInFullscreen ? handleCloseFullscreen : () => setIsFullscreen(true)
       }
-      onReload={() => setReloadKey((current) => current + 1)}
+      onReload={handleReload}
+      isDebugPanelOpen={isDebugPanelOpen}
+      hasDebugActivity={hasDebugActivity}
+      debugPanelDisabled={isPreviewEmpty}
+      onToggleDebugPanel={onToggleDebugPanel}
     />
   );
 
@@ -402,6 +421,7 @@ export function PreviewPanel({
           designModeActive={isDesignMode}
           selectedSelector={selectedElement?.selectionSelector ?? selectedElement?.selector ?? ""}
           liveDesignEdit={liveDesignEdit}
+          networkBlocked={isNetworkBlocked}
         />
       );
     }
