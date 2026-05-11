@@ -22,6 +22,7 @@ export interface PackedTutorContext {
     html: ProjectAnalysis["html"];
     css: ProjectAnalysis["css"];
     js: ProjectAnalysis["js"];
+    python: ProjectAnalysis["python"];
     linkedFiles: ProjectAnalysis["linkedFiles"];
   };
   files: PackedContextFile[];
@@ -91,6 +92,12 @@ function scoreFile(file: AnalyzedProjectFile, message: string, terms: string[]) 
   if (/\.m?js$/i.test(file.fileName) && /\b(click|toggle|open|close|show|hide|interactive|dynamic|menu|button|javascript|js)\b/i.test(message)) {
     score += 12;
   }
+  if (
+    (/\.py$/i.test(file.fileName) || file.type === "python") &&
+    /\b(python|py|print|input|stdout|stderr|error|traceback|function|def|variable|loop|list|dictionary|dict|condition|if|elif|else|class|import|module|string|integer|float|boolean|debug|bug|runtime)\b/i.test(message)
+  ) {
+    score += 14;
+  }
 
   return score;
 }
@@ -103,6 +110,9 @@ function buildSnippets(file: AnalyzedProjectFile, message: string, terms: string
     ...(/menu|hamburger|nav/i.test(message) ? ["menu", "sidebar", "nav", "button"] : []),
     ...(/responsive|mobile|layout|screen|viewport/i.test(message) ? ["resize", "canvas", "panel", "sidebar", "app"] : []),
     ...(/click|toggle|open|close|show|hide|interactive/i.test(message) ? ["addeventlistener", "onclick", "queryselector", "getelementbyid", "classlist"] : []),
+    ...(/python|print|input|function|variable|loop|list|dictionary|condition|class|import|debug|error|traceback/i.test(message)
+      ? ["def ", "class ", "import ", "input(", "print(", "for ", "while ", "if ", "return "]
+      : []),
     "boot",
   ]);
 
@@ -151,6 +161,7 @@ export function packTutorContext(
     html: analysis.html,
     css: analysis.css,
     js: analysis.js,
+    python: analysis.python,
     linkedFiles: analysis.linkedFiles,
   }).length;
 
@@ -200,6 +211,7 @@ export function packTutorContext(
       html: analysis.html,
       css: analysis.css,
       js: analysis.js,
+      python: analysis.python,
       linkedFiles: analysis.linkedFiles,
     },
     files: packedFiles,

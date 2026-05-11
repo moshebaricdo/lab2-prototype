@@ -1,15 +1,29 @@
-import { useState, useRef, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlay } from "@fortawesome/free-solid-svg-icons";
+import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { FileManager } from "../../shared/FileManager";
 import { CodeEditor } from "../../shared/code-editor";
+import { VersionBanner } from "../../shared/VersionBanner";
 import { ResizableHandle } from "../../../ui/ResizableHandle";
 import { AppButton } from "../../../ui/AppButton";
+import { FaIcon } from "../../../ui/icons/FaIcon";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import { ScrollArea } from "../../../ui/scroll-area";
+import { Tooltip } from "../../../ui/Tooltip";
 import type { FileItem } from "../../../../types/file";
-import { SAMPLE_PYTHON_OUTPUT } from "../../../../data/pythonlab";
+import { runPythonCode } from "../runtime/pythonRunner";
 import styles from "./PythonWorkspace.module.scss";
+
+const DEFAULT_FILE_MANAGER_WIDTH = 158;
+const MIN_FILE_MANAGER_WIDTH = 128;
+const MAX_FILE_MANAGER_WIDTH = 320;
+const FILE_MANAGER_ANIMATION_MS = 220;
+
+type ConsoleLineTone = "output" | "error" | "meta";
+type ConsoleLayout = "horizontal" | "vertical";
+
+interface ConsoleLine {
+  text: string;
+  tone: ConsoleLineTone;
+}
 
 interface PythonWorkspaceProps {
   fileStructure: FileItem[];
@@ -24,6 +38,26 @@ interface PythonWorkspaceProps {
   isFileManagerCollapsed: boolean;
   setIsFileManagerCollapsed: (collapsed: boolean) => void;
   setIsCreateFileModalOpen: (open: boolean) => void;
+  onFileContentChange?: (fileName: string, content: string) => void;
+  readOnly?: boolean;
+  selectedHistoryVersion?: string;
+  selectedHistoryVersionLabel?: string;
+  onReturnToCurrentVersion?: () => void;
+}
+
+function formatRunTimestamp() {
+  const timestamp = new Date().toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `-------- Run at ${timestamp} --------`;
+}
+
+function splitConsoleLines(text: string, tone: ConsoleLineTone): ConsoleLine[] {
+  return text
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => ({ text: line, tone }));
 }
 
 export function PythonWorkspace({
@@ -39,11 +73,22 @@ export function PythonWorkspace({
   isFileManagerCollapsed,
   setIsFileManagerCollapsed,
   setIsCreateFileModalOpen,
+  onFileContentChange,
+  readOnly = false,
+  selectedHistoryVersion = "current",
+  selectedHistoryVersionLabel,
+  onReturnToCurrentVersion,
 }: PythonWorkspaceProps) {
-  const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
+  const [consoleOutput, setConsoleOutput] = useState<ConsoleLine[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [consoleOnly, setConsoleOnly] = useState(false);
+  const [consoleLayout, setConsoleLayout] = useState<ConsoleLayout>("horizontal");
   const [consoleHeight, setConsoleHeight] = useState<number | null>(null);
+  const [consoleWidth, setConsoleWidth] = useState<number | null>(null);
+  const [fileManagerWidth, setFileManagerWidth] = useState(DEFAULT_FILE_MANAGER_WIDTH);
+  const [fileManagerTransition, setFileManagerTransition] = useState<
+    "collapsing" | "expanding" | null
+  >(null);
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -51,15 +96,59 @@ export function PythonWorkspace({
     consoleEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [consoleOutput]);
 
-  const handleRun = () => {
+  useEffect(() => {
+    if (!fileManagerTransition) return;
+    const timeoutId = window.setTimeout(() => {
+      setFileManagerTransition(null);
+    }, FILE_MANAGER_ANIMATION_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [fileManagerTransition]);
+
+  const appendConsoleLines = (lines: string[], tone: ConsoleLineTone = "output") => {
+    setConsoleOutput((prev) => [
+      ...prev,
+      ...lines.flatMap((line) => splitConsoleLines(line, tone)),
+    ]);
+  };
+
+  const handleRun = async () => {
+    appendConsoleLines([formatRunTimestamp()], "meta");
+
+    if (!selectedFile || selectedFile.type === "folder") {
+      appendConsoleLines(["Select a Python file to run."], "error");
+      return;
+    }
+
+    const code = selectedFile.content ?? "";
     setIsRunning(true);
-    setTimeout(() => {
-      setConsoleOutput((prev) => [...prev, SAMPLE_PYTHON_OUTPUT]);
+
+    try {
+      const result = await runPythonCode(code);
+      setConsoleOutput((prev) => {
+        return [
+          ...prev,
+          ...result.stdout.flatMap((line) => splitConsoleLines(line, "output")),
+          ...result.stderr.flatMap((line) => splitConsoleLines(line, "error")),
+          ...(result.error ? splitConsoleLines(result.error, "error") : []),
+        ];
+      });
+    } finally {
       setIsRunning(false);
-    }, 400);
+    }
   };
 
   const handleConsoleResize = (delta: number) => {
+    if (consoleLayout === "vertical") {
+      setConsoleWidth((prev) => {
+        const bodyWidth = bodyRef.current?.getBoundingClientRect().width ?? 900;
+        const currentConsoleWidth = bodyWidth * 0.36;
+        const nextWidth = prev === null ? currentConsoleWidth - delta : prev - delta;
+        return Math.max(220, Math.min(bodyWidth - 260, nextWidth));
+      });
+      return;
+    }
+
     setConsoleHeight((prev) => {
       if (prev === null && bodyRef.current) {
         const bodyHeight = bodyRef.current.getBoundingClientRect().height;
@@ -74,92 +163,267 @@ export function PythonWorkspace({
     });
   };
 
-  return (
-    <div className={styles.root}>
-      <PanelHeader
-        label="WORKSPACE"
-        right={
-          <AppButton
-            variant="secondary"
-            tone="gray"
-            size="xs"
-            onClick={() => setConsoleOnly(!consoleOnly)}
-          >
-            {consoleOnly ? "Show editor" : "Console only"}
-          </AppButton>
-        }
-      />
+  const isVerticalLayout = !consoleOnly && consoleLayout === "vertical";
+  const consoleRegionStyle = isVerticalLayout && consoleWidth !== null
+    ? { width: `${consoleWidth}px`, flex: `0 0 ${consoleWidth}px` }
+    : !consoleOnly && consoleLayout === "horizontal" && consoleHeight !== null
+      ? { height: `${consoleHeight}px`, flex: "none" }
+      : undefined;
 
-      <div className={styles.body} ref={bodyRef}>
-        {/* Editor area — shared CodeEditor + FileManager */}
-        {!consoleOnly && (
-          <div className={styles.editorPane}>
-            <div
-              className={`${styles.fileManagerRail} ${
-                isFileManagerCollapsed ? styles.fileManagerRailCollapsed : ""
-              }`}
-            >
-              <FileManager
-                fileStructure={fileStructure}
-                selectedFile={selectedFile}
-                openFolders={openFolders}
-                onFileSelect={openFile}
-                onToggleFolder={toggleFolder}
-                collapsed={isFileManagerCollapsed}
-                onToggleCollapse={() =>
-                  setIsFileManagerCollapsed(!isFileManagerCollapsed)
-                }
-                onNewFile={() => setIsCreateFileModalOpen(true)}
-              />
-            </div>
-            <div className={styles.editorArea}>
-              <CodeEditor
-                openFiles={openFiles}
-                selectedFile={selectedFile}
-                onFileSelect={setSelectedFile}
-                onCloseFile={closeFile}
-                onReorderFiles={handleReorderFiles}
-                isFileManagerCollapsed={isFileManagerCollapsed}
-                onCreateFile={() => setIsCreateFileModalOpen(true)}
-              />
-            </div>
+  const handleFileManagerCollapseChange = (collapsed: boolean) => {
+    if (collapsed === isFileManagerCollapsed) return;
+    setFileManagerTransition(collapsed ? "collapsing" : "expanding");
+    setIsFileManagerCollapsed(collapsed);
+  };
+
+  const renderExpandedFileManager = () => (
+    <FileManager
+      fileStructure={fileStructure}
+      selectedFile={selectedFile}
+      openFolders={openFolders}
+      onFileSelect={openFile}
+      onToggleFolder={toggleFolder}
+      collapsed={false}
+      onToggleCollapse={() => handleFileManagerCollapseChange(true)}
+      onNewFile={readOnly ? undefined : () => setIsCreateFileModalOpen(true)}
+      showRightBorder={false}
+    />
+  );
+
+  const renderHistoryBanner = () => (
+    selectedHistoryVersion !== "current" && onReturnToCurrentVersion ? (
+      <VersionBanner
+        versionLabel={selectedHistoryVersionLabel ?? selectedHistoryVersion}
+        onClose={onReturnToCurrentVersion}
+      />
+    ) : null
+  );
+
+  const renderWorkspaceHeader = () => (
+    <PanelHeader
+      label="WORKSPACE"
+      right={
+        <AppButton
+          variant="secondary"
+          tone="gray"
+          size="xs"
+          onClick={() => setConsoleOnly(!consoleOnly)}
+        >
+          {consoleOnly ? "Show editor" : "Console only"}
+        </AppButton>
+      }
+    />
+  );
+
+  const renderEditorPane = () => (
+    <div className={styles.editorPane}>
+      <div
+        className={`${styles.fileManagerRail} ${
+          isFileManagerCollapsed ? styles.fileManagerRailCollapsed : ""
+        }`}
+        style={isFileManagerCollapsed ? undefined : { width: `${fileManagerWidth}px` }}
+      >
+        {isFileManagerCollapsed ? (
+          <FileManager
+            fileStructure={fileStructure}
+            selectedFile={selectedFile}
+            openFolders={openFolders}
+            onFileSelect={openFile}
+            onToggleFolder={toggleFolder}
+            collapsed
+            onToggleCollapse={() => handleFileManagerCollapseChange(false)}
+          />
+        ) : (
+          <div
+            className={`${styles.fileManagerContent} ${
+              fileManagerTransition === "expanding"
+                ? styles.fileManagerContentEntering
+                : ""
+            }`}
+          >
+            {renderExpandedFileManager()}
           </div>
         )}
-
-        {/* Console divider with Run button + resizable handle */}
-        <ResizableHandle
-          onResize={handleConsoleResize}
-          orientation="horizontal"
-        />
-        <PanelHeader
-          label="CONSOLE"
-          left={
-            <AppButton
-              variant="primary"
-              tone="purple"
-              size="xs"
-              icon={<FontAwesomeIcon icon={faPlay} />}
-              onClick={handleRun}
-              disabled={isRunning}
-            >
-              Run
-            </AppButton>
-          }
-        />
-
-        {/* Console output */}
-        <ScrollArea
-          className={styles.consolePane}
-          style={consoleHeight !== null ? { height: `${consoleHeight}px`, flex: "none" } : undefined}
-        >
-          <div className={styles.consoleContent}>
-            {consoleOutput.map((line, i) => (
-              <pre key={i} className={styles.consoleLine}>{line}</pre>
-            ))}
-            <div ref={consoleEndRef} />
-          </div>
-        </ScrollArea>
       </div>
+
+      {fileManagerTransition === "collapsing" && (
+        <div
+          className={styles.fileManagerCollapseOverlay}
+          style={{ width: `${fileManagerWidth}px` }}
+          aria-hidden
+        >
+          <div className={styles.fileManagerContent}>
+            {renderExpandedFileManager()}
+          </div>
+        </div>
+      )}
+
+      {!isFileManagerCollapsed && fileManagerTransition !== "expanding" && (
+        <ResizableHandle
+          onResize={(delta) => {
+            setFileManagerWidth((prev) =>
+              Math.max(
+                MIN_FILE_MANAGER_WIDTH,
+                Math.min(MAX_FILE_MANAGER_WIDTH, prev + delta),
+              )
+            );
+          }}
+        />
+      )}
+
+      <div
+        className={`${styles.editorArea} ${
+          fileManagerTransition === "collapsing"
+            ? styles.editorAreaCollapsing
+            : fileManagerTransition === "expanding"
+              ? styles.editorAreaExpanding
+              : ""
+        }`}
+        style={{
+          "--file-manager-width": `${fileManagerWidth}px`,
+        } as CSSProperties}
+      >
+        <CodeEditor
+          openFiles={openFiles}
+          selectedFile={selectedFile}
+          onFileSelect={setSelectedFile}
+          onCloseFile={closeFile}
+          onReorderFiles={handleReorderFiles}
+          isFileManagerCollapsed={isFileManagerCollapsed}
+          onCreateFile={readOnly ? undefined : () => setIsCreateFileModalOpen(true)}
+          onFileContentChange={readOnly ? undefined : onFileContentChange}
+          readOnly={readOnly}
+        />
+      </div>
+    </div>
+  );
+
+  const renderConsoleHeader = () => (
+    <PanelHeader
+      label="CONSOLE"
+      left={
+        <AppButton
+          variant="primary"
+          tone="purple"
+          size="xs"
+          icon={isRunning ? (
+            <FaIcon name="spinner" size="xs" className={styles.spinner} />
+          ) : undefined}
+          iconName={isRunning ? undefined : "play"}
+          onClick={handleRun}
+          disabled={isRunning}
+        >
+          {isRunning ? "Running" : "Run"}
+        </AppButton>
+      }
+      right={
+        <div className={styles.consoleHeaderActions}>
+          <Tooltip
+            content={
+              consoleLayout === "horizontal"
+                ? "Move console to the right"
+                : "Move console below editor"
+            }
+            position="bottom"
+          >
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName={consoleLayout === "horizontal"
+                ? "square-half-stroke-horizontal"
+                : "square-half-stroke"}
+              aria-label={
+                consoleLayout === "horizontal"
+                  ? "Move console to the right"
+                  : "Move console below editor"
+              }
+              onClick={() =>
+                setConsoleLayout((layout) =>
+                  layout === "horizontal" ? "vertical" : "horizontal"
+                )
+              }
+            />
+          </Tooltip>
+          <Tooltip content="Clear console output" position="bottom">
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName="eraser"
+              aria-label="Clear console output"
+              disabled={consoleOutput.length === 0}
+              onClick={() => setConsoleOutput([])}
+            />
+          </Tooltip>
+        </div>
+      }
+    />
+  );
+
+  const renderConsoleOutput = () => (
+    <ScrollArea className={styles.consolePane}>
+      <div className={styles.consoleContent}>
+        {consoleOutput.map((line, i) => (
+          <pre
+            key={i}
+            className={[
+              styles.consoleLine,
+              line.tone === "error" ? styles.consoleLineError : "",
+              line.tone === "meta" ? styles.consoleLineMeta : "",
+            ].filter(Boolean).join(" ")}
+          >
+            {line.text}
+          </pre>
+        ))}
+        <div ref={consoleEndRef} />
+      </div>
+    </ScrollArea>
+  );
+
+  return (
+    <div className={styles.root}>
+      {isVerticalLayout ? (
+        <div className={styles.verticalShell} ref={bodyRef}>
+          <div className={styles.verticalEditorRegion}>
+            {renderWorkspaceHeader()}
+            {renderHistoryBanner()}
+            {renderEditorPane()}
+          </div>
+
+          <ResizableHandle
+            onResize={handleConsoleResize}
+            orientation="vertical"
+          />
+
+          <div className={styles.consoleRegion} style={consoleRegionStyle}>
+            {renderConsoleHeader()}
+            {renderConsoleOutput()}
+          </div>
+        </div>
+      ) : (
+        <>
+          {renderWorkspaceHeader()}
+          {renderHistoryBanner()}
+
+          <div className={styles.body} ref={bodyRef}>
+            {/* Editor area — shared CodeEditor + FileManager */}
+            {!consoleOnly && renderEditorPane()}
+
+            {/* Console divider with Run button + resizable handle */}
+            {!consoleOnly && (
+              <ResizableHandle
+                onResize={handleConsoleResize}
+                orientation="horizontal"
+              />
+            )}
+            <div className={styles.consoleRegion} style={consoleRegionStyle}>
+              {renderConsoleHeader()}
+              {renderConsoleOutput()}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

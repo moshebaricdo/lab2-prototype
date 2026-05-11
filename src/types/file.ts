@@ -1,4 +1,4 @@
-export type FileKind = "folder" | "file" | "html" | "css" | "image" | "text";
+export type FileKind = "folder" | "file" | "html" | "css" | "image" | "text" | "python";
 
 export interface FileItem {
   name: string;

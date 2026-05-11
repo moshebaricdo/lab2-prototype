@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { FileItem } from "../../types/file";
 import { PROJECT_PLAN_FILE } from "./planningRunner";
-import { tutorClient } from "./tutorClient";
+import { pythonTutorClient, tutorClient } from "./tutorClient";
 import type {
   TutorChatMessage,
   TutorGuidanceResponse,
@@ -152,6 +152,47 @@ describe("tutorClient guidance routing", () => {
     expect(guidanceProvider.calls).toBe(1);
     expect(structuredProvider.calls).toBe(0);
     expect(toolProvider.calls).toBe(0);
+  });
+});
+
+describe("pythonTutorClient guidance routing", () => {
+  it("answers Python requests with project context and never invokes edit paths", async () => {
+    const guidanceProvider = new GuidanceProvider({
+      message: "The `greet` function reads the name and prints a friendly message. Check the value returned by `input()` if the greeting looks wrong.",
+    });
+
+    const result = await pythonTutorClient({
+      message: "Fix my greeting function",
+      conversation: [],
+      files: rootProject([
+        {
+          name: "main.py",
+          type: "python",
+          content: "def greet():\n    name = input('Name? ')\n    print(f'Hello, {name}!')\n",
+        },
+      ]),
+      guidanceProvider,
+    });
+
+    expect(result.changes).toEqual([]);
+    expect(result.message).toContain("greet");
+    expect(guidanceProvider.calls).toBe(1);
+    const systemPrompt = guidanceProvider.messages[0][0].content;
+    expect(systemPrompt).toContain("Python Lab Tutor");
+    const payload = JSON.parse(guidanceProvider.messages[0][1].content as string);
+    expect(payload.projectContext.projectMap.python[0].functions).toContain("greet");
+  });
+
+  it("uses a Python-specific no-key fallback", async () => {
+    const result = await pythonTutorClient({
+      message: "Can you explain functions?",
+      conversation: [],
+      files: rootProject([]),
+      guidanceProvider: new GuidanceProvider(null),
+    });
+
+    expect(result.changes).toEqual([]);
+    expect(result.message).toContain("Python function");
   });
 });
 

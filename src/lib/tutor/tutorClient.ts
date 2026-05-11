@@ -169,4 +169,37 @@ export async function tutorClient({
   return getUnsafeEditFallback(message, files);
 }
 
+export async function pythonTutorClient({
+  message,
+  conversation = [],
+  files,
+  additionalSystemPrompt = "",
+  guidanceProvider = openAiTutorProvider,
+}: TutorRequest & {
+  guidanceProvider?: TutorGuidanceProvider;
+}): Promise<TutorEditResult> {
+  try {
+    const result = await runTutorGuidance({
+      message,
+      conversation,
+      files,
+      additionalSystemPrompt,
+      provider: guidanceProvider,
+      guidanceProfile: "python",
+    });
+
+    return {
+      message: result.message,
+      changes: [],
+    };
+  } catch (error) {
+    console.error("[PythonTutorGuidance] Request failed", error);
+    return {
+      message:
+        "I can help with Python questions and debugging without changing your project, but I had trouble generating an answer this time. Try asking again in a sentence or two.",
+      changes: [],
+    };
+  }
+}
+
 export type { TutorEditResult, TutorRequest };

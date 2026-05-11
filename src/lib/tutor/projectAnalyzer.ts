@@ -33,11 +33,19 @@ export interface JsProjectInfo {
   eventHandlers: string[];
 }
 
+export interface PythonProjectInfo {
+  path: string;
+  imports: string[];
+  functions: string[];
+  classes: string[];
+}
+
 export interface ProjectAnalysis {
   files: AnalyzedProjectFile[];
   html: HtmlProjectInfo[];
   css: CssProjectInfo[];
   js: JsProjectInfo[];
+  python: PythonProjectInfo[];
   linkedFiles: Array<{
     htmlPath: string;
     scripts: string[];
@@ -142,6 +150,18 @@ function analyzeJs(file: AnalyzedProjectFile): JsProjectInfo {
   };
 }
 
+function analyzePython(file: AnalyzedProjectFile): PythonProjectInfo {
+  return {
+    path: file.path,
+    imports: unique([
+      ...matchAll(file.content, /^\s*import\s+([A-Za-z_][\w.]*)/gm),
+      ...matchAll(file.content, /^\s*from\s+([A-Za-z_][\w.]*)\s+import\b/gm),
+    ]).slice(0, 80),
+    functions: unique(matchAll(file.content, /^\s*def\s+([A-Za-z_]\w*)\s*\(/gm)).slice(0, 80),
+    classes: unique(matchAll(file.content, /^\s*class\s+([A-Za-z_]\w*)\b/gm)).slice(0, 80),
+  };
+}
+
 function pathBasename(path: string) {
   return path.split("?")[0].split("#")[0].split("/").pop() ?? path;
 }
@@ -159,6 +179,7 @@ export function analyzeProject(files: FileItem[]): ProjectAnalysis {
   const html = flatFiles.filter((file) => /\.html?$/i.test(file.fileName)).map(analyzeHtml);
   const css = flatFiles.filter((file) => /\.css$/i.test(file.fileName)).map(analyzeCss);
   const js = flatFiles.filter((file) => /\.m?js$/i.test(file.fileName)).map(analyzeJs);
+  const python = flatFiles.filter((file) => /\.py$/i.test(file.fileName) || file.type === "python").map(analyzePython);
   const linkedFiles = html.map((htmlInfo) => ({
     htmlPath: htmlInfo.path,
     scripts: htmlInfo.scriptSrcs.map((src) => resolveProjectPath(src, htmlInfo.path, flatFiles)),
@@ -170,6 +191,7 @@ export function analyzeProject(files: FileItem[]): ProjectAnalysis {
     html,
     css,
     js,
+    python,
     linkedFiles,
     manifestSummary: flatFiles.map((file) => file.summary).join("\n"),
   };

@@ -15,23 +15,64 @@
   overflow: hidden;
 }
 
-/* ── Editor pane — reuses shared CodeEditor + FileManager ─ */
-
-.editorPane {
+.verticalShell {
   display: flex;
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
 }
 
+.verticalEditorRegion {
+  display: flex;
+  flex: 1;
+  flex-basis: 0;
+  flex-direction: column;
+  min-width: 260px;
+  min-height: 0;
+}
+
+/* ── Editor pane — reuses shared CodeEditor + FileManager ─ */
+
+.editorPane {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-basis: 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .fileManagerRail {
-  width: 200px;
   flex-shrink: 0;
-  transition: width 0.2s ease;
 }
 
 .fileManagerRailCollapsed {
-  width: 32px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: auto;
+}
+
+.fileManagerContent {
+  width: 100%;
+  height: 100%;
+}
+
+.fileManagerContentEntering {
+  animation: file-manager-drawer-in 220ms ease both;
+}
+
+.fileManagerCollapseOverlay {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 3;
+  overflow: clip;
+  pointer-events: none;
+  background: var(--ds-background-neutral-secondary);
+  animation: file-manager-drawer-out 220ms ease both;
 }
 
 .editorArea {
@@ -39,11 +80,40 @@
   min-width: 0;
 }
 
+.editorAreaCollapsing {
+  animation: editor-area-collapse 220ms ease both;
+}
+
+.editorAreaExpanding {
+  animation: editor-area-expand 220ms ease both;
+}
+
 /* ── Console pane ──────────────────────────────────────── */
+
+.consoleRegion {
+  display: flex;
+  flex: 1;
+  flex-basis: 0;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 60px;
+}
+
+.verticalShell .consoleRegion {
+  flex: 0 0 36%;
+  min-width: 220px;
+  min-height: 0;
+}
+
+.consoleHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 
 .consolePane {
   flex: 1;
-  min-height: 60px;
+  min-height: 0;
   background: var(--ds-background-neutral-primary);
 }
 
@@ -54,9 +124,67 @@
 .consoleLine {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-label);
   line-height: 1.6;
   color: var(--ds-text-neutral-primary);
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.consoleLineError {
+  color: var(--ds-text-error-primary);
+}
+
+.consoleLineMeta {
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.spinner {
+  animation: python-run-spin 0.8s linear infinite;
+}
+
+@keyframes file-manager-drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes python-run-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes file-manager-drawer-out {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes editor-area-collapse {
+  from {
+    transform: translateX(var(--file-manager-width));
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes editor-area-expand {
+  from {
+    transform: translateX(calc(var(--file-manager-width) * -1));
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }

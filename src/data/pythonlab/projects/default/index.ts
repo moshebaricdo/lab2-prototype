@@ -5,14 +5,15 @@ import mainPy from "./files/main.py?raw";
 export const pythonFileStructure: FileItem[] = [
   {
     name: "main.py",
-    type: "html",
+    type: "python",
     content: mainPy,
   },
 ];
 
 export const pythonInitialChatMessages: ChatMessage[] = [];
 
-export const SAMPLE_PYTHON_OUTPUT = `Hello world!`;
+export const SAMPLE_PYTHON_OUTPUT = `What is your name? Ada
+Hello, Ada!`;
 
 export const SAMPLE_PYTHON_ERROR_OUTPUT = `Traceback (most recent call last):
   File "main.py", line 1, in <module>

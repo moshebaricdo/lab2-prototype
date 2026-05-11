@@ -19,6 +19,8 @@ function getRootFolderName(tree?: FileItem[]): string {
 const FILE_KIND_BY_INPUT: Record<string, FileKind> = {
   html: "html",
   css: "css",
+  py: "python",
+  python: "python",
   image: "image",
   text: "text",
   file: "file",
@@ -35,6 +37,7 @@ function inferFileKind(fileName: string): FileKind {
   const ext = fileName.slice(dot + 1).toLowerCase();
   if (ext === "html" || ext === "htm") return "html";
   if (ext === "css") return "css";
+  if (ext === "py") return "python";
   if (["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"].includes(ext)) return "image";
   if (ext === "txt" || ext === "md") return "text";
   return "file";
