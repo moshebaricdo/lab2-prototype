@@ -3,6 +3,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AppButton } from "../../ui/AppButton";
 import { AppNativeSelect } from "../../ui/AppDropdown";
+import { AppSlider } from "../../ui/AppSlider";
+import { AppTextArea, AppTextField } from "../../ui/AppTextField";
 import type { DevPanelField, DevPanelUploadedFile } from "./types";
 import styles from "./DevPanel.module.scss";
 
@@ -17,13 +19,14 @@ interface FieldProps {
 
 function TextField({ field, value, controlId, onChange }: FieldProps) {
   return (
-    <input
+    <AppTextField
       id={controlId}
       type="text"
-      className={styles.input}
       value={(value as string) ?? ""}
       onChange={(e) => onChange(e.target.value)}
       placeholder={field.label}
+      size="s"
+      tone="gray"
     />
   );
 }
@@ -60,9 +63,10 @@ function TextareaField({ field, value, controlId, onChange }: FieldProps) {
           )}
         </div>
       ) : (
-        <textarea
+        <AppTextArea
           id={controlId}
-          className={styles.textarea}
+          appearance="bare"
+          controlClassName={styles.textarea}
           value={text}
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.label}
@@ -78,15 +82,16 @@ function NumberField({ field, value, controlId, onChange }: FieldProps) {
   const max = field.type === "number" ? field.max : undefined;
   const step = field.type === "number" ? field.step : undefined;
   return (
-    <input
+    <AppTextField
       id={controlId}
       type="number"
-      className={styles.input}
       value={(value as number) ?? ""}
       onChange={(e) => onChange(Number(e.target.value))}
       min={min}
       max={max}
       step={step}
+      size="s"
+      tone="gray"
     />
   );
 }
@@ -95,19 +100,16 @@ function SliderField({ field, value, controlId, onChange }: FieldProps) {
   if (field.type !== "slider") return null;
   const numVal = (value as number) ?? field.min;
   return (
-    <div className={styles.sliderWrap}>
-      <input
-        id={controlId}
-        type="range"
-        className={styles.slider}
-        value={numVal}
-        onChange={(e) => onChange(Number(e.target.value))}
-        min={field.min}
-        max={field.max}
-        step={field.step ?? 0.01}
-      />
-      <span className={styles.sliderValue}>{numVal}</span>
-    </div>
+    <AppSlider
+      id={controlId}
+      value={numVal}
+      min={field.min}
+      max={field.max}
+      step={field.step ?? 0.01}
+      valueLabel={String(numVal)}
+      showInputValue
+      onValueChange={onChange}
+    />
   );
 }
 

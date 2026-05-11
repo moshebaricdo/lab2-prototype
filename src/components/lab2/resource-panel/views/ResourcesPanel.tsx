@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { AppButton } from "../../../ui/AppButton";
 import { ScrollArea } from "../../../ui/scroll-area";
 import styles from "./ResourcesPanel.module.scss";
@@ -8,37 +9,30 @@ interface ResourcesPanelProps {
   showWalkthroughResources: boolean;
 }
 
-interface ResourceCardProps {
-  eyebrow: string;
+interface ResourceSectionProps {
+  title: string;
   body: string;
-  actionLabel: string;
-  actionIconName: "link" | "play";
+  children: ReactNode;
 }
 
 const WALKTHROUGHS = [
-  "Getting started with the workspace",
-  "Using AI Tutor for planning",
-  "Previewing and polishing your project",
+  "Using the Resource Panel",
+  "Using AI Tutor",
+  "Validating Your Work",
 ];
 
-function ResourceCard({
-  eyebrow,
+function ResourceSection({
+  title,
   body,
-  actionLabel,
-  actionIconName,
-}: ResourceCardProps) {
+  children,
+}: ResourceSectionProps) {
   return (
-    <section className={styles.card}>
-      <div className={styles.cardHeader}>
-        <p className={styles.eyebrow}>{eyebrow}</p>
-      </div>
-      <div className={styles.cardBody}>
+    <section className={styles.section}>
+      <div className={styles.sectionText}>
+        <h3 className={styles.sectionTitle}>{title}</h3>
         <p className={styles.body}>{body}</p>
-        <ResourceActionRow
-          label={actionLabel}
-          iconName={actionIconName}
-        />
       </div>
+      {children}
     </section>
   );
 }
@@ -48,7 +42,7 @@ function ResourceActionRow({
   iconName,
 }: {
   label: string;
-  iconName: "link" | "play";
+  iconName: "arrow-up-right-from-square" | "play";
 }) {
   return (
     <div className={styles.resourceItem}>
@@ -74,43 +68,44 @@ export function ResourcesPanel({
     <ScrollArea className={styles.root} viewportClassName={styles.viewport}>
       <div className={styles.inner}>
         {showStudentLessonResource && (
-          <ResourceCard
-            eyebrow="Lesson resources"
-            body="Jump back to the lesson resources connected to this level."
-            actionLabel="Open lesson resources"
-            actionIconName="link"
-          />
+          <ResourceSection
+            title="Lesson resources"
+            body="Key vocabulary, materials, and context for this lesson."
+          >
+            <ResourceActionRow
+              label="Lesson 1: Computing Careers"
+              iconName="arrow-up-right-from-square"
+            />
+          </ResourceSection>
         )}
 
         {showDocumentationResource && (
-          <ResourceCard
-            eyebrow="Documentation"
-            body="Reference docs and examples for this lab will be linked here."
-            actionLabel="Open documentation"
-            actionIconName="link"
-          />
+          <ResourceSection
+            title="Documentation"
+            body="A detailed guide to the programming concepts in this lab."
+          >
+            <ResourceActionRow
+              label="Web Lab 2 Documentation"
+              iconName="arrow-up-right-from-square"
+            />
+          </ResourceSection>
         )}
 
         {showWalkthroughResources && (
-          <section className={styles.card}>
-            <div className={styles.cardHeader}>
-              <p className={styles.eyebrow}>Walkthroughs</p>
+          <ResourceSection
+            title="Guided walkthroughs"
+            body="Short, interactive tours that teach you how to use important features in this lab. You won't lose your progress."
+          >
+            <div className={styles.resourceList}>
+              {WALKTHROUGHS.map((walkthrough) => (
+                <ResourceActionRow
+                  key={walkthrough}
+                  label={walkthrough}
+                  iconName="play"
+                />
+              ))}
             </div>
-            <div className={styles.cardBody}>
-              <p className={styles.body}>
-                Restart guided walkthroughs for this level whenever you need a refresher.
-              </p>
-              <div className={styles.resourceList}>
-                {WALKTHROUGHS.map((walkthrough) => (
-                  <ResourceActionRow
-                    key={walkthrough}
-                    label={walkthrough}
-                    iconName="play"
-                  />
-                ))}
-              </div>
-            </div>
-          </section>
+          </ResourceSection>
         )}
       </div>
     </ScrollArea>

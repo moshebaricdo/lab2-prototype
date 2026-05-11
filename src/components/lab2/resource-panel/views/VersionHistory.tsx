@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
+import { AppTextArea } from "../../../ui/AppTextField";
 import { AiTutorIcon } from "../../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Dialog } from "../../../ui/Dialog";
@@ -258,7 +259,7 @@ export function VersionHistory({
                 </div>
 
                 <div className={styles.savePanel}>
-                  <textarea
+                  <AppTextArea
                     value={versionDescription}
                     onFocus={() => {
                       setIsDescriptionKeyboardFocused(lastFocusWasKeyboardRef.current);
@@ -276,7 +277,10 @@ export function VersionHistory({
                     }}
                     data-keyboard-focused={isDescriptionKeyboardFocused ? "true" : undefined}
                     placeholder="Describe your changes"
-                    className={styles.textarea}
+                    appearance="bare"
+                    controlClassName={styles.textarea}
+                    size="s"
+                    tone="gray"
                   />
 
                   <AppButton

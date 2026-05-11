@@ -5,9 +5,15 @@ import { FileChip } from "../../../../ui/FileChip";
 import { faIconForFileName, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { ActionRow } from "./ActionRow";
+import { NewProjectPlanQuestionnaireCard } from "./NewProjectPlanQuestionnaireCard";
 import { TutorActionCard } from "./TutorActionCard";
 import { ThinkingAnimation } from "./ThinkingAnimation";
-import type { ChatAttachment, ChatMessage, FileChange } from "../../../../../types/chat";
+import type {
+  ChatAttachment,
+  ChatMessage,
+  FileChange,
+  NewProjectPlanAnswers,
+} from "../../../../../types/chat";
 import type { AiTutorInputExperiment } from "../../../../../types/tutor";
 import { copyTextToClipboard, FileChangesCard, renderMessageContent } from "./messageFormatting";
 import styles from "./AiTutorPanel.module.scss";
@@ -26,6 +32,14 @@ interface AiTutorMessageListProps {
   onMarkAttachmentAdded: (msgIndex: number, attachmentPath: string) => void;
   onActionCardUpdate: (msgIndex: number, newStatus: "added" | "dismissed") => void;
   onCodeChangeAction: (msgIndex: number, action: "accepted" | "rejected") => void;
+  onNewProjectPlanQuestionnaireSubmit: (
+    msgIndex: number,
+    answers: NewProjectPlanAnswers,
+    moodboardAttachments: ChatAttachment[],
+  ) => void;
+  interactiveCardsDisabled?: boolean;
+  emptyStateTitle?: string;
+  emptyStateText?: string;
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
 }
@@ -136,15 +150,21 @@ function MessageAttachments({
   );
 }
 
-function EmptyState() {
+function EmptyState({
+  title = "How can I help?",
+  text = "You can ask AI Tutor to make changes to your project, for help with the level, or simply to discuss your ideas.",
+}: {
+  title?: string;
+  text?: string;
+}) {
   return (
     <div className={styles.emptyState}>
       <div className={styles.emptyStateIcon}>
         <FaIcon name="hands-clapping" size="l" />
       </div>
-      <h2 className={styles.emptyStateTitle}>How can I help?</h2>
+      <h2 className={styles.emptyStateTitle}>{title}</h2>
       <p className={styles.emptyStateText}>
-        You can ask AI Tutor to make changes to your project, for help with the level, or simply to discuss your ideas.
+        {text}
       </p>
     </div>
   );
@@ -164,6 +184,10 @@ export function AiTutorMessageList({
   onMarkAttachmentAdded,
   onActionCardUpdate,
   onCodeChangeAction,
+  onNewProjectPlanQuestionnaireSubmit,
+  interactiveCardsDisabled = false,
+  emptyStateTitle,
+  emptyStateText,
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
 }: AiTutorMessageListProps) {
@@ -181,7 +205,9 @@ export function AiTutorMessageList({
           className={`${styles.messagesWrap} ${showEmptyState ? styles.messagesWrapEmpty : ""}`}
           style={{ paddingTop: `${topPadding}px` }}
         >
-          {showEmptyState && <EmptyState />}
+          {showEmptyState && (
+            <EmptyState title={emptyStateTitle} text={emptyStateText} />
+          )}
 
           {chatMessages.map((msg, idx) => (
             <div
@@ -223,6 +249,20 @@ export function AiTutorMessageList({
                       }`}
                     >
                       {renderMessageContent(msg.content)}
+
+                      {msg.role === "assistant" && msg.newProjectPlanQuestionnaire && (
+                        <NewProjectPlanQuestionnaireCard
+                          questionnaire={msg.newProjectPlanQuestionnaire}
+                          disabled={interactiveCardsDisabled}
+                          onSubmit={(answers, moodboardAttachments) =>
+                            onNewProjectPlanQuestionnaireSubmit(
+                              idx,
+                              answers,
+                              moodboardAttachments,
+                            )
+                          }
+                        />
+                      )}
 
                       {msg.fileChanges && msg.fileChanges.length > 0 && (
                         <FileChangesCard

@@ -59,6 +59,130 @@ function renderInlineFormatting(text: string): ReactNode {
   });
 }
 
+function renderTextBlocks(text: string, keyPrefix: string): ReactNode[] {
+  const blocks: ReactNode[] = [];
+  const paragraphLines: string[] = [];
+  let list: { ordered: boolean; items: string[] } | null = null;
+
+  const flushParagraph = () => {
+    if (paragraphLines.length === 0) return;
+    const paragraph = paragraphLines.join(" ");
+    blocks.push(
+      <p key={`${keyPrefix}-p-${blocks.length}`} className={styles.messageParagraph}>
+        {renderInlineFormatting(paragraph)}
+      </p>,
+    );
+    paragraphLines.length = 0;
+  };
+
+  const flushList = () => {
+    if (!list) return;
+    const ListTag = list.ordered ? "ol" : "ul";
+    blocks.push(
+      <ListTag key={`${keyPrefix}-list-${blocks.length}`} className={styles.messageList}>
+        {list.items.map((item, index) => (
+          <li key={index} className={styles.messageListItem}>
+            {renderInlineFormatting(item)}
+          </li>
+        ))}
+      </ListTag>,
+    );
+    list = null;
+  };
+
+  const pushParagraph = (paragraph: string) => {
+    const trimmedParagraph = paragraph.trim();
+    if (!trimmedParagraph) return;
+    blocks.push(
+      <p key={`${keyPrefix}-p-${blocks.length}`} className={styles.messageParagraph}>
+        {renderInlineFormatting(trimmedParagraph)}
+      </p>,
+    );
+  };
+
+  text.replace(/\r\n/g, "\n").split("\n").forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushParagraph();
+      flushList();
+      return;
+    }
+
+    const inlineOrderedMarkers = [...trimmed.matchAll(/(?:^|\s)(\d+)[.)]\s+/g)];
+    if (inlineOrderedMarkers.length >= 2) {
+      flushParagraph();
+      flushList();
+
+      const prefix = trimmed.slice(0, inlineOrderedMarkers[0].index).trim();
+      pushParagraph(prefix);
+
+      const inlineItems: string[] = [];
+      const trailingParagraphs: string[] = [];
+      inlineOrderedMarkers.forEach((marker, index) => {
+        const itemStart = (marker.index ?? 0) + marker[0].length;
+        const itemEnd = inlineOrderedMarkers[index + 1]?.index ?? trimmed.length;
+        let item = trimmed.slice(itemStart, itemEnd).trim();
+
+        const trailingSentence = item.match(/^(.+?\?)(?:\s+([A-Z].+))$/);
+        if (trailingSentence) {
+          item = trailingSentence[1].trim();
+          trailingParagraphs.push(trailingSentence[2].trim());
+        }
+
+        if (item) {
+          inlineItems.push(item);
+        }
+      });
+
+      if (inlineItems.length > 0) {
+        blocks.push(
+          <ol key={`${keyPrefix}-inline-list-${blocks.length}`} className={styles.messageList}>
+            {inlineItems.map((item, index) => (
+              <li key={index} className={styles.messageListItem}>
+                {renderInlineFormatting(item)}
+              </li>
+            ))}
+          </ol>,
+        );
+      }
+      trailingParagraphs.forEach(pushParagraph);
+      return;
+    }
+
+    const heading = trimmed.match(/^#{1,3}\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      flushList();
+      blocks.push(
+        <h3 key={`${keyPrefix}-heading-${blocks.length}`} className={styles.messageHeading}>
+          {renderInlineFormatting(heading[1])}
+        </h3>,
+      );
+      return;
+    }
+
+    const unordered = trimmed.match(/^[-*]\s+(.+)$/);
+    const ordered = trimmed.match(/^\d+[.)]\s+(.+)$/);
+    if (unordered || ordered) {
+      flushParagraph();
+      const nextOrdered = Boolean(ordered);
+      if (!list || list.ordered !== nextOrdered) {
+        flushList();
+        list = { ordered: nextOrdered, items: [] };
+      }
+      list.items.push((ordered?.[1] ?? unordered?.[1] ?? "").trim());
+      return;
+    }
+
+    flushList();
+    paragraphLines.push(trimmed);
+  });
+
+  flushParagraph();
+  flushList();
+  return blocks;
+}
+
 function CodeSnippetCard({ lang, code }: { lang: string | null; code: string }) {
   const label = lang ? (LANG_LABELS[lang.toLowerCase()] ?? lang) : null;
   const lines = code.split("\n");
@@ -178,7 +302,11 @@ export function FileChangesCard({
 export function renderMessageContent(content: string): ReactNode {
   const hasCodeFence = content.includes("```");
   if (!hasCodeFence) {
-    return <p className={styles.messageText}>{renderInlineFormatting(content)}</p>;
+    return (
+      <div className={styles.messageContent}>
+        {renderTextBlocks(content, "message")}
+      </div>
+    );
   }
 
   const segments = content.split(/(```\w*\n[\s\S]*?```)/g);
@@ -192,11 +320,7 @@ export function renderMessageContent(content: string): ReactNode {
           return <CodeSnippetCard key={i} lang={lang} code={code} />;
         }
         if (!seg) return null;
-        return (
-          <span key={i} className={styles.textSegment}>
-            {renderInlineFormatting(seg)}
-          </span>
-        );
+        return renderTextBlocks(seg, `segment-${i}`);
       })}
     </div>
   );

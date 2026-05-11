@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AppActionDropdown } from "../../ui/AppDropdown";
 import { AppButton } from "../../ui/AppButton";
+import { AppTextField } from "../../ui/AppTextField";
 import { Dialog } from "../../ui/Dialog";
 import dialogStyles from "../../ui/Dialog.module.scss";
 import { Tooltip } from "../../ui/Tooltip";
@@ -71,19 +72,18 @@ export function DevPanelHeaderActions({
         }
       >
         <div className={dialogStyles.fieldGroup}>
-          <label className={dialogStyles.fieldLabel}>
-            Variant name
-            <input
-              className={dialogStyles.fieldInput}
-              value={saveName}
-              onChange={(e) => setSaveName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSaveAndCopy();
-              }}
-              placeholder="e.g. Shorter stems, 2-col layout"
-              autoFocus
-            />
-          </label>
+          <AppTextField
+            label="Variant name"
+            value={saveName}
+            onChange={(e) => setSaveName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSaveAndCopy();
+            }}
+            placeholder="e.g. Shorter stems, 2-col layout"
+            autoFocus
+            size="s"
+            tone="gray"
+          />
           <p className={dialogStyles.fieldHint}>
             Saves this variant to <strong>/levels</strong> and copies the
             current override link.

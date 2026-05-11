@@ -1,0 +1,15 @@
+.root {
+  flex: 1;
+  min-height: 0;
+}
+
+.viewport {
+  height: 100%;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}

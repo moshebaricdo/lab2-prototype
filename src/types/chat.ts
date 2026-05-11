@@ -30,6 +30,19 @@ export interface ActionCardData {
   status: "pending" | "added" | "dismissed";
 }
 
+export interface NewProjectPlanAnswers {
+  projectIdea: string;
+  audience: string;
+  coreInteraction: string;
+  visualStyle: string;
+}
+
+export interface NewProjectPlanQuestionnaireData {
+  status: "pending" | "answered";
+  answers?: NewProjectPlanAnswers;
+  moodboardAttachments?: ChatAttachment[];
+}
+
 export interface FileChange {
   fileName: string;
   status: "new" | "modified" | "deleted";
@@ -42,6 +55,7 @@ export interface ChatMessage {
   content: string;
   attachments?: ChatAttachment[];
   actionCard?: ActionCardData;
+  newProjectPlanQuestionnaire?: NewProjectPlanQuestionnaireData;
   /** Files the tutor created, modified, or deleted in this response. */
   fileChanges?: FileChange[];
   /** Short AI-generated summary used when accepted changes create a history save. */

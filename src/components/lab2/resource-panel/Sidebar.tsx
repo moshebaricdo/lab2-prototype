@@ -30,7 +30,10 @@ export function Sidebar({
   setShowRestoreSuccessAlert,
   showSaveSuccessAlert = false,
   setShowSaveSuccessAlert,
+  showInstructionsTab = false,
   showValidationTab = false,
+  validationFileStructure,
+  validationTests,
   showAiTutorTab = true,
   showHistoryTab = true,
   showTeacherResourcesTab = false,
@@ -44,6 +47,7 @@ export function Sidebar({
   continueLabel,
   collapsible = false,
   defaultCollapsed,
+  surfaceVariant = "edge",
   showInstructionsDrawer = true,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
@@ -60,9 +64,14 @@ export function Sidebar({
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
   showTutorModelSelector = false,
+  aiTutorComposerPlaceholder,
+  aiTutorEmptyStateTitle,
+  aiTutorEmptyStateText,
+  aiTutorSubmitFailureMessage,
   tutorRequestMode = "auto",
   setTutorRequestMode,
   hasPendingAiChanges = false,
+  newProjectPlanQuestionnaireSignal = 0,
   historyVersions,
   showNewProjectHistoryEmptyState = false,
   onCollapsedChange,
@@ -148,6 +157,7 @@ export function Sidebar({
   useEffect(() => {
     const validTabs: SidebarTab[] = [];
 
+    if (showInstructionsTab) validTabs.push("instructions");
     if (showValidationTab) validTabs.push("checklist");
     if (showAiTutorTab) validTabs.push("ai-tutor");
     if (showHistoryTab) validTabs.push("history");
@@ -163,6 +173,7 @@ export function Sidebar({
     activeTab,
     setActiveTab,
     showAiTutorTab,
+    showInstructionsTab,
     showHistoryTab,
     showTeacherResourcesTab,
     showRubricTab,
@@ -179,9 +190,10 @@ export function Sidebar({
         e.preventDefault();
         if (activeTab === "dev") {
           const fallback: SidebarTab[] = [];
+          if (showInstructionsTab) fallback.push("instructions");
           if (showAiTutorTab) fallback.push("ai-tutor");
           if (showValidationTab) fallback.push("checklist");
-          setActiveTab(fallback[0] ?? "ai-tutor");
+          setActiveTab(fallback[0] ?? "instructions");
         } else {
           setActiveTab("dev");
           if (collapsible && isCollapsed) {
@@ -192,7 +204,7 @@ export function Sidebar({
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [showDevTab, effectiveTutorRequestRunning, activeTab, setActiveTab, showAiTutorTab, showValidationTab, collapsible, isCollapsed]);
+  }, [showDevTab, effectiveTutorRequestRunning, activeTab, setActiveTab, showInstructionsTab, showAiTutorTab, showValidationTab, collapsible, isCollapsed]);
 
   const panelHidden = collapsible && isCollapsed;
   const railWidth = 56;
@@ -238,7 +250,11 @@ export function Sidebar({
 
   return (
     <div
-      className={`${styles.root} ${isWidthAnimating ? styles.rootWidthAnimating : ""}`}
+      className={[
+        styles.root,
+        surfaceVariant === "card" ? styles.rootCard : "",
+        isWidthAnimating ? styles.rootWidthAnimating : "",
+      ].filter(Boolean).join(" ")}
       style={{
         width: panelHidden ? `${railWidth}px` : `${sidebarWidth}px`,
       }}
@@ -247,6 +263,7 @@ export function Sidebar({
         collapsible={collapsible}
         isCollapsed={isCollapsed}
         isSettingsOpen={isSettingsOpen}
+        showInstructionsTab={showInstructionsTab}
         showValidationTab={showValidationTab}
         showAiTutorTab={showAiTutorTab}
         showHistoryTab={showHistoryTab}
@@ -287,6 +304,9 @@ export function Sidebar({
             setShowRestoreSuccessAlert={setShowRestoreSuccessAlert}
             showSaveSuccessAlert={showSaveSuccessAlert}
             setShowSaveSuccessAlert={setShowSaveSuccessAlert}
+            showInstructionsTab={showInstructionsTab}
+            validationFileStructure={validationFileStructure}
+            validationTests={validationTests}
             rubricData={rubricData}
             showStudentLessonResource={showStudentLessonResource}
             showDocumentationResource={showDocumentationResource}
@@ -308,9 +328,14 @@ export function Sidebar({
             onOpenFileChangeInEditor={onOpenFileChangeInEditor}
             onOpenFileChangeInPreview={onOpenFileChangeInPreview}
             showTutorModelSelector={showTutorModelSelector}
+            aiTutorComposerPlaceholder={aiTutorComposerPlaceholder}
+            aiTutorEmptyStateTitle={aiTutorEmptyStateTitle}
+            aiTutorEmptyStateText={aiTutorEmptyStateText}
+            aiTutorSubmitFailureMessage={aiTutorSubmitFailureMessage}
             tutorRequestMode={tutorRequestMode}
             setTutorRequestMode={setTutorRequestMode ?? (() => undefined)}
             hasPendingAiChanges={hasPendingAiChanges}
+            newProjectPlanQuestionnaireSignal={newProjectPlanQuestionnaireSignal}
             historyVersions={historyVersions}
             showNewProjectHistoryEmptyState={showNewProjectHistoryEmptyState}
             devPanelFields={devPanelFields}

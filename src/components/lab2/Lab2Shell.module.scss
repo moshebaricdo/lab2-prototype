@@ -1,0 +1,20 @@
+.root {
+  position: relative;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ds-background-neutral-primary);
+}
+
+.rootFloatingSurface {
+  background: var(--ds-background-neutral-secondary);
+}
+
+.body {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}

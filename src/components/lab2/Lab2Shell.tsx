@@ -17,6 +17,7 @@ import {
 import { AnnotationOverlay } from "./dev/AnnotationOverlay";
 import { Dialog } from "../ui/Dialog";
 import { AppButton } from "../ui/AppButton";
+import styles from "./Lab2Shell.module.scss";
 
 type Lab2ShellProps =
   | {
@@ -92,9 +93,9 @@ export function Lab2Shell(props: Lab2ShellProps) {
 
   if (props.hideResourcePanel === true) {
     return (
-      <div className="relative flex h-screen flex-col overflow-hidden bg-background">
+      <div className={styles.root}>
         <TopNavigation {...resolvedTopNavigationProps} />
-        <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+        <div className={styles.body}>
           {children}
         </div>
         {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
@@ -130,12 +131,20 @@ export function Lab2Shell(props: Lab2ShellProps) {
     ),
   );
   const resizeDisabled =
-    Boolean(sidebarProps.collapsible) && sidebarCollapsed;
+    (Boolean(sidebarProps.collapsible) && sidebarCollapsed) ||
+    sidebarProps.surfaceVariant === "card";
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden bg-background">
+    <div
+      className={[
+        styles.root,
+        sidebarProps.surfaceVariant === "card" ? styles.rootFloatingSurface : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <TopNavigation {...resolvedTopNavigationProps} />
-      <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+      <div className={styles.body}>
         <Sidebar
           {...sidebarProps}
           annotations={isShareMode ? undefined : annotationsResult}

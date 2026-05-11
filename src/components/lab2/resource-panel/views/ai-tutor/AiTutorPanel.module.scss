@@ -159,10 +159,48 @@
 
 .messageContent {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--text-sm);
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.messageParagraph {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.messageHeading {
+  margin: 2px 0 0;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.messageList {
+  list-style-position: outside;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.messageList:where(ul) {
+  list-style-type: disc;
+}
+
+.messageList:where(ol) {
+  list-style-type: decimal;
+}
+
+.messageListItem {
+  margin: 0;
+  line-height: 1.45;
+  padding-left: 2px;
+}
+
+.messageListItem + .messageListItem {
+  margin-top: 4px;
 }
 
 .inlineCode {
@@ -423,9 +461,13 @@
 .inputSection {
   position: relative;
   flex-shrink: 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ds-borders-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   padding: 8px;
+}
+
+.inputSectionDisabled {
+  opacity: 0.72;
 }
 
 .inputSectionDropActive {
@@ -533,7 +575,7 @@
   overflow: visible;
   border: 1px solid var(--ds-borders-neutral-strong);
   border-radius: 4px;
-  background: var(--background);
+  background: var(--ds-background-neutral-primary);
   padding: 8px;
   transition:
     box-shadow 0.2s ease,

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 export function useLayoutState() {
   const [activeTab, setActiveTab] = useState<
+    | "instructions"
     | "checklist"
     | "ai-tutor"
     | "history"

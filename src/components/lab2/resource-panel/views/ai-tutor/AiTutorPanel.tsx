@@ -10,7 +10,12 @@ import {
 } from "react";
 import { InstructionsDrawer } from "../../InstructionsDrawer";
 import type { InstructionsDrawerVisualCue } from "../../InstructionsDrawer";
-import type { ChatAttachment, ChatMessage, FileChange } from "../../../../../types/chat";
+import type {
+  ChatAttachment,
+  ChatMessage,
+  FileChange,
+  NewProjectPlanAnswers,
+} from "../../../../../types/chat";
 import type {
   AiTutorInputExperiment,
   MockTutorConfig,
@@ -26,6 +31,11 @@ import {
   buildUnreadableUploadAttachment,
   buildUploadedAttachment,
 } from "./attachmentUtils";
+import {
+  buildNewProjectPlanPrompt,
+  createNewProjectPlanQuestionnaireMessage,
+  normalizeNewProjectPlanAnswers,
+} from "./newProjectPlanQuestionnaire";
 import styles from "./AiTutorPanel.module.scss";
 
 interface CodeAttachmentContext {
@@ -63,12 +73,17 @@ interface AiTutorPanelProps {
   onRejectAiChanges?: () => void;
   availableContextFiles?: TutorContextFile[];
   showModelSelector?: boolean;
+  composerPlaceholder?: string;
+  emptyStateTitle?: string;
+  emptyStateText?: string;
+  submitFailureMessage?: string;
   tutorRequestMode: TutorRequestMode;
   setTutorRequestMode: (mode: TutorRequestMode) => void;
   hasPendingAiChanges?: boolean;
   isRequestRunning?: boolean;
   onRequestRunningChange?: (isRunning: boolean) => void;
   clearChatSignal?: number;
+  newProjectPlanQuestionnaireSignal?: number;
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
 }
@@ -125,12 +140,17 @@ export function AiTutorPanel({
   onRejectAiChanges,
   availableContextFiles = [],
   showModelSelector = true,
+  composerPlaceholder,
+  emptyStateTitle,
+  emptyStateText,
+  submitFailureMessage = "I had trouble preparing those edits. Try sending the request again.",
   tutorRequestMode,
   setTutorRequestMode,
   hasPendingAiChanges = false,
   isRequestRunning = false,
   onRequestRunningChange,
   clearChatSignal = 0,
+  newProjectPlanQuestionnaireSignal = 0,
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
 }: AiTutorPanelProps) {
@@ -142,6 +162,7 @@ export function AiTutorPanel({
   const requestSerialRef = useRef(0);
   const hasSeededOnMountRef = useRef(false);
   const reportedLocalRunningRef = useRef(false);
+  const lastQuestionnaireSignalRef = useRef(0);
   const pendingAssistantScrollIndexRef = useRef<number | null>(null);
   const [maxDrawerHeight, setMaxDrawerHeight] = useState<number | null>(null);
   const [drawerHeight, setDrawerHeight] = useState(0);
@@ -244,6 +265,46 @@ export function AiTutorPanel({
       viewport.scrollTo({ top: nextTop, behavior: "smooth" });
     });
   }, [getScrollViewport, topPadding]);
+
+  useEffect(() => {
+    if (
+      newProjectPlanQuestionnaireSignal === 0 ||
+      lastQuestionnaireSignalRef.current === newProjectPlanQuestionnaireSignal
+    ) {
+      return;
+    }
+
+    lastQuestionnaireSignalRef.current = newProjectPlanQuestionnaireSignal;
+    requestSerialRef.current += 1;
+    setIsThinking(false);
+    setGeneratedTutorResponse(null);
+    setChatInput("");
+    setTutorRequestMode("plan");
+    resetComposerState();
+
+    const currentMessages = chatMessagesRef.current;
+    const pendingQuestionIndex = currentMessages.findIndex(
+      (message) => message.newProjectPlanQuestionnaire?.status === "pending",
+    );
+    if (pendingQuestionIndex !== -1) {
+      scrollToAssistantReplyStart(pendingQuestionIndex);
+      return;
+    }
+
+    const nextMessages = [
+      ...currentMessages,
+      createNewProjectPlanQuestionnaireMessage(),
+    ];
+    pendingAssistantScrollIndexRef.current = nextMessages.length - 1;
+    setChatMessages(nextMessages);
+  }, [
+    newProjectPlanQuestionnaireSignal,
+    resetComposerState,
+    scrollToAssistantReplyStart,
+    setChatInput,
+    setChatMessages,
+    setTutorRequestMode,
+  ]);
 
   const appendTutorResponse = useCallback((response: ChatMessage) => {
     setIsThinking(false);
@@ -431,9 +492,17 @@ export function AiTutorPanel({
     return () => window.removeEventListener("weblab:add-preview-element-to-tutor", handler);
   }, []);
 
+  const hasPendingNewProjectPlanQuestionnaire = chatMessages.some(
+    (message) => message.newProjectPlanQuestionnaire?.status === "pending",
+  );
+  const composerDisabled =
+    effectiveIsThinking ||
+    hasPendingAiChanges ||
+    hasPendingNewProjectPlanQuestionnaire;
   const canSend = Boolean(chatInput.trim() || attachedFiles.length > 0) &&
     !effectiveIsThinking &&
-    !hasPendingAiChanges;
+    !hasPendingAiChanges &&
+    !hasPendingNewProjectPlanQuestionnaire;
   const showEmptyState = chatMessages.length === 0 && !effectiveIsThinking;
 
   const formatUserMessage = () => {
@@ -586,6 +655,93 @@ export function AiTutorPanel({
     scrollToBottom();
   };
 
+  const startTutorRequest = (
+    submittedContent: string,
+    newMessages: ChatMessage[],
+    requestMode: TutorRequestMode,
+    failureMessage: string,
+  ) => {
+    const requestId = requestSerialRef.current + 1;
+    requestSerialRef.current = requestId;
+
+    if (onTutorSubmit) {
+      setIsThinking(true);
+      onTutorSubmit(submittedContent, newMessages, requestMode)
+        .then((response) => {
+          if (requestSerialRef.current !== requestId) return;
+          setGeneratedTutorResponse(response ?? {
+            role: "assistant",
+            content: "I finished thinking, but I do not have a response to show yet. Try sending the request again.",
+          });
+        })
+        .catch((error) => {
+          if (requestSerialRef.current !== requestId) return;
+          console.error("[TutorPanel] Tutor submit failed", {
+            requestId,
+            submittedContent,
+            error,
+          });
+          setGeneratedTutorResponse({
+            role: "assistant",
+            content: failureMessage,
+          });
+        });
+    } else if (mockTutorConfig?.response) {
+      setIsThinking(true);
+      Promise.resolve(resolveMockResponse(mockTutorConfig.response, submittedContent, newMessages))
+        .then((response) => {
+          if (requestSerialRef.current !== requestId || !response) return;
+          setGeneratedTutorResponse(response);
+        });
+    } else {
+      setIsThinking(false);
+    }
+  };
+
+  const handleNewProjectPlanQuestionnaireSubmit = (
+    msgIndex: number,
+    answers: NewProjectPlanAnswers,
+    moodboardAttachments: ChatAttachment[],
+  ) => {
+    if (effectiveIsThinking || hasPendingAiChanges) return;
+
+    const normalizedAnswers = normalizeNewProjectPlanAnswers(answers);
+    if (!normalizedAnswers.projectIdea) return;
+
+    const answeredMessages = chatMessagesRef.current.map((message, index) => {
+      if (index !== msgIndex || !message.newProjectPlanQuestionnaire) return message;
+      return {
+        ...message,
+        attachments: moodboardAttachments.length > 0
+          ? moodboardAttachments
+          : message.attachments,
+        newProjectPlanQuestionnaire: {
+          status: "answered" as const,
+          answers: normalizedAnswers,
+          moodboardAttachments,
+        },
+      };
+    });
+    const submittedContent = buildNewProjectPlanPrompt(
+      normalizedAnswers,
+      moodboardAttachments,
+    );
+    const nextMessages = answeredMessages;
+
+    setTutorRequestMode("plan");
+    setChatInput("");
+    setChatMessages(nextMessages);
+    setGeneratedTutorResponse(null);
+    resetComposerState();
+    startTutorRequest(
+      submittedContent,
+      nextMessages,
+      "plan",
+      "I had trouble turning those answers into a plan. Try submitting them again.",
+    );
+    scrollToBottom();
+  };
+
   const handleSendMessage = () => {
     if (!canSend) return;
     const userMessage = formatUserMessage();
@@ -622,38 +778,20 @@ export function AiTutorPanel({
     setChatMessages(seededConversation ?? newMessages);
     setGeneratedTutorResponse(null);
 
-    const requestId = requestSerialRef.current + 1;
-    requestSerialRef.current = requestId;
-
     if (onTutorSubmit) {
-      setIsThinking(true);
-      onTutorSubmit(submittedContent, newMessages, tutorRequestMode)
-        .then((response) => {
-          if (requestSerialRef.current !== requestId) return;
-          setGeneratedTutorResponse(response ?? {
-            role: "assistant",
-            content: "I finished thinking, but I do not have a response to show yet. Try sending the request again.",
-          });
-        })
-        .catch((error) => {
-          if (requestSerialRef.current !== requestId) return;
-          console.error("[TutorPanel] Tutor submit failed", {
-            requestId,
-            submittedContent,
-            error,
-          });
-          setGeneratedTutorResponse({
-            role: "assistant",
-            content: "I had trouble preparing those edits. Try sending the request again.",
-          });
-        });
+      startTutorRequest(
+        submittedContent,
+        newMessages,
+        tutorRequestMode,
+        submitFailureMessage,
+      );
     } else if (mockTutorConfig?.response) {
-      setIsThinking(true);
-      Promise.resolve(resolveMockResponse(mockTutorConfig.response, submittedContent, newMessages))
-        .then((response) => {
-          if (requestSerialRef.current !== requestId || !response) return;
-          setGeneratedTutorResponse(response);
-        });
+      startTutorRequest(
+        submittedContent,
+        newMessages,
+        tutorRequestMode,
+        "I had trouble preparing those edits. Try sending the request again.",
+      );
     } else {
       setIsThinking(false);
     }
@@ -737,9 +875,13 @@ export function AiTutorPanel({
         autoCompleteThinking={!onTutorSubmit}
         inputExperiment={inputExperiment}
         onThinkingComplete={handleThinkingComplete}
+        emptyStateTitle={emptyStateTitle}
+        emptyStateText={emptyStateText}
         onMarkAttachmentAdded={handleMarkAttachmentAdded}
         onActionCardUpdate={handleActionCardUpdate}
         onCodeChangeAction={handleCodeChangeAction}
+        onNewProjectPlanQuestionnaireSubmit={handleNewProjectPlanQuestionnaireSubmit}
+        interactiveCardsDisabled={effectiveIsThinking || hasPendingAiChanges}
         onOpenFileChangeInEditor={onOpenFileChangeInEditor}
         onOpenFileChangeInPreview={onOpenFileChangeInPreview}
       />
@@ -755,10 +897,12 @@ export function AiTutorPanel({
           codeAttachmentTimestamps={codeAttachmentTimestamps}
           isDragOverInput={isDragOverInput}
           showModelSelector={showModelSelector}
+          placeholder={composerPlaceholder}
           tutorRequestMode={tutorRequestMode}
           setTutorRequestMode={setTutorRequestMode}
           fileInputRef={fileInputRef}
           canSend={canSend}
+          disabled={composerDisabled}
           onSend={handleSendMessage}
           onRemoveAttachedFile={removeAttachedFile}
           onUploadFileSelection={handleUploadFileSelection}

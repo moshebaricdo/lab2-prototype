@@ -13,8 +13,11 @@ import type {
 import type { InstructionsDrawerVisualCue } from "./InstructionsDrawer";
 import type { VersionHistory } from "./views/VersionHistory";
 import type { RubricData } from "./views/RubricPanel";
+import type { FileItem } from "../../../types/file";
+import type { ValidationTestDefinition } from "../../../types/validation";
 
 export type SidebarTab =
+  | "instructions"
   | "checklist"
   | "ai-tutor"
   | "history"
@@ -43,7 +46,10 @@ export interface SidebarProps {
   setShowRestoreSuccessAlert?: (show: boolean) => void;
   showSaveSuccessAlert?: boolean;
   setShowSaveSuccessAlert?: (show: boolean) => void;
+  showInstructionsTab?: boolean;
   showValidationTab?: boolean;
+  validationFileStructure?: FileItem[];
+  validationTests?: ValidationTestDefinition[];
   showAiTutorTab?: boolean;
   showHistoryTab?: boolean;
   showTeacherResourcesTab?: boolean;
@@ -68,6 +74,11 @@ export interface SidebarProps {
    * Defaults to `collapsible` to preserve assessment-level behavior.
    */
   defaultCollapsed?: boolean;
+  /**
+   * Uses floating card chrome for lab layouts that do not run edge-to-edge.
+   * Defaults to the standard edge-to-edge resource panel.
+   */
+  surfaceVariant?: "edge" | "card";
   /** When false, the AI Tutor instructions drawer is hidden. Default true (Web Lab 2). */
   showInstructionsDrawer?: boolean;
   instructionsDrawerInitialHeightRatio?: number;
@@ -87,9 +98,14 @@ export interface SidebarProps {
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
   showTutorModelSelector?: boolean;
+  aiTutorComposerPlaceholder?: string;
+  aiTutorEmptyStateTitle?: string;
+  aiTutorEmptyStateText?: string;
+  aiTutorSubmitFailureMessage?: string;
   tutorRequestMode?: TutorRequestMode;
   setTutorRequestMode?: (mode: TutorRequestMode) => void;
   hasPendingAiChanges?: boolean;
+  newProjectPlanQuestionnaireSignal?: number;
   historyVersions?: ComponentProps<typeof VersionHistory>["versions"];
   showNewProjectHistoryEmptyState?: boolean;
   /** Fires when `collapsible && isCollapsed` changes (for shell chrome such as resize handle). */

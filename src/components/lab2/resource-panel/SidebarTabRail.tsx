@@ -21,6 +21,7 @@ interface SidebarTabRailProps {
   collapsible: boolean;
   isCollapsed: boolean;
   isSettingsOpen: boolean;
+  showInstructionsTab: boolean;
   showValidationTab: boolean;
   showAiTutorTab: boolean;
   showHistoryTab: boolean;
@@ -114,6 +115,7 @@ export function SidebarTabRail({
   collapsible,
   isCollapsed,
   isSettingsOpen,
+  showInstructionsTab,
   showValidationTab,
   showAiTutorTab,
   showHistoryTab,
@@ -130,6 +132,13 @@ export function SidebarTabRail({
   onToggleSettings,
 }: SidebarTabRailProps) {
   const tabs: SidebarTabConfig[] = [
+    {
+      tab: "instructions",
+      tooltip: "Instructions",
+      iconName: "circle-info",
+      iconSize: "m",
+      visible: showInstructionsTab,
+    },
     {
       tab: "checklist",
       tooltip: "Validation",
@@ -223,40 +232,27 @@ export function SidebarTabRail({
 
       <div className={styles.bottomButtons}>
         {annotations && (
-          <Tooltip
-            content={annotations.isActive ? "Exit annotation mode" : "Annotate"}
-            position="right"
-          >
-            <AppButton
-              variant={annotations.isActive ? "primary" : "tertiary"}
-              tone={annotations.isActive ? "purple" : "gray"}
-              size="xs"
-              iconName="thumbtack"
-              onClick={() => annotations.setIsActive(!annotations.isActive)}
-              aria-label={
-                annotations.isActive
-                  ? "Exit annotation mode"
-                  : "Start annotation mode"
-              }
-            />
-          </Tooltip>
+          <>
+            <Tooltip
+              content={annotations.isActive ? "Exit annotation mode" : "Annotate"}
+              position="right"
+            >
+              <AppButton
+                variant={annotations.isActive ? "primary" : "tertiary"}
+                tone={annotations.isActive ? "purple" : "gray"}
+                size="xs"
+                iconName="thumbtack"
+                onClick={() => annotations.setIsActive(!annotations.isActive)}
+                aria-label={
+                  annotations.isActive
+                    ? "Exit annotation mode"
+                    : "Start annotation mode"
+                }
+              />
+            </Tooltip>
+            <div className={styles.bottomActionDivider} aria-hidden="true" />
+          </>
         )}
-        <Tooltip content="Documentation" position="right">
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            iconName="book"
-          />
-        </Tooltip>
-        <Tooltip content="AI Usage Disclaimer" position="right">
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            iconName="triangle-exclamation"
-          />
-        </Tooltip>
         <Tooltip content="Settings" position="right">
           <AppButton
             variant="tertiary"
@@ -267,14 +263,25 @@ export function SidebarTabRail({
             aria-pressed={isSettingsOpen}
           />
         </Tooltip>
-        <Tooltip content="Copyright" position="right">
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            iconName="copyright"
-          />
-        </Tooltip>
+        <div className={styles.bottomActionDivider} aria-hidden="true" />
+        <div className={styles.bottomActionGroup}>
+          <Tooltip content="AI Usage Disclaimer" position="right">
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName="triangle-exclamation"
+            />
+          </Tooltip>
+          <Tooltip content="Copyright" position="right">
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName="copyright"
+            />
+          </Tooltip>
+        </div>
       </div>
     </div>
   );

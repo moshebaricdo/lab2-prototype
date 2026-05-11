@@ -6,6 +6,7 @@ import { ContinueButton } from "./ContinueButton";
 import { SettingsPanel } from "./views/SettingsPanel";
 import { ValidationPanel } from "./views/ValidationPanel";
 import { VersionHistory } from "./views/VersionHistory";
+import { InstructionsPanel } from "./views/InstructionsPanel";
 import { AiTutorPanel } from "./views/ai-tutor/AiTutorPanel";
 import { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
 import { RubricPanel } from "./views/RubricPanel";
@@ -29,6 +30,9 @@ interface SidebarPanelContentProps {
   setShowRestoreSuccessAlert: SidebarProps["setShowRestoreSuccessAlert"];
   showSaveSuccessAlert: NonNullable<SidebarProps["showSaveSuccessAlert"]>;
   setShowSaveSuccessAlert: SidebarProps["setShowSaveSuccessAlert"];
+  showInstructionsTab: NonNullable<SidebarProps["showInstructionsTab"]>;
+  validationFileStructure: SidebarProps["validationFileStructure"];
+  validationTests: SidebarProps["validationTests"];
   rubricData: SidebarProps["rubricData"];
   showStudentLessonResource: NonNullable<SidebarProps["showStudentLessonResource"]>;
   showDocumentationResource: NonNullable<SidebarProps["showDocumentationResource"]>;
@@ -50,9 +54,14 @@ interface SidebarPanelContentProps {
   onOpenFileChangeInEditor: SidebarProps["onOpenFileChangeInEditor"];
   onOpenFileChangeInPreview: SidebarProps["onOpenFileChangeInPreview"];
   showTutorModelSelector: NonNullable<SidebarProps["showTutorModelSelector"]>;
+  aiTutorComposerPlaceholder: SidebarProps["aiTutorComposerPlaceholder"];
+  aiTutorEmptyStateTitle: SidebarProps["aiTutorEmptyStateTitle"];
+  aiTutorEmptyStateText: SidebarProps["aiTutorEmptyStateText"];
+  aiTutorSubmitFailureMessage: SidebarProps["aiTutorSubmitFailureMessage"];
   tutorRequestMode: NonNullable<SidebarProps["tutorRequestMode"]>;
   setTutorRequestMode: NonNullable<SidebarProps["setTutorRequestMode"]>;
   hasPendingAiChanges: NonNullable<SidebarProps["hasPendingAiChanges"]>;
+  newProjectPlanQuestionnaireSignal: NonNullable<SidebarProps["newProjectPlanQuestionnaireSignal"]>;
   historyVersions: SidebarProps["historyVersions"];
   showNewProjectHistoryEmptyState: NonNullable<SidebarProps["showNewProjectHistoryEmptyState"]>;
   devPanelFields: SidebarProps["devPanelFields"];
@@ -70,6 +79,7 @@ interface SidebarPanelContentProps {
 }
 
 const PANEL_LABEL: Record<SidebarTab, string> = {
+  instructions: "INSTRUCTIONS",
   checklist: "VALIDATION",
   "ai-tutor": "AI TUTOR",
   history: "VERSION HISTORY",
@@ -95,6 +105,9 @@ export function SidebarPanelContent({
   setShowRestoreSuccessAlert,
   showSaveSuccessAlert,
   setShowSaveSuccessAlert,
+  showInstructionsTab,
+  validationFileStructure,
+  validationTests,
   rubricData,
   showStudentLessonResource,
   showDocumentationResource,
@@ -116,9 +129,14 @@ export function SidebarPanelContent({
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
   showTutorModelSelector,
+  aiTutorComposerPlaceholder,
+  aiTutorEmptyStateTitle,
+  aiTutorEmptyStateText,
+  aiTutorSubmitFailureMessage,
   tutorRequestMode,
   setTutorRequestMode,
   hasPendingAiChanges,
+  newProjectPlanQuestionnaireSignal,
   historyVersions,
   showNewProjectHistoryEmptyState,
   devPanelFields,
@@ -167,7 +185,15 @@ export function SidebarPanelContent({
         }
       />
 
-      {activeTab === "checklist" && <ValidationPanel />}
+      {activeTab === "instructions" && showInstructionsTab && (
+        <InstructionsPanel>{instructionsContent}</InstructionsPanel>
+      )}
+      {activeTab === "checklist" && (
+        <ValidationPanel
+          fileStructure={validationFileStructure}
+          tests={validationTests}
+        />
+      )}
       {activeTab === "ai-tutor" && (
         <AiTutorPanel
           chatMessages={chatMessages}
@@ -188,12 +214,17 @@ export function SidebarPanelContent({
           onOpenFileChangeInEditor={onOpenFileChangeInEditor}
           onOpenFileChangeInPreview={onOpenFileChangeInPreview}
           showModelSelector={showTutorModelSelector}
+          composerPlaceholder={aiTutorComposerPlaceholder}
+          emptyStateTitle={aiTutorEmptyStateTitle}
+          emptyStateText={aiTutorEmptyStateText}
+          submitFailureMessage={aiTutorSubmitFailureMessage}
           tutorRequestMode={tutorRequestMode}
           setTutorRequestMode={setTutorRequestMode}
           hasPendingAiChanges={hasPendingAiChanges}
           isRequestRunning={isTutorRequestRunning}
           onRequestRunningChange={onTutorRequestRunningChange}
           clearChatSignal={clearTutorChatSignal}
+          newProjectPlanQuestionnaireSignal={newProjectPlanQuestionnaireSignal}
         />
       )}
       {activeTab === "history" && (

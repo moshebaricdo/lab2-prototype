@@ -34,6 +34,7 @@ Rules:
 - For layout/style changes, update CSS and HTML together when needed.
 - For accessibility changes, add labels, focus, keyboard, or ARIA only when relevant.
 - If the request asks to build from Plans/PROJECT_PLAN.md, treat that file as requirements context and include a targeted update to Plans/PROJECT_PLAN.md marking completed items and setting Status: Completed under the existing readable title when the build is represented in the proposed files.
+- Use lightweight Markdown in the student-facing message when helpful: short paragraphs, bullets or numbered lists for next steps/questions, and inline code for file names/selectors.
 - Generate a short saveTitle like a commit title: one sentence max, no markdown, no trailing period, under 72 characters.
 
 Response shape:

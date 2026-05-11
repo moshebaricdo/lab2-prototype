@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AppButton, type FaIconName } from "../../ui/AppButton";
+import { AppTextArea } from "../../ui/AppTextField";
 import type {
   Annotation,
   AnnotationTool,
@@ -70,9 +71,8 @@ function PinPopover({
         />
       </div>
       <p className={styles.popoverSelector}>{annotation.selector}</p>
-      <textarea
+      <AppTextArea
         ref={textareaRef}
-        className={styles.popoverTextarea}
         value={note}
         onChange={(e) => setNote(e.target.value)}
         onKeyDown={(e) => {
@@ -86,6 +86,9 @@ function PinPopover({
           }
         }}
         placeholder="Add a note... (Enter to save, Shift+Enter for newline)"
+        rows={3}
+        size="s"
+        tone="gray"
       />
       <div className={styles.popoverActions}>
         <AppButton

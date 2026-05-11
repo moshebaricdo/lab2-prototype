@@ -7,9 +7,9 @@ import {
   type DragEvent,
   type RefObject,
 } from "react";
-import { Textarea } from "../../../../ui/textarea";
 import { AppButton } from "../../../../ui/AppButton";
 import { AppActionDropdown } from "../../../../ui/AppDropdown";
+import { AppTextArea } from "../../../../ui/AppTextField";
 import { FileChip } from "../../../../ui/FileChip";
 import { faIconForFileName, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
@@ -41,10 +41,12 @@ interface AiTutorComposerProps {
   codeAttachmentTimestamps: Record<string, string>;
   isDragOverInput: boolean;
   showModelSelector?: boolean;
+  placeholder?: string;
   tutorRequestMode: TutorRequestMode;
   setTutorRequestMode: (mode: TutorRequestMode) => void;
   fileInputRef: RefObject<HTMLInputElement | null>;
   canSend: boolean;
+  disabled?: boolean;
   onSend: () => void;
   onRemoveAttachedFile: (fileLabel: string) => void;
   onUploadFileSelection: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -64,10 +66,12 @@ export function AiTutorComposer({
   codeAttachmentTimestamps,
   isDragOverInput,
   showModelSelector = true,
+  placeholder,
   tutorRequestMode,
   setTutorRequestMode,
   fileInputRef,
   canSend,
+  disabled = false,
   onSend,
   onRemoveAttachedFile,
   onUploadFileSelection,
@@ -128,6 +132,8 @@ export function AiTutorComposer({
         isClarified ? styles.inputSectionClarified : ""
       } ${
         showDropHelper ? styles.inputSectionDropActive : ""
+      } ${
+        disabled ? styles.inputSectionDisabled : ""
       }`}
     >
       <div
@@ -197,18 +203,22 @@ export function AiTutorComposer({
           }`}
           {...focusWithinProps}
         >
-          <Textarea
+          <AppTextArea
             ref={textareaRef}
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={(e) => {
+              if (disabled) return;
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 onSend();
               }
             }}
-            placeholder={isClarified ? "Message AI Tutor..." : "Type something..."}
-            className={styles.textarea}
+            placeholder={placeholder ?? (isClarified ? "Message AI Tutor..." : "Type something...")}
+            appearance="bare"
+            controlClassName={styles.textarea}
+            disabled={disabled}
+            size="m"
           />
           <div className={styles.inputActions}>
             <div>
@@ -219,6 +229,7 @@ export function AiTutorComposer({
                 size="xs"
                 iconName="plus"
                 onClick={() => fileInputRef.current?.click()}
+                disabled={disabled}
               >
               </AppButton>
               <input
@@ -244,6 +255,7 @@ export function AiTutorComposer({
                       iconName={selectedTutorMode.iconName}
                       className={styles.modelDropdown}
                       aria-label={`Tutor mode: ${selectedTutorMode.label}`}
+                      disabled={disabled}
                     >
                       <span className={styles.modeTriggerContent}>
                         <span>{selectedTutorMode.label}</span>

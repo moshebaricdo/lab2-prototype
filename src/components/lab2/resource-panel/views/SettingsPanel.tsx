@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
 import { AppNativeSelect } from "../../../ui/AppDropdown";
+import { AppTextField } from "../../../ui/AppTextField";
 import { useTutorApiSettings } from "../../../../hooks/useTutorApiSettings";
 import styles from "./SettingsPanel.module.scss";
 
@@ -120,20 +121,21 @@ export function SettingsPanel({
         ))}
 
         <div className={styles.field}>
-          <p className={styles.label}>Tutor API key (prototype)</p>
-          <input
+          <AppTextField
+            label="Tutor API key (prototype)"
             type="password"
             value={apiKey}
             onChange={(event) => setApiKey(event.target.value)}
             placeholder="Stored for this browser session"
-            className={styles.input}
             autoComplete="off"
+            helperText={
+              hasApiKey
+                ? "Key is available for prototype tutor calls."
+                : "Optional for now. Mock tutor edits work without a key."
+            }
+            size="s"
+            tone="gray"
           />
-          <p className={styles.helpText}>
-            {hasApiKey
-              ? "Key is available for prototype tutor calls."
-              : "Optional for now. Mock tutor edits work without a key."}
-          </p>
         </div>
 
       </div>
