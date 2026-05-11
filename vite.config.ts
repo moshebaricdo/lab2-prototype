@@ -15,6 +15,58 @@ export default defineConfig({
   build: {
     target: "esnext",
     outDir: "build",
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("/node_modules/")) return undefined;
+
+          if (
+            id.includes("/@codemirror/") ||
+            id.includes("/@lezer/")
+          ) {
+            return "vendor-codemirror";
+          }
+
+          if (
+            id.includes("/react/") ||
+            id.includes("/react-dom/") ||
+            id.includes("/react-router/") ||
+            id.includes("/react-router-dom/") ||
+            id.includes("/scheduler/")
+          ) {
+            return "vendor-react";
+          }
+
+          if (id.includes("/@fortawesome/")) {
+            return "vendor-fontawesome";
+          }
+
+          if (
+            id.includes("/react-dnd/") ||
+            id.includes("/react-dnd-html5-backend/") ||
+            id.includes("/dnd-core/") ||
+            id.includes("/@react-dnd/")
+          ) {
+            return "vendor-dnd";
+          }
+
+          if (
+            id.includes("/react-markdown/") ||
+            id.includes("/remark-") ||
+            id.includes("/unified/") ||
+            id.includes("/micromark") ||
+            id.includes("/mdast") ||
+            id.includes("/hast") ||
+            id.includes("/unist") ||
+            id.includes("/vfile")
+          ) {
+            return "vendor-markdown";
+          }
+
+          return undefined;
+        },
+      },
+    },
   },
   /** Pre-bundle core deps so cold start / HMR invalidation is cheaper. */
   optimizeDeps: {

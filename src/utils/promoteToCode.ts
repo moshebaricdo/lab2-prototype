@@ -4,48 +4,57 @@ interface WorkspaceMapping {
   component: string;
   importPath: string;
   linksVar: string;
+  pageDirectory: string;
 }
 
 const PATH_TO_WORKSPACE: Record<string, WorkspaceMapping> = {
   "/levels/multi": {
     component: "MultiChoiceWorkspace",
-    importPath: "../components/assessment/multi",
+    importPath: "../../components/assessment/multi",
     linksVar: "multiChoiceLevelLinks",
+    pageDirectory: "multi-choice",
   },
   "/levels/free-response": {
     component: "FreeResponseWorkspace",
-    importPath: "../components/assessment/free-response",
+    importPath: "../../components/assessment/free-response",
     linksVar: "freeResponseLevelLinks",
+    pageDirectory: "free-response",
   },
   "/levels/match-definition-bank": {
     component: "MatchDefinitionBankWorkspace",
-    importPath: "../components/assessment/match",
+    importPath: "../../components/assessment/match",
     linksVar: "matchLevelLinks",
+    pageDirectory: "match",
   },
   "/levels/match-connector": {
     component: "MatchConnectorWorkspace",
-    importPath: "../components/assessment/match",
+    importPath: "../../components/assessment/match",
     linksVar: "matchLevelLinks",
+    pageDirectory: "match",
   },
   "/levels/match-swipe-cards": {
     component: "MatchSwipeWorkspace",
-    importPath: "../components/assessment/match",
+    importPath: "../../components/assessment/match",
     linksVar: "matchLevelLinks",
+    pageDirectory: "match",
   },
   "/levels/weblab2": {
     component: "Workspace",
-    importPath: "../components/ide/weblab2",
+    importPath: "../../components/ide/weblab2",
     linksVar: "webLab2LevelLinks",
+    pageDirectory: "weblab2",
   },
   "/levels/levelgroup-scroll": {
     component: "LevelGroupScrollWorkspace",
-    importPath: "../components/assessment/levelgroup",
+    importPath: "../../components/assessment/levelgroup",
     linksVar: "levelGroupLevelLinks",
+    pageDirectory: "levelgroup",
   },
   "/levels/bubble-choice": {
     component: "BubbleChoiceWorkspace",
-    importPath: "../components/assessment/bubble-choice",
+    importPath: "../../components/assessment/bubble-choice",
     linksVar: "bubbleChoiceLevelLinks",
+    pageDirectory: "bubble-choice",
   },
 };
 
@@ -78,6 +87,7 @@ function stringifyOverrides(overrides: Record<string, unknown>, indent = 2): str
 export interface PromotedCode {
   pageName: string;
   pageFileName: string;
+  pageFilePath: string;
   pageCode: string;
   routeEntry: string;
   linkEntry: string;
@@ -92,6 +102,7 @@ export function generatePromotedCode(variant: SavedVariant): PromotedCode | null
   const routePath = `/levels/${slug}`;
   const pageName = `${toPascalCase(slug)}LevelPage`;
   const pageFileName = `${pageName}.tsx`;
+  const pageFilePath = `${mapping.pageDirectory}/${pageFileName}`;
 
   const overridesStr = stringifyOverrides(variant.overrides, 2)
     .split("\n")
@@ -99,7 +110,7 @@ export function generatePromotedCode(variant: SavedVariant): PromotedCode | null
     .join("\n");
 
   const pageCode = `import { ${mapping.component} } from "${mapping.importPath}";
-import { ${mapping.linksVar} } from "./levelTypeLinks";
+import { ${mapping.linksVar} } from "../levelTypeLinks";
 
 const overrides = ${overridesStr};
 
@@ -121,6 +132,7 @@ export function ${pageName}() {
   return {
     pageName,
     pageFileName,
+    pageFilePath,
     pageCode,
     routeEntry,
     linkEntry,

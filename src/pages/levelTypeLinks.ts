@@ -131,6 +131,13 @@ export const bubbleChoiceLevelLinks: LevelProgressLink[] = [
 
 export const pythonLabLevelLinks: LevelProgressLink[] = [
   { name: "Default workspace", path: "/levels/pythonlab" },
+  { name: "Blank standalone project", path: "/levels/pythonlab-blank" },
+];
+
+export const aiChatLabLevelLinks: LevelProgressLink[] = [
+  { name: "Prompting practice", path: "/levels/aichatlab" },
+  { name: "Setup controls", path: "/levels/aichatlab-setup" },
+  { name: "Full model card", path: "/levels/aichatlab-model-card" },
 ];
 
 export const sampleProgressionLinks: LevelProgressLink[] = [

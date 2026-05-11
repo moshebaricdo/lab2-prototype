@@ -1,234 +1,422 @@
+import { lazy, Suspense, type ComponentType } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { BubbleChoiceImagesLevelPage } from "./pages/BubbleChoiceImagesLevelPage";
-import { BubbleChoiceLevelPage } from "./pages/BubbleChoiceLevelPage";
-import { CodeRefEditableLevelPage } from "./pages/CodeRefEditableLevelPage";
-import { CodeRefFreeResponseLevelPage } from "./pages/CodeRefFreeResponseLevelPage";
-import { CodeRefLevelGroupLevelPage } from "./pages/CodeRefLevelGroupLevelPage";
-import { CodeRefMultiChoiceLevelPage } from "./pages/CodeRefMultiChoiceLevelPage";
-import { CodeRefMultiFileLevelPage } from "./pages/CodeRefMultiFileLevelPage";
-import { FreeResponseLevelPage } from "./pages/FreeResponseLevelPage";
-import { FreeResponseMarkdownLevelPage } from "./pages/FreeResponseMarkdownLevelPage";
-import { FreeResponseRevealLevelPage } from "./pages/FreeResponseRevealLevelPage";
-import { FreeResponseUploadLevelPage } from "./pages/FreeResponseUploadLevelPage";
-import { LevelGroupScrollLevelPage } from "./pages/LevelGroupScrollLevelPage";
-import { LevelGroupScrollStickyFooterLevelPage } from "./pages/LevelGroupScrollStickyFooterLevelPage";
-import { LevelGroupSteppedDotsLevelPage } from "./pages/LevelGroupSteppedDotsLevelPage";
-import { LevelGroupSteppedIntroLevelPage } from "./pages/LevelGroupSteppedIntroLevelPage";
-import { LevelGroupSurveyIntroLevelPage } from "./pages/LevelGroupSurveyIntroLevelPage";
-import { LevelGroupSteppedLevelPage } from "./pages/LevelGroupSteppedLevelPage";
-import { LevelsIndexPage } from "./pages/LevelsIndexPage";
-import { MatchConnectorCodeLevelPage } from "./pages/MatchConnectorCodeLevelPage";
-import { MatchConnectorImageLevelPage } from "./pages/MatchConnectorImageLevelPage";
-import { MatchConnectorLevelPage } from "./pages/MatchConnectorLevelPage";
-import { MatchDefinitionBankLevelPage } from "./pages/MatchDefinitionBankLevelPage";
-import { MatchSwipeCodeLevelPage } from "./pages/MatchSwipeCodeLevelPage";
-import { MatchSwipeLevelPage } from "./pages/MatchSwipeLevelPage";
-import { MultiChoiceAllThatApplyLevelPage } from "./pages/MultiChoiceAllThatApplyLevelPage";
-import { MultiChoiceAuthoringArrayListLevelPage } from "./pages/MultiChoiceAuthoringArrayListLevelPage";
-import { MultiChoiceAuthoringCodeLevelPage } from "./pages/MultiChoiceAuthoringCodeLevelPage";
-import { MultiChoiceAuthoringLevelPage } from "./pages/MultiChoiceAuthoringLevelPage";
-import { MultiChoiceAuthoringMediaLevelPage } from "./pages/MultiChoiceAuthoringMediaLevelPage";
-import { MultiChoiceLevelPage } from "./pages/MultiChoiceLevelPage";
-import { WebLab2DrawerFadeLevelPage } from "./pages/WebLab2DrawerFadeLevelPage";
-import { WebLab2DrawerInlineLinkLevelPage } from "./pages/WebLab2DrawerInlineLinkLevelPage";
-import { WebLab2FileDropLevelPage } from "./pages/WebLab2FileDropLevelPage";
-import { PythonLabLevelPage } from "./pages/PythonLabLevelPage";
-import { WebLab2LevelPage } from "./pages/WebLab2LevelPage";
-import { WebLab2RubricLevelPage } from "./pages/WebLab2RubricLevelPage";
-import {
-  ProgressionBranchColorPage,
-  ProgressionBranchLayoutPage,
-  ProgressionBranchMediaPage,
-} from "./pages/ProgressionBranchWebLabPage";
-import { ProgressionBubbleChoicePage } from "./pages/ProgressionBubbleChoicePage";
-import { ProgressionFreeResponsePage } from "./pages/ProgressionFreeResponsePage";
-import { ProgressionLevelGroupPage } from "./pages/ProgressionLevelGroupPage";
-import { ProgressionWebLabPage } from "./pages/ProgressionWebLabPage";
-import { WebLab2SendAffordanceLevelPage } from "./pages/WebLab2SendAffordanceLevelPage";
-import { WebLab2FileChipActionLevelPage } from "./pages/WebLab2FileChipActionLevelPage";
-import { WebLab2TutorActionCardLevelPage } from "./pages/WebLab2TutorActionCardLevelPage";
-import { WebLab2DemoProjectLevelPage } from "./pages/WebLab2DemoProjectLevelPage";
-import { WebLab2BlankDemoProjectLevelPage } from "./pages/WebLab2BlankDemoProjectLevelPage";
+
+function lazyPage<TModule, TName extends keyof TModule>(
+  loader: () => Promise<TModule>,
+  exportName: TName,
+) {
+  return lazy(async () => ({
+    default: (await loader())[exportName] as unknown as ComponentType,
+  }));
+}
+
+
+const BubbleChoiceImagesLevelPage = lazyPage(
+  () => import("./pages/bubble-choice/BubbleChoiceImagesLevelPage"),
+  "BubbleChoiceImagesLevelPage",
+);
+const AiChatLabPages = () => import("./pages/aichatlab/AiChatLabLevelPage");
+const AiChatLabLevelPage = lazyPage(
+  AiChatLabPages,
+  "AiChatLabLevelPage",
+);
+const AiChatLabSetupLevelPage = lazyPage(
+  AiChatLabPages,
+  "AiChatLabSetupLevelPage",
+);
+const AiChatLabModelCardLevelPage = lazyPage(
+  AiChatLabPages,
+  "AiChatLabModelCardLevelPage",
+);
+const BubbleChoiceLevelPage = lazyPage(
+  () => import("./pages/bubble-choice/BubbleChoiceLevelPage"),
+  "BubbleChoiceLevelPage",
+);
+const CodeRefEditableLevelPage = lazyPage(
+  () => import("./pages/multi-choice/CodeRefEditableLevelPage"),
+  "CodeRefEditableLevelPage",
+);
+const CodeRefFreeResponseLevelPage = lazyPage(
+  () => import("./pages/free-response/CodeRefFreeResponseLevelPage"),
+  "CodeRefFreeResponseLevelPage",
+);
+const CodeRefLevelGroupLevelPage = lazyPage(
+  () => import("./pages/levelgroup/CodeRefLevelGroupLevelPage"),
+  "CodeRefLevelGroupLevelPage",
+);
+const CodeRefMultiChoiceLevelPage = lazyPage(
+  () => import("./pages/multi-choice/CodeRefMultiChoiceLevelPage"),
+  "CodeRefMultiChoiceLevelPage",
+);
+const CodeRefMultiFileLevelPage = lazyPage(
+  () => import("./pages/multi-choice/CodeRefMultiFileLevelPage"),
+  "CodeRefMultiFileLevelPage",
+);
+const FreeResponseLevelPage = lazyPage(
+  () => import("./pages/free-response/FreeResponseLevelPage"),
+  "FreeResponseLevelPage",
+);
+const FreeResponseMarkdownLevelPage = lazyPage(
+  () => import("./pages/free-response/FreeResponseMarkdownLevelPage"),
+  "FreeResponseMarkdownLevelPage",
+);
+const FreeResponseRevealLevelPage = lazyPage(
+  () => import("./pages/free-response/FreeResponseRevealLevelPage"),
+  "FreeResponseRevealLevelPage",
+);
+const FreeResponseUploadLevelPage = lazyPage(
+  () => import("./pages/free-response/FreeResponseUploadLevelPage"),
+  "FreeResponseUploadLevelPage",
+);
+const LevelGroupScrollLevelPage = lazyPage(
+  () => import("./pages/levelgroup/LevelGroupScrollLevelPage"),
+  "LevelGroupScrollLevelPage",
+);
+const LevelGroupScrollStickyFooterLevelPage = lazyPage(
+  () => import("./pages/levelgroup/LevelGroupScrollStickyFooterLevelPage"),
+  "LevelGroupScrollStickyFooterLevelPage",
+);
+const LevelGroupSteppedDotsLevelPage = lazyPage(
+  () => import("./pages/levelgroup/LevelGroupSteppedDotsLevelPage"),
+  "LevelGroupSteppedDotsLevelPage",
+);
+const LevelGroupSteppedIntroLevelPage = lazyPage(
+  () => import("./pages/levelgroup/LevelGroupSteppedIntroLevelPage"),
+  "LevelGroupSteppedIntroLevelPage",
+);
+const LevelGroupSteppedLevelPage = lazyPage(
+  () => import("./pages/levelgroup/LevelGroupSteppedLevelPage"),
+  "LevelGroupSteppedLevelPage",
+);
+const LevelGroupSurveyIntroLevelPage = lazyPage(
+  () => import("./pages/levelgroup/LevelGroupSurveyIntroLevelPage"),
+  "LevelGroupSurveyIntroLevelPage",
+);
+const LevelsIndexPage = lazyPage(
+  () => import("./pages/LevelsIndexPage"),
+  "LevelsIndexPage",
+);
+const MatchConnectorCodeLevelPage = lazyPage(
+  () => import("./pages/match/MatchConnectorCodeLevelPage"),
+  "MatchConnectorCodeLevelPage",
+);
+const MatchConnectorImageLevelPage = lazyPage(
+  () => import("./pages/match/MatchConnectorImageLevelPage"),
+  "MatchConnectorImageLevelPage",
+);
+const MatchConnectorLevelPage = lazyPage(
+  () => import("./pages/match/MatchConnectorLevelPage"),
+  "MatchConnectorLevelPage",
+);
+const MatchDefinitionBankLevelPage = lazyPage(
+  () => import("./pages/match/MatchDefinitionBankLevelPage"),
+  "MatchDefinitionBankLevelPage",
+);
+const MatchSwipeCodeLevelPage = lazyPage(
+  () => import("./pages/match/MatchSwipeCodeLevelPage"),
+  "MatchSwipeCodeLevelPage",
+);
+const MatchSwipeLevelPage = lazyPage(
+  () => import("./pages/match/MatchSwipeLevelPage"),
+  "MatchSwipeLevelPage",
+);
+const MultiChoiceAllThatApplyLevelPage = lazyPage(
+  () => import("./pages/multi-choice/MultiChoiceAllThatApplyLevelPage"),
+  "MultiChoiceAllThatApplyLevelPage",
+);
+const MultiChoiceAuthoringArrayListLevelPage = lazyPage(
+  () => import("./pages/multi-choice/MultiChoiceAuthoringArrayListLevelPage"),
+  "MultiChoiceAuthoringArrayListLevelPage",
+);
+const MultiChoiceAuthoringCodeLevelPage = lazyPage(
+  () => import("./pages/multi-choice/MultiChoiceAuthoringCodeLevelPage"),
+  "MultiChoiceAuthoringCodeLevelPage",
+);
+const MultiChoiceAuthoringLevelPage = lazyPage(
+  () => import("./pages/multi-choice/MultiChoiceAuthoringLevelPage"),
+  "MultiChoiceAuthoringLevelPage",
+);
+const MultiChoiceAuthoringMediaLevelPage = lazyPage(
+  () => import("./pages/multi-choice/MultiChoiceAuthoringMediaLevelPage"),
+  "MultiChoiceAuthoringMediaLevelPage",
+);
+const MultiChoiceLevelPage = lazyPage(
+  () => import("./pages/multi-choice/MultiChoiceLevelPage"),
+  "MultiChoiceLevelPage",
+);
+const ProgressionBranchWebLabPage = () =>
+  import("./pages/progression/ProgressionBranchWebLabPage");
+const ProgressionBranchColorPage = lazyPage(
+  ProgressionBranchWebLabPage,
+  "ProgressionBranchColorPage",
+);
+const ProgressionBranchLayoutPage = lazyPage(
+  ProgressionBranchWebLabPage,
+  "ProgressionBranchLayoutPage",
+);
+const ProgressionBranchMediaPage = lazyPage(
+  ProgressionBranchWebLabPage,
+  "ProgressionBranchMediaPage",
+);
+const ProgressionBubbleChoicePage = lazyPage(
+  () => import("./pages/progression/ProgressionBubbleChoicePage"),
+  "ProgressionBubbleChoicePage",
+);
+const ProgressionFreeResponsePage = lazyPage(
+  () => import("./pages/progression/ProgressionFreeResponsePage"),
+  "ProgressionFreeResponsePage",
+);
+const ProgressionLevelGroupPage = lazyPage(
+  () => import("./pages/progression/ProgressionLevelGroupPage"),
+  "ProgressionLevelGroupPage",
+);
+const ProgressionWebLabPage = lazyPage(
+  () => import("./pages/progression/ProgressionWebLabPage"),
+  "ProgressionWebLabPage",
+);
+const PythonLabBlankProjectLevelPage = lazyPage(
+  () => import("./pages/pythonlab/PythonLabBlankProjectLevelPage"),
+  "PythonLabBlankProjectLevelPage",
+);
+const PythonLabLevelPage = lazyPage(
+  () => import("./pages/pythonlab/PythonLabLevelPage"),
+  "PythonLabLevelPage",
+);
+const WebLab2BlankDemoProjectLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2BlankDemoProjectLevelPage"),
+  "WebLab2BlankDemoProjectLevelPage",
+);
+const WebLab2DemoProjectLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2DemoProjectLevelPage"),
+  "WebLab2DemoProjectLevelPage",
+);
+const WebLab2DrawerFadeLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2DrawerFadeLevelPage"),
+  "WebLab2DrawerFadeLevelPage",
+);
+const WebLab2DrawerInlineLinkLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2DrawerInlineLinkLevelPage"),
+  "WebLab2DrawerInlineLinkLevelPage",
+);
+const WebLab2FileChipActionLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2FileChipActionLevelPage"),
+  "WebLab2FileChipActionLevelPage",
+);
+const WebLab2FileDropLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2FileDropLevelPage"),
+  "WebLab2FileDropLevelPage",
+);
+const WebLab2LevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2LevelPage"),
+  "WebLab2LevelPage",
+);
+const WebLab2RubricLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2RubricLevelPage"),
+  "WebLab2RubricLevelPage",
+);
+const WebLab2SendAffordanceLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2SendAffordanceLevelPage"),
+  "WebLab2SendAffordanceLevelPage",
+);
+const WebLab2TutorActionCardLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2TutorActionCardLevelPage"),
+  "WebLab2TutorActionCardLevelPage",
+);
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/levels" replace />} />
-      <Route path="/levels" element={<LevelsIndexPage />} />
-      <Route path="/levels/pythonlab" element={<PythonLabLevelPage />} />
-      <Route path="/levels/weblab2" element={<WebLab2LevelPage />} />
-      <Route
-        path="/levels/weblab2-send-affordance"
-        element={<WebLab2SendAffordanceLevelPage />}
-      />
-      <Route
-        path="/levels/weblab2-file-drop"
-        element={<WebLab2FileDropLevelPage />}
-      />
-      <Route
-        path="/levels/weblab2-drawer-fade"
-        element={<WebLab2DrawerFadeLevelPage />}
-      />
-      <Route
-        path="/levels/weblab2-drawer-inline-link"
-        element={<WebLab2DrawerInlineLinkLevelPage />}
-      />
-      <Route
-        path="/levels/weblab2-rubric"
-        element={<WebLab2RubricLevelPage />}
-      />
-      <Route
-        path="/levels/weblab2-file-chip-action"
-        element={<WebLab2FileChipActionLevelPage />}
-      />
-      <Route
-        path="/levels/weblab2-tutor-action-card"
-        element={<WebLab2TutorActionCardLevelPage />}
-      />
-      <Route
-        path="/levels/weblab2-demo-project"
-        element={<WebLab2DemoProjectLevelPage />}
-      />
-      <Route
-        path="/levels/weblab2-demo-project-blank"
-        element={<WebLab2BlankDemoProjectLevelPage />}
-      />
-      <Route path="/levels/multi" element={<MultiChoiceLevelPage />} />
-      <Route
-        path="/levels/multi-authoring"
-        element={<MultiChoiceAuthoringLevelPage />}
-      />
-      <Route
-        path="/levels/multi-authoring-code"
-        element={<MultiChoiceAuthoringCodeLevelPage />}
-      />
-      <Route
-        path="/levels/multi-authoring-media"
-        element={<MultiChoiceAuthoringMediaLevelPage />}
-      />
-      <Route
-        path="/levels/multi-authoring-arraylist"
-        element={<MultiChoiceAuthoringArrayListLevelPage />}
-      />
-      <Route
-        path="/levels/multi-all-that-apply"
-        element={<MultiChoiceAllThatApplyLevelPage />}
-      />
-      <Route path="/levels/free-response" element={<FreeResponseLevelPage />} />
-      <Route
-        path="/levels/free-response-reveal"
-        element={<FreeResponseRevealLevelPage />}
-      />
-      <Route
-        path="/levels/free-response-markdown"
-        element={<FreeResponseMarkdownLevelPage />}
-      />
-      <Route
-        path="/levels/free-response-upload"
-        element={<FreeResponseUploadLevelPage />}
-      />
-      <Route
-        path="/levels/match-definition-bank"
-        element={<MatchDefinitionBankLevelPage />}
-      />
-      <Route
-        path="/levels/match-connector"
-        element={<MatchConnectorLevelPage />}
-      />
-      <Route
-        path="/levels/match-connector-images"
-        element={<MatchConnectorImageLevelPage />}
-      />
-      <Route
-        path="/levels/match-connector-code"
-        element={<MatchConnectorCodeLevelPage />}
-      />
-      <Route
-        path="/levels/match-swipe-cards"
-        element={<MatchSwipeLevelPage />}
-      />
-      <Route
-        path="/levels/match-swipe-code"
-        element={<MatchSwipeCodeLevelPage />}
-      />
-      <Route
-        path="/levels/levelgroup-scroll"
-        element={<LevelGroupScrollLevelPage />}
-      />
-      <Route
-        path="/levels/levelgroup-scroll-sticky-footer"
-        element={<LevelGroupScrollStickyFooterLevelPage />}
-      />
-      <Route
-        path="/levels/levelgroup-stepped"
-        element={<LevelGroupSteppedLevelPage />}
-      />
-      <Route
-        path="/levels/levelgroup-stepped-dots"
-        element={<LevelGroupSteppedDotsLevelPage />}
-      />
-      <Route
-        path="/levels/levelgroup-stepped-intro"
-        element={<LevelGroupSteppedIntroLevelPage />}
-      />
-      <Route
-        path="/levels/levelgroup-survey-intro"
-        element={<LevelGroupSurveyIntroLevelPage />}
-      />
-      <Route
-        path="/levels/multi-code-ref"
-        element={<CodeRefMultiChoiceLevelPage />}
-      />
-      <Route
-        path="/levels/multi-code-ref-multifile"
-        element={<CodeRefMultiFileLevelPage />}
-      />
-      <Route
-        path="/levels/multi-code-ref-editable"
-        element={<CodeRefEditableLevelPage />}
-      />
-      <Route
-        path="/levels/free-response-code-ref"
-        element={<CodeRefFreeResponseLevelPage />}
-      />
-      <Route
-        path="/levels/levelgroup-code-ref"
-        element={<CodeRefLevelGroupLevelPage />}
-      />
-      <Route path="/levels/bubble-choice" element={<BubbleChoiceLevelPage />} />
-      <Route
-        path="/levels/bubble-choice-images"
-        element={<BubbleChoiceImagesLevelPage />}
-      />
-      <Route
-        path="/levels/progression-weblab"
-        element={<ProgressionWebLabPage />}
-      />
-      <Route
-        path="/levels/progression-free-response"
-        element={<ProgressionFreeResponsePage />}
-      />
-      <Route
-        path="/levels/progression-bubble-choice"
-        element={<ProgressionBubbleChoicePage />}
-      />
-      <Route
-        path="/levels/progression-branch-color"
-        element={<ProgressionBranchColorPage />}
-      />
-      <Route
-        path="/levels/progression-branch-layout"
-        element={<ProgressionBranchLayoutPage />}
-      />
-      <Route
-        path="/levels/progression-branch-media"
-        element={<ProgressionBranchMediaPage />}
-      />
-      <Route
-        path="/levels/progression-levelgroup"
-        element={<ProgressionLevelGroupPage />}
-      />
-      <Route path="*" element={<Navigate to="/levels" replace />} />
-    </Routes>
+    <Suspense fallback={null}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/levels" replace />} />
+        <Route path="/levels" element={<LevelsIndexPage />} />
+        <Route path="/levels/aichatlab" element={<AiChatLabLevelPage />} />
+        <Route
+          path="/levels/aichatlab-setup"
+          element={<AiChatLabSetupLevelPage />}
+        />
+        <Route
+          path="/levels/aichatlab-model-card"
+          element={<AiChatLabModelCardLevelPage />}
+        />
+        <Route path="/levels/pythonlab" element={<PythonLabLevelPage />} />
+        <Route
+          path="/levels/pythonlab-blank"
+          element={<PythonLabBlankProjectLevelPage />}
+        />
+        <Route path="/levels/weblab2" element={<WebLab2LevelPage />} />
+        <Route
+          path="/levels/weblab2-send-affordance"
+          element={<WebLab2SendAffordanceLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-file-drop"
+          element={<WebLab2FileDropLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-drawer-fade"
+          element={<WebLab2DrawerFadeLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-drawer-inline-link"
+          element={<WebLab2DrawerInlineLinkLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-rubric"
+          element={<WebLab2RubricLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-file-chip-action"
+          element={<WebLab2FileChipActionLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-tutor-action-card"
+          element={<WebLab2TutorActionCardLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-demo-project"
+          element={<WebLab2DemoProjectLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-demo-project-blank"
+          element={<WebLab2BlankDemoProjectLevelPage />}
+        />
+        <Route path="/levels/multi" element={<MultiChoiceLevelPage />} />
+        <Route
+          path="/levels/multi-authoring"
+          element={<MultiChoiceAuthoringLevelPage />}
+        />
+        <Route
+          path="/levels/multi-authoring-code"
+          element={<MultiChoiceAuthoringCodeLevelPage />}
+        />
+        <Route
+          path="/levels/multi-authoring-media"
+          element={<MultiChoiceAuthoringMediaLevelPage />}
+        />
+        <Route
+          path="/levels/multi-authoring-arraylist"
+          element={<MultiChoiceAuthoringArrayListLevelPage />}
+        />
+        <Route
+          path="/levels/multi-all-that-apply"
+          element={<MultiChoiceAllThatApplyLevelPage />}
+        />
+        <Route path="/levels/free-response" element={<FreeResponseLevelPage />} />
+        <Route
+          path="/levels/free-response-reveal"
+          element={<FreeResponseRevealLevelPage />}
+        />
+        <Route
+          path="/levels/free-response-markdown"
+          element={<FreeResponseMarkdownLevelPage />}
+        />
+        <Route
+          path="/levels/free-response-upload"
+          element={<FreeResponseUploadLevelPage />}
+        />
+        <Route
+          path="/levels/match-definition-bank"
+          element={<MatchDefinitionBankLevelPage />}
+        />
+        <Route
+          path="/levels/match-connector"
+          element={<MatchConnectorLevelPage />}
+        />
+        <Route
+          path="/levels/match-connector-images"
+          element={<MatchConnectorImageLevelPage />}
+        />
+        <Route
+          path="/levels/match-connector-code"
+          element={<MatchConnectorCodeLevelPage />}
+        />
+        <Route
+          path="/levels/match-swipe-cards"
+          element={<MatchSwipeLevelPage />}
+        />
+        <Route
+          path="/levels/match-swipe-code"
+          element={<MatchSwipeCodeLevelPage />}
+        />
+        <Route
+          path="/levels/levelgroup-scroll"
+          element={<LevelGroupScrollLevelPage />}
+        />
+        <Route
+          path="/levels/levelgroup-scroll-sticky-footer"
+          element={<LevelGroupScrollStickyFooterLevelPage />}
+        />
+        <Route
+          path="/levels/levelgroup-stepped"
+          element={<LevelGroupSteppedLevelPage />}
+        />
+        <Route
+          path="/levels/levelgroup-stepped-dots"
+          element={<LevelGroupSteppedDotsLevelPage />}
+        />
+        <Route
+          path="/levels/levelgroup-stepped-intro"
+          element={<LevelGroupSteppedIntroLevelPage />}
+        />
+        <Route
+          path="/levels/levelgroup-survey-intro"
+          element={<LevelGroupSurveyIntroLevelPage />}
+        />
+        <Route
+          path="/levels/multi-code-ref"
+          element={<CodeRefMultiChoiceLevelPage />}
+        />
+        <Route
+          path="/levels/multi-code-ref-multifile"
+          element={<CodeRefMultiFileLevelPage />}
+        />
+        <Route
+          path="/levels/multi-code-ref-editable"
+          element={<CodeRefEditableLevelPage />}
+        />
+        <Route
+          path="/levels/free-response-code-ref"
+          element={<CodeRefFreeResponseLevelPage />}
+        />
+        <Route
+          path="/levels/levelgroup-code-ref"
+          element={<CodeRefLevelGroupLevelPage />}
+        />
+        <Route path="/levels/bubble-choice" element={<BubbleChoiceLevelPage />} />
+        <Route
+          path="/levels/bubble-choice-images"
+          element={<BubbleChoiceImagesLevelPage />}
+        />
+        <Route
+          path="/levels/progression-weblab"
+          element={<ProgressionWebLabPage />}
+        />
+        <Route
+          path="/levels/progression-free-response"
+          element={<ProgressionFreeResponsePage />}
+        />
+        <Route
+          path="/levels/progression-bubble-choice"
+          element={<ProgressionBubbleChoicePage />}
+        />
+        <Route
+          path="/levels/progression-branch-color"
+          element={<ProgressionBranchColorPage />}
+        />
+        <Route
+          path="/levels/progression-branch-layout"
+          element={<ProgressionBranchLayoutPage />}
+        />
+        <Route
+          path="/levels/progression-branch-media"
+          element={<ProgressionBranchMediaPage />}
+        />
+        <Route
+          path="/levels/progression-levelgroup"
+          element={<ProgressionLevelGroupPage />}
+        />
+        <Route path="*" element={<Navigate to="/levels" replace />} />
+      </Routes>
+    </Suspense>
   );
 }

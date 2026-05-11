@@ -13,6 +13,7 @@ import type { SavedVariant } from "../hooks/useSavedVariants";
 import { generatePromotedCode } from "../utils/promoteToCode";
 import type { PromotedCode } from "../utils/promoteToCode";
 import {
+  aiChatLabLevelLinks,
   bubbleChoiceLevelLinks,
   freeResponseLevelLinks,
   levelGroupLevelLinks,
@@ -44,6 +45,11 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
   {
     title: "Lab environments",
     entries: [
+      {
+        levelType: "AI Chat Lab",
+        description: "Prompting, model configuration, and chat stream prototypes.",
+        pages: aiChatLabLevelLinks,
+      },
       {
         levelType: "Web Lab 2",
         description: "Current full-featured prototype environment.",
@@ -100,6 +106,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/match-connector": "Match",
   "/levels/match-swipe-cards": "Match",
   "/levels/pythonlab": "Python Lab",
+  "/levels/aichatlab": "AI Chat Lab",
   "/levels/weblab2": "Web Lab 2",
   "/levels/levelgroup": "Levelgroup",
   "/levels/bubble-choice": "Bubble choice",
@@ -146,7 +153,7 @@ function PromoteDialog({
         <section>
           <div className={styles.promoteStepHeader}>
             <p className={styles.promoteStepLabel}>
-              1. Create <code>src/pages/{promoted.pageFileName}</code>
+              1. Create <code>src/pages/{promoted.pageFilePath}</code>
             </p>
             <CopyButton text={promoted.pageCode} />
           </div>
