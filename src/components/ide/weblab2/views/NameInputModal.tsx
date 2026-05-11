@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
+import { AppTextField } from "../../../ui/AppTextField";
 import { Modal } from "../../../ui/Modal";
-import styles from "./CreateFileModal.module.scss";
+import styles from "../../shared/CreateFileModal.module.scss";
 
 interface NameInputModalProps {
   isOpen: boolean;
@@ -78,8 +79,8 @@ export function NameInputModal({
     >
       <div className={styles.inputRow}>
         <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel}>{fieldLabel}</label>
-          <input
+          <AppTextField
+            label={fieldLabel}
             type="text"
             value={value}
             onChange={(event) => {
@@ -88,10 +89,11 @@ export function NameInputModal({
             }}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className={styles.textInput}
             autoFocus
+            errorText={error || undefined}
+            size="m"
+            tone="gray"
           />
-          {error ? <p className={styles.errorText}>{error}</p> : null}
         </div>
       </div>
     </Modal>

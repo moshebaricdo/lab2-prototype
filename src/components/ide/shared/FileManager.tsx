@@ -92,6 +92,7 @@ function mimeTypeForFile(fileName: string, fileType: FileItem["type"]): string {
   if (extension === "html" || extension === "htm" || fileType === "html") return "text/html";
   if (extension === "css" || fileType === "css") return "text/css";
   if (extension === "js" || extension === "mjs") return "text/javascript";
+  if (extension === "py" || fileType === "python") return "text/x-python";
   if (extension === "json") return "application/json";
   if (extension === "md" || extension === "txt" || fileType === "text") return "text/plain";
   if (extension === "csv") return "text/csv";

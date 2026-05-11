@@ -7,6 +7,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import emptyStateNoFilesOpen from "../../../../assets/empty-states/empty-state-no-files-open.svg";
 import type { FileItem } from "../../../../types/file";
+import { AppButton } from "../../../ui/AppButton";
 import { EmptyState } from "../EmptyState";
 import { CodeMirrorHost } from "./CodeMirrorHost";
 import { useEditorReadOnlyOverride } from "../../../../hooks/useEditorReadOnly";
@@ -178,6 +179,7 @@ export function CodeEditor({
   onCloseFile,
   onReorderFiles,
   isFileManagerCollapsed = false,
+  onCreateFile,
   enableDragToTutor = false,
   aiChangedFiles,
   onFileContentChange,
@@ -344,6 +346,17 @@ export function CodeEditor({
               heading="No files open"
               description="Open a file from the file manager to start coding your project."
               imageSrc={emptyStateNoFilesOpen}
+              actions={onCreateFile ? (
+                <AppButton
+                  variant="primary"
+                  tone="purple"
+                  size="s"
+                  iconName="plus"
+                  onClick={onCreateFile}
+                >
+                  Create file
+                </AppButton>
+              ) : undefined}
             />
           ) : selectedOpenFile && selectedCode != null && contentOverride ? (
             contentOverride({
