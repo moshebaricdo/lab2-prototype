@@ -52,7 +52,7 @@
 }
 
 .prompt {
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--ds-text-neutral-secondary);
   margin: 12px 0 0;
 }
 
@@ -81,8 +81,8 @@
 }
 
 .optionCard {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: var(--radius-card);
   cursor: pointer;
   display: flex;
@@ -97,7 +97,7 @@
 
 .optionImageWrap {
   aspect-ratio: 16 / 10;
-  background: var(--muted);
+  background: var(--ds-background-neutral-quaternary);
   flex-shrink: 0;
   overflow: hidden;
   width: 100%;
@@ -114,7 +114,11 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 16px;
+  padding: 12px 16px;
+}
+
+.optionCardTextOnly .optionCardBody {
+  padding-right: 52px;
 }
 
 .optionCard:focus-visible {
@@ -129,7 +133,7 @@
 .optionLabel {
   align-items: center;
   background: var(--ds-background-brand-teal-primary);
-  border-radius: 4px;
+  border-radius: 0px 0px 0px 8px;
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
   color: var(--ds-text-neutral-white-fixed);
   display: inline-flex;
@@ -142,21 +146,20 @@
   padding: 0 7px;
   pointer-events: none;
   position: absolute;
-  right: 8px;
-  top: 8px;
+  right: 0px;
+  top: 0px;
   width: fit-content;
   z-index: 2;
 }
 
 .optionTitle {
-  color: var(--foreground);
-  font-size: var(--text-lg);
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-base);
   font-weight: var(--font-weight-semibold);
   margin: 0;
 }
 
 .optionDescription {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-secondary);
   font-size: var(--text-sm);
-  margin: 8px 0 0;
 }

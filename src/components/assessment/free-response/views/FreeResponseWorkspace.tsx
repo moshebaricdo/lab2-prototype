@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppButton } from "../../../ui/AppButton";
+import { AppTextArea } from "../../../ui/AppTextField";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
   mockFreeResponseLevel,
@@ -241,12 +242,14 @@ export function FreeResponseWorkspace({
             description={level.stem.description}
           >
             <div className={styles.inputWrap}>
-              <textarea
-                className={styles.textarea}
+              <AppTextArea
                 value={responseText}
                 disabled={inputDisabled}
                 placeholder={level.question.placeholder}
                 onChange={(event) => setResponseText(event.target.value)}
+                rows={6}
+                size="l"
+                tone="gray"
               />
               <div className={styles.hintRow}>
                 <p className={styles.hintText}>

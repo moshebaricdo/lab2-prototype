@@ -63,7 +63,12 @@ export function BubbleChoiceWorkspace({
                 <li key={option.id} className={styles.optionItem}>
                   <button
                     type="button"
-                    className={styles.optionCard}
+                    className={[
+                      styles.optionCard,
+                      option.image ? "" : styles.optionCardTextOnly,
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                     aria-label={
                       option.image
                         ? `${labelForOptionIndex(index, optionLabelStyle)}. ${option.title}. ${option.description}`
