@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Tutor harness powers the functional AI Tutor prototype for Web Lab 2. It can answer HTML, CSS, and JavaScript learning questions without changing files, and it can propose local project edits that the student can review, accept, or reject.
+The Tutor harness powers the functional AI Tutor prototype for Web Lab 2 and Python Lab. Web Lab 2 can answer HTML, CSS, and JavaScript learning questions without changing files, and it can propose local project edits that the student can review, accept, or reject. Python Lab uses a guidance-only path: it can read Python project files and help explain or debug them, but it never proposes file changes.
 
 This remains a client-side prototype. Project state, API keys, prompt overrides, accepted workspace state, and version history are stored locally in browser session state rather than server-backed persistence.
 
@@ -10,7 +10,7 @@ This remains a client-side prototype. Project state, API keys, prompt overrides,
 
 - UI panel: `src/components/lab2/resource-panel/views/ai-tutor/AiTutorPanel.tsx`
 - Sidebar wiring: `src/components/lab2/resource-panel/Sidebar.tsx`
-- Page orchestration: `src/pages/WebLab2LevelPage.tsx`
+- Page orchestration: `src/pages/weblab2/WebLab2LevelPage.tsx`
 - Tutor client: `src/lib/tutor/tutorClient.ts`
 - Compatibility re-export: `src/lib/tutor/mockTutorClient.ts`
 
@@ -34,13 +34,15 @@ When `changes` are present, the page starts an AI proposal through `useFileWorks
 
 For empty/rootless Web Lab projects, proposal application adds new files at the top level rather than requiring a project wrapper folder. The page expands the file manager when generated code arrives; if the project was empty before the request, it also switches to preview mode so the generated page is visible immediately.
 
+`PythonLabLevelPage.tsx` calls `pythonTutorClient()`, which uses the guidance runner with a Python-specific prompt and always returns `changes: []`. Python Lab does not wire proposal accept/reject handlers, plan generation, build mode, or the tool-loop edit fallback.
+
 ## Module Map
 
 The harness lives in `src/lib/tutor`.
 
 - `types.ts` defines shared request, response, guidance, structured-edit, tool-loop, validation, and result contracts.
 - `requestIntent.ts` classifies requests as guidance, planning, or edit before any edit generation starts.
-- `guidanceRunner.ts` returns project-aware HTML/CSS/JS explanations with `changes: []`.
+- `guidanceRunner.ts` returns project-aware explanations with `changes: []`; it supports separate Web Lab and Python Lab guidance prompts.
 - `planningRunner.ts` creates or revises `Plans/PROJECT_PLAN.md` for spec-driven project planning without generating runnable app files.
 - `contextBuilder.ts` builds conversation and attachment context, including image inputs.
 - `projectAnalyzer.ts` deterministically maps project files, HTML ids/classes, CSS selectors, JS DOM references, and linked assets.
@@ -54,7 +56,7 @@ The harness lives in `src/lib/tutor`.
 - `workspaceEditor.ts` is the scratch in-memory workspace used by both structured edits and tool calls.
 - `saveTitle.ts` normalizes model-provided save titles into short commit-style labels.
 - `fallbackTutor.ts` holds no-key fallback behavior and unsafe-edit fallback messages.
-- `tutorClient.ts` orchestrates the full request flow.
+- `tutorClient.ts` orchestrates the full Web Lab request flow and exposes `pythonTutorClient()` for Python Lab’s guidance-only flow.
 - `repairRunner.ts`, `tutorPrompt.ts`, and `mockTutorClient.ts` remain for legacy compatibility.
 
 ## Request Flow
@@ -75,6 +77,8 @@ The harness lives in `src/lib/tutor`.
 14. If the staged edit session fails after repair, `tutorClient()` falls back to `toolLoopRunner.ts`.
 15. If the tool loop also fails validation, `fallbackTutor.ts` returns a safe "try again" response with no changes.
 
+Python Lab skips request-intent routing entirely. It calls the guidance runner directly through `pythonTutorClient()`, so student phrasing like "fix my loop" is answered as debugging guidance rather than routed to planning, structured edits, or tool calls.
+
 ## Guidance Mode
 
 Guidance mode is for questions such as "can you explain functions?", "how do you make things responsive?", "how would I make my map interactive?", or "where can I find the responsive CSS?". These requests should not modify the project.
@@ -84,6 +88,7 @@ Guidance mode is for questions such as "can you explain functions?", "how do you
 - `guidanceRunner.ts` still receives packed project context so it can point to likely files, selectors, functions, ids, or snippets.
 - Guidance responses always return `changes: []`.
 - The fallback guidance copy also returns no changes.
+- Python guidance uses the same no-change contract, but its system prompt is scoped to Python concepts, runtime errors, `input()`, stdout/stderr, functions, loops, lists, conditionals, and project-specific debugging.
 
 ## Planning Mode
 
@@ -91,6 +96,8 @@ Planning mode is for students who want to shape a project before generating code
 
 - `requestIntent.ts` routes planning requests before edit generation, unless the latest message clearly says to build, create files, implement the plan, or otherwise change the project. When an active unbuilt plan exists and the previous Tutor response asked planning questions, Auto mode treats the student's answer as a plan revision rather than jumping into code generation.
 - The composer mode selector can force Plan when the student wants a spec, even if the typed prompt uses build-like words.
+- Blank Web Lab projects can start planning through an inline AI Tutor questionnaire. The UI collects two fixed project details one question at a time: what the app is/does, then what it should look and feel like using style choices, a custom text option, or uploaded moodboard images. The composer is disabled while the questionnaire is pending, the answered state stays in the card, and the UI submits one enriched Plan-mode request so the first generated plan includes student-specific content.
+- Tutor messages support lightweight Markdown rendering for headings, paragraphs, inline code, and ordered/unordered lists. Planning follow-up questions should use a short intro plus a numbered list instead of one dense text block.
 - `planningRunner.ts` uses the structured JSON provider with a constrained prompt that can only create or replace `Plans/PROJECT_PLAN.md`.
 - Plan Markdown starts with a readable project title as the top-level heading and places `Status: Planned` or `Status: Completed` directly underneath it.
 - Planning responses explicitly tell the student to review the plan before building, using natural language rather than exposing the internal plan file path.
@@ -148,8 +155,8 @@ Context is split between broad conversation/attachment handling and compact proj
 - Selected-code attachments from the editor are sent as `code-reference` context.
 - Files attached through the composer upload are sent as `upload` context with readable metadata/content and image bytes for uploaded images.
 - Project files dragged from the file manager or tab row are sent as `project` context when file content is available.
-- `projectAnalyzer.ts` ignores image files, uses proposed content during pending proposals, and resolves linked scripts/stylesheets.
-- `contextPacker.ts` sends a manifest and project map first, then includes high-priority full files, snippets, or previews within budget.
+- `projectAnalyzer.ts` ignores image files, uses proposed content during pending proposals, resolves linked scripts/stylesheets, and extracts Python imports/functions/classes for `.py` files.
+- `contextPacker.ts` sends a manifest and project map first, then includes high-priority full files, snippets, or previews within budget. Python files receive relevance boosts for Python/debugging questions so they remain visible in packed context.
 - Repair passes use tighter conversation history and an expanded project-context budget on later attempts.
 
 ## Safety Checks
@@ -196,7 +203,7 @@ Validation protects the workspace from common model failure modes:
 - Change base safety and intent validation in `editValidator.ts`.
 - Change fallback tool behavior in `toolLoopRunner.ts`.
 - Keep `tutorClient.ts` focused on orchestration rather than prompt, fetch, or validation details.
-- Preserve the stable `TutorEditResult` shape unless the page proposal flow is updated at the same time.
+- Preserve the stable `TutorEditResult` shape unless the page proposal flow is updated at the same time. Python Lab intentionally uses the same shape with `changes: []`.
 
 ## Verification
 

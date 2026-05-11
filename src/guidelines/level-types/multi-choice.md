@@ -17,7 +17,7 @@ Prototype of a multiple-choice / multiple-response assessment level on the Lab2 
 
 - `src/components/assessment/shared/AssessmentStemSection.tsx` — reusable stem (eyebrow, question, markdown description) + slot for the task UI
 - `src/components/assessment/shared/AssessmentBottomRow.tsx` — reusable card footer (teacher tools left, actions + optional `AssessmentSuccessFeedback` right)
-- `src/pages/MultiChoiceLevelPage.tsx` (and sibling pages per route above)
+- `src/pages/multi-choice/MultiChoiceLevelPage.tsx` (and sibling pages per route above)
 - `src/pages/levelTypeLinks.ts` — bubble navigation between multi demos
 - `src/components/assessment/multi/views/MultiChoiceWorkspace.tsx`
 - `src/components/assessment/multi/views/MultiChoiceWorkspace.module.scss`

@@ -17,10 +17,10 @@ Bubble navigation for these demos is defined in `src/pages/levelTypeLinks.ts` (`
 
 ## Key Files
 
-- `src/pages/FreeResponseLevelPage.tsx` — simple demo route
-- `src/pages/FreeResponseRevealLevelPage.tsx`
-- `src/pages/FreeResponseMarkdownLevelPage.tsx`
-- `src/pages/FreeResponseUploadLevelPage.tsx`
+- `src/pages/free-response/FreeResponseLevelPage.tsx` — simple demo route
+- `src/pages/free-response/FreeResponseRevealLevelPage.tsx`
+- `src/pages/free-response/FreeResponseMarkdownLevelPage.tsx`
+- `src/pages/free-response/FreeResponseUploadLevelPage.tsx`
 - `src/components/assessment/free-response/views/FreeResponseWorkspace.tsx`
 - `src/components/assessment/free-response/views/FreeResponseWorkspace.module.scss`
 - `src/components/ui/FileChip.tsx` + `FileChip.module.scss` — shared file attachment chip (teal icon rail, filename, extension, remove; image thumbnail variant when applicable)

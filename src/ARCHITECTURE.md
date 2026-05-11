@@ -1,8 +1,8 @@
-# Web Lab 2 Architecture
+# Lab2 Prototype Architecture
 
 ## Overview
 
-The app is organized around a thin `App.tsx` orchestrator that composes major UI regions and delegates behavior to focused hooks and feature components.
+The app is organized around a thin `App.tsx` router. Route pages compose the Lab2 shell, resource panel, and level-specific workspace while delegating reusable behavior to focused hooks and feature components.
 
 ## Current High-Level Structure
 
@@ -10,11 +10,13 @@ The app is organized around a thin `App.tsx` orchestrator that composes major UI
 src/
 ├── App.tsx
 ├── data/
+│   ├── assessment/                 # Assessment fixtures by level type
 │   ├── weblab2/
 │   │   ├── index.ts
 │   │   └── projects/
 │   └── pythonlab/
-│       └── mockData.ts
+│       ├── index.ts
+│       └── projects/
 ├── hooks/
 │   ├── useChatState.ts
 │   ├── useFileWorkspaceState.ts
@@ -42,8 +44,15 @@ src/
 ├── components/
 │   ├── ui/                         # Universal primitives
 │   │   ├── AppButton.tsx
+│   │   ├── AppTextField.tsx
+│   │   ├── AppSlider.tsx
+│   │   ├── AppCheckbox.tsx
+│   │   ├── AppRadio.tsx
+│   │   ├── AppDropdown.tsx
 │   │   ├── Tooltip.tsx
 │   │   ├── AlertBanner.tsx
+│   │   ├── Dialog.tsx
+│   │   ├── Modal.tsx
 │   │   ├── PanelHeader.tsx
 │   │   ├── ResizableHandle.tsx
 │   │   ├── header/
@@ -78,6 +87,8 @@ src/
 │   │   ├── shared/                 # Shared between IDE labs
 │   │   │   ├── CodeEditor.tsx
 │   │   │   ├── FileManager.tsx
+│   │   │   ├── CreateFileModal.tsx
+│   │   │   ├── VersionBanner.tsx
 │   │   │   ├── EmptyState.tsx
 │   │   │   ├── FileContextMenu.tsx
 │   │   │   └── FileManagerDropdown.tsx
@@ -89,52 +100,86 @@ src/
 │   │   │   ├── CreateFileModal.tsx
 │   │   │   ├── VersionBanner.tsx
 │   │   │   └── SegmentedControl.tsx
-│   │   └── pythonlab/views/
-│   │       └── PythonWorkspace.tsx
-│   └── assessment/                 # Assessment level types (unchanged)
+│   │   ├── pythonlab/
+│   │   │   ├── runtime/
+│   │   │   │   └── pythonRunner.ts
+│   │   │   └── views/
+│   │   │       └── PythonWorkspace.tsx
+│   │   └── aichatlab/views/
+│   │       └── AiChatLabWorkspace.tsx
+│   └── assessment/                 # Assessment level types
 │       ├── shared/
-│       ├── multi/
+│       ├── bubble-choice/
+│       ├── free-response/
+│       ├── levelgroup/
 │       ├── match/
-│       └── ...
+│       └── multi/
+├── pages/                          # Route-level entry points grouped by level type
+│   ├── aichatlab/
+│   ├── bubble-choice/
+│   ├── free-response/
+│   ├── levelgroup/
+│   ├── match/
+│   ├── multi-choice/
+│   ├── progression/
+│   ├── pythonlab/
+│   └── weblab2/
 ├── assets/
 │   └── empty-states/                # Empty-state illustrations used by shared IDE surfaces
+├── utils/
+│   └── fileTree.ts                  # Shared file-tree lookup/mapping helpers
 └── types/
 ```
 
 ## Composition Flow
 
-`App.tsx` composes:
+`App.tsx` composes route-level pages. Each page generally composes:
 
 1. `TopNavigation` from `components/ui/header`
-2. `Sidebar` from `components/lab2/resource-panel`
-3. `Workspace` and `CreateFileModal` from `components/ide/weblab2/views`
+2. `Lab2Shell` from `components/lab2`
+3. `Sidebar` from `components/lab2/resource-panel`
+4. A level-specific workspace, such as `components/ide/weblab2/views/Workspace`, `components/ide/pythonlab/views/PythonWorkspace`, `components/ide/aichatlab/views/AiChatLabWorkspace`, or an assessment workspace under `components/assessment/<type>/views`
 
 This keeps feature rendering close to feature folders while the hooks layer keeps cross-cutting state logic isolated.
 
 ## State Ownership
 
-`App.tsx` gets state and handlers from dedicated hooks:
+Route pages get state and handlers from dedicated hooks:
 
 - `useLayoutState` for tab/layout/sidebar width
 - `useFileWorkspaceState` for selected/open files and file view behavior
-- `useChatState` for tutor messages/input
+- `useChatState` for Tutor messages/input where the sidebar Tutor is visible
 - `useVersionHistoryState` for version selection/save/restore feedback
 
 `useFileWorkspaceState` accepts both single-folder project wrappers and rootless file trees. Rootless trees are used by blank Web Lab projects; new files, folders, and AI proposal additions are inserted at the top level until the user creates their own folders.
 
-The shared resource panel supports a Resources tab for contextual student-facing materials. It currently renders non-functional cards for associated lesson resources, lab documentation, and available walkthroughs based on booleans passed by the level page.
+Python Lab also uses `useFileWorkspaceState`, with route-scoped session storage for file edits and created files. Its blank standalone route starts from a rootless empty tree while the guided route seeds `main.py` from `src/data/pythonlab/projects/default`. Python Lab now also uses `useVersionHistoryState` with route-scoped snapshot storage; selecting a saved snapshot maps the open/selected files onto the historical file tree and renders the editor read-only until the student returns to Current Version.
+
+The shared resource panel supports a standalone Instructions tab, a Resources tab for contextual student-facing materials, and optional floating card chrome via `surfaceVariant: "card"`. Resources currently render non-functional cards for associated lesson resources, lab documentation, and available walkthroughs based on booleans passed by the level page. Python Lab also enables the Validation tab, which receives the current editable file tree and deterministic test definitions from page/dev-panel configuration.
+
+Python code execution is isolated behind `components/ide/pythonlab/runtime/pythonRunner.ts`, which loads Pyodide in the browser and returns captured stdout, stderr, and runtime errors to `PythonWorkspace`.
 
 ## Tutor Harness
 
-Functional AI Tutor behavior is isolated under `src/lib/tutor`. `WebLab2LevelPage.tsx` calls `tutorClient()` and receives a stable `{ message, saveTitle?, changes }` result used by the existing AI proposal state and AI version-history saves.
+Functional AI Tutor behavior is isolated under `src/lib/tutor`. `WebLab2LevelPage.tsx` calls `tutorClient()` and receives a stable `{ message, saveTitle?, changes }` result used by the existing AI proposal state and AI version-history saves. `PythonLabLevelPage.tsx` calls `pythonTutorClient()`, a guidance-only entry point that can read Python project files and always returns `changes: []`.
 
 The harness first resolves requests as guidance, planning, or edit. The composer defaults to hidden Auto mode, where the harness infers the route; a dev-controlled selector can expose Build, Plan, and Help overrides. Guidance covers no-edit learning, how-to, and project-navigation questions. Planning creates or revises a Markdown `Plans/PROJECT_PLAN.md` spec before code generation. Edit requests use a staged structured-edit path that analyzes and packs project context, applies atomic HTML/CSS/JS edits to a scratch workspace, validates the result, and runs compact repair passes. A bounded tool-loop runner remains as a fallback for edit requests. See `src/guidelines/tutor-harness.md` for the full request flow and safety model.
 
+Python Lab intentionally bypasses planning/edit/tool-loop routing. Its AI Tutor panel hides the Build/Plan mode selector and proposal actions, while still passing the current editable file tree into the shared context packer. The packer includes Python-specific project metadata such as imports, functions, and classes so debugging answers can refer to concrete files and symbols.
+
 Web Lab 2 adds UI behavior around the harness result: if functional Tutor returns code changes for an empty project, the page applies the proposal, expands the file manager, and switches to preview mode so the generated project is immediately visible. If the only change is `Plans/PROJECT_PLAN.md`, the page opens the plan in code view instead of switching to preview. Accepted plan files show a Build plan action in the editor chrome; building from that action switches to preview when code changes are proposed. The Tutor composer is disabled while an AI proposal is pending so the student must accept or reject first.
+
+Preview-specific diagnostics live inside `components/ide/weblab2/views/preview-panel`, with transient debug state owned by `Workspace` so the panel can span the full workspace below code/preview/split surfaces. File previews inject a small runtime into the generated `srcDoc` to relay console output and `fetch`/`XMLHttpRequest` activity back to the workspace-level debug panel, including panel height and the network-block toggle.
 
 ## Empty States
 
 Shared IDE empty-state rendering lives in `src/components/ide/shared/EmptyState.tsx`. It supports the legacy generated illustration, preview illustration, and caller-provided image assets. Web Lab 2 uses `src/components/ide/weblab2/views/NewProjectEmptyState.tsx` for the workspace-level new-project flow when a functional-history project has never had files; this hides the workspace view switcher and avoids selecting code/preview/split until files exist. Once files have existed, deleting everything or restoring the initial version falls back to the normal empty workspace so prior versions remain reachable. The ordinary editor-level "No files open" state still appears when a non-empty project has no open tabs.
+
+## AI Chat Lab
+
+AI Chat Lab lives under `components/ide/aichatlab/views` because the chat stream and model-configuration column are lab-specific workspace chrome, not the shared Tutor. Its pages hide the AI Tutor resource-panel tab, render instructions through the shared standalone Instructions tab, and use URL-backed dev controls to toggle the config column, config tabs, individual controls, resource-panel tabs, and floating card mode.
+
+Model configuration controls use shared UI primitives where possible. The temperature control uses `components/ui/AppSlider.tsx`, the design-system slider primitive that supports range/centered layouts, control buttons, stepper notches, top-row value display, and design-token tones.
 
 ## Migration Notes
 

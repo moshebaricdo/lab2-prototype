@@ -11,7 +11,7 @@ Grouped assessment experiences where multiple question types (multi, free respon
 
 ## Key Files
 
-- `src/pages/LevelGroupScrollLevelPage.tsx`, `src/pages/LevelGroupSteppedLevelPage.tsx`
+- `src/pages/levelgroup/LevelGroupScrollLevelPage.tsx`, `src/pages/levelgroup/LevelGroupSteppedLevelPage.tsx`
 - `src/components/assessment/levelgroup/views/LevelGroupScrollWorkspace.tsx`, `LevelGroupSteppedWorkspace.tsx`
 - `src/components/assessment/levelgroup/views/LevelGroupFlowBlocks.tsx` (shared state + `LevelGroupEmbeddedBlock`)
 - `src/components/assessment/levelgroup/views/LevelGroupWorkspace.module.scss` (layout shell shared by scroll/stepped)

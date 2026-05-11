@@ -10,7 +10,7 @@ Prototype of a "choose your own adventure" selector level where students choose 
 
 ## Key Files
 
-- `src/pages/BubbleChoiceLevelPage.tsx`
+- `src/pages/bubble-choice/BubbleChoiceLevelPage.tsx`
 - `src/components/assessment/bubble-choice/views/BubbleChoiceWorkspace.tsx`
 - `src/components/assessment/bubble-choice/views/BubbleChoiceWorkspace.module.scss`
 - `src/data/assessment/bubbleChoice.ts`

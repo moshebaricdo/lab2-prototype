@@ -1,6 +1,6 @@
 # Level Types Overview
 
-This folder captures a rough, implementation-focused snapshot of each level type currently represented in this prototype.
+This folder captures an implementation-focused snapshot of each level type currently represented in this Lab2 prototype suite.
 
 Use these docs as handoff context for follow-up threads.
 
@@ -8,6 +8,7 @@ Use these docs as handoff context for follow-up threads.
 
 - [Web Lab 2](./weblab2.md)
 - [Python Lab](./pythonlab.md)
+- [AI Chat Lab](./aichatlab.md)
 - [Multi-choice](./multi-choice.md)
 - [Free response](./free-response.md)
 - [Match](./match.md)
@@ -17,8 +18,10 @@ Use these docs as handoff context for follow-up threads.
 
 ## Shared Assumptions
 
-- All level types render inside the Lab2 shell (`TopNavigation` + resource panel + resizable main surface).
+- Level pages generally render inside the Lab2 shell (`TopNavigation` + resource panel + main surface), but the main surface is not always resizable. AI Chat Lab card surfaces intentionally disable sidebar resizing while floating.
 - Assessment-focused levels currently run with AI Tutor visible and Version History hidden.
+- AI Chat Lab hides AI Tutor because its primary workspace is the AI chat stream.
+- Python Lab keeps the sidebar Tutor guidance-only; Web Lab 2 owns the full functional Tutor edit/planning flow.
 - Web Lab 2's functional Tutor harness is documented in `../tutor-harness.md`.
 - All assessment flows are prototype-level and local-only (no backend submission yet).
 - Where teacher answers appear in this prototype, they use **inline reveal** from the assessment footer (see [multi-choice](./multi-choice.md) and [free response](./free-response.md)), not a separate collapsible card below the workspace. See [teacher answer key](./teacher-answer-key.md) for the legacy card pattern as reference only.
@@ -26,7 +29,8 @@ Use these docs as handoff context for follow-up threads.
 ## Routes Snapshot
 
 - `/levels` -> categorized level index
-- `/levels/pythonlab`
+- `/levels/pythonlab` and `/levels/pythonlab-blank`
+- `/levels/aichatlab`, `/levels/aichatlab-setup`, and `/levels/aichatlab-model-card`
 - `/levels/weblab2` (and Web Lab 2 variants such as `/levels/weblab2-demo-project` and `/levels/weblab2-demo-project-blank`; see `weblab2.md`)
 - `/levels/multi` (and other multi-choice demo routes — see `multi-choice.md`)
 - `/levels/free-response` (and `/levels/free-response-reveal`, `/levels/free-response-markdown`, `/levels/free-response-upload` — see `free-response.md`)

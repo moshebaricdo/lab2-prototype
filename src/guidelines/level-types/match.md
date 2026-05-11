@@ -19,7 +19,7 @@ Bubble navigation and demos are listed in `src/pages/levelTypeLinks.ts` (`matchL
 - `src/components/assessment/shared/AssessmentBottomRow.tsx` — footer row (Reveal answer left; Submit / Try again / Continue + feedback right)
 - `src/components/assessment/match/views/MatchDefinitionBankWorkspace.tsx` (+ `.module.scss`) — bank + row slots
 - `src/components/assessment/match/views/MatchConnectorWorkspace.tsx` (+ `.module.scss`) — two columns, SVG connectors, keyboard + pointer
-- `src/pages/MatchDefinitionBankLevelPage.tsx`, `MatchConnectorLevelPage.tsx`, `MatchConnectorImageLevelPage.tsx`, `MatchConnectorCodeLevelPage.tsx`
+- `src/pages/match/MatchDefinitionBankLevelPage.tsx`, `MatchConnectorLevelPage.tsx`, `MatchConnectorImageLevelPage.tsx`, `MatchConnectorCodeLevelPage.tsx`
 - `src/data/assessment/match.ts` — payload types and demo fixtures
 - `src/assets/audio/success-sound.mp3` / `error-sound.mp3` — played on submit (all correct / any incorrect)
 - `src/components/ui/AppButton.tsx` — `iconName` for Reveal / Hide answer (FA7 Pro Solid via `FaIcon`)

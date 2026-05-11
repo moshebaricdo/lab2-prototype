@@ -4,7 +4,7 @@
 
 This repository is a **Lab2 frame/base**, not a Web Lab-only codebase.
 
-Today it powers a Web Lab 2 prototype, but the architecture should support additional Lab2-powered environments (for example Python Lab, Music Lab, and future Lab2 experiences) with minimal structural churn.
+It currently powers Web Lab 2, Python Lab, AI Chat Lab, and assessment-style prototypes. The architecture should continue to support additional Lab2-powered environments with minimal structural churn.
 
 When making changes, optimize for:
 
@@ -21,7 +21,7 @@ Use these directories intentionally:
 ```text
 src/
   components/
-    ui/                    # Universal primitives (buttons, tooltips, etc.)
+    ui/                    # Universal primitives (buttons, text fields, slider, tooltips, etc.)
     ui/header/             # Header-specific UI components
     ui/icons/              # Reusable icon components (FaIcon, AiTutorIcon, Logo)
     lab2/                  # Lab2 frame — shared by ALL level types
@@ -30,7 +30,11 @@ src/
     ide/shared/            # Shared code-editor components (CodeEditor, FileManager, EmptyState)
     ide/weblab2/views/     # Web Lab-specific workspace chrome (preview, split view, etc.)
     ide/pythonlab/views/   # Python Lab-specific workspace chrome (console, run)
-    assessment/            # Assessment level types
+    ide/pythonlab/runtime/ # Python execution runtime
+    ide/aichatlab/views/   # AI Chat Lab-specific chat/config workspace chrome
+    assessment/            # Assessment level types (shared, multi, match, free-response, levelgroup, bubble-choice)
+  pages/                   # Route-level entry points, grouped by level type
+  data/                    # Demo project data and assessment fixtures
   hooks/                   # App-level state hooks
   lib/tutor/               # Functional Tutor harness
   styles/                  # Tokens, globals, and SCSS helpers
@@ -40,10 +44,12 @@ src/
 
 ### Naming Intent
 
-- `ui/` contains all universal primitives: buttons, tooltips, icons, panel headers, etc.
+- `ui/` contains all universal primitives: buttons, text fields, sliders, tooltips, icons, panel headers, etc.
 - `lab2/` groups the Lab2 frame shell (`Lab2Shell`, resource panel, dev tools) shared across all Lab2 level types.
 - `ide/shared/` contains shared editor components (CodeEditor, FileManager, EmptyState) used by IDE-type labs.
-- `ide/weblab2/views` and `ide/pythonlab/views` hold lab-specific workspace composition.
+- `ide/weblab2/views`, `ide/pythonlab/views`, and `ide/aichatlab/views` hold lab-specific workspace composition.
+- `assessment/` contains assessment-specific workspace components; shared assessment chrome belongs in `assessment/shared`.
+- `pages/` owns route composition and dev-panel defaults. Keep route files grouped by level type (`pages/weblab2`, `pages/pythonlab`, `pages/aichatlab`, etc.).
 - As new IDE labs are introduced, add `ide/<labname>/views/` and reuse shared components from `ide/shared/`.
 - `lib/tutor/` contains the functional Tutor harness for guidance routing, project analysis, compact context packing, staged structured edits, validation, repair, tool-loop fallback, and save-title generation. See `src/guidelines/tutor-harness.md`.
 
@@ -103,7 +109,7 @@ Design tokens and globals are layered:
 ### Shared vs Lab-Specific
 
 - Universal primitives:
-  - `src/components/ui` (buttons, tooltips, panel headers, ResizableHandle)
+  - `src/components/ui` (buttons, text fields, slider, tooltips, panel headers, ResizableHandle)
   - `src/components/ui/header` (top navigation, level progress)
   - `src/components/ui/icons` (FaIcon, AiTutorIcon, Logo)
 - Lab2 frame (shared by ALL level types):
@@ -115,6 +121,9 @@ Design tokens and globals are layered:
 - Lab-specific workspace views:
   - `src/components/ide/weblab2/views` (Web Lab 2)
   - `src/components/ide/pythonlab/views` (Python Lab)
+  - `src/components/ide/aichatlab/views` (AI Chat Lab)
+- Assessment workspace views:
+  - `src/components/assessment/<type>/views`
 
 When adding a feature, ask:
 
@@ -124,11 +133,11 @@ When adding a feature, ask:
 
 ### State Management
 
-Keep `App.tsx` as orchestration/composition and move behavior into hooks:
+Keep `App.tsx` focused on routing. Put level composition in route pages, and move reusable behavior into hooks:
 
 - `useLayoutState`
 - `useFileWorkspaceState`
-- `useChatState`
+- `useChatState` for sidebar Tutor chat state
 - `useVersionHistoryState`
 
 Prefer typed props and small, explicit interfaces over broad untyped objects.
@@ -162,7 +171,8 @@ Recent organization cleanup established:
 
 - `TopNavigation` + `LevelProgressBubbles` in `src/components/ui/header`
 - resource panel views in `src/components/lab2/resource-panel/views`
-- shared atoms (`AppButton`, `Tooltip`, `AlertBanner`) in `src/components/ui`
+- shared atoms (`AppButton`, `AppTextField`/`AppTextArea`, `AppSlider`, `Tooltip`, `AlertBanner`) in `src/components/ui`
+- AI Chat Lab workspace chrome in `src/components/ide/aichatlab/views`
 - icon components in `src/components/ui/icons`
 - dev tools in `src/components/lab2/dev`
 - legacy/deprecated files removed
@@ -173,12 +183,13 @@ Do not reintroduce removed legacy paths or compatibility shims unless there is a
 
 ## Quick Decision Guide
 
-- **Need a new reusable button/input/tooltip variant?** -> `src/components/ui`
+- **Need a new reusable button/input/slider/tooltip variant?** -> `src/components/ui`
 - **Need a new icon component?** -> `src/components/ui/icons`
 - **Need a new sidebar tab panel?** -> `src/components/lab2/resource-panel/views`
 - **Need shared code editor / file manager features?** -> `src/components/ide/shared`
 - **Need Web Lab-specific workspace chrome?** -> `src/components/ide/weblab2/views`
 - **Need Python Lab-specific workspace chrome?** -> `src/components/ide/pythonlab/views`
+- **Need AI Chat Lab-specific workspace chrome?** -> `src/components/ide/aichatlab/views`
 - **Need to tune Tutor guidance, prompts, model context, validation, repair, tool fallback, or provider config?** -> `src/lib/tutor` and `src/guidelines/tutor-harness.md`
 - **Need behavior used across many surfaces?** -> hook in `src/hooks` + typed contract in `src/types`
 - **Need new styling values?** -> tokens pipeline first, then semantic aliasing
@@ -187,5 +198,5 @@ Do not reintroduce removed legacy paths or compatibility shims unless there is a
 
 ## Versioning
 
-**Last Updated:** April 29, 2026  
-**Status:** Active baseline for Lab2-powered prototypes
+**Last Updated:** May 10, 2026  
+**Status:** Active baseline for Lab2-powered prototypes across Web Lab 2, Python Lab, AI Chat Lab, and assessment level types
