@@ -16,6 +16,20 @@
   --slider-grid-columns: 24px minmax(0, 1fr) 24px;
 }
 
+.sizeS {
+  --slider-stepper-inset: 0px;
+}
+
+.sizeS .label {
+  font-size: var(--text-label);
+  line-height: 1.64;
+}
+
+.sizeS .inputValue {
+  font-size: var(--text-label);
+  line-height: 1.64;
+}
+
 .toneBlack {
   --slider-active-color: var(--ds-background-neutral-black-fixed);
   --slider-thumb-border: var(--ds-borders-neutral-solid);
@@ -42,7 +56,6 @@
 .labelRow {
   display: block;
   min-height: 22px;
-  margin-bottom: 2px;
 }
 
 .labelTrack {

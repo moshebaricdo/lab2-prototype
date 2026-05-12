@@ -82,6 +82,10 @@
     color 0.08s ease-in;
 }
 
+.label + .control {
+  margin-top: 2px;
+}
+
 .input {
   appearance: none;
 }
@@ -96,17 +100,13 @@
   opacity: 1;
 }
 
-.control:hover:not(:disabled):not(:read-only) {
-  border-color: var(--ds-borders-neutral-solid);
-}
-
 .control:focus {
   outline: none;
 }
 
-.control:focus-visible {
-  border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
+.keyboardFocused .control {
+  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline-offset: 2px;
 }
 
 .toneGray .control {
@@ -198,7 +198,8 @@
   padding: 0;
 }
 
-.bareControl:focus-visible {
+.keyboardFocused .bareControl {
   border-color: transparent;
+  outline: none;
   box-shadow: none;
 }

@@ -253,6 +253,7 @@ export function Sidebar({
       className={[
         styles.root,
         surfaceVariant === "card" ? styles.rootCard : "",
+        panelHidden ? styles.rootCollapsed : "",
         isWidthAnimating ? styles.rootWidthAnimating : "",
       ].filter(Boolean).join(" ")}
       style={{

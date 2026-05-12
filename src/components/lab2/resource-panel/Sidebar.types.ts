@@ -66,7 +66,7 @@ export interface SidebarProps {
   continueLabel?: string;
   /**
    * When true, sidebar can be collapsed to a narrow strip.
-   * Defaults to disabled for Web Lab 2 and enabled by assessment levels.
+   * Defaults to disabled for Web Lab 2, enabled by assessment levels, and enabled for AI Chat Lab card mode.
    */
   collapsible?: boolean;
   /**

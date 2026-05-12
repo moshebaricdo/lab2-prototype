@@ -218,7 +218,7 @@ export function AiTutorComposer({
             appearance="bare"
             controlClassName={styles.textarea}
             disabled={disabled}
-            size="m"
+            size="s"
           />
           <div className={styles.inputActions}>
             <div>

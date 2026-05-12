@@ -7,6 +7,7 @@ import {
 } from "react";
 import { FaIcon, type FaIconSize } from "./icons/FaIcon";
 import type { FaIconName } from "../../icons/faProRegularCodepoints";
+import { useKeyboardFocusWithin } from "../../hooks/useKeyboardFocusWithin";
 import styles from "./AppTextField.module.scss";
 
 type AppTextFieldSize = "l" | "m" | "s";
@@ -99,6 +100,7 @@ function getRootClassName({
   disabled,
   fullWidth,
   invalid,
+  keyboardFocused,
   readOnly,
   size,
   tone,
@@ -108,6 +110,7 @@ function getRootClassName({
   disabled?: boolean;
   fullWidth: boolean;
   invalid: boolean;
+  keyboardFocused: boolean;
   readOnly?: boolean;
   size: AppTextFieldSize;
   tone: AppTextFieldTone;
@@ -118,6 +121,7 @@ function getRootClassName({
     TONE_CLASS[tone],
     fullWidth ? "" : styles.widthAuto,
     invalid ? styles.invalid : "",
+    keyboardFocused ? styles.keyboardFocused : "",
     disabled ? styles.disabled : "",
     readOnly ? styles.readOnly : "",
     className,
@@ -173,6 +177,8 @@ export const AppTextField = forwardRef<HTMLInputElement, AppTextFieldProps>(
     const helperId = useId();
     const hasHelper = Boolean(errorText ?? helperText);
     const invalid = Boolean(errorText) || isAriaInvalid(ariaInvalid);
+    const { isKeyboardFocusWithin, focusWithinProps } =
+      useKeyboardFocusWithin<HTMLDivElement>();
 
     return (
       <div
@@ -182,10 +188,12 @@ export const AppTextField = forwardRef<HTMLInputElement, AppTextFieldProps>(
           disabled,
           fullWidth,
           invalid,
+          keyboardFocused: isKeyboardFocusWithin,
           readOnly,
           size,
           tone,
         })}
+        {...focusWithinProps}
       >
         {label ? (
           <label className={styles.label} htmlFor={controlId}>
@@ -251,6 +259,8 @@ export const AppTextArea = forwardRef<HTMLTextAreaElement, AppTextAreaProps>(
     const helperId = useId();
     const hasHelper = Boolean(errorText ?? helperText);
     const invalid = Boolean(errorText) || isAriaInvalid(ariaInvalid);
+    const { isKeyboardFocusWithin, focusWithinProps } =
+      useKeyboardFocusWithin<HTMLDivElement>();
 
     return (
       <div
@@ -260,10 +270,12 @@ export const AppTextArea = forwardRef<HTMLTextAreaElement, AppTextAreaProps>(
           disabled,
           fullWidth,
           invalid,
+          keyboardFocused: isKeyboardFocusWithin,
           readOnly,
           size,
           tone,
         })}
+        {...focusWithinProps}
       >
         {label ? (
           <label className={styles.label} htmlFor={controlId}>

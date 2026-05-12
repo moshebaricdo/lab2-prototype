@@ -49,6 +49,14 @@ export function Lab2Shell(props: Lab2ShellProps) {
   const isFlowShareMode = shareMode === "flow";
   const flowCompletion = shareModeConfig.flowCompletion;
   const [isFlowCompletionOpen, setIsFlowCompletionOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    props.hideResourcePanel === true
+      ? false
+      : Boolean(
+          props.sidebarProps.collapsible &&
+            (props.sidebarProps.defaultCollapsed ?? props.sidebarProps.collapsible),
+        ),
+  );
 
   const shouldShowTopNavigationContinue =
     isLockedShareMode
@@ -124,12 +132,6 @@ export function Lab2Shell(props: Lab2ShellProps) {
         onDevPanelSessionValueReset: undefined,
       }
     : props.sidebarProps;
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
-    Boolean(
-      sidebarProps.collapsible &&
-        (sidebarProps.defaultCollapsed ?? sidebarProps.collapsible),
-    ),
-  );
   const resizeDisabled =
     (Boolean(sidebarProps.collapsible) && sidebarCollapsed) ||
     sidebarProps.surfaceVariant === "card";

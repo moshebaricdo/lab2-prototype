@@ -4,7 +4,7 @@ import styles from "./AppSlider.module.scss";
 
 type NativeRangeProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  "type" | "value" | "min" | "max" | "step" | "onChange"
+  "type" | "value" | "min" | "max" | "step" | "size" | "onChange"
 >;
 
 interface AppSliderProps extends NativeRangeProps {
@@ -12,6 +12,7 @@ interface AppSliderProps extends NativeRangeProps {
   min: number;
   max: number;
   step?: number;
+  size?: "m" | "s";
   label?: string;
   showLabel?: boolean;
   /** Shows generated tick marks for each step when the step count is reasonable. */
@@ -82,6 +83,7 @@ export const AppSlider = forwardRef<HTMLInputElement, AppSliderProps>(
       min,
       max,
       step = 1,
+      size = "m",
       label,
       showLabel = Boolean(label),
       showStepper = false,
@@ -122,6 +124,7 @@ export const AppSlider = forwardRef<HTMLInputElement, AppSliderProps>(
       <div
         className={[
           styles.root,
+          size === "s" ? styles.sizeS : "",
           styles[`tone${tone[0].toUpperCase()}${tone.slice(1)}`],
           type === "centered" ? styles.centered : "",
           showControlButtons ? styles.withControls : "",
