@@ -68,6 +68,9 @@ export default defineConfig({
       },
     },
   },
+  worker: {
+    format: "es",
+  },
   /** Pre-bundle core deps so cold start / HMR invalidation is cheaper. */
   optimizeDeps: {
     include: [
@@ -81,9 +84,19 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+    },
     /** Avoid watching huge trees; reduces watcher churn on macOS. */
     watch: {
       ignored: ["**/node_modules/**", "**/build/**", "**/.git/**"],
+    },
+  },
+  preview: {
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
     },
   },
 });

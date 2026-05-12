@@ -50,10 +50,16 @@ interface PythonLabLevelPageProps {
 
 type PythonTutorModeKind = "mock" | "functional";
 
+const DEFAULT_PYTHON_STARTER_STORAGE_VERSION = "daily-check-in-v1";
+
 const DEFAULT_PYTHON_VALIDATION_TESTS_CONFIG = String.raw`
 Uses input() to ask for the user's name | includes | input(
-Stores the response in a name variable | regex | \bname\s*=\s*input\s*\(
-Prints a greeting that includes the name | regex | print\s*\(\s*f["']Hello,\s*\{name\}!["']\s*\)
+Defines a clean_name helper function | regex | def\s+clean_name\s*\(
+Defines a focus options list | includes | FOCUS_OPTIONS
+Loops through the focus options | includes | for index, option in enumerate(options, start=1):
+Builds a personalized greeting with an f-string | includes | f"Hello, {name}!"
+Prints the generated focus plan | regex | print\s*\(\s*build_focus_plan\s*\(
+Includes project notes in README | includes | # Daily Check-In Planner | README.md
 `.trim();
 
 function formatSavedSubtitle(createdAt: string | undefined, now: number) {
@@ -234,6 +240,9 @@ export function PythonLabLevelPage({
     () => fileStructureOverride ?? pythonFileStructure,
     [fileStructureOverride],
   );
+  const storageKeyBase = fileStructureOverride
+    ? `pythonlab:${currentLevelPath}`
+    : `pythonlab:${currentLevelPath}:${DEFAULT_PYTHON_STARTER_STORAGE_VERSION}`;
   const hasOpenedInitialFileRef = useRef(false);
 
   const {
@@ -256,7 +265,7 @@ export function PythonLabLevelPage({
   } = useFileWorkspaceState(
     initialFileStructure,
     {
-      storageKey: `pythonlab:file-structure:${currentLevelPath}`,
+      storageKey: `${storageKeyBase}:file-structure`,
     },
   );
 
@@ -310,7 +319,7 @@ export function PythonLabLevelPage({
   } = useVersionHistoryState({
     getFileStructure: getCurrentFileStructure,
     onRestoreFileStructure: replaceFileStructure,
-    storageKey: `pythonlab:version-history:${currentLevelPath}`,
+    storageKey: `${storageKeyBase}:version-history`,
   });
   const [subtitleNow, setSubtitleNow] = useState(() => Date.now());
   useEffect(() => {

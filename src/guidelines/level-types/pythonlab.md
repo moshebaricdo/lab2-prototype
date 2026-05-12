@@ -25,12 +25,13 @@ Python Lab is a Lab2-powered coding environment for Python. It shares the same s
 │  [main.py x]       WORKSPACE   [Console only]│  ← header
 ├──────────────────────────────────────────────┤
 │ Files │                                      │
-│ main.py│   1  name = input("Name? ")         │  ← editor pane
+│ main.py│   1  FOCUS_OPTIONS = [              │  ← editor pane
+│ README│                                      │
 │       │                                      │
 ├──────────────────────────────────────────────┤
 │ ▶ Run          CONSOLE                       │  ← console divider
 ├──────────────────────────────────────────────┤
-│ Hello, Ada!                                  │  ← console output
+│ Here is a quick coding plan for today:       │  ← console output
 └──────────────────────────────────────────────┘
 ```
 
@@ -38,7 +39,7 @@ The console header includes controls to run code, clear output, and toggle betwe
 
 ## Routes
 
-- `/levels/pythonlab` — default Python Lab workspace
+- `/levels/pythonlab` — default Python Lab workspace with a guided check-in planner project
 - `/levels/pythonlab-blank` — standalone blank Python project with no starter files, instructions drawer hidden, and collapsible sidebar enabled
 
 ## Component Structure
@@ -52,7 +53,7 @@ The console header includes controls to run code, clear output, and toggle betwe
 - Shared create-file modal: `src/components/ide/shared/CreateFileModal.tsx`
 - Shared version banner: `src/components/ide/shared/VersionBanner.tsx`
 - Validation tab: `src/components/lab2/resource-panel/views/ValidationPanel.tsx`
-- Mock data: `src/data/pythonlab/projects/default`
+- Mock data: `src/data/pythonlab/projects/default` (`main.py` and `README.md`)
 
 ## Sidebar Config
 
@@ -72,4 +73,4 @@ The Validation tab reads the current in-memory project files and runs the config
 
 ## Runtime
 
-`PythonWorkspace` runs the selected file through the Pyodide wrapper in `pythonRunner.ts`. The runner captures stdout, stderr, and Python exceptions for the console pane. `input()` is supported with a deterministic default input queue (`Ada` for the first prompt); if student code asks for more input than configured, the console shows a clear runtime error instead of hanging.
+`PythonWorkspace` runs the selected file through the Pyodide wrapper in `pythonRunner.ts`. The runner starts a web worker, streams stdout/stderr back into the console, and supports interactive `input()` by showing a terminal-style prompt row while Python waits for the next line. Local dev and preview set cross-origin isolation headers in `vite.config.ts` so `SharedArrayBuffer` can be used for worker stdin; deployed hosting must send the same COOP/COEP headers for terminal input to work in production.

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type CSSProperties } from "react";
+import { useState, useRef, useEffect, type CSSProperties, type FormEvent } from "react";
 import { FileManager } from "../../shared/FileManager";
 import { CodeEditor } from "../../shared/code-editor";
 import { VersionBanner } from "../../shared/VersionBanner";
@@ -9,15 +9,16 @@ import { PanelHeader } from "../../../ui/PanelHeader";
 import { ScrollArea } from "../../../ui/scroll-area";
 import { Tooltip } from "../../../ui/Tooltip";
 import type { FileItem } from "../../../../types/file";
-import { runPythonCode } from "../runtime/pythonRunner";
+import { startPythonRun, type PythonRunSession } from "../runtime/pythonRunner";
 import styles from "./PythonWorkspace.module.scss";
 
 const DEFAULT_FILE_MANAGER_WIDTH = 158;
 const MIN_FILE_MANAGER_WIDTH = 128;
 const MAX_FILE_MANAGER_WIDTH = 320;
 const FILE_MANAGER_ANIMATION_MS = 220;
+const DEFAULT_CONSOLE_HEIGHT_RATIO = 0.4;
 
-type ConsoleLineTone = "output" | "error" | "meta";
+type ConsoleLineTone = "output" | "error" | "meta" | "input";
 type ConsoleLayout = "horizontal" | "vertical";
 
 interface ConsoleLine {
@@ -81,6 +82,8 @@ export function PythonWorkspace({
 }: PythonWorkspaceProps) {
   const [consoleOutput, setConsoleOutput] = useState<ConsoleLine[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [isAwaitingInput, setIsAwaitingInput] = useState(false);
+  const [consoleInput, setConsoleInput] = useState("");
   const [consoleOnly, setConsoleOnly] = useState(false);
   const [consoleLayout, setConsoleLayout] = useState<ConsoleLayout>("horizontal");
   const [consoleHeight, setConsoleHeight] = useState<number | null>(null);
@@ -90,11 +93,19 @@ export function PythonWorkspace({
     "collapsing" | "expanding" | null
   >(null);
   const consoleEndRef = useRef<HTMLDivElement>(null);
+  const consoleInputRef = useRef<HTMLInputElement>(null);
+  const runSessionRef = useRef<PythonRunSession | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     consoleEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [consoleOutput]);
+  }, [consoleOutput, isAwaitingInput]);
+
+  useEffect(() => {
+    if (isAwaitingInput) {
+      consoleInputRef.current?.focus();
+    }
+  }, [isAwaitingInput]);
 
   useEffect(() => {
     if (!fileManagerTransition) return;
@@ -105,6 +116,12 @@ export function PythonWorkspace({
     return () => window.clearTimeout(timeoutId);
   }, [fileManagerTransition]);
 
+  useEffect(() => {
+    return () => {
+      runSessionRef.current?.dispose();
+    };
+  }, []);
+
   const appendConsoleLines = (lines: string[], tone: ConsoleLineTone = "output") => {
     setConsoleOutput((prev) => [
       ...prev,
@@ -112,7 +129,37 @@ export function PythonWorkspace({
     ]);
   };
 
+  const appendConsoleText = (text: string, tone: ConsoleLineTone = "output") => {
+    if (!text) return;
+
+    setConsoleOutput((prev) => {
+      const next = [...prev];
+
+      for (const character of text) {
+        if (character === "\n") {
+          next.push({ text: "", tone });
+          continue;
+        }
+
+        const currentLine = next[next.length - 1];
+        if (!currentLine || currentLine.tone !== tone) {
+          next.push({ text: character, tone });
+          continue;
+        }
+
+        next[next.length - 1] = {
+          ...currentLine,
+          text: `${currentLine.text}${character}`,
+        };
+      }
+
+      return next;
+    });
+  };
+
   const handleRun = async () => {
+    if (isRunning) return;
+
     appendConsoleLines([formatRunTimestamp()], "meta");
 
     if (!selectedFile || selectedFile.type === "folder") {
@@ -122,20 +169,39 @@ export function PythonWorkspace({
 
     const code = selectedFile.content ?? "";
     setIsRunning(true);
+    setIsAwaitingInput(false);
+    setConsoleInput("");
+
+    const session = startPythonRun(code, {
+      onStdout: (text) => appendConsoleText(text, "output"),
+      onStderr: (text) => appendConsoleText(text, "error"),
+      onStdinRequest: () => setIsAwaitingInput(true),
+    });
+    runSessionRef.current = session;
 
     try {
-      const result = await runPythonCode(code);
-      setConsoleOutput((prev) => {
-        return [
-          ...prev,
-          ...result.stdout.flatMap((line) => splitConsoleLines(line, "output")),
-          ...result.stderr.flatMap((line) => splitConsoleLines(line, "error")),
-          ...(result.error ? splitConsoleLines(result.error, "error") : []),
-        ];
-      });
+      const result = await session.result;
+      if (result.error) {
+        appendConsoleLines([result.error], "error");
+      }
     } finally {
+      if (runSessionRef.current === session) {
+        runSessionRef.current = null;
+      }
+      setIsAwaitingInput(false);
       setIsRunning(false);
     }
+  };
+
+  const handleConsoleInputSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isAwaitingInput || !runSessionRef.current) return;
+
+    const value = consoleInput;
+    setConsoleInput("");
+    setIsAwaitingInput(false);
+    appendConsoleText(`${value}\n`, "input");
+    runSessionRef.current.submitInput(value);
   };
 
   const handleConsoleResize = (delta: number) => {
@@ -153,7 +219,7 @@ export function PythonWorkspace({
       if (prev === null && bodyRef.current) {
         const bodyHeight = bodyRef.current.getBoundingClientRect().height;
         const dividerHeight = 44;
-        const currentConsoleHeight = bodyHeight * 0.35;
+        const currentConsoleHeight = bodyHeight * DEFAULT_CONSOLE_HEIGHT_RATIO;
         return Math.max(60, Math.min(bodyHeight - dividerHeight - 100, currentConsoleHeight - delta));
       }
       if (prev === null) return 200;
@@ -371,11 +437,29 @@ export function PythonWorkspace({
               styles.consoleLine,
               line.tone === "error" ? styles.consoleLineError : "",
               line.tone === "meta" ? styles.consoleLineMeta : "",
+                    line.tone === "input" ? styles.consoleLineInput : "",
             ].filter(Boolean).join(" ")}
           >
             {line.text}
           </pre>
         ))}
+              {isAwaitingInput ? (
+                <form className={styles.consoleInputRow} onSubmit={handleConsoleInputSubmit}>
+                  <span className={styles.consolePrompt} aria-hidden="true">
+                    &gt;
+                  </span>
+                  <input
+                    ref={consoleInputRef}
+                    className={styles.consoleInput}
+                    value={consoleInput}
+                    onChange={(event) => setConsoleInput(event.target.value)}
+                    aria-label="Program input"
+                    autoComplete="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                  />
+                </form>
+              ) : null}
         <div ref={consoleEndRef} />
       </div>
     </ScrollArea>

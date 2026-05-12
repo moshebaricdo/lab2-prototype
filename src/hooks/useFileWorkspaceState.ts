@@ -21,6 +21,8 @@ const FILE_KIND_BY_INPUT: Record<string, FileKind> = {
   css: "css",
   py: "python",
   python: "python",
+  md: "text",
+  txt: "text",
   image: "image",
   text: "text",
   file: "file",

@@ -13,6 +13,9 @@ export function getLanguageExtension(lang: FileKind) {
       return css();
     case "python":
       return python();
+    case "text":
+    case "file":
+      return [];
     default:
       return javascript();
   }

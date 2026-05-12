@@ -1,9 +1,8 @@
-import { loadPyodide, version as pyodideVersion, type PyodideInterface } from "pyodide";
-
-const PYODIDE_INDEX_URL = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
-const DEFAULT_STDIN_VALUES = ["Ada"];
-
-let pyodidePromise: Promise<PyodideInterface> | null = null;
+const STDIN_CONTROL_SLOTS = 2;
+const STDIN_DATA_OFFSET = STDIN_CONTROL_SLOTS * Int32Array.BYTES_PER_ELEMENT;
+const STDIN_BUFFER_BYTES = 64 * 1024;
+const STDIN_STATE_READY = 1;
+const STDIN_STATE_INTERRUPTED = 2;
 
 export interface PythonRunResult {
   stdout: string[];
@@ -11,79 +10,142 @@ export interface PythonRunResult {
   error?: string;
 }
 
-function getPyodide() {
-  pyodidePromise ??= loadPyodide({
-    indexURL: PYODIDE_INDEX_URL,
-  });
-  return pyodidePromise;
+interface PythonRunCallbacks {
+  onStdout?: (text: string) => void;
+  onStderr?: (text: string) => void;
+  onStdinRequest?: () => void;
 }
 
-function formatPythonError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-  const lines = message
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  const pythonErrorLine = [...lines]
-    .reverse()
-    .find((line) => /^[A-Za-z_][\w.]*(Error|Exception|Warning):\s/.test(line));
+export interface PythonRunSession {
+  result: Promise<PythonRunResult>;
+  submitInput: (value: string) => void;
+  dispose: () => void;
+}
 
-  if (pythonErrorLine) {
-    return pythonErrorLine;
+type WorkerResponse =
+  | {
+      type: "stdout" | "stderr";
+      text: string;
+    }
+  | {
+      type: "stdin-request" | "complete";
+    }
+  | {
+      type: "error";
+      message: string;
+    };
+
+function createStdinBuffer() {
+  if (typeof SharedArrayBuffer === "undefined" || typeof Atomics === "undefined") {
+    return undefined;
   }
 
-  const meaningfulLine = [...lines]
-    .reverse()
-    .find((line) =>
-      !line.startsWith("at ") &&
-      !line.includes("pyodide.asm") &&
-      !line.includes("pyodide.mjs")
-    );
-
-  return meaningfulLine ?? message;
+  return new SharedArrayBuffer(STDIN_DATA_OFFSET + STDIN_BUFFER_BYTES);
 }
 
-export async function runPythonCode(
+function writeInputToBuffer(stdinBuffer: SharedArrayBuffer, value: string) {
+  const control = new Int32Array(stdinBuffer, 0, STDIN_CONTROL_SLOTS);
+  const inputBytes = new Uint8Array(stdinBuffer, STDIN_DATA_OFFSET);
+  const encoded = new TextEncoder().encode(value);
+  const byteLength = Math.min(encoded.byteLength, inputBytes.byteLength);
+  inputBytes.fill(0);
+  inputBytes.set(encoded.slice(0, byteLength));
+  Atomics.store(control, 1, byteLength);
+  Atomics.store(control, 0, STDIN_STATE_READY);
+  Atomics.notify(control, 0);
+}
+
+function interruptStdin(stdinBuffer: SharedArrayBuffer | undefined) {
+  if (!stdinBuffer) return;
+  const control = new Int32Array(stdinBuffer, 0, STDIN_CONTROL_SLOTS);
+  Atomics.store(control, 0, STDIN_STATE_INTERRUPTED);
+  Atomics.notify(control, 0);
+}
+
+export function startPythonRun(
   code: string,
-  options: { stdin?: string[] } = {},
-): Promise<PythonRunResult> {
+  callbacks: PythonRunCallbacks = {},
+): PythonRunSession {
   const stdout: string[] = [];
   const stderr: string[] = [];
-  const stdinValues = [...(options.stdin ?? DEFAULT_STDIN_VALUES)];
-  let pyodide: PyodideInterface | null = null;
+  const stdinBuffer = createStdinBuffer();
+  const worker = new Worker(new URL("./pythonRunner.worker.ts", import.meta.url), {
+    type: "module",
+  });
 
-  try {
-    pyodide = await getPyodide();
-    pyodide.setStdout({
-      batched: (output) => {
-        if (output) stdout.push(output);
-      },
-    });
-    pyodide.setStderr({
-      batched: (output) => {
-        if (output) stderr.push(output);
-      },
-    });
-    pyodide.setStdin({
-      stdin: () => {
-        if (stdinValues.length === 0) {
-          throw new Error("Program requested input, but no more input values are configured.");
-        }
-        return stdinValues.shift() ?? "";
-      },
-    });
+  const result = new Promise<PythonRunResult>((resolve) => {
+    let settled = false;
 
-    await pyodide.runPythonAsync(code);
-    return { stdout, stderr };
-  } catch (error) {
-    return {
-      stdout,
-      stderr,
-      error: formatPythonError(error),
+    const finish = (runResult: PythonRunResult) => {
+      if (settled) return;
+      settled = true;
+      worker.terminate();
+      resolve(runResult);
     };
-  } finally {
-    pyodide?.setStdout();
-    pyodide?.setStderr();
-    pyodide?.setStdin();
-  }
+
+    worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+      const message = event.data;
+
+      if (message.type === "stdout") {
+        stdout.push(message.text);
+        callbacks.onStdout?.(message.text);
+        return;
+      }
+
+      if (message.type === "stderr") {
+        stderr.push(message.text);
+        callbacks.onStderr?.(message.text);
+        return;
+      }
+
+      if (message.type === "stdin-request") {
+        callbacks.onStdinRequest?.();
+        return;
+      }
+
+      if (message.type === "complete") {
+        finish({ stdout, stderr });
+        return;
+      }
+
+      if (message.type === "error") {
+        finish({ stdout, stderr, error: message.message });
+      }
+    };
+
+    worker.onerror = (event) => {
+      finish({
+        stdout,
+        stderr,
+        error: event.message || "Unable to run Python code.",
+      });
+    };
+
+    try {
+      worker.postMessage({
+        type: "run",
+        code,
+        stdinBuffer,
+      });
+    } catch {
+      finish({
+        stdout,
+        stderr,
+        error:
+          "Interactive console input requires browser shared memory support. Restart the dev server and reload the page.",
+      });
+    }
+  });
+
+  return {
+    result,
+    submitInput: (value: string) => {
+      if (!stdinBuffer) return;
+      writeInputToBuffer(stdinBuffer, value);
+    },
+    dispose: () => {
+      interruptStdin(stdinBuffer);
+      worker.terminate();
+    },
+  };
 }
