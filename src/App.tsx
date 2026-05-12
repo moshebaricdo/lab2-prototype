@@ -190,34 +190,6 @@ const WebLab2DemoProjectLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2DemoProjectLevelPage"),
   "WebLab2DemoProjectLevelPage",
 );
-const WebLab2DrawerFadeLevelPage = lazyPage(
-  () => import("./pages/weblab2/WebLab2DrawerFadeLevelPage"),
-  "WebLab2DrawerFadeLevelPage",
-);
-const WebLab2DrawerInlineLinkLevelPage = lazyPage(
-  () => import("./pages/weblab2/WebLab2DrawerInlineLinkLevelPage"),
-  "WebLab2DrawerInlineLinkLevelPage",
-);
-const WebLab2FileChipActionLevelPage = lazyPage(
-  () => import("./pages/weblab2/WebLab2FileChipActionLevelPage"),
-  "WebLab2FileChipActionLevelPage",
-);
-const WebLab2FileDropLevelPage = lazyPage(
-  () => import("./pages/weblab2/WebLab2FileDropLevelPage"),
-  "WebLab2FileDropLevelPage",
-);
-const WebLab2LevelPage = lazyPage(
-  () => import("./pages/weblab2/WebLab2LevelPage"),
-  "WebLab2LevelPage",
-);
-const WebLab2RubricLevelPage = lazyPage(
-  () => import("./pages/weblab2/WebLab2RubricLevelPage"),
-  "WebLab2RubricLevelPage",
-);
-const WebLab2SendAffordanceLevelPage = lazyPage(
-  () => import("./pages/weblab2/WebLab2SendAffordanceLevelPage"),
-  "WebLab2SendAffordanceLevelPage",
-);
 const WebLab2TutorActionCardLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2TutorActionCardLevelPage"),
   "WebLab2TutorActionCardLevelPage",
@@ -242,31 +214,6 @@ export default function App() {
         <Route
           path="/levels/pythonlab-blank"
           element={<PythonLabBlankProjectLevelPage />}
-        />
-        <Route path="/levels/weblab2" element={<WebLab2LevelPage />} />
-        <Route
-          path="/levels/weblab2-send-affordance"
-          element={<WebLab2SendAffordanceLevelPage />}
-        />
-        <Route
-          path="/levels/weblab2-file-drop"
-          element={<WebLab2FileDropLevelPage />}
-        />
-        <Route
-          path="/levels/weblab2-drawer-fade"
-          element={<WebLab2DrawerFadeLevelPage />}
-        />
-        <Route
-          path="/levels/weblab2-drawer-inline-link"
-          element={<WebLab2DrawerInlineLinkLevelPage />}
-        />
-        <Route
-          path="/levels/weblab2-rubric"
-          element={<WebLab2RubricLevelPage />}
-        />
-        <Route
-          path="/levels/weblab2-file-chip-action"
-          element={<WebLab2FileChipActionLevelPage />}
         />
         <Route
           path="/levels/weblab2-tutor-action-card"

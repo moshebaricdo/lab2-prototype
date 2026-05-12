@@ -1,29 +1,6 @@
 import type { LevelProgressLink } from "../components/ui/header/LevelProgressBubbles";
 
 export const webLab2LevelLinks: LevelProgressLink[] = [
-  { name: "Default workspace", path: "/levels/weblab2" },
-  {
-    name: "Clarified chat send affordance",
-    path: "/levels/weblab2-send-affordance",
-  },
-  {
-    name: "File drag-drop into tutor",
-    path: "/levels/weblab2-file-drop",
-  },
-  { name: "Rubric panel", path: "/levels/weblab2-rubric" },
-  { name: "50% drawer + fade cue", path: "/levels/weblab2-drawer-fade" },
-  {
-    name: "50% drawer + inline read more",
-    path: "/levels/weblab2-drawer-inline-link",
-  },
-  {
-    name: "File chip + add to project",
-    path: "/levels/weblab2-file-chip-action",
-  },
-  {
-    name: "Tutor action card (F2)",
-    path: "/levels/weblab2-tutor-action-card",
-  },
   {
     name: "Demo Project (Stellar Atlas)",
     path: "/levels/weblab2-demo-project",
@@ -31,6 +8,10 @@ export const webLab2LevelLinks: LevelProgressLink[] = [
   {
     name: "Demo Project (No Starter Code)",
     path: "/levels/weblab2-demo-project-blank",
+  },
+  {
+    name: "Tutor action card (F2)",
+    path: "/levels/weblab2-tutor-action-card",
   },
 ];
 

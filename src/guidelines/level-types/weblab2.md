@@ -6,16 +6,16 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 
 ## Routes
 
-- `/levels/weblab2`
 - `/levels/weblab2-demo-project`
 - `/levels/weblab2-demo-project-blank`
-- Additional Web Lab 2 prototype variants are listed in `src/pages/levelTypeLinks.ts`.
+- `/levels/weblab2-tutor-action-card`
 
 ## Key Files
 
 - `src/pages/weblab2/WebLab2LevelPage.tsx`
 - `src/pages/weblab2/WebLab2DemoProjectLevelPage.tsx`
 - `src/pages/weblab2/WebLab2BlankDemoProjectLevelPage.tsx`
+- `src/pages/weblab2/WebLab2TutorActionCardLevelPage.tsx`
 - `src/components/ide/weblab2/views/Workspace.tsx`
 - `src/components/ide/weblab2/views/NewProjectEmptyState.tsx`
 - `src/components/ide/weblab2/views/preview-panel/PreviewDebugPanel.tsx`
