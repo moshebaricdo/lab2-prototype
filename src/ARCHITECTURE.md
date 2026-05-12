@@ -106,7 +106,11 @@ src/
 │   │   │   └── views/
 │   │   │       └── PythonWorkspace.tsx
 │   │   └── aichatlab/views/
-│   │       └── AiChatLabWorkspace.tsx
+│   │       ├── AiChatLabWorkspace.tsx
+│   │       ├── AiChatLabConfigPanel.tsx
+│   │       ├── AiChatLabModelCardPanel.tsx
+│   │       ├── AiChatLabChatPanel.tsx
+│   │       └── aiChatLabModel.ts
 │   └── assessment/                 # Assessment level types
 │       ├── shared/
 │       ├── bubble-choice/
@@ -153,11 +157,11 @@ Route pages get state and handlers from dedicated hooks:
 
 `useFileWorkspaceState` accepts both single-folder project wrappers and rootless file trees. Rootless trees are used by blank Web Lab projects; new files, folders, and AI proposal additions are inserted at the top level until the user creates their own folders.
 
-Python Lab also uses `useFileWorkspaceState`, with route-scoped session storage for file edits and created files. Its blank standalone route starts from a rootless empty tree while the guided route seeds `main.py` from `src/data/pythonlab/projects/default`. Python Lab now also uses `useVersionHistoryState` with route-scoped snapshot storage; selecting a saved snapshot maps the open/selected files onto the historical file tree and renders the editor read-only until the student returns to Current Version.
+Python Lab also uses `useFileWorkspaceState`, with route-scoped session storage for file edits and created files. Its blank standalone route starts from a rootless empty tree while the guided route seeds `main.py` and `README.md` from `src/data/pythonlab/projects/default`. Python Lab now also uses `useVersionHistoryState` with route-scoped snapshot storage; selecting a saved snapshot maps the open/selected files onto the historical file tree and renders the editor read-only until the student returns to Current Version.
 
 The shared resource panel supports a standalone Instructions tab, a Resources tab for contextual student-facing materials, and optional floating card chrome via `surfaceVariant: "card"`. Resources currently render non-functional cards for associated lesson resources, lab documentation, and available walkthroughs based on booleans passed by the level page. Python Lab also enables the Validation tab, which receives the current editable file tree and deterministic test definitions from page/dev-panel configuration.
 
-Python code execution is isolated behind `components/ide/pythonlab/runtime/pythonRunner.ts`, which loads Pyodide in the browser and returns captured stdout, stderr, and runtime errors to `PythonWorkspace`.
+Python code execution is isolated behind `components/ide/pythonlab/runtime/pythonRunner.ts`, which starts a Pyodide web worker, streams stdout/stderr back to `PythonWorkspace`, and blocks on interactive stdin through a shared buffer while the console shows a terminal-style input row.
 
 ## Tutor Harness
 
@@ -173,13 +177,13 @@ Preview-specific diagnostics live inside `components/ide/weblab2/views/preview-p
 
 ## Empty States
 
-Shared IDE empty-state rendering lives in `src/components/ide/shared/EmptyState.tsx`. It supports the legacy generated illustration, preview illustration, and caller-provided image assets. Web Lab 2 uses `src/components/ide/weblab2/views/NewProjectEmptyState.tsx` for the workspace-level new-project flow when a functional-history project has never had files; this hides the workspace view switcher and avoids selecting code/preview/split until files exist. Once files have existed, deleting everything or restoring the initial version falls back to the normal empty workspace so prior versions remain reachable. The ordinary editor-level "No files open" state still appears when a non-empty project has no open tabs.
+Shared IDE empty-state rendering lives in `src/components/ide/shared/EmptyState.tsx`. It supports the legacy generated illustration, preview illustration, and caller-provided image assets, and switches to a compact horizontal layout when its container height is constrained. Web Lab 2 uses `src/components/ide/weblab2/views/NewProjectEmptyState.tsx` for the workspace-level new-project flow when a functional-history project has never had files; this hides the workspace view switcher and avoids selecting code/preview/split until files exist. Once files have existed, deleting everything or restoring the initial version falls back to the normal empty workspace so prior versions remain reachable. The ordinary editor-level "No files open" state still appears when a non-empty project has no open tabs.
 
 ## AI Chat Lab
 
-AI Chat Lab lives under `components/ide/aichatlab/views` because the chat stream and model-configuration column are lab-specific workspace chrome, not the shared Tutor. Its pages hide the AI Tutor resource-panel tab, render instructions through the shared standalone Instructions tab, and use URL-backed dev controls to toggle the config column, config tabs, individual controls, resource-panel tabs, and floating card mode.
+AI Chat Lab lives under `components/ide/aichatlab/views` because the chat stream, model-configuration column, and published model-card column are lab-specific workspace chrome, not the shared Tutor. `AiChatLabWorkspace.tsx` owns state orchestration while local panel components render config, chat, and published model-card surfaces. Its pages hide the AI Tutor resource-panel tab, render instructions through the shared standalone Instructions tab, and use URL-backed dev controls to toggle the config column, config tabs, individual controls, resource-panel tabs, model selector, Continue button placement, and floating card mode. Floating card sidebars are non-resizable but can collapse to a narrow card rail. When a model card is published, the page hides the resource panel and switches the workspace into a share-style two-column model-card/chat layout.
 
-Model configuration controls use shared UI primitives where possible. The temperature control uses `components/ui/AppSlider.tsx`, the design-system slider primitive that supports range/centered layouts, control buttons, stepper notches, top-row value display, and design-token tones.
+Model configuration controls use shared UI primitives where possible. The temperature control uses `components/ui/AppSlider.tsx`, the design-system slider primitive that supports range/centered layouts, control buttons, stepper notches, top-row value display, and design-token tones. Prototype defaults, sample rubric data, and AI Chat Lab dev-panel fields live in `pages/aichatlab/aiChatLabPageConfig.ts`; no separate `data/aichatlab` fixture directory exists yet.
 
 ## Migration Notes
 
