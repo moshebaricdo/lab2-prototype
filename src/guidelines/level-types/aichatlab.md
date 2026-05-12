@@ -6,14 +6,22 @@ Prototype environment for levels where the lab surface is an AI chat stream. Som
 
 ## Routes
 
-- `/levels/aichatlab`
-- `/levels/aichatlab-setup`
-- `/levels/aichatlab-model-card`
+| Route | Export | Default shape |
+|---|---|---|
+| `/levels/aichatlab` | `AiChatLabLevelPage` | Prompting-practice chat with the resource panel and no config column |
+| `/levels/aichatlab-setup` | `AiChatLabSetupLevelPage` | Resource panel, setup tab, model selector, and compact temperature tuning |
+| `/levels/aichatlab-model-card` | `AiChatLabModelCardLevelPage` | Full setup, retrieval, publish, rubric, and published model-card flow |
 
 ## Key Files
 
 - `src/pages/aichatlab/AiChatLabLevelPage.tsx`
+- `src/pages/aichatlab/aiChatLabPageConfig.ts` — default content, sample rubric, and AI Chat Lab dev-panel fields
 - `src/components/ide/aichatlab/views/AiChatLabWorkspace.tsx`
+- `src/components/ide/aichatlab/views/AiChatLabConfigPanel.tsx`
+- `src/components/ide/aichatlab/views/AiChatLabModelCardPanel.tsx`
+- `src/components/ide/aichatlab/views/AiChatLabChatPanel.tsx`
+- `src/components/ide/aichatlab/views/aiChatLabModel.ts` — model options, config initialization, and mock response helpers
+- `src/components/ide/aichatlab/views/AiChatLabWorkspace.types.ts`
 - `src/components/ui/AppSlider.tsx` — shared design-system slider used for temperature/model configuration controls
 - `src/components/lab2/resource-panel/views/ai-tutor/AiTutorPanel.tsx` — shared chat stream/composer shell reused for the lab chat surface
 - `src/components/lab2/resource-panel/Sidebar.tsx`
@@ -28,17 +36,19 @@ Prototype environment for levels where the lab surface is an AI chat stream. Som
 - AI Tutor is hidden for AI Chat Lab routes because the level itself is the AI conversation.
 - The workspace supports either chat-only mode or a two-column lab surface with model customization plus chat.
 - Configuration tabs are progressively disclosed:
-  - Setup: temperature (`AppSlider`) and optional system prompt.
-  - Retrieval: optional retrieval notes.
-  - Publish: optional name, intent, description, limitations, and example prompts.
-- The resource panel and lab workspace can use floating card chrome through `surfaceVariant: "card"`; card surfaces are intentionally non-resizable.
-- Dev panel controls can toggle the config column, visible config tabs, individual controls, resource-panel tabs, instructions content, chat placeholder, and header text.
+  - Setup: optional model selector, compact temperature (`AppSlider` size `s`, no stepper), and optional system prompt.
+  - Retrieval: optional retrieval notes, with an added-items list for saved retrieval entries.
+  - Publish: optional name, description, intended use, limitations and warnings, testing and evaluation, and example prompts/topics, with added cards for saved example prompts.
+- Setup and Retrieval tabs use an Update footer action. Publish uses Save and Publish actions, shows a success toast after publish, and can switch into the published model-card view.
+- Published/share mode hides the sidebar and config tabs, then renders a model-card column beside the reusable AI chat stream. It shows the chatbot name above collapsed sections that mirror the published model card: Description, Intended Use, Limitations and Warnings, Testing and Evaluation, Example Prompts and Topics, and Technical Info derived from config settings. The model-card header can toggle back to config view.
+- The resource panel and lab workspace can use floating card chrome through `surfaceVariant: "card"`; card surfaces are non-resizable but the resource panel can collapse to a narrow card rail.
+- Dev panel controls cover the visible prototype controls: config column, visible config tabs, individual controls, resource-panel tabs, model selector, instructions content, chat placeholder, header text, and Continue button placement.
 
 ## Current Data Shape
 
 - No backend model call is wired in this prototype.
 - Chat responses are local mock responses that reflect the current model configuration enough to demo how settings affect behavior.
-- Page defaults are URL-overridable through the shared dev panel system.
+- Page defaults are centralized in `aiChatLabPageConfig.ts`; visible prototype controls are exposed through the dev panel and defaults remain URL-overridable through the shared override system.
 
 ## Known Gaps
 

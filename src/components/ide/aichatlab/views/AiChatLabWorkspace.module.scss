@@ -15,7 +15,12 @@
   grid-template-columns: minmax(420px, 1fr);
 }
 
+.rootShareMode {
+  grid-template-columns: minmax(280px, 2fr) minmax(420px, 3fr);
+}
+
 .configPanel,
+.modelCardPanel,
 .chatPanel {
   display: flex;
   min-height: 0;
@@ -25,32 +30,64 @@
   border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
   background: var(--ds-background-neutral-primary);
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 8%);
+  box-shadow: 0 1px 2px 0 color-mix(
+    in srgb,
+    var(--ds-text-neutral-black-fixed) 8%,
+    transparent
+  );
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
 .tabBar {
   display: flex;
-  gap: 2px;
+  flex-shrink: 0;
+  height: 40px;
+  min-height: 40px;
+  gap: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-bottom: 1px solid var(--ds-borders-neutral-primary);
-  background: var(--ds-background-neutral-tertiary);
-  padding: 4px 8px 0;
+  background: var(--ds-background-neutral-secondary);
+  padding: 0;
+  scrollbar-width: none;
+}
+
+.tabBar::-webkit-scrollbar {
+  display: none;
 }
 
 .tabButton {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
   border: 0;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
+  border-right: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 0;
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-tertiary);
   cursor: pointer;
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.4;
-  padding: 6px 12px;
+  line-height: 1.54;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.tabButton:last-child {
+  border-right: 0;
 }
 
 .tabButton:hover {
+  background: var(--ds-background-neutral-tertiary);
   color: var(--ds-text-neutral-primary);
 }
 
@@ -61,7 +98,11 @@
 
 .tabButtonActive {
   background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-brand-teal-primary);
+  color: var(--ds-text-neutral-primary);
+}
+
+.tabButtonActive:hover {
+  background: var(--ds-background-neutral-primary);
 }
 
 .configBody {
@@ -92,46 +133,9 @@
 .fieldLabel {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.54;
-}
-
-.input,
-.textarea {
-  width: 100%;
-  border: 1px solid var(--ds-borders-neutral-strong);
-  border-radius: 4px;
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-normal);
-  line-height: 1.5;
-  transition:
-    border-color 0.05s ease-in,
-    box-shadow 0.05s ease-in;
-}
-
-.input {
-  min-height: 34px;
-  padding: 6px 10px;
-}
-
-.textarea {
-  resize: vertical;
-  padding: 8px 10px;
-}
-
-.input:focus,
-.textarea:focus {
-  outline: none;
-  border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: 0 0 0 2px color-mix(
-    in srgb,
-    var(--ds-borders-brand-teal-primary) 18%,
-    transparent
-  );
+  line-height: 1.64;
 }
 
 .configFooter {
@@ -143,11 +147,181 @@
   padding: 8px 12px;
 }
 
+.footerButtonRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
 .configStatus {
   margin: 0;
   color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
   line-height: 1.4;
+}
+
+.publishToast {
+  margin-bottom: 2px;
+}
+
+.addedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--ds-borders-neutral-primary);
+  padding-top: 12px;
+}
+
+.addedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.addedTitle {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.addedCount {
+  display: inline-flex;
+  min-width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--ds-background-neutral-tertiary);
+  color: var(--ds-text-neutral-tertiary);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
+.addedList,
+.modelCardPromptList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.addedCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 4px;
+  background: var(--ds-background-neutral-secondary);
+  padding: 8px 10px;
+}
+
+.addedCardText,
+.emptyAdded,
+.modelCardText {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.modelCardBody {
+  flex: 1;
+  min-height: 0;
+}
+
+.modelCardInner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.modelCardName {
+  margin: 4px 2px 4px;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.modelCardSection {
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: var(--radius);
+  background: var(--ds-background-neutral-primary);
+  overflow: hidden;
+}
+
+.modelCardSummary {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  border: 0;
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  padding: 8px 8px 8px 12px;
+}
+
+.modelCardSummary:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ds-borders-brand-teal-primary);
+}
+
+.modelCardSectionExpanded .modelCardSummary {
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.modelCardSummaryTitle {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.modelCardSummaryIcon {
+  flex: 0 0 auto;
+  width: 18px;
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.modelCardSectionBody {
+  padding: 10px;
+}
+
+.modelCardFields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+
+.modelCardField {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modelCardField dt {
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.modelCardField dd {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
 .emptyConfig {
@@ -182,7 +356,8 @@
 }
 
 @media (max-width: 960px) {
-  .rootWithConfig {
+  .rootWithConfig,
+  .rootShareMode {
     grid-template-columns: minmax(0, 1fr);
   }
 }

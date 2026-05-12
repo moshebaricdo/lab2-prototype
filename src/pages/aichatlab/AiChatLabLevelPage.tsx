@@ -1,294 +1,25 @@
+import { useState } from "react";
 import { Lab2Shell } from "../../components/lab2/Lab2Shell";
 import { MarkdownInstructions } from "../../components/lab2/resource-panel/MarkdownInstructions";
-import type { RubricData } from "../../components/lab2/resource-panel";
 import { AiChatLabWorkspace } from "../../components/ide/aichatlab/views";
 import type { AiChatLabWorkspaceProps } from "../../components/ide/aichatlab/views";
-import type { DevPanelField } from "../../components/lab2/dev";
 import { useChatState } from "../../hooks/useChatState";
 import { useLayoutState } from "../../hooks/useLayoutState";
 import { usePropsOverride } from "../../hooks/usePropsOverride";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
 import { aiChatLabLevelLinks } from "../levelTypeLinks";
 import type { ChatMessage } from "../../types/chat";
-
-interface AiChatLabDefaults extends AiChatLabWorkspaceProps {
-  [key: string]: unknown;
-  title: string;
-  subtitle: string;
-  instructionsMarkdown: string;
-  showInstructionsTab: boolean;
-  showRubricTab: boolean;
-  showResourcesTab: boolean;
-  showTeacherResourcesTab: boolean;
-  showContinueButton: boolean;
-  continueLabel: string;
-  surfaceVariant: "edge" | "card";
-}
+import {
+  AI_CHAT_LAB_DEV_FIELDS,
+  BASE_DEFAULTS,
+  SAMPLE_RUBRIC,
+  type AiChatLabDefaults,
+} from "./aiChatLabPageConfig";
 
 interface AiChatLabLevelPageProps {
   currentLevelPath?: string;
   defaults?: Partial<AiChatLabDefaults>;
 }
-
-const SAMPLE_RUBRIC: RubricData = {
-  name: "Prompting and model tuning",
-  feedback: null,
-  selectedCategoryId: null,
-  categories: [
-    {
-      id: "prompt",
-      label: "Clear prompt or goal",
-      description: "The prompt gives the AI enough context to respond usefully.",
-    },
-    {
-      id: "compare",
-      label: "Compares model behavior",
-      description: "The student observes how settings change the AI's output.",
-    },
-    {
-      id: "reflect",
-      label: "Explains tradeoffs",
-      description: "The reflection names benefits and limitations of the chosen setup.",
-    },
-  ],
-};
-
-const DEFAULT_INSTRUCTIONS = [
-  "# Gift Recommendations Part 2",
-  "Use AI Chat to get gift recommendations for a friend.",
-  "## Do This",
-  "1. Try the provided prompt first.",
-  "2. Read the AI Chat response.",
-  "3. Change the prompt to make it about someone you know.",
-  "4. Send again and compare the responses.",
-  "## Try it out",
-  "Notice which details make the response more specific and helpful.",
-].join("\n\n");
-
-const BASE_DEFAULTS: AiChatLabDefaults = {
-  title: "AI Chat Lab: Prompting Practice",
-  subtitle: "Saved a few seconds ago",
-  instructionsMarkdown: DEFAULT_INSTRUCTIONS,
-  showInstructionsTab: true,
-  showRubricTab: false,
-  showResourcesTab: true,
-  showTeacherResourcesTab: false,
-  showContinueButton: true,
-  continueLabel: "Continue to Level 4",
-  surfaceVariant: "card",
-  showConfigPanel: false,
-  showSetupTab: true,
-  showRetrievalTab: false,
-  showPublishTab: false,
-  showTemperatureControl: true,
-  showSystemPromptControl: false,
-  showRetrievalSourceControl: false,
-  showPublishNameControl: false,
-  showPublishIntentControl: false,
-  showPublishDescriptionControl: false,
-  showPublishLimitationsControl: false,
-  showPublishExamplePromptsControl: false,
-  initialTemperature: 0.7,
-  systemPrompt: "You are a friendly assistant who gives concise, useful advice.",
-  retrievalSource: "",
-  modelName: "Gift Guide Bot",
-  modelIntent: "Gift recommendations",
-  modelDescription: "Helps classmates brainstorm specific gift ideas.",
-  modelLimitations: "May miss personal context and should avoid unsafe suggestions.",
-  examplePrompts: "Give me 3 gift ideas under $30 for a friend who likes soccer.",
-  initialMessages: [
-    {
-      role: "assistant",
-      content:
-        "I'm here to help with gift recommendations! Provide a prompt or describe the occasion, and I'll suggest some great gifts.",
-    },
-  ],
-  chatPlaceholder: "Add a chat message...",
-};
-
-const AI_CHAT_LAB_DEV_FIELDS: DevPanelField[] = [
-  {
-    key: "showConfigPanel",
-    label: "Show config column",
-    type: "boolean",
-    group: "Layout",
-  },
-  {
-    key: "surfaceVariant",
-    label: "Resource panel surface",
-    type: "select",
-    group: "Layout",
-    options: [
-      { label: "Edge-to-edge", value: "edge" },
-      { label: "Card", value: "card" },
-    ],
-  },
-  {
-    key: "showInstructionsTab",
-    label: "Show instructions tab",
-    type: "boolean",
-    group: "Resource panel",
-  },
-  {
-    key: "showResourcesTab",
-    label: "Show resources tab",
-    type: "boolean",
-    group: "Resource panel",
-  },
-  {
-    key: "showRubricTab",
-    label: "Show rubric tab",
-    type: "boolean",
-    group: "Resource panel",
-  },
-  {
-    key: "showTeacherResourcesTab",
-    label: "Show teacher resources tab",
-    type: "boolean",
-    group: "Resource panel",
-  },
-  {
-    key: "showContinueButton",
-    label: "Show continue button",
-    type: "boolean",
-    group: "Resource panel",
-  },
-  {
-    key: "showSetupTab",
-    label: "Show setup tab",
-    type: "boolean",
-    group: "Config tabs",
-    visibleWhen: (values) => Boolean(values.showConfigPanel),
-  },
-  {
-    key: "showRetrievalTab",
-    label: "Show retrieval tab",
-    type: "boolean",
-    group: "Config tabs",
-    visibleWhen: (values) => Boolean(values.showConfigPanel),
-  },
-  {
-    key: "showPublishTab",
-    label: "Show publish tab",
-    type: "boolean",
-    group: "Config tabs",
-    visibleWhen: (values) => Boolean(values.showConfigPanel),
-  },
-  {
-    key: "showTemperatureControl",
-    label: "Show temperature",
-    type: "boolean",
-    group: "Setup controls",
-    visibleWhen: (values) => Boolean(values.showConfigPanel && values.showSetupTab),
-  },
-  {
-    key: "initialTemperature",
-    label: "Default temperature",
-    type: "slider",
-    min: 0,
-    max: 1,
-    step: 0.1,
-    group: "Setup controls",
-    visibleWhen: (values) =>
-      Boolean(values.showConfigPanel && values.showSetupTab && values.showTemperatureControl),
-  },
-  {
-    key: "showSystemPromptControl",
-    label: "Show system prompt",
-    type: "boolean",
-    group: "Setup controls",
-    visibleWhen: (values) => Boolean(values.showConfigPanel && values.showSetupTab),
-  },
-  {
-    key: "systemPrompt",
-    label: "System prompt",
-    type: "textarea",
-    rows: 5,
-    group: "Setup controls",
-    visibleWhen: (values) =>
-      Boolean(values.showConfigPanel && values.showSetupTab && values.showSystemPromptControl),
-  },
-  {
-    key: "showRetrievalSourceControl",
-    label: "Show retrieval notes",
-    type: "boolean",
-    group: "Retrieval controls",
-    visibleWhen: (values) => Boolean(values.showConfigPanel && values.showRetrievalTab),
-  },
-  {
-    key: "retrievalSource",
-    label: "Retrieval notes",
-    type: "textarea",
-    rows: 5,
-    group: "Retrieval controls",
-    visibleWhen: (values) =>
-      Boolean(
-        values.showConfigPanel &&
-          values.showRetrievalTab &&
-          values.showRetrievalSourceControl,
-      ),
-  },
-  {
-    key: "showPublishNameControl",
-    label: "Show model name",
-    type: "boolean",
-    group: "Publish controls",
-    visibleWhen: (values) => Boolean(values.showConfigPanel && values.showPublishTab),
-  },
-  {
-    key: "showPublishIntentControl",
-    label: "Show intent",
-    type: "boolean",
-    group: "Publish controls",
-    visibleWhen: (values) => Boolean(values.showConfigPanel && values.showPublishTab),
-  },
-  {
-    key: "showPublishDescriptionControl",
-    label: "Show description",
-    type: "boolean",
-    group: "Publish controls",
-    visibleWhen: (values) => Boolean(values.showConfigPanel && values.showPublishTab),
-  },
-  {
-    key: "showPublishLimitationsControl",
-    label: "Show limitations",
-    type: "boolean",
-    group: "Publish controls",
-    visibleWhen: (values) => Boolean(values.showConfigPanel && values.showPublishTab),
-  },
-  {
-    key: "showPublishExamplePromptsControl",
-    label: "Show example prompts",
-    type: "boolean",
-    group: "Publish controls",
-    visibleWhen: (values) => Boolean(values.showConfigPanel && values.showPublishTab),
-  },
-  {
-    key: "instructionsMarkdown",
-    label: "Instructions markdown",
-    type: "textarea",
-    rows: 8,
-    group: "Content",
-  },
-  {
-    key: "chatPlaceholder",
-    label: "Chat placeholder",
-    type: "text",
-    group: "Content",
-  },
-  {
-    key: "title",
-    label: "Level title",
-    type: "text",
-    group: "Header",
-  },
-  {
-    key: "subtitle",
-    label: "Subtitle",
-    type: "text",
-    group: "Header",
-  },
-];
 
 function currentLevelIndex(path: string) {
   const index = aiChatLabLevelLinks.findIndex((link) => link.path === path);
@@ -308,6 +39,7 @@ function toWorkspaceProps(resolved: AiChatLabDefaults): AiChatLabWorkspaceProps 
     showSetupTab: Boolean(resolved.showSetupTab),
     showRetrievalTab: Boolean(resolved.showRetrievalTab),
     showPublishTab: Boolean(resolved.showPublishTab),
+    showModelControl: Boolean(resolved.showModelControl),
     showTemperatureControl: Boolean(resolved.showTemperatureControl),
     showSystemPromptControl: Boolean(resolved.showSystemPromptControl),
     showRetrievalSourceControl: Boolean(resolved.showRetrievalSourceControl),
@@ -315,7 +47,9 @@ function toWorkspaceProps(resolved: AiChatLabDefaults): AiChatLabWorkspaceProps 
     showPublishIntentControl: Boolean(resolved.showPublishIntentControl),
     showPublishDescriptionControl: Boolean(resolved.showPublishDescriptionControl),
     showPublishLimitationsControl: Boolean(resolved.showPublishLimitationsControl),
+    showPublishTestingControl: Boolean(resolved.showPublishTestingControl),
     showPublishExamplePromptsControl: Boolean(resolved.showPublishExamplePromptsControl),
+    initialModel: String(resolved.initialModel),
     initialTemperature: Number(resolved.initialTemperature),
     systemPrompt: String(resolved.systemPrompt),
     retrievalSource: String(resolved.retrievalSource),
@@ -323,6 +57,7 @@ function toWorkspaceProps(resolved: AiChatLabDefaults): AiChatLabWorkspaceProps 
     modelIntent: String(resolved.modelIntent),
     modelDescription: String(resolved.modelDescription),
     modelLimitations: String(resolved.modelLimitations),
+    modelTestingEvaluation: String(resolved.modelTestingEvaluation),
     examplePrompts: String(resolved.examplePrompts),
     initialMessages: resolved.initialMessages as ChatMessage[],
     chatPlaceholder: String(resolved.chatPlaceholder),
@@ -345,19 +80,44 @@ export function AiChatLabLevelPage({
   const versionHistoryState = useVersionHistoryState();
   const overrideResult = usePropsOverride(mergeDefaults(defaults));
   const resolved = overrideResult.props;
+  const [isShareModeActive, setIsShareModeActive] = useState(false);
   const levelIndex = currentLevelIndex(currentLevelPath);
+  const surfaceVariant = resolved.surfaceVariant === "edge" ? "edge" : "card";
+  const continueInHeader = resolved.continueButtonPlacement === "header";
+  const showContinueButton = Boolean(resolved.showContinueButton);
+  const topNavigationProps = {
+    title: String(resolved.title),
+    subtitle: String(resolved.subtitle),
+    currentLevel: levelIndex + 1,
+    totalLevels: aiChatLabLevelLinks.length,
+    completedLevels: Array.from({ length: levelIndex }, (_, index) => index + 1),
+    levelLinks: aiChatLabLevelLinks,
+    currentLevelPath,
+    showContinueButton: showContinueButton && continueInHeader,
+    continueLabel: String(resolved.continueLabel),
+  };
+  const workspace = (
+    <AiChatLabWorkspace
+      {...toWorkspaceProps(resolved)}
+      isShareModeActive={isShareModeActive}
+      onShareModeChange={setIsShareModeActive}
+    />
+  );
+
+  if (isShareModeActive) {
+    return (
+      <Lab2Shell
+        topNavigationProps={topNavigationProps}
+        hideResourcePanel={true}
+      >
+        {workspace}
+      </Lab2Shell>
+    );
+  }
 
   return (
     <Lab2Shell
-      topNavigationProps={{
-        title: String(resolved.title),
-        subtitle: String(resolved.subtitle),
-        currentLevel: levelIndex + 1,
-        totalLevels: aiChatLabLevelLinks.length,
-        completedLevels: Array.from({ length: levelIndex }, (_, index) => index + 1),
-        levelLinks: aiChatLabLevelLinks,
-        currentLevelPath,
-      }}
+      topNavigationProps={topNavigationProps}
       sidebarProps={{
         activeTab,
         setActiveTab,
@@ -383,9 +143,11 @@ export function AiChatLabLevelPage({
         showDocumentationResource: Boolean(resolved.showResourcesTab),
         showWalkthroughResources: Boolean(resolved.showResourcesTab),
         rubricData: SAMPLE_RUBRIC,
-        showContinueButton: Boolean(resolved.showContinueButton),
+        showContinueButton: showContinueButton && !continueInHeader,
         continueLabel: String(resolved.continueLabel),
-        surfaceVariant: resolved.surfaceVariant === "edge" ? "edge" : "card",
+        collapsible: surfaceVariant === "card",
+        defaultCollapsed: false,
+        surfaceVariant,
         instructionsContent: (
           <MarkdownInstructions markdown={String(resolved.instructionsMarkdown)} />
         ),
@@ -396,7 +158,7 @@ export function AiChatLabLevelPage({
         setSidebarWidth((prev) => Math.max(280, Math.min(520, prev + delta)));
       }}
     >
-      <AiChatLabWorkspace {...toWorkspaceProps(resolved)} />
+      {workspace}
     </Lab2Shell>
   );
 }
@@ -407,7 +169,9 @@ export function AiChatLabSetupLevelPage() {
       currentLevelPath="/levels/aichatlab-setup"
       defaults={{
         title: "AI Chat Lab: Model Setup",
+        continueLabel: "Continue to Level 3",
         showConfigPanel: true,
+        showModelControl: true,
         showSystemPromptControl: false,
         initialTemperature: 0.4,
         instructionsMarkdown: [
@@ -436,15 +200,18 @@ export function AiChatLabModelCardLevelPage() {
       currentLevelPath="/levels/aichatlab-model-card"
       defaults={{
         title: "AI Chat Lab: Model Card",
+        continueLabel: "Finish",
         showConfigPanel: true,
         showRetrievalTab: true,
         showPublishTab: true,
+        showModelControl: true,
         showSystemPromptControl: true,
         showRetrievalSourceControl: true,
         showPublishNameControl: true,
         showPublishIntentControl: true,
         showPublishDescriptionControl: true,
         showPublishLimitationsControl: true,
+        showPublishTestingControl: true,
         showPublishExamplePromptsControl: true,
         showRubricTab: true,
         initialTemperature: 0.7,
