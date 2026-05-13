@@ -1,3 +1,5 @@
+import type { ValidationReviewCardData } from "./validationReview";
+
 export interface ChatAttachment {
   fileName: string;
   /** Full path or label */
@@ -62,6 +64,8 @@ export interface ChatMessage {
   aiSaveTitle?: string;
   /** Accept/reject status for generated code changes. Shows action buttons when "pending". */
   codeChangeStatus?: "pending" | "accepted" | "rejected";
+  /** Optional review card for intentional Web Lab validation flows. */
+  validationReview?: ValidationReviewCardData;
   /** When true, renders as a system-style alert instead of a chat bubble. */
   isAlert?: boolean;
   /** Visual variant for alert messages. Defaults to "success". */

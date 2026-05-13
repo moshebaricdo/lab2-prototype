@@ -205,21 +205,11 @@ export function PreviewDebugPanel({
         />
       ) : (
         <div className={styles.consoleList} role="log" aria-label="Console output">
-          <AlertBanner
-            className={styles.consoleHint}
-            dismissible={false}
-            sentiment="info"
-            showIcon
-            size="xs"
-          >
-            Console output from the current preview session appears below.
-          </AlertBanner>
           {consoleMessages.map((message) => (
             <div
               key={message.id}
-              className={`${styles.consoleRow} ${styles[`consoleLevel${message.level}`]}`}
+              className={styles.consoleRow}
             >
-              <span className={styles.consoleLevel}>{message.level}</span>
               <pre className={styles.consoleMessage}>{message.message}</pre>
               <time className={styles.consoleTime} dateTime={message.timestamp}>
                 {formatTimestamp(message.timestamp)}

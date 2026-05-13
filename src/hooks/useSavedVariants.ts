@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { ActiveLevelShareMode } from "./useLevelShareMode";
+import { encodePropsOverride } from "./usePropsOverride";
 
 const STORAGE_KEY = "lab2-variants";
 
@@ -115,7 +116,7 @@ export function buildVariantUrl(
   }
 
   if (Object.keys(overrides).length > 0) {
-    searchParams.set("o", btoa(JSON.stringify(overrides)));
+    searchParams.set("o", encodePropsOverride(overrides));
   }
 
   const search = searchParams.toString();

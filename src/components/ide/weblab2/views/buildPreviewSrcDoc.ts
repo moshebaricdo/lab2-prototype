@@ -91,6 +91,10 @@ function escapeAttributeValue(value: string) {
     .replace(/>/g, "&gt;");
 }
 
+function escapeCssUrlValue(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"").replace(/\n/g, "");
+}
+
 function isHashOnlyHref(href: string) {
   return href.trim().startsWith("#");
 }
@@ -922,6 +926,126 @@ function injectPreviewDebugRuntime(html: string) {
   return `${previewDebugRuntime}\n${html}`;
 }
 
+function isImageAssetFile(file: FlatFile, useProposedContent: boolean) {
+  const lowerName = file.name.toLowerCase();
+  return (
+    !isDeletedInPreview(file, useProposedContent) &&
+    (
+      file.item.type === "image" ||
+      /\.(?:png|jpe?g|gif|webp|svg|bmp|ico)$/i.test(lowerName)
+    )
+  );
+}
+
+function resolveProjectFile(
+  reference: string,
+  currentPath: string,
+  filesByName: Map<string, FlatFile>,
+  filesByPath: Map<string, FlatFile>,
+) {
+  const normalizedReference = resolvePreviewHref(reference, currentPath);
+  if (!normalizedReference) return undefined;
+  return (
+    filesByPath.get(normalizedReference) ??
+    filesByName.get(normalizedReference.split("/").at(-1) ?? normalizedReference)
+  );
+}
+
+function toPreviewSafeAssetUrl(content: string) {
+  const trimmedContent = content.trim();
+  if (!trimmedContent) return undefined;
+  if (trimmedContent.startsWith("data:") || trimmedContent.startsWith("blob:")) {
+    return trimmedContent;
+  }
+
+  if (typeof window === "undefined") return undefined;
+
+  if (trimmedContent.startsWith("/")) {
+    // Do not rewrite network-backed app assets into srcDoc iframes. With the
+    // preview sandbox and COEP headers, those requests can be blocked even when
+    // the path is correct. Starter assets should use data URLs instead.
+    return undefined;
+  }
+
+  const rootRelativeAssetPath = trimmedContent.replace(/^\.\//, "");
+  if (/^(?:assets|src)\//.test(rootRelativeAssetPath)) {
+    return undefined;
+  }
+
+  if (/^https?:\/\//i.test(trimmedContent)) {
+    try {
+      const url = new URL(trimmedContent);
+      return url.origin === window.location.origin ? url.href : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
+function getImageAssetUrl(
+  reference: string,
+  currentPath: string,
+  filesByName: Map<string, FlatFile>,
+  filesByPath: Map<string, FlatFile>,
+  useProposedContent: boolean,
+) {
+  const file = resolveProjectFile(reference, currentPath, filesByName, filesByPath);
+  if (!file || !isImageAssetFile(file, useProposedContent)) return undefined;
+  const content = getEffectiveContent(file.item, useProposedContent);
+  return content ? toPreviewSafeAssetUrl(content) : undefined;
+}
+
+function rewriteHtmlImageAssetUrls(
+  html: string,
+  currentPath: string,
+  filesByName: Map<string, FlatFile>,
+  filesByPath: Map<string, FlatFile>,
+  useProposedContent: boolean,
+) {
+  return html.replace(
+    /\b(src|href)\s*=\s*("[^"]*"|'[^']*'|[^\s"'=<>`]+)/gi,
+    (attribute, name: string, rawValue: string) => {
+      const quote = rawValue.startsWith("\"") || rawValue.startsWith("'") ? rawValue[0] : "";
+      const value = quote ? rawValue.slice(1, -1) : rawValue;
+      const assetUrl = getImageAssetUrl(
+        value,
+        currentPath,
+        filesByName,
+        filesByPath,
+        useProposedContent,
+      );
+      if (!assetUrl) return attribute;
+      return `${name}="${escapeAttributeValue(assetUrl)}"`;
+    },
+  );
+}
+
+function rewriteCssImageAssetUrls(
+  css: string,
+  currentPath: string,
+  filesByName: Map<string, FlatFile>,
+  filesByPath: Map<string, FlatFile>,
+  useProposedContent: boolean,
+) {
+  return css.replace(
+    /url\(\s*("[^"]*"|'[^']*'|[^'")]+)\s*\)/gi,
+    (match, rawValue: string) => {
+      const quote = rawValue.startsWith("\"") || rawValue.startsWith("'") ? rawValue[0] : "";
+      const value = quote ? rawValue.slice(1, -1) : rawValue.trim();
+      const assetUrl = getImageAssetUrl(
+        value,
+        currentPath,
+        filesByName,
+        filesByPath,
+        useProposedContent,
+      );
+      return assetUrl ? `url("${escapeCssUrlValue(assetUrl)}")` : match;
+    },
+  );
+}
+
 function isDeletedInPreview(file: FlatFile, useProposedContent: boolean) {
   return useProposedContent && file.item.proposedStatus === "deleted";
 }
@@ -975,7 +1099,15 @@ export function buildPreviewSrcDoc(
   const filesByName = new Map(flatFiles.map((file) => [file.name, file]));
   const filesByPath = new Map(flatFiles.map((file) => [file.path, file]));
 
-  const htmlWithInlinedStyles = html.replace(
+  const htmlWithImageAssets = rewriteHtmlImageAssetUrls(
+    html,
+    htmlFile.path,
+    filesByName,
+    filesByPath,
+    useProposedContent,
+  );
+
+  const htmlWithInlinedStyles = htmlWithImageAssets.replace(
     /<link\b(?=[^>]*\brel=["']stylesheet["'])(?=[^>]*\bhref=["']([^"']+)["'])[^>]*>/gi,
     (tag, href: string) => {
       if (/^(https?:)?\/\//i.test(href)) return tag;
@@ -986,7 +1118,14 @@ export function buildPreviewSrcDoc(
         filesByName.get(normalizedHref.split("/").at(-1) ?? normalizedHref);
       const css = cssFile ? getEffectiveContent(cssFile.item, useProposedContent) : undefined;
       if (!css) return tag;
-      return `<style data-preview-source="${href}">\n${escapeStyleCloseTag(css)}\n</style>`;
+      const cssWithImageAssets = rewriteCssImageAssetUrls(
+        css,
+        cssFile.path,
+        filesByName,
+        filesByPath,
+        useProposedContent,
+      );
+      return `<style data-preview-source="${href}">\n${escapeStyleCloseTag(cssWithImageAssets)}\n</style>`;
     },
   );
 
@@ -1005,5 +1144,17 @@ export function buildPreviewSrcDoc(
     },
   );
 
-  return injectPreviewRuntime(injectPreviewDebugRuntime(constrainProjectLinks(htmlWithInlinedScripts)));
+  const htmlWithResolvedInlineStyleAssets = htmlWithInlinedScripts.replace(
+    /<style\b([^>]*)>([\s\S]*?)<\/style>/gi,
+    (_tag, attributes: string, css: string) =>
+      `<style${attributes}>${rewriteCssImageAssetUrls(
+        css,
+        htmlFile.path,
+        filesByName,
+        filesByPath,
+        useProposedContent,
+      )}</style>`,
+  );
+
+  return injectPreviewRuntime(injectPreviewDebugRuntime(constrainProjectLinks(htmlWithResolvedInlineStyleAssets)));
 }

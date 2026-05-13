@@ -6,7 +6,6 @@ export type { SidebarProps as ResourcePanelProps } from "./Sidebar.types";
 
 export { ContinueButton } from "./ContinueButton";
 export { InstructionsDrawer } from "./InstructionsDrawer";
-export { PythonLabInstructions } from "./PythonLabInstructions";
 export { SettingsPanel } from "./views/SettingsPanel";
 export { ValidationPanel } from "./views/ValidationPanel";
 export { VersionHistory } from "./views/VersionHistory";

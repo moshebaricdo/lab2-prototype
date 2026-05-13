@@ -5,7 +5,8 @@ import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { TutorRequestMode, TutorStartOptions } from "../../../../types/tutor";
 import styles from "./NewProjectEmptyState.module.scss";
 
-const DEFAULT_STARTER_UPLOAD_ACCEPT = ".html,.htm,.css,.js,.json,.txt,.md";
+const DEFAULT_STARTER_UPLOAD_ACCEPT =
+  ".html,.htm,.css,.js,.json,.txt,.md,.csv,.png,.jpg,.jpeg,.gif,.webp,.svg,.bmp,.ico";
 
 const BUILD_WITH_TUTOR_PROMPT =
   "Help me make a new project. I want to build a web app that...";
@@ -52,7 +53,7 @@ export function NewProjectEmptyState({
       })
       .catch((error) => {
         console.error("[NewProjectEmptyState] Starter file upload failed", error);
-        setStarterUploadError("Unable to load those files. Try a smaller text-only project.");
+        setStarterUploadError("Unable to load those files. Try a smaller project upload.");
       })
       .finally(() => {
         setIsUploadingStarterFiles(false);

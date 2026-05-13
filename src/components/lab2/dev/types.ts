@@ -1,3 +1,11 @@
+import type {
+  AppButtonProps,
+  ButtonSize,
+  ButtonTone,
+  ButtonVariant,
+  FaIconName,
+} from "../../ui/AppButton";
+
 export type DevPanelFieldType =
   | "text"
   | "textarea"
@@ -5,7 +13,8 @@ export type DevPanelFieldType =
   | "slider"
   | "boolean"
   | "select"
-  | "file";
+  | "file"
+  | "action";
 
 export type DevPanelFieldValues = Record<string, unknown>;
 
@@ -72,6 +81,17 @@ export interface DevPanelFileField extends DevPanelFieldBase {
   maxTotalSizeBytes?: number;
 }
 
+export interface DevPanelActionField extends DevPanelFieldBase {
+  type: "action";
+  buttonLabel?: string;
+  iconName?: FaIconName;
+  variant?: ButtonVariant;
+  tone?: ButtonTone;
+  size?: ButtonSize;
+  disabled?: boolean;
+  onAction: AppButtonProps["onClick"];
+}
+
 export type DevPanelField =
   | DevPanelTextField
   | DevPanelTextareaField
@@ -79,4 +99,5 @@ export type DevPanelField =
   | DevPanelSliderField
   | DevPanelBooleanField
   | DevPanelSelectField
-  | DevPanelFileField;
+  | DevPanelFileField
+  | DevPanelActionField;

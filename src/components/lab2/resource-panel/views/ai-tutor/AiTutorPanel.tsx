@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { InstructionsDrawer } from "../../InstructionsDrawer";
+import { AppButton } from "../../../../ui/AppButton";
 import type { InstructionsDrawerVisualCue } from "../../InstructionsDrawer";
 import type {
   ChatAttachment,
@@ -23,6 +24,7 @@ import type {
   TutorRequestMode,
   TutorSubmitHandler,
 } from "../../../../../types/tutor";
+import type { ValidationReviewCardData } from "../../../../../types/validationReview";
 import { AiTutorComposer } from "./AiTutorComposer";
 import { AiTutorMessageList } from "./AiTutorMessageList";
 import {
@@ -86,6 +88,8 @@ interface AiTutorPanelProps {
   newProjectPlanQuestionnaireSignal?: number;
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
+  onValidationReview?: () => ValidationReviewCardData;
+  validationReviewOffer?: ValidationReviewCardData;
 }
 
 function resolveSeedConversation(
@@ -111,6 +115,11 @@ function truncatePreviewText(text: string) {
   const normalized = text.replace(/\s+/g, " ").trim();
   if (normalized.length <= 32) return normalized;
   return `${normalized.slice(0, 29)}...`;
+}
+
+function isValidationReviewIntent(message: string) {
+  return /\b(check|review|validate|grade|done|finished|complete|move on|continue|ready)\b/i
+    .test(message);
 }
 
 function formatPreviewElementAttachmentName(detail: PreviewElementAttachmentDetail) {
@@ -153,6 +162,8 @@ export function AiTutorPanel({
   newProjectPlanQuestionnaireSignal = 0,
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
+  onValidationReview,
+  validationReviewOffer,
 }: AiTutorPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
@@ -655,6 +666,24 @@ export function AiTutorPanel({
     scrollToBottom();
   };
 
+  const appendValidationReview = useCallback(() => {
+    if (!onValidationReview || effectiveIsThinking || hasPendingAiChanges) return;
+    const review = onValidationReview();
+    const reviewMessage: ChatMessage = {
+      role: "assistant",
+      content: "Here is a quick review based on this level's goals and your current project files.",
+      validationReview: review,
+    };
+    appendTutorResponse(reviewMessage);
+    scrollToBottom();
+  }, [
+    appendTutorResponse,
+    effectiveIsThinking,
+    hasPendingAiChanges,
+    onValidationReview,
+    scrollToBottom,
+  ]);
+
   const startTutorRequest = (
     submittedContent: string,
     newMessages: ChatMessage[],
@@ -762,6 +791,27 @@ export function AiTutorPanel({
       attachments: sentAttachments,
     };
     const newMessages = [...chatMessages, newUserMsg];
+
+    if (
+      onValidationReview &&
+      validationReviewOffer &&
+      isValidationReviewIntent(submittedContent)
+    ) {
+      setChatMessages([
+        ...newMessages,
+        {
+          role: "assistant",
+          content: "It sounds like you might be ready for a review. I can check the current project against this level's goals when you are ready.",
+          validationReview: validationReviewOffer,
+        },
+      ]);
+      setGeneratedTutorResponse(null);
+      setChatInput("");
+      resetComposerState();
+      scrollToBottom();
+      return;
+    }
+
     const followUp = sentAttachments
       ? mockTutorConfig?.buildAttachmentFollowUp?.(sentAttachments, inputExperiment)
       : null;
@@ -882,11 +932,27 @@ export function AiTutorPanel({
         onCodeChangeAction={handleCodeChangeAction}
         onNewProjectPlanQuestionnaireSubmit={handleNewProjectPlanQuestionnaireSubmit}
         interactiveCardsDisabled={effectiveIsThinking || hasPendingAiChanges}
+        onValidationReviewRequest={appendValidationReview}
         onOpenFileChangeInEditor={onOpenFileChangeInEditor}
         onOpenFileChangeInPreview={onOpenFileChangeInPreview}
       />
 
       <div ref={inputRef}>
+        {onValidationReview && (
+          <div className={styles.validationReviewBar}>
+            <AppButton
+              variant="secondary"
+              tone="gray"
+              size="s"
+              iconName="clipboard-check"
+              fullWidth
+              disabled={effectiveIsThinking || hasPendingAiChanges}
+              onClick={appendValidationReview}
+            >
+              Check my work
+            </AppButton>
+          </div>
+        )}
         <AiTutorComposer
           inputExperiment={inputExperiment}
           chatInput={chatInput}

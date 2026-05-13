@@ -21,6 +21,7 @@ import {
   multiChoiceLevelLinks,
   pythonLabLevelLinks,
   sampleProgressionLinks,
+  webLab2ValidationProgressionLinks,
   webLab2LevelLinks,
 } from "./levelTypeLinks";
 import styles from "./LevelsIndexPage.module.scss";
@@ -409,6 +410,36 @@ export function LevelsIndexPage() {
                 </div>
                 <div className={styles.bubbleRow}>
                   {sampleProgressionLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div>
+                    <h3 className={styles.cardTitle}>
+                      Web Lab 2 Validation Lab
+                    </h3>
+                    <p className={styles.cardDescription}>
+                      Technical fix → Open-ended creation → Hybrid refinement
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {webLab2ValidationProgressionLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       content={page.name}

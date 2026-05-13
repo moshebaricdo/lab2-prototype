@@ -484,9 +484,11 @@ export function useFileWorkspaceState(
     storageKey?: string;
     initialViewMode?: ViewMode;
     initialFileManagerCollapsed?: boolean;
+    storageFileStructureTransform?: (fileStructure: FileItem[]) => FileItem[];
   } = {},
 ) {
   const storageKey = options.storageKey;
+  const storageFileStructureTransform = options.storageFileStructureTransform;
   const [fileStructureState, setFileStructureState] = useState<FileItem[] | null>(
     () => readStoredFileStructure(storageKey) ?? (initialFileStructure ? cloneFileTree(initialFileStructure) : null),
   );
@@ -516,12 +518,16 @@ export function useFileWorkspaceState(
     try {
       window.sessionStorage.setItem(
         storageKey,
-        JSON.stringify({ fileStructure: cloneFileTreeForStorage(fileStructureState) }),
+        JSON.stringify({
+          fileStructure: storageFileStructureTransform
+            ? storageFileStructureTransform(fileStructureState)
+            : cloneFileTreeForStorage(fileStructureState),
+        }),
       );
     } catch (error) {
       console.warn("[useFileWorkspaceState] Unable to persist file structure", error);
     }
-  }, [fileStructureState, storageKey]);
+  }, [fileStructureState, storageFileStructureTransform, storageKey]);
 
   const syncOpenStateToTree = useCallback((tree: FileItem[]) => {
     setOpenFiles((prev) => {

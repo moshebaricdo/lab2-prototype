@@ -1,4 +1,9 @@
-export { DefaultProjectPreview, fileStructure, versionLabels } from "./projects/default";
+export {
+  DefaultProjectPreview,
+  defaultInstructionsMarkdown,
+  fileStructure,
+  versionLabels,
+} from "./projects/default";
 export {
   initialChatMessages,
   buildFileChipActionConversation,

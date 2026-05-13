@@ -139,7 +139,7 @@ export function CodeMirrorHost({
           ? []
           : [highlightActiveLine(), highlightActiveLineGutter()]),
         lineNumbers(),
-        getLanguageExtension(language),
+        getLanguageExtension(language, fileName),
         originalCode !== undefined
           ? unifiedMergeView({
               original: originalCode,
@@ -171,11 +171,11 @@ export function CodeMirrorHost({
       view.destroy();
       viewRef.current = null;
     };
-    // Recreate the editor view whenever language, diff baseline or read-only
-    // mode flips — these all require a new extension array. `code` is synced
-    // via the dispatch effect below.
+    // Recreate the editor view whenever language, filename-derived grammar,
+    // diff baseline, or read-only mode flips — these all require a new
+    // extension array. `code` is synced via the dispatch effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, originalCode, isReadOnly]);
+  }, [language, fileName, originalCode, isReadOnly]);
 
   useEffect(() => {
     const view = viewRef.current;

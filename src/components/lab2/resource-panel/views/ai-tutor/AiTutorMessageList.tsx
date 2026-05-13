@@ -15,6 +15,10 @@ import type {
   NewProjectPlanAnswers,
 } from "../../../../../types/chat";
 import type { AiTutorInputExperiment } from "../../../../../types/tutor";
+import type {
+  ValidationReviewCardData,
+  ValidationReviewItemStatus,
+} from "../../../../../types/validationReview";
 import { copyTextToClipboard, FileChangesCard, renderMessageContent } from "./messageFormatting";
 import styles from "./AiTutorPanel.module.scss";
 
@@ -40,6 +44,7 @@ interface AiTutorMessageListProps {
   interactiveCardsDisabled?: boolean;
   emptyStateTitle?: string;
   emptyStateText?: string;
+  onValidationReviewRequest?: () => void;
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
 }
@@ -170,6 +175,100 @@ function EmptyState({
   );
 }
 
+function reviewStatusLabel(status: ValidationReviewCardData["status"]) {
+  if (status === "likely_complete") return "Looks close";
+  if (status === "needs_work") return "Needs work";
+  if (status === "in_progress") return "In progress";
+  return "Not started";
+}
+
+function itemIcon(status: ValidationReviewItemStatus): "circle-check" | "circle-xmark" | "circle-minus" {
+  if (status === "pass") return "circle-check";
+  if (status === "missing") return "circle-xmark";
+  return "circle-minus";
+}
+
+function ValidationReviewCard({
+  review,
+  disabled,
+  onRequestReview,
+}: {
+  review: ValidationReviewCardData;
+  disabled: boolean;
+  onRequestReview?: () => void;
+}) {
+  const isOffer = review.kind === "offer";
+
+  return (
+    <div className={styles.validationReviewCard}>
+      <div className={styles.validationReviewHeader}>
+        <div>
+          <p className={styles.validationReviewEyebrow}>
+            {review.mode === "open-ended" ? "Open-ended review" : `${review.mode} review`}
+          </p>
+          <h3 className={styles.validationReviewTitle}>{review.title}</h3>
+        </div>
+        {!isOffer && (
+          <div className={styles.validationReviewStatus}>
+            {reviewStatusLabel(review.status)}
+          </div>
+        )}
+      </div>
+
+      {review.evidence && review.evidence.length > 0 && (
+        <div className={styles.validationReviewSection}>
+          <p className={styles.validationReviewSectionTitle}>Evidence</p>
+          <ul className={styles.validationReviewList}>
+            {review.evidence.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {review.items && review.items.length > 0 && (
+        <div className={styles.validationReviewItems}>
+          {review.items.map((item) => (
+            <div key={item.id} className={styles.validationReviewItem}>
+              <FaIcon
+                name={itemIcon(item.status)}
+                size="s"
+                className={[
+                  styles.validationReviewItemIcon,
+                  item.status === "pass" ? styles.validationReviewItemPass : "",
+                  item.status === "missing" ? styles.validationReviewItemMissing : "",
+                ].filter(Boolean).join(" ")}
+              />
+              <div>
+                <p className={styles.validationReviewItemLabel}>{item.label}</p>
+                <p className={styles.validationReviewItemDetail}>{item.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {review.nextStep && (
+        <p className={styles.validationReviewNextStep}>{review.nextStep}</p>
+      )}
+
+      {isOffer && onRequestReview && (
+        <AppButton
+          variant="primary"
+          tone="purple"
+          size="s"
+          iconName="clipboard-check"
+          fullWidth
+          disabled={disabled}
+          onClick={onRequestReview}
+        >
+          Check my work
+        </AppButton>
+      )}
+    </div>
+  );
+}
+
 export function AiTutorMessageList({
   scrollWrapRef,
   canScrollUp,
@@ -188,6 +287,7 @@ export function AiTutorMessageList({
   interactiveCardsDisabled = false,
   emptyStateTitle,
   emptyStateText,
+  onValidationReviewRequest,
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
 }: AiTutorMessageListProps) {
@@ -295,6 +395,14 @@ export function AiTutorMessageList({
                             Accept
                           </AppButton>
                         </div>
+                      )}
+
+                      {msg.role === "assistant" && msg.validationReview && (
+                        <ValidationReviewCard
+                          review={msg.validationReview}
+                          disabled={interactiveCardsDisabled}
+                          onRequestReview={onValidationReviewRequest}
+                        />
                       )}
 
                       {showTutorActionCards && msg.role === "assistant" && msg.actionCard && (

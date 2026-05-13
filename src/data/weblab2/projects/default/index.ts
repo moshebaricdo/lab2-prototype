@@ -1,5 +1,6 @@
 import type { FileItem } from "../../../../types/file";
 import indexHtml from "./files/index.html?raw";
+import defaultInstructionsMarkdown from "./instructions.md?raw";
 import stylesCss from "./files/styles.css?raw";
 
 export const fileStructure: FileItem[] = [
@@ -34,4 +35,5 @@ export const versionLabels: Record<string, string> = {
   initial: "Initial Version",
 };
 
+export { defaultInstructionsMarkdown };
 export { DefaultProjectPreview } from "./DefaultProjectPreview";

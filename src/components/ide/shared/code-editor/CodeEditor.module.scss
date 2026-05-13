@@ -75,6 +75,53 @@
   padding-left: 0;
 }
 
+.imagePreviewPane {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 24px;
+  background: var(--ds-background-neutral-primary);
+}
+
+.imagePreview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 16%);
+}
+
+.imagePreviewUnavailable {
+  display: flex;
+  max-width: 360px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 8px;
+  background: var(--ds-background-neutral-primary);
+  text-align: center;
+}
+
+.imagePreviewTitle {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+}
+
+.imagePreviewText {
+  margin: 0;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  line-height: 1.5;
+}
+
 /* ================================================
    Tab Bar
    ================================================ */

@@ -63,6 +63,8 @@ export function Sidebar({
   onTutorRequestRunningChange,
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
+  onValidationReview,
+  validationReviewOffer,
   showTutorModelSelector = false,
   aiTutorComposerPlaceholder,
   aiTutorEmptyStateTitle,
@@ -328,6 +330,8 @@ export function Sidebar({
             onRejectAiChanges={onRejectAiChanges}
             onOpenFileChangeInEditor={onOpenFileChangeInEditor}
             onOpenFileChangeInPreview={onOpenFileChangeInPreview}
+            onValidationReview={onValidationReview}
+            validationReviewOffer={validationReviewOffer}
             showTutorModelSelector={showTutorModelSelector}
             aiTutorComposerPlaceholder={aiTutorComposerPlaceholder}
             aiTutorEmptyStateTitle={aiTutorEmptyStateTitle}

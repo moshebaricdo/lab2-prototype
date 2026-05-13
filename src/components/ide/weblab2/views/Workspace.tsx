@@ -85,6 +85,8 @@ interface WorkspaceProps {
   onAddFileToTutor?: (file: FileItem, path: string) => void;
   onDeleteFile?: (file: FileItem, path: string) => void;
   onMoveFileTreeItem?: (sourcePath: string, targetFolderPath: string) => true | string | void;
+  onUploadProjectFiles?: (files: FileList) => Promise<true | string | void> | true | string | void;
+  projectUploadAccept?: string;
   onStartWithTutor?: (
     prompt?: string,
     requestMode?: TutorRequestMode,
@@ -135,6 +137,8 @@ export function Workspace({
   onAddFileToTutor,
   onDeleteFile,
   onMoveFileTreeItem,
+  onUploadProjectFiles,
+  projectUploadAccept,
   onStartWithTutor,
   onUploadStarterFiles,
   starterUploadAccept,
@@ -336,6 +340,8 @@ export function Workspace({
       onAddFileToChat={isViewingHistoryVersion ? undefined : onAddFileToTutor}
       onDeleteFile={isViewingHistoryVersion ? undefined : onDeleteFile}
       onMoveItem={isViewingHistoryVersion ? undefined : onMoveFileTreeItem}
+      onUploadFiles={isViewingHistoryVersion ? undefined : onUploadProjectFiles}
+      uploadAccept={projectUploadAccept}
       enableDragToTutor={isViewingHistoryVersion ? false : enableFileDragToTutor}
       aiChangedFiles={aiChangedFiles}
       builtPlanPaths={builtPlanPaths}

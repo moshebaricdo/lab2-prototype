@@ -4,6 +4,7 @@ import { PythonWorkspace } from "../../components/ide/pythonlab/views";
 import { CreateFileModal } from "../../components/ide/shared";
 import {
   pythonFileStructure,
+  pythonInstructionsMarkdown,
   pythonInitialChatMessages,
 } from "../../data/pythonlab";
 import { useChatState } from "../../hooks/useChatState";
@@ -18,7 +19,7 @@ import {
   setEditorReadOnlyOverride,
 } from "../../hooks/useEditorReadOnly";
 import type { InstructionsDrawerVisualCue } from "../../components/lab2/resource-panel/InstructionsDrawer";
-import { PythonLabInstructions } from "../../components/lab2/resource-panel/PythonLabInstructions";
+import { MarkdownInstructions } from "../../components/lab2/resource-panel/MarkdownInstructions";
 import { pythonLabLevelLinks } from "../levelTypeLinks";
 import { defaultMockTutorConfig } from "../../data/weblab2";
 import { pythonTutorClient } from "../../lib/tutor/tutorClient";
@@ -44,6 +45,7 @@ interface PythonLabLevelPageProps {
   showValidationTab?: boolean;
   validationTestsConfig?: string;
   showHistoryTab?: boolean;
+  instructionsMarkdown?: string;
   instructionsContent?: ReactNode;
   tutorMode?: TutorMode;
 }
@@ -219,6 +221,7 @@ export function PythonLabLevelPage({
   showValidationTab = true,
   validationTestsConfig = DEFAULT_PYTHON_VALIDATION_TESTS_CONFIG,
   showHistoryTab = true,
+  instructionsMarkdown = pythonInstructionsMarkdown,
   instructionsContent,
   tutorMode,
 }: PythonLabLevelPageProps = {}) {
@@ -344,7 +347,7 @@ export function PythonLabLevelPage({
     : selectedFile;
   const visibleOpenFiles = mapFilesToTree(openFiles, visibleFileStructure);
   const resolvedInstructionsContent =
-    instructionsContent ?? <PythonLabInstructions />;
+    instructionsContent ?? <MarkdownInstructions markdown={instructionsMarkdown} />;
   const validationTests = useMemo(
     () => parseValidationTestsConfig(resolved.validationTestsConfig),
     [resolved.validationTestsConfig],

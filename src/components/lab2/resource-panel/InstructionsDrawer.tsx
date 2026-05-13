@@ -4,7 +4,6 @@ import {
   faCircleInfo,
   faChevronDown,
   faChevronUp,
-  faCaretUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { AppButton } from "../../ui/AppButton";
 import styles from "./InstructionsDrawer.module.scss";
@@ -175,78 +174,7 @@ export function InstructionsDrawer({
                 onScroll={updateOverflowState}
               >
                 <div ref={contentRef}>
-                {children ?? (<>
-                <section className={styles.card}>
-                  <h2 className={styles.heading}>
-                    Style Your Webpage to Match Your Brand Identity
-                  </h2>
-                  <p className={styles.text}>
-                    Your goal is to apply your brand&apos;s colors and fonts to create a
-                    consistent, professional look across the entire page.
-                  </p>
-                  <p className={styles.text}>Make sure to:</p>
-                  <ul className={styles.list}>
-                    <li className={styles.listItem}>
-                      Add the html file as context and prompt the AI to update the file with a
-                      link to the stylesheet.
-                    </li>
-                    <li className={styles.listItem}>
-                      Fine-tune specific elements of your webpage so every detail aligns with
-                      your brand&apos;s look and feel.
-                    </li>
-                  </ul>
-                  <p className={`${styles.text} ${styles.textStrong}`}>
-                    Don&apos;t have your own brand identity kit?{" "}
-                    <span className={styles.text}>
-                      Attach one from the sample_brand_kits folder to your chat with AI.
-                    </span>
-                  </p>
-                </section>
-
-                <section className={styles.card}>
-                  <div className={styles.stepHeader}>
-                    <span className={styles.stepIcon}>
-                      <FontAwesomeIcon icon={faCaretUp} />
-                    </span>
-                    <p className={styles.stepTitle}>Helpful Steps</p>
-                  </div>
-                  <ol className={styles.list}>
-                    <li className={styles.listItem}>Generate the Initial Style and save as V1.</li>
-                    <li className={styles.listItem}>
-                      Make Specific Refinement Prompts. Use targeted prompts to give the AI clear
-                      styling instructions, such as:
-                      <ul className={styles.nestedList}>
-                        <li className={styles.listItem}>
-                          &quot;Style the main heading with font [X].&quot;
-                        </li>
-                        <li className={styles.listItem}>
-                          &quot;Change the button background to our secondary color and add a hover
-                          effect.&quot;
-                        </li>
-                        <li className={styles.listItem}>
-                          &quot;Make the footer text smaller and light gray.&quot;
-                        </li>
-                      </ul>
-                    </li>
-                    <li className={styles.listItem}>Save as Version 2.</li>
-                  </ol>
-                </section>
-
-                <section className={styles.card}>
-                  <p className={styles.stepTitle}>Pro Tips</p>
-                  <ul className={styles.list}>
-                    <li className={styles.listItem}>
-                      Test your styles in the preview panel to see changes in real-time.
-                    </li>
-                    <li className={styles.listItem}>
-                      Use version history to compare different styling approaches.
-                    </li>
-                    <li className={styles.listItem}>
-                      Remember: consistency across all elements creates a professional appearance.
-                    </li>
-                  </ul>
-                </section>
-                </>)}
+                  {children}
                 </div>
               </div>
               {shouldShowTopFade && (

@@ -126,9 +126,26 @@
 .list {
   margin: 0;
   padding-left: 21px;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-size: 14px;
   line-height: 1.54;
+  list-style-position: outside;
+}
+
+ul.list {
+  list-style-type: disc;
+}
+
+ol.list {
+  list-style-type: decimal;
+}
+
+.list .list {
+  margin-top: 4px;
+}
+
+.listItem::marker {
+  color: var(--ds-text-neutral-primary);
 }
 
 .nestedList {

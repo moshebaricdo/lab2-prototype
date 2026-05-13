@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import { ScrollArea } from "../../ui/scroll-area";
 import { AppActionDropdown } from "../../ui/AppDropdown";
 import { FaIcon } from "../../ui/icons/FaIcon";
@@ -22,6 +22,8 @@ interface FileManagerProps {
   onNewFile?: () => void;
   onNewFolder?: () => void;
   onNewPlan?: () => void;
+  onUploadFiles?: (files: FileList) => Promise<true | string | void> | true | string | void;
+  uploadAccept?: string;
   onRenameFile?: (file: FileItem, path: string) => void;
   onAddFileToChat?: (file: FileItem, path: string) => void;
   onDeleteFile?: (file: FileItem, path: string) => void;
@@ -102,15 +104,17 @@ function mimeTypeForFile(fileName: string, fileType: FileItem["type"]): string {
 function downloadFile(item: FileItem) {
   if (typeof document === "undefined") return;
   const content = item.proposedContent ?? item.content ?? "";
-  const blob = new Blob([content], { type: mimeTypeForFile(item.name, item.type) });
-  const url = URL.createObjectURL(blob);
+  const shouldUseDataUrl = item.type === "image" && content.startsWith("data:");
+  const url = shouldUseDataUrl
+    ? content
+    : URL.createObjectURL(new Blob([content], { type: mimeTypeForFile(item.name, item.type) }));
   const link = document.createElement("a");
   link.href = url;
   link.download = item.name;
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  if (!shouldUseDataUrl) URL.revokeObjectURL(url);
 }
 
 export function FileManager({
@@ -124,6 +128,8 @@ export function FileManager({
   onNewFile,
   onNewFolder,
   onNewPlan,
+  onUploadFiles,
+  uploadAccept,
   onRenameFile,
   onAddFileToChat,
   onDeleteFile,
@@ -143,6 +149,9 @@ export function FileManager({
   );
   const [draggingPath, setDraggingPath] = useState<string | null>(null);
   const [dropTargetPath, setDropTargetPath] = useState<string | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const visibleFileStructure = useMemo(
     () => showOnlyFilesWithContent
       ? filterFilesWithContent(fileStructure)
@@ -185,6 +194,28 @@ export function FileManager({
     if (sourcePath === targetPath) return false;
     if (targetPath.startsWith(`${sourcePath}/`)) return false;
     return true;
+  };
+
+  const handleUploadChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.currentTarget.files;
+    if (!files || files.length === 0 || !onUploadFiles) return;
+
+    setIsUploadingFiles(true);
+    setUploadError(null);
+    void Promise.resolve(onUploadFiles(files))
+      .then((result) => {
+        if (typeof result === "string") {
+          setUploadError(result);
+        }
+      })
+      .catch((error) => {
+        console.error("[FileManager] File upload failed", error);
+        setUploadError("Unable to upload those files.");
+      })
+      .finally(() => {
+        setIsUploadingFiles(false);
+        event.currentTarget.value = "";
+      });
   };
 
   const renderFileTree = (
@@ -511,8 +542,26 @@ export function FileManager({
                   ...(onNewPlan
                     ? [{ id: "new-plan", label: "New Plan", iconName: "file-lines" as FaIconName, onSelect: onNewPlan }]
                     : []),
+                  ...(onUploadFiles
+                    ? [{
+                        id: "upload-files",
+                        label: isUploadingFiles ? "Uploading..." : "Upload Files",
+                        iconName: "file-arrow-up" as FaIconName,
+                        disabled: isUploadingFiles,
+                        onSelect: () => uploadInputRef.current?.click(),
+                      }]
+                    : []),
                   { id: "import-backpack", label: "Import from Backpack", iconName: "backpack" as FaIconName, onSelect: () => console.log("Import from backpack") },
                 ]}
+              />
+              <input
+                ref={uploadInputRef}
+                type="file"
+                accept={uploadAccept}
+                multiple
+                className={styles.uploadInput}
+                tabIndex={-1}
+                onChange={handleUploadChange}
               />
               <AppButton
                 onClick={onToggleCollapse}
@@ -527,6 +576,11 @@ export function FileManager({
       </div>
 
       {/* File List */}
+      {uploadError ? (
+        <p className={styles.uploadError} role="alert">
+          {uploadError}
+        </p>
+      ) : null}
       <ScrollArea className="flex-1">
         <div className={styles.listContainer}>
           <div className="size-full">

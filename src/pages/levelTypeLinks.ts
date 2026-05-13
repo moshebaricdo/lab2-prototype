@@ -13,6 +13,10 @@ export const webLab2LevelLinks: LevelProgressLink[] = [
     name: "Tutor action card (F2)",
     path: "/levels/weblab2-tutor-action-card",
   },
+  {
+    name: "Validation test",
+    path: "/levels/weblab2-validation-test",
+  },
 ];
 
 export const multiChoiceLevelLinks: LevelProgressLink[] = [
@@ -127,6 +131,21 @@ export const sampleProgressionLinks: LevelProgressLink[] = [
   { name: "Choose Your Path", path: "/levels/progression-bubble-choice" },
   { name: "Practice Project", path: "/levels/progression-branch-color" },
   { name: "HTML & CSS Checkpoint", path: "/levels/progression-levelgroup" },
+];
+
+export const webLab2ValidationProgressionLinks: LevelProgressLink[] = [
+  {
+    name: "Fix the photo button",
+    path: "/levels/progression-weblab2-validation-fix",
+  },
+  {
+    name: "Create a spotlight page",
+    path: "/levels/progression-weblab2-validation-create",
+  },
+  {
+    name: "Refine an event page",
+    path: "/levels/progression-weblab2-validation-refine",
+  },
 ];
 
 /**

@@ -61,33 +61,11 @@
   display: grid;
   min-height: 42px;
   align-items: center;
-  grid-template-columns: 72px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
   background: var(--ds-background-neutral-secondary);
   padding: 8px 12px;
-}
-
-.consoleLevellog,
-.consoleLevelinfo {
-  border-left: 3px solid var(--ds-borders-neutral-strong);
-}
-
-.consoleLevelwarn {
-  border-left: 3px solid var(--ds-background-warning-primary);
-}
-
-.consoleLevelerror {
-  border-left: 3px solid var(--ds-borders-error-primary);
-}
-
-.consoleLevel {
-  color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.64;
-  text-transform: uppercase;
 }
 
 .consoleMessage {

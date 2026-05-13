@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AppButton } from "../../ui/AppButton";
@@ -34,7 +34,20 @@ function TextField({ field, value, controlId, onChange }: FieldProps) {
 function TextareaField({ field, value, controlId, onChange }: FieldProps) {
   const rows = field.type === "textarea" ? (field.rows ?? 3) : 3;
   const [previewing, setPreviewing] = useState(false);
-  const text = (value as string) ?? "";
+  const externalText = (value as string) ?? "";
+  const [draftText, setDraftText] = useState(externalText);
+  const isEditingRef = useRef(false);
+
+  useEffect(() => {
+    if (!isEditingRef.current) {
+      setDraftText(externalText);
+    }
+  }, [externalText]);
+
+  const handleTextChange = (nextText: string) => {
+    setDraftText(nextText);
+    onChange(nextText);
+  };
 
   return (
     <div className={styles.textareaWrap}>
@@ -56,8 +69,8 @@ function TextareaField({ field, value, controlId, onChange }: FieldProps) {
       </div>
       {previewing ? (
         <div className={styles.markdownPreview}>
-          {text ? (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+          {draftText ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{draftText}</ReactMarkdown>
           ) : (
             <span className={styles.previewEmpty}>Nothing to preview</span>
           )}
@@ -67,8 +80,15 @@ function TextareaField({ field, value, controlId, onChange }: FieldProps) {
           id={controlId}
           appearance="bare"
           controlClassName={styles.textarea}
-          value={text}
-          onChange={(e) => onChange(e.target.value)}
+          value={draftText}
+          onBlur={() => {
+            isEditingRef.current = false;
+            setDraftText(externalText);
+          }}
+          onChange={(e) => handleTextChange(e.target.value)}
+          onFocus={() => {
+            isEditingRef.current = true;
+          }}
           placeholder={field.label}
           rows={rows}
         />
@@ -251,6 +271,23 @@ function FileUploadField({ field, value, controlId, onChange }: FieldProps) {
   );
 }
 
+function ActionField({ field }: FieldProps) {
+  if (field.type !== "action") return null;
+  return (
+    <AppButton
+      variant={field.variant ?? "secondary"}
+      tone={field.tone ?? "gray"}
+      size={field.size ?? "s"}
+      iconName={field.iconName}
+      disabled={field.disabled}
+      fullWidth
+      onClick={field.onAction}
+    >
+      {field.buttonLabel ?? field.label}
+    </AppButton>
+  );
+}
+
 const FIELD_COMPONENTS: Record<string, React.ComponentType<FieldProps>> = {
   text: TextField,
   textarea: TextareaField,
@@ -259,6 +296,7 @@ const FIELD_COMPONENTS: Record<string, React.ComponentType<FieldProps>> = {
   boolean: BooleanField,
   select: SelectField,
   file: FileUploadField,
+  action: ActionField,
 };
 
 type FieldRowProps = Omit<FieldProps, "controlId">;
@@ -285,7 +323,7 @@ export function DevPanelFieldRow({
             <span className={styles.storageBadge}>Session</span>
           ) : null}
         </div>
-        {isOverridden && (
+        {isOverridden && field.type !== "action" && (
           <AppButton
             variant="tertiary"
             tone="gray"

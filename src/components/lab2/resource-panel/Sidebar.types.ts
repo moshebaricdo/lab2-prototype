@@ -15,6 +15,7 @@ import type { VersionHistory } from "./views/VersionHistory";
 import type { RubricData } from "./views/RubricPanel";
 import type { FileItem } from "../../../types/file";
 import type { ValidationTestDefinition } from "../../../types/validation";
+import type { ValidationReviewCardData } from "../../../types/validationReview";
 
 export type SidebarTab =
   | "instructions"
@@ -97,6 +98,8 @@ export interface SidebarProps {
   onTutorRequestRunningChange?: (isRunning: boolean) => void;
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
+  onValidationReview?: () => ValidationReviewCardData;
+  validationReviewOffer?: ValidationReviewCardData;
   showTutorModelSelector?: boolean;
   aiTutorComposerPlaceholder?: string;
   aiTutorEmptyStateTitle?: string;

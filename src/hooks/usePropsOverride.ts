@@ -95,7 +95,7 @@ function deleteNestedValue(
   return next;
 }
 
-function encode(overrides: Record<string, unknown>): string {
+export function encodePropsOverride(overrides: Record<string, unknown>): string {
   const bytes = new TextEncoder().encode(JSON.stringify(overrides));
   let binary = "";
   for (const byte of bytes) {
@@ -195,7 +195,7 @@ export function usePropsOverride<T extends Record<string, unknown>>(
         if (Object.keys(next).length === 0) {
           updated.delete(PARAM_KEY);
         } else {
-          updated.set(PARAM_KEY, encode(next));
+          updated.set(PARAM_KEY, encodePropsOverride(next));
         }
         return updated;
       }, { replace: true });

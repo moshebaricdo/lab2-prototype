@@ -1,0 +1,63 @@
+body {
+    font-family: sans-serif;
+    background-color: #fafafa;
+    text-align: center;
+    margin: 0;
+  }
+  
+  #topbar {
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+  }
+  
+  #avatar {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff7a59, #ffd15c);
+    vertical-align: middle;
+  }
+  
+  #brand {
+    display: inline-block;
+    margin: 0 0 0 8px;
+    vertical-align: middle;
+  }
+  
+  #post {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    width: 320px;
+    margin: 20px auto;
+    padding-bottom: 10px;
+  }
+  
+  #photo1,
+  #photo2 {
+    width: 100%;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  #photo2 {
+    display: none;
+  }
+  
+  #actions {
+    margin: 10px;
+  }
+  
+  #next {
+    border: 1px solid #ddd;
+    background-color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  
+  #caption {
+    margin: 10px;
+  }

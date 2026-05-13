@@ -18,6 +18,7 @@ interface VersionHistoryStateOptions {
   onRestoreFileStructure?: (fileStructure: FileItem[]) => void;
   storageKey?: string;
   autosaveIntervalMs?: number;
+  snapshotFileStructureTransform?: (fileStructure: FileItem[]) => FileItem[];
 }
 
 const DEFAULT_AUTOSAVE_INTERVAL_MS = 15_000;
@@ -46,6 +47,7 @@ function createSnapshot(
   kind: VersionSnapshotKind,
   fileStructure: FileItem[],
   description?: string,
+  fileStructureTransform?: (fileStructure: FileItem[]) => FileItem[],
 ): VersionSnapshot {
   const createdAt = new Date();
   return {
@@ -57,7 +59,9 @@ function createSnapshot(
     description,
     createdAt: createdAt.toISOString(),
     kind,
-    fileStructure: cloneFileTreeForSnapshot(fileStructure),
+    fileStructure: fileStructureTransform
+      ? fileStructureTransform(fileStructure)
+      : cloneFileTreeForSnapshot(fileStructure),
   };
 }
 
@@ -106,6 +110,7 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     onRestoreFileStructure,
     storageKey,
     autosaveIntervalMs = DEFAULT_AUTOSAVE_INTERVAL_MS,
+    snapshotFileStructureTransform,
   } = options;
   const [selectedHistoryVersion, setSelectedHistoryVersion] = useState("current");
   const [showRestoreSuccessAlert, setShowRestoreSuccessAlert] = useState(false);
@@ -125,7 +130,14 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     }
     const initialFileStructure = getFileStructure();
     initialHasProjectFilesRef.current = fileTreeHasProjectFiles(initialFileStructure);
-    return [createSnapshot("initial", initialFileStructure)];
+    return [
+      createSnapshot(
+        "initial",
+        initialFileStructure,
+        undefined,
+        snapshotFileStructureTransform,
+      ),
+    ];
   });
   const [hasProjectEverHadFiles, setHasProjectEverHadFiles] = useState(
     () => initialHasProjectFilesRef.current,
@@ -145,7 +157,11 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     const currentFileStructure = getFileStructureRef.current?.();
     if (!currentFileStructure) return;
 
-    const currentSignature = serializeFileTree(currentFileStructure);
+    const currentSignature = serializeFileTree(
+      snapshotFileStructureTransform
+        ? snapshotFileStructureTransform(currentFileStructure)
+        : currentFileStructure,
+    );
     const latestSignature = serializeFileTree(latestChangedSnapshot.fileStructure);
     if (currentSignature === latestSignature) {
       initialStoredSnapshotsRef.current = null;
@@ -163,7 +179,7 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     onRestoreFileStructure(restoredFileStructure);
     lastCheckedSignatureRef.current = latestSignature;
     initialStoredSnapshotsRef.current = null;
-  }, [onRestoreFileStructure, versioningEnabled]);
+  }, [onRestoreFileStructure, snapshotFileStructureTransform, versioningEnabled]);
 
   useEffect(() => {
     if (!versioningEnabled) return;
@@ -174,30 +190,43 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
       if (!fileStructure) return previous;
       return sortSnapshots([
         ...previous,
-        createSnapshot("initial", fileStructure),
+        createSnapshot("initial", fileStructure, undefined, snapshotFileStructureTransform),
       ]);
     });
-  }, [versioningEnabled]);
+  }, [snapshotFileStructureTransform, versioningEnabled]);
 
   useEffect(() => {
     if (!storageKey || !versioningEnabled || typeof window === "undefined") return;
 
-    window.sessionStorage.setItem(
-      storageKey,
-      JSON.stringify({ snapshots }),
-    );
+    try {
+      window.sessionStorage.setItem(
+        storageKey,
+        JSON.stringify({ snapshots }),
+      );
+    } catch (error) {
+      console.warn("[useVersionHistoryState] Unable to persist version history", error);
+    }
   }, [snapshots, storageKey, versioningEnabled]);
 
   useEffect(() => {
     if (!versioningEnabled) return;
     const fileStructure = getFileStructureRef.current?.();
     if (fileStructure) {
-      lastCheckedSignatureRef.current ??= serializeFileTree(fileStructure);
+      lastCheckedSignatureRef.current ??= serializeFileTree(
+        snapshotFileStructureTransform
+          ? snapshotFileStructureTransform(fileStructure)
+          : fileStructure,
+      );
       if (!hasProjectEverHadFiles && fileTreeHasProjectFiles(fileStructure)) {
         setHasProjectEverHadFiles(true);
       }
     }
-  }, [getFileStructure, hasProjectEverHadFiles, versioningEnabled]);
+  }, [
+    getFileStructure,
+    hasProjectEverHadFiles,
+    snapshotFileStructureTransform,
+    versioningEnabled,
+  ]);
 
   useEffect(() => {
     if (hasProjectEverHadFiles || !snapshotsHaveProjectFiles(snapshots)) return;
@@ -212,14 +241,23 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     const fileStructure = fileStructureOverride ?? getFileStructureRef.current?.();
     if (!fileStructure) return null;
 
-    const snapshot = createSnapshot(kind, fileStructure, description);
+    const snapshot = createSnapshot(
+      kind,
+      fileStructure,
+      description,
+      snapshotFileStructureTransform,
+    );
     if (fileTreeHasProjectFiles(fileStructure)) {
       setHasProjectEverHadFiles(true);
     }
     setSnapshots((previous) => sortSnapshots([...previous, snapshot]));
-    lastCheckedSignatureRef.current = serializeFileTree(fileStructure);
+    lastCheckedSignatureRef.current = serializeFileTree(
+      snapshotFileStructureTransform
+        ? snapshotFileStructureTransform(fileStructure)
+        : fileStructure,
+    );
     return snapshot;
-  }, []);
+  }, [snapshotFileStructureTransform]);
 
   useEffect(() => {
     if (!versioningEnabled || autosaveIntervalMs <= 0) return;
@@ -228,14 +266,23 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
       const currentFileStructure = getFileStructureRef.current?.();
       if (!currentFileStructure) return;
 
-      const currentSignature = serializeFileTree(currentFileStructure);
+      const currentSignature = serializeFileTree(
+        snapshotFileStructureTransform
+          ? snapshotFileStructureTransform(currentFileStructure)
+          : currentFileStructure,
+      );
       if (lastCheckedSignatureRef.current === currentSignature) return;
 
       addSnapshot("auto", undefined, currentFileStructure);
     }, autosaveIntervalMs);
 
     return () => window.clearInterval(intervalId);
-  }, [addSnapshot, autosaveIntervalMs, versioningEnabled]);
+  }, [
+    addSnapshot,
+    autosaveIntervalMs,
+    snapshotFileStructureTransform,
+    versioningEnabled,
+  ]);
 
   const handleSaveVersion = useCallback((description: string) => {
     addSnapshot("manual", description.trim());
@@ -251,7 +298,11 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     if (snapshot) {
       const restoredFileStructure = cloneFileTreeForSnapshot(snapshot.fileStructure);
       onRestoreFileStructure?.(restoredFileStructure);
-      lastCheckedSignatureRef.current = serializeFileTree(restoredFileStructure);
+      lastCheckedSignatureRef.current = serializeFileTree(
+        snapshotFileStructureTransform
+          ? snapshotFileStructureTransform(restoredFileStructure)
+          : restoredFileStructure,
+      );
 
       if (snapshot.kind === "initial") {
         setHasRestoredInitialVersion(true);
@@ -261,7 +312,7 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
 
     setSelectedHistoryVersion("current");
     setShowRestoreSuccessAlert(true);
-  }, [onRestoreFileStructure, snapshots]);
+  }, [onRestoreFileStructure, snapshotFileStructureTransform, snapshots]);
 
   const handleReturnToCurrentVersion = useCallback(() => {
     setSelectedHistoryVersion("current");

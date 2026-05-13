@@ -127,6 +127,18 @@
   line-height: 1.64;
 }
 
+.uploadInput {
+  display: none;
+}
+
+.uploadError {
+  margin: 0;
+  padding: 0 12px 8px;
+  color: var(--ds-text-error-primary);
+  font-size: var(--text-label);
+  line-height: 1.4;
+}
+
 .borderOverlay {
   position: absolute;
   inset: 0;

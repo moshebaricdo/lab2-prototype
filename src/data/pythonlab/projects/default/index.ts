@@ -1,5 +1,6 @@
 import type { ChatMessage } from "../../../../types/chat";
 import type { FileItem } from "../../../../types/file";
+import pythonInstructionsMarkdown from "./instructions.md?raw";
 import mainPy from "./files/main.py?raw";
 import readmeMd from "./files/README.md?raw";
 
@@ -17,6 +18,8 @@ export const pythonFileStructure: FileItem[] = [
 ];
 
 export const pythonInitialChatMessages: ChatMessage[] = [];
+
+export { pythonInstructionsMarkdown };
 
 export const SAMPLE_PYTHON_OUTPUT = `What is your name? Ada
 Hello, Ada!

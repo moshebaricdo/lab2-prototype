@@ -50,6 +50,14 @@ export function DevPanelContent<T extends Record<string, unknown>>({
   }, [visibleFields]);
 
   const getFieldState = (field: DevPanelField) => {
+    if (field.type === "action") {
+      return {
+        currentValue: undefined,
+        isOverridden: false,
+        isSessionField: false,
+      };
+    }
+
     const isSessionField = field.storage === "session";
     const currentValue = isSessionField
       ? sessionValues?.[field.key]
@@ -65,6 +73,8 @@ export function DevPanelContent<T extends Record<string, unknown>>({
     return { currentValue, isOverridden, isSessionField };
   };
   const resetField = (field: DevPanelField) => {
+    if (field.type === "action") return;
+
     if (field.storage === "session") {
       onSessionValueReset?.(field.key);
     } else {
@@ -76,6 +86,8 @@ export function DevPanelContent<T extends Record<string, unknown>>({
     const urlFieldKeys: string[] = [];
 
     for (const field of groupFields) {
+      if (field.type === "action") continue;
+
       if (field.storage === "session") {
         onSessionValueReset?.(field.key);
       } else {

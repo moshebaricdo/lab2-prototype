@@ -172,6 +172,15 @@ function getFileIcon(file: FileItem): IconDefinition {
   return faFileCode;
 }
 
+function isRenderableImageSource(source: string) {
+  return (
+    source.startsWith("data:") ||
+    source.startsWith("/") ||
+    source.startsWith("./") ||
+    /^https?:\/\//i.test(source)
+  );
+}
+
 export function CodeEditor({
   openFiles,
   selectedFile,
@@ -364,6 +373,23 @@ export function CodeEditor({
               file: selectedOpenFile,
               hasProposed: Boolean(hasProposed),
             })
+          ) : selectedOpenFile?.type === "image" && selectedCode != null ? (
+            <div className={styles.imagePreviewPane}>
+              {isRenderableImageSource(selectedCode) ? (
+                <img
+                  src={selectedCode}
+                  alt={selectedOpenFile.name}
+                  className={styles.imagePreview}
+                />
+              ) : (
+                <div className={styles.imagePreviewUnavailable}>
+                  <p className={styles.imagePreviewTitle}>Image preview unavailable</p>
+                  <p className={styles.imagePreviewText}>
+                    This image file does not have a browser-readable source.
+                  </p>
+                </div>
+              )}
+            </div>
           ) : selectedOpenFile && selectedCode != null ? (
             <div
               ref={contentPadRef}

@@ -194,6 +194,24 @@ const WebLab2TutorActionCardLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2TutorActionCardLevelPage"),
   "WebLab2TutorActionCardLevelPage",
 );
+const WebLab2ValidationLevel = lazyPage(
+  () => import("./pages/weblab2/WebLab2ValidationLevel"),
+  "WebLab2ValidationLevel",
+);
+const WebLab2ValidationProgressionPages = () =>
+  import("./pages/weblab2/WebLab2ValidationProgressionLevel");
+const WebLab2ValidationProgressionFixLevel = lazyPage(
+  WebLab2ValidationProgressionPages,
+  "WebLab2ValidationProgressionFixLevel",
+);
+const WebLab2ValidationProgressionCreateLevel = lazyPage(
+  WebLab2ValidationProgressionPages,
+  "WebLab2ValidationProgressionCreateLevel",
+);
+const WebLab2ValidationProgressionRefineLevel = lazyPage(
+  WebLab2ValidationProgressionPages,
+  "WebLab2ValidationProgressionRefineLevel",
+);
 
 export default function App() {
   return (
@@ -226,6 +244,22 @@ export default function App() {
         <Route
           path="/levels/weblab2-demo-project-blank"
           element={<WebLab2BlankDemoProjectLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-validation-test"
+          element={<WebLab2ValidationLevel />}
+        />
+        <Route
+          path="/levels/progression-weblab2-validation-fix"
+          element={<WebLab2ValidationProgressionFixLevel />}
+        />
+        <Route
+          path="/levels/progression-weblab2-validation-create"
+          element={<WebLab2ValidationProgressionCreateLevel />}
+        />
+        <Route
+          path="/levels/progression-weblab2-validation-refine"
+          element={<WebLab2ValidationProgressionRefineLevel />}
         />
         <Route path="/levels/multi" element={<MultiChoiceLevelPage />} />
         <Route
