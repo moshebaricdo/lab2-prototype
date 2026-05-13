@@ -53,11 +53,13 @@ The console header includes controls to run code, clear output, and toggle betwe
 - Shared create-file modal: `src/components/ide/shared/CreateFileModal.tsx`
 - Shared version banner: `src/components/ide/shared/VersionBanner.tsx`
 - Validation tab: `src/components/lab2/resource-panel/views/ValidationPanel.tsx`
-- Mock data: `src/data/pythonlab/projects/default` (`main.py` and `README.md`)
+- Mock data: `src/data/pythonlab/projects/default` (`main.py`, `README.md`, and `instructions.md`)
 
 ## Sidebar Config
 
 The Python Lab page uses the standard `Lab2Shell` with `Sidebar` and includes validation, functional version history, instructions drawer, collapsible sidebar, and dev panel support. Version history is powered by `useVersionHistoryState`; selecting an older snapshot shows that file tree in read-only mode until the student returns to Current Version. The blank standalone route disables the instructions drawer and validation by default, then starts the resource panel collapsed while keeping the rail available.
+
+The default guided-route instructions drawer copy lives with the Python starter fixture as raw Markdown in `src/data/pythonlab/projects/default/instructions.md`; route wrappers can override it with `instructionsMarkdown` or provide custom React content with `instructionsContent`.
 
 AI Tutor is functional by default in Python Lab, with a dev-panel mode switch for scripted mock responses. Functional Python Tutor uses the shared Tutor harness in a guidance-only mode: it receives the current editable file tree as read-only context and can answer questions, explain concepts, and help debug runtime errors, but it does not expose Build/Plan controls or file-change proposal actions.
 
