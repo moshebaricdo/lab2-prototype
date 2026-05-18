@@ -4,23 +4,23 @@ import {
   parseAssessmentChecks,
   parseAssessmentGoals,
 } from "../validationAssessment";
-import validationHybridAssessmentMarkdown from "./assessment.md?raw";
+import validationSandboxAssessmentMarkdown from "./assessment.md?raw";
 import indexHtml from "./files/index.html?raw";
-import validationHybridInstructionsMarkdown from "./instructions.md?raw";
+import validationSandboxInstructionsMarkdown from "./instructions.md?raw";
 import scriptJs from "./files/script.js?raw";
 import stylesCss from "./files/style.css?raw";
 
-export const validationHybridReviewConfig: WebLab2ValidationReviewConfig = {
-  mode: "hybrid",
-  title: "Promise tracing review",
-  goals: parseAssessmentGoals(validationHybridAssessmentMarkdown),
-  checks: parseAssessmentChecks(validationHybridAssessmentMarkdown),
+export const validationSandboxReviewConfig: WebLab2ValidationReviewConfig = {
+  mode: "technical",
+  title: "Starship loader loop review",
+  goals: parseAssessmentGoals(validationSandboxAssessmentMarkdown),
+  checks: parseAssessmentChecks(validationSandboxAssessmentMarkdown),
   minimumChangedFiles: 1,
 };
 
-export const validationHybridFileStructure: FileItem[] = [
+export const validationSandboxFileStructure: FileItem[] = [
   {
-    name: "Promise Trace Tool",
+    name: "Starship Odyssey",
     type: "folder",
     children: [
       {
@@ -42,4 +42,4 @@ export const validationHybridFileStructure: FileItem[] = [
   },
 ];
 
-export { validationHybridInstructionsMarkdown };
+export { validationSandboxInstructionsMarkdown };

@@ -1,0 +1,100 @@
+/* Orbitron font for sci-fi feel */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+:root {
+  --neon-blue: #00f3ff;
+  --neon-green: #0aff00;
+  --neon-red: #ff0055;
+  --dark-bg: #0b0d17;
+  --panel-bg: #1a1d2e;
+}
+
+body {
+  background-color: var(--dark-bg);
+  color: white;
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
+
+h1, h2, h3 {
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+h1 { color: var(--neon-blue); margin-bottom: 5px; }
+h2 { font-size: 1rem; color: #888; margin-top: 0; }
+
+.control-panel {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.status-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--neon-blue);
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+}
+
+#run-btn {
+  background-color: var(--neon-green);
+  color: black;
+  border: none;
+  padding: 10px 20px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+
+#run-btn:hover {
+  background-color: #fff;
+  box-shadow: 0 0 10px var(--neon-green);
+}
+
+.cargo-bay {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.container {
+  background: var(--panel-bg);
+  width: 250px;
+  padding: 20px;
+  border-radius: 8px;
+  border-top: 4px solid #444;
+}
+
+.container:nth-child(2) {
+  border-color: var(--neon-blue);
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  min-height: 150px;
+}
+
+li {
+  background: #333;
+  margin: 5px 0;
+  padding: 8px;
+  border-radius: 4px;
+  border-left: 4px solid #666;
+}
+
+/* Helper class to visualize moved items */
+li.loaded {
+  border-left-color: var(--neon-green);
+  background: #224422;
+}

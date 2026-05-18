@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starship Odyssey Auto-Loader</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <header>
+    <h1>🚀 Starship Odyssey</h1>
+    <h2>Auto-Loader System v4.3</h2>
+  </header>
+
+  <main>
+    <div class="control-panel">
+      <div class="status-box">
+        <h3>System Status</h3>
+        <p id="status-msg">Ready to load cargo...</p>
+        <p>Current Weight: <span id="weight-display">0</span> / 800 tons</p>
+        <button id="run-btn">Run Loader Sequence</button>
+      </div>
+    </div>
+
+    <div class="cargo-bay">
+      <div class="container">
+        <h3>📦 Warehouse Queue</h3>
+        <ul id="warehouse-list">
+          </ul>
+      </div>
+
+      <div class="container">
+        <h3>🚀 Ship Cargo Hold</h3>
+        <ul id="ship-list">
+          </ul>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>
