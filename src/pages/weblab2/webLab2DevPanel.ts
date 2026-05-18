@@ -1,10 +1,14 @@
 import type { DevPanelField } from "../../components/lab2/dev";
-import { globalEditorDevFields } from "../../components/lab2/dev";
+import {
+  globalEditorDevFields,
+  resourcePanelCompactDevField,
+} from "../../components/lab2/dev";
 import type {
   RubricData,
   RubricSubmissionStatus,
 } from "../../components/lab2/resource-panel/views/RubricPanel";
 import type { ViewMode } from "../../types/ui";
+import type { ValidationContinueMode } from "../../types/validationReview";
 import {
   STARTER_CODE_UPLOAD_ACCEPT,
   STARTER_UPLOAD_MAX_FILES,
@@ -13,6 +17,7 @@ import {
 
 export const INSTRUCTIONS_MARKDOWN_DEV_KEY = "instructionsMarkdown";
 export const STARTER_CODE_UPLOAD_DEV_KEY = "starterCodeUpload";
+export const VALIDATION_REQUIREMENTS_DEV_KEY = "validationRequirementsConfig";
 
 export type VersionHistoryMode = "mock" | "functional";
 export type RubricDevStatus = RubricSubmissionStatus | "not-graded";
@@ -62,6 +67,12 @@ export function resolveVersionHistoryMode(value: unknown): VersionHistoryMode {
 export function resolveRubricDevStatus(value: unknown): RubricDevStatus {
   if (value === "complete" || value === "needs-revisions") return value;
   return "not-graded";
+}
+
+export function resolveValidationContinueMode(value: unknown): ValidationContinueMode {
+  return value === "require-successful-review"
+    ? "require-successful-review"
+    : "standard";
 }
 
 export function normalizeRubricData(data: RubricData | RubricData[] | undefined): RubricData[] {
@@ -163,12 +174,34 @@ const webLab2ChromeDevFields: DevPanelField[] = [
 ];
 
 const webLab2ResourcePanelDevFields: DevPanelField[] = [
+  resourcePanelCompactDevField,
   {
     key: "showInstructionsDrawer",
     label: "Show instructions drawer",
     description: "Toggle the collapsible instructions affordance in AI Tutor.",
     type: "boolean",
     group: "Resource panel",
+  },
+  {
+    key: INSTRUCTIONS_MARKDOWN_DEV_KEY,
+    label: "Instructions markdown",
+    description: "Markdown rendered inside the instructions drawer and share links.",
+    type: "textarea",
+    rows: 8,
+    group: "Resource panel",
+    visibleWhen: (values) => Boolean(values.showInstructionsDrawer),
+  },
+  {
+    key: "instructionsDrawerInitialHeightRatio",
+    label: "Drawer height ratio",
+    description: "Starting height for the AI Tutor instructions drawer.",
+    type: "number",
+    min: 0.2,
+    max: 0.8,
+    step: 0.05,
+    controlLayout: "inline",
+    group: "Resource panel",
+    visibleWhen: (values) => Boolean(values.showInstructionsDrawer),
   },
   {
     key: "enableSidebarCollapse",
@@ -184,25 +217,6 @@ const webLab2ResourcePanelDevFields: DevPanelField[] = [
     type: "boolean",
     group: "Resource panel",
     visibleWhen: (values) => Boolean(values.enableSidebarCollapse),
-  },
-  {
-    key: INSTRUCTIONS_MARKDOWN_DEV_KEY,
-    label: "Instructions markdown",
-    description: "Markdown rendered inside the instructions drawer and share links.",
-    type: "textarea",
-    rows: 8,
-    group: "Resource panel",
-    visibleWhen: (values) => Boolean(values.showInstructionsDrawer),
-  },
-  {
-    key: "instructionsDrawerInitialHeightRatio",
-    label: "Drawer height ratio",
-    description: "Starting height for the AI Tutor instructions drawer.",
-    type: "slider",
-    min: 0.2,
-    max: 0.8,
-    step: 0.05,
-    group: "Resource panel",
   },
 ];
 
@@ -243,13 +257,6 @@ const webLab2TutorDevFields: DevPanelField[] = [
     group: "AI Tutor",
   },
   {
-    key: "showTutorModelSelector",
-    label: "Show mode selector",
-    description: "Toggle the tutor composer Auto, Build, Plan, and Help dropdown.",
-    type: "boolean",
-    group: "AI Tutor",
-  },
-  {
     key: "autoSeedTutorConversation",
     label: "Auto-seed tutor chat",
     description: "Start the mock tutor with its configured conversation seed.",
@@ -258,11 +265,19 @@ const webLab2TutorDevFields: DevPanelField[] = [
     visibleWhen: (values) => values.tutorModeKind !== "functional",
   },
   {
+    key: "showTutorModelSelector",
+    label: "Show mode selector",
+    description: "Toggle the tutor composer Auto, Build, Plan, and Help dropdown.",
+    type: "boolean",
+    group: "AI Tutor",
+  },
+  {
     key: "additionalTutorPrompt",
     label: "Additional system prompt",
     description: "Prompt addendum for functional tutor calls. This setting is encoded in share links.",
     type: "textarea",
     rows: 6,
+    markdownPreview: false,
     group: "AI Tutor",
   },
 ];
@@ -333,13 +348,39 @@ const webLab2VersionHistoryDevFields: DevPanelField[] = [
   },
 ];
 
+const webLab2ValidationReviewDevFields: DevPanelField[] = [
+  {
+    key: VALIDATION_REQUIREMENTS_DEV_KEY,
+    label: "Validation requirements",
+    description:
+      "One requirement per line. These plain-language requirements are used as the review focus when Check my work runs.",
+    type: "textarea",
+    rows: 5,
+    markdownPreview: false,
+    group: "Validation review",
+  },
+  {
+    key: "validationContinueMode",
+    label: "Continue behavior",
+    description:
+      "Choose whether Continue behaves normally or requires a successful validation review first.",
+    type: "select",
+    options: [
+      { label: "Standard continue", value: "standard" },
+      { label: "Require successful review", value: "require-successful-review" },
+    ],
+    group: "Validation review",
+  },
+];
+
 export const webLab2BaseDevFields: DevPanelField[] = [
   ...webLab2ChromeDevFields,
   ...webLab2ResourcePanelDevFields,
-  ...webLab2TutorDevFields,
   ...webLab2WorkspaceDevFields,
-  ...webLab2VersionHistoryDevFields,
   ...globalEditorDevFields,
+  ...webLab2ValidationReviewDevFields,
+  ...webLab2TutorDevFields,
+  ...webLab2VersionHistoryDevFields,
 ];
 
 export function applyRubricDevSettings(

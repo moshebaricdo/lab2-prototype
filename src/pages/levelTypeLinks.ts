@@ -135,16 +135,20 @@ export const sampleProgressionLinks: LevelProgressLink[] = [
 
 export const webLab2ValidationProgressionLinks: LevelProgressLink[] = [
   {
-    name: "Fix the photo button",
+    name: "Fix the photo carousel",
     path: "/levels/progression-weblab2-validation-fix",
   },
   {
-    name: "Create a spotlight page",
+    name: "Polish Loop styles",
     path: "/levels/progression-weblab2-validation-create",
   },
   {
-    name: "Refine an event page",
+    name: "Trace a Promise",
     path: "/levels/progression-weblab2-validation-refine",
+  },
+  {
+    name: "Fix the Starship loader",
+    path: "/levels/progression-weblab2-validation-sandbox",
   },
 ];
 

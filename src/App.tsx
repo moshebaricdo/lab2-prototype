@@ -198,19 +198,21 @@ const WebLab2ValidationLevel = lazyPage(
   () => import("./pages/weblab2/WebLab2ValidationLevel"),
   "WebLab2ValidationLevel",
 );
-const WebLab2ValidationProgressionPages = () =>
-  import("./pages/weblab2/WebLab2ValidationProgressionLevel");
-const WebLab2ValidationProgressionFixLevel = lazyPage(
-  WebLab2ValidationProgressionPages,
-  "WebLab2ValidationProgressionFixLevel",
+const WebLab2ValidationPhotoCarouselLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2ValidationPhotoCarouselLevelPage"),
+  "WebLab2ValidationPhotoCarouselLevelPage",
 );
-const WebLab2ValidationProgressionCreateLevel = lazyPage(
-  WebLab2ValidationProgressionPages,
-  "WebLab2ValidationProgressionCreateLevel",
+const WebLab2ValidationLoopStylePolishLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2ValidationLoopStylePolishLevelPage"),
+  "WebLab2ValidationLoopStylePolishLevelPage",
 );
-const WebLab2ValidationProgressionRefineLevel = lazyPage(
-  WebLab2ValidationProgressionPages,
-  "WebLab2ValidationProgressionRefineLevel",
+const WebLab2ValidationPromiseTraceLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2ValidationPromiseTraceLevelPage"),
+  "WebLab2ValidationPromiseTraceLevelPage",
+);
+const WebLab2ValidationStarshipLoaderLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2ValidationStarshipLoaderLevelPage"),
+  "WebLab2ValidationStarshipLoaderLevelPage",
 );
 
 export default function App() {
@@ -251,15 +253,19 @@ export default function App() {
         />
         <Route
           path="/levels/progression-weblab2-validation-fix"
-          element={<WebLab2ValidationProgressionFixLevel />}
+          element={<WebLab2ValidationPhotoCarouselLevelPage />}
         />
         <Route
           path="/levels/progression-weblab2-validation-create"
-          element={<WebLab2ValidationProgressionCreateLevel />}
+          element={<WebLab2ValidationLoopStylePolishLevelPage />}
         />
         <Route
           path="/levels/progression-weblab2-validation-refine"
-          element={<WebLab2ValidationProgressionRefineLevel />}
+          element={<WebLab2ValidationPromiseTraceLevelPage />}
+        />
+        <Route
+          path="/levels/progression-weblab2-validation-sandbox"
+          element={<WebLab2ValidationStarshipLoaderLevelPage />}
         />
         <Route path="/levels/multi" element={<MultiChoiceLevelPage />} />
         <Route

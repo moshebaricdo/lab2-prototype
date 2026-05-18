@@ -7,6 +7,7 @@ export function BubbleChoiceImagesLevelPage() {
     <BubbleChoiceWorkspace
       levelLinks={bubbleChoiceLevelLinks}
       currentLevelPath="/levels/bubble-choice-images"
+      completedLevelPaths={["/levels/multi"]}
       payload={mockBubbleChoiceLevelWithImages}
     />
   );

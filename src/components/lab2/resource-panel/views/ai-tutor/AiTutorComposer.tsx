@@ -1,5 +1,7 @@
 import {
+  useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -30,6 +32,8 @@ const TUTOR_MODE_OPTIONS = [
   value: TutorRequestMode;
   iconName: FaIconName;
 }>;
+
+const TEXTAREA_MAX_HEIGHT = 132;
 
 interface AiTutorComposerProps {
   inputExperiment: AiTutorInputExperiment;
@@ -86,7 +90,37 @@ export function AiTutorComposer({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const shimmerTimeoutRef = useRef<number | null>(null);
   const [isShimmering, setIsShimmering] = useState(false);
+  const [canTextareaScrollUp, setCanTextareaScrollUp] = useState(false);
+  const [canTextareaScrollDown, setCanTextareaScrollDown] = useState(false);
   const showDropHelper = isDragOverInput && attachedFiles.length === 0;
+
+  const updateTextareaScrollFades = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const hasOverflow = textarea.scrollHeight - textarea.clientHeight > 1;
+    setCanTextareaScrollUp(hasOverflow && textarea.scrollTop > 1);
+    setCanTextareaScrollDown(
+      hasOverflow && textarea.scrollTop + textarea.clientHeight < textarea.scrollHeight - 1,
+    );
+  }, []);
+
+  const syncTextareaOverflow = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT);
+    textarea.style.height = `${nextHeight}px`;
+    const hasOverflow = textarea.scrollHeight > nextHeight + 1;
+    textarea.style.overflowY = hasOverflow ? "auto" : "hidden";
+
+    updateTextareaScrollFades();
+  }, [updateTextareaScrollFades]);
+
+  useLayoutEffect(() => {
+    syncTextareaOverflow();
+  }, [chatInput, syncTextareaOverflow]);
 
   useEffect(() => {
     const focusTutorInput = () => {
@@ -203,23 +237,33 @@ export function AiTutorComposer({
           }`}
           {...focusWithinProps}
         >
-          <AppTextArea
-            ref={textareaRef}
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (disabled) return;
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                onSend();
-              }
-            }}
-            placeholder={placeholder ?? (isClarified ? "Message AI Tutor..." : "Type something...")}
-            appearance="bare"
-            controlClassName={styles.textarea}
-            disabled={disabled}
-            size="s"
-          />
+          <div className={styles.textareaFrame}>
+            <AppTextArea
+              ref={textareaRef}
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onScroll={updateTextareaScrollFades}
+              onKeyDown={(e) => {
+                if (disabled) return;
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  onSend();
+                }
+              }}
+              placeholder={placeholder ?? (isClarified ? "Message AI Tutor..." : "Type something...")}
+              appearance="bare"
+              controlClassName={styles.textarea}
+              disabled={disabled}
+              rows={1}
+              size="s"
+            />
+            {canTextareaScrollUp ? (
+              <div className={`${styles.textareaFade} ${styles.textareaFadeTop}`} />
+            ) : null}
+            {canTextareaScrollDown ? (
+              <div className={`${styles.textareaFade} ${styles.textareaFadeBottom}`} />
+            ) : null}
+          </div>
           <div className={styles.inputActions}>
             <div>
               <AppButton

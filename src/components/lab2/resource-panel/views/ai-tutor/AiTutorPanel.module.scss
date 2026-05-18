@@ -225,7 +225,7 @@
   background: var(--ds-background-neutral-secondary);
   border-bottom: 1px solid var(--ds-borders-neutral-primary);
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -378,7 +378,7 @@
 
 .codeCardLang {
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -437,6 +437,10 @@
   background: var(--ds-background-neutral-secondary);
 }
 
+.alertBubbleValidation {
+  background: var(--ds-background-info-extra-light);
+}
+
 .alertIcon {
   flex-shrink: 0;
   color: var(--ds-text-success-primary);
@@ -445,6 +449,10 @@
 
 .alertIconRejected {
   color: var(--ds-text-neutral-quaternary);
+}
+
+.alertIconValidation {
+  color: var(--ds-text-info-primary);
 }
 
 .alertText {
@@ -718,11 +726,42 @@
 
 /* ─── Textarea ────────────────────────────────────────── */
 
+.textareaFrame {
+  position: relative;
+}
+
 .textarea {
   min-height: 40px;
   border: 0;
+  overflow-y: hidden;
   padding: 0;
   resize: none;
+}
+
+.textareaFade {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 12px;
+  pointer-events: none;
+}
+
+.textareaFadeTop {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--ds-background-neutral-primary) 15%,
+    transparent
+  );
+}
+
+.textareaFadeBottom {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    var(--ds-background-neutral-primary) 15%,
+    transparent
+  );
 }
 
 .textarea:focus-visible {
@@ -736,7 +775,7 @@
 /* ─── Input actions row ───────────────────────────────── */
 
 .inputActions {
-  margin-top: 12px;
+  margin-top: 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -941,31 +980,54 @@
 
 /* ─── Validation review card ─────────────────────────── */
 
+.validationReviewStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .validationReviewCard {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--ds-background-neutral-primary);
-  padding: 12px;
+  overflow: hidden;
 }
 
 .validationReviewHeader {
   display: flex;
-  align-items: flex-start;
+  min-height: 40px;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  background: var(--ds-background-neutral-secondary);
+  padding: 8px 12px;
+}
+
+.validationReviewBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.validationReviewInlineAction {
+  margin-top: 0;
 }
 
 .validationReviewEyebrow {
-  margin: 0 0 2px;
-  color: var(--ds-text-neutral-quaternary);
+  margin: 0;
+  overflow: hidden;
+  color: var(--ds-text-neutral-tertiary);
   font-family: var(--font-body);
   font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.3;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .validationReviewTitle {
@@ -973,100 +1035,141 @@
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.35;
+  line-height: 1.4;
+  padding: 10px 12px 0;
 }
 
 .validationReviewStatus {
   flex-shrink: 0;
-  border-radius: 999px;
-  background: var(--ds-background-brand-aqua-extra-light);
-  color: var(--ds-text-neutral-primary);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1;
-  padding: 6px 8px;
-}
-
-.validationReviewSection {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.validationReviewSectionTitle {
-  margin: 0;
   color: var(--ds-text-neutral-tertiary);
   font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.3;
+  line-height: 1;
 }
 
-.validationReviewList {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.validationReviewSpinner {
+  animation: validationReviewSpin 0.8s linear infinite;
+}
+
+.validationReviewHeadline {
   margin: 0;
-  padding-left: 18px;
   color: var(--ds-text-neutral-secondary);
   font-size: var(--text-label);
   line-height: 1.4;
+  padding: 6px 12px 10px;
 }
 
 .validationReviewItems {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 }
 
 .validationReviewItem {
-  display: grid;
-  grid-template-columns: 16px minmax(0, 1fr);
-  gap: 8px;
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  padding: 10px 12px;
 }
 
-.validationReviewItemIcon {
-  margin-top: 1px;
-  color: var(--ds-text-neutral-quaternary);
+.validationReviewItem:last-child {
+  border-bottom: 0;
 }
 
-.validationReviewItemPass {
-  color: var(--ds-text-success-primary-fixed);
+.validationReviewMarker {
+  display: flex;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--ds-borders-neutral-strong);
+  border-radius: 999px;
+  background: var(--ds-background-neutral-primary);
+  color: var(--ds-text-neutral-white-fixed);
+  font-size: 10px;
+  margin-top: 2px;
 }
 
-.validationReviewItemMissing {
-  color: var(--ds-text-error-primary-fixed);
+.validationReviewMarkerPass {
+  border-color: var(--ds-text-brand-teal-primary);
+  background: var(--ds-text-brand-teal-primary);
+}
+
+.validationReviewMarkerMissing {
+  background: var(--ds-background-neutral-primary);
+}
+
+.validationReviewItemContent {
+  flex: 1;
+  min-width: 0;
 }
 
 .validationReviewItemLabel {
   margin: 0;
   color: var(--ds-text-neutral-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.validationReviewActions {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid var(--ds-borders-neutral-primary);
+  padding: 10px 12px;
+}
+
+.validationReviewActions > * {
+  flex: 1;
+}
+
+.validationReviewTimelineNode {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 8px;
+  background: var(--ds-background-neutral-primary);
+  color: var(--ds-text-neutral-secondary);
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.validationReviewTimelineNode:hover {
+  background: var(--ds-background-neutral-secondary);
+}
+
+.validationReviewTimelineNode:focus-visible {
+  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline-offset: 2px;
+}
+
+.validationReviewTimelineIcon {
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.validationReviewTimelineText {
+  overflow: hidden;
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.validationReviewTimelineAction {
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.3;
 }
 
-.validationReviewItemDetail {
-  margin: 2px 0 0;
-  color: var(--ds-text-neutral-secondary);
-  font-size: var(--text-label);
-  line-height: 1.35;
-}
-
-.validationReviewNextStep {
-  margin: 0;
-  border-radius: 6px;
-  background: var(--ds-background-neutral-secondary);
-  color: var(--ds-text-neutral-secondary);
-  font-size: var(--text-label);
-  line-height: 1.4;
-  padding: 8px;
-}
-
-.validationReviewBar {
-  border-top: 1px solid var(--ds-borders-neutral-primary);
-  background: var(--ds-background-neutral-primary);
-  padding: 8px;
+@keyframes validationReviewSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ─── In-stream attachment row (sent message chips) ──── */

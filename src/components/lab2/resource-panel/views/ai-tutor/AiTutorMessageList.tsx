@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import { useState, type KeyboardEvent, type RefObject } from "react";
 import { ScrollArea } from "../../../../ui/scroll-area";
 import { AppButton } from "../../../../ui/AppButton";
 import { FileChip } from "../../../../ui/FileChip";
@@ -45,6 +45,10 @@ interface AiTutorMessageListProps {
   emptyStateTitle?: string;
   emptyStateText?: string;
   onValidationReviewRequest?: () => void;
+  onValidationReviewAction?: (action: "hint" | "debug") => void;
+  onValidationReviewContinue?: () => void;
+  validationReviewContinueLabel?: string;
+  validationReviewRunning?: boolean;
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
 }
@@ -176,94 +180,201 @@ function EmptyState({
 }
 
 function reviewStatusLabel(status: ValidationReviewCardData["status"]) {
-  if (status === "likely_complete") return "Looks close";
+  if (status === "likely_complete") return "Complete";
   if (status === "needs_work") return "Needs work";
   if (status === "in_progress") return "In progress";
   return "Not started";
 }
 
-function itemIcon(status: ValidationReviewItemStatus): "circle-check" | "circle-xmark" | "circle-minus" {
-  if (status === "pass") return "circle-check";
-  if (status === "missing") return "circle-xmark";
-  return "circle-minus";
+function alertIconName(
+  variant: ChatMessage["alertVariant"],
+): "circle-xmark" | "circle-check" | "circle-info" {
+  if (variant === "rejected") return "circle-xmark";
+  if (variant === "validation") return "circle-info";
+  return "circle-check";
 }
 
 function ValidationReviewCard({
   review,
   disabled,
+  compact = false,
   onRequestReview,
+  onAction,
+  onContinue,
+  continueLabel = "Continue",
+  isRunning = false,
 }: {
   review: ValidationReviewCardData;
   disabled: boolean;
+  compact?: boolean;
   onRequestReview?: () => void;
+  onAction?: (action: "hint" | "debug") => void;
+  onContinue?: () => void;
+  continueLabel?: string;
+  isRunning?: boolean;
 }) {
   const isOffer = review.kind === "offer";
+  const [isExpanded, setIsExpanded] = useState(!compact);
+  const headline = review.status === "likely_complete"
+    ? "This meets the level goals."
+    : review.status === "needs_work"
+      ? "There is still something to work through."
+      : review.status === "in_progress"
+        ? "You are making progress. Keep iterating."
+        : isOffer
+          ? review.nextStep
+          : "Start with one small change, then check again.";
+  const visibleItems = review.items?.slice(0, isExpanded ? 3 : 2) ?? [];
+  const showFallbackSummary = visibleItems.length === 0;
+  const expandCompactCard = () => setIsExpanded(true);
+  const handleCompactCardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    expandCompactCard();
+  };
 
-  return (
-    <div className={styles.validationReviewCard}>
-      <div className={styles.validationReviewHeader}>
-        <div>
-          <p className={styles.validationReviewEyebrow}>
-            {review.mode === "open-ended" ? "Open-ended review" : `${review.mode} review`}
-          </p>
-          <h3 className={styles.validationReviewTitle}>{review.title}</h3>
-        </div>
-        {!isOffer && (
-          <div className={styles.validationReviewStatus}>
-            {reviewStatusLabel(review.status)}
-          </div>
-        )}
-      </div>
-
-      {review.evidence && review.evidence.length > 0 && (
-        <div className={styles.validationReviewSection}>
-          <p className={styles.validationReviewSectionTitle}>Evidence</p>
-          <ul className={styles.validationReviewList}>
-            {review.evidence.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {review.items && review.items.length > 0 && (
-        <div className={styles.validationReviewItems}>
-          {review.items.map((item) => (
-            <div key={item.id} className={styles.validationReviewItem}>
-              <FaIcon
-                name={itemIcon(item.status)}
-                size="s"
-                className={[
-                  styles.validationReviewItemIcon,
-                  item.status === "pass" ? styles.validationReviewItemPass : "",
-                  item.status === "missing" ? styles.validationReviewItemMissing : "",
-                ].filter(Boolean).join(" ")}
-              />
-              <div>
-                <p className={styles.validationReviewItemLabel}>{item.label}</p>
-                <p className={styles.validationReviewItemDetail}>{item.detail}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {review.nextStep && (
-        <p className={styles.validationReviewNextStep}>{review.nextStep}</p>
-      )}
-
-      {isOffer && onRequestReview && (
+  if (isOffer) {
+    return onRequestReview ? (
+      <div className={styles.validationReviewInlineAction}>
         <AppButton
           variant="primary"
           tone="purple"
           size="s"
-          iconName="clipboard-check"
+          icon={isRunning ? (
+            <FaIcon
+              name="spinner-third"
+              size="s"
+              className={styles.validationReviewSpinner}
+            />
+          ) : undefined}
+          iconName={isRunning ? undefined : "clipboard-check"}
           fullWidth
           disabled={disabled}
           onClick={onRequestReview}
         >
-          Check my work
+          {isRunning ? "Checking..." : "Check my work"}
         </AppButton>
+      </div>
+    ) : null;
+  }
+
+  if (compact && !isExpanded) {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        className={styles.validationReviewTimelineNode}
+        onClick={expandCompactCard}
+        onKeyDown={handleCompactCardKeyDown}
+      >
+        <span className={styles.validationReviewTimelineIcon}>
+          <FaIcon name="clipboard-check" size="s" />
+        </span>
+        <span className={styles.validationReviewTimelineText}>
+          Previous check: {reviewStatusLabel(review.status)}
+        </span>
+        <span className={styles.validationReviewTimelineAction}>Show</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.validationReviewStack}>
+      <div className={styles.validationReviewCard}>
+        <div className={styles.validationReviewHeader}>
+          <p className={styles.validationReviewEyebrow}>
+            Review checklist
+          </p>
+          <div className={styles.validationReviewStatus}>
+            {reviewStatusLabel(review.status)}
+          </div>
+        </div>
+
+        <div className={styles.validationReviewBody}>
+          {showFallbackSummary && (
+            <h3 className={styles.validationReviewTitle}>{review.title}</h3>
+          )}
+
+          {showFallbackSummary && headline && (
+            <p className={styles.validationReviewHeadline}>{headline}</p>
+          )}
+
+          {visibleItems.length > 0 && (
+            <div className={styles.validationReviewItems}>
+              {visibleItems.map((item) => (
+                <div key={item.id} className={styles.validationReviewItem}>
+                  <span
+                    className={[
+                      styles.validationReviewMarker,
+                      item.status === "pass" ? styles.validationReviewMarkerPass : "",
+                      item.status === "missing" ? styles.validationReviewMarkerMissing : "",
+                    ].filter(Boolean).join(" ")}
+                  >
+                    {item.status === "pass" && <FaIcon name="check" size="inherit" />}
+                  </span>
+                  <div className={styles.validationReviewItemContent}>
+                    <p className={styles.validationReviewItemLabel}>{item.label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {onAction && review.status !== "likely_complete" && (
+            <div className={styles.validationReviewActions}>
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="s"
+                iconName="lightbulb"
+                fullWidth
+                disabled={disabled}
+                onClick={() => onAction("hint")}
+              >
+                Get a hint
+              </AppButton>
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="s"
+                iconName="bug"
+                fullWidth
+                disabled={disabled}
+                onClick={() => onAction("debug")}
+              >
+                Debug
+              </AppButton>
+            </div>
+          )}
+
+          {compact && isExpanded && (
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              onClick={() => setIsExpanded(false)}
+            >
+              Collapse previous check
+            </AppButton>
+          )}
+        </div>
+      </div>
+
+      {review.status === "likely_complete" && onContinue && (
+        <div className={styles.validationReviewInlineAction}>
+          <AppButton
+            variant="primary"
+            tone="purple"
+            size="s"
+            iconName="arrow-right"
+            iconPosition="end"
+            fullWidth
+            disabled={disabled}
+            onClick={onContinue}
+          >
+            {continueLabel}
+          </AppButton>
+        </div>
       )}
     </div>
   );
@@ -288,10 +399,19 @@ export function AiTutorMessageList({
   emptyStateTitle,
   emptyStateText,
   onValidationReviewRequest,
+  onValidationReviewAction,
+  onValidationReviewContinue,
+  validationReviewContinueLabel,
+  validationReviewRunning = false,
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
 }: AiTutorMessageListProps) {
   const showTutorActionCards = inputExperiment === "tutor-action-card";
+  const latestReviewIndex = chatMessages.reduce(
+    (latest, message, index) =>
+      message.validationReview?.kind === "summary" ? index : latest,
+    -1,
+  );
 
   return (
     <div className={styles.scrollWrap} ref={scrollWrapRef}>
@@ -324,11 +444,20 @@ export function AiTutorMessageList({
 
               {msg.isAlert ? (
                 <div className={styles.messageRow}>
-                  <div className={`${styles.alertBubble} ${msg.alertVariant === "rejected" ? styles.alertBubbleRejected : ""}`}>
+                  <div className={[
+                    styles.alertBubble,
+                    msg.alertVariant === "rejected" ? styles.alertBubbleRejected : "",
+                    msg.alertVariant === "validation" ? styles.alertBubbleValidation : "",
+                  ].filter(Boolean).join(" ")}
+                  >
                     <FaIcon
-                      name={msg.alertVariant === "rejected" ? "circle-xmark" : "circle-check"}
+                      name={alertIconName(msg.alertVariant)}
                       size="s"
-                      className={`${styles.alertIcon} ${msg.alertVariant === "rejected" ? styles.alertIconRejected : ""}`}
+                      className={[
+                        styles.alertIcon,
+                        msg.alertVariant === "rejected" ? styles.alertIconRejected : "",
+                        msg.alertVariant === "validation" ? styles.alertIconValidation : "",
+                      ].filter(Boolean).join(" ")}
                     />
                     <p className={styles.alertText}>{msg.content}</p>
                   </div>
@@ -401,7 +530,15 @@ export function AiTutorMessageList({
                         <ValidationReviewCard
                           review={msg.validationReview}
                           disabled={interactiveCardsDisabled}
+                          compact={
+                            msg.validationReview.kind === "summary" &&
+                            idx !== latestReviewIndex
+                          }
                           onRequestReview={onValidationReviewRequest}
+                          onAction={onValidationReviewAction}
+                          onContinue={onValidationReviewContinue}
+                          continueLabel={validationReviewContinueLabel}
+                          isRunning={validationReviewRunning}
                         />
                       )}
 
@@ -431,7 +568,7 @@ export function AiTutorMessageList({
             </div>
           ))}
 
-          {isThinking && (
+          {isThinking && !validationReviewRunning && (
             <div className={styles.messageBlock}>
               <div className={styles.messageRow}>
                 <ThinkingAnimation

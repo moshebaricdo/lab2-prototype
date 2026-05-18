@@ -13,6 +13,7 @@ export function WebLab2BlankDemoProjectLevelPage() {
       useFilePreview={true}
       showOnlyFilesWithContent
       tutorMode={{ kind: "functional" }}
+      tutorSupportContext="standalone-project"
       rubricData={demoRubrics}
       continueButtonPlacement="header"
       collapseSidebarByDefault={true}

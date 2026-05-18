@@ -13,7 +13,7 @@ import {
   initialChatMessages,
   defaultMockTutorConfig,
 } from "../../data/weblab2";
-import type { FileChange } from "../../types/chat";
+import type { ChatMessage, FileChange } from "../../types/chat";
 import { useChatState } from "../../hooks/useChatState";
 import { useFileWorkspaceState } from "../../hooks/useFileWorkspaceState";
 import { useLayoutState } from "../../hooks/useLayoutState";
@@ -30,12 +30,19 @@ import type { LevelProgressLink } from "../../components/ui/header/LevelProgress
 import type { InstructionsDrawerVisualCue } from "../../components/lab2/resource-panel/InstructionsDrawer";
 import { MarkdownInstructions } from "../../components/lab2/resource-panel/MarkdownInstructions";
 import type { RubricData } from "../../components/lab2/resource-panel/views/RubricPanel";
-import type { WebLab2ValidationReviewConfig } from "../../types/validationReview";
+import type {
+  ValidationContinueMode,
+  ValidationReviewCardData,
+  WebLab2ValidationReviewConfig,
+} from "../../types/validationReview";
 import {
   createValidationReviewOffer,
   createWebLab2ValidationReview,
 } from "../../lib/validation/weblab2Review";
+import { createAiWebLab2ValidationReview } from "../../lib/validation/aiWebLab2Review";
+import { buildLevelProgressSnapshot } from "../../lib/validation/levelProgress";
 import { PROJECT_PLAN_FILE } from "../../lib/tutor/planningRunner";
+import { logTutorEvent } from "../../lib/tutor/tutorDebugLogger";
 import {
   decodeStarterSharePayload,
   encodeStarterSharePayload,
@@ -46,7 +53,9 @@ import type { FileItem } from "../../types/file";
 import type {
   AiTutorInputExperiment,
   MockTutorConfig,
+  TutorPolicy,
   TutorMode,
+  TutorSupportContext,
 } from "../../types/tutor";
 import type { ViewMode } from "../../types/ui";
 import {
@@ -65,9 +74,11 @@ import {
   INSTRUCTIONS_MARKDOWN_DEV_KEY,
   normalizeRubricData,
   resolveRubricDevStatus,
+  resolveValidationContinueMode,
   resolveVersionHistoryMode,
   resolveViewMode,
   STARTER_CODE_UPLOAD_DEV_KEY,
+  VALIDATION_REQUIREMENTS_DEV_KEY,
   webLab2BaseDevFields,
   webLab2ResourcesTabDevFields,
   type VersionHistoryMode,
@@ -96,6 +107,17 @@ import {
 import { useWebLab2Preview } from "../../components/ide/weblab2/useWebLab2Preview";
 import { useWebLab2TutorFlow } from "../../components/ide/weblab2/useWebLab2TutorFlow";
 
+const OPEN_TUTOR_PANEL_EVENT = "weblab:open-tutor-panel";
+
+function parseValidationRequirements(value: unknown, fallback: string[] = []) {
+  if (typeof value !== "string") return fallback;
+  const parsed = value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+  return parsed.length > 0 ? parsed : fallback;
+}
+
 interface WebLab2LevelPageProps {
   currentLevelPath?: string;
   title?: string;
@@ -116,6 +138,8 @@ interface WebLab2LevelPageProps {
   enableSidebarCollapse?: boolean;
   /** When true, the sidebar starts collapsed if sidebar collapse is enabled. */
   collapseSidebarByDefault?: boolean;
+  /** When true, condense the resource panel rail to 40px. */
+  resourcePanelCompact?: boolean;
   /** Optional markdown content to pre-seed the instructions drawer editor. */
   instructionsMarkdown?: string;
   /** Where to render the Continue button: "sidebar" (bottom bar) or "header" (next to bubbles). */
@@ -142,7 +166,9 @@ interface WebLab2LevelPageProps {
   showWalkthroughResources?: boolean;
   /** Optional suffix for route-scoped file/version storage when starter fixtures change. */
   storageKeySuffix?: string;
+  tutorSupportContext?: TutorSupportContext;
   validationReviewConfig?: WebLab2ValidationReviewConfig;
+  validationContinueMode?: ValidationContinueMode;
   levelLinks?: LevelProgressLink[];
   completedLevelPaths?: string[];
   currentLevel?: number;
@@ -167,6 +193,7 @@ export function WebLab2LevelPage({
   showInstructionsDrawer,
   enableSidebarCollapse = false,
   collapseSidebarByDefault = false,
+  resourcePanelCompact = false,
   instructionsMarkdown = defaultInstructionsMarkdown,
   continueButtonPlacement = "sidebar",
   showTutorModelSelector = false,
@@ -180,7 +207,9 @@ export function WebLab2LevelPage({
   showDocumentationResource = true,
   showWalkthroughResources = false,
   storageKeySuffix,
+  tutorSupportContext = "curriculum-level",
   validationReviewConfig,
+  validationContinueMode = "standard",
   levelLinks,
   completedLevelPaths,
   currentLevel = 9,
@@ -215,6 +244,7 @@ export function WebLab2LevelPage({
     showInstructionsDrawer: showInstructionsDrawer ?? true,
     enableSidebarCollapse,
     collapseSidebarByDefault,
+    resourcePanelCompact,
     [INSTRUCTIONS_MARKDOWN_DEV_KEY]: instructionsMarkdown,
     instructionsDrawerVisualCue,
     autoSeedTutorConversation,
@@ -233,6 +263,9 @@ export function WebLab2LevelPage({
     showStudentLessonResource,
     showDocumentationResource,
     showWalkthroughResources,
+    validationContinueMode,
+    [VALIDATION_REQUIREMENTS_DEV_KEY]:
+      validationReviewConfig?.goals.join("\n") ?? "",
     rubricName: firstEditableRubric.name,
     rubricTeacherFeedback: firstEditableRubric.feedback ?? "",
     rubricStatus: getInitialRubricStatus(firstEditableRubric),
@@ -261,9 +294,13 @@ export function WebLab2LevelPage({
   const resolvedEnableDesignMode = Boolean(resolved.enableDesignMode);
   const resolvedEditorReadOnlyOverride = Boolean(resolved[EDITOR_READ_ONLY_STORAGE_KEY]);
   const resolvedAdditionalTutorPrompt = String(resolved.additionalTutorPrompt ?? "");
+  const resolvedInstructionsMarkdown = String(resolved[INSTRUCTIONS_MARKDOWN_DEV_KEY] ?? "");
   const resolvedEnableSidebarCollapse = Boolean(resolved.enableSidebarCollapse);
   const resolvedCollapseSidebarByDefault = Boolean(resolved.collapseSidebarByDefault);
   const resolvedShowTutorModelSelector = Boolean(resolved.showTutorModelSelector);
+  const resolvedValidationContinueMode = resolveValidationContinueMode(
+    resolved.validationContinueMode,
+  );
   const resolvedVersionHistoryMode = resolveVersionHistoryMode(
     resolved.versionHistoryMode,
   );
@@ -301,6 +338,8 @@ export function WebLab2LevelPage({
   const webLab2DevFields = useMemo(
     () => [
       ...webLab2BaseDevFields,
+      ...buildRubricsDevFields(rubricCategoryOptions),
+      ...webLab2ResourcesTabDevFields,
       {
         key: "clearLevelSessionCache",
         label: "Clear level session cache",
@@ -312,8 +351,6 @@ export function WebLab2LevelPage({
         group: "Session cache",
         onAction: handleClearLevelSessionCache,
       } satisfies DevPanelField,
-      ...buildRubricsDevFields(rubricCategoryOptions),
-      ...webLab2ResourcesTabDevFields,
     ],
     [handleClearLevelSessionCache, rubricCategoryOptions],
   );
@@ -367,6 +404,8 @@ export function WebLab2LevelPage({
   const lastResolvedFileManagerCollapsedRef = useRef(
     resolvedCollapseFileManagerByDefault,
   );
+  const [latestValidationReview, setLatestValidationReview] =
+    useState<ValidationReviewCardData | null>(null);
   const appliedStarterShareParamRef = useRef<string | null>(null);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
@@ -466,29 +505,78 @@ export function WebLab2LevelPage({
   const hasPendingAiChanges = !!aiChangedFiles && Object.keys(aiChangedFiles).length > 0;
   const isAiActive = hasPendingAiChanges || hasAcceptedChanges;
   const currentFileStructure = fileStructureState ?? fileStructureOverride ?? fileStructure;
+  const effectiveValidationReviewConfig = useMemo(() => {
+    if (!validationReviewConfig) return undefined;
+    return {
+      ...validationReviewConfig,
+      goals: parseValidationRequirements(
+        resolved[VALIDATION_REQUIREMENTS_DEV_KEY],
+        validationReviewConfig.goals,
+      ),
+    };
+  }, [resolved, validationReviewConfig]);
   const validationReviewOffer = useMemo(
-    () => validationReviewConfig
-      ? createValidationReviewOffer(validationReviewConfig)
+    () => effectiveValidationReviewConfig
+      ? createValidationReviewOffer(effectiveValidationReviewConfig)
       : undefined,
-    [validationReviewConfig],
+    [effectiveValidationReviewConfig],
   );
-  const handleValidationReview = useCallback(() => {
-    if (!validationReviewConfig) {
+  const handleValidationReview = useCallback(async () => {
+    if (!effectiveValidationReviewConfig) {
       throw new Error("Validation review requested without a review config.");
     }
+    logTutorEvent("page validation review started", {
+      title: effectiveValidationReviewConfig.title,
+      mode: effectiveValidationReviewConfig.mode,
+      goalCount: effectiveValidationReviewConfig.goals.length,
+      conversationTurns: chatMessages.length,
+    });
 
-    return createWebLab2ValidationReview({
-      config: validationReviewConfig,
+    const fallbackReview = () => createWebLab2ValidationReview({
+      config: effectiveValidationReviewConfig,
       currentFileStructure,
       initialFileStructure,
       chatMessages,
     });
+    let review: ValidationReviewCardData;
+
+    try {
+      review = await createAiWebLab2ValidationReview({
+        config: effectiveValidationReviewConfig,
+        currentFileStructure,
+        initialFileStructure,
+        chatMessages,
+      }) ?? fallbackReview();
+      logTutorEvent("page validation review evaluated", {
+        title: review.title,
+        status: review.status,
+        confidence: review.confidence,
+        source: "ai-or-fallback",
+        itemCount: review.items?.length ?? 0,
+      });
+    } catch (error) {
+      logTutorEvent("page AI validation review fell back", error, "warn");
+      console.warn("[WebLab2LevelPage] AI validation review fell back to local review", error);
+      review = fallbackReview();
+      logTutorEvent("page validation fallback evaluated", {
+        title: review.title,
+        status: review.status,
+        confidence: review.confidence,
+        itemCount: review.items?.length ?? 0,
+      });
+    }
+
+    setLatestValidationReview(review);
+    return review;
   }, [
     chatMessages,
     currentFileStructure,
+    effectiveValidationReviewConfig,
     initialFileStructure,
-    validationReviewConfig,
   ]);
+  useEffect(() => {
+    setLatestValidationReview(null);
+  }, [currentFileStructure]);
   const currentFileStructureWithHydratedImages = useMemo(
     () => hydrateInlineImageContent(
       currentFileStructure,
@@ -532,6 +620,38 @@ export function WebLab2LevelPage({
     ? selectedPlanEntry?.path ?? PROJECT_PLAN_FILE
     : PROJECT_PLAN_FILE;
   const selectedPlanFileName = pathBasename(selectedPlanPath);
+  const levelProgress = useMemo(
+    () => buildLevelProgressSnapshot(latestValidationReview),
+    [latestValidationReview],
+  );
+  const tutorPolicy = useMemo<TutorPolicy>(() => ({
+    lab: "weblab2",
+    supportContext: tutorSupportContext,
+    capabilities: {
+      guidance: true,
+      planning: tutorSupportContext === "standalone-project",
+      workspaceEdits: true,
+      validationReview: Boolean(effectiveValidationReviewConfig),
+      proposalReview: true,
+    },
+    pedagogy: {
+      mode: tutorSupportContext === "curriculum-level" ? "curriculum-socratic" : "open",
+      revealPolicy: tutorSupportContext === "curriculum-level"
+        ? "hint-first"
+        : "direct-when-asked",
+    },
+    routingProfile: effectiveValidationReviewConfig
+      ? "validation-checkpoint"
+      : tutorSupportContext === "standalone-project"
+        ? "open-ended-project"
+        : "guided-level",
+  }), [effectiveValidationReviewConfig, tutorSupportContext]);
+  const handleRejectAiChanges = useCallback(() => {
+    logTutorEvent("proposal rejected", {
+      pendingFileCount: Object.keys(aiChangedFiles ?? {}).length,
+    });
+    rejectAiProposal();
+  }, [aiChangedFiles, rejectAiProposal]);
   const {
     builtPlanPaths,
     buildingPlanPath,
@@ -552,12 +672,17 @@ export function WebLab2LevelPage({
     setChatInput,
     currentFileStructure,
     additionalTutorPrompt: resolvedAdditionalTutorPrompt,
+    levelInstructionsMarkdown: resolvedInstructionsMarkdown,
+    levelProgress,
+    tutorSupportContext,
+    tutorPolicy,
+    validationReviewOffer,
     useFilePreview: resolvedUseFilePreview,
     selectedPlanPath,
     hasPendingAiChanges,
     beginAiProposal,
     acceptAiProposal,
-    rejectAiProposal,
+    rejectAiProposal: handleRejectAiChanges,
     handleSaveAiVersion,
     openFile,
     setActiveTab,
@@ -718,7 +843,6 @@ export function WebLab2LevelPage({
   }, [shareableStarterCodeUpload]);
 
   const resolvedVisualCue = resolved.instructionsDrawerVisualCue as InstructionsDrawerVisualCue;
-  const resolvedInstructionsMarkdown = String(resolved[INSTRUCTIONS_MARKDOWN_DEV_KEY] ?? "");
   const resolvedInstructionsContent = resolvedInstructionsMarkdown.trim()
     ? <MarkdownInstructions markdown={resolvedInstructionsMarkdown} />
     : undefined;
@@ -761,6 +885,65 @@ export function WebLab2LevelPage({
             Boolean(routeTutorMode.kind === "mock" && routeTutorMode.config?.seedOnMount),
         }
       : undefined;
+  const validationContinueRequiresReview = Boolean(
+    effectiveValidationReviewConfig &&
+    resolvedValidationContinueMode === "require-successful-review",
+  );
+  const validationContinueSatisfied =
+    latestValidationReview?.status === "likely_complete";
+  const resolvedContinueLabel = validationContinueRequiresReview &&
+    !validationContinueSatisfied
+    ? "Check my work"
+    : continueLabel;
+  const handleContinueAction = useCallback(() => {
+    logTutorEvent("continue action clicked", {
+      validationContinueRequiresReview,
+      validationContinueSatisfied,
+      label: resolvedContinueLabel,
+    });
+    if (!validationContinueRequiresReview || validationContinueSatisfied) {
+      onContinue?.();
+      return;
+    }
+
+    setActiveTab("ai-tutor");
+    window.dispatchEvent(new CustomEvent(OPEN_TUTOR_PANEL_EVENT));
+    setIsTutorRequestRunning(true);
+    void handleValidationReview()
+      .then((review) => {
+        logTutorEvent("continue validation review completed", {
+          status: review.status,
+          confidence: review.confidence,
+        });
+        const reviewMessage: ChatMessage = {
+          role: "assistant",
+          content: "I checked your work before continuing. Use the review below to decide what to do next.",
+          validationReview: review,
+        };
+        setChatMessages((current) => [...current, reviewMessage]);
+      })
+      .catch((error) => {
+        logTutorEvent("continue validation review failed", error, "error");
+        console.error("[WebLab2LevelPage] Continue validation review failed", error);
+        setChatMessages((current) => [
+          ...current,
+          {
+            role: "assistant",
+            content: "I had trouble checking your work. Try again in a moment.",
+          },
+        ]);
+      })
+      .finally(() => setIsTutorRequestRunning(false));
+  }, [
+    handleValidationReview,
+    onContinue,
+    setActiveTab,
+    setChatMessages,
+    setIsTutorRequestRunning,
+    resolvedContinueLabel,
+    validationContinueRequiresReview,
+    validationContinueSatisfied,
+  ]);
   const topNavigationProps: ComponentProps<typeof Lab2Shell>["topNavigationProps"] = {
     title: resolved.title as string,
     subtitle: topNavigationSubtitle,
@@ -771,8 +954,8 @@ export function WebLab2LevelPage({
     currentLevelPath,
     completedLevelPaths,
     showContinueButton: continueInHeader,
-    onContinue,
-    continueLabel,
+    onContinue: handleContinueAction,
+    continueLabel: resolvedContinueLabel,
   };
   const sidebarProps: Extract<
     ComponentProps<typeof Lab2Shell>,
@@ -799,6 +982,7 @@ export function WebLab2LevelPage({
     setShowSaveSuccessAlert,
     collapsible: resolvedEnableSidebarCollapse,
     defaultCollapsed: resolvedEnableSidebarCollapse && resolvedCollapseSidebarByDefault,
+    compact: Boolean(resolved.resourcePanelCompact),
     instructionsDrawerInitialHeightRatio:
       resolved.instructionsDrawerInitialHeightRatio as number,
     showInstructionsDrawer: Boolean(resolved.showInstructionsDrawer),
@@ -810,15 +994,18 @@ export function WebLab2LevelPage({
     availableTutorContextFiles,
     onTutorSubmit: resolvedTutorModeKind === "functional" ? handleTutorSubmit : undefined,
     onAcceptAiChanges: resolvedTutorModeKind === "functional" ? handleAcceptAiChanges : undefined,
-    onRejectAiChanges: resolvedTutorModeKind === "functional" ? rejectAiProposal : undefined,
+    onRejectAiChanges: resolvedTutorModeKind === "functional" ? handleRejectAiChanges : undefined,
     isTutorRequestRunning,
     onTutorRequestRunningChange: setIsTutorRequestRunning,
     onOpenFileChangeInEditor: handleOpenFileChangeInEditor,
     onOpenFileChangeInPreview: resolvedUseFilePreview
       ? handleOpenFileChangeInPreview
       : undefined,
-    onValidationReview: validationReviewConfig ? handleValidationReview : undefined,
-    validationReviewOffer,
+    onValidationReview: effectiveValidationReviewConfig ? handleValidationReview : undefined,
+    onValidationReviewContinue: validationContinueRequiresReview && onContinue
+      ? handleContinueAction
+      : undefined,
+    validationReviewContinueLabel: continueLabel,
     showTutorModelSelector: resolvedShowTutorModelSelector,
     tutorRequestMode,
     setTutorRequestMode,
@@ -830,8 +1017,8 @@ export function WebLab2LevelPage({
     showWalkthroughResources: resolvedShowWalkthroughResources,
     rubricData: resolvedRubrics,
     showContinueButton: !continueInHeader,
-    onContinue,
-    continueLabel,
+    onContinue: handleContinueAction,
+    continueLabel: resolvedContinueLabel,
     devPanelFields: webLab2DevFields,
     devPanelOverrideResult: overrideResult,
     devPanelSessionValues: {

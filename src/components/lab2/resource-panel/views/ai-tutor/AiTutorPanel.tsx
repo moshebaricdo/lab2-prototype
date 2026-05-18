@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import { InstructionsDrawer } from "../../InstructionsDrawer";
-import { AppButton } from "../../../../ui/AppButton";
 import type { InstructionsDrawerVisualCue } from "../../InstructionsDrawer";
 import type {
   ChatAttachment,
@@ -24,7 +23,11 @@ import type {
   TutorRequestMode,
   TutorSubmitHandler,
 } from "../../../../../types/tutor";
-import type { ValidationReviewCardData } from "../../../../../types/validationReview";
+import type {
+  LevelProgressSnapshot,
+  ValidationReviewCardData,
+} from "../../../../../types/validationReview";
+import { buildLevelProgressSnapshot } from "../../../../../lib/validation/levelProgress";
 import { AiTutorComposer } from "./AiTutorComposer";
 import { AiTutorMessageList } from "./AiTutorMessageList";
 import {
@@ -38,7 +41,10 @@ import {
   createNewProjectPlanQuestionnaireMessage,
   normalizeNewProjectPlanAnswers,
 } from "./newProjectPlanQuestionnaire";
+import { logTutorEvent } from "../../../../../lib/tutor/tutorDebugLogger";
 import styles from "./AiTutorPanel.module.scss";
+
+const FOCUS_TUTOR_INPUT_EVENT = "weblab:focus-tutor-input";
 
 interface CodeAttachmentContext {
   content: string;
@@ -88,8 +94,9 @@ interface AiTutorPanelProps {
   newProjectPlanQuestionnaireSignal?: number;
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
-  onValidationReview?: () => ValidationReviewCardData;
-  validationReviewOffer?: ValidationReviewCardData;
+  onValidationReview?: () => ValidationReviewCardData | Promise<ValidationReviewCardData>;
+  onValidationReviewContinue?: () => void;
+  validationReviewContinueLabel?: string;
 }
 
 function resolveSeedConversation(
@@ -117,9 +124,161 @@ function truncatePreviewText(text: string) {
   return `${normalized.slice(0, 29)}...`;
 }
 
-function isValidationReviewIntent(message: string) {
-  return /\b(check|review|validate|grade|done|finished|complete|move on|continue|ready)\b/i
-    .test(message);
+function validationReviewSubject(review: ValidationReviewCardData) {
+  const subject = review.title
+    .replace(/\s+review\b/i, "")
+    .replace(/\s+assessment\b/i, "")
+    .trim()
+    .toLowerCase();
+
+  if (!subject) return "this level";
+  if (/\bbug$/i.test(subject)) return subject.replace(/\bbug$/i, "fix");
+  return subject;
+}
+
+export function buildValidationReviewOfferMessage(
+  submittedContent: string,
+  review: ValidationReviewCardData,
+) {
+  const subject = validationReviewSubject(review);
+  const hasMultipleRequirements = (review.requirements?.length ?? 0) > 1;
+  const reviewScope = hasMultipleRequirements
+    ? "I'll compare your current project with this level's goals and show which parts look complete and what to work on next."
+    : "I'll compare your current project with this level's goal and let you know if it looks ready.";
+
+  if (/\b(works|worked|working|fixed|done|finished|complete|completed)\b/i.test(submittedContent)) {
+    return hasMultipleRequirements
+      ? `Great, sounds like you made progress on ${subject}. ${reviewScope}`
+      : `Great, sounds like you finished ${subject}. ${reviewScope}`;
+  }
+
+  if (/\b(check|review|validate|grade)\b/i.test(submittedContent)) {
+    return hasMultipleRequirements
+      ? `Let's check your progress on ${subject}. ${reviewScope}`
+      : `Let's check your ${subject}. ${reviewScope}`;
+  }
+
+  return `Before you move on, let's check your ${subject}. ${reviewScope}`;
+}
+
+function shortCriterionLabel(label: string) {
+  const normalized = label.replace(/\s+/g, " ").trim();
+  if (normalized.length <= 90) return normalized;
+  return `${normalized.slice(0, 87)}...`;
+}
+
+function validationReviewRetryAction(
+  review: ValidationReviewCardData,
+  progress: LevelProgressSnapshot | undefined,
+) {
+  const incompleteCount = progress?.incompleteCriteria.length ?? 0;
+  const remainingTarget = incompleteCount > 1 ? "the remaining items" : "the next item";
+  const nextLabel = progress?.nextIncompleteCriterion?.label;
+
+  if (nextLabel && nextLabel.length <= 70) {
+    return `Next up: ${nextLabel}. Check again when that step is ready.`;
+  }
+
+  if (nextLabel) {
+    return "Next up: use the remaining checklist item in the review card as your next step, then check again when it is ready.";
+  }
+
+  if (review.mode === "technical") {
+    return `Work through ${remainingTarget}, then check again.`;
+  }
+
+  if (review.mode === "open-ended") {
+    return `Keep refining ${remainingTarget}, then check again.`;
+  }
+
+  return `Revisit ${remainingTarget}, then check again.`;
+}
+
+export function buildValidationReviewResultMessage(review: ValidationReviewCardData) {
+  const subject = validationReviewSubject(review);
+  const progress = buildLevelProgressSnapshot(review);
+  const passedCount = progress?.passedCriteria.length ?? 0;
+  const incompleteCount = progress?.incompleteCriteria.length ?? 0;
+
+  if (review.status === "likely_complete") {
+    const completedSummary = passedCount > 1
+      ? `${passedCount} criteria are complete`
+      : "the level goal is complete";
+    return passedCount > 1
+      ? `Nice work, your ${subject} passes the level goals: ${completedSummary}. You can continue now.`
+      : `Nice work, your ${subject} passes the level goal: ${completedSummary}. You can continue now.`;
+  }
+
+  if (passedCount > 0 && incompleteCount > 0) {
+    const completedSummary = passedCount > 1
+      ? `${passedCount} checklist items look complete`
+      : `${shortCriterionLabel(progress?.passedCriteria[0]?.label ?? "one checklist item")} looks complete`;
+    return `Nice, ${completedSummary}. ${validationReviewRetryAction(review, progress)}`;
+  }
+
+  if (review.status === "needs_work") {
+    return `Not quite yet. ${validationReviewRetryAction(review, progress)}`;
+  }
+
+  if (review.status === "in_progress") {
+    return `You're making progress on your ${subject}. ${validationReviewRetryAction(review, progress)}`;
+  }
+
+  return `Start with your ${subject}, then check again when you have made the update.`;
+}
+
+function latestSummaryReview(messages: ChatMessage[]) {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const review = messages[index].validationReview;
+    if (review?.kind === "summary") return review;
+  }
+  return null;
+}
+
+export function buildValidationReviewActionPrompt(
+  action: "hint" | "debug",
+  review?: ValidationReviewCardData | null,
+) {
+  const progress = buildLevelProgressSnapshot(review);
+  const nextCriterion = progress?.nextIncompleteCriterion?.label;
+  const target = nextCriterion
+    ? ` for this next checklist item: ${shortCriterionLabel(nextCriterion)}`
+    : " for what to check next";
+
+  if (action === "debug") {
+    return `Help me work through${target} without giving away the full answer. Ask me what I tried first, then guide me toward what to test next.`;
+  }
+
+  return `Give me one small hint${target}. Do not tell me the exact fix yet.`;
+}
+
+function hideValidationReviewOfferActionsWithAlert(messages: ChatMessage[]) {
+  let insertedAlert = false;
+  const nextMessages: ChatMessage[] = [];
+
+  for (const message of messages) {
+    if (message.validationReview?.kind !== "offer") {
+      nextMessages.push(message);
+      continue;
+    }
+
+    nextMessages.push({
+      ...message,
+      validationReview: undefined,
+    });
+
+    if (!insertedAlert) {
+      nextMessages.push({
+        role: "assistant",
+        content: "You requested a review.",
+        isAlert: true,
+        alertVariant: "validation",
+      });
+      insertedAlert = true;
+    }
+  }
+
+  return nextMessages;
 }
 
 function formatPreviewElementAttachmentName(detail: PreviewElementAttachmentDetail) {
@@ -163,7 +322,8 @@ export function AiTutorPanel({
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
   onValidationReview,
-  validationReviewOffer,
+  onValidationReviewContinue,
+  validationReviewContinueLabel,
 }: AiTutorPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
@@ -186,6 +346,7 @@ export function AiTutorPanel({
   const [codeAttachmentTimestamps, setCodeAttachmentTimestamps] = useState<Record<string, string>>({});
   const [codeAttachmentContexts, setCodeAttachmentContexts] = useState<Record<string, CodeAttachmentContext>>({});
   const [isThinking, setIsThinking] = useState(false);
+  const [isValidationReviewRunning, setIsValidationReviewRunning] = useState(false);
   const [generatedTutorResponse, setGeneratedTutorResponse] = useState<ChatMessage | null>(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
@@ -593,6 +754,12 @@ export function AiTutorPanel({
   const handleMarkAttachmentAdded = (msgIndex: number, attachmentPath: string) => {
     const msg = chatMessages[msgIndex];
     const att = msg?.attachments?.find((a) => a.path === attachmentPath);
+    logTutorEvent("attachment add-to-project action", {
+      messageIndex: msgIndex,
+      attachmentPath,
+      fileName: att?.fileName,
+      source: att?.source,
+    });
     if (att) {
       onAddFileToProject?.(att.fileName);
     }
@@ -615,6 +782,11 @@ export function AiTutorPanel({
   const handleActionCardUpdate = (msgIndex: number, newStatus: "added" | "dismissed") => {
     const msg = chatMessages[msgIndex];
     const fileCount = msg?.actionCard?.files.length ?? 0;
+    logTutorEvent("action card updated", {
+      messageIndex: msgIndex,
+      status: newStatus,
+      files: msg?.actionCard?.files ?? [],
+    });
 
     if (newStatus === "added") {
       msg?.actionCard?.files.forEach((fileName) => {
@@ -643,6 +815,12 @@ export function AiTutorPanel({
 
   const handleCodeChangeAction = (msgIndex: number, action: "accepted" | "rejected") => {
     const msg = chatMessages[msgIndex];
+    logTutorEvent("proposal action clicked", {
+      messageIndex: msgIndex,
+      action,
+      saveTitle: msg?.aiSaveTitle,
+      fileChanges: msg?.fileChanges,
+    });
     if (action === "accepted") {
       onAcceptAiChanges?.(msg?.aiSaveTitle);
     } else {
@@ -668,20 +846,90 @@ export function AiTutorPanel({
 
   const appendValidationReview = useCallback(() => {
     if (!onValidationReview || effectiveIsThinking || hasPendingAiChanges) return;
-    const review = onValidationReview();
-    const reviewMessage: ChatMessage = {
-      role: "assistant",
-      content: "Here is a quick review based on this level's goals and your current project files.",
-      validationReview: review,
-    };
-    appendTutorResponse(reviewMessage);
-    scrollToBottom();
+    logTutorEvent("validation review requested from card", {
+      conversationTurns: chatMessagesRef.current.length,
+      hasPendingAiChanges,
+    });
+    setIsThinking(true);
+    setIsValidationReviewRunning(true);
+
+    let reviewPromise: Promise<ValidationReviewCardData>;
+    try {
+      reviewPromise = Promise.resolve(onValidationReview());
+    } catch (error) {
+      console.error("[TutorPanel] Validation review failed", error);
+      setIsThinking(false);
+      setIsValidationReviewRunning(false);
+      appendTutorResponse({
+        role: "assistant",
+        content: "I had trouble checking your work. Try again in a moment.",
+      });
+      return;
+    }
+
+    reviewPromise
+      .then((review) => {
+        logTutorEvent("validation review completed from card", {
+          title: review.title,
+          status: review.status,
+          confidence: review.confidence,
+          itemCount: review.items?.length ?? 0,
+        });
+        const reviewMessage: ChatMessage = {
+          role: "assistant",
+          content: buildValidationReviewResultMessage(review),
+          validationReview: review,
+        };
+        setIsThinking(false);
+        setIsValidationReviewRunning(false);
+        const nextMessages = [
+          ...hideValidationReviewOfferActionsWithAlert(chatMessagesRef.current),
+          reviewMessage,
+        ];
+        pendingAssistantScrollIndexRef.current = nextMessages.length - 1;
+        setChatMessages(nextMessages);
+        setGeneratedTutorResponse(null);
+        scrollToBottom();
+      })
+      .catch((error) => {
+        logTutorEvent("validation review failed from card", error, "error");
+        console.error("[TutorPanel] Validation review failed", error);
+        setIsThinking(false);
+        setIsValidationReviewRunning(false);
+        const nextMessages = [...chatMessagesRef.current, {
+          role: "assistant",
+          content: "I had trouble checking your work. Try again in a moment.",
+        } satisfies ChatMessage];
+        pendingAssistantScrollIndexRef.current = nextMessages.length - 1;
+        setChatMessages(nextMessages);
+      });
   }, [
     appendTutorResponse,
     effectiveIsThinking,
     hasPendingAiChanges,
     onValidationReview,
     scrollToBottom,
+    setChatMessages,
+  ]);
+
+  const handleValidationReviewAction = useCallback((action: "hint" | "debug") => {
+    if (effectiveIsThinking || hasPendingAiChanges) return;
+    const prompt = buildValidationReviewActionPrompt(
+      action,
+      latestSummaryReview(chatMessagesRef.current),
+    );
+    logTutorEvent("validation review follow-up action", {
+      action,
+      promptPreview: prompt.slice(0, 180),
+    });
+    setTutorRequestMode("help");
+    setChatInput(prompt);
+    window.dispatchEvent(new CustomEvent(FOCUS_TUTOR_INPUT_EVENT));
+  }, [
+    effectiveIsThinking,
+    hasPendingAiChanges,
+    setChatInput,
+    setTutorRequestMode,
   ]);
 
   const startTutorRequest = (
@@ -692,12 +940,26 @@ export function AiTutorPanel({
   ) => {
     const requestId = requestSerialRef.current + 1;
     requestSerialRef.current = requestId;
+    logTutorEvent("tutor request started", {
+      requestId,
+      requestMode,
+      mode: onTutorSubmit ? "functional" : mockTutorConfig?.response ? "mock" : "local-no-response",
+      submittedPreview: submittedContent.slice(0, 240),
+      conversationTurns: newMessages.length,
+    });
 
     if (onTutorSubmit) {
       setIsThinking(true);
       onTutorSubmit(submittedContent, newMessages, requestMode)
         .then((response) => {
           if (requestSerialRef.current !== requestId) return;
+          logTutorEvent("functional tutor request resolved", {
+            requestId,
+            hasResponse: Boolean(response),
+            hasFileChanges: Boolean(response?.fileChanges?.length),
+            fileChanges: response?.fileChanges,
+            validationReviewStatus: response?.validationReview?.status,
+          });
           setGeneratedTutorResponse(response ?? {
             role: "assistant",
             content: "I finished thinking, but I do not have a response to show yet. Try sending the request again.",
@@ -705,6 +967,11 @@ export function AiTutorPanel({
         })
         .catch((error) => {
           if (requestSerialRef.current !== requestId) return;
+          logTutorEvent("functional tutor request failed", {
+            requestId,
+            submittedPreview: submittedContent.slice(0, 240),
+            error,
+          }, "error");
           console.error("[TutorPanel] Tutor submit failed", {
             requestId,
             submittedContent,
@@ -720,6 +987,11 @@ export function AiTutorPanel({
       Promise.resolve(resolveMockResponse(mockTutorConfig.response, submittedContent, newMessages))
         .then((response) => {
           if (requestSerialRef.current !== requestId || !response) return;
+          logTutorEvent("mock tutor request resolved", {
+            requestId,
+            hasFileChanges: Boolean(response.fileChanges?.length),
+            validationReviewStatus: response.validationReview?.status,
+          });
           setGeneratedTutorResponse(response);
         });
     } else {
@@ -756,6 +1028,12 @@ export function AiTutorPanel({
       moodboardAttachments,
     );
     const nextMessages = answeredMessages;
+    logTutorEvent("new-project questionnaire submitted", {
+      messageIndex: msgIndex,
+      projectIdea: normalizedAnswers.projectIdea,
+      visualStyle: normalizedAnswers.visualStyle,
+      moodboardAttachmentCount: moodboardAttachments.length,
+    });
 
     setTutorRequestMode("plan");
     setChatInput("");
@@ -785,32 +1063,19 @@ export function AiTutorPanel({
       attachmentMeta: mockTutorConfig?.attachmentMeta,
     });
     const submittedContent = chatInput.trim() || userMessage;
+    logTutorEvent("composer send clicked", {
+      requestMode: tutorRequestMode,
+      submittedPreview: submittedContent.slice(0, 240),
+      attachmentCount: sentAttachments?.length ?? 0,
+      inputExperiment,
+      isFunctional: Boolean(onTutorSubmit),
+    });
     const newUserMsg: ChatMessage = {
       role: "user",
       content: submittedContent,
       attachments: sentAttachments,
     };
     const newMessages = [...chatMessages, newUserMsg];
-
-    if (
-      onValidationReview &&
-      validationReviewOffer &&
-      isValidationReviewIntent(submittedContent)
-    ) {
-      setChatMessages([
-        ...newMessages,
-        {
-          role: "assistant",
-          content: "It sounds like you might be ready for a review. I can check the current project against this level's goals when you are ready.",
-          validationReview: validationReviewOffer,
-        },
-      ]);
-      setGeneratedTutorResponse(null);
-      setChatInput("");
-      resetComposerState();
-      scrollToBottom();
-      return;
-    }
 
     const followUp = sentAttachments
       ? mockTutorConfig?.buildAttachmentFollowUp?.(sentAttachments, inputExperiment)
@@ -847,6 +1112,9 @@ export function AiTutorPanel({
     }
 
     setChatInput("");
+    if (!showModelSelector && tutorRequestMode !== "auto") {
+      setTutorRequestMode("auto");
+    }
     resetComposerState();
     scrollToBottom();
   };
@@ -933,26 +1201,15 @@ export function AiTutorPanel({
         onNewProjectPlanQuestionnaireSubmit={handleNewProjectPlanQuestionnaireSubmit}
         interactiveCardsDisabled={effectiveIsThinking || hasPendingAiChanges}
         onValidationReviewRequest={appendValidationReview}
+        onValidationReviewAction={handleValidationReviewAction}
+        onValidationReviewContinue={onValidationReviewContinue}
+        validationReviewContinueLabel={validationReviewContinueLabel}
+        validationReviewRunning={isValidationReviewRunning}
         onOpenFileChangeInEditor={onOpenFileChangeInEditor}
         onOpenFileChangeInPreview={onOpenFileChangeInPreview}
       />
 
       <div ref={inputRef}>
-        {onValidationReview && (
-          <div className={styles.validationReviewBar}>
-            <AppButton
-              variant="secondary"
-              tone="gray"
-              size="s"
-              iconName="clipboard-check"
-              fullWidth
-              disabled={effectiveIsThinking || hasPendingAiChanges}
-              onClick={appendValidationReview}
-            >
-              Check my work
-            </AppButton>
-          </div>
-        )}
         <AiTutorComposer
           inputExperiment={inputExperiment}
           chatInput={chatInput}

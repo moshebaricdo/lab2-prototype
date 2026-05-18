@@ -1,15 +1,25 @@
 import { useCallback, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { ChatMessage } from "../../../types/chat";
 import type { FileItem } from "../../../types/file";
-import type { TutorRequestMode, TutorStartOptions } from "../../../types/tutor";
+import type { LevelProgressSnapshot } from "../../../types/validationReview";
+import type {
+  TutorPolicy,
+  TutorRequestMode,
+  TutorStartOptions,
+  TutorSupportContext,
+} from "../../../types/tutor";
+import type { ValidationReviewCardData } from "../../../types/validationReview";
 import { PROJECT_PLAN_FILE } from "../../../lib/tutor/planningRunner";
 import { tutorClient } from "../../../lib/tutor/tutorClient";
+import { resolveTutorAction } from "../../../lib/tutor/tutorAction";
+import { logTutorEvent } from "../../../lib/tutor/tutorDebugLogger";
 import { pathBasename } from "../../../utils/fileTree";
 import {
   findFileEntryInTree,
   hasAcceptedCompletedPlanStatus,
   hasNonPlanProjectFiles,
   isPlanOnlyTutorChange,
+  isPlanFilePath,
 } from "./webLab2FileTree";
 
 const STARTER_PROJECT_TUTOR_PROMPT =
@@ -24,6 +34,11 @@ interface UseWebLab2TutorFlowOptions {
   setChatInput: (input: string) => void;
   currentFileStructure: FileItem[];
   additionalTutorPrompt: string;
+  levelInstructionsMarkdown: string;
+  levelProgress?: LevelProgressSnapshot;
+  tutorSupportContext: TutorSupportContext;
+  tutorPolicy: TutorPolicy;
+  validationReviewOffer?: ValidationReviewCardData;
   useFilePreview: boolean;
   selectedPlanPath: string;
   hasPendingAiChanges: boolean;
@@ -47,6 +62,11 @@ export function useWebLab2TutorFlow({
   setChatInput,
   currentFileStructure,
   additionalTutorPrompt,
+  levelInstructionsMarkdown,
+  levelProgress,
+  tutorSupportContext,
+  tutorPolicy,
+  validationReviewOffer,
   useFilePreview,
   selectedPlanPath,
   hasPendingAiChanges,
@@ -70,18 +90,147 @@ export function useWebLab2TutorFlow({
   const [builtPlanPaths, setBuiltPlanPaths] = useState<Set<string>>(() => new Set());
   const buildFromPlanRequestRef = useRef(false);
 
+  const hasActivePlan = useCallback((files: FileItem[], parentPath = ""): boolean => {
+    return files.some((file) => {
+      const path = parentPath ? `${parentPath}/${file.name}` : file.name;
+      if (file.children) {
+        return hasActivePlan(file.children, path);
+      }
+      if (!isPlanFilePath(path)) return false;
+      const content = file.proposedStatus && file.proposedStatus !== "deleted"
+        ? file.proposedContent ?? ""
+        : file.content ?? "";
+      return !/\bStatus:\s*Completed\b/i.test(content);
+    });
+  }, []);
+
+  const didLastAssistantAskPlanningQuestion = useCallback((conversation: ChatMessage[]) => {
+    const lastAssistantMessage = [...conversation]
+      .reverse()
+      .find((message) => message.role === "assistant" && !message.isAlert);
+    if (!lastAssistantMessage?.content.includes("?")) return false;
+    return /\b(plan|project|idea|audience|feature|style|interaction|question|before\s+building|before\s+we\s+build)\b/i
+      .test(lastAssistantMessage.content);
+  }, []);
+
+  const didLastAssistantSuggestEditableWork = useCallback((conversation: ChatMessage[]) => {
+    const lastAssistantMessage = [...conversation]
+      .reverse()
+      .find((message) => message.role === "assistant" && !message.isAlert);
+    if (!lastAssistantMessage) return false;
+    if (lastAssistantMessage.fileChanges?.length || lastAssistantMessage.validationReview) {
+      return false;
+    }
+    return /\b(style\.css|index\.html|script\.js|selector|button|link|hover|focus|style|spacing|color|colour|background|padding|margin|border|class|id)\b/i
+      .test(lastAssistantMessage.content);
+  }, []);
+
+  const buildValidationOfferMessage = useCallback((
+    submittedContent: string,
+    review: ValidationReviewCardData,
+  ) => {
+    const subject = review.title
+      .replace(/\s+review\b/i, "")
+      .replace(/\s+assessment\b/i, "")
+      .trim()
+      .toLowerCase() || "this level";
+    const normalizedSubject = /\bbug$/i.test(subject)
+      ? subject.replace(/\bbug$/i, "fix")
+      : subject;
+    const hasMultipleRequirements = (review.requirements?.length ?? 0) > 1;
+    const reviewScope = hasMultipleRequirements
+      ? "I'll compare your current project with this level's goals and show which parts look complete and what to work on next."
+      : "I'll compare your current project with this level's goal and let you know if it looks ready.";
+
+    if (/\b(works|worked|working|fixed|done|finished|complete|completed)\b/i.test(submittedContent)) {
+      return hasMultipleRequirements
+        ? `Great, sounds like you made progress on ${normalizedSubject}. ${reviewScope}`
+        : `Great, sounds like you finished ${normalizedSubject}. ${reviewScope}`;
+    }
+
+    if (/\b(check|review|validate|grade)\b/i.test(submittedContent)) {
+      return hasMultipleRequirements
+        ? `Let's check your progress on ${normalizedSubject}. ${reviewScope}`
+        : `Let's check your ${normalizedSubject}. ${reviewScope}`;
+    }
+
+    return `Before you move on, let's check your ${normalizedSubject}. ${reviewScope}`;
+  }, []);
+
   const handleTutorSubmit = useCallback(async (
     message: string,
     conversation: ChatMessage[],
     requestMode: TutorRequestMode = "auto",
   ) => {
+    const workflow = {
+      hasActivePlan: hasActivePlan(currentFileStructure),
+      lastAssistantAskedPlanningQuestion: didLastAssistantAskPlanningQuestion(conversation),
+      lastAssistantSuggestedEditableWork: didLastAssistantSuggestEditableWork(conversation),
+      hasPendingProposal: hasPendingAiChanges,
+    };
+    const action = resolveTutorAction({
+      message,
+      requestMode,
+      policy: tutorPolicy,
+      workflow,
+    });
+
+    logTutorEvent("ui action resolved", {
+      requestMode,
+      action,
+      policy: tutorPolicy,
+      workflow,
+      messagePreview: message.slice(0, 180),
+      conversationTurns: conversation.length,
+    });
+
+    if (action.kind === "validationReview" && validationReviewOffer) {
+      logTutorEvent("validation review offer returned", {
+        title: validationReviewOffer.title,
+        status: validationReviewOffer.status,
+      });
+      return {
+        role: "assistant",
+        content: buildValidationOfferMessage(message, validationReviewOffer),
+        validationReview: validationReviewOffer,
+      } satisfies ChatMessage;
+    }
+
+    if (action.kind === "validationReview" || action.kind === "denied") {
+      logTutorEvent("tutor action stopped before model call", {
+        actionKind: action.kind,
+        message: action.message,
+      }, action.kind === "denied" ? "warn" : "info");
+      return {
+        role: "assistant",
+        content: action.message,
+      } satisfies ChatMessage;
+    }
+
+    const resolvedRequestMode: TutorRequestMode =
+      action.kind === "edit" ? "build" : action.kind === "plan" ? "plan" : "help";
     const wasEmptyOrPlanOnlyProject = !hasNonPlanProjectFiles(currentFileStructure);
     const result = await tutorClient({
       message,
       conversation,
       files: currentFileStructure,
       additionalSystemPrompt: additionalTutorPrompt,
-      requestMode,
+      levelInstructionsMarkdown,
+      levelProgress,
+      requestMode: resolvedRequestMode,
+      supportContext: tutorSupportContext,
+    });
+    logTutorEvent("functional tutor result received", {
+      resolvedRequestMode,
+      changeCount: result.changes.length,
+      changes: result.changes.map((change) => ({
+        fileName: change.fileName,
+        status: change.status,
+        linesAdded: change.linesAdded,
+        linesRemoved: change.linesRemoved,
+      })),
+      hasSaveTitle: Boolean(result.saveTitle),
+      messageLength: result.message.length,
     });
 
     if (result.changes.length > 0) {
@@ -91,6 +240,12 @@ export function useWebLab2TutorFlow({
       buildFromPlanRequestRef.current = false;
       setIsFileManagerCollapsed(false);
       beginAiProposal(result.changes);
+      logTutorEvent("ai proposal started", {
+        isPlanOnlyChange,
+        changeCount: result.changes.length,
+        shouldSwitchToPreviewAfterPlanBuild,
+        wasEmptyOrPlanOnlyProject,
+      });
       if (isPlanOnlyChange) {
         setViewMode("code");
         openFile({
@@ -124,10 +279,20 @@ export function useWebLab2TutorFlow({
   }, [
     additionalTutorPrompt,
     beginAiProposal,
+    buildValidationOfferMessage,
     currentFileStructure,
+    didLastAssistantAskPlanningQuestion,
+    didLastAssistantSuggestEditableWork,
+    hasActivePlan,
+    hasPendingAiChanges,
+    levelInstructionsMarkdown,
+    levelProgress,
     openFile,
     setIsFileManagerCollapsed,
     setViewMode,
+    tutorPolicy,
+    tutorSupportContext,
+    validationReviewOffer,
     useFilePreview,
   ]);
 
@@ -142,6 +307,10 @@ export function useWebLab2TutorFlow({
     const nextMessages = [...chatMessages, userMessage];
     buildFromPlanRequestRef.current = true;
     setBuildingPlanPath(selectedPlanPath);
+    logTutorEvent("build plan action started", {
+      selectedPlanPath,
+      conversationTurns: nextMessages.length,
+    });
     setActiveTab("ai-tutor");
     window.dispatchEvent(new CustomEvent(OPEN_TUTOR_PANEL_EVENT));
     setTutorRequestMode("auto");
@@ -153,6 +322,7 @@ export function useWebLab2TutorFlow({
         setChatMessages([...nextMessages, assistantMessage]);
       })
       .catch((error) => {
+        logTutorEvent("build plan action failed", error, "error");
         console.error("[WebLab2LevelPage] Build plan request failed", error);
         buildFromPlanRequestRef.current = false;
         setChatMessages([
@@ -178,6 +348,10 @@ export function useWebLab2TutorFlow({
   ]);
 
   const handleAcceptAiChanges = useCallback((saveTitle?: string) => {
+    logTutorEvent("proposal accepted", {
+      saveTitle,
+      selectedPlanPath,
+    });
     const acceptedFileStructure = acceptAiProposal();
     const acceptedPlan = findFileEntryInTree(acceptedFileStructure, selectedPlanPath);
     if (hasAcceptedCompletedPlanStatus(acceptedPlan?.file)) {
@@ -195,6 +369,11 @@ export function useWebLab2TutorFlow({
       (message) => message.codeChangeStatus === "pending" && message.fileChanges,
     );
     if (!pendingMessage) return;
+    logTutorEvent("proposal banner action", {
+      action,
+      fileChanges: pendingMessage.fileChanges,
+      saveTitle: pendingMessage.aiSaveTitle,
+    });
 
     if (action === "accepted") {
       handleAcceptAiChanges(pendingMessage.aiSaveTitle);
@@ -226,6 +405,11 @@ export function useWebLab2TutorFlow({
   }, [chatMessages, handleAcceptAiChanges, rejectAiProposal, setChatMessages]);
 
   const handleAddFileToTutor = useCallback((file: FileItem, path: string) => {
+    logTutorEvent("project file attached to tutor", {
+      name: file.name,
+      path,
+      type: file.type,
+    });
     setActiveTab("ai-tutor");
     window.setTimeout(() => {
       window.dispatchEvent(new CustomEvent("weblab:add-project-file-to-tutor", {
@@ -242,6 +426,11 @@ export function useWebLab2TutorFlow({
     requestMode: TutorRequestMode = "auto",
     options?: TutorStartOptions,
   ) => {
+    logTutorEvent("start with tutor action", {
+      requestMode,
+      flow: options?.flow,
+      promptPreview: prompt.slice(0, 180),
+    });
     setActiveTab("ai-tutor");
     if (options?.flow === "new-project-plan-questionnaire") {
       setTutorRequestMode("plan");
