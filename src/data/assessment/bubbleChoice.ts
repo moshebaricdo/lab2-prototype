@@ -1,3 +1,7 @@
+import accessibilityPng from "../../assets/media/accessibility.png";
+import colorAndTypePng from "../../assets/media/color-and-type.png";
+import layoutFlexboxPng from "../../assets/media/layout-flexbox.png";
+
 export interface BubbleChoiceOption {
   id: string;
   title: string;
@@ -91,43 +95,33 @@ export const mockBubbleChoiceLevelWithImages: BubbleChoiceLevelPayload = {
     },
     options: [
       {
-        id: "img-animate",
-        title: "Animation basics",
-        description: "Move sprites and choreograph simple scenes.",
+        id: "img-accessibility",
+        title: "Accessibility",
+        description: "Make pages easier to use with alt text and clear structure.",
         levelPath: "/levels/multi",
         image: {
-          src: "https://placehold.co/400x250/e8f5ff/1e3a8a?text=Animation",
-          alt: "Placeholder thumbnail suggesting motion blocks and a stage preview",
+          src: accessibilityPng,
+          alt: "Preview graphic for an accessibility-focused website path",
         },
       },
       {
-        id: "img-data",
-        title: "Data & variables",
-        description: "Store values and show them on screen as your program runs.",
+        id: "img-color-type",
+        title: "Color & type",
+        description: "Explore fonts, contrast, and color choices for stronger designs.",
         levelPath: "/levels/free-response",
         image: {
-          src: "https://placehold.co/400x250/f0fdf4/166534?text=Data",
-          alt: "Placeholder thumbnail suggesting variables and a simple counter display",
+          src: colorAndTypePng,
+          alt: "Preview graphic for a color and typography design path",
         },
       },
       {
-        id: "img-events",
-        title: "Events & input",
-        description: "React to clicks and keys to control your project.",
+        id: "img-layout-flexbox",
+        title: "Layout & Flexbox",
+        description: "Build responsive sections that adapt across screen sizes.",
         levelPath: "/levels/match-connector",
         image: {
-          src: "https://placehold.co/400x250/fef3c7/92400e?text=Events",
-          alt: "Placeholder thumbnail suggesting when-clicked blocks and keyboard input",
-        },
-      },
-      {
-        id: "img-mixed",
-        title: "Mixed challenge",
-        description: "A longer set that combines several skills in one flow.",
-        levelPath: "/levels/levelgroup-scroll",
-        image: {
-          src: "https://placehold.co/400x250/fce7f3/9d174d?text=Challenge",
-          alt: "Placeholder thumbnail suggesting multiple block types in one workspace",
+          src: layoutFlexboxPng,
+          alt: "Preview graphic for a layout and flexbox design path",
         },
       },
     ],

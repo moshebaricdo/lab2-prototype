@@ -59,47 +59,62 @@ export function BubbleChoiceWorkspace({
 
           <div className={styles.cardsRegion}>
             <ul className={styles.optionsGrid}>
-              {level.options.map((option, index) => (
-                <li key={option.id} className={styles.optionItem}>
-                  <button
-                    type="button"
-                    className={[
-                      styles.optionCard,
-                      option.image ? "" : styles.optionCardTextOnly,
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    aria-label={
-                      option.image
-                        ? `${labelForOptionIndex(index, optionLabelStyle)}. ${option.title}. ${option.description}`
-                        : `${labelForOptionIndex(index, optionLabelStyle)}. ${option.title}`
-                    }
-                    onClick={() => navigate(option.levelPath)}
-                  >
-                    {option.image ? (
-                      <div className={styles.optionImageWrap}>
-                        <img
-                          src={option.image.src}
-                          alt=""
-                          className={styles.optionImage}
-                          loading="lazy"
-                          decoding="async"
-                          title={option.image.alt}
-                        />
+              {level.options.map((option, index) => {
+                const optionLabel = labelForOptionIndex(index, optionLabelStyle);
+                const isComplete =
+                  completedLevelPaths?.includes(option.levelPath) ?? false;
+                const completionLabel = isComplete ? "Complete" : "Incomplete";
+
+                return (
+                  <li key={option.id} className={styles.optionItem}>
+                    <button
+                      type="button"
+                      className={[
+                        styles.optionCard,
+                        option.image ? "" : styles.optionCardTextOnly,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      aria-label={
+                        option.image
+                          ? `${optionLabel}. ${completionLabel}. ${option.title}. ${option.description}`
+                          : `${optionLabel}. ${completionLabel}. ${option.title}`
+                      }
+                      onClick={() => navigate(option.levelPath)}
+                    >
+                      {option.image ? (
+                        <div className={styles.optionImageWrap}>
+                          <img
+                            src={option.image.src}
+                            alt=""
+                            className={styles.optionImage}
+                            loading="lazy"
+                            decoding="async"
+                            title={option.image.alt}
+                          />
+                        </div>
+                      ) : null}
+                      <span
+                        className={[
+                          styles.optionLabel,
+                          isComplete ? styles.optionLabelComplete : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        aria-hidden
+                      >
+                        {optionLabel}
+                      </span>
+                      <div className={styles.optionCardBody}>
+                        <p className={styles.optionTitle}>{option.title}</p>
+                        <p className={styles.optionDescription}>
+                          {option.description}
+                        </p>
                       </div>
-                    ) : null}
-                    <span className={styles.optionLabel} aria-hidden>
-                      {labelForOptionIndex(index, optionLabelStyle)}
-                    </span>
-                    <div className={styles.optionCardBody}>
-                      <p className={styles.optionTitle}>{option.title}</p>
-                      <p className={styles.optionDescription}>
-                        {option.description}
-                      </p>
-                    </div>
-                  </button>
-                </li>
-              ))}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
