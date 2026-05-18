@@ -10,6 +10,10 @@ export type ValidationReviewConfidence = "low" | "medium" | "high";
 
 export type ValidationReviewItemStatus = "pass" | "warn" | "missing";
 
+export type ValidationContinueMode = "standard" | "require-successful-review";
+
+export type ValidationEffortPolicy = "none" | "advisory" | "required";
+
 export interface ValidationReviewItem {
   id: string;
   label: string;
@@ -25,6 +29,26 @@ export interface ValidationReviewCardData {
   confidence?: ValidationReviewConfidence;
   items?: ValidationReviewItem[];
   evidence?: string[];
+  requirements?: string[];
+  nextStep?: string;
+}
+
+export interface LevelProgressCriterion {
+  id: string;
+  label: string;
+  status: ValidationReviewItemStatus;
+  detail?: string;
+}
+
+export interface LevelProgressSnapshot {
+  title: string;
+  mode: ValidationReviewMode;
+  status: ValidationReviewStatus;
+  phase: "not_started" | "partially_complete" | "ready_to_continue";
+  passedCriteria: LevelProgressCriterion[];
+  incompleteCriteria: LevelProgressCriterion[];
+  nextIncompleteCriterion?: LevelProgressCriterion;
+  requirements?: string[];
   nextStep?: string;
 }
 
@@ -52,4 +76,5 @@ export interface WebLab2ValidationReviewConfig {
   goals: string[];
   checks?: ValidationReviewCheck[];
   minimumChangedFiles?: number;
+  effortPolicy?: ValidationEffortPolicy;
 }

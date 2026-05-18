@@ -1,10 +1,12 @@
 import type { ChatMessage } from "../../types/chat";
 import type { FileItem } from "../../types/file";
 import type {
+  ValidationEffortPolicy,
   ValidationReviewCardData,
   ValidationReviewCheck,
   ValidationReviewConfidence,
   ValidationReviewItem,
+  ValidationReviewItemStatus,
   ValidationReviewStatus,
   WebLab2ValidationReviewConfig,
 } from "../../types/validationReview";
@@ -13,6 +15,16 @@ interface SourceFile {
   path: string;
   name: string;
   content: string;
+}
+
+export interface ValidationReviewEvidence {
+  changedFileCount: number;
+  changedFileNames: string[];
+  userTurnCount: number;
+  acceptedTutorChanges: boolean;
+  hasHtml: boolean;
+  hasCss: boolean;
+  hasJs: boolean;
 }
 
 function flattenFiles(items: FileItem[] = [], parentPath = ""): SourceFile[] {
@@ -54,6 +66,19 @@ function getChangedFiles(currentFiles: SourceFile[], initialFiles: SourceFile[])
   );
 }
 
+export function resolveValidationEffortPolicy(
+  config: WebLab2ValidationReviewConfig,
+): ValidationEffortPolicy {
+  if (config.effortPolicy) return config.effortPolicy;
+  return config.mode === "technical" ? "none" : "advisory";
+}
+
+export function getValidationMinimumChangedFiles(
+  config: WebLab2ValidationReviewConfig,
+) {
+  return config.minimumChangedFiles ?? 1;
+}
+
 function evaluateCheck(
   check: ValidationReviewCheck,
   files: SourceFile[],
@@ -80,75 +105,150 @@ function evaluateCheck(
   };
 }
 
-function buildEvidence({
-  changedFiles,
+export function buildValidationReviewEvidence({
+  currentFileStructure,
+  initialFileStructure,
   chatMessages,
-  hasHtml,
-  hasCss,
-  hasJs,
 }: {
-  changedFiles: SourceFile[];
+  currentFileStructure: FileItem[];
+  initialFileStructure: FileItem[];
   chatMessages: ChatMessage[];
-  hasHtml: boolean;
-  hasCss: boolean;
-  hasJs: boolean;
-}) {
-  const userTurns = chatMessages.filter((message) => message.role === "user").length;
+}): ValidationReviewEvidence {
+  const currentFiles = flattenFiles(currentFileStructure);
+  const initialFiles = flattenFiles(initialFileStructure);
+  const changedFiles = getChangedFiles(currentFiles, initialFiles);
+  const userTurnCount = chatMessages.filter((message) => message.role === "user").length;
   const acceptedTutorChanges = chatMessages.some(
     (message) => message.codeChangeStatus === "accepted",
   );
-  const evidence = [];
 
-  if (changedFiles.length > 0) {
-    evidence.push(`${changedFiles.length} project file${changedFiles.length === 1 ? "" : "s"} changed.`);
+  return {
+    changedFileCount: changedFiles.length,
+    changedFileNames: changedFiles.map((file) => file.path),
+    userTurnCount,
+    acceptedTutorChanges,
+    hasHtml: currentFiles.some((file) => file.name.endsWith(".html")),
+    hasCss: currentFiles.some((file) => file.name.endsWith(".css")),
+    hasJs: currentFiles.some((file) => file.name.endsWith(".js")),
+  };
+}
+
+function buildEvidence({
+  evidence,
+}: {
+  evidence: ValidationReviewEvidence;
+}) {
+  const summary = [];
+
+  if (evidence.changedFileCount > 0) {
+    summary.push(`${evidence.changedFileCount} project file${evidence.changedFileCount === 1 ? "" : "s"} changed.`);
   } else {
-    evidence.push("No project file changes detected yet.");
+    summary.push("No project file changes detected yet.");
   }
 
   const fileTypes = [
-    hasHtml ? "HTML" : null,
-    hasCss ? "CSS" : null,
-    hasJs ? "JavaScript" : null,
+    evidence.hasHtml ? "HTML" : null,
+    evidence.hasCss ? "CSS" : null,
+    evidence.hasJs ? "JavaScript" : null,
   ].filter(Boolean);
   if (fileTypes.length > 0) {
-    evidence.push(`Project includes ${fileTypes.join(", ")}.`);
+    summary.push(`Project includes ${fileTypes.join(", ")}.`);
   }
 
-  if (userTurns > 0) {
-    evidence.push(`${userTurns} Tutor turn${userTurns === 1 ? "" : "s"} from the student.`);
+  if (evidence.userTurnCount > 0) {
+    summary.push(`${evidence.userTurnCount} Tutor turn${evidence.userTurnCount === 1 ? "" : "s"} from the student.`);
   }
 
-  if (acceptedTutorChanges) {
-    evidence.push("At least one Tutor proposal was accepted.");
+  if (evidence.acceptedTutorChanges) {
+    summary.push("At least one Tutor proposal was accepted.");
   }
 
-  return evidence;
+  return summary;
 }
 
-function getSummaryStatus(
+export function buildValidationEffortItem(
+  config: WebLab2ValidationReviewConfig,
+  evidence: ValidationReviewEvidence,
+): ValidationReviewItem | null {
+  const policy = resolveValidationEffortPolicy(config);
+  if (policy === "none") return null;
+
+  const minimumChangedFiles = getValidationMinimumChangedFiles(config);
+  const hasEnoughIteration =
+    evidence.changedFileCount >= minimumChangedFiles || evidence.acceptedTutorChanges;
+  const changedFileSummary = evidence.changedFileNames.length > 0
+    ? `Changed files: ${evidence.changedFileNames.join(", ")}.`
+    : "No project file changes detected yet.";
+
+  if (hasEnoughIteration) {
+    return {
+      id: "workspace-progress",
+      label: "Meaningful project iteration",
+      status: "pass",
+      detail: `${changedFileSummary} There is evidence of intentional project refinement.`,
+    };
+  }
+
+  return {
+    id: "workspace-progress",
+    label: "Meaningful project iteration",
+    status: policy === "required" ? "missing" : "warn",
+    detail:
+      "The starter already has some polish, but I do not see your own refinement yet. Try adjusting one hover, focus, spacing, or brand detail, then check again.",
+  };
+}
+
+export function getValidationReviewSummaryStatus(
   items: ValidationReviewItem[],
-  changedFileCount: number,
-  minimumChangedFiles: number,
 ): {
   status: ValidationReviewStatus;
   confidence: ValidationReviewConfidence;
 } {
   const missingCount = items.filter((item) => item.status === "missing").length;
-  const hasEnoughChanges = changedFileCount >= minimumChangedFiles;
+  const passCount = items.filter((item) => item.status === "pass").length;
 
-  if (items.length > 0 && missingCount === 0 && hasEnoughChanges) {
+  if (items.length > 0 && missingCount === 0 && passCount > 0) {
     return { status: "likely_complete", confidence: "high" };
   }
 
-  if (missingCount > 0 && changedFileCount > 0) {
+  if (missingCount > 0 && passCount > 0) {
     return { status: "needs_work", confidence: "medium" };
   }
 
-  if (changedFileCount > 0 || items.some((item) => item.status === "pass")) {
+  if (passCount > 0 || items.some((item) => item.status === "warn")) {
     return { status: "in_progress", confidence: "medium" };
   }
 
   return { status: "not_started", confidence: "low" };
+}
+
+function mergeEffortIntoOpenEndedRequirements(
+  config: WebLab2ValidationReviewConfig,
+  items: ValidationReviewItem[],
+  effortItem: ValidationReviewItem | null,
+) {
+  if (!effortItem) return items;
+  if (config.mode !== "open-ended" || items.length !== 1) {
+    return [...items, effortItem];
+  }
+
+  const [item] = items;
+  const status: ValidationReviewItemStatus = item.status === "missing" || effortItem.status === "missing"
+    ? "missing"
+    : item.status === "warn" || effortItem.status === "warn"
+      ? "warn"
+      : "pass";
+  const detail = status === "pass"
+    ? `${item.detail} ${effortItem.detail}`
+    : effortItem.status === "missing"
+      ? effortItem.detail
+      : item.detail;
+
+  return [{
+    ...item,
+    status,
+    detail,
+  }];
 }
 
 function getNextStep(status: ValidationReviewStatus) {
@@ -156,12 +256,12 @@ function getNextStep(status: ValidationReviewStatus) {
     return "Test the project in Preview one more time, then continue when it behaves the way you expect.";
   }
   if (status === "needs_work") {
-    return "Use the missing items above as your next checklist, then run Check My Work again.";
+    return "Keep going with one focused refinement, then run Check My Work again. Try improving a hover, focus, spacing, or brand detail so the page shows your own polish.";
   }
   if (status === "in_progress") {
     return "Keep iterating. Make one focused change, test it, and ask Tutor to review again.";
   }
-  return "Start by editing the project or asking Tutor for help, then come back for a review.";
+  return "Start with one small style refinement. You can ask Tutor to make a hover, focus, spacing, or color update, then check again when you have a change to review.";
 }
 
 export function createWebLab2ValidationReview({
@@ -176,33 +276,23 @@ export function createWebLab2ValidationReview({
   chatMessages: ChatMessage[];
 }): ValidationReviewCardData {
   const currentFiles = flattenFiles(currentFileStructure);
-  const initialFiles = flattenFiles(initialFileStructure);
-  const changedFiles = getChangedFiles(currentFiles, initialFiles);
   const checks = config.checks ?? [];
-  const minimumChangedFiles = config.minimumChangedFiles ?? (config.mode === "technical" ? 1 : 2);
-  const hasHtml = currentFiles.some((file) => file.name.endsWith(".html"));
-  const hasCss = currentFiles.some((file) => file.name.endsWith(".css"));
-  const hasJs = currentFiles.some((file) => file.name.endsWith(".js"));
-  const items: ValidationReviewItem[] = [
-    ...checks.map((check) => evaluateCheck(check, currentFiles)),
-  ];
-
-  if (config.mode !== "technical") {
-    items.push({
-      id: "workspace-progress",
-      label: "Meaningful project iteration",
-      status: changedFiles.length >= minimumChangedFiles ? "pass" : "warn",
-      detail: changedFiles.length >= minimumChangedFiles
-        ? "There is evidence of changes across the project."
-        : "Make a few visible edits so the review has stronger evidence of effort.",
-    });
-  }
-
-  const { status, confidence } = getSummaryStatus(
-    items,
-    changedFiles.length,
-    minimumChangedFiles,
+  const evidence = buildValidationReviewEvidence({
+    currentFileStructure,
+    initialFileStructure,
+    chatMessages,
+  });
+  const effortItem = buildValidationEffortItem(config, evidence);
+  const items = mergeEffortIntoOpenEndedRequirements(
+    config,
+    checks.map((check) => evaluateCheck(check, currentFiles)),
+    effortItem,
   );
+
+  const summary = getValidationReviewSummaryStatus(items);
+  const missingRequiredEffort = effortItem?.status === "missing";
+  const status: ValidationReviewStatus = missingRequiredEffort ? "needs_work" : summary.status;
+  const confidence: ValidationReviewConfidence = missingRequiredEffort ? "medium" : summary.confidence;
 
   return {
     kind: "summary",
@@ -211,13 +301,8 @@ export function createWebLab2ValidationReview({
     status,
     confidence,
     items,
-    evidence: buildEvidence({
-      changedFiles,
-      chatMessages,
-      hasHtml,
-      hasCss,
-      hasJs,
-    }),
+    requirements: config.goals,
+    evidence: buildEvidence({ evidence }),
     nextStep: getNextStep(status),
   };
 }
@@ -227,8 +312,9 @@ export function createValidationReviewOffer(
 ): ValidationReviewCardData {
   return {
     kind: "offer",
-    title: "Ready for a review?",
+    title: config.title,
     mode: config.mode,
+    requirements: config.goals,
     nextStep:
       "I can run a quick check using this level's goals and the current project files.",
   };
