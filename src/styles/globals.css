@@ -10,6 +10,7 @@
   --text-h4: 24px;
   --text-lg: 20px;
   --text-icon: 18px;
+  --text-md: 18px;
   --text-base: 16px;
   --text-sm: 14px;
   --text-code: 13px;
@@ -57,6 +58,11 @@
   --sidebar-accent-foreground: var(--ds-text-neutral-white-fixed);
   --sidebar-border: var(--ds-borders-neutral-primary);
   --sidebar-ring: var(--ds-borders-brand-teal-primary);
+}
+
+:root[data-brand-theme="codeAi"] {
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Geist', sans-serif;
 }
 
 .dark {

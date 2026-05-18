@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useTheme } from "../../hooks/useTheme";
 import { AppButton } from "./AppButton";
 import styles from "./Dialog.module.scss";
 
@@ -36,6 +37,7 @@ export function Dialog({
   footerClassName = "",
   closeButtonClassName = "",
 }: DialogProps) {
+  const { theme } = useTheme();
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
@@ -68,7 +70,13 @@ export function Dialog({
     size === "s" ? styles.sizeS : size === "l" ? styles.sizeL : styles.sizeM;
 
   return createPortal(
-    <div className={styles.overlay} onMouseDown={onClose}>
+    <div
+      className={[styles.overlay, theme === "dark" ? "dark" : ""]
+        .filter(Boolean)
+        .join(" ")}
+      data-theme={theme}
+      onMouseDown={onClose}
+    >
       <div
         ref={panelRef}
         className={[styles.panel, sizeClass, panelClassName].filter(Boolean).join(" ")}

@@ -81,8 +81,14 @@ Available font-size tokens (from `globals.css`):
 | `--text-h2` | 34px |
 | `--text-h3` | 28px |
 | `--text-h4` | 24px |
+| `--text-lg` | 20px |
+| `--text-icon` | 18px |
+| `--text-md` | 18px |
 | `--text-base` | 16px |
+| `--text-sm` | 14px |
+| `--text-code` | 13px |
 | `--text-label` | 12px |
+| `--text-xs` | 10px |
 
 ```css
 /* ❌ BAD */

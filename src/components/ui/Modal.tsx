@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
+import { useTheme } from "../../hooks/useTheme";
 import { FaIcon } from "./icons/FaIcon";
 import styles from "./Modal.module.scss";
 
@@ -20,6 +21,7 @@ export function Modal({
   children,
   footer,
 }: ModalProps) {
+  const { theme } = useTheme();
   const titleId = useId();
 
   useEffect(() => {
@@ -34,7 +36,12 @@ export function Modal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className={styles.overlay}>
+    <div
+      className={[styles.overlay, theme === "dark" ? "dark" : ""]
+        .filter(Boolean)
+        .join(" ")}
+      data-theme={theme}
+    >
       <div
         className={styles.modal}
         onClick={(event) => event.stopPropagation()}

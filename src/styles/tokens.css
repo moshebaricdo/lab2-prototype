@@ -76,6 +76,16 @@
   --ds-borders-warning-light: #FEFCE8;
   --ds-borders-warning-primary: #F9CB28;
   --ds-borders-warning-strong: #C88504;
+  --ds-syntax-attribute: #945F10;
+  --ds-syntax-comment: #6A737D;
+  --ds-syntax-keyword: #7C3AED;
+  --ds-syntax-number: #0550AE;
+  --ds-syntax-property: #BE3030;
+  --ds-syntax-punctuation: #5C6370;
+  --ds-syntax-selector: #1A7F85;
+  --ds-syntax-string: #22753F;
+  --ds-syntax-tag: #BE3030;
+  --ds-syntax-value: #0550AE;
   --ds-text-brand-aqua-primary: #29DDD6;
   --ds-text-brand-aqua-primary-fixed: #29DDD6;
   --ds-text-brand-aqua-secondary: #19BBB5;
@@ -107,18 +117,6 @@
   --ds-text-warning-primary: #F9CB28;
   --ds-text-warning-primary-fixed: #F9CB28;
   --ds-text-warning-secondary: #C88504;
-
-  /* Syntax highlighting — One Light inspired */
-  --ds-syntax-comment: #6A737D;
-  --ds-syntax-tag: #BE3030;
-  --ds-syntax-attribute: #945F10;
-  --ds-syntax-string: #22753F;
-  --ds-syntax-keyword: #7C3AED;
-  --ds-syntax-number: #0550AE;
-  --ds-syntax-punctuation: #5C6370;
-  --ds-syntax-selector: #1A7F85;
-  --ds-syntax-property: #BE3030;
-  --ds-syntax-value: #0550AE;
 }
 
 .dark {
@@ -198,6 +196,16 @@
   --ds-borders-warning-light: #7D4B07;
   --ds-borders-warning-primary: #FCDC48;
   --ds-borders-warning-strong: #C88504;
+  --ds-syntax-attribute: #D19A66;
+  --ds-syntax-comment: #7F848E;
+  --ds-syntax-keyword: #C678DD;
+  --ds-syntax-number: #61AFEF;
+  --ds-syntax-property: #E06C75;
+  --ds-syntax-punctuation: #ABB2BF;
+  --ds-syntax-selector: #56B6C2;
+  --ds-syntax-string: #98C379;
+  --ds-syntax-tag: #E06C75;
+  --ds-syntax-value: #61AFEF;
   --ds-text-brand-aqua-primary: #FFFFFF;
   --ds-text-brand-aqua-primary-fixed: #3CFFF7;
   --ds-text-brand-aqua-secondary: #DFE3E9;
@@ -229,16 +237,40 @@
   --ds-text-warning-primary: #FFFFFF;
   --ds-text-warning-primary-fixed: #FCDC48;
   --ds-text-warning-secondary: #DFE3E9;
+}
 
-  /* Syntax highlighting — One Dark inspired */
-  --ds-syntax-comment: #7F848E;
-  --ds-syntax-tag: #E06C75;
-  --ds-syntax-attribute: #D19A66;
-  --ds-syntax-string: #98C379;
-  --ds-syntax-keyword: #C678DD;
-  --ds-syntax-number: #61AFEF;
-  --ds-syntax-punctuation: #ABB2BF;
-  --ds-syntax-selector: #56B6C2;
-  --ds-syntax-property: #E06C75;
-  --ds-syntax-value: #61AFEF;
+:root[data-brand-theme="codeAi"],
+:root[data-brand-theme="codeAi"] .dark {
+  --ds-background-brand-aqua-extra-light: #EFEEFC;
+  --ds-background-brand-aqua-light: #D8D5F6;
+  --ds-background-brand-aqua-primary: #6A62D9;
+  --ds-background-brand-aqua-strong: #4F48B8;
+  --ds-background-brand-purple-extra-light: #EFEEFC;
+  --ds-background-brand-purple-hover: #D8D5F6;
+  --ds-background-brand-purple-light: #D8D5F6;
+  --ds-background-brand-purple-primary: #6A62D9;
+  --ds-background-brand-purple-primary-fixed: #6A62D9;
+  --ds-background-brand-purple-strong: #4F48B8;
+  --ds-background-brand-teal-extra-light: #EFEEFC;
+  --ds-background-brand-teal-light: #D8D5F6;
+  --ds-background-brand-teal-primary: #6A62D9;
+  --ds-background-brand-teal-strong: #4F48B8;
+  --ds-borders-brand-aqua-light: #EFEEFC;
+  --ds-borders-brand-aqua-primary: #6A62D9;
+  --ds-borders-brand-aqua-strong: #4F48B8;
+  --ds-borders-brand-purple-light: #D8D5F6;
+  --ds-borders-brand-purple-primary: #6A62D9;
+  --ds-borders-brand-purple-strong: #4F48B8;
+  --ds-borders-brand-teal-light: #D8D5F6;
+  --ds-borders-brand-teal-primary: #6A62D9;
+  --ds-borders-brand-teal-strong: #4F48B8;
+  --ds-text-brand-aqua-primary: #6A62D9;
+  --ds-text-brand-aqua-primary-fixed: #6A62D9;
+  --ds-text-brand-aqua-secondary: #4F48B8;
+  --ds-text-brand-purple-primary: #6A62D9;
+  --ds-text-brand-purple-primary-fixed: #6A62D9;
+  --ds-text-brand-purple-secondary: #4F48B8;
+  --ds-text-brand-teal-primary: #6A62D9;
+  --ds-text-brand-teal-primary-fixed: #6A62D9;
+  --ds-text-brand-teal-secondary: #4F48B8;
 }

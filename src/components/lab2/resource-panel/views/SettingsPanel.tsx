@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { AppButton } from "../../../ui/AppButton";
 import { AppNativeSelect } from "../../../ui/AppDropdown";
 import { AppTextField } from "../../../ui/AppTextField";
+import {
+  useTheme,
+  type BrandTheme,
+  type ThemeMode,
+} from "../../../../hooks/useTheme";
 import { useTutorApiSettings } from "../../../../hooks/useTutorApiSettings";
 import styles from "./SettingsPanel.module.scss";
 
@@ -32,15 +37,17 @@ const SETTINGS_FIELDS: SettingsField[] = [
     value: "Small",
     options: ["Small", "Medium", "Large"],
   },
-  {
-    key: "theme",
-    label: "Theme",
-    value: "Light",
-    options: ["Light", "Dark"],
-  },
 ];
 
 const SETTINGS_PANEL_EXIT_ANIMATION_MS = 180;
+const THEME_OPTIONS: Array<{ value: ThemeMode; label: string }> = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
+const BRAND_THEME_OPTIONS: Array<{ value: BrandTheme; label: string }> = [
+  { value: "codeOrg", label: "Code.org" },
+  { value: "codeAi", label: "CodeAI" },
+];
 
 export function SettingsPanel({
   isOpen,
@@ -48,6 +55,7 @@ export function SettingsPanel({
   variant = "inline",
 }: SettingsPanelProps) {
   const { apiKey, setApiKey, hasApiKey } = useTutorApiSettings();
+  const { theme, setTheme, brandTheme, setBrandTheme } = useTheme();
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [fieldValues, setFieldValues] = useState(() =>
     Object.fromEntries(SETTINGS_FIELDS.map((field) => [field.key, field.value])),
@@ -119,6 +127,32 @@ export function SettingsPanel({
             />
           </div>
         ))}
+
+        <div className={styles.field}>
+          <p className={styles.label}>Theme</p>
+          <AppNativeSelect
+            value={theme}
+            onValueChange={(value) => setTheme(value as ThemeMode)}
+            options={THEME_OPTIONS}
+            placeholder=""
+            size="s"
+            tone="gray"
+            fullWidth
+          />
+        </div>
+
+        <div className={styles.field}>
+          <p className={styles.label}>Brand Theme</p>
+          <AppNativeSelect
+            value={brandTheme}
+            onValueChange={(value) => setBrandTheme(value as BrandTheme)}
+            options={BRAND_THEME_OPTIONS}
+            placeholder=""
+            size="s"
+            tone="gray"
+            fullWidth
+          />
+        </div>
 
         <div className={styles.field}>
           <AppTextField
