@@ -36,4 +36,4 @@ Use these docs as handoff context for follow-up threads.
 - `/levels/free-response` (and `/levels/free-response-reveal`, `/levels/free-response-markdown`, `/levels/free-response-upload` — see `free-response.md`)
 - `/levels/match-definition-bank`, `/levels/match-connector`, `/levels/match-connector-images`, `/levels/match-connector-code` (see `match.md`)
 - `/levels/levelgroup-scroll`, `/levels/levelgroup-stepped` (see `levelgroup.md`)
-- `/levels/bubble-choice`
+- `/levels/bubble-choice` and `/levels/bubble-choice-images`

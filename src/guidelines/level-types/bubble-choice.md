@@ -7,6 +7,7 @@ Prototype of a "choose your own adventure" selector level where students choose 
 ## Route
 
 - `/levels/bubble-choice`
+- `/levels/bubble-choice-images`
 
 ## Key Files
 
@@ -17,10 +18,12 @@ Prototype of a "choose your own adventure" selector level where students choose 
 
 ## Current UX Behavior
 
-- Displays four authored path cards
+- Standard demo displays four authored path cards
+- Image demo displays three authored path cards with preview images
 - Learner selects one path
 - "Continue" navigates to the selected level route
 - Selection can be cleared before continuing
+- Each option's floating label bubble communicates completion: incomplete is outlined gray; complete is solid green with white text
 
 ## Teacher Answer Key Content
 
