@@ -43,6 +43,12 @@
   height: 40px;
 }
 
+.groupCardCollapsed {
+  .groupHeader {
+    border-bottom: 0;
+  }
+}
+
 .groupHeading {
   margin: 0;
   color: var(--ds-text-neutral-tertiary);
@@ -60,7 +66,7 @@
 /* Field Rows */
 
 .fieldRow {
-  padding: 10px 12px 12px;
+  padding: 10px 8px 10px 10px;
   border-top: 1px solid var(--ds-borders-neutral-primary);
 
   &:first-child {
@@ -68,20 +74,29 @@
   }
 }
 
+.fieldRowInline {
+  padding-bottom: 10px;
+
+  .fieldHeader {
+    margin-bottom: 0;
+  }
+}
+
 .fieldHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 3px;
 }
 
 .fieldTitle {
   display: flex;
   min-width: 0;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
 }
 
 .fieldLabel {
@@ -89,13 +104,6 @@
   font-size: var(--text-label);
   font-weight: var(--font-weight-medium);
   line-height: 1.64;
-}
-
-.fieldDescription {
-  margin: 0 0 8px;
-  color: var(--ds-text-neutral-tertiary);
-  font-size: var(--text-label);
-  line-height: 1.45;
 }
 
 .storageBadge {
@@ -114,7 +122,7 @@
   white-space: nowrap;
 }
 
-.groupResetButton,
+.groupToggleButton,
 .resetButton {
   flex-shrink: 0;
 }
@@ -142,6 +150,46 @@
     background: transparent !important;
     color: var(--ds-text-neutral-primary);
   }
+}
+
+.fieldActions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 20px;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ds-text-neutral-quaternary);
+  cursor: help;
+  padding: 0;
+  transition: color 0.12s ease, background 0.12s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--ds-background-neutral-secondary);
+    color: var(--ds-text-neutral-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-borders-brand-teal-primary);
+    outline-offset: 2px;
+  }
+}
+
+.numberField {
+  width: 72px;
 }
 
 /* Shared Controls */
@@ -440,10 +488,12 @@
 .fileUploadWrap {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 8px;
 }
 
-.fileUploadButton {
+.fileUploadButton,
+.actionButton {
   width: fit-content;
 }
 
@@ -459,35 +509,30 @@
 
 .fileUploadSummary {
   margin: 0;
+  max-width: 180px;
   color: var(--ds-text-neutral-tertiary);
   font-family: var(--font-body);
   font-size: var(--text-xs);
   line-height: 1.45;
   overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .fileUploadError {
   margin: 0;
+  max-width: 180px;
   color: var(--ds-text-error-primary);
   font-family: var(--font-body);
   font-size: var(--text-xs);
   line-height: 1.45;
+  text-align: right;
 }
 
 /* Toggle */
 
-.toggleLabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ds-text-neutral-primary);
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-}
-
 .toggle {
   position: relative;
+  flex: 0 0 auto;
   width: 36px;
   height: 20px;
   appearance: none;

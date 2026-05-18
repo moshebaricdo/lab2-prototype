@@ -33,7 +33,7 @@
   min-width: 0;
 }
 
-/* Collapsed sidebar: fixed card aligned to rail (56px) + 16px gap; 16px from viewport bottom */
+/* Collapsed sidebar: fixed card aligned to rail + 16px gap; 16px from viewport bottom */
 .settingsFloatingWrap {
   position: fixed;
   z-index: 50;
@@ -42,11 +42,19 @@
   pointer-events: auto;
 }
 
+.rootCompact .settingsFloatingWrap {
+  left: calc(40px + 16px);
+}
+
 .tabRail {
   display: flex;
   width: 56px;
   flex-direction: column;
   border-right: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.tabRailCompact {
+  width: 40px;
 }
 
 .rootCard .tabRail {
@@ -104,6 +112,10 @@
   cursor: pointer;
 }
 
+.tabRailCompact .tabButton {
+  height: 40px;
+}
+
 .tabButton:hover {
   background: var(--ds-background-neutral-primary);
 }
@@ -118,9 +130,20 @@
   background: var(--ds-background-neutral-primary);
 }
 
-.railCollapseButton .tabIcon,
 .tabButton .tabIcon {
   font-size: var(--text-icon);
+}
+
+.tabRailCompact .tabButton .tabIcon {
+  font-size: var(--text-sm);
+}
+
+.railCollapseButton .railCollapseIcon {
+  font-size: var(--text-sm);
+}
+
+.tabRailCompact .railCollapseButton .railCollapseIcon {
+  font-size: var(--text-label);
 }
 
 .tabIcon {
@@ -140,6 +163,11 @@
 .aiTutorTabIcon {
   width: 20px; /* Note intentional optical adjustment to match the icon size */
   height: 20px; /* Note intentional optical adjustment to match the icon size */
+}
+
+.tabRailCompact .aiTutorTabIcon {
+  width: 16px;
+  height: 16px;
 }
 
 .tabDisabled,
@@ -186,6 +214,11 @@
   border-radius: 50%;
   background: var(--ds-background-error-primary);
   border: 1.5px solid var(--ds-background-neutral-secondary);
+}
+
+.tabRailCompact .devOverrideDot {
+  top: 6px;
+  right: 6px;
 }
 
 .bottomButtons {

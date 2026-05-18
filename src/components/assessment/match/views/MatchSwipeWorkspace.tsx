@@ -24,6 +24,7 @@ import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles"
 import errorSoundUrl from "@/assets/audio/error-sound.mp3";
 import successSoundUrl from "@/assets/audio/success-sound.mp3";
 import type { DevPanelField } from "../../../lab2/dev";
+import { resourcePanelCompactDevField } from "../../../lab2/dev";
 import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
@@ -158,6 +159,7 @@ interface MatchSwipeWorkspaceProps {
 }
 
 const matchSwipeDevFields: DevPanelField[] = [
+  resourcePanelCompactDevField,
   { key: "level.stem.question", label: "Question", type: "text", group: "Stem" },
   { key: "level.stem.description", label: "Description (markdown)", type: "textarea", group: "Stem", rows: 5 },
   { key: "level.question.termLabel", label: "Term label", type: "text", group: "Labels" },
@@ -174,9 +176,15 @@ export function MatchSwipeWorkspace({
   const navigate = useNavigate();
 
   const overrideResult = usePropsOverride(
-    payload as unknown as Record<string, unknown>,
+    {
+      ...(payload as unknown as Record<string, unknown>),
+      resourcePanelCompact: false,
+    },
   );
   const resolvedPayload = overrideResult.props as unknown as MatchLevelPayload;
+  const resourcePanelCompact = Boolean(
+    (overrideResult.props as { resourcePanelCompact?: unknown }).resourcePanelCompact,
+  );
   const {
     activeTab,
     setActiveTab,
@@ -415,6 +423,7 @@ export function MatchSwipeWorkspace({
         showHistoryTab: false,
         showContinueButton: false,
         collapsible: true,
+        compact: resourcePanelCompact,
         showInstructionsDrawer: false,
         devPanelFields: matchSwipeDevFields,
         devPanelOverrideResult: overrideResult,

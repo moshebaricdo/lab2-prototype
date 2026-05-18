@@ -48,6 +48,7 @@ export function Sidebar({
   collapsible = false,
   defaultCollapsed,
   surfaceVariant = "edge",
+  compact = false,
   showInstructionsDrawer = true,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
@@ -64,7 +65,8 @@ export function Sidebar({
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
   onValidationReview,
-  validationReviewOffer,
+  onValidationReviewContinue,
+  validationReviewContinueLabel,
   showTutorModelSelector = false,
   aiTutorComposerPlaceholder,
   aiTutorEmptyStateTitle,
@@ -209,7 +211,7 @@ export function Sidebar({
   }, [showDevTab, effectiveTutorRequestRunning, activeTab, setActiveTab, showInstructionsTab, showAiTutorTab, showValidationTab, collapsible, isCollapsed]);
 
   const panelHidden = collapsible && isCollapsed;
-  const railWidth = 56;
+  const railWidth = compact ? 40 : 56;
   const panelContentWidth = Math.max(0, sidebarWidth - railWidth);
 
   const isTabActive = (tab: SidebarTab) => !panelHidden && activeTab === tab;
@@ -255,6 +257,7 @@ export function Sidebar({
       className={[
         styles.root,
         surfaceVariant === "card" ? styles.rootCard : "",
+        compact ? styles.rootCompact : "",
         panelHidden ? styles.rootCollapsed : "",
         isWidthAnimating ? styles.rootWidthAnimating : "",
       ].filter(Boolean).join(" ")}
@@ -264,6 +267,7 @@ export function Sidebar({
     >
       <SidebarTabRail
         collapsible={collapsible}
+        compact={compact}
         isCollapsed={isCollapsed}
         isSettingsOpen={isSettingsOpen}
         showInstructionsTab={showInstructionsTab}
@@ -331,7 +335,8 @@ export function Sidebar({
             onOpenFileChangeInEditor={onOpenFileChangeInEditor}
             onOpenFileChangeInPreview={onOpenFileChangeInPreview}
             onValidationReview={onValidationReview}
-            validationReviewOffer={validationReviewOffer}
+            onValidationReviewContinue={onValidationReviewContinue}
+            validationReviewContinueLabel={validationReviewContinueLabel}
             showTutorModelSelector={showTutorModelSelector}
             aiTutorComposerPlaceholder={aiTutorComposerPlaceholder}
             aiTutorEmptyStateTitle={aiTutorEmptyStateTitle}

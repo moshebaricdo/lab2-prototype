@@ -10,6 +10,7 @@ import {
 } from "../ui/header/TopNavigation";
 import { ResizableHandle } from "../ui/ResizableHandle";
 import { useAnnotations } from "../../hooks/useAnnotations";
+import { useTheme } from "../../hooks/useTheme";
 import {
   useLevelShareMode,
   type ShareModeConfig,
@@ -40,6 +41,7 @@ type Lab2ShellProps =
 
 export function Lab2Shell(props: Lab2ShellProps) {
   const { children, topNavigationProps } = props;
+  const { theme } = useTheme();
   const annotationsResult = useAnnotations();
   const urlShareMode = useLevelShareMode();
   const shareModeConfig = props.shareModeConfig ?? { mode: urlShareMode };
@@ -98,16 +100,28 @@ export function Lab2Shell(props: Lab2ShellProps) {
       </p>
     </Dialog>
   );
+  const themeScopeClassName = [
+    styles.themeScope,
+    theme === "dark" ? "dark" : "",
+    props.hideResourcePanel !== true &&
+    props.sidebarProps.surfaceVariant === "card"
+      ? styles.themeScopeFloatingSurface
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   if (props.hideResourcePanel === true) {
     return (
       <div className={styles.root}>
         <TopNavigation {...resolvedTopNavigationProps} />
-        <div className={styles.body}>
-          {children}
+        <div className={themeScopeClassName} data-theme={theme}>
+          <div className={styles.body}>
+            {children}
+          </div>
+          {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
+          {flowCompletionDialog}
         </div>
-        {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
-        {flowCompletionDialog}
       </div>
     );
   }
@@ -137,29 +151,24 @@ export function Lab2Shell(props: Lab2ShellProps) {
     sidebarProps.surfaceVariant === "card";
 
   return (
-    <div
-      className={[
-        styles.root,
-        sidebarProps.surfaceVariant === "card" ? styles.rootFloatingSurface : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
+    <div className={styles.root}>
       <TopNavigation {...resolvedTopNavigationProps} />
-      <div className={styles.body}>
-        <Sidebar
-          {...sidebarProps}
-          annotations={isShareMode ? undefined : annotationsResult}
-          onCollapsedChange={(collapsed) => {
-            setSidebarCollapsed(collapsed);
-            sidebarProps.onCollapsedChange?.(collapsed);
-          }}
-        />
-        {!resizeDisabled && <ResizableHandle onResize={onResize} />}
-        {children}
+      <div className={themeScopeClassName} data-theme={theme}>
+        <div className={styles.body}>
+          <Sidebar
+            {...sidebarProps}
+            annotations={isShareMode ? undefined : annotationsResult}
+            onCollapsedChange={(collapsed) => {
+              setSidebarCollapsed(collapsed);
+              sidebarProps.onCollapsedChange?.(collapsed);
+            }}
+          />
+          {!resizeDisabled && <ResizableHandle onResize={onResize} />}
+          {children}
+        </div>
+        {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
+        {flowCompletionDialog}
       </div>
-      {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
-      {flowCompletionDialog}
     </div>
   );
 }

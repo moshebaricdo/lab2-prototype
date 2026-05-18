@@ -80,6 +80,8 @@ export interface SidebarProps {
    * Defaults to the standard edge-to-edge resource panel.
    */
   surfaceVariant?: "edge" | "card";
+  /** Condenses the rail from 56px to 40px and uses smaller tab icons. */
+  compact?: boolean;
   /** When false, the AI Tutor instructions drawer is hidden. Default true (Web Lab 2). */
   showInstructionsDrawer?: boolean;
   instructionsDrawerInitialHeightRatio?: number;
@@ -98,8 +100,9 @@ export interface SidebarProps {
   onTutorRequestRunningChange?: (isRunning: boolean) => void;
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
-  onValidationReview?: () => ValidationReviewCardData;
-  validationReviewOffer?: ValidationReviewCardData;
+  onValidationReview?: () => ValidationReviewCardData | Promise<ValidationReviewCardData>;
+  onValidationReviewContinue?: () => void;
+  validationReviewContinueLabel?: string;
   showTutorModelSelector?: boolean;
   aiTutorComposerPlaceholder?: string;
   aiTutorEmptyStateTitle?: string;

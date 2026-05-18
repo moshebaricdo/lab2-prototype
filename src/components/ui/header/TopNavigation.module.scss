@@ -26,6 +26,10 @@
   height: 36px;
 }
 
+:global([data-brand-theme="codeAi"]) .logoBox {
+  width: 74px;
+}
+
 .centerSpacer {
   flex: 1;
   min-width: 0;

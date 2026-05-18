@@ -4,10 +4,25 @@
   height: 100vh;
   flex-direction: column;
   overflow: hidden;
-  background: var(--ds-background-neutral-primary);
 }
 
-.rootFloatingSurface {
+.themeScope {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ds-background-neutral-primary);
+  color: var(--ds-text-neutral-primary);
+  color-scheme: light;
+}
+
+.themeScope:global(.dark) {
+  color-scheme: dark;
+}
+
+.themeScopeFloatingSurface {
   background: var(--ds-background-neutral-secondary);
 }
 

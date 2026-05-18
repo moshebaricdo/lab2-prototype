@@ -148,6 +148,7 @@ export function AiChatLabLevelPage({
         collapsible: surfaceVariant === "card",
         defaultCollapsed: false,
         surfaceVariant,
+        compact: Boolean(resolved.resourcePanelCompact),
         instructionsContent: (
           <MarkdownInstructions markdown={String(resolved.instructionsMarkdown)} />
         ),

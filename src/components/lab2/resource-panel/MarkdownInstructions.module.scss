@@ -1,0 +1,201 @@
+.card {
+  --instructions-md-h1: var(--text-h4);
+  --instructions-md-h2: var(--text-lg);
+  --instructions-md-h3: var(--text-md);
+  --instructions-md-body: var(--text-sm);
+  --instructions-md-small: var(--text-label);
+  --instructions-md-code: var(--text-code);
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 4px;
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--instructions-md-body);
+  line-height: 1.54;
+  padding: 12px;
+
+  h4,
+  h5,
+  h6 {
+    margin: 4px 0 0;
+    color: var(--ds-text-neutral-primary);
+    font-family: var(--font-body);
+    font-size: var(--instructions-md-body);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.45;
+  }
+
+  a {
+    color: var(--ds-text-brand-teal-primary);
+    font-weight: var(--font-weight-medium);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  strong {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  code {
+    border-radius: 3px;
+    background: var(--ds-background-neutral-primary);
+    color: var(--ds-text-neutral-primary);
+    font-family: var(--font-mono);
+    font-size: var(--instructions-md-code);
+    line-height: 1.45;
+    padding: 1px 4px;
+  }
+
+  pre {
+    overflow-x: auto;
+    margin: 4px 0 0;
+    border: 1px solid var(--ds-borders-neutral-primary);
+    border-radius: 4px;
+    background: var(--ds-background-neutral-primary);
+    padding: 8px;
+
+    code {
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+    }
+  }
+
+  blockquote {
+    margin: 4px 0 0;
+    border-left: 4px solid var(--ds-borders-neutral-strong);
+    color: var(--ds-text-neutral-tertiary);
+    padding-left: 10px;
+  }
+
+  table {
+    width: 100%;
+    margin: 4px 0 0;
+    border-collapse: collapse;
+    font-size: var(--instructions-md-small);
+    line-height: 1.45;
+  }
+
+  th,
+  td {
+    border: 1px solid var(--ds-borders-neutral-primary);
+    padding: 4px 6px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: var(--ds-background-neutral-primary);
+    color: var(--ds-text-neutral-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  img {
+    max-width: 100%;
+    border-radius: 4px;
+  }
+
+  input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    margin: 0 6px 0 0;
+    accent-color: var(--ds-background-brand-teal-primary);
+  }
+
+  ul:has(input[type="checkbox"]) {
+    padding-left: 0;
+    list-style: none;
+  }
+}
+
+.heading {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-heading);
+  font-size: var(--instructions-md-h1);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+
+.headingSecondary {
+  font-size: var(--instructions-md-h2);
+  line-height: 1.25;
+}
+
+.text {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--instructions-md-body);
+  line-height: 1.54;
+}
+
+.textStrong {
+  font-weight: var(--font-weight-semibold);
+}
+
+.list {
+  margin: 0;
+  padding-left: 21px;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--instructions-md-body);
+  line-height: 1.54;
+  list-style-position: outside;
+}
+
+ul.list {
+  list-style-type: disc;
+}
+
+ol.list {
+  list-style-type: decimal;
+}
+
+.list .list {
+  margin-top: 4px;
+}
+
+.listItem::marker {
+  color: var(--ds-text-neutral-primary);
+}
+
+.nestedList {
+  margin: 0;
+  padding-left: 21px;
+  list-style: disc;
+}
+
+.listItem {
+  margin: 0;
+}
+
+.rule {
+  width: 100%;
+  margin: 8px 0;
+  border: 0;
+  border-top: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.stepHeader {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 4px;
+  color: var(--ds-text-neutral-primary);
+}
+
+.stepIcon {
+  width: 16px;
+  font-size: var(--instructions-md-code);
+}
+
+.stepTitle {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--instructions-md-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+}

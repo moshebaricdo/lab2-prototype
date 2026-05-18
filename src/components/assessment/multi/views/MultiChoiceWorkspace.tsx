@@ -29,6 +29,7 @@ import errorSoundUrl from "@/assets/audio/error-sound.mp3";
 import successSoundUrl from "@/assets/audio/success-sound.mp3";
 import type { CodePanelConfig } from "../../../../data/assessment/codePanel";
 import type { DevPanelField } from "../../../lab2/dev";
+import { resourcePanelCompactDevField } from "../../../lab2/dev";
 import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
@@ -133,6 +134,7 @@ function playFeedbackSound(src: string) {
 }
 
 const multiChoiceDevFields: DevPanelField[] = [
+  resourcePanelCompactDevField,
   { key: "level.stem.question", label: "Question", type: "text", group: "Stem" },
   { key: "level.stem.description", label: "Description (markdown)", type: "textarea", group: "Stem", rows: 5 },
   {
@@ -196,7 +198,10 @@ export function MultiChoiceWorkspace({
   const navigate = useNavigate();
 
   const overrideResult = usePropsOverride(
-    payload as unknown as Record<string, unknown>,
+    {
+      ...(payload as unknown as Record<string, unknown>),
+      resourcePanelCompact: false,
+    },
   );
   const resolvedPayload = (
     embedded ? payload : overrideResult.props
@@ -223,6 +228,9 @@ export function MultiChoiceWorkspace({
   } = useVersionHistoryState();
 
   const { level } = resolvedPayload;
+  const resourcePanelCompact = Boolean(
+    (overrideResult.props as { resourcePanelCompact?: unknown }).resourcePanelCompact,
+  );
   const isSurveyLevel = level.surveyMode === true;
   const isMultiSelect = level.selectionMode === "multiple";
   const isEmbeddedControlled = Boolean(
@@ -712,6 +720,7 @@ export function MultiChoiceWorkspace({
         showHistoryTab: false,
         showContinueButton: false,
         collapsible: true,
+        compact: resourcePanelCompact,
         showInstructionsDrawer: false,
         devPanelFields: multiChoiceDevFields,
         devPanelOverrideResult: overrideResult,

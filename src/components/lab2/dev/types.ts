@@ -31,6 +31,8 @@ export interface DevPanelFieldBase {
   label: string;
   description?: string;
   group?: string;
+  /** Render compact controls in the field header instead of below the label. */
+  controlLayout?: "stacked" | "inline";
   /** URL-backed by default. Use session for values that should not be share-linked. */
   storage?: "url" | "session";
   /** Hide fields that only apply when another control is enabled. */
@@ -44,6 +46,8 @@ export interface DevPanelTextField extends DevPanelFieldBase {
 export interface DevPanelTextareaField extends DevPanelFieldBase {
   type: "textarea";
   rows?: number;
+  /** When false, render a plain textarea without the Write/Preview markdown tabs. */
+  markdownPreview?: boolean;
 }
 
 export interface DevPanelNumberField extends DevPanelFieldBase {

@@ -13,7 +13,10 @@ import { useFileWorkspaceState } from "../../hooks/useFileWorkspaceState";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
 import { usePropsOverride } from "../../hooks/usePropsOverride";
 import type { DevPanelField } from "../../components/lab2/dev";
-import { globalEditorDevFields } from "../../components/lab2/dev";
+import {
+  globalEditorDevFields,
+  resourcePanelCompactDevField,
+} from "../../components/lab2/dev";
 import {
   EDITOR_READ_ONLY_STORAGE_KEY,
   setEditorReadOnlyOverride,
@@ -42,6 +45,7 @@ interface PythonLabLevelPageProps {
   showInstructionsDrawer?: boolean;
   enableSidebarCollapse?: boolean;
   collapseSidebarByDefault?: boolean;
+  resourcePanelCompact?: boolean;
   showValidationTab?: boolean;
   validationTestsConfig?: string;
   showHistoryTab?: boolean;
@@ -125,11 +129,23 @@ function resolvePythonTutorModeKind(value: unknown): PythonTutorModeKind {
 }
 
 const pythonLabDevFields: DevPanelField[] = [
+  resourcePanelCompactDevField,
   {
     key: "showInstructionsDrawer",
     label: "Show instructions drawer",
     type: "boolean",
     group: "Resource panel",
+  },
+  {
+    key: "instructionsDrawerInitialHeightRatio",
+    label: "Drawer height ratio",
+    type: "number",
+    min: 0.2,
+    max: 0.8,
+    step: 0.05,
+    controlLayout: "inline",
+    group: "Resource panel",
+    visibleWhen: (values) => Boolean(values.showInstructionsDrawer),
   },
   {
     key: "showHistoryTab",
@@ -149,16 +165,6 @@ const pythonLabDevFields: DevPanelField[] = [
     type: "boolean",
     group: "Resource panel",
     visibleWhen: (values) => Boolean(values.enableSidebarCollapse),
-  },
-  {
-    key: "instructionsDrawerInitialHeightRatio",
-    label: "Drawer height ratio",
-    type: "slider",
-    min: 0.2,
-    max: 0.8,
-    step: 0.05,
-    group: "Resource panel",
-    visibleWhen: (values) => Boolean(values.showInstructionsDrawer),
   },
   {
     key: "showValidationTab",
@@ -218,6 +224,7 @@ export function PythonLabLevelPage({
   showInstructionsDrawer = true,
   enableSidebarCollapse = false,
   collapseSidebarByDefault = false,
+  resourcePanelCompact = false,
   showValidationTab = true,
   validationTestsConfig = DEFAULT_PYTHON_VALIDATION_TESTS_CONFIG,
   showHistoryTab = true,
@@ -279,6 +286,7 @@ export function PythonLabLevelPage({
     showInstructionsDrawer,
     enableSidebarCollapse,
     collapseSidebarByDefault,
+    resourcePanelCompact,
     showValidationTab,
     validationTestsConfig,
     showHistoryTab,
@@ -438,6 +446,7 @@ export function PythonLabLevelPage({
           defaultCollapsed:
             Boolean(resolved.enableSidebarCollapse) &&
             Boolean(resolved.collapseSidebarByDefault),
+          compact: Boolean(resolved.resourcePanelCompact),
           instructionsDrawerInitialHeightRatio:
             resolved.instructionsDrawerInitialHeightRatio as number,
           showInstructionsDrawer: Boolean(resolved.showInstructionsDrawer),

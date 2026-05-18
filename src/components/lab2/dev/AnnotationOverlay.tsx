@@ -8,6 +8,7 @@ import type {
   DrawingShape,
   UseAnnotationsResult,
 } from "../../../hooks/useAnnotations";
+import { useTheme } from "../../../hooks/useTheme";
 import { downloadAnnotatedScreenshot } from "../../../utils/captureAnnotatedScreenshot";
 import styles from "./AnnotationOverlay.module.scss";
 
@@ -361,6 +362,7 @@ interface AnnotationOverlayProps {
 }
 
 export function AnnotationOverlay({ annotations: state }: AnnotationOverlayProps) {
+  const { theme } = useTheme();
   const { isActive, activeTool, addPin, updateNote, removePin } = state;
   const pins = state.annotations;
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -407,7 +409,7 @@ export function AnnotationOverlay({ annotations: state }: AnnotationOverlayProps
   const editingPin = editingId ? pins.find((p) => p.id === editingId) : null;
 
   return createPortal(
-    <>
+    <div className={theme === "dark" ? "dark" : ""} data-theme={theme}>
       {/* Click-to-comment layer */}
       {isCommentMode && (
         <div
@@ -458,7 +460,7 @@ export function AnnotationOverlay({ annotations: state }: AnnotationOverlayProps
 
       {/* Floating toolbar */}
       <AnnotationToolbar state={state} />
-    </>,
+    </div>,
     document.body,
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import { AppButton } from "../../ui/AppButton";
 import { ScrollArea } from "../../ui/scroll-area";
@@ -21,6 +21,7 @@ export function DevPanelContent<T extends Record<string, unknown>>({
   onSessionValueChange,
   onSessionValueReset,
 }: DevPanelContentProps<T>) {
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const overriddenKeys = useMemo(
     () => flattenKeys(overrideResult.overrides),
     [overrideResult.overrides],
@@ -82,24 +83,6 @@ export function DevPanelContent<T extends Record<string, unknown>>({
     }
   };
 
-  const resetGroup = (groupFields: DevPanelField[]) => {
-    const urlFieldKeys: string[] = [];
-
-    for (const field of groupFields) {
-      if (field.type === "action") continue;
-
-      if (field.storage === "session") {
-        onSessionValueReset?.(field.key);
-      } else {
-        urlFieldKeys.push(field.key);
-      }
-    }
-
-    if (urlFieldKeys.length > 0) {
-      overrideResult.resetKeys(urlFieldKeys);
-    }
-  };
-
   return (
     <ScrollArea className={styles.panelContent} viewportClassName={styles.panelViewport}>
       {visibleFields.length === 0 ? (
@@ -113,51 +96,61 @@ export function DevPanelContent<T extends Record<string, unknown>>({
         <div className={styles.panelInner}>
           <div className={styles.fieldGroups}>
             {groups.map((group) => {
-              const groupOverrideCount = group.fields.filter(
-                (field) => getFieldState(field).isOverridden,
-              ).length;
+              const isExpanded = expandedGroups[group.name] ?? false;
+              const groupFieldsId = `dev-panel-group-${group.name.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
               return (
-                <section key={group.name} className={styles.groupCard}>
+                <section
+                  key={group.name}
+                  className={`${styles.groupCard} ${isExpanded ? "" : styles.groupCardCollapsed}`}
+                >
                   <div className={styles.groupHeader}>
                     <p className={styles.groupHeading}>{group.name}</p>
                     <AppButton
                       variant="secondary"
                       tone="gray"
                       size="xs"
-                      iconName="rotate-left"
-                      disabled={groupOverrideCount === 0}
-                      onClick={() => resetGroup(group.fields)}
-                      aria-label={`Reset ${group.name} controls`}
-                      className={styles.groupResetButton}
+                      iconName={isExpanded ? "chevron-up" : "chevron-down"}
+                      onClick={() => {
+                        setExpandedGroups((current) => ({
+                          ...current,
+                          [group.name]: !isExpanded,
+                        }));
+                      }}
+                      aria-controls={groupFieldsId}
+                      aria-expanded={isExpanded}
+                      aria-label={`${isExpanded ? "Collapse" : "Expand"} ${group.name} controls`}
+                      className={styles.groupToggleButton}
                     />
                   </div>
 
-                  <div className={styles.groupFields}>
-                    {group.fields.map((field) => {
-                      const { currentValue, isOverridden, isSessionField } =
-                        getFieldState(field);
+                  {isExpanded ? (
+                    <div className={styles.groupFields} id={groupFieldsId}>
+                      {group.fields.map((field) => {
+                        const { currentValue, isOverridden, isSessionField } =
+                          getFieldState(field);
 
-                      return (
-                        <DevPanelFieldRow
-                          key={field.key}
-                          field={field}
-                          value={currentValue}
-                          isOverridden={isOverridden}
-                          onChange={(value) => {
-                            if (isSessionField) {
-                              onSessionValueChange?.(field.key, value);
-                            } else {
-                              overrideResult.setValue(field.key, value);
-                            }
-                          }}
-                          onReset={() => {
-                            resetField(field);
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
+                        return (
+                          <DevPanelFieldRow
+                            key={field.key}
+                            field={field}
+                            value={currentValue}
+                            isOverridden={isOverridden}
+                            onChange={(value) => {
+                              if (isSessionField) {
+                                onSessionValueChange?.(field.key, value);
+                              } else {
+                                overrideResult.setValue(field.key, value);
+                              }
+                            }}
+                            onReset={() => {
+                              resetField(field);
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </section>
               );
             })}

@@ -1,4 +1,4 @@
-import styles from "./InstructionsDrawer.module.scss";
+import styles from "./MarkdownInstructions.module.scss";
 
 export function PortfolioInstructions() {
   return (

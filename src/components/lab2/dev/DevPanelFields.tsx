@@ -5,6 +5,8 @@ import { AppButton } from "../../ui/AppButton";
 import { AppNativeSelect } from "../../ui/AppDropdown";
 import { AppSlider } from "../../ui/AppSlider";
 import { AppTextArea, AppTextField } from "../../ui/AppTextField";
+import { Tooltip } from "../../ui/Tooltip";
+import { FaIcon } from "../../ui/icons/FaIcon";
 import type { DevPanelField, DevPanelUploadedFile } from "./types";
 import styles from "./DevPanel.module.scss";
 
@@ -33,6 +35,9 @@ function TextField({ field, value, controlId, onChange }: FieldProps) {
 
 function TextareaField({ field, value, controlId, onChange }: FieldProps) {
   const rows = field.type === "textarea" ? (field.rows ?? 3) : 3;
+  const useMarkdownPreview = field.type === "textarea"
+    ? (field.markdownPreview ?? true)
+    : true;
   const [previewing, setPreviewing] = useState(false);
   const externalText = (value as string) ?? "";
   const [draftText, setDraftText] = useState(externalText);
@@ -48,6 +53,27 @@ function TextareaField({ field, value, controlId, onChange }: FieldProps) {
     setDraftText(nextText);
     onChange(nextText);
   };
+
+  if (!useMarkdownPreview) {
+    return (
+      <AppTextArea
+        id={controlId}
+        value={draftText}
+        onBlur={() => {
+          isEditingRef.current = false;
+          setDraftText(externalText);
+        }}
+        onChange={(e) => handleTextChange(e.target.value)}
+        onFocus={() => {
+          isEditingRef.current = true;
+        }}
+        placeholder={field.label}
+        rows={rows}
+        size="s"
+        tone="gray"
+      />
+    );
+  }
 
   return (
     <div className={styles.textareaWrap}>
@@ -110,6 +136,8 @@ function NumberField({ field, value, controlId, onChange }: FieldProps) {
       min={min}
       max={max}
       step={step}
+      className={styles.numberField}
+      fullWidth={false}
       size="s"
       tone="gray"
     />
@@ -135,16 +163,13 @@ function SliderField({ field, value, controlId, onChange }: FieldProps) {
 
 function BooleanField({ value, controlId, onChange }: FieldProps) {
   return (
-    <label className={styles.toggleLabel}>
-      <input
-        id={controlId}
-        type="checkbox"
-        className={styles.toggle}
-        checked={Boolean(value)}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      <span>{value ? "On" : "Off"}</span>
-    </label>
+    <input
+      id={controlId}
+      type="checkbox"
+      className={styles.toggle}
+      checked={Boolean(value)}
+      onChange={(e) => onChange(e.target.checked)}
+    />
   );
 }
 
@@ -206,13 +231,12 @@ function FileUploadField({ field, value, controlId, onChange }: FieldProps) {
       <AppButton
         variant="secondary"
         tone="gray"
-        size="s"
+        size="xs"
         iconName="upload"
         className={styles.fileUploadButton}
         onClick={() => inputRef.current?.click()}
-      >
-        {field.buttonLabel ?? "Upload files"}
-      </AppButton>
+        aria-label={field.buttonLabel ?? field.label}
+      />
       <input
         ref={inputRef}
         id={controlId}
@@ -275,16 +299,15 @@ function ActionField({ field }: FieldProps) {
   if (field.type !== "action") return null;
   return (
     <AppButton
-      variant={field.variant ?? "secondary"}
-      tone={field.tone ?? "gray"}
-      size={field.size ?? "s"}
+      variant="secondary"
+      tone="gray"
+      size="xs"
       iconName={field.iconName}
       disabled={field.disabled}
-      fullWidth
+      className={styles.actionButton}
       onClick={field.onAction}
-    >
-      {field.buttonLabel ?? field.label}
-    </AppButton>
+      aria-label={field.buttonLabel ?? field.label}
+    />
   );
 }
 
@@ -311,41 +334,60 @@ export function DevPanelFieldRow({
   const Component = FIELD_COMPONENTS[field.type];
   if (!Component) return null;
   const controlId = `dev-panel-${field.key.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+  const isInlineControl =
+    field.type === "boolean" ||
+    field.type === "action" ||
+    field.type === "file" ||
+    field.controlLayout === "inline";
+  const renderedControl = (
+    <Component
+      field={field}
+      value={value}
+      isOverridden={isOverridden}
+      controlId={controlId}
+      onChange={onChange}
+      onReset={onReset}
+    />
+  );
 
   return (
-    <div className={styles.fieldRow}>
+    <div className={`${styles.fieldRow} ${isInlineControl ? styles.fieldRowInline : ""}`}>
       <div className={styles.fieldHeader}>
         <div className={styles.fieldTitle}>
           <label className={styles.fieldLabel} htmlFor={controlId}>
             {field.label}
           </label>
+          {field.description ? (
+            <Tooltip content={field.description} position="top" sideOffset={8}>
+              <button
+                type="button"
+                className={styles.infoButton}
+                aria-label={`${field.label}: ${field.description}`}
+              >
+                <FaIcon name="circle-info" size="xs" />
+              </button>
+            </Tooltip>
+          ) : null}
           {field.storage === "session" ? (
             <span className={styles.storageBadge}>Session</span>
           ) : null}
         </div>
-        {isOverridden && field.type !== "action" && (
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            iconName="rotate-left"
-            className={styles.resetButton}
-            onClick={onReset}
-            aria-label={`Reset ${field.label}`}
-          />
-        )}
+        <div className={styles.fieldActions}>
+          {isOverridden && field.type !== "action" && (
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName="rotate-left"
+              className={styles.resetButton}
+              onClick={onReset}
+              aria-label={`Reset ${field.label}`}
+            />
+          )}
+          {isInlineControl ? renderedControl : null}
+        </div>
       </div>
-      {field.description ? (
-        <p className={styles.fieldDescription}>{field.description}</p>
-      ) : null}
-      <Component
-        field={field}
-        value={value}
-        isOverridden={isOverridden}
-        controlId={controlId}
-        onChange={onChange}
-        onReset={onReset}
-      />
+      {isInlineControl ? null : renderedControl}
     </div>
   );
 }

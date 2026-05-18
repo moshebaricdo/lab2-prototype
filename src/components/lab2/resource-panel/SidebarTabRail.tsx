@@ -19,6 +19,7 @@ interface SidebarTabConfig {
 
 interface SidebarTabRailProps {
   collapsible: boolean;
+  compact: boolean;
   isCollapsed: boolean;
   isSettingsOpen: boolean;
   showInstructionsTab: boolean;
@@ -56,8 +57,18 @@ function sidebarTabIconClassName(active: boolean) {
     .join(" ");
 }
 
-function sidebarRailClassName(collapsed: boolean) {
-  return [styles.tabRail, collapsed ? styles.tabRailCollapsed : ""]
+function sidebarRailClassName({
+  collapsed,
+  compact,
+}: {
+  collapsed: boolean;
+  compact: boolean;
+}) {
+  return [
+    styles.tabRail,
+    compact ? styles.tabRailCompact : "",
+    collapsed ? styles.tabRailCollapsed : "",
+  ]
     .filter(Boolean)
     .join(" ");
 }
@@ -113,6 +124,7 @@ function SidebarTabButton({
 
 export function SidebarTabRail({
   collapsible,
+  compact,
   isCollapsed,
   isSettingsOpen,
   showInstructionsTab,
@@ -185,7 +197,7 @@ export function SidebarTabRail({
   ];
 
   return (
-    <div className={sidebarRailClassName(isCollapsed)}>
+    <div className={sidebarRailClassName({ collapsed: isCollapsed, compact })}>
       <div className={styles.railTopSpacer}>
         {collapsible && (
           <Tooltip
@@ -203,6 +215,7 @@ export function SidebarTabRail({
                   isCollapsed ? "arrow-right-from-line" : "arrow-left-from-line"
                 }
                 size="s"
+                className={`${styles.tabIcon} ${styles.railCollapseIcon}`}
               />
             </button>
           </Tooltip>

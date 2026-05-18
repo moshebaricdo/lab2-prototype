@@ -22,6 +22,7 @@ import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import type { CodePanelConfig } from "../../../../data/assessment/codePanel";
 import type { DevPanelField } from "../../../lab2/dev";
+import { resourcePanelCompactDevField } from "../../../lab2/dev";
 import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
@@ -52,6 +53,7 @@ interface FreeResponseWorkspaceProps {
 }
 
 const freeResponseDevFields: DevPanelField[] = [
+  resourcePanelCompactDevField,
   { key: "level.stem.question", label: "Question", type: "text", group: "Stem" },
   { key: "level.stem.description", label: "Description (markdown)", type: "textarea", group: "Stem", rows: 5 },
   { key: "level.question.placeholder", label: "Placeholder text", type: "text", group: "Input" },
@@ -81,7 +83,10 @@ export function FreeResponseWorkspace({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const overrideResult = usePropsOverride(
-    payload as unknown as Record<string, unknown>,
+    {
+      ...(payload as unknown as Record<string, unknown>),
+      resourcePanelCompact: false,
+    },
   );
   const resolvedPayload = (
     embedded ? payload : overrideResult.props
@@ -108,6 +113,9 @@ export function FreeResponseWorkspace({
   } = useVersionHistoryState();
 
   const { level } = resolvedPayload;
+  const resourcePanelCompact = Boolean(
+    (overrideResult.props as { resourcePanelCompact?: unknown }).resourcePanelCompact,
+  );
   const revealAnswerEnabled = level.revealAnswerEnabled === true;
   const allowFileUpload = level.allowFileUpload === true;
   const teacherAnswer = level.teacherAnswer;
@@ -480,6 +488,7 @@ export function FreeResponseWorkspace({
         showHistoryTab: false,
         showContinueButton: false,
         collapsible: true,
+        compact: resourcePanelCompact,
         showInstructionsDrawer: false,
         ...(!hideDevPanel && {
           devPanelFields: freeResponseDevFields,

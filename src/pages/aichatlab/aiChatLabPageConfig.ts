@@ -1,5 +1,6 @@
 import type { RubricData } from "../../components/lab2/resource-panel";
 import type { DevPanelField } from "../../components/lab2/dev";
+import { resourcePanelCompactDevField } from "../../components/lab2/dev";
 import type { AiChatLabWorkspaceProps } from "../../components/ide/aichatlab/views";
 
 export interface AiChatLabDefaults extends AiChatLabWorkspaceProps {
@@ -15,6 +16,7 @@ export interface AiChatLabDefaults extends AiChatLabWorkspaceProps {
   continueLabel: string;
   continueButtonPlacement: "sidebar" | "header";
   surfaceVariant: "edge" | "card";
+  resourcePanelCompact: boolean;
 }
 
 export const SAMPLE_RUBRIC: RubricData = {
@@ -64,6 +66,7 @@ export const BASE_DEFAULTS: AiChatLabDefaults = {
   continueLabel: "Continue to Level 2",
   continueButtonPlacement: "sidebar",
   surfaceVariant: "card",
+  resourcePanelCompact: false,
   showConfigPanel: false,
   showSetupTab: true,
   showRetrievalTab: false,
@@ -116,6 +119,7 @@ export const AI_CHAT_LAB_DEV_FIELDS: DevPanelField[] = [
       { label: "Card", value: "card" },
     ],
   },
+  resourcePanelCompactDevField,
   {
     key: "showInstructionsTab",
     label: "Show instructions tab",

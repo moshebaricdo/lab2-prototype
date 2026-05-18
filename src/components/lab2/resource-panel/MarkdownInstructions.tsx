@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import styles from "./InstructionsDrawer.module.scss";
+import styles from "./MarkdownInstructions.module.scss";
 
 interface MarkdownInstructionsProps {
   markdown: string;
@@ -19,9 +19,13 @@ export function MarkdownInstructions({ markdown }: MarkdownInstructionsProps) {
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              h1: ({ children }) => <h2 className={styles.heading}>{children}</h2>,
-              h2: ({ children }) => <h2 className={styles.heading}>{children}</h2>,
-              h3: ({ children }) => <p className={styles.stepTitle}>{children}</p>,
+              h1: ({ children }) => <h1 className={styles.heading}>{children}</h1>,
+              h2: ({ children }) => (
+                <h2 className={`${styles.heading} ${styles.headingSecondary}`}>
+                  {children}
+                </h2>
+              ),
+              h3: ({ children }) => <h3 className={styles.stepTitle}>{children}</h3>,
               p: ({ children }) => <p className={styles.text}>{children}</p>,
               strong: ({ children }) => (
                 <strong className={styles.textStrong}>{children}</strong>

@@ -54,7 +54,8 @@ interface SidebarPanelContentProps {
   onOpenFileChangeInEditor: SidebarProps["onOpenFileChangeInEditor"];
   onOpenFileChangeInPreview: SidebarProps["onOpenFileChangeInPreview"];
   onValidationReview: SidebarProps["onValidationReview"];
-  validationReviewOffer: SidebarProps["validationReviewOffer"];
+  onValidationReviewContinue: SidebarProps["onValidationReviewContinue"];
+  validationReviewContinueLabel: SidebarProps["validationReviewContinueLabel"];
   showTutorModelSelector: NonNullable<SidebarProps["showTutorModelSelector"]>;
   aiTutorComposerPlaceholder: SidebarProps["aiTutorComposerPlaceholder"];
   aiTutorEmptyStateTitle: SidebarProps["aiTutorEmptyStateTitle"];
@@ -131,7 +132,8 @@ export function SidebarPanelContent({
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
   onValidationReview,
-  validationReviewOffer,
+  onValidationReviewContinue,
+  validationReviewContinueLabel,
   showTutorModelSelector,
   aiTutorComposerPlaceholder,
   aiTutorEmptyStateTitle,
@@ -218,7 +220,8 @@ export function SidebarPanelContent({
           onOpenFileChangeInEditor={onOpenFileChangeInEditor}
           onOpenFileChangeInPreview={onOpenFileChangeInPreview}
           onValidationReview={onValidationReview}
-          validationReviewOffer={validationReviewOffer}
+          onValidationReviewContinue={onValidationReviewContinue}
+          validationReviewContinueLabel={validationReviewContinueLabel}
           showModelSelector={showTutorModelSelector}
           composerPlaceholder={aiTutorComposerPlaceholder}
           emptyStateTitle={aiTutorEmptyStateTitle}

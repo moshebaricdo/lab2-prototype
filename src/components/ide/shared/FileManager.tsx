@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { ScrollArea } from "../../ui/scroll-area";
 import { AppActionDropdown } from "../../ui/AppDropdown";
 import { FaIcon } from "../../ui/icons/FaIcon";
@@ -279,8 +279,9 @@ export function FileManager({
               setHoveredItem(null);
             }}
           >
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               className={`${styles.rowButton} ${level > 0 ? styles.rowButtonNested : ""} ${isHovered ? styles.rowHovered : ""} ${isFolderDropTarget ? styles.rowDropTarget : ""}`}
               draggable={isDraggableFile || isDraggableTreeItem}
               data-draggable-file={isDraggableFile ? "true" : undefined}
@@ -359,6 +360,17 @@ export function FileManager({
               }}
               onClick={(e) => {
                 e.stopPropagation();
+                if (item.type === "folder") {
+                  onToggleFolder(itemPath);
+                } else {
+                  onFileSelect(item);
+                }
+              }}
+              onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
+                if (event.target !== event.currentTarget) return;
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                event.stopPropagation();
                 if (item.type === "folder") {
                   onToggleFolder(itemPath);
                 } else {
@@ -455,7 +467,7 @@ export function FileManager({
                     ]}
                   />
                 )}
-            </button>
+            </div>
           </div>
 
           {hasChildren && isOpen && (
