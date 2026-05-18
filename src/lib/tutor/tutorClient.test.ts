@@ -101,6 +101,220 @@ describe("tutorClient guidance routing", () => {
     expect(toolProvider.calls).toBe(0);
   });
 
+  it("explains curriculum instructions without creating a plan or editing files", async () => {
+    const guidanceProvider = new GuidanceProvider({
+      message: "The level is asking you to identify each Promise state, then add a short explanation under each numbered comment. Start by checking what each example is waiting for.",
+    });
+    const structuredProvider = new StructuredProvider();
+    const toolProvider = new ToolProvider();
+
+    const result = await tutorClient({
+      message: "I'm not sure what the instructions are asking me to do, can you help?",
+      supportContext: "curriculum-level",
+      levelInstructionsMarkdown:
+        "Read each numbered Promise example and write whether it is pending, fulfilled, or rejected. This level does not ask you to add new UI.",
+      levelProgress: {
+        title: "Promise trace review",
+        mode: "hybrid",
+        status: "in_progress",
+        phase: "partially_complete",
+        passedCriteria: [{
+          id: "pending-state",
+          label: "The first Promise state is identified.",
+          status: "pass",
+        }],
+        incompleteCriteria: [{
+          id: "fulfilled-state",
+          label: "The fulfilled Promise state still needs an explanation.",
+          status: "missing",
+        }],
+        nextIncompleteCriterion: {
+          id: "fulfilled-state",
+          label: "The fulfilled Promise state still needs an explanation.",
+          status: "missing",
+        },
+      },
+      conversation: [],
+      files: rootProject([
+        {
+          name: "script.js",
+          type: "file",
+          content: "// 1.\nfetch('/data').then(response => response.json());\n",
+        },
+      ]),
+      guidanceProvider,
+      structuredProvider,
+      toolProvider,
+    });
+
+    expect(result.changes).toEqual([]);
+    expect(result.message).toContain("Promise");
+    expect(guidanceProvider.calls).toBe(1);
+    expect(structuredProvider.calls).toBe(0);
+    expect(toolProvider.calls).toBe(0);
+
+    const payload = JSON.parse(guidanceProvider.messages[0][1].content as string);
+    expect(payload.levelInstructionsMarkdown).toContain("pending, fulfilled, or rejected");
+    expect(payload.levelProgress.nextIncompleteCriterion.label).toContain("fulfilled Promise");
+    expect(payload.guidanceDisclosurePolicy).toEqual(
+      expect.objectContaining({
+        style: "socratic-nudge",
+        maxObservationQuestions: 1,
+      }),
+    );
+    expect(payload.guidanceDisclosurePolicy.revealPolicy.join(" ")).toContain("Avoid naming exact project-only selectors");
+  });
+
+  it("asks for a small check before revealing exact project-only selectors", async () => {
+    const guidanceProvider = new GuidanceProvider({
+      message:
+        "The goal is to connect the button to the photo and caption change. First, compare the selector in your JavaScript with the matching id in the HTML. What do you notice about those two names?",
+    });
+
+    const result = await tutorClient({
+      message: "Can you walk me through what I'm supposed to do in this level?",
+      supportContext: "curriculum-level",
+      levelInstructionsMarkdown:
+        "Clicking the Next button should show a new photo and caption. Check whether the JavaScript selector matches the HTML id exactly.",
+      conversation: [],
+      files: rootProject([
+        {
+          name: "index.html",
+          type: "html",
+          content: '<main><button id="next">Next</button><img id="photo1"><img id="photo2"></main>',
+        },
+        {
+          name: "script.js",
+          type: "file",
+          content: 'document.querySelector("#missing").addEventListener("click", () => {});\n',
+        },
+      ]),
+      guidanceProvider,
+      structuredProvider: new StructuredProvider(),
+      toolProvider: new ToolProvider(),
+    });
+
+    expect(result.message).toContain("selector");
+    expect(result.message).not.toContain("#photo2");
+    const payload = JSON.parse(guidanceProvider.messages[0][1].content as string);
+    expect(payload.guidanceDisclosurePolicy.style).toBe("socratic-nudge");
+  });
+
+  it("keeps instruction-scoped Back button guidance when it is an actual requirement", async () => {
+    const result = await tutorClient({
+      message: "I already fixed the next button.",
+      supportContext: "curriculum-level",
+      levelInstructionsMarkdown:
+        "First fix the Next button. Then add a Back button that returns to the previous photo.",
+      levelProgress: {
+        title: "Photo carousel review",
+        mode: "technical",
+        status: "in_progress",
+        phase: "partially_complete",
+        passedCriteria: [{
+          id: "next-button",
+          label: "Clicking Next shows the second photo.",
+          status: "pass",
+        }],
+        incompleteCriteria: [{
+          id: "back-button",
+          label: "The student adds a functional Back button.",
+          status: "missing",
+        }],
+        nextIncompleteCriterion: {
+          id: "back-button",
+          label: "The student adds a functional Back button.",
+          status: "missing",
+        },
+      },
+      conversation: [],
+      files: rootProject([]),
+      guidanceProvider: new GuidanceProvider({
+        message: "Yes, the Next button step is already complete. The next requirement is the Back button.",
+      }),
+      structuredProvider: new StructuredProvider(),
+      toolProvider: new ToolProvider(),
+    });
+
+    expect(result.message).toContain("Back button");
+    expect(result.message).toContain("already complete");
+  });
+
+  it("scopes curriculum guidance to project code instead of browser troubleshooting", async () => {
+    const guidanceProvider = new GuidanceProvider({
+      message: [
+        "If you updated the photo selector and it is still not working, double-check:",
+        "- That you saved your changes in `script.js`.",
+        "- That your browser is not caching the old script.",
+        "- That there are no typos in the selector.",
+        "You can also open your browser's developer tools with F12 and check the Console.",
+        "Try adding a Back button later if you want a new feature.",
+      ].join("\n"),
+    });
+    const structuredProvider = new StructuredProvider();
+    const toolProvider = new ToolProvider();
+
+    const result = await tutorClient({
+      message: "I updated the selector but it still is not working.",
+      supportContext: "curriculum-level",
+      conversation: [],
+      files: rootProject([
+        {
+          name: "script.js",
+          type: "file",
+          content: "const secondPhoto = document.querySelector('#missing');\n",
+        },
+      ]),
+      guidanceProvider,
+      structuredProvider,
+      toolProvider,
+    });
+
+    expect(result.changes).toEqual([]);
+    expect(result.message).toContain("photo selector");
+    expect(result.message).toContain("typos");
+    expect(result.message).not.toMatch(/saved|caching|developer tools|F12|Back button/i);
+    expect(guidanceProvider.calls).toBe(1);
+    expect(structuredProvider.calls).toBe(0);
+    expect(toolProvider.calls).toBe(0);
+
+    const systemPrompt = guidanceProvider.messages[0][0].content;
+    expect(systemPrompt).toContain("Curriculum-level Web Lab guidance");
+    expect(systemPrompt).toContain("Do not tell students to save files");
+    const payload = JSON.parse(guidanceProvider.messages[0][1].content as string);
+    expect(payload.tutorSupportContext).toBe("curriculum-level");
+  });
+
+  it("keeps curriculum concept questions from modifying project content", async () => {
+    const guidanceProvider = new GuidanceProvider({
+      message: "A Promise is a JavaScript object that represents work that may finish later.",
+    });
+    const structuredProvider = new StructuredProvider();
+    const toolProvider = new ToolProvider();
+
+    const result = await tutorClient({
+      message: "What is a Promise in JS?",
+      supportContext: "curriculum-level",
+      conversation: [],
+      files: rootProject([
+        {
+          name: "index.html",
+          type: "html",
+          content: "<main><h1>Global Population Data</h1></main>",
+        },
+      ]),
+      guidanceProvider,
+      structuredProvider,
+      toolProvider,
+    });
+
+    expect(result.changes).toEqual([]);
+    expect(result.message).toContain("Promise");
+    expect(guidanceProvider.calls).toBe(1);
+    expect(structuredProvider.calls).toBe(0);
+    expect(toolProvider.calls).toBe(0);
+  });
+
   it("falls back to a no-edit canned explanation if guidance has no API key", async () => {
     const result = await tutorClient({
       message: "Can you explain functions to me?",
@@ -503,6 +717,110 @@ describe("tutorClient code generation routing", () => {
       }),
     ]);
     expect(structuredProvider.calls).toBe(1);
+  });
+
+  it("treats curriculum hover/focus style polish as CSS work, not JavaScript behavior", async () => {
+    const structuredProvider = new StructuredProvider({
+      message: "I polished the nav link hover and focus states in `style.css` so they feel more interactive without changing the page behavior.",
+      saveTitle: "Polish nav link states",
+      edits: [{
+        path: "style.css",
+        strategy: "searchReplace",
+        replacements: [{
+          search: ".nav-link { text-decoration: none; }\n.nav-link:hover { color: blue; }\n",
+          replace: ".nav-link { text-decoration: none; text-underline-offset: 6px; transition: color 180ms ease, text-decoration-color 180ms ease; }\n.nav-link:hover { color: blue; text-decoration: underline; }\n.nav-link:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }\n",
+        }],
+      }],
+    });
+    const toolProvider = new ToolProvider();
+
+    const result = await tutorClient({
+      message: "Make the nav bar links feel interactive: add hover underline that animates, and a strong focus-visible outline.",
+      supportContext: "curriculum-level",
+      conversation: [],
+      files: rootProject([
+        {
+          name: "index.html",
+          type: "html",
+          content: '<!doctype html><html><head><link rel="stylesheet" href="style.css"></head><body><main><nav><a class="nav-link" href="#features">Features</a></nav></main></body></html>',
+        },
+        {
+          name: "style.css",
+          type: "css",
+          content: ".nav-link { text-decoration: none; }\n.nav-link:hover { color: blue; }\n",
+        },
+      ]),
+      guidanceProvider: new GuidanceProvider({
+        message: "Unexpected guidance.",
+      }),
+      structuredProvider,
+      toolProvider,
+    });
+
+    expect(result.changes).toEqual([
+      expect.objectContaining({
+        fileName: "style.css",
+        status: "modified",
+      }),
+    ]);
+    expect(structuredProvider.calls).toBe(1);
+    expect(toolProvider.calls).toBe(0);
+
+    const payload = JSON.parse(structuredProvider.messages[0][1].content as string);
+    expect(payload.requestStylePolicy.kind).toBe("css-style-polish");
+    expect(payload.requestStylePolicy.guidance.join(" ")).toContain("Treat hover");
+    expect(structuredProvider.messages[0][0].content).toContain("CSS interaction states");
+  });
+
+  it("routes curriculum prompts that ask Tutor to help make style changes to code generation", async () => {
+    const structuredProvider = new StructuredProvider({
+      message: "I updated `style.css` to make the nav links feel more interactive and easier to focus.",
+      saveTitle: "Polish nav link states",
+      edits: [{
+        path: "style.css",
+        strategy: "searchReplace",
+        replacements: [{
+          search: ".nav-link { color: navy; }\n",
+          replace: ".nav-link { color: navy; text-underline-offset: 6px; transition: color 180ms ease, text-decoration-color 180ms ease; }\n.nav-link:hover { text-decoration: underline; }\n.nav-link:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }\n",
+        }],
+      }],
+    });
+    const guidanceProvider = new GuidanceProvider({
+      message: "Unexpected guidance.",
+    });
+
+    const result = await tutorClient({
+      message: "Can you help me make the nav bar links feel interactive and add a strong focus-visible outline?",
+      supportContext: "curriculum-level",
+      levelInstructionsMarkdown:
+        "With the help of AI, improve the button, links, and their hover/focus styles so they feel on-brand and easy to use.",
+      conversation: [],
+      files: rootProject([
+        {
+          name: "index.html",
+          type: "html",
+          content: '<!doctype html><html><head><link rel="stylesheet" href="style.css"></head><body><nav><a class="nav-link" href="#features">Features</a></nav></body></html>',
+        },
+        {
+          name: "style.css",
+          type: "css",
+          content: ".nav-link { color: navy; }\n",
+        },
+      ]),
+      guidanceProvider,
+      structuredProvider,
+      toolProvider: new ToolProvider(),
+    });
+
+    expect(result.changes).toEqual([
+      expect.objectContaining({
+        fileName: "style.css",
+        status: "modified",
+      }),
+    ]);
+    expect(guidanceProvider.calls).toBe(0);
+    expect(structuredProvider.calls).toBe(1);
+    expect(structuredProvider.messages[0][0].content).toContain("explicit implementation help");
   });
 
   it("builds from an accepted project plan instead of staying in planning mode", async () => {

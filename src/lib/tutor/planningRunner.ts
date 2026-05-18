@@ -1,5 +1,6 @@
 import type { ChatMessage } from "../../types/chat";
 import type { FileItem } from "../../types/file";
+import type { LevelProgressSnapshot } from "../../types/validationReview";
 import { applyStructuredEditsAtomically } from "./atomicEditApplicator";
 import { buildConversationContext, buildConversationImageInputs } from "./contextBuilder";
 import { packTutorContext } from "./contextPacker";
@@ -112,17 +113,23 @@ function buildPlanningMessages({
   conversation,
   files,
   additionalSystemPrompt,
+  levelInstructionsMarkdown,
+  levelProgress,
 }: {
   message: string;
   conversation: ChatMessage[];
   files: FileItem[];
   additionalSystemPrompt: string;
+  levelInstructionsMarkdown: string;
+  levelProgress?: LevelProgressSnapshot;
 }): TutorChatMessage[] {
   const analysis = analyzeProject(files);
   const context = packTutorContext(analysis, message, 14000);
   const payload = {
     userMessage: message,
     projectContext: context,
+    levelInstructionsMarkdown: levelInstructionsMarkdown.trim() || undefined,
+    levelProgress,
     conversation: buildConversationContext(conversation).slice(-6),
     planningFileName: PROJECT_PLAN_FILE,
   };
@@ -203,12 +210,16 @@ export async function runTutorPlanning({
   conversation,
   files,
   additionalSystemPrompt = "",
+  levelInstructionsMarkdown = "",
+  levelProgress,
   provider = openAiTutorProvider,
 }: {
   message: string;
   conversation: ChatMessage[];
   files: FileItem[];
   additionalSystemPrompt?: string;
+  levelInstructionsMarkdown?: string;
+  levelProgress?: LevelProgressSnapshot;
   provider?: TutorStructuredEditProvider;
 }): Promise<TutorPlanningResult> {
   const response = normalizePlanningResponse(await provider.requestStructuredEdit(buildPlanningMessages({
@@ -216,6 +227,8 @@ export async function runTutorPlanning({
     conversation,
     files,
     additionalSystemPrompt,
+    levelInstructionsMarkdown,
+    levelProgress,
   })));
 
   if (!response) {

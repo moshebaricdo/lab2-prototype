@@ -1,8 +1,11 @@
 import type { FileItem } from "../../types/file";
 import type { ChatMessage } from "../../types/chat";
+import type { LevelProgressSnapshot } from "../../types/validationReview";
+import type { TutorSupportContext } from "../../types/tutor";
 import { openAiTutorToolProvider, type TutorToolProvider } from "./openAiProvider";
 import { buildToolLoopMessages } from "./promptBuilder";
 import { validateTutorChanges } from "./editValidator";
+import { summarizeTutorEditResponse } from "./responseSummary";
 import type {
   TutorEditResult,
   TutorToolChatMessage,
@@ -357,11 +360,16 @@ function validateWorkspaceResult({
   saveTitle?: string;
 }) {
   const changes = workspace.getChanges();
+  const validationMessage = summarizeTutorEditResponse({
+    responseMessage,
+    requestMessage: message,
+    changes,
+  });
   const validation = validateTutorChanges(
     changesToPatchChanges(changes),
     files,
     message,
-    responseMessage,
+    validationMessage,
     saveTitle,
   );
   return validation;
@@ -372,12 +380,18 @@ export async function runTutorToolLoop({
   conversation,
   files,
   additionalSystemPrompt = "",
+  levelInstructionsMarkdown = "",
+  levelProgress,
+  supportContext = "standalone-project",
   provider = openAiTutorToolProvider,
 }: {
   message: string;
   conversation: ChatMessage[];
   files: FileItem[];
   additionalSystemPrompt?: string;
+  levelInstructionsMarkdown?: string;
+  levelProgress?: LevelProgressSnapshot;
+  supportContext?: TutorSupportContext;
   provider?: TutorToolProvider;
 }): Promise<TutorToolLoopResult> {
   const workspace = new TutorWorkspaceEditor(files);
@@ -386,6 +400,9 @@ export async function runTutorToolLoop({
     files,
     conversation,
     additionalSystemPrompt,
+    levelInstructionsMarkdown,
+    levelProgress,
+    supportContext,
   }) as TutorToolChatMessage[];
   let lastErrors: string[] = [];
   const toolFailureCounts = new Map<string, number>();

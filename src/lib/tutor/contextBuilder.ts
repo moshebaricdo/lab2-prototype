@@ -1,5 +1,6 @@
 import type { ChatAttachment, ChatMessage } from "../../types/chat";
 import type { FileItem } from "../../types/file";
+import { buildLevelProgressSnapshot } from "../validation/levelProgress";
 import type { TutorProjectContext, TutorProjectContextFile } from "./types";
 
 function getAttachmentImageDataUrl(attachment: ChatAttachment) {
@@ -71,6 +72,13 @@ export function buildConversationContext(conversation: ChatMessage[]) {
         fileName: change.fileName,
         status: change.status,
       })),
+      validationReview: message.validationReview
+        ? buildLevelProgressSnapshot(message.validationReview) ?? {
+            title: message.validationReview.title,
+            mode: message.validationReview.mode,
+            kind: message.validationReview.kind,
+          }
+        : undefined,
     }));
 }
 

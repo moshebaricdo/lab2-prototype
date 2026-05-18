@@ -1,6 +1,7 @@
 import type { ChatMessage } from "../../types/chat";
 import type { FileItem } from "../../types/file";
-import type { TutorRequestMode } from "../../types/tutor";
+import type { LevelProgressSnapshot } from "../../types/validationReview";
+import type { TutorRequestMode, TutorSupportContext } from "../../types/tutor";
 
 export type TutorFileStatus = "new" | "modified" | "deleted";
 
@@ -80,7 +81,10 @@ export interface TutorRequest {
   conversation?: ChatMessage[];
   files: FileItem[];
   additionalSystemPrompt?: string;
+  levelInstructionsMarkdown?: string;
+  levelProgress?: LevelProgressSnapshot;
   requestMode?: TutorRequestMode;
+  supportContext?: TutorSupportContext;
 }
 
 export type TutorChatMessageContent =

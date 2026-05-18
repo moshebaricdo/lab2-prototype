@@ -69,5 +69,5 @@ export interface ChatMessage {
   /** When true, renders as a system-style alert instead of a chat bubble. */
   isAlert?: boolean;
   /** Visual variant for alert messages. Defaults to "success". */
-  alertVariant?: "success" | "accepted" | "rejected";
+  alertVariant?: "success" | "accepted" | "rejected" | "validation";
 }

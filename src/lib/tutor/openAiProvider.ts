@@ -8,6 +8,7 @@ import type {
   TutorToolChatMessage,
   TutorToolDefinition,
 } from "./types";
+import { logTutorEvent } from "./tutorDebugLogger";
 
 const OPENAI_MODEL = "gpt-4.1-nano";
 const TOOL_LOOP_MAX_TOKENS = 6000;
@@ -66,10 +67,19 @@ async function requestChatCompletionJson<T>({
   logPrefix: string;
 }): Promise<T | null> {
   const apiKey = getTutorApiKey().trim();
-  if (!apiKey) return null;
+  if (!apiKey) {
+    logTutorEvent(`${logPrefix} skipped: no API key`, undefined, "warn");
+    return null;
+  }
   const model = getTutorCodeModel().trim() || "gpt-4.1";
 
   for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt += 1) {
+    logTutorEvent(`${logPrefix} OpenAI request started`, {
+      model,
+      attempt: attempt + 1,
+      messageCount: messages.length,
+      maxTokens,
+    });
     console.info(`[${logPrefix}] OpenAI request: ${JSON.stringify({
       model,
       attempt: attempt + 1,
@@ -95,6 +105,11 @@ async function requestChatCompletionJson<T>({
     if (!response.ok) {
       const body = await response.text();
       const retryDelayMs = response.status === 429 ? getRetryDelayMs(response, body) : 0;
+      logTutorEvent(`${logPrefix} OpenAI request failed`, {
+        status: response.status,
+        retryDelayMs,
+        bodyPreview: body.slice(0, 1000),
+      }, "error");
       console.error(`[${logPrefix}] OpenAI request failed: ${JSON.stringify({
         status: response.status,
         retryDelayMs,
@@ -115,6 +130,10 @@ async function requestChatCompletionJson<T>({
       throw new Error(`${logPrefix} provider returned an empty response.`);
     }
 
+    logTutorEvent(`${logPrefix} OpenAI response received`, {
+      attempt: attempt + 1,
+      contentLength: content.length,
+    });
     return JSON.parse(content) as T;
   }
 
@@ -124,7 +143,10 @@ async function requestChatCompletionJson<T>({
 export class OpenAiTutorProvider implements TutorProvider, TutorStructuredEditProvider, TutorGuidanceProvider {
   async request(messages: TutorChatMessage[]) {
     const apiKey = getTutorApiKey().trim();
-    if (!apiKey) return null;
+    if (!apiKey) {
+      logTutorEvent("legacy tutor provider skipped: no API key", undefined, "warn");
+      return null;
+    }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -176,10 +198,19 @@ export class OpenAiTutorProvider implements TutorProvider, TutorStructuredEditPr
 export class OpenAiTutorToolProvider implements TutorToolProvider {
   async requestToolStep(messages: TutorToolChatMessage[], tools: TutorToolDefinition[]) {
     const apiKey = getTutorApiKey().trim();
-    if (!apiKey) return null;
+    if (!apiKey) {
+      logTutorEvent("TutorToolLoop skipped: no API key", undefined, "warn");
+      return null;
+    }
     const model = getTutorCodeModel().trim() || "gpt-4.1";
 
     for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt += 1) {
+      logTutorEvent("TutorToolLoop OpenAI request started", {
+        model,
+        attempt: attempt + 1,
+        messageCount: messages.length,
+        tools: tools.map((tool) => tool.function.name),
+      });
       console.info(`[TutorToolLoop] OpenAI request: ${JSON.stringify({
         model,
         attempt: attempt + 1,
@@ -206,6 +237,11 @@ export class OpenAiTutorToolProvider implements TutorToolProvider {
       if (!response.ok) {
         const body = await response.text();
         const retryDelayMs = response.status === 429 ? getRetryDelayMs(response, body) : 0;
+        logTutorEvent("TutorToolLoop OpenAI request failed", {
+          status: response.status,
+          retryDelayMs,
+          bodyPreview: body.slice(0, 1000),
+        }, "error");
         console.error(`[TutorToolLoop] OpenAI request failed: ${JSON.stringify({
           status: response.status,
           retryDelayMs,
@@ -233,6 +269,13 @@ export class OpenAiTutorToolProvider implements TutorToolProvider {
           : [],
         contentLength: typeof message.content === "string" ? message.content.length : 0,
       })}`);
+      logTutorEvent("TutorToolLoop OpenAI response received", {
+        finishReason: data?.choices?.[0]?.finish_reason,
+        toolCalls: Array.isArray(message.tool_calls)
+          ? message.tool_calls.map((toolCall: { function?: { name?: string } }) => toolCall.function?.name)
+          : [],
+        contentLength: typeof message.content === "string" ? message.content.length : 0,
+      });
 
       return {
         role: "assistant",

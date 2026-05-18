@@ -1,5 +1,7 @@
 import type { FileItem } from "../../types/file";
 import type { ChatMessage } from "../../types/chat";
+import type { LevelProgressSnapshot } from "../../types/validationReview";
+import type { TutorSupportContext } from "../../types/tutor";
 import type { TutorChatMessage, TutorPatchResponse } from "./types";
 import { buildConversationContext, buildConversationImageInputs, buildProjectContext } from "./contextBuilder";
 
@@ -26,7 +28,7 @@ const CAPABILITY_PATTERNS: Array<{
   },
   {
     capability: "style",
-    pattern: /\b(color|colour|font|typography|spacing|padding|margin|border|shadow|background|theme|visual|polish|style|restyle|make it look)\b/i,
+    pattern: /\b(color|colour|font|typography|spacing|padding|margin|border|shadow|background|theme|visual|polish|style|restyle|make it look|hover\w*|focus-visible|focus|visited|underline|transition|animate|animation)\b/i,
     guidance: "Prefer CSS changes for visual styling, following the project's existing styling pattern.",
   },
   {
@@ -36,7 +38,7 @@ const CAPABILITY_PATTERNS: Array<{
   },
   {
     capability: "behavior",
-    pattern: /\b(click|clickable|tap|select|selected|interactive|javascript|\bjs\b|event listener|dynamic|hover\w*|toggl\w*|open\w*|clos\w*|show\w*|hid\w*|dropdown|modal|submit|filter|sort|animate|animation)\b/i,
+    pattern: /\b(click|clickable|tap|select|selected|javascript|\bjs\b|event listener|dynamic|toggl\w*|open\w*|clos\w*|show\w*|hid\w*|dropdown|modal|submit|filter|sort)\b/i,
     guidance: "Add real JavaScript or DOM event handling for requested behavior, and make sure it is wired into an HTML entry point.",
   },
   {
@@ -106,6 +108,9 @@ function buildRequestCapabilities(message: string, files: FileItem[]) {
     .filter(({ capability }) => uniqueCapabilities.includes(capability))
     .map(({ guidance }) => guidance);
 
+  const styleOnlyGuidance = uniqueCapabilities.includes("style") &&
+    !uniqueCapabilities.includes("behavior");
+
   return {
     capabilities: uniqueCapabilities,
     requiresJavaScript: uniqueCapabilities.includes("behavior"),
@@ -116,6 +121,12 @@ function buildRequestCapabilities(message: string, files: FileItem[]) {
       "Infer targets from the current project files; do not require exact selector or file names from the student.",
       "Prefer editing existing files and patterns before adding new files.",
       "Do not add external dependencies, frameworks, or unavailable assets.",
+      ...(styleOnlyGuidance
+        ? [
+            "For hover, focus, visited, transition, and animation polish, use CSS; do not create or modify JavaScript unless the student explicitly asks for click or dynamic behavior.",
+            "Prefer editing the existing stylesheet for style-polish requests.",
+          ]
+        : []),
     ],
   };
 }
@@ -129,8 +140,11 @@ Your job:
 - You may also infer the project intent and style from the project code.
 - When image attachments are present, inspect them as visual context. They may be annotated screenshots, mockups, or reference images from the student.
 - When preview-element attachments are present, treat them as the exact rendered element the student selected in the live preview, including its selector, text, computed styles, and HTML snippet.
+- When levelInstructionsMarkdown is present, treat it as the curriculum task context and avoid edits outside that scope.
+- When levelProgress is present, preserve passed criteria and focus requested help on incomplete criteria unless the student explicitly asks to revisit completed work.
 - Keep responses encouraging, specific, and student-friendly.
 - Explain the learning idea briefly. Do not over-explain.
+- When you propose file edits, the student-facing message must name the main files or page areas changed and explain why those changes help.
 - Prefer simple, readable HTML and CSS code that avoids unnecessary complexity (ie. avoid Tailwind, frameworks, or complex selectors). 
 - Generate JavaScript when the student explicitly asks for behavior that needs it, or if you infer that the student's request requires it.
 - Preserve the student's project intent and style unless they ask for a redesign.
@@ -146,7 +160,8 @@ Bias toward useful edits:
 - Do not say you cannot make a safe edit plan just because the request is high level. If the intent is clear from the project, make the most reasonable safe edit.
 
 Interactive behavior rules:
-- If the student asks for something to be clickable, selectable, dynamic, interactive, or to update when clicked, you must add actual JavaScript event handling with addEventListener, onclick, or an equivalent DOM event pattern.
+- Hover, focus, visited, transition, and visual animation polish are CSS interaction states by default. Do not add JavaScript for them unless the student explicitly asks for click handlers, dynamic content, toggles, or other stateful behavior.
+- If the student asks for something to be clickable, selectable, dynamic, stateful, or to update when clicked, you must add actual JavaScript event handling with addEventListener, onclick, or an equivalent DOM event pattern.
 - When converting static content into interactive behavior, store or derive the relevant data in JavaScript and update the existing DOM rather than duplicating static markup as a substitute for interactivity.
 - For non-trivial interactivity, prefer creating script.js when no JavaScript file exists yet, then add the matching script src reference in index.html.
 - Inline script is acceptable only for very small behavior; if using inline script, include a complete script block near the end of index.html.
@@ -187,10 +202,29 @@ Respond only as JSON with this exact shape:
   ]
 }`;
 
-export function buildSystemPrompt(additionalSystemPrompt = "") {
-  return additionalSystemPrompt.trim()
-    ? `${BASE_SYSTEM_PROMPT}\n\nAdditional prototype instructions:\n${additionalSystemPrompt.trim()}`
-    : BASE_SYSTEM_PROMPT;
+const CURRICULUM_SUPPORT_PROMPT = `Curriculum-level support:
+- The student is working inside a guided level with instructions and learning goals.
+- Use levelInstructionsMarkdown as the source of truth for what the level is asking.
+- Use levelProgress to understand what the student has already completed and what remains.
+- If the student asks for explanation, directions, debugging help, ideas, or a concept, answer pedagogically without changing files.
+- Only edit files when the student explicitly asks you to implement or modify the project.
+- Do not add explanatory lesson content into the student's page unless the student explicitly asks for that page content.`;
+
+function buildSupportContextPrompt(supportContext: TutorSupportContext) {
+  return supportContext === "curriculum-level" ? `\n\n${CURRICULUM_SUPPORT_PROMPT}` : "";
+}
+
+export function buildSystemPrompt(
+  additionalSystemPrompt = "",
+  supportContext: TutorSupportContext = "standalone-project",
+) {
+  return [
+    BASE_SYSTEM_PROMPT,
+    buildSupportContextPrompt(supportContext),
+    additionalSystemPrompt.trim()
+      ? `\n\nAdditional prototype instructions:\n${additionalSystemPrompt.trim()}`
+      : "",
+  ].join("");
 }
 
 export function getRepairInstruction() {
@@ -202,20 +236,29 @@ export function buildTutorMessages({
   files,
   conversation,
   additionalSystemPrompt = "",
+  levelInstructionsMarkdown = "",
+  levelProgress,
   validationErrors,
   previousResponse,
+  supportContext = "standalone-project",
 }: {
   message: string;
   files: FileItem[];
   conversation: ChatMessage[];
   additionalSystemPrompt?: string;
+  levelInstructionsMarkdown?: string;
+  levelProgress?: LevelProgressSnapshot;
   validationErrors?: string[];
   previousResponse?: TutorPatchResponse;
+  supportContext?: TutorSupportContext;
 }): TutorChatMessage[] {
   const imageInputs = buildConversationImageInputs(conversation);
   const payload: Record<string, unknown> = {
     project: buildProjectContext(files),
     conversation: buildConversationContext(conversation),
+    tutorSupportContext: supportContext,
+    levelInstructionsMarkdown: levelInstructionsMarkdown.trim() || undefined,
+    levelProgress,
     requestCapabilities: buildRequestCapabilities(message, files),
     imageAttachments: imageInputs.map(({ fileName, path, source, mimeType, sizeBytes }, index) => ({
       index: index + 1,
@@ -251,14 +294,14 @@ export function buildTutorMessages({
       : JSON.stringify(payload);
 
   return [
-    { role: "system", content: buildSystemPrompt(additionalSystemPrompt) },
+    { role: "system", content: buildSystemPrompt(additionalSystemPrompt, supportContext) },
     { role: "user", content: userContent },
   ];
 }
 
 const TOOL_LOOP_SYSTEM_PROMPT = `You are Web Lab Tutor's code-editing agent for small HTML/CSS/JS projects.
 
-Use the available file tools to inspect and edit the project. Do not answer with code blocks. Make the requested project changes directly in the scratch workspace, then call finish with a concise student-facing explanation and a short saveTitle for version history.
+Use the available file tools to inspect and edit the project. Do not answer with code blocks. Make the requested project changes directly in the scratch workspace, then call finish with a concise student-facing explanation that names the main files or page areas changed and why those changes help, plus a short saveTitle for version history.
 
 Editing principles:
 - Infer the relevant files, selectors, elements, and behavior from the whole project.
@@ -272,6 +315,8 @@ Editing principles:
 - For behavior changes, add real DOM event handling and make sure the JavaScript can run in preview. If you create or change a JavaScript file, wire it into an HTML entry point with a script src.
 - For accessibility changes, add labels, focus behavior, keyboard support, or ARIA only when it matches the UI being changed.
 - If the request asks to build from Plans/PROJECT_PLAN.md, read that plan as requirements context and update the plan file to mark completed items and set Status: Completed under the existing readable title when the build is represented in the scratch workspace.
+- If levelInstructionsMarkdown is provided, treat it as the curriculum task context and avoid edits outside that scope.
+- If levelProgress is provided, preserve passed criteria and target incomplete criteria first.
 - If a tool call fails because exact search text did not match or arguments were invalid, read the current file and retry with smaller patch_file edits.
 - After reading the relevant files, batch related create_file/patch_file/replace_file calls in the same assistant turn when they are part of one coherent edit.
 - Avoid one-file-per-turn editing for multi-file HTML/CSS/JS changes; it is slow and can hit rate limits.
@@ -287,13 +332,19 @@ export function buildToolLoopMessages({
   files,
   conversation,
   additionalSystemPrompt = "",
+  levelInstructionsMarkdown = "",
+  levelProgress,
   validationErrors = [],
+  supportContext = "standalone-project",
 }: {
   message: string;
   files: FileItem[];
   conversation: ChatMessage[];
   additionalSystemPrompt?: string;
+  levelInstructionsMarkdown?: string;
+  levelProgress?: LevelProgressSnapshot;
   validationErrors?: string[];
+  supportContext?: TutorSupportContext;
 }) {
   const imageInputs = buildConversationImageInputs(conversation);
   const manifest = flattenToolLoopManifest(files);
@@ -303,6 +354,9 @@ export function buildToolLoopMessages({
       note: "Use read_file to inspect file contents. Tool paths are the manifest paths and do not include the project root folder.",
     },
     conversation: buildConversationContext(conversation),
+    tutorSupportContext: supportContext,
+    levelInstructionsMarkdown: levelInstructionsMarkdown.trim() || undefined,
+    levelProgress,
     requestCapabilities: buildRequestCapabilities(message, files),
     userMessage: message,
   };
@@ -314,9 +368,13 @@ export function buildToolLoopMessages({
     };
   }
 
-  const systemPrompt = additionalSystemPrompt.trim()
-    ? `${TOOL_LOOP_SYSTEM_PROMPT}\n\nAdditional prototype instructions:\n${additionalSystemPrompt.trim()}`
-    : TOOL_LOOP_SYSTEM_PROMPT;
+  const systemPrompt = [
+    TOOL_LOOP_SYSTEM_PROMPT,
+    buildSupportContextPrompt(supportContext),
+    additionalSystemPrompt.trim()
+      ? `\n\nAdditional prototype instructions:\n${additionalSystemPrompt.trim()}`
+      : "",
+  ].join("");
 
   const userContent: TutorChatMessage["content"] =
     imageInputs.length > 0

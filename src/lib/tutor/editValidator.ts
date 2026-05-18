@@ -18,9 +18,11 @@ interface FlatFile {
 const PLACEHOLDER_PATTERN =
   /(\.\.\.|…)\s*(rest|remaining|same)|rest of (the )?(code|file)|unchanged|same as before|omitted for brevity/i;
 const INTERACTIVE_REQUEST_PATTERN =
-  /\b(click|clickable|tap|select|selected|interactive|javascript|\bjs\b|event listener|dynamic|hover\w*|toggl\w*|open\w*|clos\w*|show\w*|hid\w*|dropdown|modal|submit|filter|sort|animate|animation)\b|update\s+(the\s+)?\w+\s+when/i;
+  /\b(click|clickable|tap|select|selected|javascript|\bjs\b|event listener|dynamic|toggl\w*|open\w*|clos\w*|show\w*|hid\w*|dropdown|modal|submit|filter|sort)\b|update\s+(the\s+)?\w+\s+when/i;
 const REQUIRES_NEW_BEHAVIOR_PATTERN =
-  /\b(click|clickable|tap|select|selected|interactive|javascript|\bjs\b|event listener|dynamic|hover\w*|toggl\w*|dropdown|modal|submit|filter|sort|animate|animation)\b|\b(add|create|make|wire|implement)\b.{0,50}\b(open|close|show|hide|toggle|update)\b/i;
+  /\b(click|clickable|tap|select|selected|javascript|\bjs\b|event listener|dynamic|toggl\w*|dropdown|modal|submit|filter|sort)\b|\b(add|create|make|wire|implement)\b.{0,50}\b(open|close|show|hide|toggle|update)\b/i;
+const STYLE_POLISH_REQUEST_PATTERN =
+  /\b(css|stylesheet|style|styles|polish|visual|hover\w*|focus-visible|focus|visited|underline|transition|animate|animation|font|spacing|contrast)\b/i;
 const EDIT_REQUEST_PATTERN =
   /\b(add|adjust|change|create|delete|edit|fix|hook up|implement|make|modify|move|remove|replace|resize|restyle|style|turn|update|wire)\b|sidebar|side\s*bar|layout|panel|button|clickable|interactive|responsive|mobile|menu/i;
 const JAVASCRIPT_SIGNAL_PATTERN =
@@ -138,6 +140,10 @@ function isJavaScriptFile(fileName: string) {
 
 function isHtmlFile(fileName: string) {
   return /\.html?$/i.test(fileName);
+}
+
+function isCssFile(fileName: string) {
+  return /\.css$/i.test(fileName);
 }
 
 function pathBasename(path: string) {
@@ -261,6 +267,12 @@ function hasJavaScriptBehaviorChange(
   );
 }
 
+function hasCssChange(change: TutorValidatedChange) {
+  return change.status !== "deleted" &&
+    typeof change.content === "string" &&
+    isCssFile(change.fileName);
+}
+
 function buildFileMaps(files: FileItem[]) {
   const flatFiles = flattenFiles(files).filter((file) => file.type !== "image");
   const byName = new Map(flatFiles.map((file) => [file.fileName, file]));
@@ -370,6 +382,7 @@ function validateRequestIntent(
   const errors: string[] = [];
   const asksForInteractivity = REQUIRES_NEW_BEHAVIOR_PATTERN.test(requestMessage);
   const responseMentionsInteractivity = INTERACTIVE_REQUEST_PATTERN.test(responseMessage ?? "");
+  const asksForStylePolish = STYLE_POLISH_REQUEST_PATTERN.test(requestMessage) && !asksForInteractivity;
 
   if (EDIT_REQUEST_PATTERN.test(requestMessage) && changes.length === 0) {
     errors.push("Request asks for a project edit, but the scratch workspace has no file changes.");
@@ -380,6 +393,21 @@ function validateRequestIntent(
     !changes.some((change) => hasJavaScriptBehaviorChange(change, files))
   ) {
     errors.push("Request asks for clickable or dynamic behavior, but the proposed changes do not add JavaScript or event handling.");
+  }
+
+  if (
+    asksForStylePolish &&
+    changes.some((change) => hasJavaScriptBehaviorChange(change, files))
+  ) {
+    errors.push("Request is for CSS/style polish, so the proposal should not add JavaScript behavior. Use the stylesheet for hover, focus, visited, transition, and animation polish unless the student explicitly asks for dynamic behavior.");
+  }
+
+  if (
+    asksForStylePolish &&
+    changes.length > 0 &&
+    !changes.some(hasCssChange)
+  ) {
+    errors.push("Request is for CSS/style polish, but the proposed changes do not modify a stylesheet.");
   }
 
   if (asksForInteractivity || responseMentionsInteractivity) {
