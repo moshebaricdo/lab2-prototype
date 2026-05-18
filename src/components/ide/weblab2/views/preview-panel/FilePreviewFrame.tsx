@@ -34,6 +34,13 @@ export function FilePreviewFrame({
   const suppressedDesignEditSerialRef = useRef<number | null>(null);
   const [visibleSrcDoc, setVisibleSrcDoc] = useState(srcDoc);
   const [loadingSrcDoc, setLoadingSrcDoc] = useState<string | null>(null);
+  const displaySrcDoc = loadingSrcDoc ? visibleSrcDoc : srcDoc;
+
+  useEffect(() => {
+    setVisibleSrcDoc(srcDoc);
+    setLoadingSrcDoc(null);
+    suppressedDesignEditSerialRef.current = null;
+  }, [reloadKey]);
 
   const postDesignModeState = useCallback((iframe: HTMLIFrameElement | null) => {
     iframe?.contentWindow?.postMessage({
@@ -69,7 +76,7 @@ export function FilePreviewFrame({
     postDesignModeState(loadingIframeRef.current);
     postDebugControlState(visibleIframeRef.current);
     postDebugControlState(loadingIframeRef.current);
-  }, [postDebugControlState, postDesignModeState, visibleSrcDoc, loadingSrcDoc, reloadKey]);
+  }, [postDebugControlState, postDesignModeState, displaySrcDoc, loadingSrcDoc, reloadKey]);
 
   useEffect(() => {
     postDebugControlState(visibleIframeRef.current);
@@ -94,7 +101,7 @@ export function FilePreviewFrame({
         ref={visibleIframeRef}
         key={`visible-${reloadKey}`}
         title="Project preview"
-        srcDoc={visibleSrcDoc}
+        srcDoc={displaySrcDoc}
         className={styles.previewIframe}
         sandbox={PREVIEW_IFRAME_SANDBOX}
         onLoad={() => {

@@ -3,6 +3,11 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
+const crossOriginIsolationHeaders = {
+  "Cross-Origin-Opener-Policy": "same-origin",
+  "Cross-Origin-Embedder-Policy": "credentialless",
+};
+
 export default defineConfig({
   base: "./",
   plugins: [react(), tailwindcss()],
@@ -84,19 +89,13 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    headers: {
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "require-corp",
-    },
+    headers: crossOriginIsolationHeaders,
     /** Avoid watching huge trees; reduces watcher churn on macOS. */
     watch: {
       ignored: ["**/node_modules/**", "**/build/**", "**/.git/**"],
     },
   },
   preview: {
-    headers: {
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "require-corp",
-    },
+    headers: crossOriginIsolationHeaders,
   },
 });

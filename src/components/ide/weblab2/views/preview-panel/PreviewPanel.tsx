@@ -6,6 +6,8 @@ import {
   type CSSProperties,
 } from "react";
 import emptyStatePreview from "../../../../../assets/empty-states/empty-state-preview.svg";
+import emptyStatePreviewStopped from "../../../../../assets/empty-states/empty-state-preview-stopped.svg";
+import { AppButton } from "../../../../ui/AppButton";
 import { ResizableHandle } from "../../../../ui/ResizableHandle";
 import { EmptyState } from "../../../shared/EmptyState";
 import { DesignInspectorPanel } from "./DesignInspectorPanel";
@@ -22,7 +24,7 @@ import styles from "./PreviewPanel.module.scss";
 
 const DEFAULT_MOBILE_PREVIEW_WIDTH = 375;
 const MIN_MOBILE_PREVIEW_WIDTH = 240;
-const FLOATING_TOOLBAR_EDGE_THRESHOLD = 260;
+const FLOATING_TOOLBAR_ESTIMATED_WIDTH = 560;
 const FLOATING_TOOLBAR_ESTIMATED_HEIGHT = 56;
 const FLOATING_TOOLBAR_MORPHED_ESTIMATED_HEIGHT = 180;
 const FLOATING_TOOLBAR_MARGIN = 12;
@@ -48,20 +50,25 @@ export function PreviewPanel({
 }: PreviewPanelProps) {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
   const [reloadKey, setReloadKey] = useState(0);
+  const [isPreviewStopped, setIsPreviewStopped] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isDesignMode, setIsDesignMode] = useState(false);
   const [designModeSweepKey, setDesignModeSweepKey] = useState(0);
   const [liveDesignEdit, setLiveDesignEdit] = useState<LivePreviewDesignEdit | null>(null);
   const [isDesignToolbarMorphed, setIsDesignToolbarMorphed] = useState(false);
-  const [designToolbarHeight, setDesignToolbarHeight] = useState(0);
+  const [designToolbarSize, setDesignToolbarSize] = useState({ width: 0, height: 0 });
+  const [previewFrameSize, setPreviewFrameSize] = useState({ width: 0, height: 0 });
   const [selectedElement, setSelectedElement] =
     useState<PreviewDesignElementDescriptor | null>(null);
   const [mobilePreviewWidth, setMobilePreviewWidth] = useState(
     DEFAULT_MOBILE_PREVIEW_WIDTH,
   );
   const previewCenterRef = useRef<HTMLDivElement>(null);
+  const previewFrameRef = useRef<HTMLDivElement | null>(null);
+  const previewFrameResizeObserverRef = useRef<ResizeObserver | null>(null);
   const isPreviewEmpty = !hasContent || (preview.kind === "file" && !preview.srcDoc);
+  const showPreviewPlaceholderLayout = isPreviewEmpty || isPreviewStopped;
   const showDesignTools =
     preview.kind === "file" ? preview.showDesignTools ?? true : false;
   const supportsDesignMode =
@@ -222,7 +229,18 @@ export function PreviewPanel({
     }, 200);
   };
 
+  const handleStop = () => {
+    setIsPreviewStopped(true);
+    setIsDesignMode(false);
+    setSelectedElement(null);
+    setIsDesignToolbarMorphed(false);
+    setLiveDesignEdit(null);
+    onPreviewSessionReset?.();
+  };
+
   const handleReload = () => {
+    setIsPreviewStopped(false);
+    setLiveDesignEdit(null);
     setReloadKey((current) => current + 1);
     onPreviewSessionReset?.();
   };
@@ -295,18 +313,90 @@ export function PreviewPanel({
     preview.onAddPreviewElementToTutor?.(element);
   };
 
+  const updatePreviewFrameSize = useCallback((node: HTMLDivElement) => {
+    const rect = node.getBoundingClientRect();
+    setPreviewFrameSize((current) =>
+      Math.abs(current.width - rect.width) < 0.5 && Math.abs(current.height - rect.height) < 0.5
+        ? current
+        : { width: rect.width, height: rect.height },
+    );
+  }, []);
+
+  const setPreviewFrameNode = useCallback((node: HTMLDivElement | null) => {
+    previewFrameResizeObserverRef.current?.disconnect();
+    previewFrameResizeObserverRef.current = null;
+    previewFrameRef.current = node;
+
+    if (!node) {
+      setPreviewFrameSize({ width: 0, height: 0 });
+      return;
+    }
+
+    updatePreviewFrameSize(node);
+    const observer = new ResizeObserver(() => updatePreviewFrameSize(node));
+    observer.observe(node);
+    previewFrameResizeObserverRef.current = observer;
+  }, [updatePreviewFrameSize]);
+
+  useEffect(
+    () => () => {
+      previewFrameResizeObserverRef.current?.disconnect();
+    },
+    [],
+  );
+
+  const handleDesignToolbarSizeChange = useCallback((size: { width: number; height: number }) => {
+    setDesignToolbarSize((current) =>
+      Math.abs(current.width - size.width) < 0.5 && Math.abs(current.height - size.height) < 0.5
+        ? current
+        : size,
+    );
+  }, []);
+
+  const getAvailableFloatingToolbarWidth = useCallback(() => (
+    Math.max(
+      0,
+      (
+        previewFrameSize.width ||
+        previewFrameRef.current?.getBoundingClientRect().width ||
+        DEFAULT_MOBILE_PREVIEW_WIDTH
+      ) - FLOATING_TOOLBAR_MARGIN * 2,
+    )
+  ), [previewFrameSize.width]);
+
+  const isDesignToolbarConstrained =
+    Boolean(selectedElement && designToolbarSize.width > 0) &&
+    designToolbarSize.width >= getAvailableFloatingToolbarWidth() - 0.5;
+
   const getFloatingToolbarStyle = (): CSSProperties | undefined => {
     if (!selectedElement) return undefined;
-    const previewRect = previewCenterRef.current?.getBoundingClientRect();
-    const availableWidth = previewRect?.width ?? DEFAULT_MOBILE_PREVIEW_WIDTH;
+    const availableWidth =
+      previewFrameSize.width ||
+      previewFrameRef.current?.getBoundingClientRect().width ||
+      DEFAULT_MOBILE_PREVIEW_WIDTH;
     const availableHeight =
-      previewRect?.height ?? Math.max(selectedElement.rect.bottom + FLOATING_TOOLBAR_ESTIMATED_HEIGHT, 240);
+      previewFrameSize.height ||
+      previewFrameRef.current?.getBoundingClientRect().height ||
+      Math.max(selectedElement.rect.bottom + FLOATING_TOOLBAR_ESTIMATED_HEIGHT, 240);
     const estimatedToolbarHeight = isDesignToolbarMorphed
       ? FLOATING_TOOLBAR_MORPHED_ESTIMATED_HEIGHT
       : FLOATING_TOOLBAR_ESTIMATED_HEIGHT;
-    const toolbarHeight = Math.max(designToolbarHeight || estimatedToolbarHeight, FLOATING_TOOLBAR_ESTIMATED_HEIGHT);
+    const toolbarHeight = Math.max(designToolbarSize.height || estimatedToolbarHeight, FLOATING_TOOLBAR_ESTIMATED_HEIGHT);
+    const toolbarWidth = Math.min(
+      designToolbarSize.width || FLOATING_TOOLBAR_ESTIMATED_WIDTH,
+      Math.max(0, availableWidth - FLOATING_TOOLBAR_MARGIN * 2),
+    );
     const maxToolbarHeight = Math.max(120, availableHeight - FLOATING_TOOLBAR_MARGIN * 2);
     const centerX = selectedElement.rect.left + selectedElement.rect.width / 2;
+    const unclampedLeft = centerX - toolbarWidth / 2;
+    const maxToolbarLeft = Math.max(
+      FLOATING_TOOLBAR_MARGIN,
+      availableWidth - toolbarWidth - FLOATING_TOOLBAR_MARGIN,
+    );
+    const toolbarLeft = Math.min(
+      Math.max(FLOATING_TOOLBAR_MARGIN, unclampedLeft),
+      maxToolbarLeft,
+    );
     const preferredBelowTop = selectedElement.rect.bottom + 10;
     const primaryBelowBottom = preferredBelowTop + FLOATING_TOOLBAR_ESTIMATED_HEIGHT;
     const hasRoomForPrimaryBelow =
@@ -339,22 +429,15 @@ export function PreviewPanel({
             maxHeight: maxToolbarHeight,
           };
 
-    if (centerX < FLOATING_TOOLBAR_EDGE_THRESHOLD) {
-      return { left: FLOATING_TOOLBAR_MARGIN, ...verticalStyle };
-    }
-
-    if (availableWidth - centerX < FLOATING_TOOLBAR_EDGE_THRESHOLD) {
-      return { right: FLOATING_TOOLBAR_MARGIN, ...verticalStyle };
-    }
-
-    return { left: centerX, ...verticalStyle, transform: "translateX(-50%)" };
+    return { left: toolbarLeft, ...verticalStyle };
   };
 
   const getFloatingToolbarPopupPlacement = () => {
     if (!selectedElement) return "below" as const;
-    const previewRect = previewCenterRef.current?.getBoundingClientRect();
     const availableHeight =
-      previewRect?.height ?? Math.max(selectedElement.rect.bottom + FLOATING_TOOLBAR_ESTIMATED_HEIGHT, 240);
+      previewFrameSize.height ||
+      previewFrameRef.current?.getBoundingClientRect().height ||
+      Math.max(selectedElement.rect.bottom + FLOATING_TOOLBAR_ESTIMATED_HEIGHT, 240);
     const estimatedToolbarHeight = isDesignToolbarMorphed
       ? FLOATING_TOOLBAR_MORPHED_ESTIMATED_HEIGHT
       : FLOATING_TOOLBAR_ESTIMATED_HEIGHT;
@@ -381,7 +464,9 @@ export function PreviewPanel({
       onToggleFullscreen={
         isInFullscreen ? handleCloseFullscreen : () => setIsFullscreen(true)
       }
+      onStop={handleStop}
       onReload={handleReload}
+      isPreviewStopped={isPreviewStopped}
       isDebugPanelOpen={isDebugPanelOpen}
       hasDebugActivity={hasDebugActivity}
       debugPanelDisabled={isPreviewEmpty}
@@ -400,6 +485,28 @@ export function PreviewPanel({
     </div>
   );
 
+  const renderPreviewStoppedState = () => (
+    <div className={styles.previewEmptyStateOffset} role="status">
+      <EmptyState
+        type="preview"
+        heading="Preview Stopped"
+        description="You stopped the preview. If there was an error, review your code or use AI Tutor to help debug before reloading."
+        imageSrc={emptyStatePreviewStopped}
+        actions={
+          <AppButton
+            variant="secondary"
+            tone="gray"
+            size="s"
+            iconName="rotate"
+            onClick={handleReload}
+          >
+            Reload Preview
+          </AppButton>
+        }
+      />
+    </div>
+  );
+
   const renderPreviewSurface = () => {
     if (!hasContent) {
       return renderPreviewEmptyState(
@@ -414,8 +521,13 @@ export function PreviewPanel({
         );
       }
 
+      if (isPreviewStopped) {
+        return renderPreviewStoppedState();
+      }
+
       return (
         <FilePreviewFrame
+          key={reloadKey}
           srcDoc={preview.srcDoc}
           reloadKey={reloadKey}
           designModeActive={isDesignMode}
@@ -426,6 +538,10 @@ export function PreviewPanel({
       );
     }
 
+    if (isPreviewStopped) {
+      return renderPreviewStoppedState();
+    }
+
     return <ReactPreviewFrame key={reloadKey}>{preview.content}</ReactPreviewFrame>;
   };
 
@@ -433,10 +549,11 @@ export function PreviewPanel({
     <div className={styles.previewBody}>
       <div className={styles.previewCenter} ref={previewCenterRef}>
         <div
+          ref={setPreviewFrameNode}
           className={`${styles.previewFrame} ${
             previewMode === "mobile" ? styles.mobileFrame : ""
           } ${
-            isPreviewEmpty ? styles.previewFrameEmpty : ""
+            showPreviewPlaceholderLayout ? styles.previewFrameEmpty : ""
           }`}
           style={
             previewMode === "mobile"
@@ -464,12 +581,13 @@ export function PreviewPanel({
               selectedElement={selectedElement}
               style={getFloatingToolbarStyle()}
               popupPlacement={getFloatingToolbarPopupPlacement()}
+              isConstrained={isDesignToolbarConstrained}
               canEdit={canEditDesign}
               disabledReason={preview.designDisabledReason}
               onApplyStyle={handleApplyDesignStyle}
               onResetStyles={handleResetDesignStyles}
               onMorphStateChange={setIsDesignToolbarMorphed}
-              onHeightChange={setDesignToolbarHeight}
+              onSizeChange={handleDesignToolbarSizeChange}
               onAddToTutor={handleAddPreviewElementToTutor}
               onClearSelection={() => setSelectedElement(null)}
             />

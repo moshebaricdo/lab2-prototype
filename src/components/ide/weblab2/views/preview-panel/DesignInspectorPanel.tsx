@@ -31,12 +31,13 @@ interface DesignInspectorPanelProps {
   selectedElement: PreviewDesignElementDescriptor | null;
   style?: CSSProperties;
   popupPlacement?: "above" | "below";
+  isConstrained?: boolean;
   canEdit: boolean;
   disabledReason?: string;
   onApplyStyle: (styles: PreviewDesignStylePatch) => void;
   onResetStyles: () => void;
   onMorphStateChange?: (isMorphed: boolean) => void;
-  onHeightChange?: (height: number) => void;
+  onSizeChange?: (size: { width: number; height: number }) => void;
   onAddToTutor: (element: PreviewDesignElementDescriptor) => void;
   onClearSelection: () => void;
 }
@@ -280,12 +281,13 @@ export function DesignInspectorPanel({
   selectedElement,
   style,
   popupPlacement = "below",
+  isConstrained = false,
   canEdit,
   disabledReason,
   onApplyStyle,
   onResetStyles,
   onMorphStateChange,
-  onHeightChange,
+  onSizeChange,
   onAddToTutor,
   onClearSelection,
 }: DesignInspectorPanelProps) {
@@ -328,17 +330,21 @@ export function DesignInspectorPanel({
   }, [onMorphStateChange]);
 
   useLayoutEffect(() => {
-    if (!rootRef.current || !onHeightChange) return undefined;
+    if (!rootRef.current || !onSizeChange) return undefined;
 
-    const updateHeight = () => {
-      onHeightChange(rootRef.current?.getBoundingClientRect().height ?? 0);
+    const updateSize = () => {
+      const rect = rootRef.current?.getBoundingClientRect();
+      onSizeChange({
+        width: rect?.width ?? 0,
+        height: rect?.height ?? 0,
+      });
     };
-    updateHeight();
+    updateSize();
 
-    const observer = new ResizeObserver(updateHeight);
+    const observer = new ResizeObserver(updateSize);
     observer.observe(rootRef.current);
     return () => observer.disconnect();
-  }, [activePopup, onHeightChange, selectedElementKey]);
+  }, [activePopup, onSizeChange, selectedElementKey]);
 
   useLayoutEffect(() => {
     if (!activePopup || !popupAnchorRect) {
@@ -1243,7 +1249,9 @@ export function DesignInspectorPanel({
     <>
       <aside
         ref={rootRef}
-        className={`${styles.root} ${isDragging ? styles.rootDragging : ""}`}
+        className={`${styles.root} ${isConstrained ? styles.rootConstrained : ""} ${
+          isDragging ? styles.rootDragging : ""
+        }`}
         style={panelStyle}
         aria-label="Preview design toolbar"
         data-popup-placement={popupPlacement}

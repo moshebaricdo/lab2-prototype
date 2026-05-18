@@ -72,10 +72,24 @@ function getStatusLabel(request: PreviewNetworkRequest) {
   return `${request.statusCode ?? "Unknown"}${statusText}`;
 }
 
-function getActivityStatusClass(request: PreviewNetworkRequest) {
-  if (request.status === "success") return styles.statusSuccess;
-  if (request.status === "pending") return styles.statusPending;
-  return styles.statusFailure;
+type StepStatus = "success" | "failure" | "pending";
+
+function getStepIconClass(status: StepStatus) {
+  if (status === "success") return styles.stepIconSuccess;
+  if (status === "pending") return styles.stepIconPending;
+  return styles.stepIconFailure;
+}
+
+function getStepIconName(status: StepStatus) {
+  if (status === "success") return "circle-check";
+  if (status === "pending") return "spinner-third";
+  return "circle-xmark";
+}
+
+function getActivityStepStatus(request: PreviewNetworkRequest): StepStatus {
+  if (request.status === "success") return "success";
+  if (request.status === "pending") return "pending";
+  return "failure";
 }
 
 function getConnectorStatusClass(request: PreviewNetworkRequest) {
@@ -88,6 +102,22 @@ function getConnectorStatusClass(request: PreviewNetworkRequest) {
 function copyText(value: string) {
   if (!value) return;
   void navigator.clipboard?.writeText(value);
+}
+
+function getRequestStepStatus(request: PreviewNetworkRequest): StepStatus {
+  if (request.status === "request-error") return "failure";
+  if (request.status === "pending") return "pending";
+  return "success";
+}
+
+function getResponseStepStatus(request: PreviewNetworkRequest): StepStatus {
+  if (request.status === "success") return "success";
+  if (request.status === "pending") return "pending";
+  return "failure";
+}
+
+function isResponseDisabled(request: PreviewNetworkRequest) {
+  return request.status === "request-error" || request.status === "response-error";
 }
 
 function MetadataField({
@@ -251,17 +281,16 @@ export function PreviewDebugPanel({
               <button
                 key={request.id}
                 type="button"
-                className={`${styles.activityItem} ${isSelected ? styles.activityItemSelected : ""}`}
+                className={styles.activityItem}
                 aria-pressed={isSelected}
                 onClick={() => onSelectNetworkRequest(request.id)}
               >
-                <span className={`${styles.activityStatusDot} ${getActivityStatusClass(request)}`} />
-                <span className={styles.activityText}>
-                  <span className={styles.activityName}>{getRequestName(request.url)}</span>
-                  <span className={styles.activityMeta}>
-                    {request.method}
-                    {request.durationMs != null ? ` · ${request.durationMs}ms` : ""}
-                  </span>
+                <span className={`${styles.radio} ${isSelected ? styles.radioSelected : ""}`}>
+                  {isSelected ? <span className={styles.radioDot} /> : null}
+                </span>
+                <span className={styles.activityName}>{getRequestName(request.url)}</span>
+                <span className={`${styles.stepIcon} ${getStepIconClass(getActivityStepStatus(request))}`}>
+                  <FaIcon name={getStepIconName(getActivityStepStatus(request))} size="s" />
                 </span>
               </button>
             );
@@ -271,45 +300,22 @@ export function PreviewDebugPanel({
     </aside>
   );
 
-  const renderRequestCard = (request: PreviewNetworkRequest) => (
-    <section className={styles.detailCard}>
-      <div className={styles.detailHeader}>
-        <h3>Request</h3>
-        <FaIcon name="arrow-right" size="xs" />
-      </div>
-      <div className={styles.detailBody}>
-        {request.status === "request-error" && request.error ? (
-          <AlertBanner
-            className={styles.detailAlert}
-            dismissible={false}
-            sentiment="danger"
-            showIcon
-            size="xs"
-          >
-            {request.error}
-          </AlertBanner>
-        ) : null}
-        <div className={styles.metadataGrid}>
-          <MetadataField label="Method" value={request.method} />
-          <MetadataField label="Request time" value={formatRequestTime(request.requestTime)} />
+  const renderRequestCard = (request: PreviewNetworkRequest) => {
+    const stepStatus = getRequestStepStatus(request);
+    return (
+      <section
+        className={`${styles.detailCard} ${
+          isResponseDisabled(request) ? styles.detailCardExpanded : ""
+        }`}
+      >
+        <div className={styles.detailHeader}>
+          <h3>Request</h3>
+          <span className={`${styles.stepIcon} ${getStepIconClass(stepStatus)}`}>
+            <FaIcon name={getStepIconName(stepStatus)} size="s" />
+          </span>
         </div>
-        <MetadataField label="URL" value={request.url || "Unknown URL"} copyValue={request.url} />
-      </div>
-    </section>
-  );
-
-  const renderResponseCard = (request: PreviewNetworkRequest) => (
-    <section className={`${styles.detailCard} ${request.status === "request-error" ? styles.detailCardCompact : ""}`}>
-      <div className={styles.detailHeader}>
-        <h3>Response</h3>
-        <FaIcon
-          name={request.status === "pending" ? "clock" : request.status === "success" ? "circle-check" : "circle-xmark"}
-          size="xs"
-        />
-      </div>
-      {request.status === "request-error" ? null : (
         <div className={styles.detailBody}>
-          {request.status === "response-error" ? (
+          {request.status === "request-error" && request.error ? (
             <AlertBanner
               className={styles.detailAlert}
               dismissible={false}
@@ -317,39 +323,70 @@ export function PreviewDebugPanel({
               showIcon
               size="xs"
             >
-              The server returned an error response.
+              {request.error}
             </AlertBanner>
           ) : null}
           <div className={styles.metadataGrid}>
-            <MetadataField label="Status" value={getStatusLabel(request)} />
+            <MetadataField label="Method" value={request.method} />
+            <MetadataField label="Request time" value={formatRequestTime(request.requestTime)} />
+          </div>
+          <MetadataField label="URL" value={request.url || "Unknown URL"} copyValue={request.url} />
+        </div>
+      </section>
+    );
+  };
+
+  const renderResponseCard = (request: PreviewNetworkRequest) => {
+    const stepStatus = getResponseStepStatus(request);
+    const isDisabled = isResponseDisabled(request);
+    return (
+      <section className={`${styles.detailCard} ${isDisabled ? styles.detailCardDisabled : ""}`}>
+        <div className={styles.detailHeader}>
+          <h3>Response</h3>
+          <span className={`${styles.stepIcon} ${getStepIconClass(stepStatus)}`}>
+            <FaIcon name={getStepIconName(stepStatus)} size="s" />
+          </span>
+        </div>
+        {isDisabled ? null : (
+          <div className={styles.detailBody}>
+            <div className={styles.metadataGrid}>
+              <MetadataField label="Status" value={getStatusLabel(request)} />
+              <MetadataField
+                label="Time"
+                value={request.durationMs != null ? `${request.durationMs}ms` : "In progress"}
+              />
+            </div>
             <MetadataField
-              label="Time"
-              value={request.durationMs != null ? `${request.durationMs}ms` : "In progress"}
+              label="Response data"
+              value={
+                request.status === "pending"
+                  ? "Waiting for response..."
+                  : request.responseBody || "No response body"
+              }
+              isCode
+              copyValue={request.responseBody}
             />
           </div>
-          <MetadataField
-            label="Response data"
-            value={
-              request.status === "pending"
-                ? "Waiting for response..."
-                : request.responseBody || "No response body"
-            }
-            isCode
-            copyValue={request.responseBody}
-          />
-        </div>
-      )}
-    </section>
-  );
+        )}
+      </section>
+    );
+  };
 
   const renderNetwork = () => (
     <div className={styles.networkPane}>
       {renderActivityList()}
       <div className={styles.networkDetails}>
         {selectedRequest ? (
-          <div className={styles.detailCards}>
+          <div
+            className={`${styles.detailCards} ${
+              isResponseDisabled(selectedRequest) ? styles.detailCardsResponseDisabled : ""
+            }`}
+          >
             {renderRequestCard(selectedRequest)}
-            <div className={`${styles.connector} ${getConnectorStatusClass(selectedRequest)}`} aria-hidden />
+            <div className={`${styles.connector} ${getConnectorStatusClass(selectedRequest)}`} aria-hidden>
+              <span className={`${styles.connectorNode} ${styles.connectorNodeStart}`} />
+              <span className={`${styles.connectorNode} ${styles.connectorNodeEnd}`} />
+            </div>
             {renderResponseCard(selectedRequest)}
           </div>
         ) : (

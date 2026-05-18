@@ -99,6 +99,18 @@ function isHashOnlyHref(href: string) {
   return href.trim().startsWith("#");
 }
 
+function hasDeferAttribute(tag: string) {
+  return /\sdefer(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?(?=\s|>|\/)/i.test(tag);
+}
+
+function injectBeforeBodyClose(html: string, content: string) {
+  if (!content) return html;
+  if (/<\/body>/i.test(html)) {
+    return html.replace(/<\/body>/i, `${content}\n</body>`);
+  }
+  return `${html}\n${content}`;
+}
+
 const previewDebugRuntime = `
 <script>
 (() => {
@@ -1129,6 +1141,7 @@ export function buildPreviewSrcDoc(
     },
   );
 
+  const deferredScripts: string[] = [];
   const htmlWithInlinedScripts = htmlWithInlinedStyles.replace(
     /<script\b(?=[^>]*\bsrc=["']([^"']+)["'])[^>]*>\s*<\/script>/gi,
     (tag, src: string) => {
@@ -1140,11 +1153,21 @@ export function buildPreviewSrcDoc(
         filesByName.get(normalizedSrc.split("/").at(-1) ?? normalizedSrc);
       const js = jsFile ? getEffectiveContent(jsFile.item, useProposedContent) : undefined;
       if (!js) return tag;
-      return `<script data-preview-source="${escapeAttributeValue(src)}">\n${escapeScriptCloseTag(js)}\n</script>`;
+      const inlinedScript = `<script data-preview-source="${escapeAttributeValue(src)}">\n${escapeScriptCloseTag(js)}\n</script>`;
+      if (hasDeferAttribute(tag)) {
+        deferredScripts.push(inlinedScript);
+        return "";
+      }
+      return inlinedScript;
     },
   );
 
-  const htmlWithResolvedInlineStyleAssets = htmlWithInlinedScripts.replace(
+  const htmlWithDeferredScripts = injectBeforeBodyClose(
+    htmlWithInlinedScripts,
+    deferredScripts.join("\n"),
+  );
+
+  const htmlWithResolvedInlineStyleAssets = htmlWithDeferredScripts.replace(
     /<style\b([^>]*)>([\s\S]*?)<\/style>/gi,
     (_tag, attributes: string, css: string) =>
       `<style${attributes}>${rewriteCssImageAssetUrls(

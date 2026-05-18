@@ -35,10 +35,16 @@
   width: 100%;
   min-height: 24px;
   align-items: center;
-  gap: 4px;
+  gap: 0;
   border: 1px solid var(--ds-borders-neutral-strong);
   border-radius: 4px;
   background: var(--ds-background-neutral-primary);
+}
+
+.urlBox .urlBarButton:hover:not(:disabled),
+.urlBox .urlBarButton:active:not(:disabled) {
+  background: transparent;
+  color: var(--ds-text-neutral-secondary);
 }
 
 .urlBoxDisabled {
@@ -174,6 +180,10 @@
 
 .debugToggleWrap {
   position: relative;
+  display: inline-flex;
+}
+
+.urlBarButtonWrap {
   display: inline-flex;
 }
 

@@ -42,7 +42,9 @@ interface PreviewToolbarProps {
   onToggleDebugPanel?: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
+  onStop: () => void;
   onReload: () => void;
+  isPreviewStopped?: boolean;
 }
 
 const PREVIEW_MODE_OPTIONS: SegmentedOption<PreviewMode>[] = [
@@ -105,7 +107,9 @@ export function PreviewToolbar({
   onToggleDebugPanel,
   isFullscreen,
   onToggleFullscreen,
+  onStop,
   onReload,
+  isPreviewStopped = false,
 }: PreviewToolbarProps) {
   const isPreviewUnavailable = previewModeDisabled;
   const currentPath = isPreviewUnavailable ? "" : fileNavigation?.path ?? "index.html";
@@ -275,6 +279,7 @@ export function PreviewToolbar({
           title="Back"
           iconName="chevron-left"
           size="xs"
+          className={styles.urlBarButton}
           onClick={handleBack}
           disabled={isPreviewUnavailable || !canGoBack}
         />
@@ -285,6 +290,7 @@ export function PreviewToolbar({
           title="Forward"
           iconName="chevron-right"
           size="xs"
+          className={styles.urlBarButton}
           onClick={handleForward}
           disabled={isPreviewUnavailable || !canGoForward}
         />
@@ -380,16 +386,50 @@ export function PreviewToolbar({
           ) : null}
         </form>
 
-        <AppButton
-          variant="tertiary"
-          tone="gray"
-          onClick={onReload}
-          aria-label="Refresh preview"
-          title="Refresh preview"
-          iconName="rotate"
-          size="xs"
-          disabled={isPreviewUnavailable}
-        />
+        <Tooltip
+          content={
+            isPreviewUnavailable
+              ? "Stop preview is unavailable without preview content"
+              : isPreviewStopped
+                ? "Preview already stopped"
+                : "Stop preview"
+          }
+          position="bottom"
+        >
+          <span className={styles.urlBarButtonWrap}>
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              onClick={onStop}
+              aria-label="Stop preview"
+              iconName="stop"
+              size="xs"
+              className={styles.urlBarButton}
+              disabled={isPreviewUnavailable || isPreviewStopped}
+            />
+          </span>
+        </Tooltip>
+        <Tooltip
+          content={
+            isPreviewUnavailable
+              ? "Reload preview is unavailable without preview content"
+              : "Reload preview"
+          }
+          position="bottom"
+        >
+          <span className={styles.urlBarButtonWrap}>
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              onClick={onReload}
+              aria-label="Reload preview"
+              iconName="rotate"
+              size="xs"
+              className={styles.urlBarButton}
+              disabled={isPreviewUnavailable}
+            />
+          </span>
+        </Tooltip>
       </div>
     </div>
   );

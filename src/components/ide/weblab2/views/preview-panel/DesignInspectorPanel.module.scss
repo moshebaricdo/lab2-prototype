@@ -3,6 +3,7 @@
   z-index: 4;
   display: flex;
   box-sizing: border-box;
+  width: max-content;
   max-width: calc(100% - 24px);
   flex-direction: row;
   align-items: center;
@@ -62,11 +63,19 @@
 }
 
 .toolbar {
-  flex-wrap: wrap;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
 }
 
 .contentState {
+  width: 100%;
+  flex-wrap: nowrap;
   animation: toolbarMorphIn 0.12s ease-out;
+}
+
+.rootConstrained .toolbar,
+.rootConstrained .contentState {
+  flex-wrap: wrap;
 }
 
 .label,
@@ -76,8 +85,10 @@
 
 .label {
   appearance: none;
+  flex: 0 1 auto;
   overflow: hidden;
   max-width: 120px;
+  min-width: 0;
   border: 0;
   border-radius: 4px;
   background: var(--ds-background-neutral-secondary);
@@ -119,6 +130,7 @@
 }
 
 .groupGap {
+  flex: 0 0 auto;
   width: 1px;
   height: 8px;
   margin: 0 4px;
