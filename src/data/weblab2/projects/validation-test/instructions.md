@@ -1,4 +1,4 @@
-## Do This
+# Do This
 
 **Expected Behavior:** Clicking the Next button should show a new photo and caption on the page.
 
