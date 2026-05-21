@@ -103,6 +103,177 @@ function hasDeferAttribute(tag: string) {
   return /\sdefer(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?(?=\s|>|\/)/i.test(tag);
 }
 
+function hashPreviewSourceLabel(label: string) {
+  let hash = 0;
+  for (let index = 0; index < label.length; index += 1) {
+    hash = Math.imul(31, hash) + label.charCodeAt(index);
+  }
+  return Math.abs(hash).toString(36);
+}
+
+function skipQuotedJavaScript(source: string, index: number) {
+  const quote = source[index];
+  let current = index + 1;
+  while (current < source.length) {
+    const char = source[current];
+    if (char === "\\") {
+      current += 2;
+      continue;
+    }
+    if (char === quote) return current + 1;
+    current += 1;
+  }
+  return current;
+}
+
+function skipTemplateJavaScript(source: string, index: number) {
+  let current = index + 1;
+  while (current < source.length) {
+    const char = source[current];
+    if (char === "\\") {
+      current += 2;
+      continue;
+    }
+    if (char === "`") return current + 1;
+    current += 1;
+  }
+  return current;
+}
+
+function skipWhitespaceAndComments(source: string, index: number) {
+  let current = index;
+  while (current < source.length) {
+    if (/\s/.test(source[current])) {
+      current += 1;
+      continue;
+    }
+    if (source[current] === "/" && source[current + 1] === "/") {
+      const newlineIndex = source.indexOf("\n", current + 2);
+      current = newlineIndex === -1 ? source.length : newlineIndex + 1;
+      continue;
+    }
+    if (source[current] === "/" && source[current + 1] === "*") {
+      const endIndex = source.indexOf("*/", current + 2);
+      current = endIndex === -1 ? source.length : endIndex + 2;
+      continue;
+    }
+    return current;
+  }
+  return current;
+}
+
+function findMatchingParen(source: string, index: number) {
+  let depth = 0;
+  let current = index;
+  while (current < source.length) {
+    const char = source[current];
+    const nextChar = source[current + 1];
+    if (char === "\"" || char === "'") {
+      current = skipQuotedJavaScript(source, current);
+      continue;
+    }
+    if (char === "`") {
+      current = skipTemplateJavaScript(source, current);
+      continue;
+    }
+    if (char === "/" && nextChar === "/") {
+      const newlineIndex = source.indexOf("\n", current + 2);
+      current = newlineIndex === -1 ? source.length : newlineIndex + 1;
+      continue;
+    }
+    if (char === "/" && nextChar === "*") {
+      const endIndex = source.indexOf("*/", current + 2);
+      current = endIndex === -1 ? source.length : endIndex + 2;
+      continue;
+    }
+    if (char === "(") depth += 1;
+    if (char === ")") {
+      depth -= 1;
+      if (depth === 0) return current;
+    }
+    current += 1;
+  }
+  return -1;
+}
+
+function isIdentifierChar(char: string | undefined) {
+  return Boolean(char && /[$_\p{L}\p{N}]/u.test(char));
+}
+
+function getPreviewLoopGuardInsertPositions(source: string) {
+  const insertPositions: number[] = [];
+  let index = 0;
+
+  while (index < source.length) {
+    const char = source[index];
+    const nextChar = source[index + 1];
+
+    if (char === "\"" || char === "'") {
+      index = skipQuotedJavaScript(source, index);
+      continue;
+    }
+    if (char === "`") {
+      index = skipTemplateJavaScript(source, index);
+      continue;
+    }
+    if (char === "/" && nextChar === "/") {
+      const newlineIndex = source.indexOf("\n", index + 2);
+      index = newlineIndex === -1 ? source.length : newlineIndex + 1;
+      continue;
+    }
+    if (char === "/" && nextChar === "*") {
+      const endIndex = source.indexOf("*/", index + 2);
+      index = endIndex === -1 ? source.length : endIndex + 2;
+      continue;
+    }
+    if (!/[A-Za-z_$]/.test(char)) {
+      index += 1;
+      continue;
+    }
+
+    const wordStart = index;
+    index += 1;
+    while (isIdentifierChar(source[index])) index += 1;
+    const word = source.slice(wordStart, index);
+    if (isIdentifierChar(source[wordStart - 1])) continue;
+
+    if (word === "while" || word === "for") {
+      const openParenIndex = skipWhitespaceAndComments(source, index);
+      if (source[openParenIndex] !== "(") continue;
+      const closeParenIndex = findMatchingParen(source, openParenIndex);
+      if (closeParenIndex === -1) continue;
+      const openBraceIndex = skipWhitespaceAndComments(source, closeParenIndex + 1);
+      if (source[openBraceIndex] === "{") insertPositions.push(openBraceIndex + 1);
+      index = openBraceIndex + 1;
+      continue;
+    }
+
+    if (word === "do") {
+      const openBraceIndex = skipWhitespaceAndComments(source, index);
+      if (source[openBraceIndex] === "{") insertPositions.push(openBraceIndex + 1);
+      index = openBraceIndex + 1;
+    }
+  }
+
+  return insertPositions;
+}
+
+function injectPreviewLoopGuard(js: string, sourceLabel: string) {
+  const insertPositions = getPreviewLoopGuardInsertPositions(js);
+  if (insertPositions.length === 0) return js;
+
+  const guardName = `__weblabPreviewLoopGuard_${hashPreviewSourceLabel(sourceLabel)}`;
+  const errorMessage = JSON.stringify(
+    `Web Lab preview stopped a possible infinite loop in ${sourceLabel}. Check your loop condition and update step.`,
+  );
+  const guardSource = `\nconst ${guardName} = (() => {\n  let iterations = 0;\n  const limit = 100000;\n  return () => {\n    iterations += 1;\n    if (iterations > limit) {\n      throw new Error(${errorMessage});\n    }\n  };\n})();\n`;
+  let guardedJs = js;
+  for (const insertPosition of [...insertPositions].sort((a, b) => b - a)) {
+    guardedJs = `${guardedJs.slice(0, insertPosition)}\n${guardName}();${guardedJs.slice(insertPosition)}`;
+  }
+  return `${guardSource}\n${guardedJs}`;
+}
+
 function injectBeforeBodyClose(html: string, content: string) {
   if (!content) return html;
   if (/<\/body>/i.test(html)) {
@@ -1092,6 +1263,19 @@ export function findPreviewHtmlFile(
   return matchingNames.length === 1 ? matchingNames[0] : undefined;
 }
 
+export function stampPreviewReloadNonce(srcDoc: string, reloadKey: number): string {
+  if (reloadKey <= 0) return srcDoc;
+
+  const nonce = `<!-- weblab-preview-reload:${reloadKey} -->`;
+  if (/<\/head>/i.test(srcDoc)) {
+    return srcDoc.replace(/<\/head>/i, `${nonce}\n</head>`);
+  }
+  if (/<html[^>]*>/i.test(srcDoc)) {
+    return srcDoc.replace(/<html[^>]*>/i, (match) => `${match}\n${nonce}`);
+  }
+  return `${nonce}\n${srcDoc}`;
+}
+
 export function buildPreviewSrcDoc(
   fileStructure: FileItem[],
   useProposedContent: boolean,
@@ -1153,7 +1337,8 @@ export function buildPreviewSrcDoc(
         filesByName.get(normalizedSrc.split("/").at(-1) ?? normalizedSrc);
       const js = jsFile ? getEffectiveContent(jsFile.item, useProposedContent) : undefined;
       if (!js) return tag;
-      const inlinedScript = `<script data-preview-source="${escapeAttributeValue(src)}">\n${escapeScriptCloseTag(js)}\n</script>`;
+      const guardedJs = injectPreviewLoopGuard(js, normalizedSrc);
+      const inlinedScript = `<script data-preview-source="${escapeAttributeValue(src)}">\n${escapeScriptCloseTag(guardedJs)}\n</script>`;
       if (hasDeferAttribute(tag)) {
         deferredScripts.push(inlinedScript);
         return "";

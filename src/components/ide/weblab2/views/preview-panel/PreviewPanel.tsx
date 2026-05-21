@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -10,6 +11,7 @@ import emptyStatePreviewStopped from "../../../../../assets/empty-states/empty-s
 import { AppButton } from "../../../../ui/AppButton";
 import { ResizableHandle } from "../../../../ui/ResizableHandle";
 import { EmptyState } from "../../../shared/EmptyState";
+import { stampPreviewReloadNonce } from "../buildPreviewSrcDoc";
 import { DesignInspectorPanel } from "./DesignInspectorPanel";
 import { FilePreviewFrame, type LivePreviewDesignEdit } from "./FilePreviewFrame";
 import { PreviewToolbar } from "./PreviewToolbar";
@@ -28,6 +30,10 @@ const FLOATING_TOOLBAR_ESTIMATED_WIDTH = 560;
 const FLOATING_TOOLBAR_ESTIMATED_HEIGHT = 56;
 const FLOATING_TOOLBAR_MORPHED_ESTIMATED_HEIGHT = 180;
 const FLOATING_TOOLBAR_MARGIN = 12;
+
+function logPreviewPanel(event: string, details: Record<string, unknown> = {}) {
+  console.info("[PreviewPanel]", event, details);
+}
 
 interface PreviewPanelProps {
   hasContent?: boolean;
@@ -69,6 +75,13 @@ export function PreviewPanel({
   const previewFrameResizeObserverRef = useRef<ResizeObserver | null>(null);
   const isPreviewEmpty = !hasContent || (preview.kind === "file" && !preview.srcDoc);
   const showPreviewPlaceholderLayout = isPreviewEmpty || isPreviewStopped;
+  const previewFrameSrcDoc = useMemo(
+    () =>
+      preview.kind === "file" && preview.srcDoc
+        ? stampPreviewReloadNonce(preview.srcDoc, reloadKey)
+        : undefined,
+    [preview, reloadKey],
+  );
   const showDesignTools =
     preview.kind === "file" ? preview.showDesignTools ?? true : false;
   const supportsDesignMode =
@@ -230,6 +243,13 @@ export function PreviewPanel({
   };
 
   const handleStop = () => {
+    logPreviewPanel("stop clicked", {
+      reloadKey,
+      previewKind: preview.kind,
+      previewPath: preview.kind === "file" ? preview.path : undefined,
+      srcDocLength: preview.kind === "file" ? preview.srcDoc?.length ?? 0 : undefined,
+      wasStopped: isPreviewStopped,
+    });
     setIsPreviewStopped(true);
     setIsDesignMode(false);
     setSelectedElement(null);
@@ -239,6 +259,14 @@ export function PreviewPanel({
   };
 
   const handleReload = () => {
+    logPreviewPanel("reload clicked", {
+      reloadKey,
+      nextReloadKey: reloadKey + 1,
+      previewKind: preview.kind,
+      previewPath: preview.kind === "file" ? preview.path : undefined,
+      srcDocLength: preview.kind === "file" ? preview.srcDoc?.length ?? 0 : undefined,
+      wasStopped: isPreviewStopped,
+    });
     setIsPreviewStopped(false);
     setLiveDesignEdit(null);
     setReloadKey((current) => current + 1);
@@ -527,8 +555,7 @@ export function PreviewPanel({
 
       return (
         <FilePreviewFrame
-          key={reloadKey}
-          srcDoc={preview.srcDoc}
+          srcDoc={previewFrameSrcDoc ?? preview.srcDoc}
           reloadKey={reloadKey}
           designModeActive={isDesignMode}
           selectedSelector={selectedElement?.selectionSelector ?? selectedElement?.selector ?? ""}

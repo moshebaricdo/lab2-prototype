@@ -1,9 +1,32 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import type { PreviewDesignStylePatch } from "./types";
 import styles from "./PreviewPanel.module.scss";
 
 const PREVIEW_IFRAME_SANDBOX = "allow-scripts allow-forms";
 const PREVIEW_DEBUG_CONTROL_MESSAGE_TYPE = "weblab-preview:debug-control";
+
+function logPreviewFrame(event: string, details: Record<string, unknown> = {}) {
+  console.info("[FilePreviewFrame]", event, details);
+}
+
+function stopPreviewIframe(iframe: HTMLIFrameElement | null) {
+  if (!iframe) {
+    logPreviewFrame("stop skipped; iframe missing");
+    return;
+  }
+  logPreviewFrame("stopping iframe", {
+    src: iframe.getAttribute("src"),
+    srcdocLength: iframe.getAttribute("srcdoc")?.length ?? 0,
+  });
+  iframe.removeAttribute("srcdoc");
+  iframe.src = "about:blank";
+}
 
 export interface LivePreviewDesignEdit {
   serial: number;
@@ -30,17 +53,34 @@ export function FilePreviewFrame({
   networkBlocked = false,
 }: FilePreviewFrameProps) {
   const visibleIframeRef = useRef<HTMLIFrameElement>(null);
-  const loadingIframeRef = useRef<HTMLIFrameElement>(null);
-  const suppressedDesignEditSerialRef = useRef<number | null>(null);
-  const [visibleSrcDoc, setVisibleSrcDoc] = useState(srcDoc);
-  const [loadingSrcDoc, setLoadingSrcDoc] = useState<string | null>(null);
-  const displaySrcDoc = loadingSrcDoc ? visibleSrcDoc : srcDoc;
+  const previewUrl = useMemo(() => {
+    const nextUrl = URL.createObjectURL(new Blob([srcDoc], { type: "text/html" }));
+    logPreviewFrame("created preview URL", {
+      reloadKey,
+      srcDocLength: srcDoc.length,
+      previewUrl: nextUrl,
+    });
+    return nextUrl;
+  }, [reloadKey, srcDoc]);
 
   useEffect(() => {
-    setVisibleSrcDoc(srcDoc);
-    setLoadingSrcDoc(null);
-    suppressedDesignEditSerialRef.current = null;
-  }, [reloadKey]);
+    logPreviewFrame("mounted URL", {
+      reloadKey,
+      previewUrl,
+    });
+    return () => {
+      logPreviewFrame("revoking preview URL", {
+        reloadKey,
+        previewUrl,
+      });
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  useLayoutEffect(() => () => {
+    logPreviewFrame("layout cleanup");
+    stopPreviewIframe(visibleIframeRef.current);
+  }, []);
 
   const postDesignModeState = useCallback((iframe: HTMLIFrameElement | null) => {
     iframe?.contentWindow?.postMessage({
@@ -58,33 +98,30 @@ export function FilePreviewFrame({
   }, [networkBlocked]);
 
   useEffect(() => {
-    if (srcDoc === visibleSrcDoc || srcDoc === loadingSrcDoc) return;
-    if (
-      designModeActive &&
-      liveDesignEdit &&
-      !liveDesignEdit.reset &&
-      suppressedDesignEditSerialRef.current !== liveDesignEdit.serial
-    ) {
-      suppressedDesignEditSerialRef.current = liveDesignEdit.serial;
-      return;
-    }
-    setLoadingSrcDoc(srcDoc);
-  }, [designModeActive, liveDesignEdit, loadingSrcDoc, srcDoc, visibleSrcDoc]);
-
-  useEffect(() => {
+    logPreviewFrame("posting control state", {
+      reloadKey,
+      previewUrl,
+      designModeActive,
+      networkBlocked,
+      iframeSrc: visibleIframeRef.current?.getAttribute("src"),
+    });
     postDesignModeState(visibleIframeRef.current);
-    postDesignModeState(loadingIframeRef.current);
     postDebugControlState(visibleIframeRef.current);
-    postDebugControlState(loadingIframeRef.current);
-  }, [postDebugControlState, postDesignModeState, displaySrcDoc, loadingSrcDoc, reloadKey]);
+  }, [postDebugControlState, postDesignModeState, previewUrl, reloadKey]);
 
   useEffect(() => {
     postDebugControlState(visibleIframeRef.current);
-    postDebugControlState(loadingIframeRef.current);
   }, [postDebugControlState]);
 
   useEffect(() => {
     if (!liveDesignEdit) return;
+    logPreviewFrame("posting live design edit", {
+      reloadKey,
+      previewUrl,
+      serial: liveDesignEdit.serial,
+      reset: Boolean(liveDesignEdit.reset),
+      targetSelector: liveDesignEdit.targetSelector,
+    });
     const message = {
       type: "weblab-preview:apply-design-edit",
       targetSelector: liveDesignEdit.targetSelector,
@@ -92,39 +129,34 @@ export function FilePreviewFrame({
       reset: liveDesignEdit.reset,
     };
     visibleIframeRef.current?.contentWindow?.postMessage(message, "*");
-    loadingIframeRef.current?.contentWindow?.postMessage(message, "*");
   }, [liveDesignEdit]);
 
   return (
     <div className={styles.iframeStack}>
       <iframe
         ref={visibleIframeRef}
-        key={`visible-${reloadKey}`}
+        key={`visible-${reloadKey}-${previewUrl}`}
         title="Project preview"
-        srcDoc={displaySrcDoc}
+        src={previewUrl}
         className={styles.previewIframe}
         sandbox={PREVIEW_IFRAME_SANDBOX}
         onLoad={() => {
+          logPreviewFrame("iframe load", {
+            reloadKey,
+            previewUrl,
+            iframeSrc: visibleIframeRef.current?.getAttribute("src"),
+          });
           postDesignModeState(visibleIframeRef.current);
           postDebugControlState(visibleIframeRef.current);
         }}
+        onError={() => {
+          logPreviewFrame("iframe error", {
+            reloadKey,
+            previewUrl,
+            iframeSrc: visibleIframeRef.current?.getAttribute("src"),
+          });
+        }}
       />
-      {loadingSrcDoc ? (
-        <iframe
-          ref={loadingIframeRef}
-          title="Project preview loading"
-          srcDoc={loadingSrcDoc}
-          className={`${styles.previewIframe} ${styles.previewIframeLoading}`}
-          sandbox={PREVIEW_IFRAME_SANDBOX}
-          onLoad={() => {
-            postDesignModeState(loadingIframeRef.current);
-            postDebugControlState(loadingIframeRef.current);
-            setVisibleSrcDoc(loadingSrcDoc);
-            setLoadingSrcDoc(null);
-          }}
-        />
-      ) : null}
     </div>
   );
 }
-
