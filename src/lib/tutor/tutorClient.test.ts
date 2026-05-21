@@ -315,7 +315,7 @@ describe("tutorClient guidance routing", () => {
     expect(toolProvider.calls).toBe(0);
   });
 
-  it("falls back to a no-edit canned explanation if guidance has no API key", async () => {
+  it("asks for a Lab Settings API key if guidance has no API key", async () => {
     const result = await tutorClient({
       message: "Can you explain functions to me?",
       conversation: [],
@@ -326,7 +326,7 @@ describe("tutorClient guidance routing", () => {
     });
 
     expect(result.changes).toEqual([]);
-    expect(result.message).toContain("function");
+    expect(result.message).toContain("Add a Tutor API key in Lab Settings first");
   });
 
   it("routes project code-location questions to guidance without edits", async () => {
@@ -397,7 +397,7 @@ describe("pythonTutorClient guidance routing", () => {
     expect(payload.projectContext.projectMap.python[0].functions).toContain("greet");
   });
 
-  it("uses a Python-specific no-key fallback", async () => {
+  it("asks for a Lab Settings API key for Python guidance with no API key", async () => {
     const result = await pythonTutorClient({
       message: "Can you explain functions?",
       conversation: [],
@@ -406,7 +406,7 @@ describe("pythonTutorClient guidance routing", () => {
     });
 
     expect(result.changes).toEqual([]);
-    expect(result.message).toContain("Python function");
+    expect(result.message).toContain("Add a Tutor API key in Lab Settings first");
   });
 });
 
@@ -484,7 +484,7 @@ describe("tutorClient planning routing", () => {
     expect(result.message).toBe("I revised the plan. Review the plan before building.");
   });
 
-  it("uses a no-edit planning fallback when planning has no API key", async () => {
+  it("asks for a Lab Settings API key when planning has no API key", async () => {
     const structuredProvider = new StructuredProvider(null);
     const toolProvider = new ToolProvider();
 
@@ -500,7 +500,7 @@ describe("tutorClient planning routing", () => {
     });
 
     expect(result.changes).toEqual([]);
-    expect(result.message).toContain("plan");
+    expect(result.message).toContain("Add a Tutor API key in Lab Settings first");
     expect(structuredProvider.calls).toBe(1);
     expect(toolProvider.calls).toBe(0);
   });
@@ -583,7 +583,7 @@ describe("tutorClient planning routing", () => {
     expect(toolProvider.calls).toBe(0);
   });
 
-  it("uses a plan-aware fallback when an active plan revision cannot run", async () => {
+  it("asks for a Lab Settings API key when active plan revision has no API key", async () => {
     const structuredProvider = new StructuredProvider(null);
 
     const result = await tutorClient({
@@ -611,8 +611,7 @@ describe("tutorClient planning routing", () => {
     });
 
     expect(result.changes).toEqual([]);
-    expect(result.message).toContain("still in planning mode");
-    expect(result.message).not.toContain("Try telling me the audience");
+    expect(result.message).toContain("Add a Tutor API key in Lab Settings first");
   });
 });
 

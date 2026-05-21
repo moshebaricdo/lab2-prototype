@@ -1,4 +1,5 @@
 import type { ValidationReviewCardData } from "./validationReview";
+import type { InstructionGuide } from "./tutor";
 
 export interface ChatAttachment {
   fileName: string;
@@ -66,6 +67,12 @@ export interface ChatMessage {
   codeChangeStatus?: "pending" | "accepted" | "rejected";
   /** Optional review card for intentional Web Lab validation flows. */
   validationReview?: ValidationReviewCardData;
+  /** Optional Tutor-primary instruction guide shown as a structured onboarding card. */
+  instructionGuide?: InstructionGuide;
+  /** Stable signature for a guide-derived seed message. */
+  instructionGuideSignature?: string;
+  /** Follow-up chip already selected for this validation review card. */
+  validationReviewFollowUpAction?: "hint" | "debug" | "suggestion";
   /** When true, renders as a system-style alert instead of a chat bubble. */
   isAlert?: boolean;
   /** Visual variant for alert messages. Defaults to "success". */

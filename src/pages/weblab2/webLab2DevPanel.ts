@@ -14,8 +14,19 @@ import {
   STARTER_UPLOAD_MAX_FILES,
   STARTER_UPLOAD_MAX_TOTAL_SIZE_BYTES,
 } from "../../components/ide/weblab2/webLab2Uploads";
+import {
+  ALLOW_TUTOR_BUILD_DEV_KEY,
+  ALLOW_TUTOR_HELP_DEV_KEY,
+  ALLOW_TUTOR_PLAN_DEV_KEY,
+  TUTOR_BUILD_CONTRACT_DEV_KEY,
+  TUTOR_HELP_CONTRACT_DEV_KEY,
+  TUTOR_PLAN_CONTRACT_DEV_KEY,
+  TUTOR_POLICY_PRESET_DEV_KEY,
+  TUTOR_ROUTING_DIAGNOSTICS_DEV_KEY,
+} from "./tutorDevSettings";
 
 export const INSTRUCTIONS_MARKDOWN_DEV_KEY = "instructionsMarkdown";
+export const TUTOR_INSTRUCTIONS_DELIVERY_DEV_KEY = "tutorInstructionsDelivery";
 export const STARTER_CODE_UPLOAD_DEV_KEY = "starterCodeUpload";
 export const VALIDATION_REQUIREMENTS_DEV_KEY = "validationRequirementsConfig";
 
@@ -257,6 +268,13 @@ const webLab2TutorDevFields: DevPanelField[] = [
     group: "AI Tutor",
   },
   {
+    key: TUTOR_INSTRUCTIONS_DELIVERY_DEV_KEY,
+    label: "Tutor instruction delivery",
+    description: "Start the level with Tutor-primary instruction delivery.",
+    type: "boolean",
+    group: "AI Tutor",
+  },
+  {
     key: "autoSeedTutorConversation",
     label: "Auto-seed tutor chat",
     description: "Start the mock tutor with its configured conversation seed.",
@@ -265,20 +283,69 @@ const webLab2TutorDevFields: DevPanelField[] = [
     visibleWhen: (values) => values.tutorModeKind !== "functional",
   },
   {
-    key: "showTutorModelSelector",
-    label: "Show mode selector",
-    description: "Toggle the tutor composer Auto, Build, Plan, and Help dropdown.",
-    type: "boolean",
+    key: TUTOR_POLICY_PRESET_DEV_KEY,
+    label: "Tutor policy preset",
+    description:
+      "Choose the routing profile Tutor should emulate. Validation checkpoint treats clear readiness phrases as review-offer intents when the level has validation review configured.",
+    type: "select",
+    options: [
+      { label: "Inherit from route", value: "route-default" },
+      { label: "Standalone project", value: "standalone-project" },
+      { label: "Guided level", value: "guided-level" },
+      { label: "Validation checkpoint (review offers)", value: "validation-checkpoint" },
+    ],
     group: "AI Tutor",
+    visibleWhen: (values) => values.tutorModeKind === "functional",
   },
   {
-    key: "additionalTutorPrompt",
-    label: "Additional system prompt",
-    description: "Prompt addendum for functional tutor calls. This setting is encoded in share links.",
-    type: "textarea",
-    rows: 6,
-    markdownPreview: false,
+    key: ALLOW_TUTOR_BUILD_DEV_KEY,
+    label: "Allow Build",
+    description: "Allow Tutor to propose runnable project file changes.",
+    type: "boolean",
     group: "AI Tutor",
+    visibleWhen: (values) => values.tutorModeKind === "functional",
+    contract: {
+      key: TUTOR_BUILD_CONTRACT_DEV_KEY,
+      rows: 6,
+      placeholder:
+        "Add to the Build contract. These instructions only apply when Tutor proposes project code changes.",
+    },
+  },
+  {
+    key: ALLOW_TUTOR_PLAN_DEV_KEY,
+    label: "Allow Plan",
+    description: "Allow Tutor to create or revise a project plan artifact.",
+    type: "boolean",
+    group: "AI Tutor",
+    visibleWhen: (values) => values.tutorModeKind === "functional",
+    contract: {
+      key: TUTOR_PLAN_CONTRACT_DEV_KEY,
+      rows: 5,
+      placeholder:
+        "Add to the Plan contract. These instructions only apply when Tutor creates or revises plans.",
+    },
+  },
+  {
+    key: ALLOW_TUTOR_HELP_DEV_KEY,
+    label: "Allow Help",
+    description: "Allow Tutor to answer guidance, debugging, hint, and explanation requests.",
+    type: "boolean",
+    group: "AI Tutor",
+    visibleWhen: (values) => values.tutorModeKind === "functional",
+    contract: {
+      key: TUTOR_HELP_CONTRACT_DEV_KEY,
+      rows: 5,
+      placeholder:
+        "Add to the Help contract. These instructions only apply when Tutor answers guidance, hints, or debugging questions.",
+    },
+  },
+  {
+    key: TUTOR_ROUTING_DIAGNOSTICS_DEV_KEY,
+    label: "Log routing diagnostics",
+    description: "Log resolved Tutor policy, capability gates, and action routing to the console.",
+    type: "boolean",
+    group: "AI Tutor",
+    visibleWhen: (values) => values.tutorModeKind === "functional",
   },
 ];
 
@@ -353,7 +420,7 @@ const webLab2ValidationReviewDevFields: DevPanelField[] = [
     key: VALIDATION_REQUIREMENTS_DEV_KEY,
     label: "Validation requirements",
     description:
-      "One requirement per line. These plain-language requirements are used as the review focus when Check my work runs.",
+      "One requirement per line. Optional: start a line with [Student-facing label] to show a shorter checklist label while keeping the full requirement for evaluation.",
     type: "textarea",
     rows: 5,
     markdownPreview: false,

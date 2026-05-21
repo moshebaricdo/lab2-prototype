@@ -11,7 +11,7 @@ import { runTutorEditSession } from "./editSessionRunner";
 import { fallbackPlanning, runTutorPlanning } from "./planningRunner";
 import { runTutorToolLoop } from "./toolLoopRunner";
 import { resolveTutorRequestPolicy } from "./requestIntent";
-import { finalizeTutorResponse } from "./responseFinalizer";
+import { buildRunnerSystemPromptAddendum } from "./runnerContracts";
 import { logTutorEvent } from "./tutorDebugLogger";
 import type { TutorEditResult, TutorRequest } from "./types";
 import type { ChatMessage } from "../../types/chat";
@@ -76,8 +76,10 @@ export async function tutorClient({
   conversation = [],
   files,
   additionalSystemPrompt = "",
+  runnerContracts,
   levelInstructionsMarkdown = "",
   levelProgress,
+  instructionFocus,
   requestMode = "auto",
   supportContext = "standalone-project",
   guidanceProvider = openAiTutorProvider,
@@ -94,6 +96,11 @@ export async function tutorClient({
     supportContext,
   });
   const intent = policy.intent;
+  const runnerSystemPromptAddendum = buildRunnerSystemPromptAddendum({
+    basePrompt: additionalSystemPrompt,
+    intent,
+    contracts: runnerContracts,
+  });
   logTutorEvent("core request classified", {
     requestMode,
     supportContext,
@@ -104,34 +111,36 @@ export async function tutorClient({
     topLevelFiles: files.length,
     hasLevelInstructions: Boolean(levelInstructionsMarkdown.trim()),
     hasLevelProgress: Boolean(levelProgress),
+    hasInstructionFocus: Boolean(instructionFocus),
+    hasRunnerContract: Boolean(runnerSystemPromptAddendum.trim()),
   });
-  const finalize = (result: TutorEditResult, source: string) => {
-    const finalized = finalizeTutorResponse(result, { intent, requestMessage: message });
-    logTutorEvent("core response finalized", {
+  const returnResult = (result: TutorEditResult, source: string) => {
+    logTutorEvent("core response returned", {
       source,
       intent,
-      ...summarizeTutorResult(finalized),
+      ...summarizeTutorResult(result),
     });
-    return finalized;
+    return result;
   };
 
   if (intent === "guidance") {
     try {
       logTutorEvent("guidance path started", { supportContext: policy.supportContext });
-      return finalize(await runTutorGuidance({
+      return returnResult(await runTutorGuidance({
         message,
         conversation,
         files,
-        additionalSystemPrompt,
+        additionalSystemPrompt: runnerSystemPromptAddendum,
         levelInstructionsMarkdown,
         levelProgress,
+        instructionFocus,
         supportContext: policy.supportContext,
         provider: guidanceProvider,
       }), "guidance");
     } catch (error) {
       logTutorEvent("guidance path failed", error, "error");
       console.error("[TutorGuidance] Request failed", error);
-      return finalize({
+      return returnResult({
         message:
           "I can answer that as a learning question without changing your project, but I had trouble generating the explanation this time. Try asking again in a sentence or two.",
         changes: [],
@@ -146,14 +155,14 @@ export async function tutorClient({
         message,
         conversation,
         files,
-        additionalSystemPrompt,
+        additionalSystemPrompt: runnerSystemPromptAddendum,
         levelInstructionsMarkdown,
         levelProgress,
         provider: structuredProvider,
       });
 
       if (planning.kind === "ok") {
-        return finalize(planning.result, "planning");
+        return returnResult(planning.result, "planning");
       }
 
       if (planning.kind === "failed") {
@@ -161,11 +170,15 @@ export async function tutorClient({
         console.warn("[TutorPlanning] Returning planning fallback", planning.errors);
       }
 
-      return finalize(fallbackPlanning(message, files), `planning-${planning.kind}`);
+      if (planning.kind === "no-key") {
+        return returnResult(getNoKeyTutorFallback(message, files), "planning-no-key");
+      }
+
+      return returnResult(fallbackPlanning(message, files), `planning-${planning.kind}`);
     } catch (error) {
       logTutorEvent("planning path failed", error, "error");
       console.error("[TutorPlanning] Request failed", error);
-      return finalize(fallbackPlanning(message, files), "planning-error-fallback");
+      return returnResult(fallbackPlanning(message, files), "planning-error-fallback");
     }
   }
 
@@ -176,7 +189,7 @@ export async function tutorClient({
       message,
       conversation,
       files,
-      additionalSystemPrompt,
+      additionalSystemPrompt: runnerSystemPromptAddendum,
       levelInstructionsMarkdown,
       levelProgress,
       supportContext: policy.supportContext,
@@ -188,12 +201,12 @@ export async function tutorClient({
   }
 
   if (editSession?.kind === "ok") {
-    return finalize(editSession.result, "edit-session");
+    return returnResult(editSession.result, "edit-session");
   }
 
   if (editSession?.kind === "no-key") {
     logTutorEvent("edit session has no API key", undefined, "warn");
-    return finalize(getNoKeyTutorFallback(message, files), "edit-session-no-key");
+    return returnResult(getNoKeyTutorFallback(message, files), "edit-session-no-key");
   }
 
   if (editSession?.kind === "failed") {
@@ -208,7 +221,7 @@ export async function tutorClient({
       message,
       conversation,
       files,
-      additionalSystemPrompt,
+      additionalSystemPrompt: runnerSystemPromptAddendum,
       levelInstructionsMarkdown,
       levelProgress,
       supportContext: policy.supportContext,
@@ -217,21 +230,21 @@ export async function tutorClient({
   } catch (error) {
     logTutorEvent("tool loop threw before validation", error, "error");
     console.error("[TutorToolLoop] Request failed before validation", error);
-    return finalize(getUnsafeEditFallback(message, files), "tool-loop-error-fallback");
+    return returnResult(getUnsafeEditFallback(message, files), "tool-loop-error-fallback");
   }
 
   if (toolLoop.kind === "ok") {
-    return finalize(toolLoop.result, "tool-loop");
+    return returnResult(toolLoop.result, "tool-loop");
   }
 
   if (toolLoop.kind === "no-key") {
     logTutorEvent("tool loop has no API key", undefined, "warn");
-    return finalize(getNoKeyTutorFallback(message, files), "tool-loop-no-key");
+    return returnResult(getNoKeyTutorFallback(message, files), "tool-loop-no-key");
   }
 
   logTutorEvent("tool loop returned unsafe-edit fallback", { errors: toolLoop.errors }, "warn");
   console.warn("[TutorToolLoop] Returning unsafe-edit fallback", toolLoop.errors);
-  return finalize(getUnsafeEditFallback(message, files), "tool-loop-unsafe-fallback");
+  return returnResult(getUnsafeEditFallback(message, files), "tool-loop-unsafe-fallback");
 }
 
 export async function pythonTutorClient({
@@ -248,7 +261,7 @@ export async function pythonTutorClient({
       conversationTurns: conversation.length,
       topLevelFiles: files.length,
     });
-    const result = await runTutorGuidance({
+    const guidanceResult = await runTutorGuidance({
       message,
       conversation,
       files,
@@ -257,22 +270,22 @@ export async function pythonTutorClient({
       guidanceProfile: "python",
     });
 
-    const finalized = finalizeTutorResponse({
-      message: result.message,
+    const result = {
+      message: guidanceResult.message,
       changes: [],
-    }, { intent: "guidance", requestMessage: message });
-    logTutorEvent("python guidance response finalized", summarizeTutorResult(finalized));
-    return finalized;
+    };
+    logTutorEvent("python guidance response returned", summarizeTutorResult(result));
+    return result;
   } catch (error) {
     logTutorEvent("python guidance path failed", error, "error");
     console.error("[PythonTutorGuidance] Request failed", error);
-    const finalized = finalizeTutorResponse({
+    const result = {
       message:
         "I can help with Python questions and debugging without changing your project, but I had trouble generating an answer this time. Try asking again in a sentence or two.",
       changes: [],
-    }, { intent: "guidance", requestMessage: message });
-    logTutorEvent("python guidance fallback finalized", summarizeTutorResult(finalized), "warn");
-    return finalized;
+    };
+    logTutorEvent("python guidance fallback returned", summarizeTutorResult(result), "warn");
+    return result;
   }
 }
 

@@ -15,6 +15,7 @@ import {
 } from "../../data/weblab2";
 import type { ChatMessage, FileChange } from "../../types/chat";
 import { useChatState } from "../../hooks/useChatState";
+import { useDevPanelInitialOpenFiles } from "../../hooks/useDevPanelInitialOpenFiles";
 import { useFileWorkspaceState } from "../../hooks/useFileWorkspaceState";
 import { useLayoutState } from "../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
@@ -25,6 +26,7 @@ import {
   setEditorReadOnlyOverride,
 } from "../../hooks/useEditorReadOnly";
 import { useLevelShareMode } from "../../hooks/useLevelShareMode";
+import { useTutorApiSettings } from "../../hooks/useTutorApiSettings";
 import { webLab2LevelLinks } from "../levelTypeLinks";
 import type { LevelProgressLink } from "../../components/ui/header/LevelProgressBubbles";
 import type { InstructionsDrawerVisualCue } from "../../components/lab2/resource-panel/InstructionsDrawer";
@@ -53,9 +55,10 @@ import type { FileItem } from "../../types/file";
 import type {
   AiTutorInputExperiment,
   MockTutorConfig,
-  TutorPolicy,
   TutorMode,
+  TutorPolicyPreset,
   TutorSupportContext,
+  InstructionGuideState,
 } from "../../types/tutor";
 import type { ViewMode } from "../../types/ui";
 import {
@@ -78,11 +81,23 @@ import {
   resolveVersionHistoryMode,
   resolveViewMode,
   STARTER_CODE_UPLOAD_DEV_KEY,
+  TUTOR_INSTRUCTIONS_DELIVERY_DEV_KEY,
   VALIDATION_REQUIREMENTS_DEV_KEY,
   webLab2BaseDevFields,
   webLab2ResourcesTabDevFields,
   type VersionHistoryMode,
 } from "./webLab2DevPanel";
+import {
+  ALLOW_TUTOR_BUILD_DEV_KEY,
+  ALLOW_TUTOR_HELP_DEV_KEY,
+  ALLOW_TUTOR_PLAN_DEV_KEY,
+  resolveWebLab2TutorDevSettings,
+  TUTOR_BUILD_CONTRACT_DEV_KEY,
+  TUTOR_HELP_CONTRACT_DEV_KEY,
+  TUTOR_PLAN_CONTRACT_DEV_KEY,
+  TUTOR_POLICY_PRESET_DEV_KEY,
+  TUTOR_ROUTING_DIAGNOSTICS_DEV_KEY,
+} from "./tutorDevSettings";
 import {
   buildFileTreeFromUploadedStarter,
   buildFileTreeWithUploadedFiles,
@@ -104,8 +119,17 @@ import {
   isPlanFilePath,
   stripInitialInlineImageContent,
 } from "../../components/ide/weblab2/webLab2FileTree";
+import {
+  formatInitialOpenFilesProp,
+  INITIAL_OPEN_FILES_DEV_KEY,
+  parseInitialOpenFilesConfig,
+  resolveOpenFilesForTree,
+  type InitialOpenFilesProp,
+} from "../../lib/editor/initialOpenFiles";
 import { useWebLab2Preview } from "../../components/ide/weblab2/useWebLab2Preview";
 import { useWebLab2TutorFlow } from "../../components/ide/weblab2/useWebLab2TutorFlow";
+import { buildInstructionGuide } from "../../lib/tutor/instructionGuide";
+import { resetInstructionGuideState } from "../../lib/tutor/instructionCoach";
 
 const OPEN_TUTOR_PANEL_EVENT = "weblab:open-tutor-panel";
 
@@ -116,6 +140,31 @@ function parseValidationRequirements(value: unknown, fallback: string[] = []) {
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith("#"));
   return parsed.length > 0 ? parsed : fallback;
+}
+
+function stripValidationRequirementLabel(requirement: string) {
+  return requirement.replace(/^\[([^\]]+)\]\s+(.+)$/, "$2").trim();
+}
+
+function getValidationRequirementLabel(requirement: string) {
+  const match = requirement.match(/^\[([^\]]+)\]\s+(.+)$/);
+  return match?.[1]?.trim();
+}
+
+function sameRequirements(left: string[] = [], right: string[] = []) {
+  return left.length === right.length &&
+    left.every((requirement, index) => requirement === right[index]);
+}
+
+function formatValidationRequirementsForDevPanel(
+  config?: WebLab2ValidationReviewConfig,
+) {
+  if (!config) return "";
+  return config.goals.map((goal, index) => {
+    const label = config.goalLabels?.[index]?.trim();
+    if (!label || label === goal) return goal;
+    return `[${label}] ${goal}`;
+  }).join("\n");
 }
 
 interface WebLab2LevelPageProps {
@@ -134,6 +183,8 @@ interface WebLab2LevelPageProps {
   previewContent?: React.ReactNode | ((aiActive: boolean) => React.ReactNode);
   /** Hide the instructions drawer in the AI tutor panel. Default true. */
   showInstructionsDrawer?: boolean;
+  /** When true, Tutor greets students with an instruction guide and the drawer starts collapsed. */
+  tutorInstructionsDelivery?: boolean;
   /** When true, show the sidebar collapse/expand control. */
   enableSidebarCollapse?: boolean;
   /** When true, the sidebar starts collapsed if sidebar collapse is enabled. */
@@ -144,10 +195,10 @@ interface WebLab2LevelPageProps {
   instructionsMarkdown?: string;
   /** Where to render the Continue button: "sidebar" (bottom bar) or "header" (next to bubbles). */
   continueButtonPlacement?: "sidebar" | "header";
-  /** When true, show the tutor composer model dropdown. */
-  showTutorModelSelector?: boolean;
   /** Workspace view selected when the level first loads. */
   initialViewMode?: ViewMode;
+  /** File paths to open when the level loads. Pass a newline string or an array of paths. */
+  initialOpenFiles?: InitialOpenFilesProp;
   /** When true, the file manager starts collapsed in code/split views. */
   collapseFileManagerByDefault?: boolean;
   /** When true, render preview from project file contents instead of custom React previewContent. */
@@ -167,6 +218,13 @@ interface WebLab2LevelPageProps {
   /** Optional suffix for route-scoped file/version storage when starter fixtures change. */
   storageKeySuffix?: string;
   tutorSupportContext?: TutorSupportContext;
+  tutorPolicyPreset?: TutorPolicyPreset;
+  allowTutorBuild?: boolean;
+  allowTutorPlan?: boolean;
+  allowTutorHelp?: boolean;
+  tutorBuildContract?: string;
+  tutorPlanContract?: string;
+  tutorHelpContract?: string;
   validationReviewConfig?: WebLab2ValidationReviewConfig;
   validationContinueMode?: ValidationContinueMode;
   levelLinks?: LevelProgressLink[];
@@ -191,13 +249,14 @@ export function WebLab2LevelPage({
   fileStructureOverride,
   previewContent,
   showInstructionsDrawer,
+  tutorInstructionsDelivery = false,
   enableSidebarCollapse = false,
   collapseSidebarByDefault = false,
   resourcePanelCompact = false,
   instructionsMarkdown = defaultInstructionsMarkdown,
   continueButtonPlacement = "sidebar",
-  showTutorModelSelector = false,
   initialViewMode = "code",
+  initialOpenFiles,
   collapseFileManagerByDefault = false,
   useFilePreview = false,
   enableDesignMode = true,
@@ -208,6 +267,13 @@ export function WebLab2LevelPage({
   showWalkthroughResources = false,
   storageKeySuffix,
   tutorSupportContext = "curriculum-level",
+  tutorPolicyPreset = "route-default",
+  allowTutorBuild = true,
+  allowTutorPlan,
+  allowTutorHelp = true,
+  tutorBuildContract = "",
+  tutorPlanContract = "",
+  tutorHelpContract = "",
   validationReviewConfig,
   validationContinueMode = "standard",
   levelLinks,
@@ -219,6 +285,7 @@ export function WebLab2LevelPage({
   onContinue,
 }: WebLab2LevelPageProps = {}) {
   const shareMode = useLevelShareMode();
+  const { hasApiKey: hasTutorApiKey } = useTutorApiSettings();
   const [searchParams] = useSearchParams();
   const starterShareParam = searchParams.get(STARTER_SHARE_PARAM);
   const starterSharePayload = useMemo(
@@ -238,25 +305,34 @@ export function WebLab2LevelPage({
     [baseRubrics],
   );
   const firstEditableRubric = editableRubrics[0] ?? DEFAULT_RUBRIC_DATA;
+  const routeAllowTutorPlan = allowTutorPlan ?? tutorSupportContext === "standalone-project";
   const defaults = {
     instructionsDrawerInitialHeightRatio:
       instructionsDrawerInitialHeightRatio ?? 0.6,
     showInstructionsDrawer: showInstructionsDrawer ?? true,
+    [TUTOR_INSTRUCTIONS_DELIVERY_DEV_KEY]: tutorInstructionsDelivery,
     enableSidebarCollapse,
     collapseSidebarByDefault,
     resourcePanelCompact,
     [INSTRUCTIONS_MARKDOWN_DEV_KEY]: instructionsMarkdown,
     instructionsDrawerVisualCue,
     autoSeedTutorConversation,
-    additionalTutorPrompt: "",
-    showTutorModelSelector,
     tutorModeKind: routeTutorMode.kind,
+    [TUTOR_POLICY_PRESET_DEV_KEY]: tutorPolicyPreset,
+    [ALLOW_TUTOR_BUILD_DEV_KEY]: allowTutorBuild,
+    [ALLOW_TUTOR_PLAN_DEV_KEY]: routeAllowTutorPlan,
+    [ALLOW_TUTOR_HELP_DEV_KEY]: allowTutorHelp,
+    [TUTOR_BUILD_CONTRACT_DEV_KEY]: tutorBuildContract,
+    [TUTOR_PLAN_CONTRACT_DEV_KEY]: tutorPlanContract,
+    [TUTOR_HELP_CONTRACT_DEV_KEY]: tutorHelpContract,
+    [TUTOR_ROUTING_DIAGNOSTICS_DEV_KEY]: true,
     continueButtonPlacement,
     initialViewMode,
     collapseFileManagerByDefault,
     useFilePreview,
     enableDesignMode,
     [EDITOR_READ_ONLY_STORAGE_KEY]: false,
+    [INITIAL_OPEN_FILES_DEV_KEY]: formatInitialOpenFilesProp(initialOpenFiles),
     versionHistoryMode:
       versionHistoryMode ?? (routeTutorMode.kind === "functional" ? "functional" : "mock"),
     showRubricTab,
@@ -265,7 +341,7 @@ export function WebLab2LevelPage({
     showWalkthroughResources,
     validationContinueMode,
     [VALIDATION_REQUIREMENTS_DEV_KEY]:
-      validationReviewConfig?.goals.join("\n") ?? "",
+      formatValidationRequirementsForDevPanel(validationReviewConfig),
     rubricName: firstEditableRubric.name,
     rubricTeacherFeedback: firstEditableRubric.feedback ?? "",
     rubricStatus: getInitialRubricStatus(firstEditableRubric),
@@ -293,11 +369,29 @@ export function WebLab2LevelPage({
   const resolvedUseFilePreview = Boolean(resolved.useFilePreview);
   const resolvedEnableDesignMode = Boolean(resolved.enableDesignMode);
   const resolvedEditorReadOnlyOverride = Boolean(resolved[EDITOR_READ_ONLY_STORAGE_KEY]);
-  const resolvedAdditionalTutorPrompt = String(resolved.additionalTutorPrompt ?? "");
+  const parsedInitialOpenFiles = useMemo(
+    () => parseInitialOpenFilesConfig(resolved[INITIAL_OPEN_FILES_DEV_KEY]),
+    [resolved],
+  );
   const resolvedInstructionsMarkdown = String(resolved[INSTRUCTIONS_MARKDOWN_DEV_KEY] ?? "");
+  const resolvedTutorInstructionsDelivery = Boolean(
+    resolved[TUTOR_INSTRUCTIONS_DELIVERY_DEV_KEY],
+  );
+  const instructionGuide = useMemo(
+    () => resolvedTutorInstructionsDelivery && resolvedInstructionsMarkdown.trim()
+      ? buildInstructionGuide(resolvedInstructionsMarkdown)
+      : undefined,
+    [resolvedInstructionsMarkdown, resolvedTutorInstructionsDelivery],
+  );
+  const [instructionGuideState, setInstructionGuideState] =
+    useState<InstructionGuideState | undefined>();
+  useEffect(() => {
+    setInstructionGuideState((current) =>
+      resetInstructionGuideState(instructionGuide, current)
+    );
+  }, [instructionGuide]);
   const resolvedEnableSidebarCollapse = Boolean(resolved.enableSidebarCollapse);
   const resolvedCollapseSidebarByDefault = Boolean(resolved.collapseSidebarByDefault);
-  const resolvedShowTutorModelSelector = Boolean(resolved.showTutorModelSelector);
   const resolvedValidationContinueMode = resolveValidationContinueMode(
     resolved.validationContinueMode,
   );
@@ -311,13 +405,14 @@ export function WebLab2LevelPage({
   const handleClearLevelSessionCache = useCallback(() => {
     if (typeof window === "undefined") return;
     const confirmed = window.confirm(
-      "Clear this level's saved file tree and version history, then reload the page?",
+      "Clear this level's saved file tree, version history, and AI Tutor chat, then reload the page?",
     );
     if (!confirmed) return;
 
     const prefixes = [
       `weblab2:file-structure:${currentLevelPath}`,
       `weblab2:version-history:${currentLevelPath}`,
+      `weblab2:chat:${currentLevelPath}`,
     ];
 
     for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
@@ -344,7 +439,7 @@ export function WebLab2LevelPage({
         key: "clearLevelSessionCache",
         label: "Clear level session cache",
         description:
-          "Removes this route's saved file tree and version history, then reloads from the current fixture.",
+          "Removes this route's saved file tree, version history, and AI Tutor chat, then reloads from the current fixture.",
         type: "action",
         buttonLabel: "Clear cache and reload",
         iconName: "eraser",
@@ -397,6 +492,7 @@ export function WebLab2LevelPage({
       storageKey: `weblab2:file-structure:${routeStorageKey}`,
       initialViewMode: resolvedInitialViewMode,
       initialFileManagerCollapsed: resolvedCollapseFileManagerByDefault,
+      initialOpenFilePaths: parsedInitialOpenFiles,
       storageFileStructureTransform: stripInitialImagesForStorage,
     },
   );
@@ -423,6 +519,7 @@ export function WebLab2LevelPage({
     useChatState(
       initialMockTutorConfig?.initialMessages ?? initialChatMessages,
       initialMockTutorConfig?.initialInput,
+      { storageKey: `weblab2:chat:${routeStorageKey}` },
     );
   useEffect(() => {
     if (lastResolvedInitialViewModeRef.current === resolvedInitialViewMode) return;
@@ -505,21 +602,65 @@ export function WebLab2LevelPage({
   const hasPendingAiChanges = !!aiChangedFiles && Object.keys(aiChangedFiles).length > 0;
   const isAiActive = hasPendingAiChanges || hasAcceptedChanges;
   const currentFileStructure = fileStructureState ?? fileStructureOverride ?? fileStructure;
+  useDevPanelInitialOpenFiles(
+    currentFileStructure,
+    resolved[INITIAL_OPEN_FILES_DEV_KEY],
+    setOpenFiles,
+    setSelectedFile,
+  );
+  const resolveStarterOpenFiles = useCallback((tree: FileItem[]) => (
+    resolveOpenFilesForTree(tree, {
+      initialOpenFilePaths: parsedInitialOpenFiles,
+      fallback: findFirstOpenableFile,
+    })
+  ), [parsedInitialOpenFiles]);
   const effectiveValidationReviewConfig = useMemo(() => {
     if (!validationReviewConfig) return undefined;
+    const rawRequirements = parseValidationRequirements(
+      resolved[VALIDATION_REQUIREMENTS_DEV_KEY],
+      validationReviewConfig.goals,
+    );
+    const goals = rawRequirements.map(stripValidationRequirementLabel);
+    const devLabels = rawRequirements.map(getValidationRequirementLabel);
+    const shouldUseConfiguredLabels = sameRequirements(goals, validationReviewConfig.goals);
     return {
       ...validationReviewConfig,
-      goals: parseValidationRequirements(
-        resolved[VALIDATION_REQUIREMENTS_DEV_KEY],
-        validationReviewConfig.goals,
-      ),
+      goals,
+      goalLabels: shouldUseConfiguredLabels
+        ? validationReviewConfig.goalLabels
+        : devLabels.map((label, index) => label ?? goals[index]),
     };
   }, [resolved, validationReviewConfig]);
+  const tutorDevSettings = useMemo(
+    () => resolveWebLab2TutorDevSettings({
+      values: resolved,
+      routeSupportContext: tutorSupportContext,
+      hasValidationReviewConfig: Boolean(effectiveValidationReviewConfig && hasTutorApiKey),
+      allowTutorBuild,
+      allowTutorPlan: routeAllowTutorPlan,
+      allowTutorHelp,
+      tutorBuildContract,
+      tutorPlanContract,
+      tutorHelpContract,
+    }),
+    [
+      allowTutorBuild,
+      allowTutorHelp,
+      effectiveValidationReviewConfig,
+      hasTutorApiKey,
+      resolved,
+      routeAllowTutorPlan,
+      tutorBuildContract,
+      tutorHelpContract,
+      tutorPlanContract,
+      tutorSupportContext,
+    ],
+  );
   const validationReviewOffer = useMemo(
-    () => effectiveValidationReviewConfig
+    () => effectiveValidationReviewConfig && tutorDevSettings.policy.capabilities.validationReview
       ? createValidationReviewOffer(effectiveValidationReviewConfig)
       : undefined,
-    [effectiveValidationReviewConfig],
+    [effectiveValidationReviewConfig, tutorDevSettings.policy.capabilities.validationReview],
   );
   const handleValidationReview = useCallback(async () => {
     if (!effectiveValidationReviewConfig) {
@@ -624,28 +765,8 @@ export function WebLab2LevelPage({
     () => buildLevelProgressSnapshot(latestValidationReview),
     [latestValidationReview],
   );
-  const tutorPolicy = useMemo<TutorPolicy>(() => ({
-    lab: "weblab2",
-    supportContext: tutorSupportContext,
-    capabilities: {
-      guidance: true,
-      planning: tutorSupportContext === "standalone-project",
-      workspaceEdits: true,
-      validationReview: Boolean(effectiveValidationReviewConfig),
-      proposalReview: true,
-    },
-    pedagogy: {
-      mode: tutorSupportContext === "curriculum-level" ? "curriculum-socratic" : "open",
-      revealPolicy: tutorSupportContext === "curriculum-level"
-        ? "hint-first"
-        : "direct-when-asked",
-    },
-    routingProfile: effectiveValidationReviewConfig
-      ? "validation-checkpoint"
-      : tutorSupportContext === "standalone-project"
-        ? "open-ended-project"
-        : "guided-level",
-  }), [effectiveValidationReviewConfig, tutorSupportContext]);
+  const tutorPolicy = tutorDevSettings.policy;
+  const tutorRunnerContracts = tutorDevSettings.runnerContracts;
   const handleRejectAiChanges = useCallback(() => {
     logTutorEvent("proposal rejected", {
       pendingFileCount: Object.keys(aiChangedFiles ?? {}).length,
@@ -671,11 +792,15 @@ export function WebLab2LevelPage({
     setChatMessages,
     setChatInput,
     currentFileStructure,
-    additionalTutorPrompt: resolvedAdditionalTutorPrompt,
+    runnerContracts: tutorRunnerContracts,
     levelInstructionsMarkdown: resolvedInstructionsMarkdown,
     levelProgress,
-    tutorSupportContext,
+    instructionGuide,
+    instructionGuideState,
+    onInstructionGuideStateChange: setInstructionGuideState,
+    tutorSupportContext: tutorPolicy.supportContext,
     tutorPolicy,
+    routingDiagnostics: tutorDevSettings.routingDiagnostics,
     validationReviewOffer,
     useFilePreview: resolvedUseFilePreview,
     selectedPlanPath,
@@ -748,18 +873,19 @@ export function WebLab2LevelPage({
 
     try {
       const nextTree = buildFileTreeFromUploadedStarter(uploadedFiles);
-      const firstFile = findFirstOpenableFile(nextTree);
+      const { openFiles: nextOpenFiles, selectedFile: nextSelectedFile } =
+        resolveStarterOpenFiles(nextTree);
       setStarterCodeUpload(uploadValue);
       replaceFileStructure(nextTree);
-      setSelectedFile(firstFile);
-      setOpenFiles(firstFile ? [firstFile] : []);
-      if (firstFile?.type === "html") {
-        setPreviewPath(firstFile.name);
+      setSelectedFile(nextSelectedFile);
+      setOpenFiles(nextOpenFiles);
+      if (nextSelectedFile?.type === "html") {
+        setPreviewPath(nextSelectedFile.name);
       }
     } catch (error) {
       console.error("[WebLab2LevelPage] Unable to apply starter upload", error);
     }
-  }, [replaceFileStructure, setOpenFiles, setSelectedFile]);
+  }, [replaceFileStructure, resolveStarterOpenFiles, setOpenFiles, setSelectedFile]);
   const handleStarterFileUpload = useCallback(async (files: FileList) => {
     try {
       const uploadedFiles = await readStarterUploadedFiles(files);
@@ -823,13 +949,14 @@ export function WebLab2LevelPage({
   }, [handleStarterCodeUpload, starterShareParam, starterSharePayload]);
   const handleStarterCodeReset = useCallback(() => {
     const defaultTree = fileStructureOverride ?? fileStructure;
-    const firstFile = findFirstOpenableFile(defaultTree);
+    const { openFiles: nextOpenFiles, selectedFile: nextSelectedFile } =
+      resolveStarterOpenFiles(defaultTree);
     setStarterCodeUpload(null);
     replaceFileStructure(defaultTree);
-    setSelectedFile(firstFile);
-    setOpenFiles(firstFile ? [firstFile] : []);
+    setSelectedFile(nextSelectedFile);
+    setOpenFiles(nextOpenFiles);
     setPreviewPath("index.html");
-  }, [fileStructureOverride, replaceFileStructure, setOpenFiles, setSelectedFile]);
+  }, [fileStructureOverride, replaceFileStructure, resolveStarterOpenFiles, setOpenFiles, setSelectedFile]);
   const getDevPanelShareParams = useCallback((): Record<string, string> | null => {
     const starterShareResult = encodeStarterSharePayload(shareableStarterCodeUpload);
     if ("reason" in starterShareResult) {
@@ -887,7 +1014,14 @@ export function WebLab2LevelPage({
       : undefined;
   const validationContinueRequiresReview = Boolean(
     effectiveValidationReviewConfig &&
+    tutorDevSettings.policy.capabilities.validationReview &&
     resolvedValidationContinueMode === "require-successful-review",
+  );
+  const validationRunsThroughTutor = Boolean(
+    effectiveValidationReviewConfig &&
+    resolvedTutorModeKind === "functional" &&
+    hasTutorApiKey &&
+    tutorDevSettings.policy.capabilities.validationReview,
   );
   const validationContinueSatisfied =
     latestValidationReview?.status === "likely_complete";
@@ -953,7 +1087,7 @@ export function WebLab2LevelPage({
     levelLinks: levelLinks ?? webLab2LevelLinks,
     currentLevelPath,
     completedLevelPaths,
-    showContinueButton: continueInHeader,
+    showContinueButton: continueInHeader && !validationRunsThroughTutor,
     onContinue: handleContinueAction,
     continueLabel: resolvedContinueLabel,
   };
@@ -986,7 +1120,9 @@ export function WebLab2LevelPage({
     instructionsDrawerInitialHeightRatio:
       resolved.instructionsDrawerInitialHeightRatio as number,
     showInstructionsDrawer: Boolean(resolved.showInstructionsDrawer),
+    instructionsDrawerDefaultOpen: !resolvedTutorInstructionsDelivery,
     instructionsDrawerVisualCue: resolvedVisualCue,
+    instructionGuide,
     instructionsContent: resolvedInstructionsContent,
     aiTutorInputExperiment,
     mockTutorConfig: resolvedMockTutorConfig,
@@ -1006,7 +1142,6 @@ export function WebLab2LevelPage({
       ? handleContinueAction
       : undefined,
     validationReviewContinueLabel: continueLabel,
-    showTutorModelSelector: resolvedShowTutorModelSelector,
     tutorRequestMode,
     setTutorRequestMode,
     hasPendingAiChanges,

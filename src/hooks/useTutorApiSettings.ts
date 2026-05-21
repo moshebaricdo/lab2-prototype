@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "weblab:tutor-api-key";
 const CODE_MODEL_STORAGE_KEY = "weblab:tutor-code-model";
+const SETTINGS_EVENT = "weblab:tutor-api-settings-changed";
 export const DEFAULT_TUTOR_CODE_MODEL = "gpt-4.1";
 export const TUTOR_CODE_MODEL_OPTIONS = [
   { label: "GPT-4.1", value: "gpt-4.1" },
@@ -29,8 +30,13 @@ export function useTutorApiSettings() {
   const [codeModel, setCodeModelState] = useState(DEFAULT_TUTOR_CODE_MODEL);
 
   useEffect(() => {
-    setApiKeyState(getTutorApiKey());
-    setCodeModelState(getTutorCodeModel());
+    const refreshSettings = () => {
+      setApiKeyState(getTutorApiKey());
+      setCodeModelState(getTutorCodeModel());
+    };
+    refreshSettings();
+    window.addEventListener(SETTINGS_EVENT, refreshSettings);
+    return () => window.removeEventListener(SETTINGS_EVENT, refreshSettings);
   }, []);
 
   const setApiKey = (value: string) => {
@@ -40,6 +46,7 @@ export function useTutorApiSettings() {
     } else {
       sessionStorage.removeItem(STORAGE_KEY);
     }
+    window.dispatchEvent(new CustomEvent(SETTINGS_EVENT));
   };
 
   const setCodeModel = (value: string) => {
@@ -50,6 +57,7 @@ export function useTutorApiSettings() {
     } else {
       sessionStorage.removeItem(CODE_MODEL_STORAGE_KEY);
     }
+    window.dispatchEvent(new CustomEvent(SETTINGS_EVENT));
   };
 
   return useMemo(

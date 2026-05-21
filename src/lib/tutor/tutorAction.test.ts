@@ -30,6 +30,24 @@ describe("resolveTutorAction", () => {
     });
   });
 
+  it("routes natural fixed-it updates directly to validation review offers", () => {
+    expect(resolveTutorAction({
+      message: "I got the Next button working.",
+      policy: basePolicy,
+    })).toMatchObject({
+      kind: "validationReview",
+      source: "review-offer",
+    });
+
+    expect(resolveTutorAction({
+      message: "That seems to work now.",
+      policy: basePolicy,
+    })).toMatchObject({
+      kind: "validationReview",
+      source: "review-offer",
+    });
+  });
+
   it("does not let validation checkpoint routing override debugging help", () => {
     expect(resolveTutorAction({
       message: "Can you check why this button is broken?",
@@ -64,6 +82,26 @@ describe("resolveTutorAction", () => {
       kind: "denied",
       requested: "edit",
       fallback: "guidance",
+      disabledReason: "capability-disabled",
+    });
+  });
+
+  it("returns a student-facing denied action when help is disabled", () => {
+    const policy: TutorPolicy = {
+      ...basePolicy,
+      capabilities: {
+        ...basePolicy.capabilities,
+        guidance: false,
+      },
+    };
+
+    expect(resolveTutorAction({
+      message: "Can you explain what the instructions mean?",
+      policy,
+    })).toMatchObject({
+      kind: "denied",
+      requested: "guidance",
+      fallback: "message",
       disabledReason: "capability-disabled",
     });
   });

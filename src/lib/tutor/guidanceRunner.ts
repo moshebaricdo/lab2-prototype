@@ -1,11 +1,13 @@
 import type { ChatMessage } from "../../types/chat";
 import type { FileItem } from "../../types/file";
 import type { LevelProgressSnapshot } from "../../types/validationReview";
-import type { TutorSupportContext } from "../../types/tutor";
+import type { InstructionFocusContext, TutorSupportContext } from "../../types/tutor";
 import { buildConversationContext, buildConversationImageInputs } from "./contextBuilder";
 import { packTutorContext } from "./contextPacker";
 import { analyzeProject } from "./projectAnalyzer";
 import { openAiTutorProvider, type TutorGuidanceProvider } from "./openAiProvider";
+import { getTutorApiKey } from "../../hooks/useTutorApiSettings";
+import { MISSING_TUTOR_API_KEY_MESSAGE } from "./fallbackTutor";
 import type { TutorChatMessage, TutorEditResult } from "./types";
 
 export type TutorGuidanceProfile = "web" | "python";
@@ -19,13 +21,18 @@ Rules:
 - Do not propose file changes.
 - Do not create or mention a Plans/PROJECT_PLAN.md planning proposal.
 - Do not include code fences unless a small example is helpful.
-- Keep the answer student-friendly, concrete, and concise.
+- Write like a helpful lab partner sitting beside the student: warm, direct, and brief.
+- Default to 2-5 short sentences or 2-3 tight bullets. If the answer needs steps, give only the next few steps, not a full lesson.
+- Skip recap, praise padding, generic closers, and "let me know" endings. End on the concrete next action or one focused question.
 - Use lightweight Markdown for readability: short paragraphs, bullets or numbered lists for steps/questions, and inline code for file names/selectors.
 - For "how would I..." or "how can I..." project questions, explain the approach the student could take and name likely files or concepts, but do not perform the edit.
 - For "where is this code?" or "what should I tweak?" questions, point to likely files, selectors, functions, ids, or snippets from the project context instead of describing an edit plan.
 - If useful, reference the student's current project context as an example, but make clear that no project files need to change.
+- You receive the student's current project files in projectContext. Do not say you cannot see their files, labels, selectors, or code when that information is present in the supplied project context.
+- If the student asks whether their work is correct, you may help reason from the current project files, but direct students to ask Tutor to check their work if they are ready to do so.
 - If levelInstructionsMarkdown is provided, use it as the source of truth when the student asks what the instructions want, what the level goal is, or what they should do next.
 - If levelProgress is provided, use its passed and incomplete criteria to understand what the student has already completed and what they should work on next.
+- If instructionFocus is provided, treat it as the current intended instructional focus. Stay within that focus unless the student explicitly asks to change topics or asks for implementation.
 - Stay within HTML, CSS, and JavaScript.`;
 
 const CURRICULUM_WEB_GUIDANCE_PROMPT = `Curriculum-level Web Lab guidance:
@@ -41,7 +48,15 @@ const CURRICULUM_WEB_GUIDANCE_PROMPT = `Curriculum-level Web Lab guidance:
 - Do not suggest optional stretch features, extra enhancements, or "keep experimenting" next steps unless the level instructions ask for them.
 - Do not tell students to save files, hard refresh, clear browser caches, open browser developer tools, press F12, or inspect the browser console. Files auto-save and the preview/debug UI is part of the lab.
 - For debugging help, point to project code relationships such as selectors, ids, linked scripts, event listeners, and likely files.
-- If the student reports that the fix works or that they are done, do not congratulate them and suggest more work. Tell them to run the level check or continue through the review flow.`;
+- If the student reports that the fix works or that they are done, do not congratulate them and suggest more work. Tell them to request a review of their work if they are ready to do so.`;
+
+const INSTRUCTION_FOCUS_GUIDANCE_PROMPT = `Instruction-coach context:
+- The app owns guide state and has provided the current instructional focus in instructionFocus.
+- Use instructionFocus.guidanceDirective as the highest-priority teaching move for this response.
+- Keep the response conversational and short. Do not dump the full instructions.
+- If instructionFocus.didAdvance or didSelectOption is true, briefly acknowledge the student's message and continue from the new focus.
+- Do not mark validation criteria complete. Validation review/progress remains the source of completion truth.
+- Do not make or propose file edits unless the student explicitly asked Tutor to change the project.`;
 
 const PYTHON_GUIDANCE_SYSTEM_PROMPT = `You are Python Lab Tutor, a supportive computer science tutor for students learning Python.
 
@@ -52,7 +67,9 @@ Rules:
 - Do not propose file changes.
 - Do not create or mention a Plans/PROJECT_PLAN.md planning proposal.
 - Do not include code fences unless a small Python example is helpful.
-- Keep the answer student-friendly, concrete, and concise.
+- Write like a helpful lab partner sitting beside the student: warm, direct, and brief.
+- Default to 2-5 short sentences or 2-3 tight bullets. If the answer needs steps, give only the next few steps, not a full lesson.
+- Skip recap, praise padding, generic closers, and "let me know" endings. End on the concrete next action or one focused question.
 - Use lightweight Markdown for readability: short paragraphs, bullets or numbered lists for steps/questions, and inline code for file names, functions, variables, or errors.
 - Help with Python concepts such as variables, conditionals, loops, lists, dictionaries, functions, imports, strings, \`input()\`, \`print()\`, stdout, and runtime errors.
 - For debugging questions, explain the likely cause and point to relevant lines, variables, functions, or files from the provided project context when possible.
@@ -78,6 +95,7 @@ function buildGuidanceSystemPrompt(
   guidanceProfile: TutorGuidanceProfile,
   supportContext: TutorSupportContext,
   additionalSystemPrompt?: string,
+  instructionFocus?: InstructionFocusContext,
 ) {
   const basePrompt = GUIDANCE_SYSTEM_PROMPTS[guidanceProfile];
   const contextPrompt =
@@ -88,7 +106,11 @@ function buildGuidanceSystemPrompt(
     ? `\n\nAdditional prototype instructions:\n${additionalSystemPrompt.trim()}`
     : "";
 
-  return `${basePrompt}${contextPrompt}${prototypePrompt}`;
+  const instructionFocusPrompt = instructionFocus
+    ? `\n\n${INSTRUCTION_FOCUS_GUIDANCE_PROMPT}`
+    : "";
+
+  return `${basePrompt}${contextPrompt}${instructionFocusPrompt}${prototypePrompt}`;
 }
 
 function buildGuidanceDisclosurePolicy(
@@ -179,6 +201,17 @@ function sanitizeCurriculumWebGuidance(
   return sanitized || "Focus on the level instructions and current project code. Check the relevant selector, id, or file, then use the level check when it works.";
 }
 
+function alignGuidanceWithProjectContext(
+  message: string,
+  hasProjectContext: boolean,
+) {
+  if (!hasProjectContext) return message;
+  return message
+    .replace(/\bI can'?t see your exact labels,?\s*but\s*/gi, "I can use your current project context to help check the labels. ")
+    .replace(/\bI can'?t see your exact (code|file|files|project|selectors|labels)\b/gi, "I can use your current project context")
+    .replace(/\bI don'?t have access to your (code|file|files|project|selectors|labels)\b/gi, "I can use your current project context");
+}
+
 function buildGuidanceMessages({
   message,
   conversation,
@@ -186,6 +219,7 @@ function buildGuidanceMessages({
   additionalSystemPrompt,
   levelInstructionsMarkdown,
   levelProgress,
+  instructionFocus,
   guidanceProfile,
   supportContext,
 }: {
@@ -195,6 +229,7 @@ function buildGuidanceMessages({
   additionalSystemPrompt?: string;
   levelInstructionsMarkdown?: string;
   levelProgress?: LevelProgressSnapshot;
+  instructionFocus?: InstructionFocusContext;
   guidanceProfile: TutorGuidanceProfile;
   supportContext: TutorSupportContext;
 }): TutorChatMessage[] {
@@ -206,6 +241,7 @@ function buildGuidanceMessages({
     projectContext: context,
     levelInstructionsMarkdown: levelInstructionsMarkdown?.trim() || undefined,
     levelProgress,
+    instructionFocus,
     guidanceDisclosurePolicy: buildGuidanceDisclosurePolicy(
       message,
       supportContext,
@@ -219,6 +255,7 @@ function buildGuidanceMessages({
     guidanceProfile,
     supportContext,
     additionalSystemPrompt,
+    instructionFocus,
   );
   const userContent: TutorChatMessage["content"] = imageInputs.length > 0
     ? [
@@ -239,38 +276,6 @@ function buildGuidanceMessages({
   ];
 }
 
-function fallbackGuidance(message: string, guidanceProfile: TutorGuidanceProfile): TutorEditResult {
-  if (guidanceProfile === "python") {
-    if (/\bfunction|functions\b/i.test(message)) {
-      return {
-        message:
-          "A Python function is a reusable block of code. You define it with `def`, give it a name, put steps inside the indented body, and call it when you want those steps to run. Your project files do not need to change for this explanation.",
-        changes: [],
-      };
-    }
-
-    return {
-      message:
-        "I can answer Python questions, explain code, and help debug issues without changing your project. Ask me what you want to understand, and I can connect the idea back to your current files when it helps.",
-      changes: [],
-    };
-  }
-
-  if (/\bfunction|functions\b/i.test(message)) {
-    return {
-      message:
-        "A function is a reusable block of JavaScript code. You give it a name, put steps inside it, and then call it when you want those steps to run. In a web project, a function might update text on the page, respond to a button click, or redraw a canvas. Your project files do not need to change for this explanation.",
-      changes: [],
-    };
-  }
-
-  return {
-    message:
-      "I can answer conceptual HTML, CSS, and JavaScript questions without changing your project. Ask me what you want to understand, and I can connect the idea back to your current files when it helps.",
-    changes: [],
-  };
-}
-
 export async function runTutorGuidance({
   message,
   conversation,
@@ -278,6 +283,7 @@ export async function runTutorGuidance({
   additionalSystemPrompt = "",
   levelInstructionsMarkdown = "",
   levelProgress,
+  instructionFocus,
   guidanceProfile = "web",
   supportContext = "standalone-project",
   provider = openAiTutorProvider,
@@ -288,10 +294,19 @@ export async function runTutorGuidance({
   additionalSystemPrompt?: string;
   levelInstructionsMarkdown?: string;
   levelProgress?: LevelProgressSnapshot;
+  instructionFocus?: InstructionFocusContext;
   guidanceProfile?: TutorGuidanceProfile;
   supportContext?: TutorSupportContext;
   provider?: TutorGuidanceProvider;
 }): Promise<TutorEditResult> {
+  const hasProjectContext = files.length > 0;
+  if (provider === openAiTutorProvider && !getTutorApiKey().trim()) {
+    return {
+      message: MISSING_TUTOR_API_KEY_MESSAGE,
+      changes: [],
+    };
+  }
+
   const response = await provider.requestGuidance(buildGuidanceMessages({
     message,
     conversation,
@@ -299,22 +314,29 @@ export async function runTutorGuidance({
     additionalSystemPrompt,
     levelInstructionsMarkdown,
     levelProgress,
+    instructionFocus,
     guidanceProfile,
     supportContext,
   }));
 
   if (!response?.message?.trim()) {
-    return fallbackGuidance(message, guidanceProfile);
+    return {
+      message: MISSING_TUTOR_API_KEY_MESSAGE,
+      changes: [],
+    };
   }
 
   return {
-    message: guidanceProfile === "web" && supportContext === "curriculum-level"
-      ? sanitizeCurriculumWebGuidance(
-          response.message.trim(),
-          levelInstructionsMarkdown,
-          levelProgress,
-        )
-      : response.message.trim(),
+    message: alignGuidanceWithProjectContext(
+      guidanceProfile === "web" && supportContext === "curriculum-level"
+        ? sanitizeCurriculumWebGuidance(
+            response.message.trim(),
+            levelInstructionsMarkdown,
+            levelProgress,
+          )
+        : response.message.trim(),
+      hasProjectContext,
+    ),
     changes: [],
   };
 }

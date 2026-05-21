@@ -44,7 +44,8 @@ Rules:
 - If levelInstructionsMarkdown is provided, treat it as the curriculum task context and avoid edits outside that scope.
 - If levelProgress is provided, preserve already-passed criteria and focus requested help on incomplete criteria unless the student explicitly asks to revisit completed work.
 - If the request asks to build from Plans/PROJECT_PLAN.md, treat that file as requirements context and include a targeted update to Plans/PROJECT_PLAN.md marking completed items and setting Status: Completed under the existing readable title when the build is represented in the proposed files.
-- The student-facing message must briefly name the main files or page areas changed and explain why the change helps. Do not use generic text like "I made the changes."
+- The student-facing message should feel like a quick handoff after making the edit: name the main files or page areas changed, say why it helps, and tell the student what to review.
+- Keep that message to 2 short paragraphs or 3 bullets max. Do not narrate every edit, restate the full request, or add generic closers.
 - Use lightweight Markdown in the student-facing message when helpful: short paragraphs, bullets or numbered lists for next steps/questions, and inline code for file names/selectors.
 - Generate a short saveTitle like a commit title: one sentence max, no markdown, no trailing period, under 72 characters.
 
@@ -69,7 +70,7 @@ const CURRICULUM_EDIT_PROMPT = `Curriculum-level support:
 - Only propose file edits because this request was classified as explicit implementation help.
 - Use the provided levelInstructionsMarkdown as the source of truth for what the level is asking the student to do.
 - Use levelProgress to avoid changing completed work unnecessarily and to target the next incomplete requirement.
-- Keep the student-facing message clear about what you changed and why it helps with the level goal.
+- Keep the student-facing message clear and brief: what changed, why it helps the level goal, and what to check next.
 - Do not complete unrelated extension work or add explanatory lesson content to the project unless the student explicitly asked for that content in the project.`;
 
 function buildContextPrompt(supportContext: TutorSupportContext) {

@@ -1,6 +1,9 @@
 import type { FileItem } from "../../types/file";
 import type { TutorEditResult } from "./types";
 
+export const MISSING_TUTOR_API_KEY_MESSAGE =
+  "Add a Tutor API key in Lab Settings first, then try again.";
+
 function flattenFileItems(files: FileItem[]): FileItem[] {
   return files.flatMap((item) =>
     item.children ? flattenFileItems(item.children) : [item],
@@ -239,21 +242,12 @@ function getCannedPlanetClickEdit(message: string, files: FileItem[]): TutorEdit
 }
 
 export function getNoKeyTutorFallback(message: string, files: FileItem[]): TutorEditResult {
-  const planetClickEdit = getCannedPlanetClickEdit(message, files);
-  if (planetClickEdit) {
-    return planetClickEdit;
-  }
-
-  const layoutEdit = getCannedLayoutEdit(message, files);
-  if (!layoutEdit) {
-    return {
-      message:
-        "Add a Tutor API key in Settings to let me make project-specific edits from any prompt. Without a key, this prototype only has a few canned demo edits available.",
-      changes: [],
-    };
-  }
-
-  return layoutEdit;
+  void message;
+  void files;
+  return {
+    message: MISSING_TUTOR_API_KEY_MESSAGE,
+    changes: [],
+  };
 }
 
 export function getUnsafeEditFallback(message?: string, files?: FileItem[]): TutorEditResult {

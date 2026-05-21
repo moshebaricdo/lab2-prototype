@@ -2,16 +2,20 @@ import { useCallback, useRef, useState, type Dispatch, type SetStateAction } fro
 import type { ChatMessage } from "../../../types/chat";
 import type { FileItem } from "../../../types/file";
 import type { LevelProgressSnapshot } from "../../../types/validationReview";
+import type { TutorRunnerContracts } from "../../../lib/tutor/runnerContracts";
 import type {
   TutorPolicy,
   TutorRequestMode,
   TutorStartOptions,
   TutorSupportContext,
+  InstructionGuide,
+  InstructionGuideState,
 } from "../../../types/tutor";
 import type { ValidationReviewCardData } from "../../../types/validationReview";
 import { PROJECT_PLAN_FILE } from "../../../lib/tutor/planningRunner";
 import { tutorClient } from "../../../lib/tutor/tutorClient";
 import { resolveTutorAction } from "../../../lib/tutor/tutorAction";
+import { resolveInstructionCoachResponse } from "../../../lib/tutor/instructionCoach";
 import { logTutorEvent } from "../../../lib/tutor/tutorDebugLogger";
 import { pathBasename } from "../../../utils/fileTree";
 import {
@@ -33,11 +37,15 @@ interface UseWebLab2TutorFlowOptions {
   setChatMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   setChatInput: (input: string) => void;
   currentFileStructure: FileItem[];
-  additionalTutorPrompt: string;
+  runnerContracts: TutorRunnerContracts;
   levelInstructionsMarkdown: string;
   levelProgress?: LevelProgressSnapshot;
+  instructionGuide?: InstructionGuide;
+  instructionGuideState?: InstructionGuideState;
+  onInstructionGuideStateChange?: (state: InstructionGuideState) => void;
   tutorSupportContext: TutorSupportContext;
   tutorPolicy: TutorPolicy;
+  routingDiagnostics?: boolean;
   validationReviewOffer?: ValidationReviewCardData;
   useFilePreview: boolean;
   selectedPlanPath: string;
@@ -61,11 +69,15 @@ export function useWebLab2TutorFlow({
   setChatMessages,
   setChatInput,
   currentFileStructure,
-  additionalTutorPrompt,
+  runnerContracts,
   levelInstructionsMarkdown,
   levelProgress,
+  instructionGuide,
+  instructionGuideState,
+  onInstructionGuideStateChange,
   tutorSupportContext,
   tutorPolicy,
+  routingDiagnostics = true,
   validationReviewOffer,
   useFilePreview,
   selectedPlanPath,
@@ -129,32 +141,19 @@ export function useWebLab2TutorFlow({
     submittedContent: string,
     review: ValidationReviewCardData,
   ) => {
-    const subject = review.title
-      .replace(/\s+review\b/i, "")
-      .replace(/\s+assessment\b/i, "")
-      .trim()
-      .toLowerCase() || "this level";
-    const normalizedSubject = /\bbug$/i.test(subject)
-      ? subject.replace(/\bbug$/i, "fix")
-      : subject;
     const hasMultipleRequirements = (review.requirements?.length ?? 0) > 1;
-    const reviewScope = hasMultipleRequirements
-      ? "I'll compare your current project with this level's goals and show which parts look complete and what to work on next."
-      : "I'll compare your current project with this level's goal and let you know if it looks ready.";
 
     if (/\b(works|worked|working|fixed|done|finished|complete|completed)\b/i.test(submittedContent)) {
-      return hasMultipleRequirements
-        ? `Great, sounds like you made progress on ${normalizedSubject}. ${reviewScope}`
-        : `Great, sounds like you finished ${normalizedSubject}. ${reviewScope}`;
+      return "Great. I can check your work now and let you know whether you're ready to continue.";
     }
 
     if (/\b(check|review|validate|grade)\b/i.test(submittedContent)) {
       return hasMultipleRequirements
-        ? `Let's check your progress on ${normalizedSubject}. ${reviewScope}`
-        : `Let's check your ${normalizedSubject}. ${reviewScope}`;
+        ? "I can check your progress and show what looks complete and what to work on next."
+        : "I can check your work and let you know whether you're ready to continue.";
     }
 
-    return `Before you move on, let's check your ${normalizedSubject}. ${reviewScope}`;
+    return "When you're ready, I can check your work and let you know whether you're ready to continue.";
   }, []);
 
   const handleTutorSubmit = useCallback(async (
@@ -175,14 +174,34 @@ export function useWebLab2TutorFlow({
       workflow,
     });
 
-    logTutorEvent("ui action resolved", {
-      requestMode,
-      action,
-      policy: tutorPolicy,
-      workflow,
-      messagePreview: message.slice(0, 180),
-      conversationTurns: conversation.length,
-    });
+    if (routingDiagnostics) {
+      logTutorEvent("ui action resolved", {
+        requestMode,
+        action,
+        policy: tutorPolicy,
+        workflow,
+        messagePreview: message.slice(0, 180),
+        conversationTurns: conversation.length,
+      });
+    }
+
+    const instructionCoachResult = action.kind === "guidance"
+      ? resolveInstructionCoachResponse({
+          message,
+          guide: instructionGuide,
+          guideState: instructionGuideState,
+        })
+      : null;
+    const instructionFocus = instructionCoachResult?.instructionFocus;
+    if (instructionCoachResult && instructionGuide) {
+      logTutorEvent("instruction coach handled student message", {
+        messagePreview: message.slice(0, 180),
+        guideType: instructionGuide.type,
+        nextState: instructionCoachResult.guideState,
+        instructionFocus,
+      });
+      onInstructionGuideStateChange?.(instructionCoachResult.guideState);
+    }
 
     if (action.kind === "validationReview" && validationReviewOffer) {
       logTutorEvent("validation review offer returned", {
@@ -214,9 +233,10 @@ export function useWebLab2TutorFlow({
       message,
       conversation,
       files: currentFileStructure,
-      additionalSystemPrompt: additionalTutorPrompt,
+      runnerContracts,
       levelInstructionsMarkdown,
       levelProgress,
+      instructionFocus,
       requestMode: resolvedRequestMode,
       supportContext: tutorSupportContext,
     });
@@ -277,7 +297,6 @@ export function useWebLab2TutorFlow({
       codeChangeStatus: result.changes.length > 0 ? "pending" : undefined,
     } satisfies ChatMessage;
   }, [
-    additionalTutorPrompt,
     beginAiProposal,
     buildValidationOfferMessage,
     currentFileStructure,
@@ -287,7 +306,12 @@ export function useWebLab2TutorFlow({
     hasPendingAiChanges,
     levelInstructionsMarkdown,
     levelProgress,
+    instructionGuide,
+    instructionGuideState,
+    onInstructionGuideStateChange,
     openFile,
+    routingDiagnostics,
+    runnerContracts,
     setIsFileManagerCollapsed,
     setViewMode,
     tutorPolicy,

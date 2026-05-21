@@ -18,8 +18,108 @@ export type TutorRequestMode = "auto" | "build" | "plan" | "help";
 
 export type TutorSupportContext = "standalone-project" | "curriculum-level";
 
+export type InstructionStepIntent =
+  | "observe"
+  | "inspect"
+  | "explain"
+  | "fix"
+  | "verify"
+  | "ask-for-help";
+
+export type InstructionExpectedStudentMove =
+  | "observation"
+  | "code-change"
+  | "reflection"
+  | "review-request";
+
+export interface InstructionStep {
+  id: string;
+  title: string;
+  prompt?: string;
+  intent: InstructionStepIntent;
+  expectedStudentMove?: InstructionExpectedStudentMove;
+  notes?: string[];
+}
+
+export type InstructionCheckpoint = InstructionStep;
+
+export interface LinearInstructionGuide {
+  type: "linear";
+  id: string;
+  sourceSignature: string;
+  overview: string;
+  firstMove: string;
+  steps: InstructionStep[];
+  fallbackMarkdown: string;
+}
+
+export interface InstructionOption {
+  id: string;
+  label: string;
+  prompt: string;
+  intent: "style-polish" | "content-choice" | "debug-focus" | "concept-focus";
+  editOriented?: boolean;
+}
+
+export interface ChoiceBasedInstructionGuide {
+  type: "choice-based";
+  id: string;
+  sourceSignature: string;
+  goal: string;
+  constraints: string[];
+  options: InstructionOption[];
+  fallbackMarkdown: string;
+}
+
+export type InstructionGuide = LinearInstructionGuide | ChoiceBasedInstructionGuide;
+
+export type TutorOpeningTone = "debug" | "concept" | "creative" | "procedure";
+
+export interface TutorOpening {
+  tone: TutorOpeningTone;
+  welcome?: string;
+  goal: string;
+  success: string;
+  firstMove: string;
+  sourceSignature: string;
+}
+
+export interface InstructionGuideState {
+  guideSignature: string;
+  activeStepId?: string;
+  completedStepIds: string[];
+  activeOptionId?: string;
+  lastCoachMoveId?: string;
+  dismissedIntro?: boolean;
+}
+
+export type InstructionFocusContext =
+  | {
+      guideType: "linear";
+      overview: string;
+      currentStep: InstructionStep;
+      previousStep?: InstructionStep;
+      didAdvance: boolean;
+      guidanceDirective: string;
+    }
+  | {
+      guideType: "choice-based";
+      goal: string;
+      constraints: string[];
+      activeOption?: InstructionOption;
+      availableOptions: InstructionOption[];
+      didSelectOption: boolean;
+      guidanceDirective: string;
+    };
+
 export type TutorRoutingProfile =
   | "open-ended-project"
+  | "guided-level"
+  | "validation-checkpoint";
+
+export type TutorPolicyPreset =
+  | "route-default"
+  | "standalone-project"
   | "guided-level"
   | "validation-checkpoint";
 
@@ -43,6 +143,7 @@ export interface TutorPolicy {
 export type TutorActionSource =
   | "message"
   | "ui"
+  | "guide-chip"
   | "continue"
   | "review-button"
   | "review-offer";
@@ -60,13 +161,19 @@ export interface TutorMessageRoutingContext {
 }
 
 export type TutorAction =
+  | {
+      kind: "instructionStep";
+      source: "message" | "guide-chip";
+      message: string;
+      guideState: InstructionGuideState;
+    }
   | { kind: "guidance"; source: "message" | "ui"; message: string }
   | { kind: "plan"; source: "message" | "ui"; message: string }
   | { kind: "edit"; source: "message" | "ui"; message: string }
   | { kind: "validationReview"; source: "continue" | "review-button" | "review-offer"; message: string }
   | {
       kind: "denied";
-      requested: "plan" | "edit" | "validationReview";
+      requested: "guidance" | "plan" | "edit" | "validationReview";
       fallback: "guidance" | "message";
       disabledReason: TutorActionDeniedReason;
       message: string;

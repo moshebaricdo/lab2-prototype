@@ -24,7 +24,10 @@ export interface ResolveTutorActionOptions {
   workflow?: TutorActionWorkflowState;
 }
 
-function deniedMessage(requested: "plan" | "edit" | "validationReview") {
+function deniedMessage(requested: "guidance" | "plan" | "edit" | "validationReview") {
+  if (requested === "guidance") {
+    return "I can't answer Tutor help questions in this level right now. Use the level instructions as your next step.";
+  }
   if (requested === "edit") {
     return "I can't edit files in this level, but you can make the change in the editor. I can help you reason through the next step or point you to the likely file.";
   }
@@ -34,11 +37,11 @@ function deniedMessage(requested: "plan" | "edit" | "validationReview") {
   return "I can't check your work in this level, but you can use the instructions as a checklist. I can help you review what to look at next.";
 }
 
-function denyAction(requested: "plan" | "edit" | "validationReview"): TutorAction {
+function denyAction(requested: "guidance" | "plan" | "edit" | "validationReview"): TutorAction {
   return {
     kind: "denied",
     requested,
-    fallback: "guidance",
+    fallback: requested === "guidance" ? "message" : "guidance",
     disabledReason: "capability-disabled",
     message: deniedMessage(requested),
   };
@@ -59,13 +62,7 @@ function actionForIntent(intent: TutorRequestIntent, message: string, policy: Tu
 
   return policy.capabilities.guidance
     ? { kind: "guidance", source: "message", message }
-    : {
-        kind: "denied",
-        requested: "edit",
-        fallback: "message",
-        disabledReason: "capability-disabled",
-        message: "I can't help with that in this level right now. Use the level instructions as your next step.",
-      };
+    : denyAction("guidance");
 }
 
 function isDoThatFollowUp(message: string) {
@@ -114,7 +111,7 @@ export function resolveTutorAction({
   if (requestMode === "help") {
     return policy.capabilities.guidance
       ? { kind: "guidance", source: "ui", message }
-      : denyAction("edit");
+      : denyAction("guidance");
   }
 
   if (
