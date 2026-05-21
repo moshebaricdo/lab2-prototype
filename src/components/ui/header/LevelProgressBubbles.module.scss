@@ -165,17 +165,6 @@
   }
 }
 
-.circleInProgress {
-  fill: var(--ds-background-neutral-white-fixed);
-  stroke: var(--ds-background-success-primary);
-  transition: fill 150ms, stroke 150ms;
-
-  .bubble:hover & {
-    fill: var(--ds-background-success-primary);
-    stroke: var(--ds-background-success-primary);
-  }
-}
-
 /* ── Border overlay ── */
 
 .borderOverlay {

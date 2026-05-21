@@ -1,6 +1,10 @@
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
+import {
+  findLevelLinkIndex,
+  includesLevelPath,
+} from "../../../lib/levelShareLinks";
 import { Tooltip } from "../Tooltip";
 import styles from "./LevelProgressBubbles.module.scss";
 
@@ -9,7 +13,7 @@ export interface LevelProgressLink {
   path: string;
 }
 
-type BubbleState = "not-started" | "completed" | "in-progress" | "current";
+type BubbleState = "not-started" | "completed" | "current";
 
 interface BubbleProps {
   state: BubbleState;
@@ -22,7 +26,6 @@ interface BubbleProps {
 const circleClassByState: Record<Exclude<BubbleState, "current">, string> = {
   "not-started": styles.circleNotStarted,
   completed: styles.circleCompleted,
-  "in-progress": styles.circleInProgress,
 };
 
 function Bubble({ state, levelNumber, to, label, readOnly = false }: BubbleProps) {
@@ -131,9 +134,7 @@ export function LevelProgressBubbles({
     ? resolvedLevelLinks.length
     : totalLevels;
   const linkModeCurrentLevel = isLinkMode
-    ? resolvedLevelLinks.findIndex(
-        (levelLink) => levelLink.path === currentLevelPath,
-      ) + 1
+    ? findLevelLinkIndex(resolvedLevelLinks, currentLevelPath) + 1
     : currentLevel;
   const resolvedCurrentLevel = isLinkMode
     ? Math.max(1, Math.min(resolvedTotalLevels, linkModeCurrentLevel || currentLevel))
@@ -142,7 +143,7 @@ export function LevelProgressBubbles({
   const completedLevelsSet = new Set<number>(
     isLinkMode
       ? resolvedLevelLinks.reduce<number[]>((result, levelLink, index) => {
-          if (completedLevelPaths?.includes(levelLink.path)) {
+          if (includesLevelPath(completedLevelPaths, levelLink.path)) {
             result.push(index + 1);
             return result;
           }
@@ -158,14 +159,9 @@ export function LevelProgressBubbles({
 
   const getBubbleState = (
     index: number,
-  ):
-    | "not-started"
-    | "completed"
-    | "in-progress"
-    | "current" => {
+  ): "not-started" | "completed" | "current" => {
     if (index === resolvedCurrentLevel - 1) return "current";
     if (completedLevelsSet.has(index + 1)) return "completed";
-    if (index === resolvedCurrentLevel) return "in-progress";
     return "not-started";
   };
 

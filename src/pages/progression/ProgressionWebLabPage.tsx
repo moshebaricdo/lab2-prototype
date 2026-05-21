@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Lab2Shell } from "../../components/lab2/Lab2Shell";
 import {
   Workspace,
@@ -16,6 +15,7 @@ import { useLayoutState } from "../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
 import {
   useLevelShareMode,
+  useShareAwareNavigate,
   type ShareModeConfig,
 } from "../../hooks/useLevelShareMode";
 import { PortfolioInstructions } from "../../components/lab2/resource-panel/ProgressionInstructions";
@@ -26,7 +26,7 @@ const indexHtmlFile = fileStructure[0]?.children?.find(
 );
 
 export function ProgressionWebLabPage() {
-  const navigate = useNavigate();
+  const navigate = useShareAwareNavigate();
   const shareMode = useLevelShareMode();
   const shareModeConfig: ShareModeConfig = {
     mode: shareMode,

@@ -1,4 +1,6 @@
-import { useSearchParams } from "react-router-dom";
+import { useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { resolveShareAwareNavigationPath } from "../lib/levelShareLinks";
 
 export const LEVEL_SHARE_MODE_PARAM = "share";
 
@@ -41,4 +43,16 @@ export function addLevelShareModeSearchParam(
 export function useLevelShareMode() {
   const [searchParams] = useSearchParams();
   return getLevelShareModeSearchParams(searchParams);
+}
+
+export function useShareAwareNavigate() {
+  const navigate = useNavigate();
+  const shareMode = useLevelShareMode();
+
+  return useCallback(
+    (path: string) => {
+      navigate(resolveShareAwareNavigationPath(path, shareMode));
+    },
+    [navigate, shareMode],
+  );
 }

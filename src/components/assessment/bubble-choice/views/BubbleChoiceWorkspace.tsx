@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useShareAwareNavigate } from "../../../../hooks/useLevelShareMode";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
   mockBubbleChoiceLevel,
@@ -31,7 +31,7 @@ export function BubbleChoiceWorkspace({
   completedLevelPaths,
   payload = mockBubbleChoiceLevel,
 }: BubbleChoiceWorkspaceProps = {}) {
-  const navigate = useNavigate();
+  const navigate = useShareAwareNavigate();
 
   const { level } = payload;
   const optionLabelStyle = level.optionLabelStyle;
