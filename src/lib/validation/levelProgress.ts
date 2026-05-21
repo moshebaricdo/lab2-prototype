@@ -39,6 +39,7 @@ export function buildLevelProgressSnapshot(
     incompleteCriteria,
     nextIncompleteCriterion,
     requirements: review.requirements,
+    requirementLabels: review.requirementLabels,
     nextStep: review.nextStep,
   };
 }

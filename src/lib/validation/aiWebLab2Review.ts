@@ -61,13 +61,14 @@ function buildConversationSummary(chatMessages: ChatMessage[]) {
 function normalizeItems(
   responseItems: AiReviewResponse["items"],
   requirements: string[],
+  labels?: string[],
 ): ValidationReviewItem[] {
   return requirements.map((requirement, index) => {
     const item = responseItems?.[index];
     const status = normalizeItemStatus(item?.status);
     return {
       id: `ai-requirement-${index}`,
-      label: item?.label?.trim() || requirement,
+      label: labels?.[index]?.trim() || item?.label?.trim() || requirement,
       status,
       detail: status === "pass"
         ? item?.detail?.trim() || "Evidence found."
@@ -201,7 +202,7 @@ export async function createAiWebLab2ValidationReview({
   const parsed = JSON.parse(content) as AiReviewResponse;
   const items = mergeEffortIntoOpenEndedRequirements(
     config,
-    normalizeItems(parsed.items, requirements),
+    normalizeItems(parsed.items, requirements, config.goalLabels),
     effortItem,
   );
   const summary = getValidationReviewSummaryStatus(items);
@@ -215,6 +216,8 @@ export async function createAiWebLab2ValidationReview({
     confidence: normalizeConfidence(missingEffortItem ? "medium" : summary.confidence ?? parsed.confidence),
     items,
     requirements,
+    requirementLabels: config.goalLabels,
     nextStep: missingEffortItem?.detail ?? parsed.headline?.trim(),
+    followUpPreference: config.followUpPreference,
   };
 }

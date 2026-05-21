@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { FileItem } from "../../types/file";
 import type { WebLab2ValidationReviewConfig } from "../../types/validationReview";
-import { createWebLab2ValidationReview } from "./weblab2Review";
+import {
+  createWebLab2ValidationReview,
+  getValidationReviewSummaryStatus,
+} from "./weblab2Review";
 
 const starterFiles: FileItem[] = [
   {
@@ -21,6 +24,7 @@ const openEndedConfig: WebLab2ValidationReviewConfig = {
   mode: "open-ended",
   title: "Loop style polish review",
   goals: ["Interactive styles are polished."],
+  goalLabels: ["Make one intentional style refinement"],
   effortPolicy: "required",
   minimumChangedFiles: 1,
   checks: [
@@ -48,6 +52,7 @@ describe("createWebLab2ValidationReview", () => {
     expect(review.items).toHaveLength(1);
     expect(review.items?.[0]).toEqual(expect.objectContaining({
       id: "focus-visible",
+      label: "Make one intentional style refinement",
       status: "missing",
       detail: expect.stringContaining("own refinement"),
     }));
@@ -76,6 +81,7 @@ describe("createWebLab2ValidationReview", () => {
     expect(review.items).toHaveLength(1);
     expect(review.items?.[0]).toEqual(expect.objectContaining({
       id: "focus-visible",
+      label: "Make one intentional style refinement",
       status: "pass",
     }));
   });
@@ -128,5 +134,40 @@ describe("createWebLab2ValidationReview", () => {
 
     expect(review.status).toBe("likely_complete");
     expect(review.items?.some((item) => item.id === "workspace-progress")).toBe(false);
+  });
+
+  it("carries the configured follow-up preference into review cards", () => {
+    const review = createWebLab2ValidationReview({
+      config: {
+        mode: "technical",
+        title: "Technical fix review",
+        goals: ["The selector is fixed."],
+        followUpPreference: "debug",
+      },
+      currentFileStructure: starterFiles,
+      initialFileStructure: starterFiles,
+      chatMessages: [],
+    });
+
+    expect(review.followUpPreference).toBe("debug");
+  });
+
+  it("does not treat advisory warnings plus effort evidence as complete", () => {
+    const summary = getValidationReviewSummaryStatus([
+      {
+        id: "requirement",
+        label: "Label and explain each step",
+        status: "warn",
+        detail: "The labels are present, but the explanation is incomplete.",
+      },
+      {
+        id: "workspace-progress",
+        label: "Meaningful project iteration",
+        status: "pass",
+        detail: "The project changed.",
+      },
+    ]);
+
+    expect(summary.status).toBe("in_progress");
   });
 });

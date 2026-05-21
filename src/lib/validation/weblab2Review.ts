@@ -105,6 +105,17 @@ function evaluateCheck(
   };
 }
 
+function applyGoalLabels(
+  items: ValidationReviewItem[],
+  labels: string[] | undefined,
+) {
+  if (!labels || labels.length === 0) return items;
+  return items.map((item, index) => ({
+    ...item,
+    label: labels[index]?.trim() || item.label,
+  }));
+}
+
 export function buildValidationReviewEvidence({
   currentFileStructure,
   initialFileStructure,
@@ -205,9 +216,10 @@ export function getValidationReviewSummaryStatus(
   confidence: ValidationReviewConfidence;
 } {
   const missingCount = items.filter((item) => item.status === "missing").length;
+  const warnCount = items.filter((item) => item.status === "warn").length;
   const passCount = items.filter((item) => item.status === "pass").length;
 
-  if (items.length > 0 && missingCount === 0 && passCount > 0) {
+  if (items.length > 0 && missingCount === 0 && warnCount === 0 && passCount === items.length) {
     return { status: "likely_complete", confidence: "high" };
   }
 
@@ -215,7 +227,7 @@ export function getValidationReviewSummaryStatus(
     return { status: "needs_work", confidence: "medium" };
   }
 
-  if (passCount > 0 || items.some((item) => item.status === "warn")) {
+  if (passCount > 0 || warnCount > 0) {
     return { status: "in_progress", confidence: "medium" };
   }
 
@@ -285,7 +297,10 @@ export function createWebLab2ValidationReview({
   const effortItem = buildValidationEffortItem(config, evidence);
   const items = mergeEffortIntoOpenEndedRequirements(
     config,
-    checks.map((check) => evaluateCheck(check, currentFiles)),
+    applyGoalLabels(
+      checks.map((check) => evaluateCheck(check, currentFiles)),
+      config.goalLabels,
+    ),
     effortItem,
   );
 
@@ -302,8 +317,10 @@ export function createWebLab2ValidationReview({
     confidence,
     items,
     requirements: config.goals,
+    requirementLabels: config.goalLabels,
     evidence: buildEvidence({ evidence }),
     nextStep: getNextStep(status),
+    followUpPreference: config.followUpPreference,
   };
 }
 
@@ -315,7 +332,9 @@ export function createValidationReviewOffer(
     title: config.title,
     mode: config.mode,
     requirements: config.goals,
+    requirementLabels: config.goalLabels,
+    followUpPreference: config.followUpPreference,
     nextStep:
-      "I can run a quick check using this level's goals and the current project files.",
+      "I can check your work when you're ready and let you know whether you're ready to continue.",
   };
 }

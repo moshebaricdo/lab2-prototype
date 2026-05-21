@@ -26,6 +26,7 @@ const config: WebLab2ValidationReviewConfig = {
   mode: "open-ended",
   title: "Loop style polish review",
   goals: ["Interactive styles are polished."],
+  goalLabels: ["Make one intentional style refinement"],
   effortPolicy: "required",
   minimumChangedFiles: 1,
 };
@@ -72,6 +73,7 @@ describe("createAiWebLab2ValidationReview", () => {
     expect(review?.items).toHaveLength(1);
     expect(review?.items?.[0]).toEqual(expect.objectContaining({
       id: "ai-requirement-0",
+      label: "Make one intentional style refinement",
       status: "missing",
       detail: expect.stringContaining("own refinement"),
     }));

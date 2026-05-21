@@ -13,6 +13,7 @@ export type ValidationReviewItemStatus = "pass" | "warn" | "missing";
 export type ValidationContinueMode = "standard" | "require-successful-review";
 
 export type ValidationEffortPolicy = "none" | "advisory" | "required";
+export type ValidationReviewFollowUpPreference = "auto" | "debug" | "suggestion";
 
 export interface ValidationReviewItem {
   id: string;
@@ -30,7 +31,9 @@ export interface ValidationReviewCardData {
   items?: ValidationReviewItem[];
   evidence?: string[];
   requirements?: string[];
+  requirementLabels?: string[];
   nextStep?: string;
+  followUpPreference?: ValidationReviewFollowUpPreference;
 }
 
 export interface LevelProgressCriterion {
@@ -49,6 +52,7 @@ export interface LevelProgressSnapshot {
   incompleteCriteria: LevelProgressCriterion[];
   nextIncompleteCriterion?: LevelProgressCriterion;
   requirements?: string[];
+  requirementLabels?: string[];
   nextStep?: string;
 }
 
@@ -74,7 +78,9 @@ export interface WebLab2ValidationReviewConfig {
   mode: ValidationReviewMode;
   title: string;
   goals: string[];
+  goalLabels?: string[];
   checks?: ValidationReviewCheck[];
   minimumChangedFiles?: number;
   effortPolicy?: ValidationEffortPolicy;
+  followUpPreference?: ValidationReviewFollowUpPreference;
 }
