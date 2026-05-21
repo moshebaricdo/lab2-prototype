@@ -1,8 +1,9 @@
 import {
-  validationSandboxFileStructure,
-  validationSandboxInstructionsMarkdown,
-  validationSandboxReviewConfig,
-} from "../../data/weblab2/projects/validation-sandbox";
+  validationStarshipLoaderFileStructure,
+  validationStarshipLoaderInitialOpenFiles,
+  validationStarshipLoaderInstructionsMarkdown,
+  validationStarshipLoaderReviewConfig,
+} from "../../data/weblab2/projects/validation-starship-loader";
 import { WebLab2LevelPage } from "./WebLab2LevelPage";
 import {
   validationProgressionCommonProps,
@@ -20,11 +21,12 @@ export function WebLab2ValidationStarshipLoaderLevelPage() {
         validationProgressionPaths.loopStylePolish,
         validationProgressionPaths.promiseTrace,
       ]}
-      instructionsMarkdown={validationSandboxInstructionsMarkdown}
-      fileStructureOverride={validationSandboxFileStructure}
-      validationReviewConfig={validationSandboxReviewConfig}
+      instructionsMarkdown={validationStarshipLoaderInstructionsMarkdown}
+      fileStructureOverride={validationStarshipLoaderFileStructure}
+      validationReviewConfig={validationStarshipLoaderReviewConfig}
       continueLabel="Finish"
       storageKeySuffix="validation-progression-sandbox-v1"
+      initialOpenFiles={validationStarshipLoaderInitialOpenFiles}
     />
   );
 }

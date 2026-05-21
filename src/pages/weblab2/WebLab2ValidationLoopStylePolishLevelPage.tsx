@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import {
-  validationOpenEndedFileStructure,
-  validationOpenEndedInstructionsMarkdown,
-  validationOpenEndedReviewConfig,
-} from "../../data/weblab2/projects/validation-open-ended";
+  validationLoopStylePolishFileStructure,
+  validationLoopStylePolishInitialOpenFiles,
+  validationLoopStylePolishInstructionsMarkdown,
+  validationLoopStylePolishReviewConfig,
+} from "../../data/weblab2/projects/validation-loop-style-polish";
 import { WebLab2LevelPage } from "./WebLab2LevelPage";
 import {
   validationProgressionCommonProps,
@@ -19,13 +20,14 @@ export function WebLab2ValidationLoopStylePolishLevelPage() {
       title="Validation Lab: Polish Loop's Styles"
       currentLevelPath={validationProgressionPaths.loopStylePolish}
       completedLevelPaths={[validationProgressionPaths.photoCarousel]}
-      instructionsMarkdown={validationOpenEndedInstructionsMarkdown}
-      fileStructureOverride={validationOpenEndedFileStructure}
-      validationReviewConfig={validationOpenEndedReviewConfig}
+      instructionsMarkdown={validationLoopStylePolishInstructionsMarkdown}
+      fileStructureOverride={validationLoopStylePolishFileStructure}
+      validationReviewConfig={validationLoopStylePolishReviewConfig}
       continueLabel="Continue"
       onContinue={() => navigate(validationProgressionPaths.promiseTrace)}
       storageKeySuffix="validation-progression-create-v1"
       initialViewMode="preview"
+      initialOpenFiles={validationLoopStylePolishInitialOpenFiles}
     />
   );
 }

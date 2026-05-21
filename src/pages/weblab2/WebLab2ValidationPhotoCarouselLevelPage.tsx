@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import {
-  validationTestFileStructure,
-  validationTestInstructionsMarkdown,
-  validationTestReviewConfig,
-} from "../../data/weblab2/projects/validation-test";
+  validationPhotoCarouselFileStructure,
+  validationPhotoCarouselInitialOpenFiles,
+  validationPhotoCarouselInstructionsMarkdown,
+  validationPhotoCarouselReviewConfig,
+} from "../../data/weblab2/projects/validation-photo-carousel";
 import { WebLab2LevelPage } from "./WebLab2LevelPage";
 import {
   validationProgressionCommonProps,
@@ -19,12 +20,14 @@ export function WebLab2ValidationPhotoCarouselLevelPage() {
       title="Validation Lab: Fix the Photo Carousel"
       currentLevelPath={validationProgressionPaths.photoCarousel}
       completedLevelPaths={[]}
-      instructionsMarkdown={validationTestInstructionsMarkdown}
-      fileStructureOverride={validationTestFileStructure}
-      validationReviewConfig={validationTestReviewConfig}
+      instructionsMarkdown={validationPhotoCarouselInstructionsMarkdown}
+      fileStructureOverride={validationPhotoCarouselFileStructure}
+      validationReviewConfig={validationPhotoCarouselReviewConfig}
       continueLabel="Continue"
       onContinue={() => navigate(validationProgressionPaths.loopStylePolish)}
       storageKeySuffix="validation-progression-fix-v1"
+      allowTutorBuild={false}
+      initialOpenFiles={validationPhotoCarouselInitialOpenFiles}
     />
   );
 }

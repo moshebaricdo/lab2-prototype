@@ -13,6 +13,7 @@ export const validationProgressionCommonProps = {
   showOnlyFilesWithContent: true,
   tutorMode: { kind: "functional" as const },
   tutorSupportContext: "curriculum-level" as const,
+  tutorInstructionsDelivery: true,
   continueButtonPlacement: "header" as const,
   instructionsDrawerInitialHeightRatio: 0.5,
   enableSidebarCollapse: true,
@@ -21,4 +22,5 @@ export const validationProgressionCommonProps = {
   totalLevels: webLab2ValidationProgressionLinks.length,
   validationContinueMode: "require-successful-review" as const,
   enableDesignMode: false,
+  collapseFileManagerByDefault: true,
 };

@@ -2,9 +2,7 @@
 
 ## AI Review Requirements
 
-- Each numbered Promise comment identifies the Promise state at that point: Pending, Fulfilled, or Rejected.
-- Each numbered Promise comment includes a short explanation of what is happening at that step, such as waiting for the fetch, parsing JSON, rendering data, or handling an error.
-- The fetch chain and page behavior remain intact after the comments are added.
+- [Label and explain what each step is doing] Each numbered Promise comment includes both a Promise state label and a separate explanation phrase beyond the state word, describing what the code is doing at that step.
 
 ## Local Fallback Checks
 

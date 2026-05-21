@@ -2,7 +2,7 @@
 
 **Expected Behavior:** Clicking the Next button should show a new photo and caption on the page.
 
-**1: Test it:** Run the code and click the button once. What happens (or doesn’t happen)?
+**1: Test it:** Click the next button once. What happens (or doesn’t happen)?
 
 **2: Check the basics:** Look for small mistakes that can break the connection between the button and the action.
 

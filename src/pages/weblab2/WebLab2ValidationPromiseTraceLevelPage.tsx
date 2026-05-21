@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import {
-  validationHybridFileStructure,
-  validationHybridInstructionsMarkdown,
-  validationHybridReviewConfig,
-} from "../../data/weblab2/projects/validation-hybrid";
+  validationPromiseTraceFileStructure,
+  validationPromiseTraceInitialOpenFiles,
+  validationPromiseTraceInstructionsMarkdown,
+  validationPromiseTraceReviewConfig,
+} from "../../data/weblab2/projects/validation-promise-trace";
 import { WebLab2LevelPage } from "./WebLab2LevelPage";
 import {
   validationProgressionCommonProps,
@@ -22,12 +23,14 @@ export function WebLab2ValidationPromiseTraceLevelPage() {
         validationProgressionPaths.photoCarousel,
         validationProgressionPaths.loopStylePolish,
       ]}
-      instructionsMarkdown={validationHybridInstructionsMarkdown}
-      fileStructureOverride={validationHybridFileStructure}
-      validationReviewConfig={validationHybridReviewConfig}
+      instructionsMarkdown={validationPromiseTraceInstructionsMarkdown}
+      fileStructureOverride={validationPromiseTraceFileStructure}
+      validationReviewConfig={validationPromiseTraceReviewConfig}
       continueLabel="Continue"
       onContinue={() => navigate(validationProgressionPaths.starshipLoader)}
       storageKeySuffix="validation-progression-refine-v1"
+      allowTutorBuild={false}
+      initialOpenFiles={validationPromiseTraceInitialOpenFiles}
     />
   );
 }

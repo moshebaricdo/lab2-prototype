@@ -2,7 +2,7 @@
 
 ## AI Review Requirements
 
-- Clicking Next hides the first photo and shows the next `#photo2` image.
+- [Fix the Next button] Clicking Next hides the first photo and shows the next `#photo2` image.
 
 ## Local Fallback Checks
 
