@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Lab2Shell } from "../../components/lab2/Lab2Shell";
 import { PythonWorkspace } from "../../components/ide/pythonlab/views";
 import { CreateFileModal } from "../../components/ide/shared";
@@ -9,6 +9,7 @@ import {
 } from "../../data/pythonlab";
 import { useChatState } from "../../hooks/useChatState";
 import { useLayoutState } from "../../hooks/useLayoutState";
+import { useDevPanelInitialOpenFiles } from "../../hooks/useDevPanelInitialOpenFiles";
 import { useFileWorkspaceState } from "../../hooks/useFileWorkspaceState";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
 import { usePropsOverride } from "../../hooks/usePropsOverride";
@@ -31,8 +32,13 @@ import type { FileItem } from "../../types/file";
 import type { TutorMode, TutorRequestMode } from "../../types/tutor";
 import type { ValidationTestDefinition } from "../../types/validation";
 import {
+  formatInitialOpenFilesProp,
+  INITIAL_OPEN_FILES_DEV_KEY,
+  parseInitialOpenFilesConfig,
+  type InitialOpenFilesProp,
+} from "../../lib/editor/initialOpenFiles";
+import {
   findFileByNameInTree,
-  findFirstFile,
   flattenTutorContextFiles,
   mapFilesToTree,
 } from "../../utils/fileTree";
@@ -52,6 +58,8 @@ interface PythonLabLevelPageProps {
   instructionsMarkdown?: string;
   instructionsContent?: ReactNode;
   tutorMode?: TutorMode;
+  /** File paths to open when the level loads. Pass a newline string or an array of paths. */
+  initialOpenFiles?: InitialOpenFilesProp;
 }
 
 type PythonTutorModeKind = "mock" | "functional";
@@ -231,6 +239,7 @@ export function PythonLabLevelPage({
   instructionsMarkdown = pythonInstructionsMarkdown,
   instructionsContent,
   tutorMode,
+  initialOpenFiles,
 }: PythonLabLevelPageProps = {}) {
   const {
     activeTab,
@@ -241,11 +250,6 @@ export function PythonLabLevelPage({
     setSidebarWidth,
   } = useLayoutState();
 
-  const { chatMessages, setChatMessages, chatInput, setChatInput } =
-    useChatState(pythonInitialChatMessages);
-  const [isTutorRequestRunning, setIsTutorRequestRunning] = useState(false);
-  const [tutorRequestMode, setTutorRequestMode] =
-    useState<TutorRequestMode>("help");
   const initialFileStructure = useMemo(
     () => fileStructureOverride ?? pythonFileStructure,
     [fileStructureOverride],
@@ -253,31 +257,14 @@ export function PythonLabLevelPage({
   const storageKeyBase = fileStructureOverride
     ? `pythonlab:${currentLevelPath}`
     : `pythonlab:${currentLevelPath}:${DEFAULT_PYTHON_STARTER_STORAGE_VERSION}`;
-  const hasOpenedInitialFileRef = useRef(false);
 
-  const {
-    fileStructureState,
-    openFolders,
-    selectedFile,
-    openFiles,
-    isFileManagerCollapsed,
-    isCreateFileModalOpen,
-    setSelectedFile,
-    setIsFileManagerCollapsed,
-    setIsCreateFileModalOpen,
-    toggleFolder,
-    openFile,
-    closeFile,
-    handleReorderFiles,
-    handleCreateFile,
-    updateFileContent,
-    replaceFileStructure,
-  } = useFileWorkspaceState(
-    initialFileStructure,
-    {
-      storageKey: `${storageKeyBase}:file-structure`,
-    },
-  );
+  const { chatMessages, setChatMessages, chatInput, setChatInput } =
+    useChatState(pythonInitialChatMessages, "", {
+      storageKey: `${storageKeyBase}:chat`,
+    });
+  const [isTutorRequestRunning, setIsTutorRequestRunning] = useState(false);
+  const [tutorRequestMode, setTutorRequestMode] =
+    useState<TutorRequestMode>("help");
 
   const defaults = {
     instructionsDrawerInitialHeightRatio: 0.5,
@@ -294,11 +281,42 @@ export function PythonLabLevelPage({
     title,
     subtitle,
     [EDITOR_READ_ONLY_STORAGE_KEY]: false,
+    [INITIAL_OPEN_FILES_DEV_KEY]: formatInitialOpenFilesProp(initialOpenFiles),
   };
 
   const overrideResult = usePropsOverride(defaults);
   const resolved = overrideResult.props;
   const resolvedEditorReadOnlyOverride = Boolean(resolved[EDITOR_READ_ONLY_STORAGE_KEY]);
+  const parsedInitialOpenFiles = useMemo(
+    () => parseInitialOpenFilesConfig(resolved[INITIAL_OPEN_FILES_DEV_KEY]),
+    [resolved],
+  );
+
+  const {
+    fileStructureState,
+    openFolders,
+    selectedFile,
+    openFiles,
+    isFileManagerCollapsed,
+    isCreateFileModalOpen,
+    setSelectedFile,
+    setOpenFiles,
+    setIsFileManagerCollapsed,
+    setIsCreateFileModalOpen,
+    toggleFolder,
+    openFile,
+    closeFile,
+    handleReorderFiles,
+    handleCreateFile,
+    updateFileContent,
+    replaceFileStructure,
+  } = useFileWorkspaceState(
+    initialFileStructure,
+    {
+      storageKey: `${storageKeyBase}:file-structure`,
+      initialOpenFilePaths: parsedInitialOpenFiles,
+    },
+  );
 
   const resolvedVisualCue =
     resolved.instructionsDrawerVisualCue as InstructionsDrawerVisualCue;
@@ -308,6 +326,12 @@ export function PythonLabLevelPage({
   }, [resolvedEditorReadOnlyOverride]);
 
   const currentFileStructure = fileStructureState ?? initialFileStructure;
+  useDevPanelInitialOpenFiles(
+    currentFileStructure,
+    resolved[INITIAL_OPEN_FILES_DEV_KEY],
+    setOpenFiles,
+    setSelectedFile,
+  );
   const getCurrentFileStructure = useCallback(
     () => fileStructureState ?? initialFileStructure,
     [fileStructureState, initialFileStructure],
@@ -391,20 +415,6 @@ export function PythonLabLevelPage({
       content: result.message,
     } satisfies ChatMessage;
   }, [currentFileStructure]);
-
-  useEffect(() => {
-    if (hasOpenedInitialFileRef.current) return;
-    if (openFiles.length > 0) {
-      hasOpenedInitialFileRef.current = true;
-      return;
-    }
-
-    const initialFile = findFirstFile(currentFileStructure);
-    if (initialFile) {
-      openFile(initialFile);
-      hasOpenedInitialFileRef.current = true;
-    }
-  }, [currentFileStructure, openFiles.length, openFile]);
 
   return (
     <>

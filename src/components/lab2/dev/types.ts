@@ -66,6 +66,13 @@ export interface DevPanelSliderField extends DevPanelFieldBase {
 
 export interface DevPanelBooleanField extends DevPanelFieldBase {
   type: "boolean";
+  contract?: {
+    key: string;
+    buttonLabel?: string;
+    expandedButtonLabel?: string;
+    placeholder?: string;
+    rows?: number;
+  };
 }
 
 export interface DevPanelSelectField extends DevPanelFieldBase {

@@ -3,6 +3,7 @@ import { ScrollArea } from "../../ui/scroll-area";
 import { AppActionDropdown } from "../../ui/AppDropdown";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import { AppButton } from "../../ui/AppButton";
+import { Tooltip } from "../../ui/Tooltip";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import type { FileItem } from "../../../types/file";
 import styles from "./FileManager.module.scss";
@@ -503,13 +504,16 @@ export function FileManager({
       >
         {/* Panel Header with folder button - aligned with code editor tabs */}
         <div className={styles.collapsedHeader}>
-          <AppButton
-            onClick={onToggleCollapse}
-            iconName="folder"
-            variant="secondary"
-            tone="gray"
-            size="xs"
-          />
+          <Tooltip content="Open file manager" position="bottom">
+            <AppButton
+              onClick={onToggleCollapse}
+              iconName="folder"
+              variant="secondary"
+              tone="gray"
+              size="xs"
+              aria-label="Open file manager"
+            />
+          </Tooltip>
         </div>
       </div>
     );
@@ -575,13 +579,16 @@ export function FileManager({
                 tabIndex={-1}
                 onChange={handleUploadChange}
               />
-              <AppButton
-                onClick={onToggleCollapse}
-                iconName="arrow-left-to-line"
-                variant="tertiary"
-                tone="gray"
-                size="xs"
-              />
+              <Tooltip content="Hide file manager" position="bottom">
+                <AppButton
+                  onClick={onToggleCollapse}
+                  iconName="arrow-left-to-line"
+                  variant="tertiary"
+                  tone="gray"
+                  size="xs"
+                  aria-label="Hide file manager"
+                />
+              </Tooltip>
             </div>
           </div>
         </div>

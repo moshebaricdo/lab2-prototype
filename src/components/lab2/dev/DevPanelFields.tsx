@@ -17,6 +17,10 @@ interface FieldProps {
   controlId: string;
   onChange: (value: unknown) => void;
   onReset: () => void;
+  contractValue?: unknown;
+  isContractOverridden?: boolean;
+  onContractChange?: (value: unknown) => void;
+  onContractReset?: () => void;
 }
 
 function TextField({ field, value, controlId, onChange }: FieldProps) {
@@ -328,12 +332,23 @@ export function DevPanelFieldRow({
   field,
   value,
   isOverridden,
+  contractValue,
+  isContractOverridden = false,
   onChange,
   onReset,
+  onContractChange,
+  onContractReset,
 }: FieldRowProps) {
   const Component = FIELD_COMPONENTS[field.type];
-  if (!Component) return null;
   const controlId = `dev-panel-${field.key.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+  const contractId = field.type === "boolean" && field.contract
+    ? `dev-panel-${field.contract.key.replace(/[^a-zA-Z0-9_-]/g, "-")}`
+    : undefined;
+  const hasContractEditor = field.type === "boolean" && field.contract && Boolean(value);
+  const contractText = typeof contractValue === "string" ? contractValue : "";
+  const [isContractExpanded, setIsContractExpanded] = useState(() => Boolean(contractText.trim()));
+  const showContractEditor = hasContractEditor && (isContractExpanded || Boolean(contractText.trim()));
+  if (!Component) return null;
   const isInlineControl =
     field.type === "boolean" ||
     field.type === "action" ||
@@ -347,9 +362,12 @@ export function DevPanelFieldRow({
       controlId={controlId}
       onChange={onChange}
       onReset={onReset}
+      contractValue={contractValue}
+      isContractOverridden={isContractOverridden}
+      onContractChange={onContractChange}
+      onContractReset={onContractReset}
     />
   );
-
   return (
     <div className={`${styles.fieldRow} ${isInlineControl ? styles.fieldRowInline : ""}`}>
       <div className={styles.fieldHeader}>
@@ -384,9 +402,56 @@ export function DevPanelFieldRow({
               aria-label={`Reset ${field.label}`}
             />
           )}
+          {hasContractEditor ? (
+            <Tooltip
+              content={`${showContractEditor ? "Hide" : "View/add to"} ${field.label} contract`}
+              position="top"
+              sideOffset={8}
+            >
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="pencil"
+                className={styles.contractToggleButton}
+                aria-label={`${showContractEditor ? "Hide" : "View/add to"} ${field.label} contract`}
+                aria-controls={contractId}
+                aria-expanded={showContractEditor}
+                onClick={() => setIsContractExpanded((current) => !current)}
+              />
+            </Tooltip>
+          ) : null}
           {isInlineControl ? renderedControl : null}
         </div>
       </div>
+      {showContractEditor ? (
+        <div className={styles.contractInline}>
+          <div className={styles.contractEditor}>
+            {isContractOverridden ? (
+              <div className={styles.contractEditorHeader}>
+                <AppButton
+                  variant="tertiary"
+                  tone="gray"
+                  size="xs"
+                  iconName="rotate-left"
+                  className={styles.resetButton}
+                  onClick={onContractReset}
+                  aria-label={`Reset ${field.label} contract`}
+                />
+              </div>
+            ) : null}
+            <AppTextArea
+              id={contractId}
+              value={contractText}
+              onChange={(event) => onContractChange?.(event.target.value)}
+              placeholder={field.contract?.placeholder ?? "Add to contract (optional). Write additional instructions in markdown."}
+              rows={field.contract?.rows ?? 4}
+              size="s"
+              tone="gray"
+            />
+          </div>
+        </div>
+      ) : null}
       {isInlineControl ? null : renderedControl}
     </div>
   );

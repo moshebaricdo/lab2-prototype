@@ -82,6 +82,31 @@
   }
 }
 
+.contractInline {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  margin-top: 8px;
+}
+
+.contractToggleButton {
+  flex-shrink: 0;
+}
+
+.contractEditor {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 0;
+}
+
+.contractEditorHeader {
+  display: flex;
+  min-height: 13px;
+  justify-content: flex-end;
+}
+
 .fieldHeader {
   display: flex;
   align-items: center;

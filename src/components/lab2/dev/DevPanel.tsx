@@ -129,6 +129,15 @@ export function DevPanelContent<T extends Record<string, unknown>>({
                       {group.fields.map((field) => {
                         const { currentValue, isOverridden, isSessionField } =
                           getFieldState(field);
+                        const contractKey = field.type === "boolean"
+                          ? field.contract?.key
+                          : undefined;
+                        const contractValue = contractKey
+                          ? overrideResult.getValue(contractKey)
+                          : undefined;
+                        const isContractOverridden = contractKey
+                          ? contractKey in overriddenKeys
+                          : false;
 
                         return (
                           <DevPanelFieldRow
@@ -136,6 +145,8 @@ export function DevPanelContent<T extends Record<string, unknown>>({
                             field={field}
                             value={currentValue}
                             isOverridden={isOverridden}
+                            contractValue={contractValue}
+                            isContractOverridden={isContractOverridden}
                             onChange={(value) => {
                               if (isSessionField) {
                                 onSessionValueChange?.(field.key, value);
@@ -146,6 +157,12 @@ export function DevPanelContent<T extends Record<string, unknown>>({
                             onReset={() => {
                               resetField(field);
                             }}
+                            onContractChange={contractKey
+                              ? (value) => overrideResult.setValue(contractKey, value)
+                              : undefined}
+                            onContractReset={contractKey
+                              ? () => overrideResult.resetKey(contractKey)
+                              : undefined}
                           />
                         );
                       })}

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FileItem, FileKind } from "../types/file";
 import type { ViewMode } from "../types/ui";
+import {
+  resolveDefaultOpenFile,
+  resolveOpenFilesForTree,
+} from "../lib/editor/initialOpenFiles";
 
 const FALLBACK_ROOT_FOLDER = "My Project";
 const NON_ROOT_WRAPPER_FOLDERS = new Set(["Plans"]);
@@ -484,24 +488,31 @@ export function useFileWorkspaceState(
     storageKey?: string;
     initialViewMode?: ViewMode;
     initialFileManagerCollapsed?: boolean;
+    initialOpenFilePaths?: string[];
     storageFileStructureTransform?: (fileStructure: FileItem[]) => FileItem[];
   } = {},
 ) {
   const storageKey = options.storageKey;
   const storageFileStructureTransform = options.storageFileStructureTransform;
+  const initialOpenFilePaths = options.initialOpenFilePaths;
   const [fileStructureState, setFileStructureState] = useState<FileItem[] | null>(
     () => readStoredFileStructure(storageKey) ?? (initialFileStructure ? cloneFileTree(initialFileStructure) : null),
   );
   const rootFolder = getRootFolderName(fileStructureState ?? initialFileStructure);
-  const initialFile = useMemo(
-    () => findFileByName(fileStructureState ?? initialFileStructure, "index.html"),
-    [fileStructureState, initialFileStructure],
-  );
+  const initialOpenState = useMemo(() => {
+    const tree = fileStructureState ?? initialFileStructure ?? [];
+    return resolveOpenFilesForTree(tree, {
+      initialOpenFilePaths,
+      fallback: resolveDefaultOpenFile,
+    });
+  }, []);
   const [openFolders, setOpenFolders] = useState<Set<string>>(
     new Set([rootFolder]),
   );
-  const [selectedFile, setSelectedFile] = useState<FileItem | null>(initialFile);
-  const [openFiles, setOpenFiles] = useState<FileItem[]>(initialFile ? [initialFile] : []);
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(
+    initialOpenState.selectedFile,
+  );
+  const [openFiles, setOpenFiles] = useState<FileItem[]>(initialOpenState.openFiles);
   const [viewMode, setViewMode] = useState<ViewMode>(
     () => options.initialViewMode ?? "code",
   );
