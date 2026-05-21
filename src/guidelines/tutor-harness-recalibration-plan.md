@@ -122,7 +122,7 @@ Each runner should aim to produce the right-sized response upfront:
 - Fallback responses should stay short at the source.
 - Mode prompts should specify a small Markdown contract: short paragraphs, valid bullets or numbered lists, inline code for file names/selectors, and fenced code snippets only when the mode explicitly allows examples.
 
-`responseFinalizer.ts` should remain a conservative presentation seatbelt. This should be a programmatic, rule-based cleanup pass, not a second LLM request and not a semantic summarizer. It should only do transformations that are obviously safe without understanding the lesson content: remove generic closing lines, collapse repeated blank lines, drop duplicate boilerplate caveats, and leave short or structured answers alone. It can also run a lightweight Markdown hygiene pass: normalize list spacing, remove accidental empty bullets, close or unwrap unmatched code fences, and preserve code blocks exactly when they are already well-formed. It should not invent formatting, rewrite code examples, or decide which prose belongs in a list. If a response is too long or poorly structured because the explanation itself is too broad, fix that in the mode-specific runner prompt or response contract instead of asking the finalizer to condense it. The finalizer must preserve `changes`, `saveTitle`, validation status, criteria, routing, workflow state, and the core student-facing move.
+Tutor no longer uses a response finalizer. If a response is too long or poorly structured because the explanation itself is too broad, fix that in the mode-specific runner prompt or response contract rather than post-processing the result. The runner prompts must preserve `changes`, `saveTitle`, validation status, criteria, routing, workflow state, and the core student-facing move.
 
 ## Files Likely To Change
 
@@ -167,7 +167,7 @@ Move plan build status out of Markdown content over time. `Status: Completed` in
 
 ### Phase 5: Tighten Response Contracts
 
-Update runner prompts for concise, mode-specific response shape. Keep `responseFinalizer.ts` rule-based and conservative as a final presentation guard.
+Update runner prompts for concise, mode-specific response shape. Keep response length controlled at generation time through runner style contracts.
 
 ## Non-Goals
 

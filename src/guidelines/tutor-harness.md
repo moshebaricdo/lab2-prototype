@@ -47,11 +47,14 @@ The harness lives in `src/lib/tutor`.
 - `contextBuilder.ts` builds conversation and attachment context, including image inputs.
 - `projectAnalyzer.ts` deterministically maps project files, HTML ids/classes, CSS selectors, JS DOM references, and linked assets.
 - `contextPacker.ts` selects full files, snippets, or previews within a character budget.
+- `instructionGuide.ts` deterministically derives an inspectable `InstructionGuide` from instructions Markdown. Procedural/debugging instructions become linear guides with ordered instructional steps; open-ended/creative prompt lists become choice-based guides with selectable focus options.
+- `tutorOpening.ts` deterministically derives the first Tutor-primary onboarding message from the canonical Markdown plus `InstructionGuide`. It strips worksheet labels such as "Expected Behavior" and "Do This", applies tone-specific templates, and keeps the opening stable across students without live per-student generation.
+- `instructionCoach.ts` owns deterministic guide state helpers and next-move decisions for Tutor-primary instruction delivery. The app owns the current guide state, while the coach advances the intended instructional flow or selects a focus without treating chat transcript position as progress truth.
 - `editSessionRunner.ts` is the primary code-generation path. It asks for one structured edit proposal, applies it atomically, validates it, and runs compact repair passes when needed.
 - `atomicEditApplicator.ts` applies structured `replace`, `searchReplace`, and `delete` edits to a scratch workspace as one all-or-nothing edit set.
 - `webProjectValidator.ts` adds web-specific checks on top of the base validator, including CSS brace balance, duplicate HTML ids, and browser-script syntax.
 - `editValidator.ts` normalizes and validates final proposal changes, including cross-file references, behavior wiring, edit intent, and `saveTitle`.
-- `responseFinalizer.ts` performs conservative message-only cleanup after guidance/planning/edit/tool-loop results are produced. It removes generic closers and condenses overlong proposal summaries without changing file edits, validation results, or save titles.
+- `runnerContracts.ts` selects route/dev-panel runner contracts and always adds built-in response-style contracts for Help, Plan, and Build. These contracts keep Tutor's student-facing messages short and useful at generation time instead of relying on a later cleanup pass.
 - `openAiProvider.ts` owns API-key lookup, OpenAI fetch configuration, model settings, structured JSON parsing, guidance calls, and tool-call transport.
 - `toolLoopRunner.ts` is the fallback edit path. It runs bounded scratch-workspace file tools, compacts tool history, validates final scratch state, and can salvage valid accumulated edits after repeated stale tool failures.
 - `workspaceEditor.ts` is the scratch in-memory workspace used by both structured edits and tool calls.
@@ -65,19 +68,20 @@ The harness lives in `src/lib/tutor`.
 1. Level pages choose `tutorMode={{ kind: "mock" }}` or `tutorMode={{ kind: "functional" }}`.
 2. `AiTutorPanel` appends the student message and starts the thinking state when a mock or functional response is pending.
 3. In functional mode, `WebLab2LevelPage.tsx` receives the submitted message plus visible conversation and current project files.
-4. The composer normally sends `requestMode: "auto"` and hides the manual selector. When the dev-controlled selector is shown, it can send `requestMode: "auto" | "build" | "plan" | "help"`. Auto uses request inference; Build, Plan, and Help force edit, planning, or guidance routing.
-5. `WebLab2LevelPage.tsx` also passes a Tutor support context. Standalone projects use `standalone-project`, where broad project-building requests can become edits. Curriculum/instruction levels use `curriculum-level`, where explanation, debugging, ideas, and instruction-breakdown requests stay guidance unless the student explicitly asks Tutor to implement a change. Direct implementation phrasing such as "make", "update", "improve", "help me make", "I need you to update", or "the instructions say to ask Tutor to make..." routes to code generation rather than Socratic guidance.
-6. `tutorClient()` resolves a policy with `resolveTutorRequestPolicy()` from `requestIntent.ts`, including intent and whether workspace or plan edits are allowed.
-7. If the message is a conceptual, how-to, instruction-breakdown, debugging, or project-navigation question, `guidanceRunner.ts` returns a project-aware explanation and no file changes.
-8. If the message asks to plan, brainstorm, ask guiding questions, or make a spec before building in a standalone context, `planningRunner.ts` returns a constrained Markdown proposal for `Plans/PROJECT_PLAN.md`.
-9. Otherwise, explicit edit requests go to `editSessionRunner.ts`, which analyzes the project, packs compact context, and asks the provider for structured JSON edits.
-10. `atomicEditApplicator.ts` applies the entire structured edit set to a scratch workspace. If any edit fails, no visible project files are changed.
-11. `webProjectValidator.ts` validates the resulting proposal through base edit rules and web-specific checks.
-12. If validation fails, `editSessionRunner.ts` sends compact repair context and validation errors back to the model for up to two repair attempts.
-13. If the staged edit session succeeds, `tutorClient()` finalizes only the student-facing message, then returns that message, optional `saveTitle`, and validated changes.
-14. If there is no API key, `fallbackTutor.ts` returns a no-key educational fallback.
-15. If the staged edit session fails after repair, `tutorClient()` falls back to `toolLoopRunner.ts`.
-16. If the tool loop also fails validation, `fallbackTutor.ts` returns a safe "try again" response with no changes.
+4. The student composer stays mode-neutral. Web Lab 2 infers whether a request is Help, Plan, or Build, then checks route/dev-panel capabilities before calling the model.
+5. `WebLab2LevelPage.tsx` also passes a normalized Tutor policy. Standalone projects use `standalone-project`, where broad project-building requests can become edits. Curriculum/instruction levels use `curriculum-level`, where explanation, debugging, ideas, and instruction-breakdown requests stay guidance unless the student explicitly asks Tutor to implement a change. Direct implementation phrasing such as "make", "update", "improve", "help me make", "I need you to update", or "the instructions say to ask Tutor to make..." routes to code generation when Build is enabled.
+6. Build, Plan, and Help can be enabled or disabled independently by route props or Web Lab 2 dev-panel overrides. Disabled capabilities are denied before model calls, so levels can allow guidance/debugging while preventing direct project code generation.
+7. `tutorClient()` resolves a policy with `resolveTutorRequestPolicy()` from `requestIntent.ts`, including intent and whether workspace or plan edits are allowed.
+8. If the message is a conceptual, how-to, instruction-breakdown, debugging, or project-navigation question, `guidanceRunner.ts` returns a project-aware explanation and no file changes.
+9. If the message asks to plan, brainstorm, ask guiding questions, or make a spec before building in a standalone context, `planningRunner.ts` returns a constrained Markdown proposal for `Plans/PROJECT_PLAN.md`.
+10. Otherwise, explicit edit requests go to `editSessionRunner.ts`, which analyzes the project, packs compact context, and asks the provider for structured JSON edits.
+11. `atomicEditApplicator.ts` applies the entire structured edit set to a scratch workspace. If any edit fails, no visible project files are changed.
+12. `webProjectValidator.ts` validates the resulting proposal through base edit rules and web-specific checks.
+13. If validation fails, `editSessionRunner.ts` sends compact repair context and validation errors back to the model for up to two repair attempts.
+14. If the staged edit session succeeds, `tutorClient()` returns the runner's student-facing message, optional `saveTitle`, and validated changes.
+15. If there is no API key, Tutor returns a direct "Add a Tutor API key in Lab Settings first" message instead of canned guidance, planning, edits, or validation.
+16. If the staged edit session fails after repair, `tutorClient()` falls back to `toolLoopRunner.ts`.
+17. If the tool loop also fails validation, `fallbackTutor.ts` returns a safe "try again" response with no changes.
 
 Python Lab skips request-intent routing entirely. It calls the guidance runner directly through `pythonTutorClient()`, so student phrasing like "fix my loop" is answered as debugging guidance rather than routed to planning, structured edits, or tool calls.
 
@@ -89,11 +93,12 @@ Guidance mode is for questions such as "can you explain functions?", "what is a 
 - Project-adjacent how-to phrasing stays guidance: "How would I make my map interactive?" should teach strategy and likely files, while "Let's make the map interactive" routes to edit generation.
 - `guidanceRunner.ts` still receives packed project context so it can point to likely files, selectors, functions, ids, or snippets.
 - In curriculum-level Web Lab contexts, guidance is scoped to the level's instructions and current project code. It should avoid generic browser troubleshooting such as saving files, clearing cache, hard refreshes, opening devtools/F12, or inspecting the browser console, and it should not suggest optional stretch features outside the level goals.
-- Curriculum help uses a light Socratic disclosure policy for instruction, hint, and debug questions: start with the goal, give one small next check, ask at most one focused observation question, and avoid revealing exact project-only selectors, ids, values, or replacement text unless the student supplied them or explicitly asks for the answer.
+- Web Lab 2 help uses a light Socratic disclosure policy for instruction, hint, and debug questions: start with the goal, give one small next check, ask at most one focused observation question, and avoid revealing exact project-only selectors, ids, values, or replacement text unless the student supplied them or explicitly asks for the answer.
 - Socratic guidance must not override the code-generation contract. When a curriculum level instructs students to ask Tutor to make styling or code updates, that direct implementation request should produce a proposal instead of saying Tutor cannot make the change.
-- Web Lab validation routes can pass `levelProgress`, a compact snapshot of the latest review card. Guidance should use passed criteria to avoid re-teaching completed work and should target hints/debug help at `nextIncompleteCriterion` when present.
+- Web Lab validation routes can pass `levelProgress`, a compact snapshot of the latest review card. Guidance should use passed criteria to avoid re-teaching completed work and should target hints/debug help at `nextIncompleteCriterion` when present. Review cards may use short student-facing criterion labels while preserving fuller evaluator requirements in `requirements`.
+- Validation review configs can set `followUpPreference: "debug"` or `"suggestion"` to choose the second follow-up chip beside Hint. Use Debug for bug-fix/troubleshooting levels and Suggestion for creative, styling, or labeling/refinement levels.
 - Guidance responses always return `changes: []`.
-- The response finalizer may remove generic closing lines or trim very long guidance, but it must preserve the answer and never introduce file changes.
+- Guidance prompts should keep answers short at the source: answer the immediate question, offer one concrete next check, and avoid generic closing lines.
 - The fallback guidance copy also returns no changes.
 - Python guidance uses the same no-change contract, but its system prompt is scoped to Python concepts, runtime errors, `input()`, stdout/stderr, functions, loops, lists, conditionals, and project-specific debugging.
 
@@ -142,7 +147,7 @@ Use `replace` only when the model can provide the complete final file. Use `sear
 
 Edit responses must give the student a useful summary. The staged edit and tool-loop paths ask the model to name the main files or page areas changed and explain why the change helps. If the model returns generic copy such as "Updated the project," the harness replaces it with a diff-aware summary that names the changed file(s) and points the student to the proposal diff.
 
-After edit/planning/tool-loop results are validated, `responseFinalizer.ts` may shorten only the returned message when it is overly long. It preserves `changes` and `saveTitle`, keeps a concrete first sentence, and keeps a test/review sentence when available.
+After edit/planning/tool-loop results are validated, `tutorClient()` returns the runner result directly. Keep student-facing response length controlled by runner prompts and contracts, not by post-generation summarization.
 
 ## Tool Loop Fallback
 
@@ -167,6 +172,7 @@ Context is split between broad conversation/attachment handling and compact proj
 - Files attached through the composer upload are sent as `upload` context with readable metadata/content and image bytes for uploaded images.
 - Project files dragged from the file manager or tab row are sent as `project` context when file content is available.
 - Curriculum Web Lab routes pass the resolved instructions Markdown into every functional Tutor request as `levelInstructionsMarkdown`, separate from project files and dev-only prompt addenda. Guidance answers instruction-help questions from this field instead of giving generic advice about rereading directions.
+- Web Lab routes can opt into Tutor-primary instruction delivery with `tutorInstructionsDelivery`. The route still treats `instructions.md` / `instructionsMarkdown` as the authoritative student-facing fallback, but derives either a linear or choice-based `InstructionGuide` plus a separate `TutorOpening`. The opening is a short conversational orientation; subsequent typed conversation lets the app pass the current `instructionFocus` into normal guidance. Student typed conversation drives progression; the guide does not expose step/focus chips or return canned chip replies. Seeded guide messages are reproducible from the current guide/opening and are not the source of truth.
 - Validation review cards are serialized into conversation context as compact progress snapshots, and the latest page-level review is passed into Tutor requests as `levelProgress`. This keeps follow-up hints and debug guidance aligned to completed versus incomplete checklist items even after the visible card scrolls up.
 - `projectAnalyzer.ts` ignores image files, uses proposed content during pending proposals, resolves linked scripts/stylesheets, and extracts Python imports/functions/classes for `.py` files.
 - `contextPacker.ts` sends a manifest and project map first, then includes high-priority full files, snippets, or previews within budget. Python files receive relevance boosts for Python/debugging questions so they remain visible in packed context.
@@ -194,6 +200,7 @@ Validation protects the workspace from common model failure modes:
 ## Version History And Workspace State
 
 - `useFileWorkspaceState` persists the accepted file tree in `sessionStorage` so a hard refresh does not reset the current workspace to starter code.
+- `useChatState` persists AI Tutor messages and draft input in `sessionStorage` under a route-scoped key (`weblab2:chat:*` or `pythonlab:*:chat`). Pending code-change cards are marked rejected on restore because AI proposal state is not persisted across reloads.
 - File workspace state supports both rootless project trees and single-folder project wrappers. A folder is treated as the root wrapper only when it is the sole top-level item.
 - AI proposal state is still temporary until accepted.
 - Accepting a proposal commits `proposedContent` into file content and passes the accepted tree to `handleSaveAiVersion`.
@@ -205,8 +212,10 @@ Validation protects the workspace from common model failure modes:
 ## Development Guidance
 
 - Change guidance/planning/edit routing in `requestIntent.ts`.
-- Change manual mode selector wiring through `types/tutor.ts`, `AiTutorComposer.tsx`, `Sidebar*.tsx`, and `WebLab2LevelPage.tsx`.
-- Tutor interaction diagnostics use `src/lib/tutor/tutorDebugLogger.ts` and log UI actions, routing, validation review, model-path selection, proposal accept/reject, and finalized results to the browser console with the `[TutorFlow]` prefix. Set `localStorage.setItem("weblab:tutorDebugLogging", "off")` to silence this local debugging stream.
+- Change Web Lab 2 Tutor capability presets, Build/Plan/Help gates, and scoped contract addenda in `pages/weblab2/tutorDevSettings.ts`, `pages/weblab2/webLab2DevPanel.ts`, and `WebLab2LevelPage.tsx`.
+- Change Tutor-primary opening copy in `tutorOpening.ts`, instruction guide derivation in `instructionGuide.ts`, and deterministic guide-state behavior in `instructionCoach.ts`. Keep intended instruction flow separate from `levelProgress`; delivering or advancing a guide step must not mark validation criteria complete.
+- Change runner-scoped contract prompt selection in `runnerContracts.ts` and `tutorClient.ts`.
+- Tutor interaction diagnostics use `src/lib/tutor/tutorDebugLogger.ts` and log UI actions, routing, validation review, model-path selection, proposal accept/reject, and returned runner results to the browser console with the `[TutorFlow]` prefix. Set `localStorage.setItem("weblab:tutorDebugLogging", "off")` to silence this local debugging stream.
 - Change guidance prompt behavior in `guidanceRunner.ts`.
 - Change planning prompt behavior in `planningRunner.ts`.
 - Change structured edit prompt behavior in `editSessionRunner.ts`.
