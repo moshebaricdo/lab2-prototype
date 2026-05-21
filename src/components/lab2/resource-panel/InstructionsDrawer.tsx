@@ -15,7 +15,11 @@ interface InstructionsDrawerProps {
   onHeightChange?: (height: number) => void;
   onOpenChange?: (isOpen: boolean) => void;
   initialHeightRatio?: number;
+  defaultOpen?: boolean;
+  openSignal?: number;
   visualCue?: InstructionsDrawerVisualCue;
+  showLabel?: string;
+  hideLabel?: string;
   children?: React.ReactNode;
 }
 
@@ -24,11 +28,15 @@ export function InstructionsDrawer({
   onHeightChange,
   onOpenChange,
   initialHeightRatio = 0.6,
+  defaultOpen = true,
+  openSignal = 0,
   visualCue = "none",
+  showLabel = "Show Instructions",
+  hideLabel = "Hide Instructions",
   children,
 }: InstructionsDrawerProps) {
   const minimumContentHeight = 150;
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [height, setHeight] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
   const [isHoveringHandle, setIsHoveringHandle] = useState(false);
@@ -39,6 +47,8 @@ export function InstructionsDrawer({
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const previousDefaultOpenRef = useRef(defaultOpen);
+  const previousOpenSignalRef = useRef(openSignal);
 
   const getUpperLimit = () => {
     const viewportFallback = typeof window !== "undefined" ? window.innerHeight - 200 : 600;
@@ -70,6 +80,18 @@ export function InstructionsDrawer({
   useEffect(() => {
     onOpenChange?.(isOpen);
   }, [isOpen, onOpenChange]);
+
+  useEffect(() => {
+    if (previousDefaultOpenRef.current === defaultOpen) return;
+    previousDefaultOpenRef.current = defaultOpen;
+    setIsOpen(defaultOpen);
+  }, [defaultOpen]);
+
+  useEffect(() => {
+    if (previousOpenSignalRef.current === openSignal) return;
+    previousOpenSignalRef.current = openSignal;
+    setIsOpen(true);
+  }, [openSignal]);
 
   useEffect(() => {
     if (isOpen) {
@@ -237,7 +259,7 @@ export function InstructionsDrawer({
           icon={<FontAwesomeIcon icon={faCircleInfo} />}
           onClick={() => setIsOpen((prev) => !prev)}
         >
-          {isOpen ? "Hide Instructions" : "Show Instructions"}{" "}
+          {isOpen ? hideLabel : showLabel}{" "}
           <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} />
         </AppButton>
       </div>

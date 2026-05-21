@@ -8,6 +8,7 @@ import { ValidationPanel } from "./views/ValidationPanel";
 import { VersionHistory } from "./views/VersionHistory";
 import { InstructionsPanel } from "./views/InstructionsPanel";
 import { AiTutorPanel } from "./views/ai-tutor/AiTutorPanel";
+import { downloadChatLog } from "./views/ai-tutor/exportChatLog";
 import { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
 import { RubricPanel } from "./views/RubricPanel";
 import { ResourcesPanel } from "./views/ResourcesPanel";
@@ -41,8 +42,10 @@ interface SidebarPanelContentProps {
   onContinue: SidebarProps["onContinue"];
   continueLabel: SidebarProps["continueLabel"];
   showInstructionsDrawer: NonNullable<SidebarProps["showInstructionsDrawer"]>;
+  instructionsDrawerDefaultOpen: NonNullable<SidebarProps["instructionsDrawerDefaultOpen"]>;
   instructionsDrawerInitialHeightRatio: SidebarProps["instructionsDrawerInitialHeightRatio"];
   instructionsDrawerVisualCue: NonNullable<SidebarProps["instructionsDrawerVisualCue"]>;
+  instructionGuide: SidebarProps["instructionGuide"];
   aiTutorInputExperiment: NonNullable<SidebarProps["aiTutorInputExperiment"]>;
   mockTutorConfig: NonNullable<SidebarProps["mockTutorConfig"]>;
   onAddFileToProject: SidebarProps["onAddFileToProject"];
@@ -119,8 +122,10 @@ export function SidebarPanelContent({
   onContinue,
   continueLabel,
   showInstructionsDrawer,
+  instructionsDrawerDefaultOpen,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue,
+  instructionGuide,
   aiTutorInputExperiment,
   mockTutorConfig,
   onAddFileToProject,
@@ -165,6 +170,17 @@ export function SidebarPanelContent({
         right={
           activeTab === "ai-tutor" ? (
             <div className="flex gap-1">
+              <Tooltip content="Export chat log" position="bottom">
+                <AppButton
+                  variant="tertiary"
+                  tone="gray"
+                  size="xs"
+                  iconName="download"
+                  onClick={() => downloadChatLog(chatMessages)}
+                  disabled={chatMessages.length === 0}
+                  aria-label="Export AI Tutor chat log"
+                />
+              </Tooltip>
               <Tooltip content="Clear chat" position="bottom">
                 <AppButton
                   variant="tertiary"
@@ -207,8 +223,10 @@ export function SidebarPanelContent({
           chatInput={chatInput}
           setChatInput={setChatInput}
           showInstructionsDrawer={showInstructionsDrawer}
+          instructionsDrawerDefaultOpen={instructionsDrawerDefaultOpen}
           instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
           instructionsDrawerVisualCue={instructionsDrawerVisualCue}
+          instructionGuide={instructionGuide}
           inputExperiment={aiTutorInputExperiment}
           mockTutorConfig={mockTutorConfig}
           onAddFileToProject={onAddFileToProject}

@@ -50,8 +50,10 @@ export function Sidebar({
   surfaceVariant = "edge",
   compact = false,
   showInstructionsDrawer = true,
+  instructionsDrawerDefaultOpen = true,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
+  instructionGuide,
   aiTutorInputExperiment = "default",
   mockTutorConfig = defaultMockTutorConfig,
   onAddFileToProject,
@@ -322,8 +324,10 @@ export function Sidebar({
             onContinue={onContinue}
             continueLabel={continueLabel}
             showInstructionsDrawer={showInstructionsDrawer}
+            instructionsDrawerDefaultOpen={instructionsDrawerDefaultOpen}
             instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
             instructionsDrawerVisualCue={instructionsDrawerVisualCue}
+            instructionGuide={instructionGuide}
             aiTutorInputExperiment={aiTutorInputExperiment}
             mockTutorConfig={mockTutorConfig}
             onAddFileToProject={onAddFileToProject}

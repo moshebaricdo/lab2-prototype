@@ -18,6 +18,7 @@ import type {
 } from "../../../../../types/chat";
 import type {
   AiTutorInputExperiment,
+  InstructionGuide,
   MockTutorConfig,
   TutorContextFile,
   TutorRequestMode,
@@ -41,10 +42,14 @@ import {
   createNewProjectPlanQuestionnaireMessage,
   normalizeNewProjectPlanAnswers,
 } from "./newProjectPlanQuestionnaire";
+import { getInstructionGuideSignature } from "../../../../../lib/tutor/instructionGuide";
+import { buildTutorOpening, formatTutorOpening } from "../../../../../lib/tutor/tutorOpening";
 import { logTutorEvent } from "../../../../../lib/tutor/tutorDebugLogger";
 import styles from "./AiTutorPanel.module.scss";
 
 const FOCUS_TUTOR_INPUT_EVENT = "weblab:focus-tutor-input";
+type ValidationReviewRequestSource = "card" | "composer";
+type ValidationReviewFollowUpAction = "hint" | "debug" | "suggestion";
 
 interface CodeAttachmentContext {
   content: string;
@@ -70,8 +75,10 @@ interface AiTutorPanelProps {
   chatInput: string;
   setChatInput: (input: string) => void;
   showInstructionsDrawer?: boolean;
+  instructionsDrawerDefaultOpen?: boolean;
   instructionsDrawerInitialHeightRatio?: number;
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
+  instructionGuide?: InstructionGuide;
   inputExperiment?: AiTutorInputExperiment;
   mockTutorConfig?: MockTutorConfig;
   onAddFileToProject?: (fileName: string) => void;
@@ -124,41 +131,23 @@ function truncatePreviewText(text: string) {
   return `${normalized.slice(0, 29)}...`;
 }
 
-function validationReviewSubject(review: ValidationReviewCardData) {
-  const subject = review.title
-    .replace(/\s+review\b/i, "")
-    .replace(/\s+assessment\b/i, "")
-    .trim()
-    .toLowerCase();
-
-  if (!subject) return "this level";
-  if (/\bbug$/i.test(subject)) return subject.replace(/\bbug$/i, "fix");
-  return subject;
-}
-
 export function buildValidationReviewOfferMessage(
   submittedContent: string,
   review: ValidationReviewCardData,
 ) {
-  const subject = validationReviewSubject(review);
   const hasMultipleRequirements = (review.requirements?.length ?? 0) > 1;
-  const reviewScope = hasMultipleRequirements
-    ? "I'll compare your current project with this level's goals and show which parts look complete and what to work on next."
-    : "I'll compare your current project with this level's goal and let you know if it looks ready.";
 
   if (/\b(works|worked|working|fixed|done|finished|complete|completed)\b/i.test(submittedContent)) {
-    return hasMultipleRequirements
-      ? `Great, sounds like you made progress on ${subject}. ${reviewScope}`
-      : `Great, sounds like you finished ${subject}. ${reviewScope}`;
+    return "Great. I can check your work now and let you know whether you're ready to continue.";
   }
 
   if (/\b(check|review|validate|grade)\b/i.test(submittedContent)) {
     return hasMultipleRequirements
-      ? `Let's check your progress on ${subject}. ${reviewScope}`
-      : `Let's check your ${subject}. ${reviewScope}`;
+      ? "I can check your progress and show what looks complete and what to work on next."
+      : "I can check your work and let you know whether you're ready to continue.";
   }
 
-  return `Before you move on, let's check your ${subject}. ${reviewScope}`;
+  return "When you're ready, I can check your work and let you know whether you're ready to continue.";
 }
 
 function shortCriterionLabel(label: string) {
@@ -195,18 +184,14 @@ function validationReviewRetryAction(
 }
 
 export function buildValidationReviewResultMessage(review: ValidationReviewCardData) {
-  const subject = validationReviewSubject(review);
   const progress = buildLevelProgressSnapshot(review);
   const passedCount = progress?.passedCriteria.length ?? 0;
   const incompleteCount = progress?.incompleteCriteria.length ?? 0;
 
   if (review.status === "likely_complete") {
-    const completedSummary = passedCount > 1
-      ? `${passedCount} criteria are complete`
-      : "the level goal is complete";
     return passedCount > 1
-      ? `Nice work, your ${subject} passes the level goals: ${completedSummary}. You can continue now.`
-      : `Nice work, your ${subject} passes the level goal: ${completedSummary}. You can continue now.`;
+      ? "Nice work, the checklist looks complete. You can continue now."
+      : "Nice work, this looks ready to continue.";
   }
 
   if (passedCount > 0 && incompleteCount > 0) {
@@ -221,10 +206,10 @@ export function buildValidationReviewResultMessage(review: ValidationReviewCardD
   }
 
   if (review.status === "in_progress") {
-    return `You're making progress on your ${subject}. ${validationReviewRetryAction(review, progress)}`;
+    return `You're making progress. ${validationReviewRetryAction(review, progress)}`;
   }
 
-  return `Start with your ${subject}, then check again when you have made the update.`;
+  return "I don't see a project change yet. Make one focused update, then check again.";
 }
 
 function latestSummaryReview(messages: ChatMessage[]) {
@@ -236,7 +221,7 @@ function latestSummaryReview(messages: ChatMessage[]) {
 }
 
 export function buildValidationReviewActionPrompt(
-  action: "hint" | "debug",
+  action: ValidationReviewFollowUpAction,
   review?: ValidationReviewCardData | null,
 ) {
   const progress = buildLevelProgressSnapshot(review);
@@ -249,7 +234,28 @@ export function buildValidationReviewActionPrompt(
     return `Help me work through${target} without giving away the full answer. Ask me what I tried first, then guide me toward what to test next.`;
   }
 
+  if (action === "suggestion") {
+    return `Give me one concrete suggestion${target}. Keep it focused on my current project and explain why it would help.`;
+  }
+
   return `Give me one small hint${target}. Do not tell me the exact fix yet.`;
+}
+
+function validationReviewActionDisplayLabel(action: ValidationReviewFollowUpAction) {
+  if (action === "debug") return "Help me debug";
+  if (action === "suggestion") return "Give me a suggestion";
+  return "Give me a hint";
+}
+
+export function buildInstructionGuideSeedMessage(guide: InstructionGuide): ChatMessage {
+  const opening = buildTutorOpening(guide.fallbackMarkdown, guide);
+
+  return {
+    role: "assistant",
+    content: formatTutorOpening(opening),
+    instructionGuide: guide,
+    instructionGuideSignature: getInstructionGuideSignature(guide),
+  };
 }
 
 function hideValidationReviewOfferActionsWithAlert(messages: ChatMessage[]) {
@@ -297,8 +303,10 @@ export function AiTutorPanel({
   chatInput,
   setChatInput,
   showInstructionsDrawer = true,
+  instructionsDrawerDefaultOpen = true,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
+  instructionGuide,
   inputExperiment = "default",
   mockTutorConfig,
   onAddFileToProject,
@@ -337,7 +345,7 @@ export function AiTutorPanel({
   const pendingAssistantScrollIndexRef = useRef<number | null>(null);
   const [maxDrawerHeight, setMaxDrawerHeight] = useState<number | null>(null);
   const [drawerHeight, setDrawerHeight] = useState(0);
-  const [drawerIsOpen, setDrawerIsOpen] = useState(true);
+  const [drawerIsOpen, setDrawerIsOpen] = useState(instructionsDrawerDefaultOpen);
   const [isDragOverInput, setIsDragOverInput] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<string[]>(
     mockTutorConfig?.initialAttachments ?? [],
@@ -347,6 +355,8 @@ export function AiTutorPanel({
   const [codeAttachmentContexts, setCodeAttachmentContexts] = useState<Record<string, CodeAttachmentContext>>({});
   const [isThinking, setIsThinking] = useState(false);
   const [isValidationReviewRunning, setIsValidationReviewRunning] = useState(false);
+  const [validationReviewRequestSource, setValidationReviewRequestSource] =
+    useState<ValidationReviewRequestSource | null>(null);
   const [generatedTutorResponse, setGeneratedTutorResponse] = useState<ChatMessage | null>(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
@@ -364,6 +374,9 @@ export function AiTutorPanel({
   const effectiveIsThinking = isThinking || isRequestRunning;
   const previousChatMessageCountRef = useRef(chatMessages.length);
   const previousEffectiveIsThinkingRef = useRef(effectiveIsThinking);
+  const instructionGuideSignature = instructionGuide
+    ? getInstructionGuideSignature(instructionGuide)
+    : "";
 
   const resetComposerState = useCallback(() => {
     setAttachedFiles([]);
@@ -399,6 +412,7 @@ export function AiTutorPanel({
     hasSeededOnMountRef.current = true;
     requestSerialRef.current += 1;
     setIsThinking(false);
+    setValidationReviewRequestSource(null);
     setGeneratedTutorResponse(null);
     resetComposerState();
   }, [clearChatSignal, resetComposerState]);
@@ -449,6 +463,7 @@ export function AiTutorPanel({
     lastQuestionnaireSignalRef.current = newProjectPlanQuestionnaireSignal;
     requestSerialRef.current += 1;
     setIsThinking(false);
+    setValidationReviewRequestSource(null);
     setGeneratedTutorResponse(null);
     setChatInput("");
     setTutorRequestMode("plan");
@@ -575,6 +590,27 @@ export function AiTutorPanel({
     hasSeededOnMountRef.current = true;
     setChatMessages(seeded);
   }, [chatMessages.length, mockTutorConfig, setChatMessages]);
+
+  useEffect(() => {
+    if (!instructionGuide) return;
+    const seededMessage = buildInstructionGuideSeedMessage(instructionGuide);
+    const currentMessages = chatMessagesRef.current;
+
+    if (currentMessages.length === 0) {
+      pendingAssistantScrollIndexRef.current = 0;
+      setChatMessages([seededMessage]);
+      return;
+    }
+
+    if (
+      currentMessages.length === 1 &&
+      currentMessages[0]?.instructionGuide &&
+      currentMessages[0]?.instructionGuideSignature !== instructionGuideSignature
+    ) {
+      pendingAssistantScrollIndexRef.current = 0;
+      setChatMessages([seededMessage]);
+    }
+  }, [instructionGuide, instructionGuideSignature, setChatMessages]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -844,14 +880,16 @@ export function AiTutorPanel({
     scrollToBottom();
   };
 
-  const appendValidationReview = useCallback(() => {
+  const appendValidationReview = useCallback((source: ValidationReviewRequestSource = "card") => {
     if (!onValidationReview || effectiveIsThinking || hasPendingAiChanges) return;
-    logTutorEvent("validation review requested from card", {
+    logTutorEvent("validation review requested", {
+      source,
       conversationTurns: chatMessagesRef.current.length,
       hasPendingAiChanges,
     });
     setIsThinking(true);
     setIsValidationReviewRunning(true);
+    setValidationReviewRequestSource(source);
 
     let reviewPromise: Promise<ValidationReviewCardData>;
     try {
@@ -860,6 +898,7 @@ export function AiTutorPanel({
       console.error("[TutorPanel] Validation review failed", error);
       setIsThinking(false);
       setIsValidationReviewRunning(false);
+      setValidationReviewRequestSource(null);
       appendTutorResponse({
         role: "assistant",
         content: "I had trouble checking your work. Try again in a moment.",
@@ -882,6 +921,7 @@ export function AiTutorPanel({
         };
         setIsThinking(false);
         setIsValidationReviewRunning(false);
+        setValidationReviewRequestSource(null);
         const nextMessages = [
           ...hideValidationReviewOfferActionsWithAlert(chatMessagesRef.current),
           reviewMessage,
@@ -896,6 +936,7 @@ export function AiTutorPanel({
         console.error("[TutorPanel] Validation review failed", error);
         setIsThinking(false);
         setIsValidationReviewRunning(false);
+        setValidationReviewRequestSource(null);
         const nextMessages = [...chatMessagesRef.current, {
           role: "assistant",
           content: "I had trouble checking your work. Try again in a moment.",
@@ -912,25 +953,13 @@ export function AiTutorPanel({
     setChatMessages,
   ]);
 
-  const handleValidationReviewAction = useCallback((action: "hint" | "debug") => {
-    if (effectiveIsThinking || hasPendingAiChanges) return;
-    const prompt = buildValidationReviewActionPrompt(
-      action,
-      latestSummaryReview(chatMessagesRef.current),
-    );
-    logTutorEvent("validation review follow-up action", {
-      action,
-      promptPreview: prompt.slice(0, 180),
-    });
-    setTutorRequestMode("help");
-    setChatInput(prompt);
-    window.dispatchEvent(new CustomEvent(FOCUS_TUTOR_INPUT_EVENT));
-  }, [
-    effectiveIsThinking,
-    hasPendingAiChanges,
-    setChatInput,
-    setTutorRequestMode,
-  ]);
+  const requestComposerValidationReview = useCallback(() => {
+    appendValidationReview("composer");
+  }, [appendValidationReview]);
+
+  const requestCardValidationReview = useCallback(() => {
+    appendValidationReview("card");
+  }, [appendValidationReview]);
 
   const startTutorRequest = (
     submittedContent: string,
@@ -997,6 +1026,49 @@ export function AiTutorPanel({
     } else {
       setIsThinking(false);
     }
+  };
+
+  const handleValidationReviewAction = (action: ValidationReviewFollowUpAction) => {
+    if (effectiveIsThinking || hasPendingAiChanges) return;
+    const submittedContent = buildValidationReviewActionPrompt(
+      action,
+      latestSummaryReview(chatMessagesRef.current),
+    );
+    logTutorEvent("validation review follow-up action", {
+      action,
+      promptPreview: submittedContent.slice(0, 180),
+    });
+
+    const reviewIndex = [...chatMessagesRef.current]
+      .reverse()
+      .findIndex((message) => message.validationReview?.kind === "summary");
+    const latestReviewIndex = reviewIndex === -1
+      ? -1
+      : chatMessagesRef.current.length - 1 - reviewIndex;
+    const updatedMessages = latestReviewIndex === -1
+      ? chatMessagesRef.current
+      : chatMessagesRef.current.map((message, index) =>
+          index === latestReviewIndex
+            ? { ...message, validationReviewFollowUpAction: action }
+            : message
+        );
+    const newUserMsg: ChatMessage = {
+      role: "user",
+      content: validationReviewActionDisplayLabel(action),
+    };
+    const newMessages = [...updatedMessages, newUserMsg];
+
+    setChatInput("");
+    setChatMessages(newMessages);
+    setGeneratedTutorResponse(null);
+    resetComposerState();
+    startTutorRequest(
+      submittedContent,
+      newMessages,
+      "help",
+      "I had trouble preparing that guidance. Try clicking the suggestion again.",
+    );
+    scrollToBottom();
   };
 
   const handleNewProjectPlanQuestionnaireSubmit = (
@@ -1175,7 +1247,10 @@ export function AiTutorPanel({
             onHeightChange={setDrawerHeight}
             onOpenChange={setDrawerIsOpen}
             initialHeightRatio={instructionsDrawerInitialHeightRatio}
+            defaultOpen={instructionsDrawerDefaultOpen}
             visualCue={instructionsDrawerVisualCue}
+            showLabel={instructionGuide ? "Show Full Instructions" : undefined}
+            hideLabel={instructionGuide ? "Hide Full Instructions" : undefined}
           >
             {instructionsContent}
           </InstructionsDrawer>
@@ -1191,6 +1266,11 @@ export function AiTutorPanel({
         chatMessages={chatMessages}
         isThinking={effectiveIsThinking}
         autoCompleteThinking={!onTutorSubmit}
+        thinkingLabel={
+          isValidationReviewRunning && validationReviewRequestSource === "composer"
+            ? "Evaluating"
+            : undefined
+        }
         inputExperiment={inputExperiment}
         onThinkingComplete={handleThinkingComplete}
         emptyStateTitle={emptyStateTitle}
@@ -1200,7 +1280,7 @@ export function AiTutorPanel({
         onCodeChangeAction={handleCodeChangeAction}
         onNewProjectPlanQuestionnaireSubmit={handleNewProjectPlanQuestionnaireSubmit}
         interactiveCardsDisabled={effectiveIsThinking || hasPendingAiChanges}
-        onValidationReviewRequest={appendValidationReview}
+        onValidationReviewRequest={requestCardValidationReview}
         onValidationReviewAction={handleValidationReviewAction}
         onValidationReviewContinue={onValidationReviewContinue}
         validationReviewContinueLabel={validationReviewContinueLabel}
@@ -1226,6 +1306,8 @@ export function AiTutorPanel({
           fileInputRef={fileInputRef}
           canSend={canSend}
           disabled={composerDisabled}
+          onCheckWork={onValidationReview ? requestComposerValidationReview : undefined}
+          checkWorkDisabled={isValidationReviewRunning}
           onSend={handleSendMessage}
           onRemoveAttachedFile={removeAttachedFile}
           onUploadFileSelection={handleUploadFileSelection}

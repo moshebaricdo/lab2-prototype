@@ -15,6 +15,10 @@ import {
   useLevelShareMode,
   type ShareModeConfig,
 } from "../../hooks/useLevelShareMode";
+import {
+  isProgressionLevelLinks,
+  mapLevelLinksWithShareMode,
+} from "../../lib/levelShareLinks";
 import { AnnotationOverlay } from "./dev/AnnotationOverlay";
 import { Dialog } from "../ui/Dialog";
 import { AppButton } from "../ui/AppButton";
@@ -60,6 +64,11 @@ export function Lab2Shell(props: Lab2ShellProps) {
         ),
   );
 
+  const hasProgressionLevelLinks = isProgressionLevelLinks(
+    topNavigationProps?.levelLinks,
+  );
+  const allowLockedShareProgressionNavigation =
+    isLockedShareMode && hasProgressionLevelLinks;
   const shouldShowTopNavigationContinue =
     isLockedShareMode
       ? false
@@ -68,8 +77,14 @@ export function Lab2Shell(props: Lab2ShellProps) {
         : topNavigationProps?.showContinueButton;
   const resolvedTopNavigationProps = {
     ...topNavigationProps,
+    levelLinks:
+      allowLockedShareProgressionNavigation && topNavigationProps?.levelLinks
+        ? mapLevelLinksWithShareMode(topNavigationProps.levelLinks, "locked")
+        : topNavigationProps?.levelLinks,
     disableLogoLink: isShareMode || topNavigationProps?.disableLogoLink,
-    hideProgression: isLockedShareMode || topNavigationProps?.hideProgression,
+    hideProgression:
+      (isLockedShareMode && !hasProgressionLevelLinks) ||
+      topNavigationProps?.hideProgression,
     disableProgressionLinks:
       isFlowShareMode || topNavigationProps?.disableProgressionLinks,
     showContinueButton: shouldShowTopNavigationContinue,

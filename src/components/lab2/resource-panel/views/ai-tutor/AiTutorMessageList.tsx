@@ -14,13 +14,17 @@ import type {
   FileChange,
   NewProjectPlanAnswers,
 } from "../../../../../types/chat";
-import type { AiTutorInputExperiment } from "../../../../../types/tutor";
+import type {
+  AiTutorInputExperiment,
+} from "../../../../../types/tutor";
 import type {
   ValidationReviewCardData,
   ValidationReviewItemStatus,
 } from "../../../../../types/validationReview";
 import { copyTextToClipboard, FileChangesCard, renderMessageContent } from "./messageFormatting";
 import styles from "./AiTutorPanel.module.scss";
+
+type ValidationReviewFollowUpAction = "hint" | "debug" | "suggestion";
 
 interface AiTutorMessageListProps {
   scrollWrapRef: RefObject<HTMLDivElement | null>;
@@ -31,6 +35,7 @@ interface AiTutorMessageListProps {
   chatMessages: ChatMessage[];
   isThinking: boolean;
   autoCompleteThinking: boolean;
+  thinkingLabel?: string;
   inputExperiment: AiTutorInputExperiment;
   onThinkingComplete: () => void;
   onMarkAttachmentAdded: (msgIndex: number, attachmentPath: string) => void;
@@ -45,7 +50,7 @@ interface AiTutorMessageListProps {
   emptyStateTitle?: string;
   emptyStateText?: string;
   onValidationReviewRequest?: () => void;
-  onValidationReviewAction?: (action: "hint" | "debug") => void;
+  onValidationReviewAction?: (action: ValidationReviewFollowUpAction) => void;
   onValidationReviewContinue?: () => void;
   validationReviewContinueLabel?: string;
   validationReviewRunning?: boolean;
@@ -194,12 +199,116 @@ function alertIconName(
   return "circle-check";
 }
 
+function hasAssistantCardContent(message: ChatMessage) {
+  if (message.role !== "assistant") return false;
+  return Boolean(
+    message.newProjectPlanQuestionnaire ||
+    message.validationReview ||
+    message.instructionGuide ||
+    message.actionCard ||
+    (message.fileChanges && message.fileChanges.length > 0),
+  );
+}
+
+export function hasLaterChatMessageForTest(messages: ChatMessage[], messageIndex: number) {
+  return messages.length > messageIndex + 1;
+}
+
+export function hasInstructionGuideActionsForTest() {
+  return false;
+}
+
+function validationReviewText(review: ValidationReviewCardData) {
+  return [
+    review.title,
+    review.nextStep,
+    ...(review.requirements ?? []),
+    ...(review.requirementLabels ?? []),
+    ...(review.items ?? []).flatMap((item) => [item.label, item.detail]),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function shouldPreferDebugFollowUp(review: ValidationReviewCardData) {
+  if (review.followUpPreference === "debug") return true;
+  if (review.followUpPreference === "suggestion") return false;
+
+  const text = validationReviewText(review);
+  const isStylingFocused =
+    review.mode === "open-ended" ||
+    /\b(style|styling|css|color|colour|font|typography|spacing|layout|align|alignment|padding|margin|visual|design|polish|responsive)\b/i.test(text);
+  const looksBugFocused =
+    review.mode === "technical" ||
+    /\b(debug|bug|error|broken|fix|logic|javascript|selector|promise|loop|function|event|click|console|trace|not working|fails?)\b/i.test(text);
+
+  return looksBugFocused && !isStylingFocused;
+}
+
+function validationReviewSuggestionActions(review: ValidationReviewCardData) {
+  const actions: Array<{
+    action: ValidationReviewFollowUpAction;
+    label: string;
+    iconName: "lightbulb" | "bug" | "wand-magic-sparkles";
+  }> = [
+    { action: "hint", label: "Give me a hint", iconName: "lightbulb" },
+  ];
+
+  if (shouldPreferDebugFollowUp(review)) {
+    actions.push({ action: "debug", label: "Help me debug", iconName: "bug" });
+    return actions;
+  }
+
+  actions.push({
+    action: "suggestion",
+    label: "Give me a suggestion",
+    iconName: "wand-magic-sparkles",
+  });
+
+  return actions;
+}
+
+export const validationReviewSuggestionActionsForTest = validationReviewSuggestionActions;
+
+function ValidationReviewSuggestionChips({
+  review,
+  disabled,
+  onAction,
+}: {
+  review: ValidationReviewCardData;
+  disabled: boolean;
+  onAction?: (action: ValidationReviewFollowUpAction) => void;
+}) {
+  if (!onAction || review.kind !== "summary" || review.status === "likely_complete") {
+    return null;
+  }
+
+  const actions = validationReviewSuggestionActions(review);
+
+  return (
+    <div className={styles.suggestionChipRow} aria-label="Suggested follow-up prompts">
+      {actions.map((item) => (
+        <button
+          key={item.action}
+          type="button"
+          className={styles.suggestionChip}
+          disabled={disabled}
+          onClick={() => onAction(item.action)}
+        >
+          <FaIcon name={item.iconName} size="xs" className={styles.suggestionChipIcon} />
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function ValidationReviewCard({
   review,
   disabled,
   compact = false,
   onRequestReview,
-  onAction,
   onContinue,
   continueLabel = "Continue",
   isRunning = false,
@@ -208,7 +317,6 @@ function ValidationReviewCard({
   disabled: boolean;
   compact?: boolean;
   onRequestReview?: () => void;
-  onAction?: (action: "hint" | "debug") => void;
   onContinue?: () => void;
   continueLabel?: string;
   isRunning?: boolean;
@@ -285,9 +393,6 @@ function ValidationReviewCard({
           <p className={styles.validationReviewEyebrow}>
             Review checklist
           </p>
-          <div className={styles.validationReviewStatus}>
-            {reviewStatusLabel(review.status)}
-          </div>
         </div>
 
         <div className={styles.validationReviewBody}>
@@ -310,40 +415,13 @@ function ValidationReviewCard({
                       item.status === "missing" ? styles.validationReviewMarkerMissing : "",
                     ].filter(Boolean).join(" ")}
                   >
-                    {item.status === "pass" && <FaIcon name="check" size="inherit" />}
+                    {item.status === "pass" && <FaIcon name="circle-check" size="m" />}
                   </span>
                   <div className={styles.validationReviewItemContent}>
                     <p className={styles.validationReviewItemLabel}>{item.label}</p>
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {onAction && review.status !== "likely_complete" && (
-            <div className={styles.validationReviewActions}>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="s"
-                iconName="lightbulb"
-                fullWidth
-                disabled={disabled}
-                onClick={() => onAction("hint")}
-              >
-                Get a hint
-              </AppButton>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="s"
-                iconName="bug"
-                fullWidth
-                disabled={disabled}
-                onClick={() => onAction("debug")}
-              >
-                Debug
-              </AppButton>
             </div>
           )}
 
@@ -389,6 +467,7 @@ export function AiTutorMessageList({
   chatMessages,
   isThinking,
   autoCompleteThinking,
+  thinkingLabel,
   inputExperiment,
   onThinkingComplete,
   onMarkAttachmentAdded,
@@ -429,150 +508,174 @@ export function AiTutorMessageList({
             <EmptyState title={emptyStateTitle} text={emptyStateText} />
           )}
 
-          {chatMessages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={styles.messageBlock}
-              data-tutor-message-index={idx}
-            >
-              <MessageAttachments
-                msg={msg}
-                idx={idx}
-                inputExperiment={inputExperiment}
-                onMarkAttachmentAdded={onMarkAttachmentAdded}
-              />
+          {chatMessages.map((msg, idx) => {
+            const hasCardContent = hasAssistantCardContent(msg);
+            const hasLaterChatMessage = hasLaterChatMessageForTest(chatMessages, idx);
 
-              {msg.isAlert ? (
-                <div className={styles.messageRow}>
-                  <div className={[
-                    styles.alertBubble,
-                    msg.alertVariant === "rejected" ? styles.alertBubbleRejected : "",
-                    msg.alertVariant === "validation" ? styles.alertBubbleValidation : "",
-                  ].filter(Boolean).join(" ")}
-                  >
-                    <FaIcon
-                      name={alertIconName(msg.alertVariant)}
-                      size="s"
-                      className={[
-                        styles.alertIcon,
-                        msg.alertVariant === "rejected" ? styles.alertIconRejected : "",
-                        msg.alertVariant === "validation" ? styles.alertIconValidation : "",
-                      ].filter(Boolean).join(" ")}
-                    />
-                    <p className={styles.alertText}>{msg.content}</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div
-                    className={`${styles.messageRow} ${
-                      msg.role === "user" ? styles.messageRowUser : styles.messageRowAssistant
-                    }`}
-                    data-tutor-message-anchor={msg.role === "assistant" ? "assistant-reply-start" : undefined}
-                  >
-                    <div
-                      className={`${styles.messageBubble} ${
-                        msg.role === "user"
-                          ? styles.messageBubbleUser
-                          : styles.messageBubbleAssistant
-                      }`}
+            return (
+              <div
+                key={idx}
+                className={styles.messageBlock}
+                data-tutor-message-index={idx}
+              >
+                <MessageAttachments
+                  msg={msg}
+                  idx={idx}
+                  inputExperiment={inputExperiment}
+                  onMarkAttachmentAdded={onMarkAttachmentAdded}
+                />
+
+                {msg.isAlert ? (
+                  <div className={styles.messageRow}>
+                    <div className={[
+                      styles.alertBubble,
+                      msg.alertVariant === "rejected" ? styles.alertBubbleRejected : "",
+                      msg.alertVariant === "validation" ? styles.alertBubbleValidation : "",
+                    ].filter(Boolean).join(" ")}
                     >
-                      {renderMessageContent(msg.content)}
-
-                      {msg.role === "assistant" && msg.newProjectPlanQuestionnaire && (
-                        <NewProjectPlanQuestionnaireCard
-                          questionnaire={msg.newProjectPlanQuestionnaire}
-                          disabled={interactiveCardsDisabled}
-                          onSubmit={(answers, moodboardAttachments) =>
-                            onNewProjectPlanQuestionnaireSubmit(
-                              idx,
-                              answers,
-                              moodboardAttachments,
-                            )
-                          }
-                        />
-                      )}
-
-                      {msg.fileChanges && msg.fileChanges.length > 0 && (
-                        <FileChangesCard
-                          changes={msg.fileChanges}
-                          onOpenFileInEditor={onOpenFileChangeInEditor}
-                          onOpenFileInPreview={onOpenFileChangeInPreview}
-                        />
-                      )}
-
-                      {msg.fileChanges && msg.codeChangeStatus === "pending" && (
-                        <div className={styles.codeChangeActions}>
-                          <AppButton
-                            variant="secondary"
-                            tone="gray"
-                            size="s"
-                            iconName="xmark"
-                            fullWidth
-                            onClick={() => onCodeChangeAction(idx, "rejected")}
-                          >
-                            Reject
-                          </AppButton>
-                          <AppButton
-                            variant="primary"
-                            tone="purple"
-                            size="s"
-                            iconName="check"
-                            fullWidth
-                            onClick={() => onCodeChangeAction(idx, "accepted")}
-                          >
-                            Accept
-                          </AppButton>
-                        </div>
-                      )}
-
-                      {msg.role === "assistant" && msg.validationReview && (
-                        <ValidationReviewCard
-                          review={msg.validationReview}
-                          disabled={interactiveCardsDisabled}
-                          compact={
-                            msg.validationReview.kind === "summary" &&
-                            idx !== latestReviewIndex
-                          }
-                          onRequestReview={onValidationReviewRequest}
-                          onAction={onValidationReviewAction}
-                          onContinue={onValidationReviewContinue}
-                          continueLabel={validationReviewContinueLabel}
-                          isRunning={validationReviewRunning}
-                        />
-                      )}
-
-                      {showTutorActionCards && msg.role === "assistant" && msg.actionCard && (
-                        <TutorActionCard
-                          prompt={msg.actionCard.prompt}
-                          files={msg.actionCard.files}
-                          status={msg.actionCard.status}
-                          onAdd={() => onActionCardUpdate(idx, "added")}
-                          onDismiss={() => onActionCardUpdate(idx, "dismissed")}
-                        />
-                      )}
+                      <FaIcon
+                        name={alertIconName(msg.alertVariant)}
+                        size="s"
+                        className={[
+                          styles.alertIcon,
+                          msg.alertVariant === "rejected" ? styles.alertIconRejected : "",
+                          msg.alertVariant === "validation" ? styles.alertIconValidation : "",
+                        ].filter(Boolean).join(" ")}
+                      />
+                      <p className={styles.alertText}>{msg.content}</p>
                     </div>
                   </div>
+                ) : (
+                  <>
+                    <div
+                      className={`${styles.messageRow} ${
+                        msg.role === "user" ? styles.messageRowUser : styles.messageRowAssistant
+                      }`}
+                      data-tutor-message-anchor={msg.role === "assistant" ? "assistant-reply-start" : undefined}
+                    >
+                      <div
+                        className={[
+                          styles.messageBubble,
+                          msg.role === "user"
+                            ? styles.messageBubbleUser
+                            : styles.messageBubbleAssistant,
+                          hasCardContent ? styles.messageBubbleWithCard : "",
+                        ].filter(Boolean).join(" ")}
+                      >
+                        {renderMessageContent(msg.content)}
 
-                  {msg.role === "assistant" && (
-                    <div className={styles.actionRowWrap}>
-                      <ActionRow
-                        onCopy={() => void copyTextToClipboard(msg.content)}
-                        showDownload={false}
-                        showFeedback={false}
-                      />
+                        {msg.role === "assistant" && msg.newProjectPlanQuestionnaire && (
+                          <NewProjectPlanQuestionnaireCard
+                            questionnaire={msg.newProjectPlanQuestionnaire}
+                            disabled={interactiveCardsDisabled}
+                            onSubmit={(answers, moodboardAttachments) =>
+                              onNewProjectPlanQuestionnaireSubmit(
+                                idx,
+                                answers,
+                                moodboardAttachments,
+                              )
+                            }
+                          />
+                        )}
+
+                        {msg.fileChanges && msg.fileChanges.length > 0 && (
+                          <FileChangesCard
+                            changes={msg.fileChanges}
+                            onOpenFileInEditor={onOpenFileChangeInEditor}
+                            onOpenFileInPreview={onOpenFileChangeInPreview}
+                          />
+                        )}
+
+                        {msg.fileChanges && msg.codeChangeStatus === "pending" && (
+                          <div className={styles.codeChangeActions}>
+                            <AppButton
+                              variant="secondary"
+                              tone="gray"
+                              size="s"
+                              iconName="xmark"
+                              fullWidth
+                              onClick={() => onCodeChangeAction(idx, "rejected")}
+                            >
+                              Reject
+                            </AppButton>
+                            <AppButton
+                              variant="primary"
+                              tone="purple"
+                              size="s"
+                              iconName="check"
+                              fullWidth
+                              onClick={() => onCodeChangeAction(idx, "accepted")}
+                            >
+                              Accept
+                            </AppButton>
+                          </div>
+                        )}
+
+                        {msg.role === "assistant" && msg.validationReview && (
+                          <ValidationReviewCard
+                            review={msg.validationReview}
+                            disabled={interactiveCardsDisabled}
+                            compact={
+                              msg.validationReview.kind === "summary" &&
+                              idx !== latestReviewIndex
+                            }
+                            onRequestReview={onValidationReviewRequest}
+                            onContinue={onValidationReviewContinue}
+                            continueLabel={validationReviewContinueLabel}
+                            isRunning={validationReviewRunning}
+                          />
+                        )}
+
+                        {showTutorActionCards && msg.role === "assistant" && msg.actionCard && (
+                          <TutorActionCard
+                            prompt={msg.actionCard.prompt}
+                            files={msg.actionCard.files}
+                            status={msg.actionCard.status}
+                            onAdd={() => onActionCardUpdate(idx, "added")}
+                            onDismiss={() => onActionCardUpdate(idx, "dismissed")}
+                          />
+                        )}
+                      </div>
                     </div>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
 
-          {isThinking && !validationReviewRunning && (
+                    {msg.role === "assistant" && (
+                      <div className={styles.assistantMessageFooter}>
+                        <div className={styles.actionRowWrap}>
+                          <ActionRow
+                            onCopy={() => void copyTextToClipboard(msg.content)}
+                            showDownload={false}
+                            showFeedback={false}
+                          />
+                        </div>
+
+                        {msg.validationReview?.kind === "summary" &&
+                          idx === latestReviewIndex &&
+                          !msg.validationReviewFollowUpAction &&
+                          !hasLaterChatMessage &&
+                          msg.validationReview.status !== "likely_complete" && (
+                            <div className={styles.suggestionChipWrap}>
+                              <ValidationReviewSuggestionChips
+                                review={msg.validationReview}
+                                disabled={interactiveCardsDisabled}
+                                onAction={onValidationReviewAction}
+                              />
+                            </div>
+                          )}
+
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
+
+          {isThinking && (!validationReviewRunning || thinkingLabel) && (
             <div className={styles.messageBlock}>
               <div className={styles.messageRow}>
                 <ThinkingAnimation
                   autoComplete={autoCompleteThinking}
+                  label={thinkingLabel}
                   onComplete={onThinkingComplete}
                 />
               </div>

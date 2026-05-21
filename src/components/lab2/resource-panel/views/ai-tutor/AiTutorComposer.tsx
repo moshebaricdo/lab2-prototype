@@ -13,6 +13,7 @@ import { AppButton } from "../../../../ui/AppButton";
 import { AppActionDropdown } from "../../../../ui/AppDropdown";
 import { AppTextArea } from "../../../../ui/AppTextField";
 import { FileChip } from "../../../../ui/FileChip";
+import { Tooltip } from "../../../../ui/Tooltip";
 import { faIconForFileName, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
@@ -51,6 +52,8 @@ interface AiTutorComposerProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
   canSend: boolean;
   disabled?: boolean;
+  onCheckWork?: () => void;
+  checkWorkDisabled?: boolean;
   onSend: () => void;
   onRemoveAttachedFile: (fileLabel: string) => void;
   onUploadFileSelection: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -76,6 +79,8 @@ export function AiTutorComposer({
   fileInputRef,
   canSend,
   disabled = false,
+  onCheckWork,
+  checkWorkDisabled = false,
   onSend,
   onRemoveAttachedFile,
   onUploadFileSelection,
@@ -265,17 +270,41 @@ export function AiTutorComposer({
             ) : null}
           </div>
           <div className={styles.inputActions}>
-            <div>
-              <AppButton
-                variant="secondary"
-                aria-label="Add file"
-                tone="gray"
-                size="xs"
-                iconName="plus"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={disabled}
-              >
-              </AppButton>
+            <div className={styles.composerShortcutGroup}>
+              <Tooltip content="Add file" position="top">
+                <AppButton
+                  variant="secondary"
+                  aria-label="Add file"
+                  tone="gray"
+                  size="xs"
+                  iconName="plus"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={disabled}
+                />
+              </Tooltip>
+              {onCheckWork ? (
+                <>
+                  <span className={styles.composerShortcutDivider} aria-hidden="true" />
+                  <Tooltip content="Check my work" position="top">
+                    <AppButton
+                      variant="secondary"
+                      aria-label={checkWorkDisabled ? "Checking work" : "Check my work"}
+                      tone="gray"
+                      size="xs"
+                      icon={checkWorkDisabled ? (
+                        <FaIcon
+                          name="spinner-third"
+                          size="xs"
+                          className={styles.validationReviewSpinner}
+                        />
+                      ) : undefined}
+                      iconName={checkWorkDisabled ? undefined : "clipboard-list"}
+                      onClick={onCheckWork}
+                      disabled={disabled || checkWorkDisabled}
+                    />
+                  </Tooltip>
+                </>
+              ) : null}
               <input
                 ref={fileInputRef}
                 type="file"

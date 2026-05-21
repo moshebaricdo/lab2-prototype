@@ -5,6 +5,7 @@ import type { UseAnnotationsResult } from "../../../hooks/useAnnotations";
 import type { ChatMessage, FileChange } from "../../../types/chat";
 import type {
   AiTutorInputExperiment,
+  InstructionGuide,
   MockTutorConfig,
   TutorContextFile,
   TutorRequestMode,
@@ -84,8 +85,11 @@ export interface SidebarProps {
   compact?: boolean;
   /** When false, the AI Tutor instructions drawer is hidden. Default true (Web Lab 2). */
   showInstructionsDrawer?: boolean;
+  /** Initial open state for the AI Tutor instructions drawer. Default true. */
+  instructionsDrawerDefaultOpen?: boolean;
   instructionsDrawerInitialHeightRatio?: number;
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
+  instructionGuide?: InstructionGuide;
   aiTutorInputExperiment?: AiTutorInputExperiment;
   mockTutorConfig?: MockTutorConfig;
   /** Callback to add a file to the project tree. */
