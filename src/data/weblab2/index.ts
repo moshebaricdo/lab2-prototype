@@ -11,6 +11,8 @@ export {
   fileChipActionPrefilledInput,
   fileChipActionPrefilledAttachments,
   fileChipActionMockTutor,
+  uploadActionCardMockTutor,
+  uploadFileChipMockTutor,
   tutorActionCardPrefilledInput,
   tutorActionCardPrefilledAttachments,
   tutorActionCardMockTutor,

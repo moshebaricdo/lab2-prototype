@@ -152,6 +152,21 @@ export const webLab2ValidationProgressionLinks: LevelProgressLink[] = [
   },
 ];
 
+export const uploadMechanismsProgressionLinks: LevelProgressLink[] = [
+  {
+    name: "Staged uploads",
+    path: "/levels/progression-upload-mechanisms-staged",
+  },
+  {
+    name: "Add-files message",
+    path: "/levels/progression-upload-mechanisms-action-card",
+  },
+  {
+    name: "Plus-button chips",
+    path: "/levels/progression-upload-mechanisms-file-chip",
+  },
+];
+
 /**
  * All valid branch paths — the bubble choice level can land on any of these,
  * and the header treats whichever one the student is on as "level 4".

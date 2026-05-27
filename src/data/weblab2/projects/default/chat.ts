@@ -65,3 +65,33 @@ export const tutorActionCardMockTutor: MockTutorConfig = {
   initialAttachments: tutorActionCardPrefilledAttachments,
   attachmentMeta: sharedAttachmentMeta,
 };
+
+export const uploadActionCardMockTutor: MockTutorConfig = {
+  initialInput: tutorActionCardPrefilledInput,
+  initialAttachments: tutorActionCardPrefilledAttachments,
+  attachmentMeta: sharedAttachmentMeta,
+  buildAttachmentFollowUp: (attachments) => {
+    const uploads = attachments.filter((attachment) => attachment.source === "upload");
+    if (uploads.length === 0) return null;
+
+    return {
+      role: "assistant",
+      content: uploads.length === 1
+        ? "Should I add this file to your project so you can use it in your code?"
+        : "Should I add these files to your project so you can use them in your code?",
+      actionCard: {
+        prompt: "Add these files to your project?",
+        files: uploads.map((attachment) => attachment.fileName),
+        attachmentPaths: uploads.map((attachment) => attachment.path),
+        status: "pending",
+        kind: "upload-add",
+      },
+    };
+  },
+};
+
+export const uploadFileChipMockTutor: MockTutorConfig = {
+  initialInput: fileChipActionPrefilledInput,
+  initialAttachments: fileChipActionPrefilledAttachments,
+  attachmentMeta: sharedAttachmentMeta,
+};

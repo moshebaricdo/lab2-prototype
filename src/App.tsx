@@ -194,6 +194,20 @@ const WebLab2TutorActionCardLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2TutorActionCardLevelPage"),
   "WebLab2TutorActionCardLevelPage",
 );
+const WebLab2UploadMechanismsPages = () =>
+  import("./pages/weblab2/WebLab2UploadMechanismsLevelPage");
+const UploadMechanismsStagedLevelPage = lazyPage(
+  WebLab2UploadMechanismsPages,
+  "UploadMechanismsStagedLevelPage",
+);
+const UploadMechanismsActionCardLevelPage = lazyPage(
+  WebLab2UploadMechanismsPages,
+  "UploadMechanismsActionCardLevelPage",
+);
+const UploadMechanismsFileChipLevelPage = lazyPage(
+  WebLab2UploadMechanismsPages,
+  "UploadMechanismsFileChipLevelPage",
+);
 const WebLab2ValidationLevel = lazyPage(
   () => import("./pages/weblab2/WebLab2ValidationLevel"),
   "WebLab2ValidationLevel",
@@ -250,6 +264,18 @@ export default function App() {
         <Route
           path="/levels/weblab2-validation-test"
           element={<WebLab2ValidationLevel />}
+        />
+        <Route
+          path="/levels/progression-upload-mechanisms-staged"
+          element={<UploadMechanismsStagedLevelPage />}
+        />
+        <Route
+          path="/levels/progression-upload-mechanisms-action-card"
+          element={<UploadMechanismsActionCardLevelPage />}
+        />
+        <Route
+          path="/levels/progression-upload-mechanisms-file-chip"
+          element={<UploadMechanismsFileChipLevelPage />}
         />
         <Route
           path="/levels/progression-weblab2-validation-fix"

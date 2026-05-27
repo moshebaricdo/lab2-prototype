@@ -21,6 +21,7 @@ import {
   multiChoiceLevelLinks,
   pythonLabLevelLinks,
   sampleProgressionLinks,
+  uploadMechanismsProgressionLinks,
   webLab2ValidationProgressionLinks,
   webLab2LevelLinks,
 } from "./levelTypeLinks";
@@ -111,6 +112,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/weblab2": "Web Lab 2",
   "/levels/levelgroup": "Levelgroup",
   "/levels/bubble-choice": "Bubble choice",
+  "/levels/progression-upload-mechanisms": "Sample progression",
   "/levels/progression": "Sample progression",
 };
 
@@ -440,6 +442,36 @@ export function LevelsIndexPage() {
                 </div>
                 <div className={styles.bubbleRow}>
                   {webLab2ValidationProgressionLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div>
+                    <h3 className={styles.cardTitle}>
+                      Upload Mechanisms
+                    </h3>
+                    <p className={styles.cardDescription}>
+                      Functional staging → Add-files message → Plus-button chips
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {uploadMechanismsProgressionLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       content={page.name}
