@@ -31,10 +31,6 @@ const FLOATING_TOOLBAR_ESTIMATED_HEIGHT = 56;
 const FLOATING_TOOLBAR_MORPHED_ESTIMATED_HEIGHT = 180;
 const FLOATING_TOOLBAR_MARGIN = 12;
 
-function logPreviewPanel(event: string, details: Record<string, unknown> = {}) {
-  console.info("[PreviewPanel]", event, details);
-}
-
 interface PreviewPanelProps {
   hasContent?: boolean;
   preview: WebLabPreviewConfig;
@@ -243,13 +239,6 @@ export function PreviewPanel({
   };
 
   const handleStop = () => {
-    logPreviewPanel("stop clicked", {
-      reloadKey,
-      previewKind: preview.kind,
-      previewPath: preview.kind === "file" ? preview.path : undefined,
-      srcDocLength: preview.kind === "file" ? preview.srcDoc?.length ?? 0 : undefined,
-      wasStopped: isPreviewStopped,
-    });
     setIsPreviewStopped(true);
     setIsDesignMode(false);
     setSelectedElement(null);
@@ -259,14 +248,6 @@ export function PreviewPanel({
   };
 
   const handleReload = () => {
-    logPreviewPanel("reload clicked", {
-      reloadKey,
-      nextReloadKey: reloadKey + 1,
-      previewKind: preview.kind,
-      previewPath: preview.kind === "file" ? preview.path : undefined,
-      srcDocLength: preview.kind === "file" ? preview.srcDoc?.length ?? 0 : undefined,
-      wasStopped: isPreviewStopped,
-    });
     setIsPreviewStopped(false);
     setLiveDesignEdit(null);
     setReloadKey((current) => current + 1);

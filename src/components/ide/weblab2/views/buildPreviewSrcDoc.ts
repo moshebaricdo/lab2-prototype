@@ -1128,10 +1128,28 @@ function resolveProjectFile(
 ) {
   const normalizedReference = resolvePreviewHref(reference, currentPath);
   if (!normalizedReference) return undefined;
-  return (
-    filesByPath.get(normalizedReference) ??
-    filesByName.get(normalizedReference.split("/").at(-1) ?? normalizedReference)
-  );
+  const decodedReference = safeDecodePreviewPath(normalizedReference);
+  const pathCandidates = Array.from(new Set([normalizedReference, decodedReference]));
+  for (const path of pathCandidates) {
+    const file = filesByPath.get(path);
+    if (file) return file;
+  }
+
+  for (const path of pathCandidates) {
+    const name = path.split("/").at(-1) ?? path;
+    const file = filesByName.get(name);
+    if (file) return file;
+  }
+
+  return undefined;
+}
+
+function safeDecodePreviewPath(path: string) {
+  try {
+    return decodeURIComponent(path);
+  } catch {
+    return path;
+  }
 }
 
 function toPreviewSafeAssetUrl(content: string) {
