@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { FileManager } from "../../shared/FileManager";
 import { CodeEditor } from "../../shared/code-editor";
 import { NewProjectEmptyState } from "./NewProjectEmptyState";
@@ -24,6 +24,7 @@ import type {
   PreviewDebugTab,
   PreviewNetworkRequest,
 } from "./preview-panel/types";
+import { hasWorkspaceProjectFiles } from "../webLab2FileTree";
 import styles from "./Workspace.module.scss";
 
 const DEFAULT_FILE_MANAGER_WIDTH = 158;
@@ -54,12 +55,6 @@ function getPlanFileNames(items: FileItem[]): Set<string> {
     }
   }
   return names;
-}
-
-function hasProjectFiles(items: FileItem[]): boolean {
-  return items.some((item) =>
-    item.children ? hasProjectFiles(item.children) : true
-  );
 }
 
 interface WorkspaceProps {
@@ -289,7 +284,7 @@ export function Workspace({
     { value: "split", label: "Split View", iconName: "table-columns" },
   ];
   const isViewingHistoryVersion = selectedHistoryVersion !== "current";
-  const isEmptyProject = !hasProjectFiles(fileStructure);
+  const isEmptyProject = !hasWorkspaceProjectFiles(fileStructure);
   const shouldShowNewProjectEmptyState =
     isEmptyProject && showNewProjectEmptyState && !isViewingHistoryVersion;
   const hasPendingAiChanges = !!aiChangedFiles && Object.keys(aiChangedFiles).length > 0;

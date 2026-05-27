@@ -7,11 +7,11 @@ import {
 } from "../lib/editor/initialOpenFiles";
 
 const FALLBACK_ROOT_FOLDER = "My Project";
-const NON_ROOT_WRAPPER_FOLDERS = new Set(["Plans"]);
+const NON_ROOT_WRAPPER_FOLDERS = new Set(["Plans", "uploads"]);
 const PLAN_FOLDER_NAME = "Plans";
 type FileActionResult = true | string;
 
-function getRootFolderName(tree?: FileItem[]): string {
+export function getRootFolderName(tree?: FileItem[]): string {
   const root =
     tree?.length === 1 &&
     tree[0]?.type === "folder" &&
@@ -521,6 +521,11 @@ export function useFileWorkspaceState(
   );
   const [isCreateFileModalOpen, setIsCreateFileModalOpen] = useState(false);
   const preAiSnapshotRef = useRef<FileItem[] | null>(null);
+  const fileStructureRef = useRef(fileStructureState);
+
+  useEffect(() => {
+    fileStructureRef.current = fileStructureState;
+  }, [fileStructureState]);
 
   useEffect(() => {
     if (!storageKey || typeof window === "undefined") return;
@@ -803,11 +808,11 @@ export function useFileWorkspaceState(
   }, []);
 
   const beginAiProposal = useCallback((changes: AiProposalChange[]) => {
-    const baseTree = cloneFileTree(fileStructureState ?? initialFileStructure ?? []);
+    const baseTree = cloneFileTree(fileStructureRef.current ?? initialFileStructure ?? []);
     preAiSnapshotRef.current = cloneFileTree(baseTree);
     const proposedTree = applyProposalToTree(baseTree, changes, rootFolder);
     replaceFileStructure(proposedTree);
-  }, [fileStructureState, initialFileStructure, replaceFileStructure, rootFolder]);
+  }, [initialFileStructure, replaceFileStructure, rootFolder]);
 
   const acceptAiProposal = useCallback(() => {
     const baseTree = cloneFileTree(fileStructureState ?? initialFileStructure ?? []);

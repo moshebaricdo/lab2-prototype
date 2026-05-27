@@ -21,7 +21,7 @@ import { pathBasename } from "../../../utils/fileTree";
 import {
   findFileEntryInTree,
   hasAcceptedCompletedPlanStatus,
-  hasNonPlanProjectFiles,
+  hasWorkspaceProjectFiles,
   isPlanOnlyTutorChange,
   isPlanFilePath,
 } from "./webLab2FileTree";
@@ -228,7 +228,7 @@ export function useWebLab2TutorFlow({
 
     const resolvedRequestMode: TutorRequestMode =
       action.kind === "edit" ? "build" : action.kind === "plan" ? "plan" : "help";
-    const wasEmptyOrPlanOnlyProject = !hasNonPlanProjectFiles(currentFileStructure);
+    const wasEmptyOrPlanOnlyProject = !hasWorkspaceProjectFiles(currentFileStructure);
     const result = await tutorClient({
       message,
       conversation,

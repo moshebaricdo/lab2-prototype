@@ -8,7 +8,81 @@ import {
 import type { getPreviewHtmlFiles } from "./views/buildPreviewSrcDoc";
 
 export const FIXED_SAVED_SUBTITLE = "Saved a few seconds ago";
-export const NON_ROOT_WRAPPER_FOLDERS = new Set(["Plans"]);
+export const TUTOR_STAGED_UPLOADS_FOLDER = "uploads";
+export const NON_ROOT_WRAPPER_FOLDERS = new Set(["Plans", TUTOR_STAGED_UPLOADS_FOLDER]);
+
+function isStagedTutorUploadsFolderPath(path: string): boolean {
+  const parts = normalizeFileLookupPath(path).split("/").filter(Boolean);
+  if (parts.at(-1) !== TUTOR_STAGED_UPLOADS_FOLDER) return false;
+  return parts.length === 1 || parts.length === 2;
+}
+
+/** Tutor composer uploads live in project state but do not count as authored project files. */
+export function filterTutorStagedUploadsFromWorkspaceTree(
+  tree: FileItem[],
+  parentPath = "",
+): FileItem[] {
+  return tree.flatMap((item) => {
+    const path = parentPath ? `${parentPath}/${item.name}` : item.name;
+    if (item.type === "folder" && isStagedTutorUploadsFolderPath(path)) {
+      return [];
+    }
+    if (item.type === "folder") {
+      return [{
+        ...item,
+        children: filterTutorStagedUploadsFromWorkspaceTree(item.children ?? [], path),
+      }];
+    }
+    return [item];
+  });
+}
+
+function cloneFileItem(item: FileItem): FileItem {
+  return {
+    ...item,
+    children: item.children?.map(cloneFileItem),
+  };
+}
+
+export function findTutorStagedUploadsFolder(
+  tree: FileItem[],
+  parentPath = "",
+): FileItem | null {
+  for (const item of tree) {
+    const path = parentPath ? `${parentPath}/${item.name}` : item.name;
+    if (item.type === "folder" && isStagedTutorUploadsFolderPath(path)) {
+      return item;
+    }
+    if (item.type === "folder") {
+      const nested = findTutorStagedUploadsFolder(item.children ?? [], path);
+      if (nested) return nested;
+    }
+  }
+  return null;
+}
+
+export function mergeTutorStagedUploadsIntoWorkspaceTree(
+  tree: FileItem[],
+  uploadsSourceTree: FileItem[],
+): FileItem[] {
+  const uploadsFolder = findTutorStagedUploadsFolder(uploadsSourceTree);
+  const baseTree = filterTutorStagedUploadsFromWorkspaceTree(tree);
+  if (!uploadsFolder) return baseTree;
+
+  const uploadsClone = cloneFileItem(uploadsFolder);
+  if (
+    baseTree.length === 1 &&
+    baseTree[0].type === "folder" &&
+    !NON_ROOT_WRAPPER_FOLDERS.has(baseTree[0].name)
+  ) {
+    return [{
+      ...baseTree[0],
+      children: [...(baseTree[0].children ?? []), uploadsClone],
+    }];
+  }
+
+  return [...baseTree, uploadsClone];
+}
 
 export function findFileEntryInTree(
   tree: FileItem[],
@@ -148,6 +222,10 @@ export function hasProjectFiles(tree: FileItem[]): boolean {
   return tree.some((item) => item.type === "folder"
     ? hasProjectFiles(item.children ?? [])
     : true);
+}
+
+export function hasWorkspaceProjectFiles(tree: FileItem[]): boolean {
+  return hasNonPlanProjectFiles(filterTutorStagedUploadsFromWorkspaceTree(tree));
 }
 
 export function hasNonPlanProjectFiles(tree: FileItem[], parentPath = ""): boolean {

@@ -19,6 +19,7 @@ interface VersionHistoryStateOptions {
   storageKey?: string;
   autosaveIntervalMs?: number;
   snapshotFileStructureTransform?: (fileStructure: FileItem[]) => FileItem[];
+  hasProjectFiles?: (tree: FileItem[]) => boolean;
 }
 
 const DEFAULT_AUTOSAVE_INTERVAL_MS = 15_000;
@@ -86,8 +87,11 @@ function fileTreeHasProjectFiles(tree: FileItem[]): boolean {
   );
 }
 
-function snapshotsHaveProjectFiles(snapshots: VersionSnapshot[]): boolean {
-  return snapshots.some((snapshot) => fileTreeHasProjectFiles(snapshot.fileStructure));
+function snapshotsHaveProjectFiles(
+  snapshots: VersionSnapshot[],
+  hasProjectFiles: (tree: FileItem[]) => boolean,
+): boolean {
+  return snapshots.some((snapshot) => hasProjectFiles(snapshot.fileStructure));
 }
 
 function readStoredSnapshots(storageKey: string): VersionSnapshot[] | null {
@@ -111,6 +115,7 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     storageKey,
     autosaveIntervalMs = DEFAULT_AUTOSAVE_INTERVAL_MS,
     snapshotFileStructureTransform,
+    hasProjectFiles: hasProjectFilesInTree = fileTreeHasProjectFiles,
   } = options;
   const [selectedHistoryVersion, setSelectedHistoryVersion] = useState("current");
   const [showRestoreSuccessAlert, setShowRestoreSuccessAlert] = useState(false);
@@ -125,11 +130,14 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
     const storedSnapshots = storageKey ? readStoredSnapshots(storageKey) : null;
     initialStoredSnapshotsRef.current = storedSnapshots;
     if (storedSnapshots) {
-      initialHasProjectFilesRef.current = snapshotsHaveProjectFiles(storedSnapshots);
+      initialHasProjectFilesRef.current = snapshotsHaveProjectFiles(
+        storedSnapshots,
+        hasProjectFilesInTree,
+      );
       return storedSnapshots;
     }
     const initialFileStructure = getFileStructure();
-    initialHasProjectFilesRef.current = fileTreeHasProjectFiles(initialFileStructure);
+    initialHasProjectFilesRef.current = hasProjectFilesInTree(initialFileStructure);
     return [
       createSnapshot(
         "initial",
@@ -217,21 +225,22 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
           ? snapshotFileStructureTransform(fileStructure)
           : fileStructure,
       );
-      if (!hasProjectEverHadFiles && fileTreeHasProjectFiles(fileStructure)) {
+      if (!hasProjectEverHadFiles && hasProjectFilesInTree(fileStructure)) {
         setHasProjectEverHadFiles(true);
       }
     }
   }, [
     getFileStructure,
     hasProjectEverHadFiles,
+    hasProjectFilesInTree,
     snapshotFileStructureTransform,
     versioningEnabled,
   ]);
 
   useEffect(() => {
-    if (hasProjectEverHadFiles || !snapshotsHaveProjectFiles(snapshots)) return;
+    if (hasProjectEverHadFiles || !snapshotsHaveProjectFiles(snapshots, hasProjectFilesInTree)) return;
     setHasProjectEverHadFiles(true);
-  }, [hasProjectEverHadFiles, snapshots]);
+  }, [hasProjectEverHadFiles, hasProjectFilesInTree, snapshots]);
 
   const addSnapshot = useCallback((
     kind: Exclude<VersionSnapshotKind, "initial">,
@@ -247,7 +256,7 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
       description,
       snapshotFileStructureTransform,
     );
-    if (fileTreeHasProjectFiles(fileStructure)) {
+    if (hasProjectFilesInTree(fileStructure)) {
       setHasProjectEverHadFiles(true);
     }
     setSnapshots((previous) => sortSnapshots([...previous, snapshot]));
@@ -257,7 +266,7 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
         : fileStructure,
     );
     return snapshot;
-  }, [snapshotFileStructureTransform]);
+  }, [hasProjectFilesInTree, snapshotFileStructureTransform]);
 
   useEffect(() => {
     if (!versioningEnabled || autosaveIntervalMs <= 0) return;
