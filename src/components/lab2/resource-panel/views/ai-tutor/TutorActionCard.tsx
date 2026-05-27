@@ -53,7 +53,7 @@ export function TutorActionCard({
           fullWidth
           onClick={onDismiss}
         >
-          Keep as context only
+          Keep as reference only
         </AppButton>
       </div>
     </div>

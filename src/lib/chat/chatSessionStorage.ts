@@ -20,7 +20,17 @@ export function prepareChatMessagesForStorage(messages: ChatMessage[]): ChatMess
 
     return {
       ...message,
-      attachments: message.attachments.map(({ imageDataUrl: _imageDataUrl, ...attachment }) => attachment),
+      attachments: message.attachments.map((attachment) => {
+        const { imageDataUrl: _imageDataUrl, ...withoutImageDataUrl } = attachment;
+        if (attachment.source !== "upload") return withoutImageDataUrl;
+
+        const {
+          imageSrc: _imageSrc,
+          content: _content,
+          ...storedAttachment
+        } = withoutImageDataUrl;
+        return storedAttachment;
+      }),
     };
   });
 }

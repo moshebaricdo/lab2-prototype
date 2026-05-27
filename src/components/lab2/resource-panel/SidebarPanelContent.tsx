@@ -48,7 +48,10 @@ interface SidebarPanelContentProps {
   instructionGuide: SidebarProps["instructionGuide"];
   aiTutorInputExperiment: NonNullable<SidebarProps["aiTutorInputExperiment"]>;
   mockTutorConfig: NonNullable<SidebarProps["mockTutorConfig"]>;
-  onAddFileToProject: SidebarProps["onAddFileToProject"];
+  onStageTutorUpload: SidebarProps["onStageTutorUpload"];
+  onAddTutorUploadToProject: SidebarProps["onAddTutorUploadToProject"];
+  onRemoveStagedTutorUpload: SidebarProps["onRemoveStagedTutorUpload"];
+  existingProjectFileNames: SidebarProps["existingProjectFileNames"];
   instructionsContent: SidebarProps["instructionsContent"];
   availableTutorContextFiles: SidebarProps["availableTutorContextFiles"];
   onTutorSubmit: SidebarProps["onTutorSubmit"];
@@ -128,7 +131,10 @@ export function SidebarPanelContent({
   instructionGuide,
   aiTutorInputExperiment,
   mockTutorConfig,
-  onAddFileToProject,
+  onStageTutorUpload,
+  onAddTutorUploadToProject,
+  onRemoveStagedTutorUpload,
+  existingProjectFileNames,
   instructionsContent,
   availableTutorContextFiles,
   onTutorSubmit,
@@ -229,7 +235,10 @@ export function SidebarPanelContent({
           instructionGuide={instructionGuide}
           inputExperiment={aiTutorInputExperiment}
           mockTutorConfig={mockTutorConfig}
-          onAddFileToProject={onAddFileToProject}
+          onStageTutorUpload={onStageTutorUpload}
+          onAddTutorUploadToProject={onAddTutorUploadToProject}
+          onRemoveStagedTutorUpload={onRemoveStagedTutorUpload}
+          existingProjectFileNames={existingProjectFileNames}
           instructionsContent={instructionsContent}
           availableContextFiles={availableTutorContextFiles}
           onTutorSubmit={onTutorSubmit}

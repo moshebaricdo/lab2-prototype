@@ -56,7 +56,10 @@ export function Sidebar({
   instructionGuide,
   aiTutorInputExperiment = "default",
   mockTutorConfig = defaultMockTutorConfig,
-  onAddFileToProject,
+  onStageTutorUpload,
+  onAddTutorUploadToProject,
+  onRemoveStagedTutorUpload,
+  existingProjectFileNames,
   instructionsContent,
   availableTutorContextFiles,
   onTutorSubmit,
@@ -330,7 +333,10 @@ export function Sidebar({
             instructionGuide={instructionGuide}
             aiTutorInputExperiment={aiTutorInputExperiment}
             mockTutorConfig={mockTutorConfig}
-            onAddFileToProject={onAddFileToProject}
+            onStageTutorUpload={onStageTutorUpload}
+            onAddTutorUploadToProject={onAddTutorUploadToProject}
+            onRemoveStagedTutorUpload={onRemoveStagedTutorUpload}
+            existingProjectFileNames={existingProjectFileNames}
             instructionsContent={instructionsContent}
             availableTutorContextFiles={availableTutorContextFiles}
             onTutorSubmit={onTutorSubmit}

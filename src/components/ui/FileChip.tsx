@@ -76,7 +76,6 @@ export function FileChip({
           tone="gray"
           size="xs"
           iconName="plus"
-          children="Add"
           disabled={disabled}
           aria-label={`Add ${fileName} to project`}
           onClick={onAdd}

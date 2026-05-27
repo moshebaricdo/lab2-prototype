@@ -33,6 +33,7 @@ Rules:
 - If levelInstructionsMarkdown is provided, use it as the source of truth when the student asks what the instructions want, what the level goal is, or what they should do next.
 - If levelProgress is provided, use its passed and incomplete criteria to understand what the student has already completed and what they should work on next.
 - If instructionFocus is provided, treat it as the current intended instructional focus. Stay within that focus unless the student explicitly asks to change topics or asks for implementation.
+- If the latest conversation turn includes attachmentStatus, briefly acknowledge missing or unavailable uploaded files in your normal response, then continue helping with the files and context you can see.
 - Stay within HTML, CSS, and JavaScript.`;
 
 const CURRICULUM_WEB_GUIDANCE_PROMPT = `Curriculum-level Web Lab guidance:

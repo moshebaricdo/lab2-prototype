@@ -13,7 +13,7 @@ import {
   initialChatMessages,
   defaultMockTutorConfig,
 } from "../../data/weblab2";
-import type { ChatMessage, FileChange } from "../../types/chat";
+import type { ChatAttachment, ChatMessage, FileChange } from "../../types/chat";
 import { useChatState } from "../../hooks/useChatState";
 import { useDevPanelInitialOpenFiles } from "../../hooks/useDevPanelInitialOpenFiles";
 import { useFileWorkspaceState } from "../../hooks/useFileWorkspaceState";
@@ -68,6 +68,18 @@ import {
   pathBasename,
 } from "../../utils/fileTree";
 import {
+  buildFileTreeWithChatAttachments,
+  buildFileTreeWithRootChatAttachments,
+  canAddTutorUploadToProjectRoot,
+  canStageTutorUploadInProject,
+  getProjectFileNames,
+  getRootUploadProjectPath,
+  getStagedUploadProjectPath,
+  isRootTutorUploadInProject,
+  isStagedTutorUploadInProject,
+  removeStagedTutorUploadFromTree,
+} from "../../components/lab2/resource-panel/views/ai-tutor/tutorAttachmentToProject";
+import {
   applyRubricDevSettings,
   buildRubricsDevFields,
   DEFAULT_RUBRIC_DATA,
@@ -110,13 +122,15 @@ import {
   findFileEntryInTree,
   findFirstOpenableFile,
   FIXED_SAVED_SUBTITLE,
+  filterTutorStagedUploadsFromWorkspaceTree,
   formatSavedSubtitle,
   getInitialInlineImageContentMap,
   hasAcceptedCompletedPlanStatus,
   hasCompletedPlanStatus,
-  hasProjectFiles,
+  hasWorkspaceProjectFiles,
   hydrateInlineImageContent,
   isPlanFilePath,
+  mergeTutorStagedUploadsIntoWorkspaceTree,
   stripInitialInlineImageContent,
 } from "../../components/ide/weblab2/webLab2FileTree";
 import {
@@ -217,6 +231,8 @@ interface WebLab2LevelPageProps {
   showWalkthroughResources?: boolean;
   /** Optional suffix for route-scoped file/version storage when starter fixtures change. */
   storageKeySuffix?: string;
+  /** When false, Tutor composer uploads stay in chat only for mock upload-mechanism demos. */
+  enableTutorUploadStaging?: boolean;
   tutorSupportContext?: TutorSupportContext;
   tutorPolicyPreset?: TutorPolicyPreset;
   allowTutorBuild?: boolean;
@@ -266,6 +282,7 @@ export function WebLab2LevelPage({
   showDocumentationResource = true,
   showWalkthroughResources = false,
   storageKeySuffix,
+  enableTutorUploadStaging = true,
   tutorSupportContext = "curriculum-level",
   tutorPolicyPreset = "route-default",
   allowTutorBuild = true,
@@ -356,13 +373,21 @@ export function WebLab2LevelPage({
     () => getInitialInlineImageContentMap(initialFileStructure),
     [initialFileStructure],
   );
-  const stripInitialImagesForStorage = useCallback(
+  const stripInitialImagesForFileStorage = useCallback(
     (tree: FileItem[]) =>
       stripInitialInlineImageContent(tree, initialInlineImageContentByPath),
     [initialInlineImageContentByPath],
   );
+  const stripInitialImagesAndUploadsForHistory = useCallback(
+    (tree: FileItem[]) =>
+      stripInitialInlineImageContent(
+        filterTutorStagedUploadsFromWorkspaceTree(tree),
+        initialInlineImageContentByPath,
+      ),
+    [initialInlineImageContentByPath],
+  );
   const shouldCollapseEmptyFileManager =
-    !hasProjectFiles(initialFileStructure);
+    !hasWorkspaceProjectFiles(initialFileStructure);
   const resolvedCollapseFileManagerByDefault = Boolean(
     resolved.collapseFileManagerByDefault || shouldCollapseEmptyFileManager,
   );
@@ -477,7 +502,6 @@ export function WebLab2LevelPage({
     handleCreateFile,
     handleCreateFolder,
     handleCreatePlan,
-    addFileToProject,
     renameFile,
     deleteFile,
     moveFileTreeItem,
@@ -493,7 +517,7 @@ export function WebLab2LevelPage({
       initialViewMode: resolvedInitialViewMode,
       initialFileManagerCollapsed: resolvedCollapseFileManagerByDefault,
       initialOpenFilePaths: parsedInitialOpenFiles,
-      storageFileStructureTransform: stripInitialImagesForStorage,
+      storageFileStructureTransform: stripInitialImagesForFileStorage,
     },
   );
   const lastResolvedInitialViewModeRef = useRef(resolvedInitialViewMode);
@@ -539,7 +563,18 @@ export function WebLab2LevelPage({
   }, [resolvedCollapseFileManagerByDefault, setIsFileManagerCollapsed]);
   const getCurrentFileStructure = useCallback(
     () => fileStructureState ?? fileStructureOverride ?? fileStructure,
-    [fileStructureOverride, fileStructureState],
+    [fileStructure, fileStructureOverride, fileStructureState],
+  );
+  const restoreFileStructurePreservingUploads = useCallback(
+    (restoredFileStructure: FileItem[]) => {
+      replaceFileStructure(
+        mergeTutorStagedUploadsIntoWorkspaceTree(
+          restoredFileStructure,
+          getCurrentFileStructure(),
+        ),
+      );
+    },
+    [getCurrentFileStructure, replaceFileStructure],
   );
   const resolvedTutorModeKind =
     resolved.tutorModeKind === "functional" ? "functional" : "mock";
@@ -563,9 +598,10 @@ export function WebLab2LevelPage({
     useFunctionalVersionHistory
       ? {
           getFileStructure: getCurrentFileStructure,
-          onRestoreFileStructure: replaceFileStructure,
+          onRestoreFileStructure: restoreFileStructurePreservingUploads,
           storageKey: `weblab2:version-history:${routeStorageKey}`,
-          snapshotFileStructureTransform: stripInitialImagesForStorage,
+          snapshotFileStructureTransform: stripInitialImagesAndUploadsForHistory,
+          hasProjectFiles: hasWorkspaceProjectFiles,
         }
       : undefined,
   );
@@ -602,6 +638,10 @@ export function WebLab2LevelPage({
   const hasPendingAiChanges = !!aiChangedFiles && Object.keys(aiChangedFiles).length > 0;
   const isAiActive = hasPendingAiChanges || hasAcceptedChanges;
   const currentFileStructure = fileStructureState ?? fileStructureOverride ?? fileStructure;
+  const currentFileStructureRef = useRef(currentFileStructure);
+  useEffect(() => {
+    currentFileStructureRef.current = currentFileStructure;
+  }, [currentFileStructure]);
   useDevPanelInitialOpenFiles(
     currentFileStructure,
     resolved[INITIAL_OPEN_FILES_DEV_KEY],
@@ -734,11 +774,15 @@ export function WebLab2LevelPage({
   const visibleFileStructure = useMemo(
     () => isViewingHistoryVersion && selectedHistoryFileStructure
       ? hydrateInlineImageContent(
-          selectedHistoryFileStructure,
+          mergeTutorStagedUploadsIntoWorkspaceTree(
+            selectedHistoryFileStructure,
+            currentFileStructure,
+          ),
           initialInlineImageContentByPath,
         )
       : currentFileStructureWithHydratedImages,
     [
+      currentFileStructure,
       currentFileStructureWithHydratedImages,
       initialInlineImageContentByPath,
       isViewingHistoryVersion,
@@ -862,6 +906,92 @@ export function WebLab2LevelPage({
     () => flattenTutorContextFiles(currentFileStructure),
     [currentFileStructure],
   );
+  const existingProjectFileNames = useMemo(
+    () => [...getProjectFileNames(currentFileStructure)],
+    [currentFileStructure],
+  );
+  const handleStageTutorUpload = useCallback((attachment: ChatAttachment): true | string => {
+    const baseTree = currentFileStructureRef.current;
+    const validation = canStageTutorUploadInProject(attachment, baseTree);
+    if (validation !== true) return validation;
+
+    if (isStagedTutorUploadInProject(baseTree, attachment)) {
+      return true;
+    }
+
+    try {
+      const nextTree = buildFileTreeWithChatAttachments(baseTree, [attachment]);
+      currentFileStructureRef.current = nextTree;
+      replaceFileStructure(nextTree);
+      console.info("[WebLab2TutorUpload] staged in project", {
+        fileName: attachment.fileName,
+        path: attachment.path,
+        projectPath: getStagedUploadProjectPath(attachment),
+        mimeType: attachment.mimeType,
+        sizeBytes: attachment.sizeBytes,
+        hasImageDataUrl: Boolean(attachment.imageDataUrl),
+        hasContent: Boolean(attachment.content?.trim()),
+      });
+      return true;
+    } catch (error) {
+      console.warn("[WebLab2TutorUpload] staging failed", {
+        fileName: attachment.fileName,
+        path: attachment.path,
+        error,
+      });
+      return error instanceof Error
+        ? error.message
+        : "Unable to add that file to your project.";
+    }
+  }, [replaceFileStructure]);
+
+  const handleAddTutorUploadToProjectRoot = useCallback((attachment: ChatAttachment): true | string => {
+    const baseTree = currentFileStructureRef.current;
+    const validation = canAddTutorUploadToProjectRoot(attachment, baseTree);
+    if (validation !== true) return validation;
+
+    if (isRootTutorUploadInProject(baseTree, attachment)) {
+      return true;
+    }
+
+    try {
+      const nextTree = buildFileTreeWithRootChatAttachments(baseTree, [attachment]);
+      currentFileStructureRef.current = nextTree;
+      replaceFileStructure(nextTree);
+      console.info("[WebLab2TutorUpload] added to project root", {
+        fileName: attachment.fileName,
+        path: attachment.path,
+        projectPath: getRootUploadProjectPath(attachment),
+        mimeType: attachment.mimeType,
+        sizeBytes: attachment.sizeBytes,
+        hasImageDataUrl: Boolean(attachment.imageDataUrl),
+        hasContent: Boolean(attachment.content?.trim()),
+      });
+      return true;
+    } catch (error) {
+      console.warn("[WebLab2TutorUpload] root add failed", {
+        fileName: attachment.fileName,
+        path: attachment.path,
+        error,
+      });
+      return error instanceof Error
+        ? error.message
+        : "Unable to add that file to your project.";
+    }
+  }, [replaceFileStructure]);
+
+  const handleRemoveStagedTutorUpload = useCallback((attachment: ChatAttachment) => {
+    const baseTree = currentFileStructureRef.current;
+    if (!isStagedTutorUploadInProject(baseTree, attachment)) return;
+    const nextTree = removeStagedTutorUploadFromTree(baseTree, attachment);
+    currentFileStructureRef.current = nextTree;
+    replaceFileStructure(nextTree);
+    console.info("[WebLab2TutorUpload] removed from project", {
+      fileName: attachment.fileName,
+      path: attachment.path,
+      projectPath: getStagedUploadProjectPath(attachment),
+    });
+  }, [replaceFileStructure]);
 
   const handleStarterCodeUpload = useCallback((value: StarterCodeUploadValue | null | undefined) => {
     const uploadedFiles = value?.files ?? [];
@@ -1126,7 +1256,12 @@ export function WebLab2LevelPage({
     instructionsContent: resolvedInstructionsContent,
     aiTutorInputExperiment,
     mockTutorConfig: resolvedMockTutorConfig,
-    onAddFileToProject: addFileToProject,
+    existingProjectFileNames,
+    onStageTutorUpload: enableTutorUploadStaging ? handleStageTutorUpload : undefined,
+    onAddTutorUploadToProject: enableTutorUploadStaging
+      ? undefined
+      : handleAddTutorUploadToProjectRoot,
+    onRemoveStagedTutorUpload: enableTutorUploadStaging ? handleRemoveStagedTutorUpload : undefined,
     availableTutorContextFiles,
     onTutorSubmit: resolvedTutorModeKind === "functional" ? handleTutorSubmit : undefined,
     onAcceptAiChanges: resolvedTutorModeKind === "functional" ? handleAcceptAiChanges : undefined,

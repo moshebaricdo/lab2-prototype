@@ -76,8 +76,22 @@ function flattenProjectFiles(files: FileItem[], parentPath = ""): AnalyzedProjec
     if (file.children) {
       return flattenProjectFiles(file.children, path);
     }
-    if (file.proposedStatus === "deleted" || file.type === "image") {
+    if (file.proposedStatus === "deleted") {
       return [];
+    }
+    if (file.type === "image") {
+      const content = effectiveContent(file);
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+      return [{
+        path,
+        fileName: file.name,
+        type: file.type,
+        extension,
+        size: content.length,
+        lineCount: 0,
+        content: "",
+        summary: `${path} (image asset, ${content.length} chars)`,
+      }];
     }
     const content = effectiveContent(file);
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "";

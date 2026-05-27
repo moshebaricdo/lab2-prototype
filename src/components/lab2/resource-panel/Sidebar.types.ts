@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import type { DevPanelField } from "../dev";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import type { UseAnnotationsResult } from "../../../hooks/useAnnotations";
-import type { ChatMessage, FileChange } from "../../../types/chat";
+import type { ChatAttachment, ChatMessage, FileChange } from "../../../types/chat";
 import type {
   AiTutorInputExperiment,
   InstructionGuide,
@@ -92,8 +92,14 @@ export interface SidebarProps {
   instructionGuide?: InstructionGuide;
   aiTutorInputExperiment?: AiTutorInputExperiment;
   mockTutorConfig?: MockTutorConfig;
-  /** Callback to add a file to the project tree. */
-  onAddFileToProject?: (fileName: string) => void;
+  /** Basenames already present in the project file tree. */
+  existingProjectFileNames?: string[];
+  /** Stage a composer upload into the project uploads/ folder. */
+  onStageTutorUpload?: (attachment: ChatAttachment) => true | string;
+  /** Manually add a Tutor upload to the project from a chat affordance. */
+  onAddTutorUploadToProject?: (attachment: ChatAttachment) => true | string;
+  /** Remove a composer upload from the project uploads/ folder before send. */
+  onRemoveStagedTutorUpload?: (attachment: ChatAttachment) => void;
   /** Custom content for the instructions drawer (replaces default copy). */
   instructionsContent?: ReactNode;
   availableTutorContextFiles?: TutorContextFile[];

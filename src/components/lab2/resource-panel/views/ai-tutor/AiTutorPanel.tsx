@@ -11,6 +11,7 @@ import {
 import { InstructionsDrawer } from "../../InstructionsDrawer";
 import type { InstructionsDrawerVisualCue } from "../../InstructionsDrawer";
 import type {
+  AttachmentStatusContext,
   ChatAttachment,
   ChatMessage,
   FileChange,
@@ -37,6 +38,8 @@ import {
   buildUnreadableUploadAttachment,
   buildUploadedAttachment,
 } from "./attachmentUtils";
+import { resolveActionCardAttachments } from "./uploadAddWorkflow";
+import { isAddableUploadAttachment } from "./uploadIntentClassifier";
 import {
   buildNewProjectPlanPrompt,
   createNewProjectPlanQuestionnaireMessage,
@@ -69,6 +72,85 @@ interface PreviewElementAttachmentDetail {
   computedStyles?: Record<string, string>;
 }
 
+interface UploadProcessingResult {
+  attachments: ChatAttachment[];
+  failedCount: number;
+  selectedCount: number;
+}
+
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+};
+
+const ATTACHMENT_NOUN_PATTERN =
+  /(?:photos?|pictures?|images?|files?|attachments?|assets?|screenshots?|screen\s*shots?|mockups?|wireframes?)/i;
+
+function parseSmallCount(value: string) {
+  const numeric = Number.parseInt(value, 10);
+  if (Number.isFinite(numeric)) return numeric;
+  return NUMBER_WORDS[value.toLowerCase()];
+}
+
+function inferMentionedUploadCount(message: string) {
+  const numberAlternatives = `\\d+|${Object.keys(NUMBER_WORDS).join("|")}`;
+  const beforeNounPattern = new RegExp(
+    `\\b(${numberAlternatives})\\s+(?:new\\s+|more\\s+|different\\s+)?${ATTACHMENT_NOUN_PATTERN.source}`,
+    "i",
+  );
+  const beforeMatch = message.match(beforeNounPattern);
+  if (beforeMatch?.[1]) return parseSmallCount(beforeMatch[1]);
+
+  const afterNounPattern = new RegExp(
+    `${ATTACHMENT_NOUN_PATTERN.source}\\s*(?:x\\s*)?\\(?\\b(${numberAlternatives})\\b\\)?`,
+    "i",
+  );
+  const afterMatch = message.match(afterNounPattern);
+  return afterMatch?.[1] ? parseSmallCount(afterMatch[1]) : undefined;
+}
+
+function isUsefulUploadAttachment(attachment: ChatAttachment) {
+  if (attachment.source !== "upload") return false;
+  if (attachment.imageDataUrl ?? attachment.imageSrc) return true;
+  const content = attachment.content?.trim() ?? "";
+  return Boolean(content) && !/browser could not read this file/i.test(content);
+}
+
+function buildAttachmentStatusContext(options: {
+  submittedContent: string;
+  sentAttachments?: ChatAttachment[];
+  failedUploadCount: number;
+}): AttachmentStatusContext | undefined {
+  const availableUploadCount =
+    options.sentAttachments?.filter(isUsefulUploadAttachment).length ?? 0;
+  const inferredMentionedUploadCount = inferMentionedUploadCount(options.submittedContent);
+  const hasMentionedMoreThanAvailable =
+    inferredMentionedUploadCount !== undefined &&
+    inferredMentionedUploadCount > availableUploadCount;
+
+  if (options.failedUploadCount === 0 && !hasMentionedMoreThanAvailable) {
+    return undefined;
+  }
+
+  return {
+    availableUploadCount,
+    failedUploadCount: options.failedUploadCount || undefined,
+    inferredMentionedUploadCount: hasMentionedMoreThanAvailable
+      ? inferredMentionedUploadCount
+      : undefined,
+    instruction:
+      "Briefly and naturally acknowledge any missing or unavailable uploaded files at the start of your response, then continue helping with the files and context available. Do not over-explain upload internals or present this as a separate alert.",
+  };
+}
+
 interface AiTutorPanelProps {
   chatMessages: ChatMessage[];
   setChatMessages: (messages: ChatMessage[]) => void;
@@ -81,7 +163,10 @@ interface AiTutorPanelProps {
   instructionGuide?: InstructionGuide;
   inputExperiment?: AiTutorInputExperiment;
   mockTutorConfig?: MockTutorConfig;
-  onAddFileToProject?: (fileName: string) => void;
+  existingProjectFileNames?: string[];
+  onStageTutorUpload?: (attachment: ChatAttachment) => true | string;
+  onAddTutorUploadToProject?: (attachment: ChatAttachment) => true | string;
+  onRemoveStagedTutorUpload?: (attachment: ChatAttachment) => void;
   instructionsContent?: ReactNode;
   onTutorSubmit?: TutorSubmitHandler;
   onAcceptAiChanges?: (saveTitle?: string) => void;
@@ -309,7 +394,9 @@ export function AiTutorPanel({
   instructionGuide,
   inputExperiment = "default",
   mockTutorConfig,
-  onAddFileToProject,
+  onStageTutorUpload,
+  onAddTutorUploadToProject,
+  onRemoveStagedTutorUpload,
   instructionsContent,
   onTutorSubmit,
   onAcceptAiChanges,
@@ -361,8 +448,18 @@ export function AiTutorPanel({
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
   const chatMessagesRef = useRef(chatMessages);
+  const attachedFilesRef = useRef(attachedFiles);
+  const uploadedAttachmentContextsRef = useRef(uploadedAttachmentContexts);
+  const codeAttachmentTimestampsRef = useRef(codeAttachmentTimestamps);
+  const codeAttachmentContextsRef = useRef(codeAttachmentContexts);
+  const pendingUploadPromisesRef = useRef(new Set<Promise<UploadProcessingResult>>());
+  const uploadFailureCountSinceLastSendRef = useRef(0);
   const generatedTutorResponseRef = useRef<ChatMessage | null>(generatedTutorResponse);
   chatMessagesRef.current = chatMessages;
+  attachedFilesRef.current = attachedFiles;
+  uploadedAttachmentContextsRef.current = uploadedAttachmentContexts;
+  codeAttachmentTimestampsRef.current = codeAttachmentTimestamps;
+  codeAttachmentContextsRef.current = codeAttachmentContexts;
   generatedTutorResponseRef.current = generatedTutorResponse;
 
   const contextFileByPath = useMemo(
@@ -379,6 +476,11 @@ export function AiTutorPanel({
     : "";
 
   const resetComposerState = useCallback(() => {
+    attachedFilesRef.current = [];
+    uploadedAttachmentContextsRef.current = {};
+    codeAttachmentTimestampsRef.current = {};
+    codeAttachmentContextsRef.current = {};
+    uploadFailureCountSinceLastSendRef.current = 0;
     setAttachedFiles([]);
     setUploadedAttachmentContexts({});
     setCodeAttachmentTimestamps({});
@@ -618,19 +720,25 @@ export function AiTutorPanel({
       const range = startLine === endLine ? `${startLine}` : `${startLine}-${endLine}`;
       const label = `${fileName} (${range})`;
       const timestamp = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-      setAttachedFiles((prev) =>
-        prev.some((f) => f === label) ? prev : [...prev, label],
-      );
-      setCodeAttachmentTimestamps((prev) => ({ ...prev, [label]: timestamp }));
-      setCodeAttachmentContexts((prev) => ({
-        ...prev,
+      if (!attachedFilesRef.current.some((file) => file === label)) {
+        attachedFilesRef.current = [...attachedFilesRef.current, label];
+        setAttachedFiles(attachedFilesRef.current);
+      }
+      codeAttachmentTimestampsRef.current = {
+        ...codeAttachmentTimestampsRef.current,
+        [label]: timestamp,
+      };
+      codeAttachmentContextsRef.current = {
+        ...codeAttachmentContextsRef.current,
         [label]: {
           content: selectedText ?? "",
           startLine,
           endLine,
           fileName,
         },
-      }));
+      };
+      setCodeAttachmentTimestamps(codeAttachmentTimestampsRef.current);
+      setCodeAttachmentContexts(codeAttachmentContextsRef.current);
     };
     window.addEventListener("weblab:add-to-tutor", handler);
     return () => window.removeEventListener("weblab:add-to-tutor", handler);
@@ -641,9 +749,9 @@ export function AiTutorPanel({
       const { path, name } = (event as CustomEvent<{ path?: string; name?: string }>).detail ?? {};
       const fileLabel = path || name;
       if (!fileLabel) return;
-      setAttachedFiles((prev) =>
-        prev.includes(fileLabel) ? prev : [...prev, fileLabel],
-      );
+      if (attachedFilesRef.current.includes(fileLabel)) return;
+      attachedFilesRef.current = [...attachedFilesRef.current, fileLabel];
+      setAttachedFiles(attachedFilesRef.current);
     };
     window.addEventListener("weblab:add-project-file-to-tutor", handler);
     return () => window.removeEventListener("weblab:add-project-file-to-tutor", handler);
@@ -692,8 +800,15 @@ export function AiTutorPanel({
         ].join("\n"),
       };
 
-      setUploadedAttachmentContexts((prev) => ({ ...prev, [path]: attachment }));
-      setAttachedFiles((prev) => prev.includes(path) ? prev : [...prev, path]);
+      uploadedAttachmentContextsRef.current = {
+        ...uploadedAttachmentContextsRef.current,
+        [path]: attachment,
+      };
+      setUploadedAttachmentContexts(uploadedAttachmentContextsRef.current);
+      if (!attachedFilesRef.current.includes(path)) {
+        attachedFilesRef.current = [...attachedFilesRef.current, path];
+        setAttachedFiles(attachedFilesRef.current);
+      }
     };
 
     window.addEventListener("weblab:add-preview-element-to-tutor", handler);
@@ -727,88 +842,193 @@ export function AiTutorPanel({
   };
 
   const mergeAttachedFile = (fileLabel: string) => {
-    setAttachedFiles((prev) => {
-      if (prev.includes(fileLabel)) return prev;
-      return [...prev, fileLabel];
-    });
+    if (attachedFilesRef.current.includes(fileLabel)) return;
+    const nextAttachedFiles = [...attachedFilesRef.current, fileLabel];
+    attachedFilesRef.current = nextAttachedFiles;
+    setAttachedFiles(nextAttachedFiles);
   };
 
-  const handleUploadFileSelection = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.currentTarget.files ?? []);
-    event.currentTarget.value = "";
-    if (files.length === 0) return;
+  const processUploadFiles = async (files: File[]): Promise<UploadProcessingResult> => {
+    let failedCount = 0;
+
+    console.info("[AiTutorUpload] selected", files.map((file) => ({
+      name: file.name,
+      type: file.type || "unknown type",
+      sizeBytes: file.size,
+    })));
 
     const existingPaths = new Set([
-      ...attachedFiles,
-      ...Object.keys(uploadedAttachmentContexts),
+      ...attachedFilesRef.current,
+      ...Object.keys(uploadedAttachmentContextsRef.current),
     ]);
 
-    const uploaded = await Promise.all(files.map(async (file) => {
+    const built = await Promise.all(files.map(async (file) => {
       const path = buildUniqueUploadPath(file.name, existingPaths);
       existingPaths.add(path);
       try {
         return await buildUploadedAttachment(file, path);
-      } catch {
+      } catch (error) {
+        failedCount += 1;
+        console.warn("[AiTutorUpload] read failed", {
+          name: file.name,
+          path,
+          type: file.type || "unknown type",
+          sizeBytes: file.size,
+          error,
+        });
         return buildUnreadableUploadAttachment(file, path);
       }
     }));
 
-    setUploadedAttachmentContexts((prev) => ({
-      ...prev,
-      ...Object.fromEntries(uploaded.map((attachment) => [attachment.path, attachment])),
-    }));
-    setAttachedFiles((prev) => {
-      const next = [...prev];
-      for (const attachment of uploaded) {
-        if (!next.includes(attachment.path)) {
-          next.push(attachment.path);
+    console.info("[AiTutorUpload] prepared", built.map((attachment) => ({
+      fileName: attachment.fileName,
+      path: attachment.path,
+      mimeType: attachment.mimeType,
+      sizeBytes: attachment.sizeBytes,
+      hasImageDataUrl: Boolean(attachment.imageDataUrl),
+      hasContent: Boolean(attachment.content?.trim()),
+      addable: isAddableUploadAttachment(attachment),
+    })));
+
+    const staged: ChatAttachment[] = [];
+
+    for (const attachment of built) {
+      if (!isAddableUploadAttachment(attachment)) {
+        console.info("[AiTutorUpload] skipped project staging", {
+          fileName: attachment.fileName,
+          path: attachment.path,
+          reason: "not addable",
+        });
+        staged.push(attachment);
+        continue;
+      }
+
+      if (onStageTutorUpload) {
+        const result = onStageTutorUpload(attachment);
+        if (result !== true) {
+          failedCount += 1;
+          console.warn("[AiTutorUpload] project staging failed silently", {
+            fileName: attachment.fileName,
+            path: attachment.path,
+            reason: result,
+          });
+          staged.push(attachment);
+          continue;
         }
       }
-      return next;
+
+      console.info("[AiTutorUpload] project staging succeeded", {
+        fileName: attachment.fileName,
+        path: attachment.path,
+      });
+      staged.push({ ...attachment, addedToProject: true });
+    }
+
+    if (staged.length > 0) {
+      const nextContexts = {
+        ...uploadedAttachmentContextsRef.current,
+        ...Object.fromEntries(staged.map((attachment) => [attachment.path, attachment])),
+      };
+      const nextAttachedFiles = [...attachedFilesRef.current];
+      for (const attachment of staged) {
+        if (!nextAttachedFiles.includes(attachment.path)) {
+          nextAttachedFiles.push(attachment.path);
+        }
+      }
+
+      uploadedAttachmentContextsRef.current = nextContexts;
+      attachedFilesRef.current = nextAttachedFiles;
+      setUploadedAttachmentContexts(nextContexts);
+      setAttachedFiles(nextAttachedFiles);
+
+      console.info("[AiTutorUpload] attached to composer", staged.map((attachment) => ({
+        fileName: attachment.fileName,
+        path: attachment.path,
+        addedToProject: Boolean(attachment.addedToProject),
+      })));
+    }
+
+    if (failedCount > 0) {
+      uploadFailureCountSinceLastSendRef.current += failedCount;
+    }
+
+    return {
+      attachments: staged,
+      failedCount,
+      selectedCount: files.length,
+    };
+  };
+
+  const handleUploadFileSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = "";
+    if (files.length === 0) return;
+
+    const uploadPromise = processUploadFiles(files);
+    pendingUploadPromisesRef.current.add(uploadPromise);
+    void uploadPromise.finally(() => {
+      pendingUploadPromisesRef.current.delete(uploadPromise);
     });
   };
 
   const removeAttachedFile = (fileLabel: string) => {
-    setAttachedFiles((prev) => prev.filter((file) => file !== fileLabel));
-    setUploadedAttachmentContexts((prev) => {
-      const next = { ...prev };
-      delete next[fileLabel];
-      return next;
-    });
-    setCodeAttachmentTimestamps((prev) => {
-      const next = { ...prev };
-      delete next[fileLabel];
-      return next;
-    });
-    setCodeAttachmentContexts((prev) => {
-      const next = { ...prev };
-      delete next[fileLabel];
-      return next;
-    });
+    const attachment = uploadedAttachmentContextsRef.current[fileLabel];
+    if (attachment?.source === "upload") {
+      console.info("[AiTutorUpload] removed from composer", {
+        fileName: attachment.fileName,
+        path: attachment.path,
+        addedToProject: Boolean(attachment.addedToProject),
+      });
+      onRemoveStagedTutorUpload?.(attachment);
+    }
+
+    const nextAttachedFiles = attachedFilesRef.current.filter((file) => file !== fileLabel);
+    const nextUploadedContexts = { ...uploadedAttachmentContextsRef.current };
+    const nextCodeTimestamps = { ...codeAttachmentTimestampsRef.current };
+    const nextCodeContexts = { ...codeAttachmentContextsRef.current };
+    delete nextUploadedContexts[fileLabel];
+    delete nextCodeTimestamps[fileLabel];
+    delete nextCodeContexts[fileLabel];
+
+    attachedFilesRef.current = nextAttachedFiles;
+    uploadedAttachmentContextsRef.current = nextUploadedContexts;
+    codeAttachmentTimestampsRef.current = nextCodeTimestamps;
+    codeAttachmentContextsRef.current = nextCodeContexts;
+    setAttachedFiles(nextAttachedFiles);
+    setUploadedAttachmentContexts(nextUploadedContexts);
+    setCodeAttachmentTimestamps(nextCodeTimestamps);
+    setCodeAttachmentContexts(nextCodeContexts);
   };
 
   const handleMarkAttachmentAdded = (msgIndex: number, attachmentPath: string) => {
-    const msg = chatMessages[msgIndex];
-    const att = msg?.attachments?.find((a) => a.path === attachmentPath);
+    const attachment = chatMessages[msgIndex]?.attachments?.find(
+      (item) => item.path === attachmentPath,
+    );
+    const addResult = attachment ? onAddTutorUploadToProject?.(attachment) : true;
+    if (addResult !== undefined && addResult !== true) {
+      console.warn("[AiTutorUpload] manual chip add failed silently", {
+        attachmentPath,
+        reason: addResult,
+      });
+      return;
+    }
+
     logTutorEvent("attachment add-to-project action", {
       messageIndex: msgIndex,
       attachmentPath,
-      fileName: att?.fileName,
-      source: att?.source,
+      note: onAddTutorUploadToProject
+        ? "Upload manually added to the project from chat chip."
+        : "Uploads are staged in uploads/ at composer attach time.",
     });
-    if (att) {
-      onAddFileToProject?.(att.fileName);
-    }
-
     setChatMessages(
-      chatMessages.map((m, i) => {
-        if (i !== msgIndex || !m.attachments) return m;
+      chatMessages.map((message, index) => {
+        if (index !== msgIndex || !message.attachments?.length) return message;
         return {
-          ...m,
-          attachments: m.attachments.map((a) =>
-            a.path === attachmentPath
-              ? { ...a, addedToProject: true }
-              : a,
+          ...message,
+          attachments: message.attachments.map((attachment) =>
+            attachment.path === attachmentPath
+              ? { ...attachment, addedToProject: true }
+              : attachment
           ),
         };
       }),
@@ -817,36 +1037,65 @@ export function AiTutorPanel({
 
   const handleActionCardUpdate = (msgIndex: number, newStatus: "added" | "dismissed") => {
     const msg = chatMessages[msgIndex];
-    const fileCount = msg?.actionCard?.files.length ?? 0;
+    const previousUserMessage = chatMessages
+      .slice(0, msgIndex)
+      .reverse()
+      .find((message) => message.role === "user");
+    const manuallyAddedAttachmentPaths = new Set<string>();
+
+    if (newStatus === "added" && msg?.actionCard) {
+      const attachments = resolveActionCardAttachments(
+        msg.actionCard.attachmentPaths,
+        previousUserMessage,
+      );
+      for (const attachment of attachments) {
+        const result = onAddTutorUploadToProject?.(attachment);
+        if (result !== undefined && result !== true) {
+          console.warn("[AiTutorUpload] manual action-card add failed silently", {
+            attachmentPath: attachment.path,
+            reason: result,
+          });
+          continue;
+        }
+        manuallyAddedAttachmentPaths.add(attachment.path);
+      }
+    }
+
     logTutorEvent("action card updated", {
       messageIndex: msgIndex,
       status: newStatus,
       files: msg?.actionCard?.files ?? [],
+      attachmentPaths: msg?.actionCard?.attachmentPaths ?? [],
     });
 
-    if (newStatus === "added") {
-      msg?.actionCard?.files.forEach((fileName) => {
-        onAddFileToProject?.(fileName);
-      });
-    }
+    setChatMessages(
+      chatMessages.map((m, i) => {
+        if (i === msgIndex && m.actionCard) {
+          return {
+            ...m,
+            actionCard: { ...m.actionCard, status: newStatus },
+          };
+        }
 
-    const updated = chatMessages.map((m, i) => {
-      if (i !== msgIndex || !m.actionCard) return m;
-      return {
-        ...m,
-        actionCard: { ...m.actionCard, status: newStatus },
-      };
-    });
+        if (
+          newStatus === "added" &&
+          manuallyAddedAttachmentPaths.size > 0 &&
+          m.role === "user" &&
+          m.attachments?.length
+        ) {
+          return {
+            ...m,
+            attachments: m.attachments.map((attachment) =>
+              manuallyAddedAttachmentPaths.has(attachment.path)
+                ? { ...attachment, addedToProject: true }
+                : attachment
+            ),
+          };
+        }
 
-    if (newStatus === "added") {
-      updated.push({
-        role: "assistant",
-        content: `${fileCount} ${fileCount === 1 ? "file was" : "files were"} added to your project.`,
-        isAlert: true,
-      });
-    }
-
-    setChatMessages(updated);
+        return m;
+      }),
+    );
   };
 
   const handleCodeChangeAction = (msgIndex: number, action: "accepted" | "rejected") => {
@@ -1121,74 +1370,120 @@ export function AiTutorPanel({
     scrollToBottom();
   };
 
+  const waitForPendingUploads = async () => {
+    const pendingUploads = [...pendingUploadPromisesRef.current];
+    if (pendingUploads.length === 0) return;
+
+    logTutorEvent("waiting for pending uploads before tutor request", {
+      pendingUploadCount: pendingUploads.length,
+    });
+    await Promise.allSettled(pendingUploads);
+  };
+
   const handleSendMessage = () => {
     if (!canSend) return;
-    const userMessage = formatUserMessage();
-    if (!userMessage) return;
-
-    const sentAttachments = buildAttachmentsForSend({
-      attachedFiles,
-      codeAttachmentTimestamps,
-      codeAttachmentContexts,
-      contextFileByPath,
-      uploadedAttachmentContexts,
-      attachmentMeta: mockTutorConfig?.attachmentMeta,
-    });
-    const submittedContent = chatInput.trim() || userMessage;
-    logTutorEvent("composer send clicked", {
-      requestMode: tutorRequestMode,
-      submittedPreview: submittedContent.slice(0, 240),
-      attachmentCount: sentAttachments?.length ?? 0,
-      inputExperiment,
-      isFunctional: Boolean(onTutorSubmit),
-    });
-    const newUserMsg: ChatMessage = {
-      role: "user",
-      content: submittedContent,
-      attachments: sentAttachments,
-    };
-    const newMessages = [...chatMessages, newUserMsg];
-
-    const followUp = sentAttachments
-      ? mockTutorConfig?.buildAttachmentFollowUp?.(sentAttachments, inputExperiment)
-      : null;
-    if (followUp) {
-      newMessages.push(followUp);
-    }
-
-    const isFirstMessage = chatMessages.length === 0;
-    const seededConversation =
-      !onTutorSubmit && isFirstMessage && !sentAttachments && !followUp
-        ? resolveSeedConversation(mockTutorConfig?.seedConversation, userMessage)
-        : null;
-
-    setChatMessages(seededConversation ?? newMessages);
-    setGeneratedTutorResponse(null);
-
-    if (onTutorSubmit) {
-      startTutorRequest(
-        submittedContent,
-        newMessages,
-        tutorRequestMode,
-        submitFailureMessage,
-      );
-    } else if (mockTutorConfig?.response) {
-      startTutorRequest(
-        submittedContent,
-        newMessages,
-        tutorRequestMode,
-        "I had trouble preparing those edits. Try sending the request again.",
-      );
-    } else {
-      setIsThinking(false);
-    }
+    const submittedText = chatInput.trim();
+    const acceptedTutorMode = tutorRequestMode;
+    const baseMessages = chatMessagesRef.current;
+    const acceptedSerial = requestSerialRef.current;
 
     setChatInput("");
-    if (!showModelSelector && tutorRequestMode !== "auto") {
+    setGeneratedTutorResponse(null);
+    setIsThinking(true);
+    if (!showModelSelector && acceptedTutorMode !== "auto") {
       setTutorRequestMode("auto");
     }
-    resetComposerState();
     scrollToBottom();
+
+    void (async () => {
+      await waitForPendingUploads();
+      if (requestSerialRef.current !== acceptedSerial) return;
+
+      const sentAttachments = buildAttachmentsForSend({
+        attachedFiles: attachedFilesRef.current,
+        codeAttachmentTimestamps: codeAttachmentTimestampsRef.current,
+        codeAttachmentContexts: codeAttachmentContextsRef.current,
+        contextFileByPath,
+        uploadedAttachmentContexts: uploadedAttachmentContextsRef.current,
+        attachmentMeta: mockTutorConfig?.attachmentMeta,
+      });
+      const uploadedAttachmentLabels = sentAttachments
+        ?.map((attachment) => attachment.fileName)
+        .join(", ");
+      const userMessage = submittedText ||
+        (uploadedAttachmentLabels ? `Attached files: ${uploadedAttachmentLabels}` : "");
+      if (!userMessage) {
+        setIsThinking(false);
+        return;
+      }
+
+      const submittedContent = submittedText || userMessage;
+      const failedUploadCount = uploadFailureCountSinceLastSendRef.current;
+      const attachmentStatus = buildAttachmentStatusContext({
+        submittedContent,
+        sentAttachments,
+        failedUploadCount,
+      });
+      uploadFailureCountSinceLastSendRef.current = 0;
+
+      logTutorEvent("composer send clicked", {
+        requestMode: acceptedTutorMode,
+        submittedPreview: submittedContent.slice(0, 240),
+        attachmentCount: sentAttachments?.length ?? 0,
+        failedUploadCount,
+        hasAttachmentStatus: Boolean(attachmentStatus),
+        inputExperiment,
+        isFunctional: Boolean(onTutorSubmit),
+      });
+      const newUserMsg: ChatMessage = {
+        role: "user",
+        content: submittedContent,
+        attachments: sentAttachments?.map((attachment) =>
+          attachment.source === "upload" && onStageTutorUpload
+            ? { ...attachment, addedToProject: true }
+            : attachment,
+        ),
+        attachmentStatus,
+      };
+
+      let newMessages = [...baseMessages, newUserMsg];
+
+      const followUp = !onStageTutorUpload && sentAttachments
+        ? mockTutorConfig?.buildAttachmentFollowUp?.(sentAttachments, inputExperiment)
+        : null;
+      if (followUp) {
+        newMessages.push(followUp);
+      }
+
+      const isFirstMessage = baseMessages.length === 0;
+      const seededConversation =
+        !onTutorSubmit && isFirstMessage && !sentAttachments && !followUp
+          ? resolveSeedConversation(mockTutorConfig?.seedConversation, userMessage)
+          : null;
+
+      setChatMessages(seededConversation ?? newMessages);
+
+      if (onTutorSubmit) {
+        startTutorRequest(
+          submittedContent,
+          newMessages,
+          acceptedTutorMode,
+          submitFailureMessage,
+        );
+      } else if (mockTutorConfig?.response) {
+        startTutorRequest(
+          submittedContent,
+          newMessages,
+          acceptedTutorMode,
+          "I had trouble preparing those edits. Try sending the request again.",
+        );
+      } else {
+        setIsThinking(false);
+      }
+
+      resetComposerState();
+      scrollToBottom();
+    })();
   };
 
   const isFileDragEvent = (event: DragEvent<HTMLElement>) =>
@@ -1272,6 +1567,7 @@ export function AiTutorPanel({
             : undefined
         }
         inputExperiment={inputExperiment}
+        enableUploadAddActions={false}
         onThinkingComplete={handleThinkingComplete}
         emptyStateTitle={emptyStateTitle}
         emptyStateText={emptyStateText}

@@ -21,6 +21,7 @@ import type {
   ValidationReviewCardData,
   ValidationReviewItemStatus,
 } from "../../../../../types/validationReview";
+import { isAddableUploadAttachment } from "./uploadIntentClassifier";
 import { copyTextToClipboard, FileChangesCard, renderMessageContent } from "./messageFormatting";
 import styles from "./AiTutorPanel.module.scss";
 
@@ -40,6 +41,7 @@ interface AiTutorMessageListProps {
   onThinkingComplete: () => void;
   onMarkAttachmentAdded: (msgIndex: number, attachmentPath: string) => void;
   onActionCardUpdate: (msgIndex: number, newStatus: "added" | "dismissed") => void;
+  enableUploadAddActions?: boolean;
   onCodeChangeAction: (msgIndex: number, action: "accepted" | "rejected") => void;
   onNewProjectPlanQuestionnaireSubmit: (
     msgIndex: number,
@@ -69,14 +71,16 @@ function MessageAttachments({
   idx,
   inputExperiment,
   onMarkAttachmentAdded,
+  enableUploadAddActions = false,
 }: {
   msg: ChatMessage;
   idx: number;
   inputExperiment: AiTutorInputExperiment;
   onMarkAttachmentAdded: (msgIndex: number, attachmentPath: string) => void;
+  enableUploadAddActions?: boolean;
 }) {
-  const showFileChipActionsInStream = inputExperiment === "file-chip-action";
-  const showTutorActionCards = inputExperiment === "tutor-action-card";
+  const showFileChipActionsInStream =
+    enableUploadAddActions || inputExperiment === "file-chip-action";
 
   if (msg.role !== "user" || !msg.attachments?.length) return null;
 
@@ -102,7 +106,7 @@ function MessageAttachments({
         </div>
       )}
 
-      {!showFileChipActionsInStream && !showTutorActionCards && nonCodeRefs.length > 0 && (
+      {!showFileChipActionsInStream && nonCodeRefs.length > 0 && (
         <div className={`${styles.messageRow} ${styles.messageRowUser}`}>
           <div className={styles.streamAttachmentRow}>
             {nonCodeRefs.map((att) => (
@@ -125,6 +129,7 @@ function MessageAttachments({
           <div className={styles.streamAttachmentRow}>
             {msg.attachments.map((att) => {
               const isUpload = att.source === "upload";
+              const canAdd = isUpload && isAddableUploadAttachment(att);
               return (
                 <FileChip
                   key={att.path}
@@ -134,29 +139,11 @@ function MessageAttachments({
                   iconName={faIconForFileName(att.path)}
                   imageSrc={att.imageSrc}
                   mode={isUpload ? "add" : "static"}
-                  onAdd={isUpload ? () => onMarkAttachmentAdded(idx, att.path) : undefined}
+                  onAdd={canAdd ? () => onMarkAttachmentAdded(idx, att.path) : undefined}
                   addedToProject={att.addedToProject}
                 />
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {showTutorActionCards && (
-        <div className={`${styles.messageRow} ${styles.messageRowUser}`}>
-          <div className={styles.streamAttachmentRow}>
-            {msg.attachments.map((att) => (
-              <FileChip
-                key={att.path}
-                fileName={att.fileName}
-                nameTitle={att.path}
-                extensionLabel={metadataLabelForAttachment(att)}
-                iconName={faIconForFileName(att.path)}
-                imageSrc={att.imageSrc}
-                mode="static"
-              />
-            ))}
           </div>
         </div>
       )}
@@ -472,6 +459,7 @@ export function AiTutorMessageList({
   onThinkingComplete,
   onMarkAttachmentAdded,
   onActionCardUpdate,
+  enableUploadAddActions = false,
   onCodeChangeAction,
   onNewProjectPlanQuestionnaireSubmit,
   interactiveCardsDisabled = false,
@@ -485,7 +473,6 @@ export function AiTutorMessageList({
   onOpenFileChangeInEditor,
   onOpenFileChangeInPreview,
 }: AiTutorMessageListProps) {
-  const showTutorActionCards = inputExperiment === "tutor-action-card";
   const latestReviewIndex = chatMessages.reduce(
     (latest, message, index) =>
       message.validationReview?.kind === "summary" ? index : latest,
@@ -522,6 +509,7 @@ export function AiTutorMessageList({
                   msg={msg}
                   idx={idx}
                   inputExperiment={inputExperiment}
+                  enableUploadAddActions={enableUploadAddActions}
                   onMarkAttachmentAdded={onMarkAttachmentAdded}
                 />
 
@@ -626,7 +614,7 @@ export function AiTutorMessageList({
                           />
                         )}
 
-                        {showTutorActionCards && msg.role === "assistant" && msg.actionCard && (
+                        {msg.role === "assistant" && msg.actionCard && (
                           <TutorActionCard
                             prompt={msg.actionCard.prompt}
                             files={msg.actionCard.files}

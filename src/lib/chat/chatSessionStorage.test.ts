@@ -48,7 +48,7 @@ describe("chatSessionStorage", () => {
     });
   });
 
-  it("strips imageDataUrl from attachments before persisting", () => {
+  it("strips heavy upload payloads before persisting", () => {
     const messages: ChatMessage[] = [
       {
         role: "user",
@@ -59,6 +59,16 @@ describe("chatSessionStorage", () => {
             path: "preview-elements/index.html#btn",
             imageDataUrl: "data:image/png;base64,abc",
             imageSrc: "blob:preview",
+            content: "small preview context",
+            source: "preview-element",
+          },
+          {
+            fileName: "photo.png",
+            path: "uploads/photo.png",
+            imageDataUrl: "data:image/png;base64,large",
+            imageSrc: "data:image/png;base64,large",
+            content: "Uploaded image file: photo.png",
+            source: "upload",
           },
         ],
       },
@@ -67,6 +77,8 @@ describe("chatSessionStorage", () => {
     writeStoredChatState(STORAGE_KEY, { messages, input: "" });
     const storedRaw = window.sessionStorage.getItem(STORAGE_KEY);
     expect(storedRaw).not.toContain("imageDataUrl");
+    expect(storedRaw).not.toContain("data:image/png;base64,large");
+    expect(storedRaw).not.toContain("Uploaded image file: photo.png");
     expect(readStoredChatState(STORAGE_KEY)).toEqual({
       messages: [
         {
@@ -77,6 +89,13 @@ describe("chatSessionStorage", () => {
               fileName: "preview.png",
               path: "preview-elements/index.html#btn",
               imageSrc: "blob:preview",
+              content: "small preview context",
+              source: "preview-element",
+            },
+            {
+              fileName: "photo.png",
+              path: "uploads/photo.png",
+              source: "upload",
             },
           ],
         },
