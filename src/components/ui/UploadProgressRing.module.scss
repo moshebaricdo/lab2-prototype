@@ -1,0 +1,18 @@
+.ring {
+  display: block;
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+}
+
+.track {
+  fill: none;
+  stroke: var(--ds-text-neutral-white-fixed);
+  opacity: 0.28;
+}
+
+.fill {
+  fill: none;
+  stroke: var(--ds-text-neutral-white-fixed);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.12s ease-out;
+}

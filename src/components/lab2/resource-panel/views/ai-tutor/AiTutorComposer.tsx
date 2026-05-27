@@ -43,6 +43,7 @@ interface AiTutorComposerProps {
   attachedFiles: string[];
   attachmentMeta?: Record<string, ChatAttachment>;
   uploadedAttachmentContexts: Record<string, ChatAttachment>;
+  uploadProgressByPath?: Record<string, number>;
   codeAttachmentTimestamps: Record<string, string>;
   isDragOverInput: boolean;
   showModelSelector?: boolean;
@@ -70,6 +71,7 @@ export function AiTutorComposer({
   attachedFiles,
   attachmentMeta,
   uploadedAttachmentContexts,
+  uploadProgressByPath = {},
   codeAttachmentTimestamps,
   isDragOverInput,
   showModelSelector = true,
@@ -200,6 +202,7 @@ export function AiTutorComposer({
                   extensionLabel={metadataLabel}
                   iconName={faIconForFileName(displayName)}
                   imageSrc={meta?.imageSrc}
+                  uploadProgress={uploadProgressByPath[fileLabel]}
                   onRemove={() => onRemoveAttachedFile(fileLabel)}
                 />
               );

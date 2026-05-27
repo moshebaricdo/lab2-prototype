@@ -39,6 +39,11 @@ import {
   buildUploadedAttachment,
 } from "./attachmentUtils";
 import { resolveActionCardAttachments } from "./uploadAddWorkflow";
+import {
+  finishUploadProgress,
+  runSimulatedUploadProgress,
+  waitForMinimumUploadIndicator,
+} from "./uploadProgress";
 import { isAddableUploadAttachment } from "./uploadIntentClassifier";
 import {
   buildNewProjectPlanPrompt,
@@ -438,6 +443,7 @@ export function AiTutorPanel({
     mockTutorConfig?.initialAttachments ?? [],
   );
   const [uploadedAttachmentContexts, setUploadedAttachmentContexts] = useState<Record<string, ChatAttachment>>({});
+  const [uploadProgressByPath, setUploadProgressByPath] = useState<Record<string, number>>({});
   const [codeAttachmentTimestamps, setCodeAttachmentTimestamps] = useState<Record<string, string>>({});
   const [codeAttachmentContexts, setCodeAttachmentContexts] = useState<Record<string, CodeAttachmentContext>>({});
   const [isThinking, setIsThinking] = useState(false);
@@ -453,6 +459,7 @@ export function AiTutorPanel({
   const codeAttachmentTimestampsRef = useRef(codeAttachmentTimestamps);
   const codeAttachmentContextsRef = useRef(codeAttachmentContexts);
   const pendingUploadPromisesRef = useRef(new Set<Promise<UploadProcessingResult>>());
+  const pendingPreviewUrlsRef = useRef<Record<string, string>>({});
   const uploadFailureCountSinceLastSendRef = useRef(0);
   const generatedTutorResponseRef = useRef<ChatMessage | null>(generatedTutorResponse);
   chatMessagesRef.current = chatMessages;
@@ -481,6 +488,11 @@ export function AiTutorPanel({
     codeAttachmentTimestampsRef.current = {};
     codeAttachmentContextsRef.current = {};
     uploadFailureCountSinceLastSendRef.current = 0;
+    for (const previewUrl of Object.values(pendingPreviewUrlsRef.current)) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    pendingPreviewUrlsRef.current = {};
+    setUploadProgressByPath({});
     setAttachedFiles([]);
     setUploadedAttachmentContexts({});
     setCodeAttachmentTimestamps({});
@@ -848,6 +860,94 @@ export function AiTutorPanel({
     setAttachedFiles(nextAttachedFiles);
   };
 
+  const revokePendingPreviewUrl = (path: string) => {
+    const previewUrl = pendingPreviewUrlsRef.current[path];
+    if (!previewUrl) return;
+    URL.revokeObjectURL(previewUrl);
+    const nextPreviewUrls = { ...pendingPreviewUrlsRef.current };
+    delete nextPreviewUrls[path];
+    pendingPreviewUrlsRef.current = nextPreviewUrls;
+  };
+
+  const updateUploadProgress = (path: string, progress: number) => {
+    setUploadProgressByPath((prev) => ({ ...prev, [path]: progress }));
+  };
+
+  const clearUploadProgress = (path: string) => {
+    setUploadProgressByPath((prev) => {
+      if (!(path in prev)) return prev;
+      const next = { ...prev };
+      delete next[path];
+      return next;
+    });
+  };
+
+  const registerPendingUpload = (file: File, path: string) => {
+    const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined;
+    if (previewUrl) {
+      pendingPreviewUrlsRef.current = {
+        ...pendingPreviewUrlsRef.current,
+        [path]: previewUrl,
+      };
+    }
+
+    const placeholder: ChatAttachment = {
+      fileName: file.name,
+      path,
+      imageSrc: previewUrl ?? null,
+      source: "upload",
+      mimeType: file.type || undefined,
+      sizeBytes: file.size,
+    };
+
+    uploadedAttachmentContextsRef.current = {
+      ...uploadedAttachmentContextsRef.current,
+      [path]: placeholder,
+    };
+
+    if (!attachedFilesRef.current.includes(path)) {
+      attachedFilesRef.current = [...attachedFilesRef.current, path];
+    }
+
+    setUploadedAttachmentContexts({ ...uploadedAttachmentContextsRef.current });
+    setAttachedFiles([...attachedFilesRef.current]);
+    updateUploadProgress(path, 0);
+  };
+
+  const processSingleUpload = async (file: File, path: string): Promise<ChatAttachment> => {
+    const stopSimulatedProgress = runSimulatedUploadProgress((progress) => {
+      updateUploadProgress(path, progress);
+    });
+
+    try {
+      const [attachment] = await Promise.all([
+        buildUploadedAttachment(file, path),
+        waitForMinimumUploadIndicator(),
+      ]);
+      stopSimulatedProgress();
+      await finishUploadProgress((progress) => {
+        updateUploadProgress(path, progress);
+      });
+      return attachment;
+    } catch (error) {
+      await waitForMinimumUploadIndicator();
+      stopSimulatedProgress();
+      console.warn("[AiTutorUpload] read failed", {
+        name: file.name,
+        path,
+        type: file.type || "unknown type",
+        sizeBytes: file.size,
+        error,
+      });
+      await finishUploadProgress((progress) => {
+        updateUploadProgress(path, progress);
+      });
+      return buildUnreadableUploadAttachment(file, path);
+    } finally {
+      clearUploadProgress(path);
+    }
+  };
+
   const processUploadFiles = async (files: File[]): Promise<UploadProcessingResult> => {
     let failedCount = 0;
 
@@ -862,23 +962,16 @@ export function AiTutorPanel({
       ...Object.keys(uploadedAttachmentContextsRef.current),
     ]);
 
-    const built = await Promise.all(files.map(async (file) => {
+    const pendingUploads = files.map((file) => {
       const path = buildUniqueUploadPath(file.name, existingPaths);
       existingPaths.add(path);
-      try {
-        return await buildUploadedAttachment(file, path);
-      } catch (error) {
-        failedCount += 1;
-        console.warn("[AiTutorUpload] read failed", {
-          name: file.name,
-          path,
-          type: file.type || "unknown type",
-          sizeBytes: file.size,
-          error,
-        });
-        return buildUnreadableUploadAttachment(file, path);
-      }
-    }));
+      registerPendingUpload(file, path);
+      return { file, path };
+    });
+
+    const built = await Promise.all(
+      pendingUploads.map(({ file, path }) => processSingleUpload(file, path)),
+    );
 
     console.info("[AiTutorUpload] prepared", built.map((attachment) => ({
       fileName: attachment.fileName,
@@ -924,29 +1017,25 @@ export function AiTutorPanel({
       staged.push({ ...attachment, addedToProject: true });
     }
 
-    if (staged.length > 0) {
-      const nextContexts = {
-        ...uploadedAttachmentContextsRef.current,
-        ...Object.fromEntries(staged.map((attachment) => [attachment.path, attachment])),
-      };
-      const nextAttachedFiles = [...attachedFilesRef.current];
-      for (const attachment of staged) {
-        if (!nextAttachedFiles.includes(attachment.path)) {
-          nextAttachedFiles.push(attachment.path);
-        }
-      }
-
-      uploadedAttachmentContextsRef.current = nextContexts;
-      attachedFilesRef.current = nextAttachedFiles;
-      setUploadedAttachmentContexts(nextContexts);
-      setAttachedFiles(nextAttachedFiles);
-
-      console.info("[AiTutorUpload] attached to composer", staged.map((attachment) => ({
-        fileName: attachment.fileName,
-        path: attachment.path,
-        addedToProject: Boolean(attachment.addedToProject),
-      })));
+    const nextContexts = { ...uploadedAttachmentContextsRef.current };
+    for (const attachment of built) {
+      nextContexts[attachment.path] = staged.find((item) => item.path === attachment.path) ?? attachment;
     }
+    uploadedAttachmentContextsRef.current = nextContexts;
+    setUploadedAttachmentContexts(nextContexts);
+
+    for (const { path } of pendingUploads) {
+      revokePendingPreviewUrl(path);
+    }
+
+    console.info("[AiTutorUpload] attached to composer", built.map((attachment) => ({
+      fileName: attachment.fileName,
+      path: attachment.path,
+      addedToProject: staged.some(
+        (stagedAttachment) =>
+          stagedAttachment.path === attachment.path && stagedAttachment.addedToProject,
+      ),
+    })));
 
     if (failedCount > 0) {
       uploadFailureCountSinceLastSendRef.current += failedCount;
@@ -972,6 +1061,8 @@ export function AiTutorPanel({
   };
 
   const removeAttachedFile = (fileLabel: string) => {
+    clearUploadProgress(fileLabel);
+    revokePendingPreviewUrl(fileLabel);
     const attachment = uploadedAttachmentContextsRef.current[fileLabel];
     if (attachment?.source === "upload") {
       console.info("[AiTutorUpload] removed from composer", {
@@ -1593,6 +1684,7 @@ export function AiTutorPanel({
           attachedFiles={attachedFiles}
           attachmentMeta={mockTutorConfig?.attachmentMeta}
           uploadedAttachmentContexts={uploadedAttachmentContexts}
+          uploadProgressByPath={uploadProgressByPath}
           codeAttachmentTimestamps={codeAttachmentTimestamps}
           isDragOverInput={isDragOverInput}
           showModelSelector={showModelSelector}

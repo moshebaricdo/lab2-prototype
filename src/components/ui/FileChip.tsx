@@ -1,6 +1,7 @@
 import { FaIcon, type FaIconName } from "@/icons";
 import { AppButton } from "./AppButton";
 import { Tooltip } from "./Tooltip";
+import { UploadProgressRing } from "./UploadProgressRing";
 import styles from "./FileChip.module.scss";
 
 export interface FileChipProps {
@@ -29,6 +30,8 @@ export interface FileChipProps {
   /** When set, renders the square image thumbnail variant instead of the file row. */
   imageSrc?: string | null;
   onImageError?: () => void;
+  /** When set, shows a circular upload progress indicator (0–100). */
+  uploadProgress?: number;
 }
 
 export function FileChip({
@@ -43,10 +46,20 @@ export function FileChip({
   disabled,
   imageSrc,
   onImageError,
+  uploadProgress,
 }: FileChipProps) {
   const titleAttr = nameTitle ?? fileName;
   const metadataLabel = extensionLabel?.trim();
   const isAdd = mode === "add";
+  const isUploading = uploadProgress !== undefined;
+  const uploadOverlay = isUploading ? (
+    <>
+      <div className={styles.uploadOverlay} aria-hidden />
+      <div className={styles.uploadProgress}>
+        <UploadProgressRing progress={uploadProgress} size={18} />
+      </div>
+    </>
+  ) : null;
 
   const removeButton = mode === "remove" ? (
     <button
@@ -95,6 +108,7 @@ export function FileChip({
             src={imageSrc}
             onError={() => onImageError?.()}
           />
+          {uploadOverlay}
         </div>
         {addButton}
       </div>
@@ -104,12 +118,15 @@ export function FileChip({
   if (imageSrc) {
     return (
       <div className={`${styles.imageChip} ${addedToProject ? styles.imageChipAdded : ""}`}>
-        <img
-          alt=""
-          className={styles.imageChipImg}
-          src={imageSrc}
-          onError={() => onImageError?.()}
-        />
+        <div className={styles.imageChipMedia}>
+          <img
+            alt=""
+            className={styles.imageChipImg}
+            src={imageSrc}
+            onError={() => onImageError?.()}
+          />
+          {uploadOverlay}
+        </div>
         {removeButton}
       </div>
     );
@@ -118,7 +135,11 @@ export function FileChip({
   return (
     <div className={`${styles.fileChip} ${addedToProject ? styles.fileChipAdded : ""}`}>
       <div className={styles.iconRail} aria-hidden="true">
-        <FaIcon name={iconName} size="inherit" className={styles.iconGlyph} />
+        {isUploading ? (
+          <UploadProgressRing progress={uploadProgress} size={16} strokeWidth={2} />
+        ) : (
+          <FaIcon name={iconName} size="inherit" className={styles.iconGlyph} />
+        )}
       </div>
       <div className={styles.textBlock}>
         <p className={styles.fileName} title={titleAttr}>
