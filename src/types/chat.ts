@@ -30,7 +30,17 @@ export interface ChatAttachment {
 export interface ActionCardData {
   prompt: string;
   files: string[];
+  /** Upload attachment paths from the preceding user message. */
+  attachmentPaths?: string[];
   status: "pending" | "added" | "dismissed";
+  kind?: "upload-add" | "legacy";
+}
+
+export interface AttachmentStatusContext {
+  availableUploadCount: number;
+  failedUploadCount?: number;
+  inferredMentionedUploadCount?: number;
+  instruction: string;
 }
 
 export interface NewProjectPlanAnswers {
@@ -57,6 +67,8 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   attachments?: ChatAttachment[];
+  /** Structured context for Tutor to naturally acknowledge missing/unavailable uploads. */
+  attachmentStatus?: AttachmentStatusContext;
   actionCard?: ActionCardData;
   newProjectPlanQuestionnaire?: NewProjectPlanQuestionnaireData;
   /** Files the tutor created, modified, or deleted in this response. */
