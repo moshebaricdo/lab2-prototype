@@ -10,6 +10,9 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - `/levels/weblab2-demo-project-blank`
 - `/levels/weblab2-tutor-action-card`
 - `/levels/weblab2-validation-test`
+- `/levels/progression-upload-mechanisms-staged`
+- `/levels/progression-upload-mechanisms-action-card`
+- `/levels/progression-upload-mechanisms-file-chip`
 - `/levels/progression-weblab2-validation-fix`
 - `/levels/progression-weblab2-validation-create`
 - `/levels/progression-weblab2-validation-refine`
@@ -26,6 +29,7 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - `src/pages/weblab2/WebLab2DemoProjectLevelPage.tsx`
 - `src/pages/weblab2/WebLab2BlankDemoProjectLevelPage.tsx`
 - `src/pages/weblab2/WebLab2TutorActionCardLevelPage.tsx`
+- `src/pages/weblab2/WebLab2UploadMechanismsLevelPage.tsx`
 - `src/pages/weblab2/WebLab2ValidationLevel.tsx`
 - `src/pages/weblab2/WebLab2ValidationPhotoCarouselLevelPage.tsx`
 - `src/pages/weblab2/WebLab2ValidationLoopStylePolishLevelPage.tsx`
@@ -45,6 +49,8 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 
 - File manager + editor + preview workspace
 - Web Lab 2's file manager plus menu supports uploading project files and image assets from the student's computer. Uploaded UI assets are session-scoped; image contents are stored as data URLs in the in-memory/session file tree and are not encoded into share URLs.
+- Tutor chat uploads are staged into an `uploads/` project folder as soon as they are attached in the composer; removing the attachment before send deletes the staged file. Tutor then decides from message intent whether to reference those files in code. Staged uploads stay silent: they do not add chat success/failure messages, count as project content for the new-project empty state, switch view mode, expand the file manager, or auto-open in the editor. Once the workspace is visible for real project files, the `uploads/` folder appears in the file manager.
+- The Upload Mechanisms progression compares the current functional staged-upload flow with two mock-only alternatives: an in-chat add-files action card and upload file chips with plus buttons. The mock alternatives intentionally do not mutate the project tree.
 - Tabbed resource panel integration (AI Tutor, Version History; optional tabs supported)
 - Resources tab support with placeholder cards for student lesson resources, lab documentation, and restartable walkthroughs; Web Lab 2 dev controls can toggle each card independently.
 - Functional AI Tutor prototype can respond with no-edit guidance, Markdown planning proposals, or validated project edit proposals when a session API key is present. Route-level Tutor proposal orchestration lives in `useWebLab2TutorFlow`, while `WebLab2LevelPage` stays focused on composing the Lab2 shell, resource panel, workspace, and modals. Web Lab 2 routes choose a Tutor support context: standalone project routes allow broader co-building behavior, while curriculum/validation routes keep instruction breakdown, debugging, concept, and idea requests in guidance unless the student explicitly asks for implementation. Direct curriculum implementation requests such as "help me make/update/improve..." route to code generation when the level enables Build, especially when level instructions tell students to ask Tutor to make a change. Curriculum guidance is scoped to the level's instructions and project code, avoiding generic browser/cache/devtools troubleshooting or optional stretch-feature nudges.
@@ -73,7 +79,7 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - Web Lab 2 supports rootless file trees (`[]` or top-level files) as well as single-folder project wrappers. `useFileWorkspaceState` only treats a folder as the project root wrapper when it is the only top-level item.
 - Route pages can pass a `storageKeySuffix` when a starter fixture changes and should not reuse an older route-scoped file/version-history session tree.
 - The Web Lab 2 dev panel includes a Clear level session cache action that removes route-scoped file tree/version-history session storage and reloads from the current fixture.
-- Static fixture images may be inline data URLs for preview compatibility; initial inline image payloads are stripped from route-scoped file/version-history storage and rehydrated from the fixture at render time.
+- Static fixture images may be inline data URLs for preview compatibility; initial inline image payloads are stripped from route-scoped file/version-history storage and fixture images are rehydrated from the fixture at render time. Tutor-staged uploads persist in the route-scoped file tree so reloads keep uploaded assets, but version-history snapshots omit the upload folder and merge the current uploads back when viewing or restoring saved versions to avoid duplicating image bytes across snapshots.
 - Uploaded project files are shaped by `webLab2Uploads.ts`, inserted into the current project root, and persisted through the route-scoped session-storage file tree. Text starter uploads may still be encoded into share links, but UI-uploaded images are session-only unless they are committed into sample data.
 - `tutorInstructionsDelivery` is enabled across the validation progression routes so the four curriculum-backed fixtures exercise technical debugging, open-ended style polish, concept tracing, and loop debugging instruction styles. The guide is deterministically derived from markdown, with lightweight author hints such as `tutor-mode` and `tutor-first-move` available as escape hatches.
 - Functional Tutor settings, API key, Tutor instruction delivery, and Build/Plan/Help capability overrides are session- or URL-scoped according to the dev-panel field storage. Prompt customization is runner-scoped through the enabled capability contracts rather than one global dev-panel addendum. If validation review is configured but no Tutor API key is present, header validation controls fall back to the normal Continue action instead of routing review through Tutor.
