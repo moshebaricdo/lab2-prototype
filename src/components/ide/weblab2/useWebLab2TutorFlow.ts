@@ -20,6 +20,7 @@ import { resolveTutorAction } from "../../../lib/tutor/tutorAction";
 import { resolveInstructionCoachResponse } from "../../../lib/tutor/instructionCoach";
 import { logTutorEvent } from "../../../lib/tutor/tutorDebugLogger";
 import { pathBasename } from "../../../utils/fileTree";
+import { mergeStagedUploadImagesIntoFileChanges } from "../../lab2/resource-panel/views/ai-tutor/tutorFileChanges";
 import {
   findFileEntryInTree,
   hasAcceptedCompletedPlanStatus,
@@ -309,17 +310,24 @@ export function useWebLab2TutorFlow({
       buildFromPlanRequestRef.current = false;
     }
 
-    return {
-      role: "assistant",
-      content: result.message,
-      fileChanges: result.changes.length > 0
+    const tutorFileChanges =
+      result.changes.length > 0
         ? result.changes.map(({ fileName, status, linesAdded, linesRemoved }) => ({
             fileName,
             status,
             linesAdded,
             linesRemoved,
           }))
-        : undefined,
+        : [];
+    const fileChanges =
+      tutorFileChanges.length > 0 && !isPlanOnlyTutorChange(result.changes)
+        ? mergeStagedUploadImagesIntoFileChanges(conversation, tutorFileChanges)
+        : tutorFileChanges;
+
+    return {
+      role: "assistant",
+      content: result.message,
+      fileChanges: fileChanges.length > 0 ? fileChanges : undefined,
       aiSaveTitle: result.changes.length > 0 ? result.saveTitle : undefined,
       codeChangeStatus: result.changes.length > 0 ? "pending" : undefined,
     } satisfies ChatMessage;
