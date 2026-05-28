@@ -4,6 +4,7 @@ import type {
   TutorRequestMode,
 } from "../../types/tutor";
 import { isValidationReviewIntent } from "../validation/validationReviewIntent";
+import { isUnderspecifiedEditRequest } from "./editClarification";
 import {
   resolveTutorRequestIntent,
   type TutorRequestIntent,
@@ -15,6 +16,8 @@ export interface TutorActionWorkflowState {
   lastAssistantSuggestedEditableWork?: boolean;
   hasPendingProposal?: boolean;
   isHistoryReadOnly?: boolean;
+  /** Skip clarification when the request already came from a selected edit option. */
+  skipEditClarification?: boolean;
 }
 
 export interface ResolveTutorActionOptions {
@@ -23,6 +26,9 @@ export interface ResolveTutorActionOptions {
   policy: TutorPolicy;
   workflow?: TutorActionWorkflowState;
 }
+
+const CONCRETE_BUILD_REQUEST_PATTERN =
+  /\b(build the project described in|update the plan status|check off the completed items|ready to build the project from this plan)\b/i;
 
 function deniedMessage(requested: "guidance" | "plan" | "edit" | "validationReview") {
   if (requested === "guidance") {
@@ -47,11 +53,49 @@ function denyAction(requested: "guidance" | "plan" | "edit" | "validationReview"
   };
 }
 
-function actionForIntent(intent: TutorRequestIntent, message: string, policy: TutorPolicy): TutorAction {
+function shouldClarifyBeforeEdit(
+  message: string,
+  workflow: TutorActionWorkflowState,
+) {
+  if (workflow.skipEditClarification) return false;
+  if (CONCRETE_BUILD_REQUEST_PATTERN.test(message)) return false;
+  return isUnderspecifiedEditRequest(message);
+}
+
+function resolveEditAction({
+  message,
+  policy,
+  source,
+  workflow,
+}: {
+  message: string;
+  policy: TutorPolicy;
+  source: "message" | "ui";
+  workflow: TutorActionWorkflowState;
+}): TutorAction {
+  if (!policy.capabilities.workspaceEdits) {
+    return denyAction("edit");
+  }
+
+  if (shouldClarifyBeforeEdit(message, workflow)) {
+    return {
+      kind: "editClarification",
+      source,
+      message,
+    };
+  }
+
+  return { kind: "edit", source, message };
+}
+
+function actionForIntent(
+  intent: TutorRequestIntent,
+  message: string,
+  policy: TutorPolicy,
+  workflow: TutorActionWorkflowState,
+): TutorAction {
   if (intent === "edit") {
-    return policy.capabilities.workspaceEdits
-      ? { kind: "edit", source: "message", message }
-      : denyAction("edit");
+    return resolveEditAction({ message, policy, source: "message", workflow });
   }
 
   if (intent === "planning") {
@@ -97,9 +141,7 @@ export function resolveTutorAction({
   }
 
   if (requestMode === "build") {
-    return policy.capabilities.workspaceEdits
-      ? { kind: "edit", source: "ui", message }
-      : denyAction("edit");
+    return resolveEditAction({ message, policy, source: "ui", workflow });
   }
 
   if (requestMode === "plan") {
@@ -140,5 +182,5 @@ export function resolveTutorAction({
     supportContext: policy.supportContext,
   });
 
-  return actionForIntent(intent, message, policy);
+  return actionForIntent(intent, message, policy, workflow);
 }

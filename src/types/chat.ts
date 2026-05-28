@@ -56,6 +56,23 @@ export interface NewProjectPlanQuestionnaireData {
   moodboardAttachments?: ChatAttachment[];
 }
 
+export interface EditOptionChoice {
+  id: string;
+  label: string;
+  enrichPrompt: string;
+}
+
+export interface EditOptionsCardData {
+  status: "pending" | "answered";
+  originalMessage: string;
+  /** LLM-authored intro shown above the option list. */
+  intro?: string;
+  options: EditOptionChoice[];
+  selectedOptionId?: string;
+  /** Student free-text direction when they chose the custom input row. */
+  customDirection?: string;
+}
+
 export interface FileChange {
   fileName: string;
   status: "new" | "modified" | "deleted";
@@ -71,6 +88,8 @@ export interface ChatMessage {
   attachmentStatus?: AttachmentStatusContext;
   actionCard?: ActionCardData;
   newProjectPlanQuestionnaire?: NewProjectPlanQuestionnaireData;
+  /** Pre-edit direction picker for broad implementation requests. */
+  editOptions?: EditOptionsCardData;
   /** Files the tutor created, modified, or deleted in this response. */
   fileChanges?: FileChange[];
   /** Short AI-generated summary used when accepted changes create a history save. */

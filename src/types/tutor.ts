@@ -146,7 +146,8 @@ export type TutorActionSource =
   | "guide-chip"
   | "continue"
   | "review-button"
-  | "review-offer";
+  | "review-offer"
+  | "edit-options";
 
 export type TutorActionDeniedReason =
   | "capability-disabled"
@@ -169,7 +170,12 @@ export type TutorAction =
     }
   | { kind: "guidance"; source: "message" | "ui"; message: string }
   | { kind: "plan"; source: "message" | "ui"; message: string }
-  | { kind: "edit"; source: "message" | "ui"; message: string }
+  | { kind: "edit"; source: "message" | "ui" | "edit-options"; message: string }
+  | {
+      kind: "editClarification";
+      source: "message" | "ui";
+      message: string;
+    }
   | { kind: "validationReview"; source: "continue" | "review-button" | "review-offer"; message: string }
   | {
       kind: "denied";
@@ -185,10 +191,15 @@ export interface TutorStartOptions {
   flow?: TutorStartFlow;
 }
 
+export interface TutorSubmitOptions {
+  skipEditClarification?: boolean;
+}
+
 export type TutorSubmitHandler = (
   message: string,
   conversation: ChatMessage[],
   requestMode?: TutorRequestMode,
+  options?: TutorSubmitOptions,
 ) => Promise<ChatMessage | undefined>;
 
 export interface MockTutorConfig {

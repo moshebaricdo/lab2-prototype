@@ -1,7 +1,7 @@
 import type { TutorSupportContext } from "../../types/tutor";
 
 const EDIT_VERB_PATTERN =
-  "(add|adjust|build|change|create|delete|edit|fix|generate|implement|improve|insert|make|modify|move|polish|refine|remove|replace|resize|restyle|style|update|wire)";
+  "(add|adjust|build|change|create|delete|edit|fix|generate|implement|improve|insert|make|modify|move|polish|refine|remove|replace|resize|restyle|style|update|use|wire)";
 
 export type TutorRequestIntent = "guidance" | "planning" | "edit";
 export type TutorRequestIntentOverride = "auto" | "build" | "plan" | "help";
@@ -56,7 +56,7 @@ const INSTRUCTION_HELP_PATTERN =
 const DEBUG_HELP_PATTERN =
   /\b(debug|debugging|error|broken|not working|doesn'?t work|isn'?t working|why (is|does|did)|what went wrong|console)\b/i;
 
-function asksForDirectEdit(message: string) {
+export function asksForDirectEdit(message: string) {
   return DIRECT_EDIT_PATTERNS.some((pattern) => pattern.test(message));
 }
 

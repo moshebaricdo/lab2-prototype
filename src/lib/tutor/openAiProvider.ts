@@ -1,6 +1,7 @@
 import { getTutorApiKey, getTutorCodeModel } from "../../hooks/useTutorApiSettings";
 import type {
   TutorChatMessage,
+  TutorEditClarificationResponse,
   TutorGuidanceResponse,
   TutorPatchResponse,
   TutorStructuredEditResponse,
@@ -53,6 +54,12 @@ export interface TutorStructuredEditProvider {
 
 export interface TutorGuidanceProvider {
   requestGuidance(messages: TutorChatMessage[]): Promise<TutorGuidanceResponse | null>;
+}
+
+export interface TutorEditClarificationProvider {
+  requestEditClarification(
+    messages: TutorChatMessage[],
+  ): Promise<TutorEditClarificationResponse | null>;
 }
 
 async function requestChatCompletionJson<T>({
@@ -140,7 +147,9 @@ async function requestChatCompletionJson<T>({
   throw new Error(`${logPrefix} provider exhausted retry attempts.`);
 }
 
-export class OpenAiTutorProvider implements TutorProvider, TutorStructuredEditProvider, TutorGuidanceProvider {
+export class OpenAiTutorProvider
+  implements TutorProvider, TutorStructuredEditProvider, TutorGuidanceProvider, TutorEditClarificationProvider
+{
   async request(messages: TutorChatMessage[]) {
     const apiKey = getTutorApiKey().trim();
     if (!apiKey) {
@@ -191,6 +200,15 @@ export class OpenAiTutorProvider implements TutorProvider, TutorStructuredEditPr
       maxTokens: 1000,
       temperature: 0.2,
       logPrefix: "TutorGuidance",
+    });
+  }
+
+  async requestEditClarification(messages: TutorChatMessage[]) {
+    return requestChatCompletionJson<TutorEditClarificationResponse>({
+      messages,
+      maxTokens: 1400,
+      temperature: 0.3,
+      logPrefix: "TutorEditClarification",
     });
   }
 }

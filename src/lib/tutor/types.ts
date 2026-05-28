@@ -1,4 +1,4 @@
-import type { ChatMessage } from "../../types/chat";
+import type { ChatMessage, EditOptionsCardData } from "../../types/chat";
 import type { FileItem } from "../../types/file";
 import type { LevelProgressSnapshot } from "../../types/validationReview";
 import type {
@@ -53,6 +53,22 @@ export interface TutorStructuredEditResponse {
 
 export interface TutorGuidanceResponse {
   message?: string;
+}
+
+export interface TutorEditClarificationOptionResponse {
+  id?: string;
+  label?: string;
+  enrichPrompt?: string;
+}
+
+export interface TutorEditClarificationResponse {
+  message?: string;
+  options?: TutorEditClarificationOptionResponse[];
+}
+
+export interface TutorEditClarificationResult {
+  message: string;
+  editOptions?: EditOptionsCardData;
 }
 
 export type TutorValidatedChange = {

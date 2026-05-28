@@ -66,6 +66,49 @@ describe("resolveTutorAction", () => {
     });
   });
 
+  it("returns edit clarification for broad underspecified edit requests in auto mode", () => {
+    expect(resolveTutorAction({
+      message: "make all of the buttons more exciting",
+      policy: basePolicy,
+    })).toMatchObject({
+      kind: "editClarification",
+      message: "make all of the buttons more exciting",
+    });
+  });
+
+  it("returns edit clarification for broad build-mode requests", () => {
+    expect(resolveTutorAction({
+      message: "make the buttons better",
+      requestMode: "build",
+      policy: basePolicy,
+    })).toMatchObject({
+      kind: "editClarification",
+    });
+  });
+
+  it("skips edit clarification when the workflow already resolved a direction", () => {
+    expect(resolveTutorAction({
+      message: "make the buttons more exciting. Use this direction: update the buttons with bolder color.",
+      requestMode: "build",
+      policy: basePolicy,
+      workflow: {
+        skipEditClarification: true,
+      },
+    })).toMatchObject({
+      kind: "edit",
+    });
+  });
+
+  it("does not clarify concrete build-from-plan requests", () => {
+    expect(resolveTutorAction({
+      message: "Build the project described in Plans/PROJECT_PLAN.md. Update the plan status and check off the completed items as part of the proposal.",
+      requestMode: "build",
+      policy: basePolicy,
+    })).toMatchObject({
+      kind: "edit",
+    });
+  });
+
   it("returns a student-facing denied action when edits are disabled", () => {
     const policy: TutorPolicy = {
       ...basePolicy,

@@ -7,10 +7,12 @@ import type {
   TutorPolicy,
   TutorRequestMode,
   TutorStartOptions,
+  TutorSubmitOptions,
   TutorSupportContext,
   InstructionGuide,
   InstructionGuideState,
 } from "../../../types/tutor";
+import { runEditClarification } from "../../../lib/tutor/editClarificationRunner";
 import type { ValidationReviewCardData } from "../../../types/validationReview";
 import { PROJECT_PLAN_FILE } from "../../../lib/tutor/planningRunner";
 import { tutorClient } from "../../../lib/tutor/tutorClient";
@@ -160,12 +162,14 @@ export function useWebLab2TutorFlow({
     message: string,
     conversation: ChatMessage[],
     requestMode: TutorRequestMode = "auto",
+    options: TutorSubmitOptions = {},
   ) => {
     const workflow = {
       hasActivePlan: hasActivePlan(currentFileStructure),
       lastAssistantAskedPlanningQuestion: didLastAssistantAskPlanningQuestion(conversation),
       lastAssistantSuggestedEditableWork: didLastAssistantSuggestEditableWork(conversation),
       hasPendingProposal: hasPendingAiChanges,
+      skipEditClarification: options.skipEditClarification,
     };
     const action = resolveTutorAction({
       message,
@@ -223,6 +227,29 @@ export function useWebLab2TutorFlow({
       return {
         role: "assistant",
         content: action.message,
+      } satisfies ChatMessage;
+    }
+
+    if (action.kind === "editClarification") {
+      const clarification = await runEditClarification({
+        message,
+        conversation,
+        files: currentFileStructure,
+        additionalSystemPrompt: runnerContracts.build ?? "",
+        levelInstructionsMarkdown,
+        levelProgress,
+        supportContext: tutorSupportContext,
+      });
+      logTutorEvent("edit clarification result received", {
+        messagePreview: message.slice(0, 180),
+        hasEditOptions: Boolean(clarification.editOptions),
+        optionCount: clarification.editOptions?.options.length ?? 0,
+        introLength: clarification.message.length,
+      });
+      return {
+        role: "assistant",
+        content: clarification.message,
+        editOptions: clarification.editOptions,
       } satisfies ChatMessage;
     }
 

@@ -14,6 +14,7 @@ import type {
   AttachmentStatusContext,
   ChatAttachment,
   ChatMessage,
+  EditOptionChoice,
   FileChange,
   NewProjectPlanAnswers,
 } from "../../../../../types/chat";
@@ -24,7 +25,12 @@ import type {
   TutorContextFile,
   TutorRequestMode,
   TutorSubmitHandler,
+  TutorSubmitOptions,
 } from "../../../../../types/tutor";
+import {
+  buildCustomEditOptionChoice,
+  enrichEditOptionPrompt,
+} from "../../../../../lib/tutor/editClarification";
 import type {
   LevelProgressSnapshot,
   ValidationReviewCardData,
@@ -830,14 +836,19 @@ export function AiTutorPanel({
   const hasPendingNewProjectPlanQuestionnaire = chatMessages.some(
     (message) => message.newProjectPlanQuestionnaire?.status === "pending",
   );
+  const hasPendingEditOptions = chatMessages.some(
+    (message) => message.editOptions?.status === "pending",
+  );
   const composerDisabled =
     effectiveIsThinking ||
     hasPendingAiChanges ||
-    hasPendingNewProjectPlanQuestionnaire;
+    hasPendingNewProjectPlanQuestionnaire ||
+    hasPendingEditOptions;
   const canSend = Boolean(chatInput.trim() || attachedFiles.length > 0) &&
     !effectiveIsThinking &&
     !hasPendingAiChanges &&
-    !hasPendingNewProjectPlanQuestionnaire;
+    !hasPendingNewProjectPlanQuestionnaire &&
+    !hasPendingEditOptions;
   const showEmptyState = chatMessages.length === 0 && !effectiveIsThinking;
 
   const formatUserMessage = () => {
@@ -1306,6 +1317,7 @@ export function AiTutorPanel({
     newMessages: ChatMessage[],
     requestMode: TutorRequestMode,
     failureMessage: string,
+    submitOptions?: TutorSubmitOptions,
   ) => {
     const requestId = requestSerialRef.current + 1;
     requestSerialRef.current = requestId;
@@ -1319,7 +1331,7 @@ export function AiTutorPanel({
 
     if (onTutorSubmit) {
       setIsThinking(true);
-      onTutorSubmit(submittedContent, newMessages, requestMode)
+      onTutorSubmit(submittedContent, newMessages, requestMode, submitOptions)
         .then((response) => {
           if (requestSerialRef.current !== requestId) return;
           logTutorEvent("functional tutor request resolved", {
@@ -1409,6 +1421,54 @@ export function AiTutorPanel({
       "I had trouble preparing that guidance. Try clicking the suggestion again.",
     );
     scrollToBottom();
+  };
+
+  const handleEditOptionsSelect = (msgIndex: number, option: EditOptionChoice) => {
+    if (effectiveIsThinking || hasPendingAiChanges) return;
+
+    const answeredMessages = chatMessagesRef.current.map((message, index) => {
+      if (index !== msgIndex || !message.editOptions) return message;
+      const { editOptions: _removed, ...messageWithoutEditOptions } = message;
+      return messageWithoutEditOptions;
+    });
+    const submittedContent = enrichEditOptionPrompt(option);
+    const newUserMessage: ChatMessage = {
+      role: "user",
+      content: option.label,
+    };
+    const nextMessages = [...answeredMessages, newUserMessage];
+
+    logTutorEvent("edit options card selection", {
+      messageIndex: msgIndex,
+      optionId: option.id,
+      optionLabel: option.label,
+      promptPreview: submittedContent.slice(0, 180),
+    });
+
+    setTutorRequestMode("build");
+    setChatInput("");
+    setChatMessages(nextMessages);
+    setGeneratedTutorResponse(null);
+    resetComposerState();
+    startTutorRequest(
+      submittedContent,
+      nextMessages,
+      "build",
+      "I had trouble applying that direction. Try choosing it again.",
+      { skipEditClarification: true },
+    );
+    scrollToBottom();
+  };
+
+  const handleEditOptionsCustomSubmit = (msgIndex: number, customDirection: string) => {
+    const editOptions = chatMessagesRef.current[msgIndex]?.editOptions;
+    if (!editOptions) return;
+
+    const option = buildCustomEditOptionChoice(
+      editOptions.originalMessage,
+      customDirection,
+    );
+    handleEditOptionsSelect(msgIndex, option);
   };
 
   const handleNewProjectPlanQuestionnaireSubmit = (
@@ -1666,6 +1726,8 @@ export function AiTutorPanel({
         onActionCardUpdate={handleActionCardUpdate}
         onCodeChangeAction={handleCodeChangeAction}
         onNewProjectPlanQuestionnaireSubmit={handleNewProjectPlanQuestionnaireSubmit}
+        onEditOptionsSelect={handleEditOptionsSelect}
+        onEditOptionsCustomSubmit={handleEditOptionsCustomSubmit}
         interactiveCardsDisabled={effectiveIsThinking || hasPendingAiChanges}
         onValidationReviewRequest={requestCardValidationReview}
         onValidationReviewAction={handleValidationReviewAction}

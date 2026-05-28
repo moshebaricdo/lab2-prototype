@@ -5,12 +5,14 @@ import { FileChip } from "../../../../ui/FileChip";
 import { faIconForFileName, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { ActionRow } from "./ActionRow";
+import { EditOptionsCard } from "./EditOptionsCard";
 import { NewProjectPlanQuestionnaireCard } from "./NewProjectPlanQuestionnaireCard";
 import { TutorActionCard } from "./TutorActionCard";
 import { ThinkingAnimation } from "./ThinkingAnimation";
 import type {
   ChatAttachment,
   ChatMessage,
+  EditOptionChoice,
   FileChange,
   NewProjectPlanAnswers,
 } from "../../../../../types/chat";
@@ -48,6 +50,8 @@ interface AiTutorMessageListProps {
     answers: NewProjectPlanAnswers,
     moodboardAttachments: ChatAttachment[],
   ) => void;
+  onEditOptionsSelect?: (msgIndex: number, option: EditOptionChoice) => void;
+  onEditOptionsCustomSubmit?: (msgIndex: number, customDirection: string) => void;
   interactiveCardsDisabled?: boolean;
   emptyStateTitle?: string;
   emptyStateText?: string;
@@ -190,6 +194,7 @@ function hasAssistantCardContent(message: ChatMessage) {
   if (message.role !== "assistant") return false;
   return Boolean(
     message.newProjectPlanQuestionnaire ||
+    message.editOptions?.status === "pending" ||
     message.validationReview ||
     message.instructionGuide ||
     message.actionCard ||
@@ -462,6 +467,8 @@ export function AiTutorMessageList({
   enableUploadAddActions = false,
   onCodeChangeAction,
   onNewProjectPlanQuestionnaireSubmit,
+  onEditOptionsSelect,
+  onEditOptionsCustomSubmit,
   interactiveCardsDisabled = false,
   emptyStateTitle,
   emptyStateText,
@@ -562,6 +569,18 @@ export function AiTutorMessageList({
                                 answers,
                                 moodboardAttachments,
                               )
+                            }
+                          />
+                        )}
+
+                        {msg.role === "assistant" &&
+                          msg.editOptions?.status === "pending" && (
+                          <EditOptionsCard
+                            editOptions={msg.editOptions}
+                            disabled={interactiveCardsDisabled || !onEditOptionsSelect}
+                            onSelect={(option) => onEditOptionsSelect?.(idx, option)}
+                            onCustomSubmit={(customDirection) =>
+                              onEditOptionsCustomSubmit?.(idx, customDirection)
                             }
                           />
                         )}

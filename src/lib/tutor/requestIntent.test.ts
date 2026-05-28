@@ -54,6 +54,13 @@ describe("tutor request intent", () => {
     expect(classifyTutorRequestIntent("I'm ready to build the project from this plan.")).toBe("edit");
   });
 
+  it("classifies use phrasing as edit requests", () => {
+    expect(classifyTutorRequestIntent("Please use these 3 photos.")).toBe("edit");
+    expect(classifyTutorRequestIntent("Use this image for that card.")).toBe("edit");
+    expect(classifyTutorRequestIntent("Use blue for the heading.")).toBe("edit");
+    expect(classifyTutorRequestIntent("Can you use the uploaded photo in the hero?")).toBe("edit");
+  });
+
   it("does not treat give-me help requests as edit requests", () => {
     expect(classifyTutorRequestIntent("Give me a hint.")).toBe("guidance");
     expect(classifyTutorRequestIntent("Can you give me a tip?")).toBe("guidance");

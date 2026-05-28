@@ -14,6 +14,10 @@ function formatMessageExtras(message: ChatMessage): string[] {
     extras.push(`Attachments: ${names}`);
   }
 
+  if (message.editOptions?.status === "pending") {
+    extras.push("Edit direction options");
+  }
+
   if (message.newProjectPlanQuestionnaire) {
     const { status, answers } = message.newProjectPlanQuestionnaire;
     if (status === "answered" && answers) {
