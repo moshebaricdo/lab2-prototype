@@ -1,6 +1,6 @@
 import svgPaths from "../../../imports/svg-lnv1h8eepy";
 import { useTheme, type BrandTheme } from "../../../hooks/useTheme";
-import codeAiLogoUrl from "../../../assets/logo/codeai-logo.svg";
+import codeAiLogoUrl from "../../../assets/logo/codeai-logo-wide.svg";
 
 interface LogoProps {
   brandTheme?: BrandTheme;
