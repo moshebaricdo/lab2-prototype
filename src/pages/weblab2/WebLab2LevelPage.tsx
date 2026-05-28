@@ -14,6 +14,7 @@ import {
   defaultMockTutorConfig,
 } from "../../data/weblab2";
 import type { ChatAttachment, ChatMessage, FileChange } from "../../types/chat";
+import { hydrateChatMessageUploadImages } from "../../lib/chat/chatSessionStorage";
 import { useChatState } from "../../hooks/useChatState";
 import { useDevPanelInitialOpenFiles } from "../../hooks/useDevPanelInitialOpenFiles";
 import { useFileWorkspaceState } from "../../hooks/useFileWorkspaceState";
@@ -765,6 +766,16 @@ export function WebLab2LevelPage({
     ),
     [currentFileStructure, initialInlineImageContentByPath],
   );
+  useEffect(() => {
+    const imageContentByPath = getInitialInlineImageContentMap(
+      currentFileStructureWithHydratedImages,
+    );
+    if (imageContentByPath.size === 0) return;
+
+    setChatMessages((messages) =>
+      hydrateChatMessageUploadImages(messages, imageContentByPath),
+    );
+  }, [currentFileStructureWithHydratedImages, setChatMessages]);
   const showWorkspaceNewProjectEmptyState =
     !useFunctionalVersionHistory || showNewProjectHistoryEmptyState;
   const isViewingHistoryVersion =

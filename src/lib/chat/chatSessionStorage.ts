@@ -1,4 +1,61 @@
-import type { ChatMessage } from "../../types/chat";
+import type { ChatAttachment, ChatMessage } from "../../types/chat";
+import { normalizeFileLookupPath, pathBasename } from "../../utils/fileTree";
+
+function isDisplayableImageSrc(value: string) {
+  return value.startsWith("data:") || value.startsWith("blob:");
+}
+
+function resolveUploadAttachmentImageSrc(
+  attachment: ChatAttachment,
+  imageContentByPath: Map<string, string>,
+): string | undefined {
+  const normalizedPath = normalizeFileLookupPath(attachment.path);
+  const candidates = [
+    normalizedPath,
+    attachment.path,
+    attachment.fileName,
+    pathBasename(normalizedPath),
+  ];
+
+  for (const key of candidates) {
+    const content = imageContentByPath.get(key);
+    if (content && isDisplayableImageSrc(content)) {
+      return content;
+    }
+  }
+
+  return undefined;
+}
+
+/** Restore upload chip thumbnails from project file bytes after sessionStorage reload. */
+export function hydrateChatMessageUploadImages(
+  messages: ChatMessage[],
+  imageContentByPath: Map<string, string>,
+): ChatMessage[] {
+  if (imageContentByPath.size === 0) return messages;
+
+  let hasChanges = false;
+  const nextMessages = messages.map((message) => {
+    if (!message.attachments?.length) return message;
+
+    let messageChanged = false;
+    const attachments = message.attachments.map((attachment) => {
+      if (attachment.source !== "upload") return attachment;
+
+      const imageSrc = resolveUploadAttachmentImageSrc(attachment, imageContentByPath);
+      if (!imageSrc || attachment.imageSrc === imageSrc) return attachment;
+
+      messageChanged = true;
+      return { ...attachment, imageSrc };
+    });
+
+    if (!messageChanged) return message;
+    hasChanges = true;
+    return { ...message, attachments };
+  });
+
+  return hasChanges ? nextMessages : messages;
+}
 
 export interface StoredChatState {
   messages: ChatMessage[];
@@ -37,12 +94,21 @@ export function prepareChatMessagesForStorage(messages: ChatMessage[]): ChatMess
 
 export function sanitizeChatMessagesFromStorage(messages: ChatMessage[]): ChatMessage[] {
   return messages.map((message) => {
-    if (message.codeChangeStatus !== "pending") return message;
+    let nextMessage = message;
 
-    return {
-      ...message,
-      codeChangeStatus: "rejected",
-    };
+    if (message.codeChangeStatus === "pending") {
+      nextMessage = {
+        ...nextMessage,
+        codeChangeStatus: "rejected",
+      };
+    }
+
+    if (message.editOptions) {
+      const { editOptions: _removed, ...withoutEditOptions } = nextMessage;
+      nextMessage = withoutEditOptions;
+    }
+
+    return nextMessage;
   });
 }
 

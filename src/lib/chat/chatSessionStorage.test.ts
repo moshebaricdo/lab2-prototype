@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChatMessage } from "../../types/chat";
 import {
+  hydrateChatMessageUploadImages,
   prepareChatMessagesForStorage,
   readStoredChatState,
   sanitizeChatMessagesFromStorage,
@@ -104,6 +105,33 @@ describe("chatSessionStorage", () => {
     });
   });
 
+  it("removes pending edit option cards when restoring", () => {
+    const messages: ChatMessage[] = [
+      {
+        role: "assistant",
+        content: "Pick a direction first:",
+        editOptions: {
+          status: "pending",
+          originalMessage: "make the buttons more exciting",
+          options: [
+            {
+              id: "motion",
+              label: "More playful motion",
+              enrichPrompt: "Use playful motion.",
+            },
+          ],
+        },
+      },
+    ];
+
+    expect(sanitizeChatMessagesFromStorage(messages)).toEqual([
+      {
+        role: "assistant",
+        content: "Pick a direction first:",
+      },
+    ]);
+  });
+
   it("marks pending code changes as rejected when restoring", () => {
     const messages: ChatMessage[] = [
       {
@@ -132,5 +160,47 @@ describe("chatSessionStorage", () => {
   it("prepareChatMessagesForStorage leaves messages without attachments unchanged", () => {
     const messages: ChatMessage[] = [{ role: "user", content: "Hello" }];
     expect(prepareChatMessagesForStorage(messages)).toEqual(messages);
+  });
+
+  it("hydrates upload attachment thumbnails from project image paths", () => {
+    const imageContentByPath = new Map<string, string>([
+      ["uploads/monstera.jpg", "data:image/jpeg;base64,abc"],
+      ["monstera.jpg", "data:image/jpeg;base64,abc"],
+    ]);
+    const messages: ChatMessage[] = [
+      {
+        role: "user",
+        content: "Please use these photos",
+        attachments: [
+          {
+            fileName: "monstera.jpg",
+            path: "uploads/monstera.jpg",
+            source: "upload",
+            timestamp: "1:17 PM",
+          },
+        ],
+      },
+    ];
+
+    expect(hydrateChatMessageUploadImages(messages, imageContentByPath)).toEqual([
+      {
+        role: "user",
+        content: "Please use these photos",
+        attachments: [
+          {
+            fileName: "monstera.jpg",
+            path: "uploads/monstera.jpg",
+            source: "upload",
+            timestamp: "1:17 PM",
+            imageSrc: "data:image/jpeg;base64,abc",
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("hydrateChatMessageUploadImages returns the same array when nothing changes", () => {
+    const messages: ChatMessage[] = [{ role: "user", content: "Hello" }];
+    expect(hydrateChatMessageUploadImages(messages, new Map())).toBe(messages);
   });
 });
