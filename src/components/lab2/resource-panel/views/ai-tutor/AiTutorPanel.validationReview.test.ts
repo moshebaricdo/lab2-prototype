@@ -164,7 +164,10 @@ describe("instruction guide onboarding copy", () => {
   };
 
   it("creates reproducible seed messages from the current guide", () => {
-    const message = buildInstructionGuideSeedMessage(guide);
+    const message = buildInstructionGuideSeedMessage(
+      guide,
+      "Let's debug a carousel. First, run the project and click Next once. Tell me what you notice.",
+    );
 
     expect(message.role).toBe("assistant");
     expect(message.content).toContain("Let's debug");

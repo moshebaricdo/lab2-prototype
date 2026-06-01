@@ -84,6 +84,12 @@ export interface TutorOpening {
   sourceSignature: string;
 }
 
+export interface InstructionOpeningStepSummary {
+  id: string;
+  shortLabel: string;
+  summary: string;
+}
+
 export interface InstructionGuideState {
   guideSignature: string;
   activeStepId?: string;
@@ -91,6 +97,13 @@ export interface InstructionGuideState {
   activeOptionId?: string;
   lastCoachMoveId?: string;
   dismissedIntro?: boolean;
+  /** LLM- or programmatic summaries for drawer pin + step labels. */
+  openingStepSummaries?: InstructionOpeningStepSummary[];
+}
+
+export interface InstructionPinnedStep {
+  positionLabel: string;
+  summary: string;
 }
 
 export type InstructionFocusContext =

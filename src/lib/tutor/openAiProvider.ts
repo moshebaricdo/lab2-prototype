@@ -3,6 +3,7 @@ import type {
   TutorChatMessage,
   TutorEditClarificationResponse,
   TutorGuidanceResponse,
+  TutorInstructionOpeningResponse,
   TutorPatchResponse,
   TutorStructuredEditResponse,
   TutorToolAssistantMessage,
@@ -60,6 +61,12 @@ export interface TutorEditClarificationProvider {
   requestEditClarification(
     messages: TutorChatMessage[],
   ): Promise<TutorEditClarificationResponse | null>;
+}
+
+export interface TutorInstructionOpeningProvider {
+  requestInstructionOpening(
+    messages: TutorChatMessage[],
+  ): Promise<TutorInstructionOpeningResponse | null>;
 }
 
 async function requestChatCompletionJson<T>({
@@ -148,7 +155,12 @@ async function requestChatCompletionJson<T>({
 }
 
 export class OpenAiTutorProvider
-  implements TutorProvider, TutorStructuredEditProvider, TutorGuidanceProvider, TutorEditClarificationProvider
+  implements
+    TutorProvider,
+    TutorStructuredEditProvider,
+    TutorGuidanceProvider,
+    TutorEditClarificationProvider,
+    TutorInstructionOpeningProvider
 {
   async request(messages: TutorChatMessage[]) {
     const apiKey = getTutorApiKey().trim();
@@ -209,6 +221,15 @@ export class OpenAiTutorProvider
       maxTokens: 1400,
       temperature: 0.3,
       logPrefix: "TutorEditClarification",
+    });
+  }
+
+  async requestInstructionOpening(messages: TutorChatMessage[]) {
+    return requestChatCompletionJson<TutorInstructionOpeningResponse>({
+      messages,
+      maxTokens: 1200,
+      temperature: 0.25,
+      logPrefix: "TutorInstructionOpening",
     });
   }
 }

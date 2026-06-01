@@ -45,7 +45,7 @@ interface UseWebLab2TutorFlowOptions {
   levelProgress?: LevelProgressSnapshot;
   instructionGuide?: InstructionGuide;
   instructionGuideState?: InstructionGuideState;
-  onInstructionGuideStateChange?: (state: InstructionGuideState) => void;
+  onInstructionGuideStateChange?: Dispatch<SetStateAction<InstructionGuideState>>;
   tutorSupportContext: TutorSupportContext;
   tutorPolicy: TutorPolicy;
   routingDiagnostics?: boolean;
@@ -205,7 +205,10 @@ export function useWebLab2TutorFlow({
         nextState: instructionCoachResult.guideState,
         instructionFocus,
       });
-      onInstructionGuideStateChange?.(instructionCoachResult.guideState);
+      onInstructionGuideStateChange?.((current) => ({
+        ...instructionCoachResult.guideState,
+        openingStepSummaries: current.openingStepSummaries,
+      }));
     }
 
     if (action.kind === "validationReview" && validationReviewOffer) {

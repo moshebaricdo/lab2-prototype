@@ -3,6 +3,8 @@ import type { FileItem } from "../../types/file";
 import type { LevelProgressSnapshot } from "../../types/validationReview";
 import type {
   InstructionFocusContext,
+  InstructionOpeningStepSummary,
+  TutorOpening,
   TutorRequestMode,
   TutorSupportContext,
 } from "../../types/tutor";
@@ -69,6 +71,26 @@ export interface TutorEditClarificationResponse {
 export interface TutorEditClarificationResult {
   message: string;
   editOptions?: EditOptionsCardData;
+}
+
+export interface TutorInstructionOpeningStepResponse {
+  id?: string;
+  shortLabel?: string;
+  summary?: string;
+}
+
+export interface TutorInstructionOpeningResponse {
+  tone?: string;
+  goal?: string;
+  success?: string;
+  firstMove?: string;
+  steps?: TutorInstructionOpeningStepResponse[];
+}
+
+export interface TutorInstructionOpeningResult {
+  opening: TutorOpening;
+  content: string;
+  stepSummaries: InstructionOpeningStepSummary[];
 }
 
 export type TutorValidatedChange = {

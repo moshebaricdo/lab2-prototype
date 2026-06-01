@@ -11,6 +11,7 @@ import {
 import {
   validationStarshipLoaderInstructionsMarkdown,
 } from "../../data/weblab2/projects/validation-starship-loader";
+import { featureRouletteInstructionsMarkdown } from "../../data/weblab2/projects/feature-roulette";
 import { buildInstructionGuide } from "./instructionGuide";
 import { buildTutorOpening, formatTutorOpening } from "./tutorOpening";
 
@@ -55,6 +56,15 @@ describe("Tutor opening tone", () => {
     expect(text).toContain("the loop adds cargo and moves forward");
     expect(text).toContain("Start by finding the while loop inside the runBtn event listener.");
     expect(text).not.toMatch(/Do this|1\. Find/);
+  });
+
+  it("does not echo raw Feature Roulette worksheet step titles", () => {
+    const text = openingText(featureRouletteInstructionsMarkdown);
+
+    expect(text).not.toMatch(/on track when\s+1:\s*Create a New Feature/i);
+    expect(text).not.toMatch(/First,\s*1:\s*Create a New Feature/i);
+    expect(text).not.toContain("1: Create a New Feature");
+    expect(text).toContain("Tell me what you notice.");
   });
 
   it("uses lightweight opening overrides without exposing the comments", () => {

@@ -37,9 +37,24 @@ function stripMarkdownInline(value: string) {
 function stripWorksheetPrefix(value: string) {
   return stripMarkdownInline(value)
     .replace(/^(expected behavior|do this|start here|level guide|try these prompts[^:]*):?\s*/i, "")
-    .replace(/^\d+\s*:\s*[^:]+:\s*/i, "")
+    .replace(/^\d+\s*:\s*/, "")
     .replace(/^\d+\.\s*/, "")
     .trim();
+}
+
+function looksLikeNumberedStepTitle(value: string) {
+  const trimmed = value.trim();
+  return /^\d+\s*:\s*.+/i.test(trimmed) || /^\d+\.\s+.+/i.test(trimmed);
+}
+
+function isUsableSuccessPhrase(value: string) {
+  const normalized = stripWorksheetPrefix(value);
+  if (!normalized) return false;
+  if (looksLikeNumberedStepTitle(normalized)) return false;
+  if (/^(create|save|revert|test|check|ask)\b/i.test(normalized) && normalized.split(" ").length <= 6) {
+    return false;
+  }
+  return true;
 }
 
 function firstHeadingTitle(markdown: string) {
@@ -75,7 +90,13 @@ function expectedBehaviorFromMarkdown(markdown: string) {
 
 function firstNumberedAction(guide: LinearInstructionGuide) {
   const firstStep = guide.steps[0];
-  return stripWorksheetPrefix(guide.firstMove || firstStep?.prompt || "");
+  const candidates = [
+    guide.firstMove,
+    firstStep?.prompt,
+    firstStep?.notes?.[0],
+  ].map((value) => (value ? stripWorksheetPrefix(value) : ""));
+
+  return candidates.find((value) => value && !looksLikeNumberedStepTitle(value)) ?? "";
 }
 
 function deriveTone(markdown: string, guide: InstructionGuide): TutorOpeningTone {
@@ -140,7 +161,8 @@ function deriveSuccess(markdown: string, guide: InstructionGuide, tone: TutorOpe
     return "the loop adds cargo and moves forward until the ship reaches 800 tons without freezing";
   }
 
-  return stripWorksheetPrefix(guide.firstMove || guide.overview);
+  const fallback = stripWorksheetPrefix(guide.firstMove || guide.overview);
+  return isUsableSuccessPhrase(fallback) ? fallback : "";
 }
 
 function deriveFirstMove(markdown: string, guide: InstructionGuide, tone: TutorOpeningTone) {
@@ -163,6 +185,10 @@ function deriveFirstMove(markdown: string, guide: InstructionGuide, tone: TutorO
       .replace(/\s+What happens.*$/i, "")
       .replace(/[?.]+$/, "")
       .trim();
+    if (looksLikeNumberedStepTitle(actionOnly)) {
+      const cleaned = stripWorksheetPrefix(actionOnly);
+      return `Start with "${cleaned}". Tell me what you'd like to do first.`;
+    }
     return `First, ${actionOnly.charAt(0).toLowerCase()}${actionOnly.slice(1)}. Tell me what you notice.`;
   }
   return "Try the first small step, then tell me what you notice.";
@@ -206,9 +232,17 @@ export function buildTutorOpening(markdown: string, guide: InstructionGuide): Tu
   };
 }
 
+export function formatInstructionOpeningMessage(opening: TutorOpening) {
+  const goalSentence = formatGoalSentence(opening.tone, opening.goal);
+  const success = opening.success?.trim();
+  const successPart =
+    success && isUsableSuccessPhrase(success)
+      ? ` ${formatSuccessSentence(opening.tone, success)}`
+      : "";
+
+  return [goalSentence + successPart, opening.firstMove].filter(Boolean).join("\n\n");
+}
+
 export function formatTutorOpening(opening: TutorOpening) {
-  return [
-    `${formatGoalSentence(opening.tone, opening.goal)} ${formatSuccessSentence(opening.tone, opening.success)}`,
-    opening.firstMove,
-  ].join("\n\n");
+  return formatInstructionOpeningMessage(opening);
 }
