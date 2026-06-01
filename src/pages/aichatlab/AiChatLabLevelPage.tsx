@@ -19,6 +19,7 @@ import {
 interface AiChatLabLevelPageProps {
   currentLevelPath?: string;
   defaults?: Partial<AiChatLabDefaults>;
+  hideProgression?: boolean;
 }
 
 function currentLevelIndex(path: string) {
@@ -67,6 +68,7 @@ function toWorkspaceProps(resolved: AiChatLabDefaults): AiChatLabWorkspaceProps 
 export function AiChatLabLevelPage({
   currentLevelPath = "/levels/aichatlab",
   defaults,
+  hideProgression,
 }: AiChatLabLevelPageProps = {}) {
   const {
     activeTab,
@@ -95,6 +97,7 @@ export function AiChatLabLevelPage({
     currentLevelPath,
     showContinueButton: showContinueButton && continueInHeader,
     continueLabel: String(resolved.continueLabel),
+    hideProgression,
   };
   const workspace = (
     <AiChatLabWorkspace
@@ -169,7 +172,7 @@ export function AiChatLabSetupLevelPage() {
     <AiChatLabLevelPage
       currentLevelPath="/levels/aichatlab-setup"
       defaults={{
-        title: "AI Chat Lab: Model Setup",
+        title: "Setup Only Level",
         continueLabel: "Continue to Level 3",
         showConfigPanel: true,
         showModelControl: true,
@@ -200,7 +203,7 @@ export function AiChatLabModelCardLevelPage() {
     <AiChatLabLevelPage
       currentLevelPath="/levels/aichatlab-model-card"
       defaults={{
-        title: "AI Chat Lab: Model Card",
+        title: "Full Model Config Level",
         continueLabel: "Finish",
         showConfigPanel: true,
         showRetrievalTab: true,

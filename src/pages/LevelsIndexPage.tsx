@@ -22,10 +22,20 @@ import {
   pythonLabLevelLinks,
   sampleProgressionLinks,
   uploadMechanismsProgressionLinks,
+  webLab2ExperimentLinks,
   webLab2ValidationProgressionLinks,
   webLab2LevelLinks,
 } from "./levelTypeLinks";
+import { buildShareLinkDropdownItems } from "../lib/shareLinkActions";
+import { isProgressionLevelPath } from "../lib/levelShareLinks";
+import { FaIcon } from "../components/ui/icons/FaIcon";
+import { getLevelTypeIconConfig } from "../lib/levelTypeIcon";
 import styles from "./LevelsIndexPage.module.scss";
+
+function levelTypeTooltipStartIcon(path: string) {
+  const icon = getLevelTypeIconConfig(path);
+  return <FaIcon family={icon.family} name={icon.name} size="xs" />;
+}
 
 interface LevelPage {
   name: string;
@@ -34,7 +44,6 @@ interface LevelPage {
 
 interface LevelTypeEntry {
   levelType: string;
-  description: string;
   pages: LevelPage[];
 }
 
@@ -49,17 +58,14 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
     entries: [
       {
         levelType: "AI Chat Lab",
-        description: "Prompting, model configuration, and chat stream prototypes.",
         pages: aiChatLabLevelLinks,
       },
       {
         levelType: "Web Lab 2",
-        description: "Current full-featured prototype environment.",
         pages: webLab2LevelLinks,
       },
       {
         levelType: "Python Lab",
-        description: "Python coding environment with console output.",
         pages: pythonLabLevelLinks,
       },
     ],
@@ -69,22 +75,18 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
     entries: [
       {
         levelType: "Multi-choice",
-        description: "Thin vertical slice with local submit feedback.",
         pages: multiChoiceLevelLinks,
       },
       {
         levelType: "Free response",
-        description: "Thin vertical slice with local text submission.",
         pages: freeResponseLevelLinks,
       },
       {
         levelType: "Match",
-        description: "Thin vertical slice with drag-and-drop matching.",
         pages: matchLevelLinks,
       },
       {
         levelType: "Levelgroup",
-        description: "Thin vertical slice combining multi, free response, and match.",
         pages: levelGroupLevelLinks,
       },
     ],
@@ -94,7 +96,6 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
     entries: [
       {
         levelType: "Bubble choice",
-        description: "Choose one of four authored paths for the same concept.",
         pages: bubbleChoiceLevelLinks,
       },
     ],
@@ -249,7 +250,7 @@ function SavedVariantsSection() {
 
   const copyVariantShareLink = useCallback((
     variant: SavedVariant,
-    shareMode: "locked" | "flow",
+    shareMode: "locked-level" | "locked-progression" | "flow",
   ) => {
     navigator.clipboard.writeText(
       buildVariantAbsoluteUrl(variant.basePath, variant.overrides, {
@@ -323,7 +324,7 @@ function SavedVariantsSection() {
                     align="end"
                     side="bottom"
                     sideOffset={6}
-                    menuWidth={172}
+                    menuWidth={208}
                     listLabel={`Share ${v.name}`}
                     trigger={
                       <AppButton
@@ -335,20 +336,17 @@ function SavedVariantsSection() {
                         title="Share links"
                       />
                     }
-                    items={[
+                    items={buildShareLinkDropdownItems(
                       {
-                        id: "locked-share",
-                        label: "Locked share link",
-                        iconName: "lock",
-                        onSelect: () => copyVariantShareLink(v, "locked"),
+                        showLockedProgression: isProgressionLevelPath(v.basePath),
                       },
                       {
-                        id: "flow-share",
-                        label: "Flow share link",
-                        iconName: "diagram-project",
-                        onSelect: () => copyVariantShareLink(v, "flow"),
+                        onLockedLevel: () => copyVariantShareLink(v, "locked-level"),
+                        onLockedProgression: () =>
+                          copyVariantShareLink(v, "locked-progression"),
+                        onFlow: () => copyVariantShareLink(v, "flow"),
                       },
-                    ]}
+                    )}
                   />
                   <Tooltip content="Promote to code" position="top">
                     <AppButton
@@ -387,7 +385,8 @@ export function LevelsIndexPage() {
       <div className={styles.container}>
         <h1 className={styles.pageTitle}>Lab2 Level Types</h1>
         <p className={styles.pageSubtitle}>
-          Explore level types and jump directly into implemented page variants.
+          Lab templates, assessment levels, and demo progressions for this
+          prototype.
         </p>
 
         <SavedVariantsSection />
@@ -399,14 +398,14 @@ export function LevelsIndexPage() {
             onToggle={() => setSampleExpanded((current) => !current)}
           >
             <div className={styles.entryGrid}>
-              <div className={styles.card}>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
                 <div className={styles.cardHeader}>
                   <div>
                     <h3 className={styles.cardTitle}>
                       Intro to HTML &amp; CSS
                     </h3>
                     <p className={styles.cardDescription}>
-                      Web Lab → Free Response → Bubble Choice → Practice Project → Checkpoint
+                      Lab, reflection, path choice, project, and checkpoint.
                     </p>
                   </div>
                 </div>
@@ -417,6 +416,7 @@ export function LevelsIndexPage() {
                       content={page.name}
                       position="top"
                       sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -429,14 +429,15 @@ export function LevelsIndexPage() {
                   ))}
                 </div>
               </div>
-              <div className={styles.card}>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
                 <div className={styles.cardHeader}>
                   <div>
                     <h3 className={styles.cardTitle}>
                       Web Lab 2 Validation Lab
                     </h3>
                     <p className={styles.cardDescription}>
-                      Technical fix → Open-ended creation → Hybrid refinement
+                      Five Web Lab validation levels, from fixes to open-ended
+                      build.
                     </p>
                   </div>
                 </div>
@@ -447,6 +448,7 @@ export function LevelsIndexPage() {
                       content={page.name}
                       position="top"
                       sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -459,14 +461,14 @@ export function LevelsIndexPage() {
                   ))}
                 </div>
               </div>
-              <div className={styles.card}>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
                 <div className={styles.cardHeader}>
                   <div>
                     <h3 className={styles.cardTitle}>
                       Upload Mechanisms
                     </h3>
                     <p className={styles.cardDescription}>
-                      Functional staging → Add-files message → Plus-button chips
+                      Three Tutor upload patterns side by side.
                     </p>
                   </div>
                 </div>
@@ -477,6 +479,36 @@ export function LevelsIndexPage() {
                       content={page.name}
                       position="top"
                       sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <div>
+                    <h3 className={styles.cardTitle}>Web Lab 2 Experiments</h3>
+                    <p className={styles.cardDescription}>
+                      Standalone Tutor action card and validation review demos.
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {webLab2ExperimentLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -500,18 +532,21 @@ export function LevelsIndexPage() {
             {LEVEL_CATEGORIES.map((category) => (
               <section key={category.title} className={styles.levelTypeGroup}>
                 <h2 className={styles.sectionHeading}>{category.title}</h2>
-              <div className={styles.entryGrid}>
+              <div
+                className={[
+                  styles.entryGrid,
+                  category.title === "Lab environments" && styles.entryGridThreeCol,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
                 {category.entries.map((entry) => (
-                  <div key={entry.levelType} className={styles.card}>
+                  <div
+                    key={entry.levelType}
+                    className={`${styles.card} ${styles.cardCompact}`}
+                  >
                     <div className={styles.cardHeader}>
-                      <div>
-                        <h3 className={styles.cardTitle}>
-                          {entry.levelType}
-                        </h3>
-                        <p className={styles.cardDescription}>
-                          {entry.description}
-                        </p>
-                      </div>
+                      <h3 className={styles.cardTitle}>{entry.levelType}</h3>
                     </div>
                     <div className={styles.bubbleRow}>
                       {entry.pages.map((page, index) => (

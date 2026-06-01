@@ -39,8 +39,8 @@ The console header includes controls to run code, clear output, and toggle betwe
 
 ## Routes
 
-- `/levels/pythonlab` — default Python Lab workspace with a guided check-in planner project
-- `/levels/pythonlab-blank` — standalone blank Python project with no starter files, instructions drawer hidden, and collapsible sidebar enabled
+- `/levels/pythonlab` — Python Lab Level with a guided check-in planner project
+- `/levels/pythonlab-blank` — Standalone Project (Blank) with no starter files, instructions drawer hidden, and collapsible sidebar enabled
 
 ## Component Structure
 

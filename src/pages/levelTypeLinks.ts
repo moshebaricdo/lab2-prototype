@@ -2,13 +2,20 @@ import type { LevelProgressLink } from "../components/ui/header/LevelProgressBub
 
 export const webLab2LevelLinks: LevelProgressLink[] = [
   {
-    name: "Demo Project (Stellar Atlas)",
+    name: "Web Lab 2 Level",
+    path: "/levels/weblab2-level",
+  },
+  {
+    name: "Standalone Project (Demo)",
     path: "/levels/weblab2-demo-project",
   },
   {
-    name: "Demo Project (No Starter Code)",
+    name: "Standalone Project (Blank)",
     path: "/levels/weblab2-demo-project-blank",
   },
+];
+
+export const webLab2ExperimentLinks: LevelProgressLink[] = [
   {
     name: "Tutor action card (F2)",
     path: "/levels/weblab2-tutor-action-card",
@@ -115,14 +122,14 @@ export const bubbleChoiceLevelLinks: LevelProgressLink[] = [
 ];
 
 export const pythonLabLevelLinks: LevelProgressLink[] = [
-  { name: "Default workspace", path: "/levels/pythonlab" },
-  { name: "Blank standalone project", path: "/levels/pythonlab-blank" },
+  { name: "Python Lab Level", path: "/levels/pythonlab" },
+  { name: "Standalone Project (Blank)", path: "/levels/pythonlab-blank" },
 ];
 
 export const aiChatLabLevelLinks: LevelProgressLink[] = [
-  { name: "Prompting practice", path: "/levels/aichatlab" },
-  { name: "Setup controls", path: "/levels/aichatlab-setup" },
-  { name: "Full model card", path: "/levels/aichatlab-model-card" },
+  { name: "Chat Only Level", path: "/levels/aichatlab" },
+  { name: "Setup Only Level", path: "/levels/aichatlab-setup" },
+  { name: "Full Model Config Level", path: "/levels/aichatlab-model-card" },
 ];
 
 export const sampleProgressionLinks: LevelProgressLink[] = [
@@ -149,6 +156,10 @@ export const webLab2ValidationProgressionLinks: LevelProgressLink[] = [
   {
     name: "Fix the Starship loader",
     path: "/levels/progression-weblab2-validation-sandbox",
+  },
+  {
+    name: "Feature Roulette (AIF)",
+    path: "/levels/progression-weblab2-validation-feature-roulette",
   },
 ];
 

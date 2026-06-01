@@ -6,11 +6,11 @@ Prototype environment for levels where the lab surface is an AI chat stream. Som
 
 ## Routes
 
-| Route | Export | Default shape |
-|---|---|---|
-| `/levels/aichatlab` | `AiChatLabLevelPage` | Prompting-practice chat with the resource panel and no config column |
-| `/levels/aichatlab-setup` | `AiChatLabSetupLevelPage` | Resource panel, setup tab, model selector, and compact temperature tuning |
-| `/levels/aichatlab-model-card` | `AiChatLabModelCardLevelPage` | Full setup, retrieval, publish, rubric, and published model-card flow |
+| Route | Name | Export | Index section | Default shape |
+|---|---|---|---|---|
+| `/levels/aichatlab` | Chat Only Level | `AiChatLabLevelPage` | Level Types (core config) | Chat-only surface with the resource panel and no config column |
+| `/levels/aichatlab-setup` | Setup Only Level | `AiChatLabSetupLevelPage` | Level Types (core config) | Resource panel, setup tab, model selector, and compact temperature tuning |
+| `/levels/aichatlab-model-card` | Full Model Config Level | `AiChatLabModelCardLevelPage` | Level Types (core config) | Full setup, retrieval, publish, rubric, and published model-card flow |
 
 ## Key Files
 

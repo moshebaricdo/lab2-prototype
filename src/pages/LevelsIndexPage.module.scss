@@ -72,6 +72,10 @@
   grid-template-columns: repeat(2, 1fr);
 }
 
+.entryGridThreeCol {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 /* ── Level-type card ── */
 
 .card {
@@ -94,7 +98,15 @@
   font-size: var(--text-base);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
-  margin-bottom: 4px;
+  margin: 0;
+}
+
+.cardWithDescription .bubbleRow {
+  margin-top: 16px;
+}
+
+.cardCompact .bubbleRow {
+  margin-top: 12px;
 }
 
 .cardDescription {
@@ -104,7 +116,6 @@
 }
 
 .bubbleRow {
-  margin-top: 16px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

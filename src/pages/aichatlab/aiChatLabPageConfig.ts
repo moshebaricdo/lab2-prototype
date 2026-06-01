@@ -55,7 +55,7 @@ const DEFAULT_INSTRUCTIONS = [
 ].join("\n\n");
 
 export const BASE_DEFAULTS: AiChatLabDefaults = {
-  title: "AI Chat Lab: Prompting Practice",
+  title: "Chat Only Level",
   subtitle: "Saved a few seconds ago",
   instructionsMarkdown: DEFAULT_INSTRUCTIONS,
   showInstructionsTab: true,
