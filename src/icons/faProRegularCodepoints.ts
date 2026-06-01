@@ -1,6 +1,6 @@
 /**
  * Unicode codepoints (hex, no "0x") for every glyph in the Font Awesome 7 Pro Solid font.
- * Auto-generated from src/assets/fonts/font-awesome-7-pro-solid-900.otf
+ * Auto-generated from font-awesome-7-pro-solid-900.otf
  * Regenerate: `npm run generate:fa-codepoints`
  */
 export const FA_PRO_SOLID_CODEPOINTS = {

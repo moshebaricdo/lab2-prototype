@@ -3,6 +3,8 @@
 :root {
   /* FA7 Pro Solid webfont (@font-face weight 900 in fonts-fa-pro.css) */
   --font-fa-pro: "Font Awesome 7 Pro";
+  /* FA7 Brands webfont (@font-face weight 400 in fonts-fa-brands.css) */
+  --font-fa-brands: "Font Awesome 7 Brands";
   --font-size: 16px;
   --text-h1: 48px;
   --text-h2: 34px;

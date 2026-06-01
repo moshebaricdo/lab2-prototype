@@ -3,10 +3,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-fa-pro), sans-serif;
   font-style: normal;
-  font-weight: 900;
   line-height: 1;
+}
+
+.familySolid {
+  font-family: var(--font-fa-pro), sans-serif;
+  font-weight: 900;
+}
+
+.familyBrands {
+  font-family: var(--font-fa-brands), sans-serif;
+  font-weight: 400;
 }
 
 .sizeInherit {

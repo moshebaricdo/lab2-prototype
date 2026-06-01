@@ -3,6 +3,7 @@
 @import 'tw-animate-css';
 @import './styles/tokens.css';
 @import './styles/fonts-fa-pro.css';
+@import './styles/fonts-fa-brands.css';
 @import './styles/globals.css';
 
 @layer base {

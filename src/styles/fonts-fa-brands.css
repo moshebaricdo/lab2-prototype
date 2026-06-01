@@ -1,0 +1,11 @@
+/**
+ * Licensed Font Awesome 7 Brands (webfont, weight 400).
+ * File: src/assets/fonts/Font Awesome 7 Brands-Regular-400.otf
+ */
+@font-face {
+  font-family: "Font Awesome 7 Brands";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/Font Awesome 7 Brands-Regular-400.otf") format("opentype");
+}
