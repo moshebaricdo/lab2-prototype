@@ -16,6 +16,7 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 
 - `/levels/weblab2-tutor-action-card`
 - `/levels/weblab2-validation-test`
+- `/levels/weblab2-drawer-improvements` — instructions drawer slides closed after the student's first Tutor message; the Show Instructions toggle pulses twice to hint it can reopen
 
 ### Multi-level progressions (Sample Progressions index)
 

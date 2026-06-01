@@ -35,6 +35,7 @@ interface AiTutorMessageListProps {
   canScrollDown: boolean;
   showEmptyState: boolean;
   topPadding: number;
+  animateTopPadding?: boolean;
   chatMessages: ChatMessage[];
   isThinking: boolean;
   autoCompleteThinking: boolean;
@@ -167,7 +168,7 @@ function MessageAttachments({
 
 function EmptyState({
   title = "How can I help?",
-  text = "You can ask AI Tutor to make changes to your project, for help with the level, or simply to discuss your ideas.",
+  text = "AI Tutor can make project changes, help with the level, or chat about your ideas.",
 }: {
   title?: string;
   text?: string;
@@ -466,6 +467,7 @@ export function AiTutorMessageList({
   canScrollDown,
   showEmptyState,
   topPadding,
+  animateTopPadding = false,
   chatMessages,
   isThinking,
   autoCompleteThinking,
@@ -506,7 +508,12 @@ export function AiTutorMessageList({
       >
         <div
           className={`${styles.messagesWrap} ${showEmptyState ? styles.messagesWrapEmpty : ""}`}
-          style={{ paddingTop: `${topPadding}px` }}
+          style={{
+            paddingTop: `${topPadding}px`,
+            transition: animateTopPadding
+              ? "padding-top 280ms ease"
+              : undefined,
+          }}
         >
           {showEmptyState && (
             <EmptyState title={emptyStateTitle} text={emptyStateText} />

@@ -9,7 +9,10 @@ import {
   type ReactNode,
 } from "react";
 import { InstructionsDrawer } from "../../InstructionsDrawer";
-import type { InstructionsDrawerVisualCue } from "../../InstructionsDrawer";
+import type {
+  InstructionsDrawerExperiment,
+  InstructionsDrawerVisualCue,
+} from "../../InstructionsDrawer";
 import type {
   AttachmentStatusContext,
   ChatAttachment,
@@ -171,6 +174,7 @@ interface AiTutorPanelProps {
   instructionsDrawerDefaultOpen?: boolean;
   instructionsDrawerInitialHeightRatio?: number;
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
+  instructionsDrawerExperiment?: InstructionsDrawerExperiment;
   instructionGuide?: InstructionGuide;
   inputExperiment?: AiTutorInputExperiment;
   mockTutorConfig?: MockTutorConfig;
@@ -402,6 +406,7 @@ export function AiTutorPanel({
   instructionsDrawerDefaultOpen = true,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
+  instructionsDrawerExperiment = "default",
   instructionGuide,
   inputExperiment = "default",
   mockTutorConfig,
@@ -467,6 +472,11 @@ export function AiTutorPanel({
   const pendingUploadPromisesRef = useRef(new Set<Promise<UploadProcessingResult>>());
   const pendingPreviewUrlsRef = useRef<Record<string, string>>({});
   const uploadFailureCountSinceLastSendRef = useRef(0);
+  const hasAutoClosedDrawerOnFirstSendRef = useRef(false);
+  const hasPlayedFirstCollapseTogglePulseRef = useRef(false);
+  const pendingFirstCollapsePulseRef = useRef(false);
+  const [drawerCloseSignal, setDrawerCloseSignal] = useState(0);
+  const [showDrawerTogglePulse, setShowDrawerTogglePulse] = useState(false);
   const generatedTutorResponseRef = useRef<ChatMessage | null>(generatedTutorResponse);
   chatMessagesRef.current = chatMessages;
   attachedFilesRef.current = attachedFiles;
@@ -479,8 +489,16 @@ export function AiTutorPanel({
     () => new Map(availableContextFiles.map((file) => [file.path, file])),
     [availableContextFiles],
   );
-  const topPadding =
-    showInstructionsDrawer && drawerIsOpen ? drawerHeight + 40 : showInstructionsDrawer ? 40 : 8;
+  const usesSyncedDrawerPadding =
+    instructionsDrawerExperiment === "close-on-first-send";
+  const drawerToChatGap = 10;
+  const topPadding = !showInstructionsDrawer
+    ? drawerToChatGap
+    : usesSyncedDrawerPadding
+      ? drawerHeight + drawerToChatGap
+      : drawerIsOpen
+        ? drawerHeight + 40
+        : 40;
   const effectiveIsThinking = isThinking || isRequestRunning;
   const previousChatMessageCountRef = useRef(chatMessages.length);
   const previousEffectiveIsThinkingRef = useRef(effectiveIsThinking);
@@ -530,6 +548,10 @@ export function AiTutorPanel({
   useEffect(() => {
     if (clearChatSignal === 0) return;
     hasSeededOnMountRef.current = true;
+    hasAutoClosedDrawerOnFirstSendRef.current = false;
+    hasPlayedFirstCollapseTogglePulseRef.current = false;
+    pendingFirstCollapsePulseRef.current = false;
+    setShowDrawerTogglePulse(false);
     requestSerialRef.current += 1;
     setIsThinking(false);
     setValidationReviewRequestSource(null);
@@ -1612,6 +1634,21 @@ export function AiTutorPanel({
           ? resolveSeedConversation(mockTutorConfig?.seedConversation, userMessage)
           : null;
 
+      const drawerIsExpandedEnoughToCollapse = drawerHeight > 48 || drawerIsOpen;
+      if (
+        instructionsDrawerExperiment === "close-on-first-send" &&
+        isFirstMessage &&
+        showInstructionsDrawer &&
+        drawerIsExpandedEnoughToCollapse &&
+        !hasAutoClosedDrawerOnFirstSendRef.current
+      ) {
+        hasAutoClosedDrawerOnFirstSendRef.current = true;
+        setDrawerCloseSignal((current) => current + 1);
+        if (!hasPlayedFirstCollapseTogglePulseRef.current) {
+          pendingFirstCollapsePulseRef.current = true;
+        }
+      }
+
       setChatMessages(seededConversation ?? newMessages);
 
       if (onTutorSubmit) {
@@ -1691,9 +1728,36 @@ export function AiTutorPanel({
           <InstructionsDrawer
             maxHeight={maxDrawerHeight}
             onHeightChange={setDrawerHeight}
-            onOpenChange={setDrawerIsOpen}
+            onOpenChange={(isOpen) => {
+              setDrawerIsOpen(isOpen);
+              if (isOpen) {
+                setShowDrawerTogglePulse(false);
+              }
+            }}
             initialHeightRatio={instructionsDrawerInitialHeightRatio}
             defaultOpen={instructionsDrawerDefaultOpen}
+            closeSignal={drawerCloseSignal}
+            collapseAnimation={
+              instructionsDrawerExperiment === "close-on-first-send"
+                ? "slide"
+                : "none"
+            }
+            showTogglePulse={showDrawerTogglePulse}
+            onTogglePulseComplete={() => setShowDrawerTogglePulse(false)}
+            onSlideCollapseSettled={() => {
+              if (
+                !pendingFirstCollapsePulseRef.current ||
+                hasPlayedFirstCollapseTogglePulseRef.current
+              ) {
+                pendingFirstCollapsePulseRef.current = false;
+                return;
+              }
+              pendingFirstCollapsePulseRef.current = false;
+              hasPlayedFirstCollapseTogglePulseRef.current = true;
+              window.requestAnimationFrame(() => {
+                setShowDrawerTogglePulse(true);
+              });
+            }}
             visualCue={instructionsDrawerVisualCue}
             showLabel={instructionGuide ? "Show Full Instructions" : undefined}
             hideLabel={instructionGuide ? "Hide Full Instructions" : undefined}
@@ -1709,6 +1773,7 @@ export function AiTutorPanel({
         canScrollDown={canScrollDown}
         showEmptyState={showEmptyState}
         topPadding={topPadding}
+        animateTopPadding={false}
         chatMessages={chatMessages}
         isThinking={effectiveIsThinking}
         autoCompleteThinking={!onTutorSubmit}

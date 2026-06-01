@@ -11,7 +11,10 @@ import type {
   TutorRequestMode,
   TutorSubmitHandler,
 } from "../../../types/tutor";
-import type { InstructionsDrawerVisualCue } from "./InstructionsDrawer";
+import type {
+  InstructionsDrawerExperiment,
+  InstructionsDrawerVisualCue,
+} from "./InstructionsDrawer";
 import type { VersionHistory } from "./views/VersionHistory";
 import type { RubricData } from "./views/RubricPanel";
 import type { FileItem } from "../../../types/file";
@@ -89,6 +92,7 @@ export interface SidebarProps {
   instructionsDrawerDefaultOpen?: boolean;
   instructionsDrawerInitialHeightRatio?: number;
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
+  instructionsDrawerExperiment?: InstructionsDrawerExperiment;
   instructionGuide?: InstructionGuide;
   aiTutorInputExperiment?: AiTutorInputExperiment;
   mockTutorConfig?: MockTutorConfig;

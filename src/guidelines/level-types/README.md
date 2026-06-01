@@ -31,7 +31,7 @@ Use these docs as handoff context for follow-up threads.
 - `/levels` -> categorized level index
 - `/levels/pythonlab` and `/levels/pythonlab-blank`
 - `/levels/aichatlab`, `/levels/aichatlab-setup`, and `/levels/aichatlab-model-card`
-- Web Lab 2 core templates: `/levels/weblab2-level`, `/levels/weblab2-demo-project`, and `/levels/weblab2-demo-project-blank`; Web Lab 2 experiments (`/levels/weblab2-tutor-action-card`, `/levels/weblab2-validation-test`) and progressions are listed under Sample Progressions on `/levels`
+- Web Lab 2 core templates: `/levels/weblab2-level`, `/levels/weblab2-demo-project`, and `/levels/weblab2-demo-project-blank`; Web Lab 2 experiments (`/levels/weblab2-tutor-action-card`, `/levels/weblab2-validation-test`, `/levels/weblab2-drawer-improvements`) and progressions are listed under Sample Progressions on `/levels`
 - Web Lab 2 progression routes: Upload Mechanisms under `/levels/progression-upload-mechanisms-*`, and the validation progression under `/levels/progression-weblab2-validation-*` (including Feature Roulette AIF as the fifth level — see `weblab2.md`)
 - `/levels/multi` (and other multi-choice demo routes — see `multi-choice.md`)
 - `/levels/free-response` (and `/levels/free-response-reveal`, `/levels/free-response-markdown`, `/levels/free-response-upload` — see `free-response.md`)

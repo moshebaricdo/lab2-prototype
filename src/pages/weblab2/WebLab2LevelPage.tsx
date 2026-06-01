@@ -30,7 +30,10 @@ import { useLevelShareMode } from "../../hooks/useLevelShareMode";
 import { useTutorApiSettings } from "../../hooks/useTutorApiSettings";
 import { webLab2LevelLinks } from "../levelTypeLinks";
 import type { LevelProgressLink } from "../../components/ui/header/LevelProgressBubbles";
-import type { InstructionsDrawerVisualCue } from "../../components/lab2/resource-panel/InstructionsDrawer";
+import type {
+  InstructionsDrawerExperiment,
+  InstructionsDrawerVisualCue,
+} from "../../components/lab2/resource-panel/InstructionsDrawer";
 import { MarkdownInstructions } from "../../components/lab2/resource-panel/MarkdownInstructions";
 import type { RubricData } from "../../components/lab2/resource-panel/views/RubricPanel";
 import type {
@@ -188,6 +191,7 @@ interface WebLab2LevelPageProps {
   title?: string;
   instructionsDrawerInitialHeightRatio?: number;
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
+  instructionsDrawerExperiment?: InstructionsDrawerExperiment;
   autoSeedTutorConversation?: boolean;
   aiTutorInputExperiment?: AiTutorInputExperiment;
   showRubricTab?: boolean;
@@ -260,6 +264,7 @@ export function WebLab2LevelPage({
   title = "Web Lab 2: Intro Project",
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
+  instructionsDrawerExperiment = "default",
   autoSeedTutorConversation = false,
   aiTutorInputExperiment = "default",
   showRubricTab = false,
@@ -337,6 +342,7 @@ export function WebLab2LevelPage({
     resourcePanelCompact,
     [INSTRUCTIONS_MARKDOWN_DEV_KEY]: instructionsMarkdown,
     instructionsDrawerVisualCue,
+    instructionsDrawerExperiment,
     autoSeedTutorConversation,
     tutorModeKind: routeTutorMode.kind,
     [TUTOR_POLICY_PRESET_DEV_KEY]: tutorPolicyPreset,
@@ -1286,6 +1292,9 @@ export function WebLab2LevelPage({
     showInstructionsDrawer: Boolean(resolved.showInstructionsDrawer),
     instructionsDrawerDefaultOpen: !resolvedTutorInstructionsDelivery,
     instructionsDrawerVisualCue: resolvedVisualCue,
+    instructionsDrawerExperiment:
+      (resolved.instructionsDrawerExperiment as InstructionsDrawerExperiment) ??
+      "default",
     instructionGuide,
     instructionsContent: resolvedInstructionsContent,
     aiTutorInputExperiment,

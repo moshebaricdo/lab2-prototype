@@ -53,6 +53,7 @@ export function Sidebar({
   instructionsDrawerDefaultOpen = true,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
+  instructionsDrawerExperiment = "default",
   instructionGuide,
   aiTutorInputExperiment = "default",
   mockTutorConfig = defaultMockTutorConfig,
@@ -330,6 +331,7 @@ export function Sidebar({
             instructionsDrawerDefaultOpen={instructionsDrawerDefaultOpen}
             instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
             instructionsDrawerVisualCue={instructionsDrawerVisualCue}
+            instructionsDrawerExperiment={instructionsDrawerExperiment}
             instructionGuide={instructionGuide}
             aiTutorInputExperiment={aiTutorInputExperiment}
             mockTutorConfig={mockTutorConfig}

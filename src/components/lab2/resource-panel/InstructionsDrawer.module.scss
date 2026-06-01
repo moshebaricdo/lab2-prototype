@@ -130,6 +130,44 @@
   pointer-events: none;
 }
 
+.rootSlideAssembly {
+  width: 100%;
+}
+
+.slideAssembly {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  overflow: visible;
+}
+
+.slideAssembly .toggleWrap {
+  flex-shrink: 0;
+  transform: translateY(-1px);
+}
+
+.panelCollapseShell {
+  display: grid;
+  width: 100%;
+  transition: grid-template-rows 280ms ease;
+  grid-template-rows: 0fr;
+  pointer-events: auto;
+}
+
+.panelCollapseShellOpen {
+  grid-template-rows: 1fr;
+}
+
+.panelCollapseShellClosing {
+  grid-template-rows: 0fr;
+}
+
+.panelCollapseInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .toggleWrap {
   position: relative;
   margin-bottom: -1px;
@@ -145,6 +183,29 @@
   pointer-events: auto;
 }
 
+.toggleWrapPanelAttached {
+  margin-top: -1px;
+}
+
+.toggleWrapGlow {
+  z-index: 1;
+  animation: instructionsDrawerToggleGlow 2s ease-in-out 1 forwards;
+}
+
+@keyframes instructionsDrawerToggleGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  40%,
+  60% {
+    box-shadow:
+      0 0 0 1px var(--ds-borders-brand-teal-primary),
+      0 0 10px 4px var(--ds-background-brand-teal-light);
+  }
+}
+
 .toggleWrapOpen {
   margin-top: -1px;
   padding-top: 0;
@@ -154,10 +215,13 @@
   position: absolute;
   inset: 0;
   border: 1px solid var(--ds-borders-neutral-primary);
-  border-top: 0;
   border-bottom-right-radius: 8px;
   border-bottom-left-radius: 8px;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
   pointer-events: none;
+}
+
+.toggleBorderConnected {
+  border-top: 0;
 }
 

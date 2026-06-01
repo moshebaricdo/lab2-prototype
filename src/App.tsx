@@ -198,6 +198,10 @@ const WebLab2TutorActionCardLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2TutorActionCardLevelPage"),
   "WebLab2TutorActionCardLevelPage",
 );
+const WebLab2DrawerImprovementsLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2DrawerImprovementsLevelPage"),
+  "WebLab2DrawerImprovementsLevelPage",
+);
 const WebLab2UploadMechanismsPages = () =>
   import("./pages/weblab2/WebLab2UploadMechanismsLevelPage");
 const UploadMechanismsStagedLevelPage = lazyPage(
@@ -260,6 +264,10 @@ export default function App() {
         <Route
           path="/levels/weblab2-tutor-action-card"
           element={<WebLab2TutorActionCardLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-drawer-improvements"
+          element={<WebLab2DrawerImprovementsLevelPage />}
         />
         <Route
           path="/levels/weblab2-level"

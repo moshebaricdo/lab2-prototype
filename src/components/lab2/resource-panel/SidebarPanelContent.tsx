@@ -45,6 +45,7 @@ interface SidebarPanelContentProps {
   instructionsDrawerDefaultOpen: NonNullable<SidebarProps["instructionsDrawerDefaultOpen"]>;
   instructionsDrawerInitialHeightRatio: SidebarProps["instructionsDrawerInitialHeightRatio"];
   instructionsDrawerVisualCue: NonNullable<SidebarProps["instructionsDrawerVisualCue"]>;
+  instructionsDrawerExperiment: NonNullable<SidebarProps["instructionsDrawerExperiment"]>;
   instructionGuide: SidebarProps["instructionGuide"];
   aiTutorInputExperiment: NonNullable<SidebarProps["aiTutorInputExperiment"]>;
   mockTutorConfig: NonNullable<SidebarProps["mockTutorConfig"]>;
@@ -128,6 +129,7 @@ export function SidebarPanelContent({
   instructionsDrawerDefaultOpen,
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue,
+  instructionsDrawerExperiment,
   instructionGuide,
   aiTutorInputExperiment,
   mockTutorConfig,
@@ -232,6 +234,7 @@ export function SidebarPanelContent({
           instructionsDrawerDefaultOpen={instructionsDrawerDefaultOpen}
           instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
           instructionsDrawerVisualCue={instructionsDrawerVisualCue}
+          instructionsDrawerExperiment={instructionsDrawerExperiment}
           instructionGuide={instructionGuide}
           inputExperiment={aiTutorInputExperiment}
           mockTutorConfig={mockTutorConfig}
