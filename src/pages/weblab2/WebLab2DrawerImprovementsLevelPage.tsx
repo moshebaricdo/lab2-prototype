@@ -28,6 +28,7 @@ export function WebLab2DrawerImprovementsLevelPage() {
       instructionsDrawerExperiment="close-on-first-send"
       continueLabel="Continue"
       onContinue={() => navigate(drawerImprovementsPaths.instructionsTab)}
+      instructionsDrawerInitialHeightRatio={0.5}
     />
   );
 }
