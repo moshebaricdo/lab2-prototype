@@ -31,6 +31,7 @@ interface SidebarTabRailProps {
   showResourcesTab: boolean;
   showDevTab: boolean;
   devPanelHasOverrides?: boolean;
+  showAiTutorTabNotification?: boolean;
   annotations?: SidebarProps["annotations"];
   isTabActive: (tab: SidebarTab) => boolean;
   isTabDisabled: (tab: SidebarTab) => boolean;
@@ -81,11 +82,13 @@ function SidebarTabButton({
   active,
   disabled,
   showOverrideDot = false,
+  showNotificationBadge = false,
   onSelectTab,
 }: Omit<SidebarTabConfig, "visible"> & {
   active: boolean;
   disabled: boolean;
   showOverrideDot?: boolean;
+  showNotificationBadge?: boolean;
   onSelectTab: (tab: SidebarTab) => void;
 }) {
   return (
@@ -116,7 +119,9 @@ function SidebarTabButton({
             <div className={styles.tabActiveMask} />
           </>
         )}
-        {showOverrideDot && <span className={styles.devOverrideDot} />}
+        {(showOverrideDot || showNotificationBadge) && (
+          <span className={styles.devOverrideDot} />
+        )}
       </button>
     </Tooltip>
   );
@@ -136,6 +141,7 @@ export function SidebarTabRail({
   showResourcesTab,
   showDevTab,
   devPanelHasOverrides = false,
+  showAiTutorTabNotification = false,
   annotations,
   isTabActive,
   isTabDisabled,
@@ -235,6 +241,9 @@ export function SidebarTabRail({
               disabled={isTabDisabled(tab.tab)}
               showOverrideDot={
                 tab.tab === "dev" && devPanelHasOverrides && !active
+              }
+              showNotificationBadge={
+                tab.tab === "ai-tutor" && showAiTutorTabNotification && !active
               }
               onSelectTab={onSelectTab}
             />

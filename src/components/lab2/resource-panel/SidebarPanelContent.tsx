@@ -46,7 +46,12 @@ interface SidebarPanelContentProps {
   instructionsDrawerInitialHeightRatio: SidebarProps["instructionsDrawerInitialHeightRatio"];
   instructionsDrawerVisualCue: NonNullable<SidebarProps["instructionsDrawerVisualCue"]>;
   instructionsDrawerExperiment: NonNullable<SidebarProps["instructionsDrawerExperiment"]>;
+  tutorDrawerPulseSignal: NonNullable<SidebarProps["tutorDrawerPulseSignal"]>;
   instructionGuide: SidebarProps["instructionGuide"];
+  instructionGuideState: SidebarProps["instructionGuideState"];
+  onInstructionGuideStateChange: SidebarProps["onInstructionGuideStateChange"];
+  instructionsMarkdown: SidebarProps["instructionsMarkdown"];
+  instructionPinnedStep: SidebarProps["instructionPinnedStep"];
   aiTutorInputExperiment: NonNullable<SidebarProps["aiTutorInputExperiment"]>;
   mockTutorConfig: NonNullable<SidebarProps["mockTutorConfig"]>;
   onStageTutorUpload: SidebarProps["onStageTutorUpload"];
@@ -130,7 +135,12 @@ export function SidebarPanelContent({
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue,
   instructionsDrawerExperiment,
+  tutorDrawerPulseSignal,
   instructionGuide,
+  instructionGuideState,
+  onInstructionGuideStateChange,
+  instructionsMarkdown,
+  instructionPinnedStep,
   aiTutorInputExperiment,
   mockTutorConfig,
   onStageTutorUpload,
@@ -235,7 +245,12 @@ export function SidebarPanelContent({
           instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
           instructionsDrawerVisualCue={instructionsDrawerVisualCue}
           instructionsDrawerExperiment={instructionsDrawerExperiment}
+          tutorDrawerPulseSignal={tutorDrawerPulseSignal}
           instructionGuide={instructionGuide}
+          instructionGuideState={instructionGuideState}
+          onInstructionGuideStateChange={onInstructionGuideStateChange}
+          instructionsMarkdown={instructionsMarkdown}
+          instructionPinnedStep={instructionPinnedStep}
           inputExperiment={aiTutorInputExperiment}
           mockTutorConfig={mockTutorConfig}
           onStageTutorUpload={onStageTutorUpload}

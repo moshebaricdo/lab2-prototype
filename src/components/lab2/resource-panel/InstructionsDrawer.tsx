@@ -6,13 +6,17 @@ import {
   faChevronUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { AppButton } from "../../ui/AppButton";
+import type { InstructionPinnedStep } from "../../../types/tutor";
 import styles from "./InstructionsDrawer.module.scss";
 
 export type InstructionsDrawerVisualCue = "none" | "inline-link";
 
 export type InstructionsDrawerCollapseAnimation = "none" | "slide";
 
-export type InstructionsDrawerExperiment = "default" | "close-on-first-send";
+export type InstructionsDrawerExperiment =
+  | "default"
+  | "close-on-first-send"
+  | "instructions-tab-first-visit";
 
 interface InstructionsDrawerProps {
   maxHeight?: number | null;
@@ -29,6 +33,9 @@ interface InstructionsDrawerProps {
   visualCue?: InstructionsDrawerVisualCue;
   showLabel?: string;
   hideLabel?: string;
+  pinnedStep?: InstructionPinnedStep;
+  /** Tutor instruction-delivery layout for the collapsed drawer toggle chrome. */
+  tutorDeliveryToggleLayout?: boolean;
   children?: React.ReactNode;
 }
 
@@ -49,6 +56,8 @@ export function InstructionsDrawer({
   visualCue = "none",
   showLabel = "Show Instructions",
   hideLabel = "Hide Instructions",
+  pinnedStep,
+  tutorDeliveryToggleLayout = false,
   children,
 }: InstructionsDrawerProps) {
   const minimumContentHeight = 150;
@@ -70,6 +79,7 @@ export function InstructionsDrawer({
   const previousCloseSignalRef = useRef(closeSignal);
   const collapseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const assemblyRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const onSlideCollapseSettledRef = useRef(onSlideCollapseSettled);
   const useSlideAssembly = collapseAnimation === "slide";
 
@@ -139,7 +149,6 @@ export function InstructionsDrawer({
       setIsCollapsing(false);
       setIsOpen(false);
       onOpenChange?.(false);
-      onHeightChange?.(0);
       return true;
     }
 
@@ -172,32 +181,33 @@ export function InstructionsDrawer({
     [],
   );
 
+  // The root wraps the (optional) panel, the pinned step, and the toggle in all
+  // modes, so observing it is the single source of truth for how far the chat
+  // stream below must be padded to clear the floating drawer chrome.
   useEffect(() => {
-    if (useSlideAssembly) {
-      return;
-    }
-    if (isOpen && !isCollapsing) {
-      onHeightChange?.(height);
-    }
-  }, [height, isCollapsing, isOpen, onHeightChange, useSlideAssembly]);
-
-  useEffect(() => {
-    if (!useSlideAssembly || !assemblyRef.current) {
+    const element = rootRef.current;
+    if (!element || !onHeightChange) {
       return;
     }
 
-    const element = assemblyRef.current;
-    const reportAssemblyHeight = () => {
-      const measuredHeight = Math.ceil(element.getBoundingClientRect().height);
-      onHeightChange?.(measuredHeight);
+    const reportChromeHeight = () => {
+      onHeightChange(Math.ceil(element.getBoundingClientRect().height));
     };
 
-    reportAssemblyHeight();
-    const observer = new ResizeObserver(reportAssemblyHeight);
+    reportChromeHeight();
+    const observer = new ResizeObserver(reportChromeHeight);
     observer.observe(element);
 
     return () => observer.disconnect();
-  }, [useSlideAssembly, onHeightChange, isOpen, isCollapsing, isOpening, height]);
+  }, [
+    onHeightChange,
+    useSlideAssembly,
+    isOpen,
+    isCollapsing,
+    isOpening,
+    height,
+    pinnedStep,
+  ]);
 
   useLayoutEffect(() => {
     if (!isOpening) {
@@ -244,9 +254,6 @@ export function InstructionsDrawer({
 
     if (Math.abs(nextHeight - height) > 1) {
       setHeight(nextHeight);
-      if (!useSlideAssembly) {
-        onHeightChange?.(nextHeight);
-      }
     }
   }, [
     hasUserResized,
@@ -267,9 +274,6 @@ export function InstructionsDrawer({
     const upperLimit = getUpperLimit();
     if (height > upperLimit) {
       setHeight(upperLimit);
-      if (!useSlideAssembly) {
-        onHeightChange?.(upperLimit);
-      }
     }
   }, [contentMaxHeight, height, isOpen, onHeightChange, propMaxHeight, useSlideAssembly]);
 
@@ -291,9 +295,6 @@ export function InstructionsDrawer({
       const deltaY = moveEvent.clientY - startY;
       const nextHeight = clampHeight(startHeight + deltaY);
       setHeight(nextHeight);
-      if (!useSlideAssembly) {
-        onHeightChange?.(nextHeight);
-      }
     };
 
     const handleMouseUp = () => {
@@ -373,9 +374,7 @@ export function InstructionsDrawer({
               className={styles.inlineExpandButton}
               onClick={() => {
                 setHasUserResized(true);
-                const nextHeight = getUpperLimit();
-                setHeight(nextHeight);
-                onHeightChange?.(nextHeight);
+                setHeight(getUpperLimit());
               }}
             >
               Read more
@@ -404,7 +403,19 @@ export function InstructionsDrawer({
     </div>
   );
 
-  const togglePanelAttached = useSlideAssembly ? panelExpanded : isOpen;
+  const showPinnedStep =
+    tutorDeliveryToggleLayout && !isOpen && Boolean(pinnedStep);
+
+  const togglePanelAttached = useSlideAssembly
+    ? panelExpanded
+    : isOpen || showPinnedStep;
+
+  const pinnedStepSummary = showPinnedStep ? (
+    <div className={styles.pinnedStep}>
+      <span className={styles.pinnedStepLabel}>{pinnedStep!.positionLabel}</span>
+      <span className={styles.pinnedStepSummary}>{pinnedStep!.summary}</span>
+    </div>
+  ) : null;
 
   const toggleControl = (
     <div
@@ -455,6 +466,7 @@ export function InstructionsDrawer({
 
   return (
     <div
+      ref={rootRef}
       className={[styles.root, useSlideAssembly ? styles.rootSlideAssembly : ""]
         .filter(Boolean)
         .join(" ")}
@@ -466,11 +478,13 @@ export function InstructionsDrawer({
               <div className={styles.panelCollapseInner}>{drawerPanel}</div>
             </div>
           ) : null}
+          {pinnedStepSummary}
           {toggleControl}
         </div>
       ) : (
         <>
           {isOpen ? drawerPanel : null}
+          {pinnedStepSummary}
           {toggleControl}
         </>
       )}

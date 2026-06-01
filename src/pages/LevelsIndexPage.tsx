@@ -487,7 +487,7 @@ export function LevelsIndexPage() {
                 <div className={styles.cardHeader}>
                   <h3 className={styles.cardTitle}>Drawer Improvements</h3>
                   <p className={styles.cardDescription}>
-                    Improvements to drawer behavior and visual cues.
+                    Close-on-first-send vs. Instructions tab + Tutor badge welcome flow.
                   </p>
                 </div>
                 <div className={styles.bubbleRow}>

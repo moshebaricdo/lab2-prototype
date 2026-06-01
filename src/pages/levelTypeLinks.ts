@@ -31,6 +31,10 @@ export const drawerImprovementsExperimentLinks: LevelProgressLink[] = [
     name: "Close + Pulse",
     path: "/levels/weblab2-drawer-improvements",
   },
+  {
+    name: "Instructions tab",
+    path: "/levels/weblab2-drawer-instructions-tab",
+  },
 ];
 
 export const multiChoiceLevelLinks: LevelProgressLink[] = [

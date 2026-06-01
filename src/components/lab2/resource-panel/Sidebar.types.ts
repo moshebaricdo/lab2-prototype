@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, Dispatch, ReactNode, SetStateAction } from "react";
 import type { DevPanelField } from "../dev";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import type { UseAnnotationsResult } from "../../../hooks/useAnnotations";
@@ -6,6 +6,8 @@ import type { ChatAttachment, ChatMessage, FileChange } from "../../../types/cha
 import type {
   AiTutorInputExperiment,
   InstructionGuide,
+  InstructionGuideState,
+  InstructionPinnedStep,
   MockTutorConfig,
   TutorContextFile,
   TutorRequestMode,
@@ -52,6 +54,10 @@ export interface SidebarProps {
   showSaveSuccessAlert?: boolean;
   setShowSaveSuccessAlert?: (show: boolean) => void;
   showInstructionsTab?: boolean;
+  /** Red notification dot on the AI Tutor rail tab (e.g. until first visit). */
+  showAiTutorTabNotification?: boolean;
+  /** Increment to pulse the AI Tutor instructions drawer toggle. */
+  tutorDrawerPulseSignal?: number;
   showValidationTab?: boolean;
   validationFileStructure?: FileItem[];
   validationTests?: ValidationTestDefinition[];
@@ -94,6 +100,10 @@ export interface SidebarProps {
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
   instructionsDrawerExperiment?: InstructionsDrawerExperiment;
   instructionGuide?: InstructionGuide;
+  instructionGuideState?: InstructionGuideState;
+  onInstructionGuideStateChange?: Dispatch<SetStateAction<InstructionGuideState>>;
+  instructionsMarkdown?: string;
+  instructionPinnedStep?: InstructionPinnedStep;
   aiTutorInputExperiment?: AiTutorInputExperiment;
   mockTutorConfig?: MockTutorConfig;
   /** Basenames already present in the project file tree. */

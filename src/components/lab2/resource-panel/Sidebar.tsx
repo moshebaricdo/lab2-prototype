@@ -31,6 +31,8 @@ export function Sidebar({
   showSaveSuccessAlert = false,
   setShowSaveSuccessAlert,
   showInstructionsTab = false,
+  showAiTutorTabNotification = false,
+  tutorDrawerPulseSignal = 0,
   showValidationTab = false,
   validationFileStructure,
   validationTests,
@@ -55,6 +57,10 @@ export function Sidebar({
   instructionsDrawerVisualCue = "none",
   instructionsDrawerExperiment = "default",
   instructionGuide,
+  instructionGuideState,
+  onInstructionGuideStateChange,
+  instructionsMarkdown,
+  instructionPinnedStep,
   aiTutorInputExperiment = "default",
   mockTutorConfig = defaultMockTutorConfig,
   onStageTutorUpload,
@@ -285,6 +291,7 @@ export function Sidebar({
         showResourcesTab={showResourcesTab}
         showDevTab={showDevTab}
         devPanelHasOverrides={devPanelOverrideResult?.hasOverrides}
+        showAiTutorTabNotification={showAiTutorTabNotification}
         annotations={annotations}
         isTabActive={isTabActive}
         isTabDisabled={isTabDisabled}
@@ -332,7 +339,12 @@ export function Sidebar({
             instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
             instructionsDrawerVisualCue={instructionsDrawerVisualCue}
             instructionsDrawerExperiment={instructionsDrawerExperiment}
+            tutorDrawerPulseSignal={tutorDrawerPulseSignal}
             instructionGuide={instructionGuide}
+            instructionGuideState={instructionGuideState}
+            onInstructionGuideStateChange={onInstructionGuideStateChange}
+            instructionsMarkdown={instructionsMarkdown}
+            instructionPinnedStep={instructionPinnedStep}
             aiTutorInputExperiment={aiTutorInputExperiment}
             mockTutorConfig={mockTutorConfig}
             onStageTutorUpload={onStageTutorUpload}

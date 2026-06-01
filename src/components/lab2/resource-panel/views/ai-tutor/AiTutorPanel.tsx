@@ -5,8 +5,10 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type Dispatch,
   type DragEvent,
   type ReactNode,
+  type SetStateAction,
 } from "react";
 import { InstructionsDrawer } from "../../InstructionsDrawer";
 import type {
@@ -24,6 +26,9 @@ import type {
 import type {
   AiTutorInputExperiment,
   InstructionGuide,
+  InstructionGuideState,
+  InstructionOpeningStepSummary,
+  InstructionPinnedStep,
   MockTutorConfig,
   TutorContextFile,
   TutorRequestMode,
@@ -60,6 +65,12 @@ import {
   normalizeNewProjectPlanAnswers,
 } from "./newProjectPlanQuestionnaire";
 import { getInstructionGuideSignature } from "../../../../../lib/tutor/instructionGuide";
+import { getTutorApiKey } from "../../../../../hooks/useTutorApiSettings";
+import { createInitialInstructionGuideState } from "../../../../../lib/tutor/instructionCoach";
+import {
+  buildProgrammaticInstructionOpening,
+  runInstructionOpening,
+} from "../../../../../lib/tutor/instructionOpeningRunner";
 import { buildTutorOpening, formatTutorOpening } from "../../../../../lib/tutor/tutorOpening";
 import { logTutorEvent } from "../../../../../lib/tutor/tutorDebugLogger";
 import styles from "./AiTutorPanel.module.scss";
@@ -175,7 +186,13 @@ interface AiTutorPanelProps {
   instructionsDrawerInitialHeightRatio?: number;
   instructionsDrawerVisualCue?: InstructionsDrawerVisualCue;
   instructionsDrawerExperiment?: InstructionsDrawerExperiment;
+  /** Increment to play the drawer toggle glow (e.g. first AI Tutor tab visit). */
+  tutorDrawerPulseSignal?: number;
   instructionGuide?: InstructionGuide;
+  instructionGuideState?: InstructionGuideState;
+  onInstructionGuideStateChange?: Dispatch<SetStateAction<InstructionGuideState>>;
+  instructionsMarkdown?: string;
+  instructionPinnedStep?: InstructionPinnedStep;
   inputExperiment?: AiTutorInputExperiment;
   mockTutorConfig?: MockTutorConfig;
   existingProjectFileNames?: string[];
@@ -347,12 +364,13 @@ function validationReviewActionDisplayLabel(action: ValidationReviewFollowUpActi
   return "Give me a hint";
 }
 
-export function buildInstructionGuideSeedMessage(guide: InstructionGuide): ChatMessage {
-  const opening = buildTutorOpening(guide.fallbackMarkdown, guide);
-
+export function buildInstructionGuideSeedMessage(
+  guide: InstructionGuide,
+  content: string,
+): ChatMessage {
   return {
     role: "assistant",
-    content: formatTutorOpening(opening),
+    content,
     instructionGuide: guide,
     instructionGuideSignature: getInstructionGuideSignature(guide),
   };
@@ -407,7 +425,12 @@ export function AiTutorPanel({
   instructionsDrawerInitialHeightRatio,
   instructionsDrawerVisualCue = "none",
   instructionsDrawerExperiment = "default",
+  tutorDrawerPulseSignal = 0,
   instructionGuide,
+  instructionGuideState,
+  onInstructionGuideStateChange,
+  instructionsMarkdown = "",
+  instructionPinnedStep,
   inputExperiment = "default",
   mockTutorConfig,
   onStageTutorUpload,
@@ -476,6 +499,8 @@ export function AiTutorPanel({
   const hasPlayedFirstCollapseTogglePulseRef = useRef(false);
   const pendingFirstCollapsePulseRef = useRef(false);
   const [drawerCloseSignal, setDrawerCloseSignal] = useState(0);
+  const [isPreparingInstructionOpening, setIsPreparingInstructionOpening] = useState(false);
+  const openingSeedGenerationRef = useRef(0);
   const [showDrawerTogglePulse, setShowDrawerTogglePulse] = useState(false);
   const generatedTutorResponseRef = useRef<ChatMessage | null>(generatedTutorResponse);
   chatMessagesRef.current = chatMessages;
@@ -489,16 +514,14 @@ export function AiTutorPanel({
     () => new Map(availableContextFiles.map((file) => [file.path, file])),
     [availableContextFiles],
   );
-  const usesSyncedDrawerPadding =
+  const isCloseOnFirstSendExperiment =
     instructionsDrawerExperiment === "close-on-first-send";
   const drawerToChatGap = 10;
-  const topPadding = !showInstructionsDrawer
-    ? drawerToChatGap
-    : usesSyncedDrawerPadding
-      ? drawerHeight + drawerToChatGap
-      : drawerIsOpen
-        ? drawerHeight + 40
-        : 40;
+  // `drawerHeight` reflects the full floating drawer chrome (panel + pinned step
+  // + toggle), so a single gap keeps the chat stream clear in every state.
+  const topPadding = showInstructionsDrawer
+    ? drawerHeight + drawerToChatGap
+    : drawerToChatGap;
   const effectiveIsThinking = isThinking || isRequestRunning;
   const previousChatMessageCountRef = useRef(chatMessages.length);
   const previousEffectiveIsThinkingRef = useRef(effectiveIsThinking);
@@ -734,25 +757,89 @@ export function AiTutorPanel({
   }, [chatMessages.length, mockTutorConfig, setChatMessages]);
 
   useEffect(() => {
-    if (!instructionGuide) return;
-    const seededMessage = buildInstructionGuideSeedMessage(instructionGuide);
+    if (!tutorDrawerPulseSignal || !showInstructionsDrawer) return;
+    window.requestAnimationFrame(() => {
+      setShowDrawerTogglePulse(true);
+    });
+  }, [tutorDrawerPulseSignal, showInstructionsDrawer]);
+
+  useEffect(() => {
+    if (!instructionGuide || !instructionsMarkdown.trim()) return;
+
     const currentMessages = chatMessagesRef.current;
-
-    if (currentMessages.length === 0) {
-      pendingAssistantScrollIndexRef.current = 0;
-      setChatMessages([seededMessage]);
-      return;
-    }
-
-    if (
+    const shouldSeedFresh = currentMessages.length === 0;
+    const shouldReplaceStaleGuideSeed =
       currentMessages.length === 1 &&
       currentMessages[0]?.instructionGuide &&
-      currentMessages[0]?.instructionGuideSignature !== instructionGuideSignature
-    ) {
+      currentMessages[0]?.instructionGuideSignature !== instructionGuideSignature;
+
+    if (!shouldSeedFresh && !shouldReplaceStaleGuideSeed) return;
+
+    const generation = openingSeedGenerationRef.current + 1;
+    openingSeedGenerationRef.current = generation;
+
+    const commitOpening = (
+      content: string,
+      stepSummaries: InstructionOpeningStepSummary[],
+    ) => {
+      if (openingSeedGenerationRef.current !== generation) return;
+      if (chatMessagesRef.current.some((message) => message.role === "user")) return;
+
+      const baseState =
+        instructionGuideState?.guideSignature === instructionGuideSignature
+          ? instructionGuideState
+          : createInitialInstructionGuideState(instructionGuide);
+
+      onInstructionGuideStateChange?.({
+        ...baseState,
+        guideSignature: instructionGuideSignature,
+        openingStepSummaries: stepSummaries,
+      });
+
       pendingAssistantScrollIndexRef.current = 0;
-      setChatMessages([seededMessage]);
-    }
-  }, [instructionGuide, instructionGuideSignature, setChatMessages]);
+      setChatMessages([buildInstructionGuideSeedMessage(instructionGuide, content)]);
+    };
+
+    const run = async () => {
+      if (!getTutorApiKey().trim()) {
+        const result = buildProgrammaticInstructionOpening(
+          instructionsMarkdown,
+          instructionGuide,
+        );
+        commitOpening(result.content, result.stepSummaries);
+        return;
+      }
+
+      setIsPreparingInstructionOpening(true);
+      try {
+        const result = await runInstructionOpening({
+          instructionsMarkdown,
+          guide: instructionGuide,
+        });
+        commitOpening(result.content, result.stepSummaries);
+      } catch (error) {
+        logTutorEvent("instruction opening fell back to programmatic", error, "warn");
+        const result = buildProgrammaticInstructionOpening(
+          instructionsMarkdown,
+          instructionGuide,
+        );
+        commitOpening(result.content, result.stepSummaries);
+      } finally {
+        if (openingSeedGenerationRef.current === generation) {
+          setIsPreparingInstructionOpening(false);
+        }
+      }
+    };
+
+    void run();
+  }, [
+    instructionGuide,
+    instructionGuideSignature,
+    instructionGuideState,
+    instructionsMarkdown,
+    onInstructionGuideStateChange,
+    setChatMessages,
+  ]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -871,7 +958,10 @@ export function AiTutorPanel({
     !hasPendingAiChanges &&
     !hasPendingNewProjectPlanQuestionnaire &&
     !hasPendingEditOptions;
-  const showEmptyState = chatMessages.length === 0 && !effectiveIsThinking;
+  const showInstructionOpeningThinking =
+    isPreparingInstructionOpening && chatMessages.length === 0;
+  const showEmptyState =
+    chatMessages.length === 0 && !effectiveIsThinking && !showInstructionOpeningThinking;
 
   const formatUserMessage = () => {
     const trimmedMessage = chatInput.trim();
@@ -1559,6 +1649,8 @@ export function AiTutorPanel({
     const acceptedTutorMode = tutorRequestMode;
     const baseMessages = chatMessagesRef.current;
     const acceptedSerial = requestSerialRef.current;
+    openingSeedGenerationRef.current += 1;
+    setIsPreparingInstructionOpening(false);
 
     setChatInput("");
     setGeneratedTutorResponse(null);
@@ -1636,7 +1728,7 @@ export function AiTutorPanel({
 
       const drawerIsExpandedEnoughToCollapse = drawerHeight > 48 || drawerIsOpen;
       if (
-        instructionsDrawerExperiment === "close-on-first-send" &&
+        isCloseOnFirstSendExperiment &&
         isFirstMessage &&
         showInstructionsDrawer &&
         drawerIsExpandedEnoughToCollapse &&
@@ -1737,11 +1829,7 @@ export function AiTutorPanel({
             initialHeightRatio={instructionsDrawerInitialHeightRatio}
             defaultOpen={instructionsDrawerDefaultOpen}
             closeSignal={drawerCloseSignal}
-            collapseAnimation={
-              instructionsDrawerExperiment === "close-on-first-send"
-                ? "slide"
-                : "none"
-            }
+            collapseAnimation={isCloseOnFirstSendExperiment ? "slide" : "none"}
             showTogglePulse={showDrawerTogglePulse}
             onTogglePulseComplete={() => setShowDrawerTogglePulse(false)}
             onSlideCollapseSettled={() => {
@@ -1761,6 +1849,8 @@ export function AiTutorPanel({
             visualCue={instructionsDrawerVisualCue}
             showLabel={instructionGuide ? "Show Full Instructions" : undefined}
             hideLabel={instructionGuide ? "Hide Full Instructions" : undefined}
+            pinnedStep={instructionPinnedStep}
+            tutorDeliveryToggleLayout={Boolean(instructionGuide)}
           >
             {instructionsContent}
           </InstructionsDrawer>
@@ -1775,12 +1865,14 @@ export function AiTutorPanel({
         topPadding={topPadding}
         animateTopPadding={false}
         chatMessages={chatMessages}
-        isThinking={effectiveIsThinking}
-        autoCompleteThinking={!onTutorSubmit}
+        isThinking={effectiveIsThinking || showInstructionOpeningThinking}
+        autoCompleteThinking={!onTutorSubmit && !showInstructionOpeningThinking}
         thinkingLabel={
-          isValidationReviewRunning && validationReviewRequestSource === "composer"
-            ? "Evaluating"
-            : undefined
+          showInstructionOpeningThinking
+            ? "Preparing instructions"
+            : isValidationReviewRunning && validationReviewRequestSource === "composer"
+              ? "Evaluating"
+              : undefined
         }
         inputExperiment={inputExperiment}
         enableUploadAddActions={false}

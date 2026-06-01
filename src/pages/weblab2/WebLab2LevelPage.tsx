@@ -18,7 +18,8 @@ import { hydrateChatMessageUploadImages } from "../../lib/chat/chatSessionStorag
 import { useChatState } from "../../hooks/useChatState";
 import { useDevPanelInitialOpenFiles } from "../../hooks/useDevPanelInitialOpenFiles";
 import { useFileWorkspaceState } from "../../hooks/useFileWorkspaceState";
-import { useLayoutState } from "../../hooks/useLayoutState";
+import { useLayoutState, type ResourcePanelTab } from "../../hooks/useLayoutState";
+import { DRAWER_IMPROVEMENTS_TUTOR_TAB_OPENING_MESSAGE } from "../../data/weblab2/drawerImprovements";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
 import { usePropsOverride } from "../../hooks/usePropsOverride";
 import type { DevPanelField } from "../../components/lab2/dev";
@@ -148,6 +149,7 @@ import {
 import { useWebLab2Preview } from "../../components/ide/weblab2/useWebLab2Preview";
 import { useWebLab2TutorFlow } from "../../components/ide/weblab2/useWebLab2TutorFlow";
 import { buildInstructionGuide } from "../../lib/tutor/instructionGuide";
+import { deriveInstructionPinnedStep } from "../../lib/tutor/instructionPinnedStep";
 import { resetInstructionGuideState } from "../../lib/tutor/instructionCoach";
 
 const OPEN_TUTOR_PANEL_EVENT = "weblab:open-tutor-panel";
@@ -425,6 +427,11 @@ export function WebLab2LevelPage({
       resetInstructionGuideState(instructionGuide, current)
     );
   }, [instructionGuide]);
+
+  const instructionPinnedStep = useMemo(
+    () => deriveInstructionPinnedStep(instructionGuide, instructionGuideState),
+    [instructionGuide, instructionGuideState],
+  );
   const resolvedEnableSidebarCollapse = Boolean(resolved.enableSidebarCollapse);
   const resolvedCollapseSidebarByDefault = Boolean(resolved.collapseSidebarByDefault);
   const resolvedValidationContinueMode = resolveValidationContinueMode(
@@ -491,7 +498,11 @@ export function WebLab2LevelPage({
     setIsSettingsOpen,
     sidebarWidth,
     setSidebarWidth,
-  } = useLayoutState();
+  } = useLayoutState(
+    (instructionsDrawerExperiment === "instructions-tab-first-visit"
+      ? "instructions"
+      : "ai-tutor") satisfies ResourcePanelTab,
+  );
   const {
     fileStructureState,
     openFolders,
@@ -549,6 +560,8 @@ export function WebLab2LevelPage({
     () => getShareableStarterUpload(starterCodeUpload),
     [starterCodeUpload],
   );
+  const hasWelcomedOnTutorTabRef = useRef(false);
+  const [tutorDrawerPulseSignal, setTutorDrawerPulseSignal] = useState(0);
   const { chatMessages, setChatMessages, chatInput, setChatInput } =
     useChatState(
       initialMockTutorConfig?.initialMessages ?? initialChatMessages,
@@ -1139,6 +1152,28 @@ export function WebLab2LevelPage({
   }, [shareableStarterCodeUpload]);
 
   const resolvedVisualCue = resolved.instructionsDrawerVisualCue as InstructionsDrawerVisualCue;
+  const resolvedDrawerExperiment =
+    (resolved.instructionsDrawerExperiment as InstructionsDrawerExperiment) ??
+    "default";
+  const isInstructionsTabFirstVisitExperiment =
+    resolvedDrawerExperiment === "instructions-tab-first-visit";
+  useEffect(() => {
+    if (!isInstructionsTabFirstVisitExperiment) return;
+    if (activeTab !== "ai-tutor") return;
+    if (hasWelcomedOnTutorTabRef.current) return;
+    hasWelcomedOnTutorTabRef.current = true;
+
+    setChatMessages((current) => {
+      if (current.length > 0) return current;
+      return [
+        {
+          role: "assistant",
+          content: DRAWER_IMPROVEMENTS_TUTOR_TAB_OPENING_MESSAGE,
+        },
+      ];
+    });
+    setTutorDrawerPulseSignal((signal) => signal + 1);
+  }, [activeTab, isInstructionsTabFirstVisitExperiment, setChatMessages]);
   const resolvedInstructionsContent = resolvedInstructionsMarkdown.trim()
     ? <MarkdownInstructions markdown={resolvedInstructionsMarkdown} />
     : undefined;
@@ -1289,13 +1324,21 @@ export function WebLab2LevelPage({
     compact: Boolean(resolved.resourcePanelCompact),
     instructionsDrawerInitialHeightRatio:
       resolved.instructionsDrawerInitialHeightRatio as number,
+    showInstructionsTab: isInstructionsTabFirstVisitExperiment,
+    showAiTutorTabNotification:
+      isInstructionsTabFirstVisitExperiment && activeTab !== "ai-tutor",
     showInstructionsDrawer: Boolean(resolved.showInstructionsDrawer),
-    instructionsDrawerDefaultOpen: !resolvedTutorInstructionsDelivery,
+    instructionsDrawerDefaultOpen: isInstructionsTabFirstVisitExperiment
+      ? false
+      : !resolvedTutorInstructionsDelivery,
     instructionsDrawerVisualCue: resolvedVisualCue,
-    instructionsDrawerExperiment:
-      (resolved.instructionsDrawerExperiment as InstructionsDrawerExperiment) ??
-      "default",
+    instructionsDrawerExperiment: resolvedDrawerExperiment,
+    tutorDrawerPulseSignal,
     instructionGuide,
+    instructionGuideState,
+    onInstructionGuideStateChange: setInstructionGuideState,
+    instructionsMarkdown: resolvedInstructionsMarkdown,
+    instructionPinnedStep,
     instructionsContent: resolvedInstructionsContent,
     aiTutorInputExperiment,
     mockTutorConfig: resolvedMockTutorConfig,
