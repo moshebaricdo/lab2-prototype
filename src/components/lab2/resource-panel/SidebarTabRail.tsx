@@ -32,6 +32,7 @@ interface SidebarTabRailProps {
   showDevTab: boolean;
   devPanelHasOverrides?: boolean;
   showAiTutorTabNotification?: boolean;
+  showAiTutorTabNotificationPulse?: boolean;
   annotations?: SidebarProps["annotations"];
   isTabActive: (tab: SidebarTab) => boolean;
   isTabDisabled: (tab: SidebarTab) => boolean;
@@ -83,12 +84,14 @@ function SidebarTabButton({
   disabled,
   showOverrideDot = false,
   showNotificationBadge = false,
+  showNotificationBadgePulse = false,
   onSelectTab,
 }: Omit<SidebarTabConfig, "visible"> & {
   active: boolean;
   disabled: boolean;
   showOverrideDot?: boolean;
   showNotificationBadge?: boolean;
+  showNotificationBadgePulse?: boolean;
   onSelectTab: (tab: SidebarTab) => void;
 }) {
   return (
@@ -119,8 +122,19 @@ function SidebarTabButton({
             <div className={styles.tabActiveMask} />
           </>
         )}
-        {(showOverrideDot || showNotificationBadge) && (
-          <span className={styles.devOverrideDot} />
+        {showOverrideDot && <span className={styles.devOverrideDot} />}
+        {showNotificationBadge && (
+          <span
+            className={[
+              styles.tabNotificationBadge,
+              showNotificationBadgePulse ? styles.tabNotificationBadgePulsing : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria-hidden="true"
+          >
+            <span className={styles.tabNotificationDot} />
+          </span>
         )}
       </button>
     </Tooltip>
@@ -142,6 +156,7 @@ export function SidebarTabRail({
   showDevTab,
   devPanelHasOverrides = false,
   showAiTutorTabNotification = false,
+  showAiTutorTabNotificationPulse = false,
   annotations,
   isTabActive,
   isTabDisabled,
@@ -244,6 +259,12 @@ export function SidebarTabRail({
               }
               showNotificationBadge={
                 tab.tab === "ai-tutor" && showAiTutorTabNotification && !active
+              }
+              showNotificationBadgePulse={
+                tab.tab === "ai-tutor" &&
+                showAiTutorTabNotificationPulse &&
+                showAiTutorTabNotification &&
+                !active
               }
               onSelectTab={onSelectTab}
             />

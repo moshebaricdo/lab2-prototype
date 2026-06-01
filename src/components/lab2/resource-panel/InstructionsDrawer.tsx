@@ -16,7 +16,17 @@ export type InstructionsDrawerCollapseAnimation = "none" | "slide";
 export type InstructionsDrawerExperiment =
   | "default"
   | "close-on-first-send"
-  | "instructions-tab-first-visit";
+  | "instructions-tab-first-visit"
+  | "instructions-tab-notification-halo";
+
+export function isInstructionsTabDrawerExperiment(
+  experiment: InstructionsDrawerExperiment,
+): boolean {
+  return (
+    experiment === "instructions-tab-first-visit" ||
+    experiment === "instructions-tab-notification-halo"
+  );
+}
 
 interface InstructionsDrawerProps {
   maxHeight?: number | null;

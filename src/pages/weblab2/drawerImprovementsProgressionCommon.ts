@@ -3,6 +3,7 @@ import { drawerImprovementsExperimentLinks } from "../levelTypeLinks";
 export const drawerImprovementsPaths = {
   closeOnFirstSend: "/levels/weblab2-drawer-improvements",
   instructionsTab: "/levels/weblab2-drawer-instructions-tab",
+  notificationHalo: "/levels/weblab2-drawer-notification-halo",
 } as const;
 
 export function drawerImprovementsCommonProps(

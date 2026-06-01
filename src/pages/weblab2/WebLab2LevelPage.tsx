@@ -35,9 +35,10 @@ import { isProgressionLevelLinks } from "../../lib/levelShareLinks";
 import { useTutorApiSettings } from "../../hooks/useTutorApiSettings";
 import { webLab2LevelLinks } from "../levelTypeLinks";
 import type { LevelProgressLink } from "../../components/ui/header/LevelProgressBubbles";
-import type {
-  InstructionsDrawerExperiment,
-  InstructionsDrawerVisualCue,
+import {
+  isInstructionsTabDrawerExperiment,
+  type InstructionsDrawerExperiment,
+  type InstructionsDrawerVisualCue,
 } from "../../components/lab2/resource-panel/InstructionsDrawer";
 import { MarkdownInstructions } from "../../components/lab2/resource-panel/MarkdownInstructions";
 import type { RubricData } from "../../components/lab2/resource-panel/views/RubricPanel";
@@ -503,7 +504,7 @@ export function WebLab2LevelPage({
     sidebarWidth,
     setSidebarWidth,
   } = useLayoutState(
-    (instructionsDrawerExperiment === "instructions-tab-first-visit"
+    (isInstructionsTabDrawerExperiment(instructionsDrawerExperiment)
       ? "instructions"
       : "ai-tutor") satisfies ResourcePanelTab,
   );
@@ -1159,10 +1160,13 @@ export function WebLab2LevelPage({
   const resolvedDrawerExperiment =
     (resolved.instructionsDrawerExperiment as InstructionsDrawerExperiment) ??
     "default";
-  const isInstructionsTabFirstVisitExperiment =
-    resolvedDrawerExperiment === "instructions-tab-first-visit";
+  const isInstructionsTabDrawerExperimentActive = isInstructionsTabDrawerExperiment(
+    resolvedDrawerExperiment,
+  );
+  const isInstructionsTabNotificationHaloExperiment =
+    resolvedDrawerExperiment === "instructions-tab-notification-halo";
   useEffect(() => {
-    if (!isInstructionsTabFirstVisitExperiment) return;
+    if (!isInstructionsTabDrawerExperimentActive) return;
     if (activeTab !== "ai-tutor") return;
     if (hasWelcomedOnTutorTabRef.current) return;
     hasWelcomedOnTutorTabRef.current = true;
@@ -1176,8 +1180,15 @@ export function WebLab2LevelPage({
         },
       ];
     });
-    setTutorDrawerPulseSignal((signal) => signal + 1);
-  }, [activeTab, isInstructionsTabFirstVisitExperiment, setChatMessages]);
+    if (!isInstructionsTabNotificationHaloExperiment) {
+      setTutorDrawerPulseSignal((signal) => signal + 1);
+    }
+  }, [
+    activeTab,
+    isInstructionsTabDrawerExperimentActive,
+    isInstructionsTabNotificationHaloExperiment,
+    setChatMessages,
+  ]);
   const resolvedInstructionsContent = resolvedInstructionsMarkdown.trim()
     ? <MarkdownInstructions markdown={resolvedInstructionsMarkdown} />
     : undefined;
@@ -1328,11 +1339,13 @@ export function WebLab2LevelPage({
     compact: Boolean(resolved.resourcePanelCompact),
     instructionsDrawerInitialHeightRatio:
       resolved.instructionsDrawerInitialHeightRatio as number,
-    showInstructionsTab: isInstructionsTabFirstVisitExperiment,
+    showInstructionsTab: isInstructionsTabDrawerExperimentActive,
     showAiTutorTabNotification:
-      isInstructionsTabFirstVisitExperiment && activeTab !== "ai-tutor",
+      isInstructionsTabDrawerExperimentActive && activeTab !== "ai-tutor",
+    showAiTutorTabNotificationPulse:
+      isInstructionsTabNotificationHaloExperiment && activeTab !== "ai-tutor",
     showInstructionsDrawer: Boolean(resolved.showInstructionsDrawer),
-    instructionsDrawerDefaultOpen: isInstructionsTabFirstVisitExperiment
+    instructionsDrawerDefaultOpen: isInstructionsTabDrawerExperimentActive
       ? false
       : !resolvedTutorInstructionsDelivery,
     instructionsDrawerVisualCue: resolvedVisualCue,

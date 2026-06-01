@@ -56,6 +56,8 @@ export interface SidebarProps {
   showInstructionsTab?: boolean;
   /** Red notification dot on the AI Tutor rail tab (e.g. until first visit). */
   showAiTutorTabNotification?: boolean;
+  /** Subtle pulsing halo behind the AI Tutor notification dot. */
+  showAiTutorTabNotificationPulse?: boolean;
   /** Increment to pulse the AI Tutor instructions drawer toggle. */
   tutorDrawerPulseSignal?: number;
   showValidationTab?: boolean;

@@ -1,4 +1,3 @@
-import { useShareAwareNavigate } from "../../hooks/useLevelShareMode";
 import { WebLab2LevelPage } from "./WebLab2LevelPage";
 import {
   genericLevelFileStructure,
@@ -9,25 +8,22 @@ import {
   drawerImprovementsPaths,
 } from "./drawerImprovementsProgressionCommon";
 
-export function WebLab2DrawerInstructionsTabLevelPage() {
-  const navigate = useShareAwareNavigate();
-
+export function WebLab2DrawerNotificationHaloLevelPage() {
   return (
     <WebLab2LevelPage
       {...drawerImprovementsCommonProps(
-        drawerImprovementsPaths.instructionsTab,
-        2,
+        drawerImprovementsPaths.notificationHalo,
+        3,
       )}
-      title="Drawer improvements — Instructions tab"
+      title="Drawer improvements — Notification halo"
       instructionsMarkdown={genericLevelInstructionsMarkdown}
       fileStructureOverride={genericLevelFileStructure}
       useFilePreview={true}
       showOnlyFilesWithContent
       tutorMode={{ kind: "functional" }}
       tutorSupportContext="curriculum-level"
-      instructionsDrawerExperiment="instructions-tab-first-visit"
-      continueLabel="Continue"
-      onContinue={() => navigate(drawerImprovementsPaths.notificationHalo)}
+      instructionsDrawerExperiment="instructions-tab-notification-halo"
+      continueLabel="Done"
     />
   );
 }

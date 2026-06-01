@@ -221,6 +221,72 @@
   right: 6px;
 }
 
+.tabNotificationBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+}
+
+.tabNotificationDot {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--ds-background-brand-aqua-strong);
+  z-index: 1;
+}
+
+.tabNotificationBadgePulsing::before,
+.tabNotificationBadgePulsing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--ds-background-brand-aqua-primary);
+  opacity: 0;
+  transform: scale(1);
+  transform-origin: center;
+  animation: tabNotificationRadarRing 2.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  z-index: 0;
+}
+
+.tabNotificationBadgePulsing::after {
+  animation-delay: 1.25s;
+}
+
+.tabRailCompact .tabNotificationBadge {
+  top: 6px;
+  right: 6px;
+}
+
+@keyframes tabNotificationRadarRing {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(2.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabNotificationBadgePulsing::before,
+  .tabNotificationBadgePulsing::after {
+    animation: none;
+    opacity: 0.3;
+    transform: scale(1.6);
+  }
+
+  .tabNotificationBadgePulsing::after {
+    display: none;
+  }
+}
+
 .bottomButtons {
   display: flex;
   flex-direction: column;

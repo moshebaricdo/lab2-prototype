@@ -32,6 +32,7 @@ export function Sidebar({
   setShowSaveSuccessAlert,
   showInstructionsTab = false,
   showAiTutorTabNotification = false,
+  showAiTutorTabNotificationPulse = false,
   tutorDrawerPulseSignal = 0,
   showValidationTab = false,
   validationFileStructure,
@@ -292,6 +293,7 @@ export function Sidebar({
         showDevTab={showDevTab}
         devPanelHasOverrides={devPanelOverrideResult?.hasOverrides}
         showAiTutorTabNotification={showAiTutorTabNotification}
+        showAiTutorTabNotificationPulse={showAiTutorTabNotificationPulse}
         annotations={annotations}
         isTabActive={isTabActive}
         isTabDisabled={isTabDisabled}

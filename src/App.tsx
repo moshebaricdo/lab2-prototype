@@ -206,6 +206,10 @@ const WebLab2DrawerInstructionsTabLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2DrawerInstructionsTabLevelPage"),
   "WebLab2DrawerInstructionsTabLevelPage",
 );
+const WebLab2DrawerNotificationHaloLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2DrawerNotificationHaloLevelPage"),
+  "WebLab2DrawerNotificationHaloLevelPage",
+);
 const WebLab2UploadMechanismsPages = () =>
   import("./pages/weblab2/WebLab2UploadMechanismsLevelPage");
 const UploadMechanismsStagedLevelPage = lazyPage(
@@ -276,6 +280,10 @@ export default function App() {
         <Route
           path="/levels/weblab2-drawer-instructions-tab"
           element={<WebLab2DrawerInstructionsTabLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-drawer-notification-halo"
+          element={<WebLab2DrawerNotificationHaloLevelPage />}
         />
         <Route
           path="/levels/weblab2-level"

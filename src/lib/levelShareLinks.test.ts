@@ -48,6 +48,7 @@ describe("isProgressionLevelLinks", () => {
 
   it("returns true for drawer improvements progression links", () => {
     expect(isProgressionLevelLinks(drawerImprovementsExperimentLinks)).toBe(true);
+    expect(drawerImprovementsExperimentLinks).toHaveLength(3);
   });
 });
 
@@ -124,6 +125,14 @@ describe("resolveShareAwareNavigationPath", () => {
     expect(resolveShareAwareNavigationPath("/levels/weblab2", "locked")).toBe(
       "/levels/weblab2",
     );
+  });
+
+  it("maps drawer improvements links with flow share mode", () => {
+    const [first] = mapLevelLinksWithShareMode(
+      drawerImprovementsExperimentLinks,
+      "flow",
+    );
+    expect(first.path).toBe("/levels/weblab2-drawer-improvements?share=flow");
   });
 
   it("preserves share mode when navigating between drawer improvements levels", () => {
