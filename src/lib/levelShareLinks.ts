@@ -2,8 +2,14 @@ import {
   addLevelShareModeSearchParam,
   type ActiveLevelShareMode,
 } from "../hooks/useLevelShareMode";
+import { drawerImprovementsExperimentLinks } from "../pages/levelTypeLinks";
 
 export const PROGRESSION_LEVEL_PATH_PREFIX = "/levels/progression-";
+
+/** Multi-level routes that do not use the `progression-` prefix but still support share navigation. */
+const EXPLICIT_PROGRESSION_NAVIGATION_PATHS = new Set(
+  drawerImprovementsExperimentLinks.map((link) => link.path),
+);
 
 export interface LevelShareLink {
   name: string;
@@ -40,13 +46,17 @@ export function findLevelLinkIndex(
 }
 
 export function isProgressionLevelPath(path: string): boolean {
-  return getPathnameFromLevelPath(path).startsWith(PROGRESSION_LEVEL_PATH_PREFIX);
+  const pathname = getPathnameFromLevelPath(path);
+  return (
+    pathname.startsWith(PROGRESSION_LEVEL_PATH_PREFIX) ||
+    EXPLICIT_PROGRESSION_NAVIGATION_PATHS.has(pathname)
+  );
 }
 
 export function isProgressionLevelLinks(
   levelLinks: LevelShareLink[] | undefined,
 ): boolean {
-  if (!levelLinks || levelLinks.length === 0) return false;
+  if (!levelLinks || levelLinks.length <= 1) return false;
   return levelLinks.every((link) => isProgressionLevelPath(link.path));
 }
 

@@ -73,12 +73,19 @@ export function Lab2Shell(props: Lab2ShellProps) {
     shareMode,
     hasProgressionLevelLinks,
   );
-  const shouldShowTopNavigationContinue =
-    isLockedShareModeActive
-      ? false
-      : isFlowShareMode
-        ? Boolean(topNavigationProps?.showContinueButton && flowCompletion)
-        : topNavigationProps?.showContinueButton;
+  const resolveFlowContinueHandler = (onContinue?: () => void) => {
+    if (!isFlowShareMode) return onContinue;
+    return () => {
+      if (onContinue) {
+        onContinue();
+        return;
+      }
+      setIsFlowCompletionOpen(true);
+    };
+  };
+  const shouldShowTopNavigationContinue = isLockedShareModeActive
+    ? false
+    : topNavigationProps?.showContinueButton;
   const resolvedTopNavigationProps = {
     ...topNavigationProps,
     levelLinks:
@@ -95,10 +102,7 @@ export function Lab2Shell(props: Lab2ShellProps) {
     disableProgressionLinks:
       isFlowShareMode || topNavigationProps?.disableProgressionLinks,
     showContinueButton: shouldShowTopNavigationContinue,
-    onContinue:
-      isFlowShareMode && shouldShowTopNavigationContinue
-        ? () => setIsFlowCompletionOpen(true)
-        : topNavigationProps?.onContinue,
+    onContinue: resolveFlowContinueHandler(topNavigationProps?.onContinue),
   };
   const flowCompletionDialog = (
     <Dialog
@@ -154,13 +158,8 @@ export function Lab2Shell(props: Lab2ShellProps) {
         ...props.sidebarProps,
         showContinueButton: isLockedShareModeActive
           ? false
-          : isFlowShareMode
-            ? Boolean(flowCompletion && props.sidebarProps.showContinueButton !== false)
-            : props.sidebarProps.showContinueButton,
-        onContinue:
-          isFlowShareMode && flowCompletion
-            ? () => setIsFlowCompletionOpen(true)
-            : props.sidebarProps.onContinue,
+          : props.sidebarProps.showContinueButton,
+        onContinue: resolveFlowContinueHandler(props.sidebarProps.onContinue),
         devPanelFields: undefined,
         devPanelOverrideResult: undefined,
         devPanelSessionValues: undefined,

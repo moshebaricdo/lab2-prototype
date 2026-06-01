@@ -27,7 +27,11 @@ import {
   EDITOR_READ_ONLY_STORAGE_KEY,
   setEditorReadOnlyOverride,
 } from "../../hooks/useEditorReadOnly";
-import { useLevelShareMode } from "../../hooks/useLevelShareMode";
+import {
+  useLevelShareMode,
+  type ShareModeConfig,
+} from "../../hooks/useLevelShareMode";
+import { isProgressionLevelLinks } from "../../lib/levelShareLinks";
 import { useTutorApiSettings } from "../../hooks/useTutorApiSettings";
 import { webLab2LevelLinks } from "../levelTypeLinks";
 import type { LevelProgressLink } from "../../components/ui/header/LevelProgressBubbles";
@@ -1448,10 +1452,25 @@ export function WebLab2LevelPage({
     );
   };
 
+  const effectiveLevelLinks = levelLinks ?? webLab2LevelLinks;
+  const shareModeConfig = useMemo((): ShareModeConfig => {
+    return {
+      mode: shareMode,
+      flowCompletion:
+        shareMode === "flow" && isProgressionLevelLinks(effectiveLevelLinks)
+          ? {
+              title: "Task complete",
+              message: "Thanks, you have completed this shared task.",
+              buttonLabel: "Close",
+            }
+          : undefined,
+    };
+  }, [effectiveLevelLinks, shareMode]);
+
   return (
     <>
       <Lab2Shell
-        shareModeConfig={{ mode: shareMode }}
+        shareModeConfig={shareModeConfig}
         topNavigationProps={topNavigationProps}
         sidebarProps={sidebarProps}
         onResize={handleSidebarResize}

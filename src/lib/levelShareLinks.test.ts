@@ -8,7 +8,11 @@ import {
   resolveShareAwareNavigationPath,
   withLevelShareModePath,
 } from "./levelShareLinks";
-import { sampleProgressionLinks, webLab2LevelLinks } from "../pages/levelTypeLinks";
+import {
+  drawerImprovementsExperimentLinks,
+  sampleProgressionLinks,
+  webLab2LevelLinks,
+} from "../pages/levelTypeLinks";
 
 describe("isProgressionLevelPath", () => {
   it("matches progression routes", () => {
@@ -22,6 +26,15 @@ describe("isProgressionLevelPath", () => {
     expect(isProgressionLevelPath("/levels/weblab2")).toBe(false);
     expect(isProgressionLevelPath("/levels/multi-authoring")).toBe(false);
   });
+
+  it("includes drawer improvements experiment routes", () => {
+    expect(isProgressionLevelPath("/levels/weblab2-drawer-improvements")).toBe(
+      true,
+    );
+    expect(isProgressionLevelPath("/levels/weblab2-drawer-instructions-tab")).toBe(
+      true,
+    );
+  });
 });
 
 describe("isProgressionLevelLinks", () => {
@@ -31,6 +44,10 @@ describe("isProgressionLevelLinks", () => {
 
   it("returns false for demo level link sets", () => {
     expect(isProgressionLevelLinks(webLab2LevelLinks)).toBe(false);
+  });
+
+  it("returns true for drawer improvements progression links", () => {
+    expect(isProgressionLevelLinks(drawerImprovementsExperimentLinks)).toBe(true);
   });
 });
 
@@ -107,5 +124,20 @@ describe("resolveShareAwareNavigationPath", () => {
     expect(resolveShareAwareNavigationPath("/levels/weblab2", "locked")).toBe(
       "/levels/weblab2",
     );
+  });
+
+  it("preserves share mode when navigating between drawer improvements levels", () => {
+    expect(
+      resolveShareAwareNavigationPath(
+        "/levels/weblab2-drawer-instructions-tab",
+        "locked-progression",
+      ),
+    ).toBe("/levels/weblab2-drawer-instructions-tab?share=locked-progression");
+    expect(
+      resolveShareAwareNavigationPath(
+        "/levels/weblab2-drawer-instructions-tab",
+        "flow",
+      ),
+    ).toBe("/levels/weblab2-drawer-instructions-tab?share=flow");
   });
 });
