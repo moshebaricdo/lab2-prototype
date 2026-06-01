@@ -247,7 +247,7 @@ export function usePropsOverride<T extends Record<string, unknown>>(
   }, [location, searchParams]);
 
   const copyShareLink = useCallback((
-    mode: ActiveLevelShareMode = "locked",
+    mode: ActiveLevelShareMode = "locked-level",
     options: { extraSearchParams?: ExtraSearchParams } = {},
   ) => {
     const shareSearchParams = applyExtraSearchParams(

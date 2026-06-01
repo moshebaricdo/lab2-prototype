@@ -76,13 +76,31 @@ describe("includesLevelPath", () => {
 });
 
 describe("resolveShareAwareNavigationPath", () => {
-  it("preserves locked share mode for progression navigation", () => {
+  it("preserves locked progression share mode for progression navigation", () => {
+    expect(
+      resolveShareAwareNavigationPath(
+        "/levels/progression-free-response",
+        "locked-progression",
+      ),
+    ).toBe("/levels/progression-free-response?share=locked-progression");
+  });
+
+  it("preserves legacy locked share mode for progression navigation", () => {
     expect(
       resolveShareAwareNavigationPath(
         "/levels/progression-free-response",
         "locked",
       ),
     ).toBe("/levels/progression-free-response?share=locked");
+  });
+
+  it("preserves locked level share mode without enabling progression navigation URLs", () => {
+    expect(
+      resolveShareAwareNavigationPath(
+        "/levels/progression-free-response",
+        "locked-level",
+      ),
+    ).toBe("/levels/progression-free-response?share=locked-level");
   });
 
   it("leaves demo routes unchanged in locked share mode", () => {

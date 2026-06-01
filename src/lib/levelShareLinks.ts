@@ -79,5 +79,14 @@ export function resolveShareAwareNavigationPath(
 ): string {
   if (shareMode === "off") return path;
   if (!isProgressionLevelPath(path)) return path;
+  if (shareMode === "locked-level") {
+    return withLevelShareModePath(path, "locked-level");
+  }
+  if (shareMode === "locked-progression" || shareMode === "locked") {
+    return withLevelShareModePath(
+      path,
+      shareMode === "locked" ? "locked" : "locked-progression",
+    );
+  }
   return withLevelShareModePath(path, shareMode);
 }

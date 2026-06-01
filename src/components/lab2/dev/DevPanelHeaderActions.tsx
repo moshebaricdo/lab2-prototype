@@ -9,6 +9,8 @@ import { Tooltip } from "../../ui/Tooltip";
 import { useSavedVariants } from "../../../hooks/useSavedVariants";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import type { DevPanelShareParamsProvider } from "../resource-panel/Sidebar.types";
+import { isProgressionLevelPath } from "../../../lib/levelShareLinks";
+import { buildShareLinkDropdownItems } from "../../../lib/shareLinkActions";
 
 interface DevPanelHeaderActionsProps {
   hasShareParams?: boolean;
@@ -28,6 +30,27 @@ export function DevPanelHeaderActions({
   const { saveVariant } = useSavedVariants();
   const getShareParams = () =>
     devPanelShareParams ? devPanelShareParams() : {};
+  const showLockedProgression = isProgressionLevelPath(location.pathname);
+  const shareLinkItems = buildShareLinkDropdownItems(
+    { showLockedProgression },
+    {
+      onLockedLevel: () => {
+        const extraSearchParams = getShareParams();
+        if (extraSearchParams === null) return;
+        overrideResult.copyShareLink("locked-level", { extraSearchParams });
+      },
+      onLockedProgression: () => {
+        const extraSearchParams = getShareParams();
+        if (extraSearchParams === null) return;
+        overrideResult.copyShareLink("locked-progression", { extraSearchParams });
+      },
+      onFlow: () => {
+        const extraSearchParams = getShareParams();
+        if (extraSearchParams === null) return;
+        overrideResult.copyShareLink("flow", { extraSearchParams });
+      },
+    },
+  );
 
   const handleSaveAndCopy = () => {
     if (!saveName.trim()) return;
@@ -112,7 +135,7 @@ export function DevPanelHeaderActions({
           align="end"
           side="bottom"
           sideOffset={6}
-          menuWidth={172}
+          menuWidth={208}
           listLabel="Share links"
           trigger={
             <AppButton
@@ -124,28 +147,7 @@ export function DevPanelHeaderActions({
               title="Share links"
             />
           }
-          items={[
-            {
-              id: "locked-share",
-              label: "Locked share link",
-              iconName: "lock",
-              onSelect: () => {
-                const extraSearchParams = getShareParams();
-                if (extraSearchParams === null) return;
-                overrideResult.copyShareLink("locked", { extraSearchParams });
-              },
-            },
-            {
-              id: "flow-share",
-              label: "Flow share link",
-              iconName: "diagram-project",
-              onSelect: () => {
-                const extraSearchParams = getShareParams();
-                if (extraSearchParams === null) return;
-                overrideResult.copyShareLink("flow", { extraSearchParams });
-              },
-            },
-          ]}
+          items={shareLinkItems}
         />
         <Tooltip content="Reset all overrides" position="bottom">
           <AppButton

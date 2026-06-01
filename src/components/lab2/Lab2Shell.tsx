@@ -12,6 +12,8 @@ import { ResizableHandle } from "../ui/ResizableHandle";
 import { useAnnotations } from "../../hooks/useAnnotations";
 import { useTheme } from "../../hooks/useTheme";
 import {
+  allowsLockedProgressionNavigation,
+  isLockedShareMode,
   useLevelShareMode,
   type ShareModeConfig,
 } from "../../hooks/useLevelShareMode";
@@ -51,7 +53,7 @@ export function Lab2Shell(props: Lab2ShellProps) {
   const shareModeConfig = props.shareModeConfig ?? { mode: urlShareMode };
   const shareMode = shareModeConfig.mode;
   const isShareMode = shareMode !== "off";
-  const isLockedShareMode = shareMode === "locked";
+  const isLockedShareModeActive = isLockedShareMode(shareMode);
   const isFlowShareMode = shareMode === "flow";
   const flowCompletion = shareModeConfig.flowCompletion;
   const [isFlowCompletionOpen, setIsFlowCompletionOpen] = useState(false);
@@ -67,10 +69,12 @@ export function Lab2Shell(props: Lab2ShellProps) {
   const hasProgressionLevelLinks = isProgressionLevelLinks(
     topNavigationProps?.levelLinks,
   );
-  const allowLockedShareProgressionNavigation =
-    isLockedShareMode && hasProgressionLevelLinks;
+  const allowLockedShareProgressionNavigation = allowsLockedProgressionNavigation(
+    shareMode,
+    hasProgressionLevelLinks,
+  );
   const shouldShowTopNavigationContinue =
-    isLockedShareMode
+    isLockedShareModeActive
       ? false
       : isFlowShareMode
         ? Boolean(topNavigationProps?.showContinueButton && flowCompletion)
@@ -79,11 +83,14 @@ export function Lab2Shell(props: Lab2ShellProps) {
     ...topNavigationProps,
     levelLinks:
       allowLockedShareProgressionNavigation && topNavigationProps?.levelLinks
-        ? mapLevelLinksWithShareMode(topNavigationProps.levelLinks, "locked")
+        ? mapLevelLinksWithShareMode(
+            topNavigationProps.levelLinks,
+            shareMode === "locked-progression" ? "locked-progression" : "locked",
+          )
         : topNavigationProps?.levelLinks,
     disableLogoLink: isShareMode || topNavigationProps?.disableLogoLink,
     hideProgression:
-      (isLockedShareMode && !hasProgressionLevelLinks) ||
+      (isLockedShareModeActive && !allowLockedShareProgressionNavigation) ||
       topNavigationProps?.hideProgression,
     disableProgressionLinks:
       isFlowShareMode || topNavigationProps?.disableProgressionLinks,
@@ -145,7 +152,7 @@ export function Lab2Shell(props: Lab2ShellProps) {
   const sidebarProps = isShareMode
     ? {
         ...props.sidebarProps,
-        showContinueButton: isLockedShareMode
+        showContinueButton: isLockedShareModeActive
           ? false
           : isFlowShareMode
             ? Boolean(flowCompletion && props.sidebarProps.showContinueButton !== false)

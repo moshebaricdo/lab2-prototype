@@ -4,7 +4,12 @@ import { resolveShareAwareNavigationPath } from "../lib/levelShareLinks";
 
 export const LEVEL_SHARE_MODE_PARAM = "share";
 
-export type LevelShareMode = "off" | "locked" | "flow";
+export type LevelShareMode =
+  | "off"
+  | "locked"
+  | "locked-level"
+  | "locked-progression"
+  | "flow";
 export type ActiveLevelShareMode = Exclude<LevelShareMode, "off">;
 
 export interface ShareFlowCompletionConfig {
@@ -23,8 +28,28 @@ export function getLevelShareModeSearchParams(
 ): LevelShareMode {
   const value = searchParams.get(LEVEL_SHARE_MODE_PARAM);
   if (value === "flow") return "flow";
+  if (value === "locked-level") return "locked-level";
+  if (value === "locked-progression") return "locked-progression";
   if (value === "locked" || value === "1" || value === "true") return "locked";
   return "off";
+}
+
+export function isLockedShareMode(mode: LevelShareMode): boolean {
+  return (
+    mode === "locked" ||
+    mode === "locked-level" ||
+    mode === "locked-progression"
+  );
+}
+
+/** Legacy `locked` URLs keep progression navigation on multi-level progression routes. */
+export function allowsLockedProgressionNavigation(
+  mode: LevelShareMode,
+  hasProgressionLevelLinks: boolean,
+): boolean {
+  if (!isLockedShareMode(mode) || !hasProgressionLevelLinks) return false;
+  if (mode === "locked-level") return false;
+  return true;
 }
 
 export function isLevelShareModeSearchParams(searchParams: URLSearchParams) {
