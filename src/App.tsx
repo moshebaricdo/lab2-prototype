@@ -186,6 +186,10 @@ const WebLab2BlankDemoProjectLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2BlankDemoProjectLevelPage"),
   "WebLab2BlankDemoProjectLevelPage",
 );
+const WebLab2GenericLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2GenericLevelPage"),
+  "WebLab2GenericLevelPage",
+);
 const WebLab2DemoProjectLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2DemoProjectLevelPage"),
   "WebLab2DemoProjectLevelPage",
@@ -228,6 +232,10 @@ const WebLab2ValidationStarshipLoaderLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2ValidationStarshipLoaderLevelPage"),
   "WebLab2ValidationStarshipLoaderLevelPage",
 );
+const WebLab2FeatureRouletteLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2FeatureRouletteLevelPage"),
+  "WebLab2FeatureRouletteLevelPage",
+);
 
 export default function App() {
   return (
@@ -252,6 +260,10 @@ export default function App() {
         <Route
           path="/levels/weblab2-tutor-action-card"
           element={<WebLab2TutorActionCardLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-level"
+          element={<WebLab2GenericLevelPage />}
         />
         <Route
           path="/levels/weblab2-demo-project"
@@ -292,6 +304,19 @@ export default function App() {
         <Route
           path="/levels/progression-weblab2-validation-sandbox"
           element={<WebLab2ValidationStarshipLoaderLevelPage />}
+        />
+        <Route
+          path="/levels/progression-weblab2-validation-feature-roulette"
+          element={<WebLab2FeatureRouletteLevelPage />}
+        />
+        <Route
+          path="/levels/progression-feature-roulette"
+          element={
+            <Navigate
+              to="/levels/progression-weblab2-validation-feature-roulette"
+              replace
+            />
+          }
         />
         <Route path="/levels/multi" element={<MultiChoiceLevelPage />} />
         <Route

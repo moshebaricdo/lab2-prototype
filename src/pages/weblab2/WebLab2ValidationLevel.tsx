@@ -24,6 +24,7 @@ export function WebLab2ValidationLevel() {
       enableSidebarCollapse={true}
       initialViewMode="split"
       initialOpenFiles={validationPhotoCarouselInitialOpenFiles}
+      hideProgression
     />
   );
 }

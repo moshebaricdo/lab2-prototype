@@ -9,6 +9,7 @@ export function WebLab2TutorActionCardLevelPage() {
       currentLevelPath="/levels/weblab2-tutor-action-card"
       aiTutorInputExperiment="tutor-action-card"
       tutorMode={{ kind: "mock", config: tutorActionCardMockTutor }}
+      hideProgression
     />
   );
 }

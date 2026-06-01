@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  featureRouletteInstructionsMarkdown,
+} from "../../data/weblab2/projects/feature-roulette";
+import {
   validationLoopStylePolishInstructionsMarkdown,
 } from "../../data/weblab2/projects/validation-loop-style-polish";
 import {
@@ -11,7 +14,22 @@ import {
 import {
   validationStarshipLoaderInstructionsMarkdown,
 } from "../../data/weblab2/projects/validation-starship-loader";
-import { buildInstructionGuide } from "./instructionGuide";
+import {
+  buildInstructionGuide,
+  stripInstructionAuthoringMetadata,
+} from "./instructionGuide";
+
+describe("stripInstructionAuthoringMetadata", () => {
+  it("removes tutor-guide blocks from student-facing markdown", () => {
+    const stripped = stripInstructionAuthoringMetadata(
+      featureRouletteInstructionsMarkdown,
+    );
+
+    expect(stripped).not.toContain("tutor-guide:");
+    expect(stripped).toContain("# Feature Roulette");
+    expect(stripped).toContain("Why go back to an old version?");
+  });
+});
 
 describe("buildInstructionGuide", () => {
   it("builds an inspectable guide from technical debugging instructions", () => {
@@ -74,6 +92,21 @@ describe("buildInstructionGuide", () => {
     expect(guide.overview).toContain("The Infinite Loader");
     expect(guide.firstMove).toContain("Find the while loop");
     expect(guide.steps.length).toBeGreaterThan(0);
+  });
+
+  it("builds a linear guide for Feature Roulette curriculum instructions", () => {
+    const guide = buildInstructionGuide(featureRouletteInstructionsMarkdown);
+
+    expect(guide.type).toBe("linear");
+    if (guide.type !== "linear") throw new Error("Expected linear guide");
+    expect(guide.overview).toContain("physical Feature Roulette cards");
+    expect(guide.firstMove).toContain("Draw a card");
+    expect(guide.steps.map((step) => step.title)).toEqual([
+      "Create a new feature",
+      "Save with a comment",
+      "Revert as needed",
+    ]);
+    expect(guide.fallbackMarkdown).toContain("Why go back to an old version?");
   });
 
   it("uses optional tutor-guide metadata as an authoring escape hatch", () => {

@@ -83,4 +83,6 @@ export interface WebLab2ValidationReviewConfig {
   minimumChangedFiles?: number;
   effortPolicy?: ValidationEffortPolicy;
   followUpPreference?: ValidationReviewFollowUpPreference;
+  /** When true, review includes save/revert checks from Version History snapshots. */
+  versionHistoryWorkflow?: boolean;
 }

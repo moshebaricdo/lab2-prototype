@@ -4,7 +4,7 @@ import type { FileItem } from "../types/file";
 
 type VersionSnapshotKind = "initial" | "manual" | "auto" | "ai";
 
-interface VersionSnapshot {
+export interface VersionSnapshot {
   id: string;
   label: string;
   description?: string;
@@ -365,6 +365,7 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
 
   return useMemo(
     () => ({
+      snapshots,
       versions,
       selectedHistoryFileStructure: selectedHistorySnapshot?.fileStructure,
       selectedHistoryVersionLabel,
@@ -382,6 +383,7 @@ export function useVersionHistoryState(options: VersionHistoryStateOptions = {})
       handleReturnToCurrentVersion,
     }),
     [
+      snapshots,
       versions,
       selectedHistorySnapshot,
       selectedHistoryVersionLabel,

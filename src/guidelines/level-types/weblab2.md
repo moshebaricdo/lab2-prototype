@@ -6,10 +6,19 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 
 ## Routes
 
+### Core templates (Level Types index)
+
+- `/levels/weblab2-level`
 - `/levels/weblab2-demo-project`
 - `/levels/weblab2-demo-project-blank`
+
+### Experiments (Sample Progressions index)
+
 - `/levels/weblab2-tutor-action-card`
 - `/levels/weblab2-validation-test`
+
+### Multi-level progressions (Sample Progressions index)
+
 - `/levels/progression-upload-mechanisms-staged`
 - `/levels/progression-upload-mechanisms-action-card`
 - `/levels/progression-upload-mechanisms-file-chip`
@@ -17,6 +26,7 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - `/levels/progression-weblab2-validation-create`
 - `/levels/progression-weblab2-validation-refine`
 - `/levels/progression-weblab2-validation-sandbox`
+- `/levels/progression-weblab2-validation-feature-roulette`
 
 ## Key Files
 
@@ -35,6 +45,7 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - `src/pages/weblab2/WebLab2ValidationLoopStylePolishLevelPage.tsx`
 - `src/pages/weblab2/WebLab2ValidationPromiseTraceLevelPage.tsx`
 - `src/pages/weblab2/WebLab2ValidationStarshipLoaderLevelPage.tsx`
+- `src/pages/weblab2/WebLab2FeatureRouletteLevelPage.tsx`
 - `src/pages/weblab2/webLab2ValidationProgressionCommon.ts`
 - `src/components/ide/weblab2/views/Workspace.tsx`
 - `src/components/ide/weblab2/views/NewProjectEmptyState.tsx`
@@ -77,6 +88,7 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - Uses starter file trees and local version state from `src/data/weblab2` and `useFileWorkspaceState`.
 - The default AI Tutor instructions drawer copy lives with the project fixture as raw Markdown in `src/data/weblab2/projects/default/instructions.md`; project-specific routes such as validation can pass their own fixture Markdown through `instructionsMarkdown`, and the dev panel can still override it.
 - Validation review experiment fixtures live under `src/data/weblab2/projects/validation-*`, with folder names aligned to their level pages: `validation-photo-carousel`, `validation-loop-style-polish`, `validation-promise-trace`, and `validation-starship-loader`. The photo-carousel fixture powers `/levels/weblab2-validation-test` and the first validation progression level. Each validation fixture keeps author-facing assessment requirements in `assessment.md`, with route config importing those requirements for AI review and local fallback checks. A requirement can start with a student-facing label in brackets, for example `- [Fix the Next button] Clicking Next hides...`; the bracketed label is used in review cards while the full requirement remains the evaluator input. Open-ended fixtures can set `effortPolicy: "required"` plus `minimumChangedFiles` when the level goal is for students to make an intentional refinement beyond starter code that may already satisfy some visual checks.
+- `feature-roulette` is the fifth level in the Web Lab 2 validation progression at `/levels/progression-weblab2-validation-feature-roulette` (legacy `/levels/progression-feature-roulette` redirects). It ships blank `index.html` and `style.css` starters plus instructions that reference physical Feature Roulette cards students draw in class. Tutor does not receive the printout; students must name the feature they drew when prompting. The workspace opens in preview-only view with the file manager collapsed by default. Continue requires a successful review (`validationContinueMode: "require-successful-review"`). Assessment is lightweight and hybrid: one AI requirement for building a feature with Tutor, local HTML/CSS checks, required iteration evidence, and Version History workflow checks for saving with a description and reverting to that described save.
 - Web Lab 2 supports rootless file trees (`[]` or top-level files) as well as single-folder project wrappers. `useFileWorkspaceState` only treats a folder as the project root wrapper when it is the only top-level item.
 - Route pages can pass a `storageKeySuffix` when a starter fixture changes and should not reuse an older route-scoped file/version-history session tree.
 - The Web Lab 2 dev panel includes a Clear level session cache action that removes route-scoped file tree/version-history session storage and reloads from the current fixture.

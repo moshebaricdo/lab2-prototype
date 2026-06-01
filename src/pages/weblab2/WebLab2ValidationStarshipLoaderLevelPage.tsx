@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   validationStarshipLoaderFileStructure,
   validationStarshipLoaderInitialOpenFiles,
@@ -11,6 +12,8 @@ import {
 } from "./webLab2ValidationProgressionCommon";
 
 export function WebLab2ValidationStarshipLoaderLevelPage() {
+  const navigate = useNavigate();
+
   return (
     <WebLab2LevelPage
       {...validationProgressionCommonProps}
@@ -24,7 +27,8 @@ export function WebLab2ValidationStarshipLoaderLevelPage() {
       instructionsMarkdown={validationStarshipLoaderInstructionsMarkdown}
       fileStructureOverride={validationStarshipLoaderFileStructure}
       validationReviewConfig={validationStarshipLoaderReviewConfig}
-      continueLabel="Finish"
+      continueLabel="Continue"
+      onContinue={() => navigate(validationProgressionPaths.featureRoulette)}
       storageKeySuffix="validation-progression-sandbox-v1"
       initialOpenFiles={validationStarshipLoaderInitialOpenFiles}
     />

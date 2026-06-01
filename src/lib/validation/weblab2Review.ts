@@ -27,6 +27,11 @@ export interface ValidationReviewEvidence {
   hasJs: boolean;
 }
 
+export interface VersionHistoryValidationSummary {
+  manualSavesWithDescription: number;
+  revertedToDescribedManualSave: boolean;
+}
+
 function flattenFiles(items: FileItem[] = [], parentPath = ""): SourceFile[] {
   return items.flatMap((item) => {
     const itemPath = parentPath ? `${parentPath}/${item.name}` : item.name;
@@ -54,6 +59,84 @@ function findSourceFile(files: SourceFile[], targetFile?: string) {
     file.name.toLowerCase() === normalized ||
     file.path.toLowerCase().endsWith(`/${normalized}`)
   ) ?? null;
+}
+
+function serializeFileTreeForComparison(tree: FileItem[]) {
+  return JSON.stringify(
+    tree.map((item) => ({
+      name: item.name,
+      type: item.type,
+      content: item.content,
+      children: item.children,
+    })),
+  );
+}
+
+export function buildVersionHistoryValidationSummary(
+  snapshots: Array<{
+    kind: string;
+    description?: string;
+    fileStructure: FileItem[];
+  }>,
+  currentFileStructure: FileItem[],
+): VersionHistoryValidationSummary {
+  const manualSnapshots = snapshots.filter((snapshot) => snapshot.kind === "manual");
+  const describedManualSnapshots = manualSnapshots.filter((snapshot) =>
+    snapshot.description?.trim(),
+  );
+  const currentSignature = serializeFileTreeForComparison(currentFileStructure);
+  const revertedToDescribedManualSave = describedManualSnapshots.some(
+    (snapshot) =>
+      serializeFileTreeForComparison(snapshot.fileStructure) === currentSignature,
+  );
+
+  return {
+    manualSavesWithDescription: describedManualSnapshots.length,
+    revertedToDescribedManualSave,
+  };
+}
+
+export function buildVersionHistoryReviewItems(
+  summary: VersionHistoryValidationSummary,
+  evidence: ValidationReviewEvidence,
+): ValidationReviewItem[] {
+  const savedWithDescription = summary.manualSavesWithDescription >= 1;
+  const hasProjectActivity =
+    evidence.userTurnCount >= 1 ||
+    evidence.acceptedTutorChanges ||
+    evidence.changedFileCount > 0;
+  const revertedAsRequired =
+    summary.revertedToDescribedManualSave &&
+    savedWithDescription &&
+    hasProjectActivity;
+
+  return [
+    {
+      id: "save-with-description",
+      label: "Save with a comment",
+      status: savedWithDescription ? "pass" : "missing",
+      detail: savedWithDescription
+        ? "A manual version with a description was saved in Version History."
+        : "Save your work in Version History with a short description of what you changed.",
+    },
+    {
+      id: "revert-to-described-save",
+      label: "Revert as needed",
+      status: revertedAsRequired ? "pass" : "missing",
+      detail: revertedAsRequired
+        ? "Your current project matches a version you saved with a description."
+        : "When prompted, restore the version you saved with a description.",
+    },
+  ];
+}
+
+function appendVersionHistoryItems(
+  items: ValidationReviewItem[],
+  summary: VersionHistoryValidationSummary | undefined,
+  evidence: ValidationReviewEvidence,
+) {
+  if (!summary) return items;
+  return [...items, ...buildVersionHistoryReviewItems(summary, evidence)];
 }
 
 function getChangedFiles(currentFiles: SourceFile[], initialFiles: SourceFile[]) {
@@ -281,11 +364,13 @@ export function createWebLab2ValidationReview({
   currentFileStructure,
   initialFileStructure,
   chatMessages,
+  versionHistorySummary,
 }: {
   config: WebLab2ValidationReviewConfig;
   currentFileStructure: FileItem[];
   initialFileStructure: FileItem[];
   chatMessages: ChatMessage[];
+  versionHistorySummary?: VersionHistoryValidationSummary;
 }): ValidationReviewCardData {
   const currentFiles = flattenFiles(currentFileStructure);
   const checks = config.checks ?? [];
@@ -295,13 +380,17 @@ export function createWebLab2ValidationReview({
     chatMessages,
   });
   const effortItem = buildValidationEffortItem(config, evidence);
-  const items = mergeEffortIntoOpenEndedRequirements(
-    config,
-    applyGoalLabels(
-      checks.map((check) => evaluateCheck(check, currentFiles)),
-      config.goalLabels,
+  const items = appendVersionHistoryItems(
+    mergeEffortIntoOpenEndedRequirements(
+      config,
+      applyGoalLabels(
+        checks.map((check) => evaluateCheck(check, currentFiles)),
+        config.goalLabels,
+      ),
+      effortItem,
     ),
-    effortItem,
+    versionHistorySummary,
+    evidence,
   );
 
   const summary = getValidationReviewSummaryStatus(items);

@@ -13,8 +13,10 @@ import type { TutorChatMessage } from "../tutor/types";
 import {
   buildValidationEffortItem,
   buildValidationReviewEvidence,
+  buildVersionHistoryReviewItems,
   getValidationReviewSummaryStatus,
   resolveValidationEffortPolicy,
+  type VersionHistoryValidationSummary,
 } from "./weblab2Review";
 
 interface AiReviewResponse {
@@ -111,11 +113,13 @@ export async function createAiWebLab2ValidationReview({
   currentFileStructure,
   initialFileStructure,
   chatMessages,
+  versionHistorySummary,
 }: {
   config: WebLab2ValidationReviewConfig;
   currentFileStructure: FileItem[];
   initialFileStructure: FileItem[];
   chatMessages: ChatMessage[];
+  versionHistorySummary?: VersionHistoryValidationSummary;
 }): Promise<ValidationReviewCardData | null> {
   const apiKey = getTutorApiKey().trim();
   if (!apiKey) return null;
@@ -148,6 +152,7 @@ export async function createAiWebLab2ValidationReview({
         "Create exactly one item per requirement, in the same order.",
         "Use 'pass' only when there is clear evidence. Use 'warn' when partially addressed. Use 'missing' when not addressed.",
         "Use the supplied effort evidence when judging open-ended refinement work. If the current files match the starter and effortPolicy is required, do not treat starter polish as enough evidence that the student experimented.",
+        "When versionHistory is provided, treat manualSavesWithDescription and revertedToDescribedManualSave as authoritative for save/revert requirements; do not mark those workflow steps complete without that evidence.",
         "Keep details brief, student-safe, and non-spoiler; examples: 'Evidence found.', 'Needs more evidence.', 'Keep working on this area.'",
       ].join("\n"),
     },
@@ -169,6 +174,7 @@ export async function createAiWebLab2ValidationReview({
         projectMap: packedContext.projectMap,
         files: packedContext.files,
         recentConversation: buildConversationSummary(chatMessages),
+        versionHistory: versionHistorySummary,
       }),
     },
   ];
@@ -200,11 +206,14 @@ export async function createAiWebLab2ValidationReview({
   }
 
   const parsed = JSON.parse(content) as AiReviewResponse;
-  const items = mergeEffortIntoOpenEndedRequirements(
+  const baseItems = mergeEffortIntoOpenEndedRequirements(
     config,
     normalizeItems(parsed.items, requirements, config.goalLabels),
     effortItem,
   );
+  const items = versionHistorySummary
+    ? [...baseItems, ...buildVersionHistoryReviewItems(versionHistorySummary, evidence)]
+    : baseItems;
   const summary = getValidationReviewSummaryStatus(items);
   const missingEffortItem = effortItem?.status === "missing" ? effortItem : null;
 

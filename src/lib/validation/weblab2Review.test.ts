@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { FileItem } from "../../types/file";
 import type { WebLab2ValidationReviewConfig } from "../../types/validationReview";
 import {
+  buildVersionHistoryValidationSummary,
+  buildVersionHistoryReviewItems,
   createWebLab2ValidationReview,
   getValidationReviewSummaryStatus,
 } from "./weblab2Review";
@@ -38,6 +40,44 @@ const openEndedConfig: WebLab2ValidationReviewConfig = {
     },
   ],
 };
+
+describe("version history validation", () => {
+  const starter: FileItem[] = [
+    { name: "index.html", type: "html", content: "<body></body>" },
+  ];
+  const feature: FileItem[] = [
+    { name: "index.html", type: "html", content: "<body><header>Nav</header></body>" },
+  ];
+
+  it("detects a described manual save and a revert to that snapshot", () => {
+    const summary = buildVersionHistoryValidationSummary(
+      [
+        {
+          kind: "initial",
+          fileStructure: starter,
+        },
+        {
+          kind: "manual",
+          description: "Added navigation",
+          fileStructure: feature,
+        },
+      ],
+      feature,
+    );
+
+    expect(summary.manualSavesWithDescription).toBe(1);
+    expect(summary.revertedToDescribedManualSave).toBe(true);
+    expect(buildVersionHistoryReviewItems(summary, {
+      changedFileCount: 1,
+      changedFileNames: ["index.html"],
+      userTurnCount: 2,
+      acceptedTutorChanges: true,
+      hasHtml: true,
+      hasCss: false,
+      hasJs: false,
+    }).map((item) => item.status)).toEqual(["pass", "pass"]);
+  });
+});
 
 describe("createWebLab2ValidationReview", () => {
   it("does not complete an open-ended level when starter code already satisfies checks but no iteration happened", () => {

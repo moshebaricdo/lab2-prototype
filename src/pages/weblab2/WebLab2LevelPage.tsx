@@ -39,6 +39,7 @@ import type {
   WebLab2ValidationReviewConfig,
 } from "../../types/validationReview";
 import {
+  buildVersionHistoryValidationSummary,
   createValidationReviewOffer,
   createWebLab2ValidationReview,
 } from "../../lib/validation/weblab2Review";
@@ -251,6 +252,7 @@ interface WebLab2LevelPageProps {
   completedLevels?: number[];
   continueLabel?: string;
   onContinue?: () => void;
+  hideProgression?: boolean;
 }
 
 export function WebLab2LevelPage({
@@ -301,6 +303,7 @@ export function WebLab2LevelPage({
   completedLevels = [1, 2, 3],
   continueLabel,
   onContinue,
+  hideProgression = false,
 }: WebLab2LevelPageProps = {}) {
   const shareMode = useLevelShareMode();
   const { hasApiKey: hasTutorApiKey } = useTutorApiSettings();
@@ -580,6 +583,7 @@ export function WebLab2LevelPage({
   const resolvedTutorModeKind =
     resolved.tutorModeKind === "functional" ? "functional" : "mock";
   const {
+    snapshots: historySnapshots,
     versions: historyVersions,
     selectedHistoryFileStructure,
     selectedHistoryVersionLabel,
@@ -703,6 +707,21 @@ export function WebLab2LevelPage({
       : undefined,
     [effectiveValidationReviewConfig, tutorDevSettings.policy.capabilities.validationReview],
   );
+  const versionHistorySummary = useMemo(() => {
+    if (!effectiveValidationReviewConfig?.versionHistoryWorkflow || !useFunctionalVersionHistory) {
+      return undefined;
+    }
+
+    return buildVersionHistoryValidationSummary(
+      historySnapshots ?? [],
+      currentFileStructure,
+    );
+  }, [
+    currentFileStructure,
+    effectiveValidationReviewConfig?.versionHistoryWorkflow,
+    historySnapshots,
+    useFunctionalVersionHistory,
+  ]);
   const handleValidationReview = useCallback(async () => {
     if (!effectiveValidationReviewConfig) {
       throw new Error("Validation review requested without a review config.");
@@ -719,6 +738,7 @@ export function WebLab2LevelPage({
       currentFileStructure,
       initialFileStructure,
       chatMessages,
+      versionHistorySummary,
     });
     let review: ValidationReviewCardData;
 
@@ -728,6 +748,7 @@ export function WebLab2LevelPage({
         currentFileStructure,
         initialFileStructure,
         chatMessages,
+        versionHistorySummary,
       }) ?? fallbackReview();
       logTutorEvent("page validation review evaluated", {
         title: review.title,
@@ -755,6 +776,7 @@ export function WebLab2LevelPage({
     currentFileStructure,
     effectiveValidationReviewConfig,
     initialFileStructure,
+    versionHistorySummary,
   ]);
   useEffect(() => {
     setLatestValidationReview(null);
@@ -1231,6 +1253,7 @@ export function WebLab2LevelPage({
     showContinueButton: continueInHeader && !validationRunsThroughTutor,
     onContinue: handleContinueAction,
     continueLabel: resolvedContinueLabel,
+    hideProgression,
   };
   const sidebarProps: Extract<
     ComponentProps<typeof Lab2Shell>,

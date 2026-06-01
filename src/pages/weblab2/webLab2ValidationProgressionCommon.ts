@@ -6,6 +6,7 @@ export const validationProgressionPaths = {
   loopStylePolish: "/levels/progression-weblab2-validation-create",
   promiseTrace: "/levels/progression-weblab2-validation-refine",
   starshipLoader: "/levels/progression-weblab2-validation-sandbox",
+  featureRoulette: "/levels/progression-weblab2-validation-feature-roulette",
 } as const;
 
 export const validationProgressionCommonProps = {

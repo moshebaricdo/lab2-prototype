@@ -104,12 +104,17 @@ function parseTutorGuideMetadata(markdown: string): TutorGuideMetadata | null {
     : null;
 }
 
-function markdownWithoutTutorGuideMetadata(markdown: string) {
+/** Removes Tutor-only authoring metadata before student-facing instruction render. */
+export function stripInstructionAuthoringMetadata(markdown: string) {
   return markdown
     .replace(TUTOR_GUIDE_COMMENT_PATTERN, "")
     .replace(TUTOR_MODE_COMMENT_PATTERN, "")
     .replace(TUTOR_FIRST_MOVE_COMMENT_PATTERN, "")
     .trim();
+}
+
+function markdownWithoutTutorGuideMetadata(markdown: string) {
+  return stripInstructionAuthoringMetadata(markdown);
 }
 
 function nonEmptyInstructionLines(markdown: string) {

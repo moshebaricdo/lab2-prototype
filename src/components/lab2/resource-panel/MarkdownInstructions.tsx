@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { stripInstructionAuthoringMetadata } from "../../../lib/tutor/instructionGuide";
 import styles from "./MarkdownInstructions.module.scss";
 
 interface MarkdownInstructionsProps {
@@ -7,7 +8,8 @@ interface MarkdownInstructionsProps {
 }
 
 export function MarkdownInstructions({ markdown }: MarkdownInstructionsProps) {
-  const sections = markdown
+  const studentMarkdown = stripInstructionAuthoringMetadata(markdown);
+  const sections = studentMarkdown
     .split(/^\s*---\s*$/m)
     .map((section) => section.trim())
     .filter(Boolean);
