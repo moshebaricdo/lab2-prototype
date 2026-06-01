@@ -28,7 +28,6 @@ import {
   webLab2LevelLinks,
 } from "./levelTypeLinks";
 import { buildShareLinkDropdownItems } from "../lib/shareLinkActions";
-import { isProgressionLevelPath } from "../lib/levelShareLinks";
 import { FaIcon } from "../components/ui/icons/FaIcon";
 import { getLevelTypeIconConfig } from "../lib/levelTypeIcon";
 import styles from "./LevelsIndexPage.module.scss";
@@ -251,7 +250,7 @@ function SavedVariantsSection() {
 
   const copyVariantShareLink = useCallback((
     variant: SavedVariant,
-    shareMode: "locked-level" | "locked-progression" | "flow",
+    shareMode: "locked-level" | "flow",
   ) => {
     navigator.clipboard.writeText(
       buildVariantAbsoluteUrl(variant.basePath, variant.overrides, {
@@ -337,17 +336,10 @@ function SavedVariantsSection() {
                         title="Share links"
                       />
                     }
-                    items={buildShareLinkDropdownItems(
-                      {
-                        showLockedProgression: isProgressionLevelPath(v.basePath),
-                      },
-                      {
-                        onLockedLevel: () => copyVariantShareLink(v, "locked-level"),
-                        onLockedProgression: () =>
-                          copyVariantShareLink(v, "locked-progression"),
-                        onFlow: () => copyVariantShareLink(v, "flow"),
-                      },
-                    )}
+                    items={buildShareLinkDropdownItems({
+                      onLockedLevel: () => copyVariantShareLink(v, "locked-level"),
+                      onFlow: () => copyVariantShareLink(v, "flow"),
+                    })}
                   />
                   <Tooltip content="Promote to code" position="top">
                     <AppButton

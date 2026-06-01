@@ -9,7 +9,6 @@ import { Tooltip } from "../../ui/Tooltip";
 import { useSavedVariants } from "../../../hooks/useSavedVariants";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import type { DevPanelShareParamsProvider } from "../resource-panel/Sidebar.types";
-import { isProgressionLevelPath } from "../../../lib/levelShareLinks";
 import { buildShareLinkDropdownItems } from "../../../lib/shareLinkActions";
 
 interface DevPanelHeaderActionsProps {
@@ -30,27 +29,18 @@ export function DevPanelHeaderActions({
   const { saveVariant } = useSavedVariants();
   const getShareParams = () =>
     devPanelShareParams ? devPanelShareParams() : {};
-  const showLockedProgression = isProgressionLevelPath(location.pathname);
-  const shareLinkItems = buildShareLinkDropdownItems(
-    { showLockedProgression },
-    {
-      onLockedLevel: () => {
-        const extraSearchParams = getShareParams();
-        if (extraSearchParams === null) return;
-        overrideResult.copyShareLink("locked-level", { extraSearchParams });
-      },
-      onLockedProgression: () => {
-        const extraSearchParams = getShareParams();
-        if (extraSearchParams === null) return;
-        overrideResult.copyShareLink("locked-progression", { extraSearchParams });
-      },
-      onFlow: () => {
-        const extraSearchParams = getShareParams();
-        if (extraSearchParams === null) return;
-        overrideResult.copyShareLink("flow", { extraSearchParams });
-      },
+  const shareLinkItems = buildShareLinkDropdownItems({
+    onLockedLevel: () => {
+      const extraSearchParams = getShareParams();
+      if (extraSearchParams === null) return;
+      overrideResult.copyShareLink("locked-level", { extraSearchParams });
     },
-  );
+    onFlow: () => {
+      const extraSearchParams = getShareParams();
+      if (extraSearchParams === null) return;
+      overrideResult.copyShareLink("flow", { extraSearchParams });
+    },
+  });
 
   const handleSaveAndCopy = () => {
     if (!saveName.trim()) return;
