@@ -21,6 +21,7 @@ import {
   multiChoiceLevelLinks,
   pythonLabLevelLinks,
   sampleProgressionLinks,
+  drawerImprovementsExperimentLinks,
   uploadMechanismsProgressionLinks,
   webLab2ExperimentLinks,
   webLab2ValidationProgressionLinks,
@@ -383,10 +384,9 @@ export function LevelsIndexPage() {
   return (
     <main className={styles.page}>
       <div className={styles.container}>
-        <h1 className={styles.pageTitle}>Lab2 Level Types</h1>
+        <h1 className={styles.pageTitle}>Lab2 Sandbox</h1>
         <p className={styles.pageSubtitle}>
-          Lab templates, assessment levels, and demo progressions for this
-          prototype.
+          This environment provides functional base templates for Lab2 environments and assessment levels.
         </p>
 
         <SavedVariantsSection />
@@ -400,14 +400,12 @@ export function LevelsIndexPage() {
             <div className={styles.entryGrid}>
               <div className={`${styles.card} ${styles.cardWithDescription}`}>
                 <div className={styles.cardHeader}>
-                  <div>
-                    <h3 className={styles.cardTitle}>
-                      Intro to HTML &amp; CSS
-                    </h3>
-                    <p className={styles.cardDescription}>
-                      Lab, reflection, path choice, project, and checkpoint.
-                    </p>
-                  </div>
+                  <h3 className={styles.cardTitle}>
+                    Intro to HTML &amp; CSS
+                  </h3>
+                  <p className={styles.cardDescription}>
+                    Lab, reflection, path choice, project, and checkpoint.
+                  </p>
                 </div>
                 <div className={styles.bubbleRow}>
                   {sampleProgressionLinks.map((page, index) => (
@@ -431,15 +429,12 @@ export function LevelsIndexPage() {
               </div>
               <div className={`${styles.card} ${styles.cardWithDescription}`}>
                 <div className={styles.cardHeader}>
-                  <div>
-                    <h3 className={styles.cardTitle}>
-                      Web Lab 2 Validation Lab
-                    </h3>
-                    <p className={styles.cardDescription}>
-                      Five Web Lab validation levels, from fixes to open-ended
-                      build.
-                    </p>
-                  </div>
+                  <h3 className={styles.cardTitle}>
+                    Tutor Instructions and Validation
+                  </h3>
+                  <p className={styles.cardDescription}>
+                    Experiments with instructions and validation via Tutor.
+                  </p>
                 </div>
                 <div className={styles.bubbleRow}>
                   {webLab2ValidationProgressionLinks.map((page, index) => (
@@ -463,14 +458,10 @@ export function LevelsIndexPage() {
               </div>
               <div className={`${styles.card} ${styles.cardWithDescription}`}>
                 <div className={styles.cardHeader}>
-                  <div>
-                    <h3 className={styles.cardTitle}>
-                      Upload Mechanisms
-                    </h3>
-                    <p className={styles.cardDescription}>
-                      Three Tutor upload patterns side by side.
-                    </p>
-                  </div>
+                  <h3 className={styles.cardTitle}>Upload Mechanisms</h3>
+                  <p className={styles.cardDescription}>
+                    Three Tutor upload patterns side by side.
+                  </p>
                 </div>
                 <div className={styles.bubbleRow}>
                   {uploadMechanismsProgressionLinks.map((page, index) => (
@@ -494,12 +485,37 @@ export function LevelsIndexPage() {
               </div>
               <div className={`${styles.card} ${styles.cardWithDescription}`}>
                 <div className={styles.cardHeader}>
-                  <div>
-                    <h3 className={styles.cardTitle}>Web Lab 2 Experiments</h3>
-                    <p className={styles.cardDescription}>
-                      Standalone Tutor action card and validation review demos.
-                    </p>
-                  </div>
+                  <h3 className={styles.cardTitle}>Drawer Improvements</h3>
+                  <p className={styles.cardDescription}>
+                    Improvements to drawer behavior and visual cues.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {drawerImprovementsExperimentLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>Web Lab 2 Experiments</h3>
+                  <p className={styles.cardDescription}>
+                    Standalone Tutor action card and validation review demos.
+                  </p>
                 </div>
                 <div className={styles.bubbleRow}>
                   {webLab2ExperimentLinks.map((page, index) => (
