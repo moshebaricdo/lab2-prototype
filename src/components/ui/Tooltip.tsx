@@ -4,7 +4,9 @@ import styles from "./Tooltip.module.scss";
 
 interface TooltipProps {
   children: ReactNode;
-  content: string;
+  content: ReactNode;
+  startIcon?: ReactNode;
+  endIcon?: ReactNode;
   position?: "top" | "right" | "bottom" | "left";
   delayDuration?: number;
   sideOffset?: number;
@@ -14,9 +16,36 @@ interface TooltipProps {
   disableHoverableContent?: boolean;
 }
 
+function TooltipBody({
+  content,
+  startIcon,
+  endIcon,
+}: Pick<TooltipProps, "content" | "startIcon" | "endIcon">) {
+  const hasIcons = Boolean(startIcon || endIcon);
+
+  if (!hasIcons) {
+    if (typeof content === "string") {
+      return <p className={styles.text}>{content}</p>;
+    }
+    return <div className={styles.text}>{content}</div>;
+  }
+
+  return (
+    <div className={styles.contentRow}>
+      {startIcon ? (
+        <span className={styles.iconSlot}>{startIcon}</span>
+      ) : null}
+      <span className={styles.textInline}>{content}</span>
+      {endIcon ? <span className={styles.iconSlot}>{endIcon}</span> : null}
+    </div>
+  );
+}
+
 export function Tooltip({
   children,
   content,
+  startIcon,
+  endIcon,
   position = "top",
   delayDuration = 0,
   sideOffset = 6,
@@ -35,7 +64,11 @@ export function Tooltip({
           className={styles.content}
         >
           <div className={styles.body} data-name="Tooltip">
-            <p className={styles.text}>{content}</p>
+            <TooltipBody
+              content={content}
+              startIcon={startIcon}
+              endIcon={endIcon}
+            />
           </div>
           <TooltipPrimitive.Arrow
             className={styles.arrow}

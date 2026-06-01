@@ -26,6 +26,28 @@
   text-wrap: pretty;
 }
 
+.contentRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ds-text-neutral-white-fixed);
+  text-align: left;
+}
+
+.iconSlot {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.textInline {
+  color: var(--ds-text-neutral-white-fixed);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.54;
+  text-wrap: pretty;
+}
+
 .arrow {
   fill: var(--ds-background-neutral-black-fixed);
 }
