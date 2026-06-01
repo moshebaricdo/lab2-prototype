@@ -1,4 +1,6 @@
-import { FaIcon, type FaIconName } from "@/icons";
+import { FaIcon, type FaIconFamily } from "./icons/FaIcon";
+import type { FaBrandIconName } from "../../icons/faBrandsCodepoints";
+import type { FaIconName } from "../../icons/faProRegularCodepoints";
 import { AppButton } from "./AppButton";
 import { Tooltip } from "./Tooltip";
 import { UploadProgressRing } from "./UploadProgressRing";
@@ -14,7 +16,8 @@ export interface FileChipProps {
    * or timestamp (e.g. "12:56PM") in add mode.
    */
   extensionLabel?: string;
-  iconName: FaIconName;
+  iconName: FaIconName | FaBrandIconName;
+  iconFamily?: FaIconFamily;
   /**
    * `"remove"` shows an X button (pre-send composer chip).
    * `"add"` shows an inline "+ Add" button inside the chip (sent chat chip).
@@ -39,6 +42,7 @@ export function FileChip({
   nameTitle,
   extensionLabel,
   iconName,
+  iconFamily = "solid",
   mode = "remove",
   onRemove,
   onAdd,
@@ -138,7 +142,12 @@ export function FileChip({
         {isUploading ? (
           <UploadProgressRing progress={uploadProgress} size={16} strokeWidth={2} />
         ) : (
-          <FaIcon name={iconName} size="inherit" className={styles.iconGlyph} />
+          <FaIcon
+            family={iconFamily}
+            name={iconName}
+            size="inherit"
+            className={styles.iconGlyph}
+          />
         )}
       </div>
       <div className={styles.textBlock}>

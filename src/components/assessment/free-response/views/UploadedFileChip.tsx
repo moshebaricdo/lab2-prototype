@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileChip } from "../../../ui/FileChip";
-import { faIconForFileName, fileExtensionLabelFromName } from "../../../ui/fileChipMeta";
+import { getFileChipIconProps, fileExtensionLabelFromName } from "../../../ui/fileChipMeta";
 
 function canPreviewImageInBrowser(file: File): boolean {
   const t = file.type.toLowerCase();
@@ -41,13 +41,14 @@ export function UploadedFileChip({
   }, [imageUrl]);
 
   const extension = fileExtensionLabelFromName(file.name);
-  const iconName = faIconForFileName(file.name);
+  const fileIcon = getFileChipIconProps(file.name);
 
   return (
     <FileChip
       fileName={file.name}
       extensionLabel={extension}
-      iconName={iconName}
+      iconName={fileIcon.iconName}
+      iconFamily={fileIcon.iconFamily}
       onRemove={onRemove}
       disabled={disabled}
       imageSrc={showImageThumb && imageUrl ? imageUrl : null}

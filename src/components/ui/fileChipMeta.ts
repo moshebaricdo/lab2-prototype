@@ -1,4 +1,10 @@
-import type { FaIconName } from "@/icons";
+import type { FaBrandIconName } from "../../icons/faBrandsCodepoints";
+import type { FaIconName } from "../../icons/faProRegularCodepoints";
+import type { FaIconFamily } from "./icons/FaIcon";
+import {
+  getFileTypeIconConfigForPath,
+  type FileTypeIconConfig,
+} from "../../lib/fileTypeIcons";
 
 function basename(pathOrName: string): string {
   const i = pathOrName.lastIndexOf("/");
@@ -15,27 +21,26 @@ export function fileExtensionLabelFromName(pathOrName: string): string {
   return name.slice(dot + 1).toUpperCase();
 }
 
-/** Icon for a file based on its name / extension (matches free-response upload behavior). */
-export function faIconForFileName(pathOrName: string): FaIconName {
-  const name = basename(pathOrName);
-  const dot = name.lastIndexOf(".");
-  const ext = dot >= 0 ? name.slice(dot + 1).toLowerCase() : "";
+export type FileChipIconConfig = FileTypeIconConfig;
 
-  if (ext === "pdf") return "file-pdf";
-  if (["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"].includes(ext)) {
-    return "file-image";
-  }
-  if (
-    ["html", "htm", "css", "js", "ts", "tsx", "jsx", "json", "java", "py"].includes(ext)
-  ) {
-    return "file-code";
-  }
-  if (ext === "csv") return "file-csv";
-  if (["xlsx", "xls"].includes(ext)) return "file-excel";
-  if (["doc", "docx"].includes(ext)) return "file-word";
-  if (["ppt", "pptx"].includes(ext)) return "file-powerpoint";
-  if (["zip", "rar", "7z"].includes(ext)) return "file-zipper";
-  if (["mp3", "wav", "ogg", "m4a"].includes(ext)) return "file-audio";
-  if (["mp4", "webm", "mov"].includes(ext)) return "file-video";
-  return "file";
+/** Icon for a file based on its name / extension. */
+export function getFileChipIconConfig(pathOrName: string): FileChipIconConfig {
+  return getFileTypeIconConfigForPath(pathOrName);
+}
+
+/** @deprecated Use getFileChipIconConfig for brand-aware icons. */
+export function faIconForFileName(pathOrName: string): FaIconName {
+  return getFileChipIconConfig(pathOrName).name as FaIconName;
+}
+
+export function getFileChipIconFamily(pathOrName: string): FaIconFamily {
+  return getFileChipIconConfig(pathOrName).family;
+}
+
+export function getFileChipIconProps(pathOrName: string): {
+  iconName: FaIconName | FaBrandIconName;
+  iconFamily: FaIconFamily;
+} {
+  const icon = getFileChipIconConfig(pathOrName);
+  return { iconName: icon.name, iconFamily: icon.family };
 }

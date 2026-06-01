@@ -4,7 +4,10 @@ import { AppButton } from "../../ui/AppButton";
 import { AppTextField } from "../../ui/AppTextField";
 import { Modal } from "../../ui/Modal";
 import { FaIcon } from "../../ui/icons/FaIcon";
-import type { FaIconName } from "../../../icons/faProRegularCodepoints";
+import {
+  getFileTypeIconConfigForCreateFileType,
+  type CreateFileModalType,
+} from "../../../lib/fileTypeIcons";
 import styles from "./CreateFileModal.module.scss";
 
 interface CreateFileModalProps {
@@ -15,19 +18,9 @@ interface CreateFileModalProps {
   fileTypes?: FileType[];
 }
 
-type FileType = "HTML" | "CSS" | "JS" | "PY" | "MD" | "TXT" | "CSV";
+type FileType = CreateFileModalType;
 
 const DEFAULT_FILE_TYPES: FileType[] = ["HTML", "CSS", "JS", "MD", "TXT", "CSV"];
-
-const FILE_TYPE_ICONS: Record<FileType, FaIconName> = {
-  HTML: "file-code",
-  CSS: "file-brackets-curly",
-  JS: "file-code",
-  PY: "file-code",
-  MD: "file-lines",
-  TXT: "file-lines",
-  CSV: "file-csv",
-};
 
 interface FileTypeDropdownProps {
   selectedType: FileType;
@@ -44,6 +37,8 @@ function FileTypeDropdown({
   onOpenChange,
   onSelect,
 }: FileTypeDropdownProps) {
+  const selectedIcon = getFileTypeIconConfigForCreateFileType(selectedType);
+
   return (
     <AppActionDropdown
       open={isOpen}
@@ -59,7 +54,8 @@ function FileTypeDropdown({
         >
           <span className={styles.dropdownValueText}>
             <FaIcon
-              name={FILE_TYPE_ICONS[selectedType]}
+              family={selectedIcon.family}
+              name={selectedIcon.name}
               size="s"
               className={styles.dropdownIcon}
             />
@@ -72,12 +68,17 @@ function FileTypeDropdown({
           />
         </button>
       }
-      items={fileTypes.map((type) => ({
-        id: type,
-        label: type,
-        iconName: FILE_TYPE_ICONS[type],
-        onSelect: () => onSelect(type),
-      }))}
+      items={fileTypes.map((type) => {
+        const icon = getFileTypeIconConfigForCreateFileType(type);
+        return {
+          id: type,
+          label: type,
+          icon: (
+            <FaIcon family={icon.family} name={icon.name} size="s" />
+          ),
+          onSelect: () => onSelect(type),
+        };
+      })}
     />
   );
 }

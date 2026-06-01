@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent, type RefObject } from "react";
 import { ScrollArea } from "../../../../ui/scroll-area";
 import { AppButton } from "../../../../ui/AppButton";
 import { FileChip } from "../../../../ui/FileChip";
-import { faIconForFileName, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
+import { getFileChipIconProps, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { ActionRow } from "./ActionRow";
 import { EditOptionsCard } from "./EditOptionsCard";
@@ -96,16 +96,20 @@ function MessageAttachments({
       {codeRefs.length > 0 && (
         <div className={`${styles.messageRow} ${styles.messageRowUser}`}>
           <div className={styles.streamAttachmentRow}>
-            {codeRefs.map((att) => (
+            {codeRefs.map((att) => {
+              const fileIcon = getFileChipIconProps(att.path);
+              return (
               <FileChip
                 key={att.path}
                 fileName={att.fileName}
                 nameTitle={att.path}
                 extensionLabel={metadataLabelForAttachment(att)}
-                iconName={faIconForFileName(att.path)}
+                iconName={fileIcon.iconName}
+                iconFamily={fileIcon.iconFamily}
                 mode="static"
               />
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -113,17 +117,21 @@ function MessageAttachments({
       {!showFileChipActionsInStream && nonCodeRefs.length > 0 && (
         <div className={`${styles.messageRow} ${styles.messageRowUser}`}>
           <div className={styles.streamAttachmentRow}>
-            {nonCodeRefs.map((att) => (
+            {nonCodeRefs.map((att) => {
+              const fileIcon = getFileChipIconProps(att.fileName);
+              return (
               <FileChip
                 key={att.path}
                 fileName={att.fileName}
                 nameTitle={att.path}
                 extensionLabel={metadataLabelForAttachment(att)}
-                iconName={faIconForFileName(att.fileName)}
+                iconName={fileIcon.iconName}
+                iconFamily={fileIcon.iconFamily}
                 imageSrc={att.imageSrc}
                 mode="static"
               />
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -134,13 +142,15 @@ function MessageAttachments({
             {msg.attachments.map((att) => {
               const isUpload = att.source === "upload";
               const canAdd = isUpload && isAddableUploadAttachment(att);
+              const fileIcon = getFileChipIconProps(att.path);
               return (
                 <FileChip
                   key={att.path}
                   fileName={att.fileName}
                   nameTitle={att.path}
                   extensionLabel={metadataLabelForAttachment(att)}
-                  iconName={faIconForFileName(att.path)}
+                  iconName={fileIcon.iconName}
+                  iconFamily={fileIcon.iconFamily}
                   imageSrc={att.imageSrc}
                   mode={isUpload ? "add" : "static"}
                   onAdd={canAdd ? () => onMarkAttachmentAdded(idx, att.path) : undefined}

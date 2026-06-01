@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { faFileCode, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { faCss3 } from "@fortawesome/free-brands-svg-icons";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import emptyStateNoFilesOpen from "../../../../assets/empty-states/empty-state-no-files-open.svg";
 import type { FileItem } from "../../../../types/file";
+import { getFileTypeIconConfigForFileItem } from "../../../../lib/fileTypeIcons";
 import { AppButton } from "../../../ui/AppButton";
+import { FaIcon } from "../../../ui/icons/FaIcon";
 import { EmptyState } from "../EmptyState";
 import { CodeMirrorHost } from "./CodeMirrorHost";
 import { useEditorReadOnlyOverride } from "../../../../hooks/useEditorReadOnly";
@@ -47,7 +47,6 @@ interface DraggableTabProps {
   onFileSelect: (file: FileItem) => void;
   onCloseFile: (file: FileItem) => void;
   moveTab: (dragIndex: number, hoverIndex: number) => void;
-  getFileIcon: (file: FileItem) => IconDefinition;
   enableDragToTutor?: boolean;
   isAiChanged?: boolean;
 }
@@ -63,7 +62,6 @@ function DraggableTab({
   onFileSelect,
   onCloseFile,
   moveTab,
-  getFileIcon,
   enableDragToTutor = false,
   isAiChanged = false,
 }: DraggableTabProps) {
@@ -113,6 +111,7 @@ function DraggableTab({
   drag(drop(ref));
 
   const isActive = selectedFile?.name === file.name;
+  const fileIcon = getFileTypeIconConfigForFileItem(file);
 
   return (
     <div
@@ -132,8 +131,10 @@ function DraggableTab({
       } ${isDragging ? "opacity-50" : "opacity-100"}`}
     >
       <div className={styles.tabIconWrap}>
-        <FontAwesomeIcon
-          icon={getFileIcon(file)}
+        <FaIcon
+          family={fileIcon.family}
+          name={fileIcon.name}
+          size="s"
           className={`${styles.tabIcon} ${
             isActive ? styles.tabIconActive : styles.tabIconInactive
           }`}
@@ -163,13 +164,6 @@ function DraggableTab({
       </button>
     </div>
   );
-}
-
-function getFileIcon(file: FileItem): IconDefinition {
-  if (file.type === "css") {
-    return faCss3;
-  }
-  return faFileCode;
 }
 
 function isRenderableImageSource(source: string) {
@@ -329,7 +323,6 @@ export function CodeEditor({
                   onFileSelect={onFileSelect}
                   onCloseFile={onCloseFile}
                   moveTab={moveTab}
-                  getFileIcon={getFileIcon}
                   enableDragToTutor={enableDragToTutor}
                   isAiChanged={!!(file.name && aiChangedFiles?.[file.name])}
                 />

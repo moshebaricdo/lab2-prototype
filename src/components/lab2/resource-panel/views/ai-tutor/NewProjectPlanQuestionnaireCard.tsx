@@ -10,7 +10,7 @@ import { AppButton } from "../../../../ui/AppButton";
 import { AppTextArea } from "../../../../ui/AppTextField";
 import { FileChip } from "../../../../ui/FileChip";
 import {
-  faIconForFileName,
+  getFileChipIconProps,
   fileExtensionLabelFromName,
 } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
@@ -258,7 +258,8 @@ export function NewProjectPlanQuestionnaireCard({
                               fileName={attachment.fileName}
                               nameTitle={attachment.path}
                               extensionLabel={fileExtensionLabelFromName(attachment.fileName)}
-                              iconName={faIconForFileName(attachment.fileName)}
+                              iconName={getFileChipIconProps(attachment.fileName).iconName}
+                              iconFamily={getFileChipIconProps(attachment.fileName).iconFamily}
                               imageSrc={attachment.imageSrc}
                               mode="remove"
                               onRemove={() => handleRemoveMoodboardAttachment(attachment.path)}

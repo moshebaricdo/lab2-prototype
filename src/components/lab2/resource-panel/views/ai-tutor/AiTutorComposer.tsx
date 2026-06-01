@@ -14,7 +14,7 @@ import { AppActionDropdown } from "../../../../ui/AppDropdown";
 import { AppTextArea } from "../../../../ui/AppTextField";
 import { FileChip } from "../../../../ui/FileChip";
 import { Tooltip } from "../../../../ui/Tooltip";
-import { faIconForFileName, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
+import { faIconForFileName, fileExtensionLabelFromName, getFileChipIconProps } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import { useKeyboardFocusWithin } from "../../../../../hooks/useKeyboardFocusWithin";
@@ -194,13 +194,15 @@ export function AiTutorComposer({
               const metadataLabel = isFullProjectFile
                 ? undefined
                 : codeTimestamp ?? meta?.timestamp ?? fileExtensionLabelFromName(displayName);
+              const fileIcon = getFileChipIconProps(displayName);
               return (
                 <FileChip
                   key={fileLabel}
                   fileName={displayName}
                   nameTitle={fileLabel}
                   extensionLabel={metadataLabel}
-                  iconName={faIconForFileName(displayName)}
+                  iconName={fileIcon.iconName}
+                  iconFamily={fileIcon.iconFamily}
                   imageSrc={meta?.imageSrc}
                   uploadProgress={uploadProgressByPath[fileLabel]}
                   onRemove={() => onRemoveAttachedFile(fileLabel)}

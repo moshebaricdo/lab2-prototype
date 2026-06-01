@@ -6,6 +6,7 @@ import { AppButton } from "../../ui/AppButton";
 import { Tooltip } from "../../ui/Tooltip";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import type { FileItem } from "../../../types/file";
+import { getFileTypeIconConfigForFileItem } from "../../../lib/fileTypeIcons";
 import styles from "./FileManager.module.scss";
 
 const FILE_TREE_DRAG_MIME = "application/x-weblab-file-tree-item";
@@ -172,23 +173,8 @@ export function FileManager({
     return builtPlanPaths?.has(itemPath) || /\bStatus:\s*Completed\b/i.test(content);
   };
 
-  const getFileIconName = (item: FileItem, isOpen: boolean): FaIconName => {
-    if (item.type === "folder") {
-      return isOpen ? "folder-open" : "folder";
-    }
-    switch (item.type) {
-      case "html":
-        return "file-code";
-      case "css":
-        return "file-brackets-curly";
-      case "text":
-        return "file-lines";
-      case "image":
-        return "image";
-      default:
-        return "file-code";
-    }
-  };
+  const getFileIcon = (item: FileItem, isOpen: boolean) =>
+    getFileTypeIconConfigForFileItem(item, isOpen);
 
   const canDropOnFolder = (sourcePath: string | null, targetPath: string) => {
     if (!sourcePath || !onMoveItem) return false;
@@ -386,11 +372,19 @@ export function FileManager({
                   ) : isPlanTreeFile && !isBuiltPlanFile(item, itemPath) ? (
                     <span className={styles.planFileIconOutline} />
                   ) : (
-                    <FaIcon
-                      name={isPlanTreeFile ? "circle-check" : getFileIconName(item, isOpen)}
-                      size="s"
-                      className={`${styles.fileIcon} ${isBuiltPlanFile(item, itemPath) ? styles.planFileIconBuilt : ""}`}
-                    />
+                    (() => {
+                      const icon = isPlanTreeFile
+                        ? { family: "solid" as const, name: "circle-check" as const }
+                        : getFileIcon(item, isOpen);
+                      return (
+                        <FaIcon
+                          family={icon.family}
+                          name={icon.name}
+                          size="s"
+                          className={`${styles.fileIcon} ${isBuiltPlanFile(item, itemPath) ? styles.planFileIconBuilt : ""}`}
+                        />
+                      );
+                    })()
                   )}
                 </div>
                 <p className={`${styles.fileName} ${isSelected ? styles.fileNameSelected : ""}`}>
