@@ -86,21 +86,25 @@ export function Lab2Shell(props: Lab2ShellProps) {
   const shouldShowTopNavigationContinue = isLockedShareModeActive
     ? false
     : topNavigationProps?.showContinueButton;
+  const sharedProgressionLevelLinks =
+    hasProgressionLevelLinks && topNavigationProps?.levelLinks
+      ? isFlowShareMode
+        ? mapLevelLinksWithShareMode(topNavigationProps.levelLinks, "flow")
+        : allowLockedShareProgressionNavigation
+          ? mapLevelLinksWithShareMode(
+              topNavigationProps.levelLinks,
+              shareMode === "locked-progression" ? "locked-progression" : "locked",
+            )
+          : topNavigationProps.levelLinks
+      : topNavigationProps?.levelLinks;
   const resolvedTopNavigationProps = {
     ...topNavigationProps,
-    levelLinks:
-      allowLockedShareProgressionNavigation && topNavigationProps?.levelLinks
-        ? mapLevelLinksWithShareMode(
-            topNavigationProps.levelLinks,
-            shareMode === "locked-progression" ? "locked-progression" : "locked",
-          )
-        : topNavigationProps?.levelLinks,
+    levelLinks: sharedProgressionLevelLinks,
     disableLogoLink: isShareMode || topNavigationProps?.disableLogoLink,
     hideProgression:
       (isLockedShareModeActive && !allowLockedShareProgressionNavigation) ||
       topNavigationProps?.hideProgression,
-    disableProgressionLinks:
-      isFlowShareMode || topNavigationProps?.disableProgressionLinks,
+    disableProgressionLinks: topNavigationProps?.disableProgressionLinks,
     showContinueButton: shouldShowTopNavigationContinue,
     onContinue: resolveFlowContinueHandler(topNavigationProps?.onContinue),
   };
