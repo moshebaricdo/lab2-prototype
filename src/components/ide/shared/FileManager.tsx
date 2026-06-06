@@ -466,14 +466,16 @@ export function FileManager({
           </div>
 
           {hasChildren && isOpen && (
-            <div className={styles.childrenWrap}>
+            <div
+              className={`${styles.childrenWrap} ${
+                item.children!.length === 1 ? styles.childrenWrapSingle : ""
+              }`}
+            >
               {/* Vertical line for children of this folder */}
               <div
                 className={styles.childrenConnector}
                 style={{
                   left: `${paddingLeft + 6}px`, // Center of parent icon
-                  top: 0,
-                  height: `${(item.children!.length - 1) * 24 + 12}px`,
                 }}
               />
               {renderFileTree(

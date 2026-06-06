@@ -162,6 +162,8 @@
 .readOnly .control {
   border-color: var(--ds-borders-neutral-primary);
   background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-primary);
+  cursor: default;
 }
 
 .helper {

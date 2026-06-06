@@ -6,7 +6,6 @@
   height: 50px;
   padding: 0 8px;
   background: var(--ds-background-brand-teal-primary);
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
 }
 
 .leftGroup {
@@ -26,8 +25,12 @@
   height: 36px;
 }
 
+:global([data-brand-theme="codeAi"]) .logoWrap {
+  padding-left: 6px;
+}
+
 :global([data-brand-theme="codeAi"]) .logoBox {
-  width: 74px;
+  width: 120px;
 }
 
 .centerSpacer {
