@@ -102,6 +102,10 @@ export const matchLevelLinks: LevelProgressLink[] = [
 
 export const levelGroupLevelLinks: LevelProgressLink[] = [
   {
+    name: "Demo quiz (screencast — all question types)",
+    path: "/levels/levelgroup-demo-quiz",
+  },
+  {
     name: "Survey-style: all questions on one page",
     path: "/levels/levelgroup-scroll",
   },

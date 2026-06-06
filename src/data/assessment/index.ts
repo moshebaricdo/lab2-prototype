@@ -45,6 +45,7 @@ export {
   type LevelGroupFlowPayload,
   type LevelGroupQuestionBlock,
 } from "./levelGroup";
+export { mockDemoQuizLevelGroup } from "./demoQuiz";
 export {
   mockBubbleChoiceLevel,
   mockBubbleChoiceLevelWithImages,

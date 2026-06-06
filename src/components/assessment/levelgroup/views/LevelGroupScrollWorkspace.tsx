@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppButton } from "../../../ui/AppButton";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { AssessmentBottomRow, AssessmentCodeRefLayout } from "../../shared";
@@ -12,6 +13,7 @@ import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import {
   allBlocksComplete,
+  getLevelContinueTarget,
   LevelGroupEmbeddedBlock,
   useLevelGroupFlowState,
 } from "./LevelGroupFlowBlocks";
@@ -49,6 +51,7 @@ export function LevelGroupScrollWorkspace({
   shellSubtitle,
   stickyFooter = false,
 }: LevelGroupScrollWorkspaceProps) {
+  const navigate = useNavigate();
   const resolvedShellSubtitle =
     shellSubtitle ??
     (stickyFooter ? STICKY_FOOTER_SHELL_SUBTITLE : DEFAULT_SHELL_SUBTITLE);
@@ -104,6 +107,15 @@ export function LevelGroupScrollWorkspace({
 
   const assessmentHeaderTitle =
     level.metadata.assessmentName ?? level.name;
+
+  const continueTarget = useMemo(
+    () => getLevelContinueTarget(levelLinks, currentLevelPath),
+    [levelLinks, currentLevelPath],
+  );
+
+  const handleContinue = () => {
+    navigate(continueTarget.path);
+  };
 
   const handleStartOver = () => {
     resetFlow();
@@ -253,6 +265,25 @@ export function LevelGroupScrollWorkspace({
               }
             />
           )}
+
+          {isSubmitted && (
+            <AssessmentBottomRow
+              flushTop
+              showLeft={false}
+              right={
+                <AppButton
+                  variant="primary"
+                  size="m"
+                  tone="purple"
+                  iconPosition="end"
+                  iconName="arrow-right"
+                  onClick={handleContinue}
+                >
+                  {continueTarget.label}
+                </AppButton>
+              }
+            />
+          )}
         </>
       )}
     </>
@@ -282,6 +313,8 @@ export function LevelGroupScrollWorkspace({
             surveyMode={surveyMode}
             assessmentTitle={assessmentHeaderTitle}
             onStartOver={handleStartOver}
+            onContinue={handleContinue}
+            continueLabel={continueTarget.label}
           />
         )}
         <div

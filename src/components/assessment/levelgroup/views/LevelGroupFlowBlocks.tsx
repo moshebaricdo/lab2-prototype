@@ -16,7 +16,26 @@ import {
 import { FreeResponseWorkspace } from "../../free-response/views/FreeResponseWorkspace";
 import { MatchConnectorWorkspace } from "../../match/views/MatchConnectorWorkspace";
 import { MultiChoiceWorkspace } from "../../multi/views/MultiChoiceWorkspace";
+import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import flowStyles from "./LevelGroupFlow.module.scss";
+
+export function getLevelContinueTarget(
+  levelLinks: LevelProgressLink[] | undefined,
+  currentLevelPath: string | undefined,
+): { path: string; label: "Continue" | "Finish" } {
+  if (!levelLinks?.length || !currentLevelPath) {
+    return { path: "/levels", label: "Finish" };
+  }
+  const index = levelLinks.findIndex((link) => link.path === currentLevelPath);
+  if (index === -1) {
+    return { path: "/levels", label: "Finish" };
+  }
+  const nextPath = levelLinks[index + 1]?.path;
+  if (!nextPath) {
+    return { path: "/levels", label: "Finish" };
+  }
+  return { path: nextPath, label: "Continue" };
+}
 
 export type MatchAssignments = Record<string, string | null>;
 

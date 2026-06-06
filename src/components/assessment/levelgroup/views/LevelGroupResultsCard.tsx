@@ -17,6 +17,9 @@ interface LevelGroupResultsCardProps {
   attemptLabel?: string;
   /** Elapsed time string, e.g. "23:58". Shown as "23:58 mins". Omit to hide. */
   elapsedTime?: string;
+  /** Primary action after reviewing results — omit to hide. */
+  onContinue?: () => void;
+  continueLabel?: string;
 }
 
 const RING_RADIUS = 30;
@@ -30,6 +33,8 @@ export function LevelGroupResultsCard({
   onStartOver,
   attemptLabel,
   elapsedTime,
+  onContinue,
+  continueLabel = "Continue",
 }: LevelGroupResultsCardProps) {
   const total = steps.length;
   const correct = steps.filter((s) =>
@@ -108,8 +113,8 @@ export function LevelGroupResultsCard({
 
         <div className={styles.actions}>
           <AppButton
-            variant="primary"
-            tone="purple"
+            variant="secondary"
+            tone="gray"
             size="m"
             iconPosition="start"
             iconName="rotate-right"
@@ -117,6 +122,18 @@ export function LevelGroupResultsCard({
           >
             Try again
           </AppButton>
+          {onContinue ? (
+            <AppButton
+              variant="primary"
+              tone="purple"
+              size="m"
+              iconPosition="end"
+              iconName="arrow-right"
+              onClick={onContinue}
+            >
+              {continueLabel}
+            </AppButton>
+          ) : null}
         </div>
       </div>
     </div>

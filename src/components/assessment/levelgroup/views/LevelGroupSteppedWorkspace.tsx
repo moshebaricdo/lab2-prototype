@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppButton } from "../../../ui/AppButton";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { AssessmentBottomRow, CodeReferencePanel } from "../../shared";
@@ -17,6 +18,7 @@ import {
   blockMeetsExpectations,
   isBlockComplete,
   LevelGroupEmbeddedBlock,
+  getLevelContinueTarget,
   useLevelGroupFlowState,
 } from "./LevelGroupFlowBlocks";
 import { LevelGroupAssessmentIntro } from "./LevelGroupAssessmentIntro";
@@ -54,6 +56,7 @@ export function LevelGroupSteppedWorkspace({
   progressVariant = "headerTrack",
   shellSubtitle = DEFAULT_SHELL_SUBTITLE,
 }: LevelGroupSteppedWorkspaceProps) {
+  const navigate = useNavigate();
   const stripCodePanel = (block: LevelGroupQuestionBlock): LevelGroupQuestionBlock =>
     block.codePanel ? { ...block, codePanel: undefined } : block;
 
@@ -138,7 +141,11 @@ export function LevelGroupSteppedWorkspace({
 
   const currentBlock = steps[activeStep];
   const currentBlockCodePanel =
-    !isSubmitted && currentBlock?.kind === "multi" ? currentBlock.codePanel : undefined;
+    !showIntro &&
+    !isSubmitted &&
+    currentBlock?.kind === "multi"
+      ? currentBlock.codePanel
+      : undefined;
   const hasActiveCodeStep = Boolean(currentBlockCodePanel);
   const currentComplete = currentBlock
     ? isBlockComplete(currentBlock, state)
@@ -148,6 +155,15 @@ export function LevelGroupSteppedWorkspace({
 
   const assessmentHeaderTitle =
     level.metadata.assessmentName ?? level.name;
+
+  const continueTarget = useMemo(
+    () => getLevelContinueTarget(levelLinks, currentLevelPath),
+    [levelLinks, currentLevelPath],
+  );
+
+  const handleContinue = () => {
+    navigate(continueTarget.path);
+  };
 
   const progressFillPercent =
     total === 0
@@ -333,6 +349,8 @@ export function LevelGroupSteppedWorkspace({
               surveyMode={level.surveyMode}
               assessmentTitle={assessmentHeaderTitle}
               onStartOver={handleStartOver}
+              onContinue={handleContinue}
+              continueLabel={continueTarget.label}
               attemptLabel={
                 introConfig?.attempts
                   ? `1 of ${introConfig.attempts}`
@@ -508,6 +526,21 @@ export function LevelGroupSteppedWorkspace({
                     />
                   </div>
                 ) : null}
+
+            {isSubmitted ? (
+              <div className={styles.steppedSubmittedFooterRow}>
+                <AppButton
+                  variant="primary"
+                  tone="purple"
+                  size="m"
+                  iconPosition="end"
+                  iconName="arrow-right"
+                  onClick={handleContinue}
+                >
+                  {continueTarget.label}
+                </AppButton>
+              </div>
+            ) : null}
 
             {isBottomDots ? (
               !isSubmitted ? (

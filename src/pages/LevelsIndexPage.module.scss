@@ -72,10 +72,6 @@
   grid-template-columns: repeat(2, 1fr);
 }
 
-.entryGridThreeCol {
-  grid-template-columns: repeat(3, 1fr);
-}
-
 /* ── Level-type card ── */
 
 .card {
@@ -109,10 +105,6 @@
 
 .cardWithDescription .bubbleRow {
   margin-top: 16px;
-}
-
-.cardCompact .bubbleRow {
-  margin-top: 12px;
 }
 
 .cardDescription {

@@ -44,6 +44,7 @@ interface LevelPage {
 
 interface LevelTypeEntry {
   levelType: string;
+  description: string;
   pages: LevelPage[];
 }
 
@@ -58,14 +59,17 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
     entries: [
       {
         levelType: "AI Chat Lab",
+        description: "AI chat and model prototypes",
         pages: aiChatLabLevelLinks,
       },
       {
         levelType: "Web Lab 2",
+        description: "Full-featured web IDE prototype",
         pages: webLab2LevelLinks,
       },
       {
         levelType: "Python Lab",
+        description: "Python IDE with console output",
         pages: pythonLabLevelLinks,
       },
     ],
@@ -75,18 +79,22 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
     entries: [
       {
         levelType: "Multi-choice",
+        description: "Local submit feedback demos",
         pages: multiChoiceLevelLinks,
       },
       {
         levelType: "Free response",
+        description: "Local text submission demos",
         pages: freeResponseLevelLinks,
       },
       {
         levelType: "Match",
+        description: "Drag-and-drop matching demos",
         pages: matchLevelLinks,
       },
       {
         levelType: "Levelgroup",
+        description: "Combined assessment step groups",
         pages: levelGroupLevelLinks,
       },
     ],
@@ -96,6 +104,7 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
     entries: [
       {
         levelType: "Bubble choice",
+        description: "Four authored learning paths",
         pages: bubbleChoiceLevelLinks,
       },
     ],
@@ -540,21 +549,17 @@ export function LevelsIndexPage() {
             {LEVEL_CATEGORIES.map((category) => (
               <section key={category.title} className={styles.levelTypeGroup}>
                 <h2 className={styles.sectionHeading}>{category.title}</h2>
-              <div
-                className={[
-                  styles.entryGrid,
-                  category.title === "Lab environments" && styles.entryGridThreeCol,
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
+              <div className={styles.entryGrid}>
                 {category.entries.map((entry) => (
                   <div
                     key={entry.levelType}
-                    className={`${styles.card} ${styles.cardCompact}`}
+                    className={`${styles.card} ${styles.cardWithDescription}`}
                   >
                     <div className={styles.cardHeader}>
                       <h3 className={styles.cardTitle}>{entry.levelType}</h3>
+                      <p className={styles.cardDescription}>
+                        {entry.description}
+                      </p>
                     </div>
                     <div className={styles.bubbleRow}>
                       {entry.pages.map((page, index) => (

@@ -22,6 +22,7 @@ Grouped assessment experiences where multiple question types (multi, free respon
 - Each block maps to `MultiChoiceWorkspace`, `FreeResponseWorkspace`, or `MatchConnectorWorkspace` in **embedded** mode (no per-section shell submit; group footer submits).
 - Scroll variant: stacked blocks + aggregate summary after submit.
 - Stepped variant: progress chrome + Next/Back; after submit, all blocks render for review.
+- After submit, the results summary shows **Try again** (secondary) and **Continue** / **Finish** (primary — next entry in `levelLinks`, or `/levels`). Stepped and scroll layouts also pin the continue action at the bottom of the review card.
 
 ## Teacher Answer Key Content
 

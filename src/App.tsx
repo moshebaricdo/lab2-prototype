@@ -84,6 +84,10 @@ const LevelGroupSteppedIntroLevelPage = lazyPage(
   () => import("./pages/levelgroup/LevelGroupSteppedIntroLevelPage"),
   "LevelGroupSteppedIntroLevelPage",
 );
+const DemoQuizLevelGroupLevelPage = lazyPage(
+  () => import("./pages/levelgroup/DemoQuizLevelGroupLevelPage"),
+  "DemoQuizLevelGroupLevelPage",
+);
 const LevelGroupSteppedLevelPage = lazyPage(
   () => import("./pages/levelgroup/LevelGroupSteppedLevelPage"),
   "LevelGroupSteppedLevelPage",
@@ -419,6 +423,10 @@ export default function App() {
         <Route
           path="/levels/levelgroup-stepped-intro"
           element={<LevelGroupSteppedIntroLevelPage />}
+        />
+        <Route
+          path="/levels/levelgroup-demo-quiz"
+          element={<DemoQuizLevelGroupLevelPage />}
         />
         <Route
           path="/levels/levelgroup-survey-intro"
