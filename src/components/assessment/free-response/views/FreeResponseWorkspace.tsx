@@ -191,8 +191,10 @@ export function FreeResponseWorkspace({
 
   const isAnswerLocked = embedded ? Boolean(groupSubmitted) : isSubmitted;
 
+  const inputReadOnly = isAnswerLocked;
   const inputDisabled =
-    isAnswerLocked || (revealAnswerEnabled && teacherRevealActive);
+    !isAnswerLocked && revealAnswerEnabled && teacherRevealActive;
+  const fieldLocked = inputReadOnly || inputDisabled;
 
   const rubricCriteria =
     teacherAnswer?.rubricCriteria?.filter(Boolean) ?? [];
@@ -252,11 +254,11 @@ export function FreeResponseWorkspace({
             <div className={styles.inputWrap}>
               <AppTextArea
                 value={responseText}
+                readOnly={inputReadOnly}
                 disabled={inputDisabled}
                 placeholder={level.question.placeholder}
                 onChange={(event) => setResponseText(event.target.value)}
                 rows={6}
-                size="l"
                 tone="gray"
               />
               <div className={styles.hintRow}>
@@ -285,7 +287,7 @@ export function FreeResponseWorkspace({
                       className={styles.fileInputHidden}
                       tabIndex={-1}
                       type="file"
-                      disabled={inputDisabled}
+                      disabled={fieldLocked}
                       onChange={handleFileChange}
                     />
                     <div className={styles.fileDropZoneInner}>
@@ -296,7 +298,7 @@ export function FreeResponseWorkspace({
                         size="s"
                         iconPosition="start"
                         iconName="upload"
-                        disabled={inputDisabled}
+                        disabled={fieldLocked}
                         onClick={() => fileInputRef.current?.click()}
                       >
                         Attach a file
@@ -306,7 +308,7 @@ export function FreeResponseWorkspace({
                   {attachedFile ? (
                     <UploadedFileChip
                       file={attachedFile}
-                      disabled={inputDisabled}
+                      disabled={fieldLocked}
                       onRemove={clearFile}
                     />
                   ) : null}

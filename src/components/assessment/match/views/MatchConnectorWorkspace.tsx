@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -226,9 +227,10 @@ export function MatchConnectorWorkspace({
   const instructionsId = useId();
   const matchBoardId = useId();
 
+  const promptIdsKey = level.question.prompts.map((p) => p.id).join("\0");
   const promptIds = useMemo(
     () => level.question.prompts.map((p) => p.id),
-    [level.question.prompts],
+    [promptIdsKey],
   );
 
   /* ── State ───────────────────────────────────────────────────── */
@@ -295,7 +297,10 @@ export function MatchConnectorWorkspace({
   const promptDotRefs = useRef<Record<string, HTMLElement | null>>({});
   const termDotRefs = useRef<Record<string, HTMLElement | null>>({});
   const didDragRef = useRef(false);
-  const dragHoverIdRef = useRef<string | null>(null);
+  const dragHoverTargetRef = useRef<{
+    type: "prompt" | "term";
+    id: string;
+  } | null>(null);
   const activeDragRef = useRef<typeof activeDrag>(null);
   const dragCleanupRef = useRef<(() => void) | null>(null);
 
@@ -309,7 +314,7 @@ export function MatchConnectorWorkspace({
     setSelectedCard(null);
     setIsSubmitted(false);
     setIsTeacherAnswerRevealed(false);
-  }, [level.id, promptIds, isEmbeddedControlled]);
+  }, [level.id, promptIdsKey, isEmbeddedControlled]);
 
   useEffect(() => {
     dragCleanupRef.current?.();
@@ -393,6 +398,11 @@ export function MatchConnectorWorkspace({
     }
     return assignments;
   }, [teacherRevealActive, assignments, level.question.prompts]);
+
+  /** Re-measure connector endpoints after assignments change (refs/layout settle in layout phase). */
+  useLayoutEffect(() => {
+    setLayoutVersion((v) => v + 1);
+  }, [displayAssignments]);
 
   const allAssigned = useMemo(
     () => level.question.prompts.every((p) => Boolean(assignments[p.id])),
@@ -528,6 +538,31 @@ export function MatchConnectorWorkspace({
 
   const assignTermToPromptRef = useRef(assignTermToPrompt);
   assignTermToPromptRef.current = assignTermToPrompt;
+
+  const resolveDropTarget = useCallback(
+    (
+      drag: NonNullable<typeof activeDrag>,
+      clientX: number,
+      clientY: number,
+    ): { type: "prompt" | "term"; id: string } | null => {
+      const hover = dragHoverTargetRef.current;
+      if (hover && hover.type !== drag.type) {
+        return hover;
+      }
+
+      const el = document.elementFromPoint(clientX, clientY);
+      const dotTarget = el?.closest<HTMLElement>("[data-connector-dot='true']");
+      const cardTarget = el?.closest<HTMLElement>("[data-match-card='true']");
+      const targetType = (dotTarget?.dataset.dotType ??
+        cardTarget?.dataset.cardType) as "prompt" | "term" | undefined;
+      const targetId = dotTarget?.dataset.dotId ?? cardTarget?.dataset.cardId;
+      if (targetType && targetId && targetType !== drag.type) {
+        return { type: targetType, id: targetId };
+      }
+      return null;
+    },
+    [],
+  );
 
   const selectOrConnect = useCallback(
     (type: "prompt" | "term", id: string) => {
@@ -712,13 +747,16 @@ export function MatchConnectorWorkspace({
           | undefined;
         const cardId = card?.dataset.cardId;
         const drag = activeDragRef.current;
-        const validTarget =
-          cardType && cardId && drag && cardType !== drag.type ? cardId : null;
-        if (validTarget !== dragHoverIdRef.current) {
-          dragHoverIdRef.current = validTarget;
-          setDragHoverTarget(
-            validTarget ? { type: cardType!, id: cardId! } : null,
-          );
+        const hoverTarget =
+          cardType && cardId && drag && cardType !== drag.type
+            ? { type: cardType, id: cardId }
+            : null;
+        if (
+          hoverTarget?.id !== dragHoverTargetRef.current?.id ||
+          hoverTarget?.type !== dragHoverTargetRef.current?.type
+        ) {
+          dragHoverTargetRef.current = hoverTarget;
+          setDragHoverTarget(hoverTarget);
         }
       };
 
@@ -732,7 +770,7 @@ export function MatchConnectorWorkspace({
           /* capture may already be released */
         }
         activeDragRef.current = null;
-        dragHoverIdRef.current = null;
+        dragHoverTargetRef.current = null;
         dragCleanupRef.current = null;
         setDragHoverTarget(null);
         setActiveDrag(null);
@@ -742,27 +780,18 @@ export function MatchConnectorWorkspace({
       const onUp = (e: PointerEvent) => {
         const drag = activeDragRef.current;
         if (drag) {
-          const el = document.elementFromPoint(e.clientX, e.clientY);
-          const dotTarget = el?.closest<HTMLElement>(
-            "[data-connector-dot='true']",
-          );
-          const cardTarget = el?.closest<HTMLElement>(
-            "[data-match-card='true']",
-          );
-          const target = dotTarget || cardTarget;
+          try {
+            boardRef.current?.releasePointerCapture(pointerId);
+          } catch {
+            /* capture may already be released */
+          }
 
-          if (target) {
-            const targetType = (dotTarget?.dataset.dotType ??
-              cardTarget?.dataset.cardType) as "prompt" | "term" | undefined;
-            const targetId =
-              dotTarget?.dataset.dotId ?? cardTarget?.dataset.cardId;
-            if (targetType && targetId && targetType !== drag.type) {
-              const promptId =
-                drag.type === "prompt" ? drag.id : targetId;
-              const termId =
-                drag.type === "term" ? drag.id : targetId;
-              assignTermToPromptRef.current(promptId, termId);
-            }
+          const dropTarget = resolveDropTarget(drag, e.clientX, e.clientY);
+          if (dropTarget) {
+            const promptId =
+              drag.type === "prompt" ? drag.id : dropTarget.id;
+            const termId = drag.type === "term" ? drag.id : dropTarget.id;
+            assignTermToPromptRef.current(promptId, termId);
           }
         }
         teardown();
@@ -777,7 +806,7 @@ export function MatchConnectorWorkspace({
       window.addEventListener("pointerup", onUp);
       window.addEventListener("pointercancel", onCancel);
     },
-    [],
+    [resolveDropTarget],
   );
 
   const handleCardPointerDown = useCallback(
