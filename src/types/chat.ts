@@ -102,6 +102,8 @@ export interface ChatMessage {
   instructionGuide?: InstructionGuide;
   /** Stable signature for a guide-derived seed message. */
   instructionGuideSignature?: string;
+  /** Placeholder opening before a Tutor API key or instruction analysis is available. */
+  instructionOpeningPhase?: "api-key-required";
   /** Follow-up chip already selected for this validation review card. */
   validationReviewFollowUpAction?: "hint" | "debug" | "suggestion";
   /** When true, renders as a system-style alert instead of a chat bubble. */

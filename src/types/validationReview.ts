@@ -56,33 +56,7 @@ export interface LevelProgressSnapshot {
   nextStep?: string;
 }
 
-export interface ValidationReviewCheck {
-  id: string;
-  label: string;
-  targetFile?: string;
-  matcher:
-    | {
-        type: "includes";
-        value: string;
-      }
-    | {
-        type: "regex";
-        value: string;
-        flags?: string;
-      };
-  passDetail: string;
-  failDetail: string;
-}
-
 export interface WebLab2ValidationReviewConfig {
-  mode: ValidationReviewMode;
-  title: string;
   goals: string[];
   goalLabels?: string[];
-  checks?: ValidationReviewCheck[];
-  minimumChangedFiles?: number;
-  effortPolicy?: ValidationEffortPolicy;
-  followUpPreference?: ValidationReviewFollowUpPreference;
-  /** When true, review includes save/revert checks from Version History snapshots. */
-  versionHistoryWorkflow?: boolean;
 }

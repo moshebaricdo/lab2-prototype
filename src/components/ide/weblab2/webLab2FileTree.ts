@@ -1,4 +1,4 @@
-import { PROJECT_PLAN_FILE } from "../../../lib/tutor/planningRunner";
+import { PROJECT_PLAN_FILE } from "../../../lib/tutor/runners/planningRunner";
 import type { FileItem } from "../../../types/file";
 import {
   findFileEntryInTree as findFileEntryInTreeBase,

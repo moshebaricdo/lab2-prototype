@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { stripInstructionAuthoringMetadata } from "../../../lib/tutor/instructionGuide";
+import { stripInstructionAuthoringMetadata } from "../../../lib/tutor/instruction/instructionGuide";
 import styles from "./MarkdownInstructions.module.scss";
 
 interface MarkdownInstructionsProps {

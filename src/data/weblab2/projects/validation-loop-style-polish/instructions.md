@@ -4,6 +4,6 @@
 
 **Try these prompts to help you polish the style:**
 * *Make the nav bar links feel interactive: add hover underline that animates, and a strong focus-visible outline.*
-* *Improve the [X] button so it looks distinct from [X] button, with a hover that doesn’t hurt contrast.*
+* *Improve this buttons so it looks distinct from another button, with a hover that doesn’t hurt contrast.*
 * *Give the links inside the cards a consistent style (default, hover, visited) with good readability.*
-* *Import the [x] font family from Google Fonts to my stylesheet. Then, apply this front to [x] elements.*
+* *Import this font family from Google Fonts to my stylesheet. Then, apply this front to these elements.*

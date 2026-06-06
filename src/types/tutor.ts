@@ -186,7 +186,7 @@ export type TutorAction =
   | { kind: "edit"; source: "message" | "ui" | "edit-options"; message: string }
   | {
       kind: "editClarification";
-      source: "message" | "ui";
+      source: "message" | "ui" | "focus-pick";
       message: string;
     }
   | { kind: "validationReview"; source: "continue" | "review-button" | "review-offer"; message: string }

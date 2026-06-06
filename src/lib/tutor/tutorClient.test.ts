@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FileItem } from "../../types/file";
-import { PROJECT_PLAN_FILE } from "./planningRunner";
+import { PROJECT_PLAN_FILE } from "./runners/planningRunner";
 import { pythonTutorClient, tutorClient } from "./tutorClient";
 import type {
   TutorChatMessage,
@@ -14,7 +14,7 @@ import type {
   TutorGuidanceProvider,
   TutorStructuredEditProvider,
   TutorToolProvider,
-} from "./openAiProvider";
+} from "./provider/openAiProvider";
 
 function rootProject(children: FileItem[]): FileItem[] {
   return [{ name: "Project", type: "folder", children }];
@@ -240,17 +240,13 @@ describe("tutorClient guidance routing", () => {
     expect(result.message).toContain("already complete");
   });
 
-  it("scopes curriculum guidance to project code instead of browser troubleshooting", async () => {
-    const guidanceProvider = new GuidanceProvider({
-      message: [
-        "If you updated the photo selector and it is still not working, double-check:",
-        "- That you saved your changes in `script.js`.",
-        "- That your browser is not caching the old script.",
-        "- That there are no typos in the selector.",
-        "You can also open your browser's developer tools with F12 and check the Console.",
-        "Try adding a Back button later if you want a new feature.",
-      ].join("\n"),
-    });
+  it("scopes curriculum guidance to project code via the system prompt and returns it unmodified", async () => {
+    const message = [
+      "Look at the photo selector in `script.js` and compare it to the matching id in your HTML.",
+      "- Check that the selector points at an id that actually exists on the page.",
+      "- Check there are no typos in the selector.",
+    ].join("\n");
+    const guidanceProvider = new GuidanceProvider({ message });
     const structuredProvider = new StructuredProvider();
     const toolProvider = new ToolProvider();
 
@@ -271,13 +267,13 @@ describe("tutorClient guidance routing", () => {
     });
 
     expect(result.changes).toEqual([]);
-    expect(result.message).toContain("photo selector");
-    expect(result.message).toContain("typos");
-    expect(result.message).not.toMatch(/saved|caching|developer tools|F12|Back button/i);
+    // Curriculum guidance is no longer post-scrubbed; the model output is returned verbatim.
+    expect(result.message).toBe(message);
     expect(guidanceProvider.calls).toBe(1);
     expect(structuredProvider.calls).toBe(0);
     expect(toolProvider.calls).toBe(0);
 
+    // Browser-troubleshooting / stretch prevention now lives only in the system prompt.
     const systemPrompt = guidanceProvider.messages[0][0].content;
     expect(systemPrompt).toContain("Curriculum-level Web Lab guidance");
     expect(systemPrompt).toContain("Do not tell students to save files");

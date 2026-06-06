@@ -23,24 +23,17 @@ src/
 │   ├── useLayoutState.ts
 │   └── useVersionHistoryState.ts
 ├── lib/
-│   └── tutor/                      # Functional Tutor harness
-│       ├── tutorClient.ts
-│       ├── contextBuilder.ts
-│       ├── projectAnalyzer.ts
-│       ├── contextPacker.ts
-│       ├── promptBuilder.ts
-│       ├── openAiProvider.ts
-│       ├── requestIntent.ts
-│       ├── guidanceRunner.ts
-│       ├── planningRunner.ts
-│       ├── editSessionRunner.ts
-│       ├── atomicEditApplicator.ts
-│       ├── webProjectValidator.ts
-│       ├── editValidator.ts
-│       ├── toolLoopRunner.ts
-│       ├── fallbackTutor.ts
-│       ├── saveTitle.ts
-│       └── types.ts
+│   └── tutor/                      # Functional Tutor harness (see tutor-harness.md)
+│       ├── tutorClient.ts          # Root orchestration entry points
+│       ├── types.ts
+│       ├── intent/                 # Request classification
+│       ├── routing/                # Turn resolution & UI actions
+│       ├── runners/                # Guidance, planning, edit, tool-loop
+│       ├── context/                # Conversation & project packing
+│       ├── instruction/            # Tutor-primary curriculum delivery
+│       ├── edit/                   # Proposal application & validation
+│       ├── provider/               # OpenAI transport & prompts
+│       └── conversation/           # Transcript signals & debug logging
 ├── components/
 │   ├── ui/                         # Universal primitives
 │   │   ├── AppButton.tsx

@@ -60,6 +60,9 @@ export function Sidebar({
   instructionGuide,
   instructionGuideState,
   onInstructionGuideStateChange,
+  instructionAnalysisOpening,
+  isInstructionAnalysisPending,
+  tutorInstructionsDelivery,
   instructionsMarkdown,
   instructionPinnedStep,
   aiTutorInputExperiment = "default",
@@ -345,6 +348,9 @@ export function Sidebar({
             instructionGuide={instructionGuide}
             instructionGuideState={instructionGuideState}
             onInstructionGuideStateChange={onInstructionGuideStateChange}
+            instructionAnalysisOpening={instructionAnalysisOpening}
+            isInstructionAnalysisPending={isInstructionAnalysisPending}
+            tutorInstructionsDelivery={tutorInstructionsDelivery}
             instructionsMarkdown={instructionsMarkdown}
             instructionPinnedStep={instructionPinnedStep}
             aiTutorInputExperiment={aiTutorInputExperiment}

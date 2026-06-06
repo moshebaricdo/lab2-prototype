@@ -36,7 +36,7 @@ src/
   pages/                   # Route-level entry points, grouped by level type
   data/                    # Demo project data and assessment fixtures
   hooks/                   # App-level state hooks
-  lib/tutor/               # Functional Tutor harness
+  lib/tutor/               # Functional Tutor harness (grouped: intent/, routing/, runners/, context/, instruction/, edit/, provider/, conversation/)
   styles/                  # Tokens, globals, and SCSS helpers
   types/                   # Shared type contracts
   guidelines/              # This document

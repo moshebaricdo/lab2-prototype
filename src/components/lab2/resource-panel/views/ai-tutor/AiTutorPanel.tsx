@@ -38,7 +38,7 @@ import type {
 import {
   buildCustomEditOptionChoice,
   enrichEditOptionPrompt,
-} from "../../../../../lib/tutor/editClarification";
+} from "../../../../../lib/tutor/routing/editClarification";
 import type {
   LevelProgressSnapshot,
   ValidationReviewCardData,
@@ -64,19 +64,30 @@ import {
   createNewProjectPlanQuestionnaireMessage,
   normalizeNewProjectPlanAnswers,
 } from "./newProjectPlanQuestionnaire";
-import { getInstructionGuideSignature } from "../../../../../lib/tutor/instructionGuide";
-import { getTutorApiKey } from "../../../../../hooks/useTutorApiSettings";
-import { createInitialInstructionGuideState } from "../../../../../lib/tutor/instructionCoach";
+import { getInstructionGuideSignature } from "../../../../../lib/tutor/instruction/instructionGuide";
+import type { InstructionAnalysisOpeningCache } from "../../../../../lib/tutor/instruction/instructionAnalysisRunner";
 import {
-  buildProgrammaticInstructionOpening,
-  runInstructionOpening,
-} from "../../../../../lib/tutor/instructionOpeningRunner";
-import { buildTutorOpening, formatTutorOpening } from "../../../../../lib/tutor/tutorOpening";
-import { logTutorEvent } from "../../../../../lib/tutor/tutorDebugLogger";
+  buildApiKeyRequiredSeedMessage,
+  isApiKeyRequiredSeedMessage,
+} from "../../../../../lib/tutor/instruction/instructionDelivery";
+import { useTutorApiSettings } from "../../../../../hooks/useTutorApiSettings";
+import { createInitialInstructionGuideState } from "../../../../../lib/tutor/instruction/instructionCoach";
+import { logTutorEvent } from "../../../../../lib/tutor/conversation/tutorDebugLogger";
+import {
+  appendValidationReviewResultToConversation,
+  type ValidationReviewRequestSource,
+} from "../../../../../lib/tutor/routing/validationReviewFlow";
+import {
+  composerModeAfterCardAction,
+  composerModeForSend,
+} from "../../../../../lib/tutor/routing/tutorComposerMode";
 import styles from "./AiTutorPanel.module.scss";
 
 const FOCUS_TUTOR_INPUT_EVENT = "weblab:focus-tutor-input";
-type ValidationReviewRequestSource = "card" | "composer";
+type PanelValidationReviewRequestSource = Extract<
+  ValidationReviewRequestSource,
+  "card" | "composer"
+>;
 type ValidationReviewFollowUpAction = "hint" | "debug" | "suggestion";
 
 interface CodeAttachmentContext {
@@ -191,6 +202,9 @@ interface AiTutorPanelProps {
   instructionGuide?: InstructionGuide;
   instructionGuideState?: InstructionGuideState;
   onInstructionGuideStateChange?: Dispatch<SetStateAction<InstructionGuideState>>;
+  instructionAnalysisOpening?: InstructionAnalysisOpeningCache;
+  isInstructionAnalysisPending?: boolean;
+  tutorInstructionsDelivery?: boolean;
   instructionsMarkdown?: string;
   instructionPinnedStep?: InstructionPinnedStep;
   inputExperiment?: AiTutorInputExperiment;
@@ -376,35 +390,6 @@ export function buildInstructionGuideSeedMessage(
   };
 }
 
-function hideValidationReviewOfferActionsWithAlert(messages: ChatMessage[]) {
-  let insertedAlert = false;
-  const nextMessages: ChatMessage[] = [];
-
-  for (const message of messages) {
-    if (message.validationReview?.kind !== "offer") {
-      nextMessages.push(message);
-      continue;
-    }
-
-    nextMessages.push({
-      ...message,
-      validationReview: undefined,
-    });
-
-    if (!insertedAlert) {
-      nextMessages.push({
-        role: "assistant",
-        content: "You requested a review.",
-        isAlert: true,
-        alertVariant: "validation",
-      });
-      insertedAlert = true;
-    }
-  }
-
-  return nextMessages;
-}
-
 function formatPreviewElementAttachmentName(detail: PreviewElementAttachmentDetail) {
   const tagName = (detail.tagName || "element").toLowerCase();
   const text = detail.text ? truncatePreviewText(detail.text) : "";
@@ -429,6 +414,9 @@ export function AiTutorPanel({
   instructionGuide,
   instructionGuideState,
   onInstructionGuideStateChange,
+  instructionAnalysisOpening,
+  isInstructionAnalysisPending = false,
+  tutorInstructionsDelivery = false,
   instructionsMarkdown = "",
   instructionPinnedStep,
   inputExperiment = "default",
@@ -483,7 +471,7 @@ export function AiTutorPanel({
   const [isThinking, setIsThinking] = useState(false);
   const [isValidationReviewRunning, setIsValidationReviewRunning] = useState(false);
   const [validationReviewRequestSource, setValidationReviewRequestSource] =
-    useState<ValidationReviewRequestSource | null>(null);
+    useState<PanelValidationReviewRequestSource | null>(null);
   const [generatedTutorResponse, setGeneratedTutorResponse] = useState<ChatMessage | null>(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
@@ -509,6 +497,7 @@ export function AiTutorPanel({
   codeAttachmentTimestampsRef.current = codeAttachmentTimestamps;
   codeAttachmentContextsRef.current = codeAttachmentContexts;
   generatedTutorResponseRef.current = generatedTutorResponse;
+  const { hasApiKey: hasTutorApiKey } = useTutorApiSettings();
 
   const contextFileByPath = useMemo(
     () => new Map(availableContextFiles.map((file) => [file.path, file])),
@@ -764,16 +753,51 @@ export function AiTutorPanel({
   }, [tutorDrawerPulseSignal, showInstructionsDrawer]);
 
   useEffect(() => {
-    if (!instructionGuide || !instructionsMarkdown.trim()) return;
+    if (!tutorInstructionsDelivery || !instructionsMarkdown.trim()) return;
 
     const currentMessages = chatMessagesRef.current;
+    if (currentMessages.some((message) => message.role === "user")) return;
+
+    if (!hasTutorApiKey) {
+      const shouldSeedApiKeyMessage =
+        currentMessages.length === 0 ||
+        (currentMessages.length === 1 &&
+          (isApiKeyRequiredSeedMessage(currentMessages[0]) ||
+            Boolean(currentMessages[0]?.instructionGuide)));
+
+      if (!shouldSeedApiKeyMessage) return;
+
+      setIsPreparingInstructionOpening(false);
+      pendingAssistantScrollIndexRef.current = 0;
+      setChatMessages([buildApiKeyRequiredSeedMessage()]);
+      return;
+    }
+
+    if (!instructionGuide) {
+      if (
+        currentMessages.length === 1 &&
+        (isApiKeyRequiredSeedMessage(currentMessages[0]) ||
+          Boolean(currentMessages[0]?.instructionGuide))
+      ) {
+        setChatMessages([]);
+      }
+      setIsPreparingInstructionOpening(isInstructionAnalysisPending);
+      return;
+    }
+
     const shouldSeedFresh = currentMessages.length === 0;
+    const shouldReplaceApiKeyPlaceholder =
+      currentMessages.length === 1 &&
+      isApiKeyRequiredSeedMessage(currentMessages[0]);
     const shouldReplaceStaleGuideSeed =
       currentMessages.length === 1 &&
       currentMessages[0]?.instructionGuide &&
       currentMessages[0]?.instructionGuideSignature !== instructionGuideSignature;
 
-    if (!shouldSeedFresh && !shouldReplaceStaleGuideSeed) return;
+    if (!shouldSeedFresh && !shouldReplaceApiKeyPlaceholder && !shouldReplaceStaleGuideSeed) {
+      setIsPreparingInstructionOpening(false);
+      return;
+    }
 
     const generation = openingSeedGenerationRef.current + 1;
     openingSeedGenerationRef.current = generation;
@@ -800,45 +824,39 @@ export function AiTutorPanel({
       setChatMessages([buildInstructionGuideSeedMessage(instructionGuide, content)]);
     };
 
-    const run = async () => {
-      if (!getTutorApiKey().trim()) {
-        const result = buildProgrammaticInstructionOpening(
-          instructionsMarkdown,
-          instructionGuide,
-        );
-        commitOpening(result.content, result.stepSummaries);
-        return;
-      }
+    if (
+      instructionAnalysisOpening?.guideSignature === instructionGuideSignature
+    ) {
+      setIsPreparingInstructionOpening(false);
+      commitOpening(
+        instructionAnalysisOpening.content,
+        instructionAnalysisOpening.stepSummaries,
+      );
+      return;
+    }
 
+    if (isInstructionAnalysisPending) {
       setIsPreparingInstructionOpening(true);
-      try {
-        const result = await runInstructionOpening({
-          instructionsMarkdown,
-          guide: instructionGuide,
-        });
-        commitOpening(result.content, result.stepSummaries);
-      } catch (error) {
-        logTutorEvent("instruction opening fell back to programmatic", error, "warn");
-        const result = buildProgrammaticInstructionOpening(
-          instructionsMarkdown,
-          instructionGuide,
-        );
-        commitOpening(result.content, result.stepSummaries);
-      } finally {
-        if (openingSeedGenerationRef.current === generation) {
-          setIsPreparingInstructionOpening(false);
-        }
-      }
-    };
+      return;
+    }
 
-    void run();
+    logTutorEvent(
+      "instruction opening cache missing after analysis completed",
+      { guideSignature: instructionGuideSignature },
+      "warn",
+    );
+    setIsPreparingInstructionOpening(false);
   }, [
+    hasTutorApiKey,
+    instructionAnalysisOpening,
     instructionGuide,
     instructionGuideSignature,
     instructionGuideState,
     instructionsMarkdown,
+    isInstructionAnalysisPending,
     onInstructionGuideStateChange,
     setChatMessages,
+    tutorInstructionsDelivery,
   ]);
 
   useEffect(() => {
@@ -959,7 +977,9 @@ export function AiTutorPanel({
     !hasPendingNewProjectPlanQuestionnaire &&
     !hasPendingEditOptions;
   const showInstructionOpeningThinking =
-    isPreparingInstructionOpening && chatMessages.length === 0;
+    tutorInstructionsDelivery &&
+    (isPreparingInstructionOpening || isInstructionAnalysisPending) &&
+    chatMessages.length === 0;
   const showEmptyState =
     chatMessages.length === 0 && !effectiveIsThinking && !showInstructionOpeningThinking;
 
@@ -1343,7 +1363,7 @@ export function AiTutorPanel({
     scrollToBottom();
   };
 
-  const appendValidationReview = useCallback((source: ValidationReviewRequestSource = "card") => {
+  const appendValidationReview = useCallback((source: PanelValidationReviewRequestSource = "card") => {
     if (!onValidationReview || effectiveIsThinking || hasPendingAiChanges) return;
     logTutorEvent("validation review requested", {
       source,
@@ -1377,18 +1397,14 @@ export function AiTutorPanel({
           confidence: review.confidence,
           itemCount: review.items?.length ?? 0,
         });
-        const reviewMessage: ChatMessage = {
-          role: "assistant",
-          content: buildValidationReviewResultMessage(review),
-          validationReview: review,
-        };
         setIsThinking(false);
         setIsValidationReviewRunning(false);
         setValidationReviewRequestSource(null);
-        const nextMessages = [
-          ...hideValidationReviewOfferActionsWithAlert(chatMessagesRef.current),
-          reviewMessage,
-        ];
+        const nextMessages = appendValidationReviewResultToConversation(
+          chatMessagesRef.current,
+          review,
+          buildValidationReviewResultMessage(review),
+        );
         pendingAssistantScrollIndexRef.current = nextMessages.length - 1;
         setChatMessages(nextMessages);
         setGeneratedTutorResponse(null);
@@ -1557,7 +1573,6 @@ export function AiTutorPanel({
       promptPreview: submittedContent.slice(0, 180),
     });
 
-    setTutorRequestMode("build");
     setChatInput("");
     setChatMessages(nextMessages);
     setGeneratedTutorResponse(null);
@@ -1569,6 +1584,7 @@ export function AiTutorPanel({
       "I had trouble applying that direction. Try choosing it again.",
       { skipEditClarification: true },
     );
+    setTutorRequestMode(composerModeAfterCardAction());
     scrollToBottom();
   };
 
@@ -1619,7 +1635,6 @@ export function AiTutorPanel({
       moodboardAttachmentCount: moodboardAttachments.length,
     });
 
-    setTutorRequestMode("plan");
     setChatInput("");
     setChatMessages(nextMessages);
     setGeneratedTutorResponse(null);
@@ -1630,6 +1645,7 @@ export function AiTutorPanel({
       "plan",
       "I had trouble turning those answers into a plan. Try submitting them again.",
     );
+    setTutorRequestMode(composerModeAfterCardAction());
     scrollToBottom();
   };
 
@@ -1646,7 +1662,9 @@ export function AiTutorPanel({
   const handleSendMessage = () => {
     if (!canSend) return;
     const submittedText = chatInput.trim();
-    const acceptedTutorMode = tutorRequestMode;
+    const { modeForRequest, modeAfterSend } = composerModeForSend(tutorRequestMode, {
+      persistNonAutoMode: showModelSelector,
+    });
     const baseMessages = chatMessagesRef.current;
     const acceptedSerial = requestSerialRef.current;
     openingSeedGenerationRef.current += 1;
@@ -1655,9 +1673,7 @@ export function AiTutorPanel({
     setChatInput("");
     setGeneratedTutorResponse(null);
     setIsThinking(true);
-    if (!showModelSelector && acceptedTutorMode !== "auto") {
-      setTutorRequestMode("auto");
-    }
+    setTutorRequestMode(modeAfterSend);
     scrollToBottom();
 
     void (async () => {
@@ -1692,7 +1708,8 @@ export function AiTutorPanel({
       uploadFailureCountSinceLastSendRef.current = 0;
 
       logTutorEvent("composer send clicked", {
-        requestMode: acceptedTutorMode,
+        requestMode: modeForRequest,
+        composerModeAfterSend: modeAfterSend,
         submittedPreview: submittedContent.slice(0, 240),
         attachmentCount: sentAttachments?.length ?? 0,
         failedUploadCount,
@@ -1747,14 +1764,14 @@ export function AiTutorPanel({
         startTutorRequest(
           submittedContent,
           newMessages,
-          acceptedTutorMode,
+          modeForRequest,
           submitFailureMessage,
         );
       } else if (mockTutorConfig?.response) {
         startTutorRequest(
           submittedContent,
           newMessages,
-          acceptedTutorMode,
+          modeForRequest,
           "I had trouble preparing those edits. Try sending the request again.",
         );
       } else {
@@ -1847,10 +1864,10 @@ export function AiTutorPanel({
               });
             }}
             visualCue={instructionsDrawerVisualCue}
-            showLabel={instructionGuide ? "Show Full Instructions" : undefined}
-            hideLabel={instructionGuide ? "Hide Full Instructions" : undefined}
+            showLabel={instructionGuide || tutorInstructionsDelivery ? "Show Full Instructions" : undefined}
+            hideLabel={instructionGuide || tutorInstructionsDelivery ? "Hide Full Instructions" : undefined}
             pinnedStep={instructionPinnedStep}
-            tutorDeliveryToggleLayout={Boolean(instructionGuide)}
+            tutorDeliveryToggleLayout={Boolean(instructionGuide || tutorInstructionsDelivery)}
           >
             {instructionsContent}
           </InstructionsDrawer>

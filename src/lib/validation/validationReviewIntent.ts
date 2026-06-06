@@ -17,6 +17,7 @@ const REVIEW_READINESS_PATTERNS = [
   new RegExp(`\\b(i think|i feel like|pretty sure|i'?m pretty sure|i guess)\\s+(i|we)\\s+${READINESS_MODIFIER_PATTERN}(did it|finished|completed|am done|are done|got it)\\b`, "i"),
   new RegExp(`\\b(i|we)\\s+${READINESS_MODIFIER_PATTERN}(did it|finished|completed|am done|are done|got it)\\b`, "i"),
   new RegExp(`\\b(i'?m|i am|we'?re|we are)\\s+${READINESS_MODIFIER_PATTERN}(done|finished|complete|ready)\\b`, "i"),
+  /\b(are|is|was|were)\s+(done|finished|complete|completed|ready)\b/i,
   /\b(it|that|this)\s+(works|worked|is working|fixed it)\b/i,
   /\b(it|that|this)\s+(seems|looks|appears)\s+to\s+(work|be working)\b/i,
   /\b(i think|looks like|seems like)\s+(it|that|this)\s+(did it|fixed it|worked|works)\b/i,

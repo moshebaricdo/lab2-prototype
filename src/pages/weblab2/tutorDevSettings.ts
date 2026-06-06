@@ -3,7 +3,7 @@ import type {
   TutorPolicyPreset,
   TutorSupportContext,
 } from "../../types/tutor";
-import type { TutorRunnerContracts } from "../../lib/tutor/runnerContracts";
+import type { TutorRunnerContracts } from "../../lib/tutor/runners/runnerContracts";
 
 export const TUTOR_POLICY_PRESET_DEV_KEY = "tutorPolicyPreset";
 export const ALLOW_TUTOR_BUILD_DEV_KEY = "allowTutorBuild";

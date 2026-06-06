@@ -1,0 +1,201 @@
+import type {
+  TutorAction,
+  TutorPolicy,
+  TutorRequestMode,
+} from "../../../types/tutor";
+import { isValidationReviewIntent } from "../../validation/validationReviewIntent";
+import { isUnderspecifiedEditRequest } from "./editClarification";
+import { isAffirmation } from "../intent/studentIntentSignals";
+import { type TutorRequestIntent } from "../intent/requestIntent";
+import { resolveAutoTutorRequestIntent } from "../intent/requestIntentClassifier";
+import {
+  openAiTutorProvider,
+  type TutorRequestIntentProvider,
+} from "../provider/openAiProvider";
+
+export interface TutorActionWorkflowState {
+  hasActivePlan?: boolean;
+  lastAssistantAskedPlanningQuestion?: boolean;
+  lastAssistantSuggestedEditableWork?: boolean;
+  /** The previous Tutor turn offered to review/check the student's work. */
+  lastAssistantOfferedReview?: boolean;
+  hasPendingProposal?: boolean;
+  isHistoryReadOnly?: boolean;
+  /** Skip clarification when the request already came from a selected edit option. */
+  skipEditClarification?: boolean;
+}
+
+export interface ResolveTutorActionOptions {
+  message: string;
+  requestMode?: TutorRequestMode;
+  policy: TutorPolicy;
+  workflow?: TutorActionWorkflowState;
+  /** Override the intent classifier provider (tests inject a stub). */
+  intentProvider?: TutorRequestIntentProvider;
+}
+
+const CONCRETE_BUILD_REQUEST_PATTERN =
+  /\b(build the project described in|update the plan status|check off the completed items|ready to build the project from this plan)\b/i;
+
+function deniedMessage(requested: "guidance" | "plan" | "edit" | "validationReview") {
+  if (requested === "guidance") {
+    return "I can't answer Tutor help questions in this level right now. Use the level instructions as your next step.";
+  }
+  if (requested === "edit") {
+    return "I can't edit files in this level, but you can make the change in the editor. I can help you reason through the next step or point you to the likely file.";
+  }
+  if (requested === "plan") {
+    return "I can't create a plan file in this level, but you can describe your idea and I can help you think through the next step.";
+  }
+  return "I can't check your work in this level, but you can use the instructions as a checklist. I can help you review what to look at next.";
+}
+
+function denyAction(requested: "guidance" | "plan" | "edit" | "validationReview"): TutorAction {
+  return {
+    kind: "denied",
+    requested,
+    fallback: requested === "guidance" ? "message" : "guidance",
+    disabledReason: "capability-disabled",
+    message: deniedMessage(requested),
+  };
+}
+
+function shouldClarifyBeforeEdit(
+  message: string,
+  workflow: TutorActionWorkflowState,
+) {
+  if (workflow.skipEditClarification) return false;
+  if (CONCRETE_BUILD_REQUEST_PATTERN.test(message)) return false;
+  return isUnderspecifiedEditRequest(message);
+}
+
+function resolveEditAction({
+  message,
+  policy,
+  source,
+  workflow,
+}: {
+  message: string;
+  policy: TutorPolicy;
+  source: "message" | "ui";
+  workflow: TutorActionWorkflowState;
+}): TutorAction {
+  if (!policy.capabilities.workspaceEdits) {
+    return denyAction("edit");
+  }
+
+  if (shouldClarifyBeforeEdit(message, workflow)) {
+    return {
+      kind: "editClarification",
+      source,
+      message,
+    };
+  }
+
+  return { kind: "edit", source, message };
+}
+
+function actionForIntent(
+  intent: TutorRequestIntent,
+  message: string,
+  policy: TutorPolicy,
+  workflow: TutorActionWorkflowState,
+): TutorAction {
+  if (intent === "edit") {
+    return resolveEditAction({ message, policy, source: "message", workflow });
+  }
+
+  if (intent === "planning") {
+    return policy.capabilities.planning
+      ? { kind: "plan", source: "message", message }
+      : denyAction("plan");
+  }
+
+  return policy.capabilities.guidance
+    ? { kind: "guidance", source: "message", message }
+    : denyAction("guidance");
+}
+
+function isDoThatFollowUp(message: string) {
+  return /^\s*(please\s+)?(do|make|apply|try)\s+(that|it|this)\s*\.?\s*$/i.test(message) ||
+    /^\s*(yes|yeah|yep|ok|okay),?\s+(please\s+)?(do|make|apply|try)\s+(that|it|this)\s*\.?\s*$/i.test(message);
+}
+
+export async function resolveTutorAction({
+  message,
+  requestMode = "auto",
+  policy,
+  workflow = {},
+  intentProvider = openAiTutorProvider,
+}: ResolveTutorActionOptions): Promise<TutorAction> {
+  if (workflow.hasPendingProposal) {
+    return {
+      kind: "denied",
+      requested: "edit",
+      fallback: "message",
+      disabledReason: "pending-proposal",
+      message: "Review the current Tutor suggestion first. Accept or reject it, then ask for the next change.",
+    };
+  }
+
+  if (workflow.isHistoryReadOnly && requestMode === "build") {
+    return {
+      kind: "denied",
+      requested: "edit",
+      fallback: "message",
+      disabledReason: "history-read-only",
+      message: "I can't edit a past version. Return to the current version, then ask for the change again.",
+    };
+  }
+
+  // Readiness to validate overrides sticky Build/Plan/Help composer mode (e.g. after
+  // picking a direction on the edit-options card, which temporarily sets Build).
+  if (
+    policy.capabilities.validationReview &&
+    (isValidationReviewIntent(message) ||
+      // "yes" / "sure" / "go ahead" confirming a review Tutor just offered.
+      (workflow.lastAssistantOfferedReview && isAffirmation(message)))
+  ) {
+    return {
+      kind: "validationReview",
+      source: "review-offer",
+      message,
+    };
+  }
+
+  if (requestMode === "build") {
+    return resolveEditAction({ message, policy, source: "ui", workflow });
+  }
+
+  if (requestMode === "plan") {
+    return policy.capabilities.planning
+      ? { kind: "plan", source: "ui", message }
+      : denyAction("plan");
+  }
+
+  if (requestMode === "help") {
+    return policy.capabilities.guidance
+      ? { kind: "guidance", source: "ui", message }
+      : denyAction("guidance");
+  }
+
+  if (
+    workflow.lastAssistantSuggestedEditableWork &&
+    policy.capabilities.workspaceEdits &&
+    isDoThatFollowUp(message)
+  ) {
+    return { kind: "edit", source: "message", message };
+  }
+
+  const { intent } = await resolveAutoTutorRequestIntent({
+    message,
+    context: {
+      hasActivePlan: workflow.hasActivePlan,
+      lastAssistantAskedPlanningQuestion: workflow.lastAssistantAskedPlanningQuestion,
+      supportContext: policy.supportContext,
+    },
+    provider: intentProvider,
+  });
+
+  return actionForIntent(intent, message, policy, workflow);
+}

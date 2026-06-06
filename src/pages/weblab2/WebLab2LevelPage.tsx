@@ -48,14 +48,20 @@ import type {
   WebLab2ValidationReviewConfig,
 } from "../../types/validationReview";
 import {
+  assessmentNeedsVersionHistorySnapshots,
   buildVersionHistoryValidationSummary,
+  createValidationReview,
   createValidationReviewOffer,
-  createWebLab2ValidationReview,
-} from "../../lib/validation/weblab2Review";
+} from "../../lib/validation/validationHarness";
 import { createAiWebLab2ValidationReview } from "../../lib/validation/aiWebLab2Review";
+import { resolveValidationReviewProfile } from "../../lib/validation/validationReviewProfile";
 import { buildLevelProgressSnapshot } from "../../lib/validation/levelProgress";
-import { PROJECT_PLAN_FILE } from "../../lib/tutor/planningRunner";
-import { logTutorEvent } from "../../lib/tutor/tutorDebugLogger";
+import { PROJECT_PLAN_FILE } from "../../lib/tutor/runners/planningRunner";
+import { logTutorEvent } from "../../lib/tutor/conversation/tutorDebugLogger";
+import {
+  appendValidationReviewResultToConversation,
+} from "../../lib/tutor/routing/validationReviewFlow";
+import { buildValidationReviewResultMessage } from "../../components/lab2/resource-panel/views/ai-tutor/AiTutorPanel";
 import {
   decodeStarterSharePayload,
   encodeStarterSharePayload,
@@ -153,9 +159,21 @@ import {
 } from "../../lib/editor/initialOpenFiles";
 import { useWebLab2Preview } from "../../components/ide/weblab2/useWebLab2Preview";
 import { useWebLab2TutorFlow } from "../../components/ide/weblab2/useWebLab2TutorFlow";
-import { buildInstructionGuide } from "../../lib/tutor/instructionGuide";
-import { deriveInstructionPinnedStep } from "../../lib/tutor/instructionPinnedStep";
-import { resetInstructionGuideState } from "../../lib/tutor/instructionCoach";
+import {
+  runInstructionAnalysis,
+  toInstructionAnalysisOpeningCache,
+  type InstructionAnalysisOpeningCache,
+} from "../../lib/tutor/instruction/instructionAnalysisRunner";
+import {
+  TUTOR_INSTRUCTION_API_KEY_PINNED_STEP,
+  TUTOR_INSTRUCTION_LOADING_PINNED_STEP,
+} from "../../lib/tutor/instruction/instructionDelivery";
+import { deriveInstructionPinnedStep } from "../../lib/tutor/instruction/instructionPinnedStep";
+import { buildInstructionGuide } from "../../lib/tutor/instruction/instructionGuide";
+import {
+  resetInstructionGuideState,
+  syncInstructionGuideStateWithLevelProgress,
+} from "../../lib/tutor/instruction/instructionCoach";
 
 const OPEN_TUTOR_PANEL_EVENT = "weblab:open-tutor-panel";
 
@@ -419,12 +437,10 @@ export function WebLab2LevelPage({
   const resolvedTutorInstructionsDelivery = Boolean(
     resolved[TUTOR_INSTRUCTIONS_DELIVERY_DEV_KEY],
   );
-  const instructionGuide = useMemo(
-    () => resolvedTutorInstructionsDelivery && resolvedInstructionsMarkdown.trim()
-      ? buildInstructionGuide(resolvedInstructionsMarkdown)
-      : undefined,
-    [resolvedInstructionsMarkdown, resolvedTutorInstructionsDelivery],
-  );
+  const [instructionGuide, setInstructionGuide] = useState<ReturnType<typeof buildInstructionGuide>>();
+  const [instructionAnalysisOpening, setInstructionAnalysisOpening] =
+    useState<InstructionAnalysisOpeningCache>();
+  const [isInstructionAnalysisPending, setIsInstructionAnalysisPending] = useState(false);
   const [instructionGuideState, setInstructionGuideState] =
     useState<InstructionGuideState | undefined>();
   useEffect(() => {
@@ -432,11 +448,6 @@ export function WebLab2LevelPage({
       resetInstructionGuideState(instructionGuide, current)
     );
   }, [instructionGuide]);
-
-  const instructionPinnedStep = useMemo(
-    () => deriveInstructionPinnedStep(instructionGuide, instructionGuideState),
-    [instructionGuide, instructionGuideState],
-  );
   const resolvedEnableSidebarCollapse = Boolean(resolved.enableSidebarCollapse);
   const resolvedCollapseSidebarByDefault = Boolean(resolved.collapseSidebarByDefault);
   const resolvedValidationContinueMode = resolveValidationContinueMode(
@@ -700,11 +711,83 @@ export function WebLab2LevelPage({
         : devLabels.map((label, index) => label ?? goals[index]),
     };
   }, [resolved, validationReviewConfig]);
+  const instructionAnalysisSessionKey = useMemo(() => {
+    if (!resolvedTutorInstructionsDelivery || !resolvedInstructionsMarkdown.trim()) {
+      return "";
+    }
+    const keyPresence = hasTutorApiKey ? "keyed" : "unkeyed";
+    if (!validationReviewConfig) {
+      return `${keyPresence}\0${resolvedInstructionsMarkdown}`;
+    }
+    const rawRequirements = parseValidationRequirements(
+      resolved[VALIDATION_REQUIREMENTS_DEV_KEY],
+      validationReviewConfig.goals,
+    );
+    const goals = rawRequirements
+      .map(stripValidationRequirementLabel)
+      .filter((goal) => goal.trim());
+    return `${keyPresence}\0${resolvedInstructionsMarkdown}\0${goals.join("\0")}`;
+  }, [
+    hasTutorApiKey,
+    resolvedTutorInstructionsDelivery,
+    resolvedInstructionsMarkdown,
+    validationReviewConfig,
+    resolved[VALIDATION_REQUIREMENTS_DEV_KEY],
+  ]);
+  const instructionAnalysisSessionRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!instructionAnalysisSessionKey) {
+      instructionAnalysisSessionRef.current = null;
+      setInstructionGuide(undefined);
+      setInstructionAnalysisOpening(undefined);
+      setIsInstructionAnalysisPending(false);
+      return;
+    }
+
+    if (instructionAnalysisSessionRef.current === instructionAnalysisSessionKey) {
+      return;
+    }
+    instructionAnalysisSessionRef.current = instructionAnalysisSessionKey;
+
+    if (!hasTutorApiKey) {
+      setInstructionGuide(undefined);
+      setInstructionAnalysisOpening(undefined);
+      setIsInstructionAnalysisPending(false);
+      return;
+    }
+
+    const markdown = resolvedInstructionsMarkdown;
+    setInstructionGuide(undefined);
+    setInstructionAnalysisOpening(undefined);
+    setIsInstructionAnalysisPending(true);
+
+    const assessment = effectiveValidationReviewConfig?.goals.some((goal) => goal.trim())
+      ? {
+          goals: effectiveValidationReviewConfig.goals,
+          goalLabels: effectiveValidationReviewConfig.goalLabels,
+        }
+      : undefined;
+
+    let cancelled = false;
+    void runInstructionAnalysis({
+      instructionsMarkdown: markdown,
+      assessment,
+    }).then((result) => {
+      if (cancelled) return;
+      setInstructionGuide(result.guide);
+      setInstructionAnalysisOpening(toInstructionAnalysisOpeningCache(result));
+      setIsInstructionAnalysisPending(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [instructionAnalysisSessionKey, hasTutorApiKey, resolvedInstructionsMarkdown]);
   const tutorDevSettings = useMemo(
     () => resolveWebLab2TutorDevSettings({
       values: resolved,
       routeSupportContext: tutorSupportContext,
-      hasValidationReviewConfig: Boolean(effectiveValidationReviewConfig && hasTutorApiKey),
+      hasValidationReviewConfig: Boolean(effectiveValidationReviewConfig),
       allowTutorBuild,
       allowTutorPlan: routeAllowTutorPlan,
       allowTutorHelp,
@@ -716,7 +799,6 @@ export function WebLab2LevelPage({
       allowTutorBuild,
       allowTutorHelp,
       effectiveValidationReviewConfig,
-      hasTutorApiKey,
       resolved,
       routeAllowTutorPlan,
       tutorBuildContract,
@@ -727,12 +809,26 @@ export function WebLab2LevelPage({
   );
   const validationReviewOffer = useMemo(
     () => effectiveValidationReviewConfig && tutorDevSettings.policy.capabilities.validationReview
-      ? createValidationReviewOffer(effectiveValidationReviewConfig)
+      ? createValidationReviewOffer(
+        effectiveValidationReviewConfig,
+        resolvedInstructionsMarkdown,
+      )
       : undefined,
-    [effectiveValidationReviewConfig, tutorDevSettings.policy.capabilities.validationReview],
+    [
+      effectiveValidationReviewConfig,
+      resolvedInstructionsMarkdown,
+      tutorDevSettings.policy.capabilities.validationReview,
+    ],
+  );
+  const evaluateVersionHistory = useMemo(
+    () => Boolean(
+      effectiveValidationReviewConfig &&
+      assessmentNeedsVersionHistorySnapshots(effectiveValidationReviewConfig),
+    ),
+    [effectiveValidationReviewConfig],
   );
   const versionHistorySummary = useMemo(() => {
-    if (!effectiveValidationReviewConfig?.versionHistoryWorkflow || !useFunctionalVersionHistory) {
+    if (!evaluateVersionHistory || !useFunctionalVersionHistory) {
       return undefined;
     }
 
@@ -742,7 +838,7 @@ export function WebLab2LevelPage({
     );
   }, [
     currentFileStructure,
-    effectiveValidationReviewConfig?.versionHistoryWorkflow,
+    evaluateVersionHistory,
     historySnapshots,
     useFunctionalVersionHistory,
   ]);
@@ -750,15 +846,20 @@ export function WebLab2LevelPage({
     if (!effectiveValidationReviewConfig) {
       throw new Error("Validation review requested without a review config.");
     }
+    const reviewProfile = resolveValidationReviewProfile(
+      effectiveValidationReviewConfig,
+      { instructionsMarkdown: resolvedInstructionsMarkdown },
+    );
     logTutorEvent("page validation review started", {
-      title: effectiveValidationReviewConfig.title,
-      mode: effectiveValidationReviewConfig.mode,
+      title: reviewProfile.title,
+      mode: reviewProfile.reviewMode,
       goalCount: effectiveValidationReviewConfig.goals.length,
       conversationTurns: chatMessages.length,
     });
 
-    const fallbackReview = () => createWebLab2ValidationReview({
+    const fallbackReview = () => createValidationReview({
       config: effectiveValidationReviewConfig,
+      instructionsMarkdown: resolvedInstructionsMarkdown,
       currentFileStructure,
       initialFileStructure,
       chatMessages,
@@ -769,6 +870,7 @@ export function WebLab2LevelPage({
     try {
       review = await createAiWebLab2ValidationReview({
         config: effectiveValidationReviewConfig,
+        instructionsMarkdown: resolvedInstructionsMarkdown,
         currentFileStructure,
         initialFileStructure,
         chatMessages,
@@ -800,6 +902,7 @@ export function WebLab2LevelPage({
     currentFileStructure,
     effectiveValidationReviewConfig,
     initialFileStructure,
+    resolvedInstructionsMarkdown,
     versionHistorySummary,
   ]);
   useEffect(() => {
@@ -866,6 +969,39 @@ export function WebLab2LevelPage({
     () => buildLevelProgressSnapshot(latestValidationReview),
     [latestValidationReview],
   );
+
+  useEffect(() => {
+    setInstructionGuideState((current) =>
+      syncInstructionGuideStateWithLevelProgress(
+        instructionGuide,
+        current,
+        levelProgress,
+      ),
+    );
+  }, [instructionGuide, levelProgress]);
+
+  const instructionPinnedStep = useMemo(() => {
+    if (!resolvedTutorInstructionsDelivery) return undefined;
+    if (!hasTutorApiKey) return TUTOR_INSTRUCTION_API_KEY_PINNED_STEP;
+    if (isInstructionAnalysisPending || !instructionGuide) {
+      return TUTOR_INSTRUCTION_LOADING_PINNED_STEP;
+    }
+    return deriveInstructionPinnedStep(
+      instructionGuide,
+      instructionGuideState,
+      levelProgress,
+      effectiveValidationReviewConfig,
+    );
+  }, [
+    effectiveValidationReviewConfig,
+    hasTutorApiKey,
+    instructionGuide,
+    instructionGuideState,
+    isInstructionAnalysisPending,
+    levelProgress,
+    resolvedTutorInstructionsDelivery,
+  ]);
+
   const tutorPolicy = tutorDevSettings.policy;
   const tutorRunnerContracts = tutorDevSettings.runnerContracts;
   const handleRejectAiChanges = useCallback(() => {
@@ -1268,12 +1404,11 @@ export function WebLab2LevelPage({
           status: review.status,
           confidence: review.confidence,
         });
-        const reviewMessage: ChatMessage = {
-          role: "assistant",
-          content: "I checked your work before continuing. Use the review below to decide what to do next.",
-          validationReview: review,
-        };
-        setChatMessages((current) => [...current, reviewMessage]);
+        setChatMessages((current) => appendValidationReviewResultToConversation(
+          current,
+          review,
+          buildValidationReviewResultMessage(review),
+        ));
       })
       .catch((error) => {
         logTutorEvent("continue validation review failed", error, "error");
@@ -1354,6 +1489,9 @@ export function WebLab2LevelPage({
     instructionGuide,
     instructionGuideState,
     onInstructionGuideStateChange: setInstructionGuideState,
+    instructionAnalysisOpening,
+    isInstructionAnalysisPending,
+    tutorInstructionsDelivery: resolvedTutorInstructionsDelivery,
     instructionsMarkdown: resolvedInstructionsMarkdown,
     instructionPinnedStep,
     instructionsContent: resolvedInstructionsContent,

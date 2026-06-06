@@ -1,19 +1,26 @@
-import { getNoKeyTutorFallback, getUnsafeEditFallback } from "./fallbackTutor";
+import { getNoKeyTutorFallback, getUnsafeEditFallback } from "./provider/fallbackTutor";
 import {
   openAiTutorProvider,
   openAiTutorToolProvider,
   type TutorGuidanceProvider,
   type TutorStructuredEditProvider,
   type TutorToolProvider,
-} from "./openAiProvider";
-import { runTutorGuidance } from "./guidanceRunner";
-import { runTutorEditSession } from "./editSessionRunner";
-import { fallbackPlanning, runTutorPlanning } from "./planningRunner";
-import { runTutorToolLoop } from "./toolLoopRunner";
-import { resolveTutorRequestPolicy } from "./requestIntent";
-import { buildRunnerSystemPromptAddendum } from "./runnerContracts";
-import { logTutorEvent } from "./tutorDebugLogger";
+} from "./provider/openAiProvider";
+import { runTutorGuidance } from "./runners/guidanceRunner";
+import { runTutorEditSession } from "./runners/editSessionRunner";
+import { fallbackPlanning, runTutorPlanning } from "./runners/planningRunner";
+import { runTutorToolLoop } from "./runners/toolLoopRunner";
+import {
+  runnerAllowsPlanEdits,
+  runnerAllowsWorkspaceEdits,
+  runnerIntentFromTutorAction,
+} from "./routing/tutorActionRunner";
+import { resolveTutorRequestPolicy } from "./intent/requestIntent";
+import { buildRunnerSystemPromptAddendum } from "./runners/runnerContracts";
+import { logTutorEvent } from "./conversation/tutorDebugLogger";
+import { lastAssistantAskedPlanningQuestion } from "./conversation/tutorConversationSignals";
 import type { TutorEditResult, TutorRequest } from "./types";
+import type { TutorAction } from "../../types/tutor";
 import type { ChatMessage } from "../../types/chat";
 import type { FileItem } from "../../types/file";
 
@@ -44,17 +51,7 @@ function hasActivePlan(files: FileItem[], parentPath = ""): boolean {
 }
 
 function didLastAssistantAskPlanningQuestion(conversation: ChatMessage[]) {
-  let lastAssistantMessage: ChatMessage | undefined;
-  for (let index = conversation.length - 1; index >= 0; index -= 1) {
-    const message = conversation[index];
-    if (message.role === "assistant" && !message.isAlert) {
-      lastAssistantMessage = message;
-      break;
-    }
-  }
-  if (!lastAssistantMessage?.content.includes("?")) return false;
-  return /\b(plan|project|idea|audience|feature|style|interaction|question|before\s+building|before\s+we\s+build)\b/i
-    .test(lastAssistantMessage.content);
+  return lastAssistantAskedPlanningQuestion(conversation);
 }
 
 function summarizeTutorResult(result: TutorEditResult) {
@@ -71,6 +68,44 @@ function summarizeTutorResult(result: TutorEditResult) {
   };
 }
 
+function resolveRunnerFromRequest(
+  resolvedAction: TutorAction | undefined,
+  message: string,
+  requestMode: TutorRequest["requestMode"],
+  supportContext: TutorRequest["supportContext"],
+  files: FileItem[],
+  conversation: ChatMessage[],
+) {
+  if (resolvedAction) {
+    const intent = runnerIntentFromTutorAction(resolvedAction);
+    if (!intent) {
+      throw new Error(`tutorClient received non-runner action: ${resolvedAction.kind}`);
+    }
+    return {
+      intent,
+      allowWorkspaceEdits: runnerAllowsWorkspaceEdits(resolvedAction),
+      allowPlanEdits: runnerAllowsPlanEdits(resolvedAction),
+      supportContext: supportContext ?? "standalone-project",
+      routingSource: "resolved-action" as const,
+      resolvedActionKind: resolvedAction.kind,
+    };
+  }
+
+  const policy = resolveTutorRequestPolicy(message, requestMode ?? "auto", {
+    hasActivePlan: hasActivePlan(files),
+    lastAssistantAskedPlanningQuestion: didLastAssistantAskPlanningQuestion(conversation),
+    supportContext,
+  });
+  return {
+    intent: policy.intent,
+    allowWorkspaceEdits: policy.allowWorkspaceEdits,
+    allowPlanEdits: policy.allowPlanEdits,
+    supportContext: policy.supportContext,
+    routingSource: "legacy-request-mode" as const,
+    resolvedActionKind: undefined,
+  };
+}
+
 export async function tutorClient({
   message,
   conversation = [],
@@ -82,20 +117,25 @@ export async function tutorClient({
   instructionFocus,
   requestMode = "auto",
   supportContext = "standalone-project",
+  resolvedAction,
   guidanceProvider = openAiTutorProvider,
   structuredProvider = openAiTutorProvider,
   toolProvider = openAiTutorToolProvider,
 }: TutorRequest & {
+  resolvedAction?: TutorAction;
   guidanceProvider?: TutorGuidanceProvider;
   structuredProvider?: TutorStructuredEditProvider;
   toolProvider?: TutorToolProvider;
 }): Promise<TutorEditResult> {
-  const policy = resolveTutorRequestPolicy(message, requestMode, {
-    hasActivePlan: hasActivePlan(files),
-    lastAssistantAskedPlanningQuestion: didLastAssistantAskPlanningQuestion(conversation),
+  const runner = resolveRunnerFromRequest(
+    resolvedAction,
+    message,
+    requestMode,
     supportContext,
-  });
-  const intent = policy.intent;
+    files,
+    conversation,
+  );
+  const intent = runner.intent;
   const runnerSystemPromptAddendum = buildRunnerSystemPromptAddendum({
     basePrompt: additionalSystemPrompt,
     intent,
@@ -103,10 +143,12 @@ export async function tutorClient({
   });
   logTutorEvent("core request classified", {
     requestMode,
-    supportContext,
+    routingSource: runner.routingSource,
+    resolvedActionKind: runner.resolvedActionKind,
+    supportContext: runner.supportContext,
     intent,
-    allowWorkspaceEdits: policy.allowWorkspaceEdits,
-    allowPlanEdits: policy.allowPlanEdits,
+    allowWorkspaceEdits: runner.allowWorkspaceEdits,
+    allowPlanEdits: runner.allowPlanEdits,
     conversationTurns: conversation.length,
     topLevelFiles: files.length,
     hasLevelInstructions: Boolean(levelInstructionsMarkdown.trim()),
@@ -125,7 +167,7 @@ export async function tutorClient({
 
   if (intent === "guidance") {
     try {
-      logTutorEvent("guidance path started", { supportContext: policy.supportContext });
+      logTutorEvent("guidance path started", { supportContext: runner.supportContext });
       return returnResult(await runTutorGuidance({
         message,
         conversation,
@@ -134,7 +176,7 @@ export async function tutorClient({
         levelInstructionsMarkdown,
         levelProgress,
         instructionFocus,
-        supportContext: policy.supportContext,
+        supportContext: runner.supportContext,
         provider: guidanceProvider,
       }), "guidance");
     } catch (error) {
@@ -150,7 +192,7 @@ export async function tutorClient({
 
   if (intent === "planning") {
     try {
-      logTutorEvent("planning path started", { supportContext: policy.supportContext });
+      logTutorEvent("planning path started", { supportContext: runner.supportContext });
       const planning = await runTutorPlanning({
         message,
         conversation,
@@ -184,7 +226,7 @@ export async function tutorClient({
 
   let editSession;
   try {
-    logTutorEvent("edit session path started", { supportContext: policy.supportContext });
+    logTutorEvent("edit session path started", { supportContext: runner.supportContext });
     editSession = await runTutorEditSession({
       message,
       conversation,
@@ -192,7 +234,7 @@ export async function tutorClient({
       additionalSystemPrompt: runnerSystemPromptAddendum,
       levelInstructionsMarkdown,
       levelProgress,
-      supportContext: policy.supportContext,
+      supportContext: runner.supportContext,
       provider: structuredProvider,
     });
   } catch (error) {
@@ -216,7 +258,7 @@ export async function tutorClient({
 
   let toolLoop;
   try {
-    logTutorEvent("tool loop path started", { supportContext: policy.supportContext });
+    logTutorEvent("tool loop path started", { supportContext: runner.supportContext });
     toolLoop = await runTutorToolLoop({
       message,
       conversation,
@@ -224,7 +266,7 @@ export async function tutorClient({
       additionalSystemPrompt: runnerSystemPromptAddendum,
       levelInstructionsMarkdown,
       levelProgress,
-      supportContext: policy.supportContext,
+      supportContext: runner.supportContext,
       provider: toolProvider,
     });
   } catch (error) {

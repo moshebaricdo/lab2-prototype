@@ -1,0 +1,39 @@
+# Validation Harness Spec (assessment-owned checklist)
+
+## Invariants
+
+1. **Checklist = assessment goals only** — no appending requirements from instructions or derived rows.
+2. **Evaluator routing is generalized** — goal requirement text resolves to `ai`, `version-history-save`, or `version-history-revert`; no level ids or flags.
+3. **Labels and ids come from assessment** — `requirement-{index}` + bracket labels from `assessment.md`.
+4. **Effort is a gate on AI goals, not a checklist row** — when `effortPolicy` is `required`, AI-evaluated goals fail without iteration evidence; no `workspace-progress` item.
+5. **Version history snapshots** run when any assessment goal needs them, not when instructions mention Version History.
+
+## Modules
+
+| Module | Role |
+|---|---|
+| `validationGoalEvaluators.ts` | Resolve evaluator kind per goal index |
+| `validationHarness.ts` | Evidence, checklist assembly, rollup, offer/fallback review |
+| `aiWebLab2Review.ts` | AI path for `ai` goals only; merges via harness |
+
+## Goal → evaluator patterns
+
+- **version-history-save** — goal text mentions saving a manual version / Version History with description
+- **version-history-revert** — goal text mentions restoring/reverting to a saved version
+- **ai** — default; model (or no-key placeholder) + optional effort gate
+
+## Rollup
+
+- Item status (`pass` / `warn` / `missing`) is authoritative.
+- Aggregate status derived via `getValidationReviewSummaryStatus`; `likely_complete` gates Continue.
+- `getNextStep` uses the first incomplete assessment item label when present.
+
+## Pinned steps
+
+When a route passes `validationReviewConfig`, the collapsed instructions pin uses **`Step N of M`** where `M` is the assessment goal count and `N` comes from the first incomplete criterion after Check My Work (or `1` before any review). Summary text uses review detail when present, otherwise the assessment goal label. Instruction guide shape (linear vs choice-based) does not affect the pin.
+
+Levels without validation config keep guide-driven pinning (linear steps or open-ended focus).
+
+## Level builder contract
+
+Authors declare all Continue requirements under `## AI Review Requirements` in `assessment.md`. Instructions remain student-facing prose only.

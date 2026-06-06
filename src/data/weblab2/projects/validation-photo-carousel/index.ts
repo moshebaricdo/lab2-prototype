@@ -1,10 +1,5 @@
 import type { FileItem } from "../../../../types/file";
-import type { WebLab2ValidationReviewConfig } from "../../../../types/validationReview";
-import {
-  parseAssessmentChecks,
-  parseAssessmentGoalLabels,
-  parseAssessmentGoals,
-} from "../validationAssessment";
+import { buildValidationReviewConfig } from "../validationAssessment";
 import validationPhotoCarouselAssessmentMarkdown from "./assessment.md?raw";
 import photo1Url from "./files/6ecdd334-d9e8-4425-9468-2976df16571f.png?inline";
 import photo2Url from "./files/8435cb23-6c4c-4306-b3a5-c704a344407a.png?inline";
@@ -52,12 +47,6 @@ export { validationPhotoCarouselInstructionsMarkdown };
 /** Editor tabs to open when the photo carousel level loads. First path is selected. */
 export const validationPhotoCarouselInitialOpenFiles = ["index.html", "script.js"];
 
-export const validationPhotoCarouselReviewConfig: WebLab2ValidationReviewConfig = {
-  mode: "technical",
-  title: "Photo carousel bug review",
-  goals: parseAssessmentGoals(validationPhotoCarouselAssessmentMarkdown),
-  goalLabels: parseAssessmentGoalLabels(validationPhotoCarouselAssessmentMarkdown),
-  checks: parseAssessmentChecks(validationPhotoCarouselAssessmentMarkdown),
-  minimumChangedFiles: 1,
-  followUpPreference: "debug",
-};
+export const validationPhotoCarouselReviewConfig = buildValidationReviewConfig(
+  validationPhotoCarouselAssessmentMarkdown,
+);

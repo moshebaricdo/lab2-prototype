@@ -1,25 +1,14 @@
 import type { FileItem } from "../../../../types/file";
-import type { WebLab2ValidationReviewConfig } from "../../../../types/validationReview";
-import {
-  parseAssessmentChecks,
-  parseAssessmentGoalLabels,
-  parseAssessmentGoals,
-} from "../validationAssessment";
+import { buildValidationReviewConfig } from "../validationAssessment";
 import validationStarshipLoaderAssessmentMarkdown from "./assessment.md?raw";
 import indexHtml from "./files/index.html?raw";
 import validationStarshipLoaderInstructionsMarkdown from "./instructions.md?raw";
 import scriptJs from "./files/script.js?raw";
 import stylesCss from "./files/style.css?raw";
 
-export const validationStarshipLoaderReviewConfig: WebLab2ValidationReviewConfig = {
-  mode: "technical",
-  title: "Starship loader loop review",
-  goals: parseAssessmentGoals(validationStarshipLoaderAssessmentMarkdown),
-  goalLabels: parseAssessmentGoalLabels(validationStarshipLoaderAssessmentMarkdown),
-  checks: parseAssessmentChecks(validationStarshipLoaderAssessmentMarkdown),
-  minimumChangedFiles: 1,
-  followUpPreference: "debug",
-};
+export const validationStarshipLoaderReviewConfig = buildValidationReviewConfig(
+  validationStarshipLoaderAssessmentMarkdown,
+);
 
 export const validationStarshipLoaderFileStructure: FileItem[] = [
   {

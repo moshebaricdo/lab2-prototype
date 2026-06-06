@@ -50,6 +50,9 @@ interface SidebarPanelContentProps {
   instructionGuide: SidebarProps["instructionGuide"];
   instructionGuideState: SidebarProps["instructionGuideState"];
   onInstructionGuideStateChange: SidebarProps["onInstructionGuideStateChange"];
+  instructionAnalysisOpening: SidebarProps["instructionAnalysisOpening"];
+  isInstructionAnalysisPending: SidebarProps["isInstructionAnalysisPending"];
+  tutorInstructionsDelivery: SidebarProps["tutorInstructionsDelivery"];
   instructionsMarkdown: SidebarProps["instructionsMarkdown"];
   instructionPinnedStep: SidebarProps["instructionPinnedStep"];
   aiTutorInputExperiment: NonNullable<SidebarProps["aiTutorInputExperiment"]>;
@@ -139,6 +142,9 @@ export function SidebarPanelContent({
   instructionGuide,
   instructionGuideState,
   onInstructionGuideStateChange,
+  instructionAnalysisOpening,
+  isInstructionAnalysisPending,
+  tutorInstructionsDelivery,
   instructionsMarkdown,
   instructionPinnedStep,
   aiTutorInputExperiment,
@@ -249,6 +255,9 @@ export function SidebarPanelContent({
           instructionGuide={instructionGuide}
           instructionGuideState={instructionGuideState}
           onInstructionGuideStateChange={onInstructionGuideStateChange}
+          instructionAnalysisOpening={instructionAnalysisOpening}
+          isInstructionAnalysisPending={isInstructionAnalysisPending}
+          tutorInstructionsDelivery={tutorInstructionsDelivery}
           instructionsMarkdown={instructionsMarkdown}
           instructionPinnedStep={instructionPinnedStep}
           inputExperiment={aiTutorInputExperiment}

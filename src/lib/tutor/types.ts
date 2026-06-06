@@ -3,12 +3,10 @@ import type { FileItem } from "../../types/file";
 import type { LevelProgressSnapshot } from "../../types/validationReview";
 import type {
   InstructionFocusContext,
-  InstructionOpeningStepSummary,
-  TutorOpening,
   TutorRequestMode,
   TutorSupportContext,
 } from "../../types/tutor";
-import type { TutorRunnerContracts } from "./runnerContracts";
+import type { TutorRunnerContracts } from "./runners/runnerContracts";
 
 export type TutorFileStatus = "new" | "modified" | "deleted";
 
@@ -57,6 +55,14 @@ export interface TutorGuidanceResponse {
   message?: string;
 }
 
+export interface TutorRequestIntentResponse {
+  intent?: "guidance" | "planning" | "edit";
+  isConcept?: boolean;
+  asksForAnswer?: boolean;
+  confidence?: "high" | "low";
+  reason?: string;
+}
+
 export interface TutorEditClarificationOptionResponse {
   id?: string;
   label?: string;
@@ -73,24 +79,45 @@ export interface TutorEditClarificationResult {
   editOptions?: EditOptionsCardData;
 }
 
-export interface TutorInstructionOpeningStepResponse {
-  id?: string;
+/**
+ * One node of a derived instruction guide. Carries both the structural fields
+ * (title/prompt/intent) and the student-facing opening copy (shortLabel/summary)
+ * so a single analysis call describes a step (linear) or focus area (open-ended).
+ */
+export interface TutorInstructionAnalysisStepResponse {
+  title?: string;
+  prompt?: string;
+  /** Linear: observe|inspect|explain|fix|verify|ask-for-help. Open-ended: style-polish|content-choice|debug-focus|concept-focus. */
+  intent?: string;
+  editOriented?: boolean;
   shortLabel?: string;
   summary?: string;
 }
 
-export interface TutorInstructionOpeningResponse {
+/** Consolidated model output: guide shape + opening copy from raw instructions. */
+export interface TutorInstructionAnalysisResponse {
+  mode?: "linear" | "open-ended" | "choice-based";
   tone?: string;
+  overview?: string;
   goal?: string;
   success?: string;
   firstMove?: string;
-  steps?: TutorInstructionOpeningStepResponse[];
+  constraints?: string[];
+  steps?: TutorInstructionAnalysisStepResponse[];
 }
 
-export interface TutorInstructionOpeningResult {
-  opening: TutorOpening;
-  content: string;
-  stepSummaries: InstructionOpeningStepSummary[];
+/** Picks which open-ended focus a student message is choosing. */
+export interface TutorInstructionOptionSelectionResponse {
+  optionId?: string;
+  confidence?: "high" | "low";
+  reason?: string;
+}
+
+/** Whether a student reply satisfies the active linear instruction step. */
+export interface TutorInstructionStepSatisfactionResponse {
+  satisfied?: boolean;
+  confidence?: "high" | "low";
+  reason?: string;
 }
 
 export type TutorValidatedChange = {

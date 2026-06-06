@@ -7,6 +7,7 @@ import type {
   AiTutorInputExperiment,
   InstructionGuide,
   InstructionGuideState,
+  InstructionOpeningStepSummary,
   InstructionPinnedStep,
   MockTutorConfig,
   TutorContextFile,
@@ -103,7 +104,14 @@ export interface SidebarProps {
   instructionsDrawerExperiment?: InstructionsDrawerExperiment;
   instructionGuide?: InstructionGuide;
   instructionGuideState?: InstructionGuideState;
-  onInstructionGuideStateChange?: Dispatch<SetStateAction<InstructionGuideState>>;
+  onInstructionGuideStateChange?: Dispatch<SetStateAction<InstructionGuideState | undefined>>;
+  instructionAnalysisOpening?: {
+    guideSignature: string;
+    content: string;
+    stepSummaries: InstructionOpeningStepSummary[];
+  };
+  isInstructionAnalysisPending?: boolean;
+  tutorInstructionsDelivery?: boolean;
   instructionsMarkdown?: string;
   instructionPinnedStep?: InstructionPinnedStep;
   aiTutorInputExperiment?: AiTutorInputExperiment;

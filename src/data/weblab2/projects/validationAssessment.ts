@@ -1,4 +1,4 @@
-import type { ValidationReviewCheck } from "../../../types/validationReview";
+import type { WebLab2ValidationReviewConfig } from "../../../types/validationReview";
 
 function stripListMarker(line: string) {
   return line.replace(/^[-*]\s+/, "").replace(/^\d+\.\s+/, "").trim();
@@ -67,14 +67,12 @@ export function parseAssessmentGoalLabels(markdown: string) {
   );
 }
 
-export function parseAssessmentChecks(markdown: string): ValidationReviewCheck[] {
-  const match = markdown.match(/```validation-checks\s*\n([\s\S]*?)```/);
-  if (!match) return [];
-
-  try {
-    const parsed = JSON.parse(match[1]) as ValidationReviewCheck[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+/** Builds the route review config from assessment markdown (AI review requirements only). */
+export function buildValidationReviewConfig(
+  assessmentMarkdown: string,
+): WebLab2ValidationReviewConfig {
+  return {
+    goals: parseAssessmentGoals(assessmentMarkdown),
+    goalLabels: parseAssessmentGoalLabels(assessmentMarkdown),
+  };
 }

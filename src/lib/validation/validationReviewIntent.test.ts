@@ -10,6 +10,7 @@ describe("isValidationReviewIntent", () => {
     expect(isValidationReviewIntent("That worked, thanks.")).toBe(true);
     expect(isValidationReviewIntent("Oh you're right, I updated and it works now.")).toBe(true);
     expect(isValidationReviewIntent("I'm done.")).toBe(true);
+    expect(isValidationReviewIntent("I'm done!")).toBe(true);
     expect(isValidationReviewIntent("I fixed it.")).toBe(true);
     expect(isValidationReviewIntent("I fixed the button, can you check?")).toBe(true);
     expect(isValidationReviewIntent("I fixed the Next button.")).toBe(true);
@@ -27,6 +28,7 @@ describe("isValidationReviewIntent", () => {
     expect(isValidationReviewIntent("I'm basically finished.")).toBe(true);
     expect(isValidationReviewIntent("I'm definitely ready.")).toBe(true);
     expect(isValidationReviewIntent("We're finally ready.")).toBe(true);
+    expect(isValidationReviewIntent("The nav links are done.")).toBe(true);
   });
 
   it("does not treat debugging or negated readiness as review intent", () => {

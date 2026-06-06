@@ -2,7 +2,7 @@ import { useCallback, useRef, useState, type Dispatch, type SetStateAction } fro
 import type { ChatMessage } from "../../../types/chat";
 import type { FileItem } from "../../../types/file";
 import type { LevelProgressSnapshot } from "../../../types/validationReview";
-import type { TutorRunnerContracts } from "../../../lib/tutor/runnerContracts";
+import type { TutorRunnerContracts } from "../../../lib/tutor/runners/runnerContracts";
 import type {
   TutorPolicy,
   TutorRequestMode,
@@ -12,13 +12,20 @@ import type {
   InstructionGuide,
   InstructionGuideState,
 } from "../../../types/tutor";
-import { runEditClarification } from "../../../lib/tutor/editClarificationRunner";
+import { runEditClarification } from "../../../lib/tutor/routing/editClarificationRunner";
 import type { ValidationReviewCardData } from "../../../types/validationReview";
-import { PROJECT_PLAN_FILE } from "../../../lib/tutor/planningRunner";
+import { PROJECT_PLAN_FILE } from "../../../lib/tutor/runners/planningRunner";
 import { tutorClient } from "../../../lib/tutor/tutorClient";
-import { resolveTutorAction } from "../../../lib/tutor/tutorAction";
-import { resolveInstructionCoachResponse } from "../../../lib/tutor/instructionCoach";
-import { logTutorEvent } from "../../../lib/tutor/tutorDebugLogger";
+import { resolveTutorTurn } from "../../../lib/tutor/routing/resolveTutorTurn";
+import { logTutorEvent } from "../../../lib/tutor/conversation/tutorDebugLogger";
+import {
+  buildValidationReviewOfferChatMessage,
+} from "../../../lib/tutor/routing/validationReviewFlow";
+import {
+  lastAssistantAskedPlanningQuestion,
+  lastAssistantInvitedEditableFollowUp,
+  lastAssistantOfferedValidationReview,
+} from "../../../lib/tutor/conversation/tutorConversationSignals";
 import { pathBasename } from "../../../utils/fileTree";
 import { mergeStagedUploadImagesIntoFileChanges } from "../../lab2/resource-panel/views/ai-tutor/tutorFileChanges";
 import {
@@ -119,46 +126,6 @@ export function useWebLab2TutorFlow({
     });
   }, []);
 
-  const didLastAssistantAskPlanningQuestion = useCallback((conversation: ChatMessage[]) => {
-    const lastAssistantMessage = [...conversation]
-      .reverse()
-      .find((message) => message.role === "assistant" && !message.isAlert);
-    if (!lastAssistantMessage?.content.includes("?")) return false;
-    return /\b(plan|project|idea|audience|feature|style|interaction|question|before\s+building|before\s+we\s+build)\b/i
-      .test(lastAssistantMessage.content);
-  }, []);
-
-  const didLastAssistantSuggestEditableWork = useCallback((conversation: ChatMessage[]) => {
-    const lastAssistantMessage = [...conversation]
-      .reverse()
-      .find((message) => message.role === "assistant" && !message.isAlert);
-    if (!lastAssistantMessage) return false;
-    if (lastAssistantMessage.fileChanges?.length || lastAssistantMessage.validationReview) {
-      return false;
-    }
-    return /\b(style\.css|index\.html|script\.js|selector|button|link|hover|focus|style|spacing|color|colour|background|padding|margin|border|class|id)\b/i
-      .test(lastAssistantMessage.content);
-  }, []);
-
-  const buildValidationOfferMessage = useCallback((
-    submittedContent: string,
-    review: ValidationReviewCardData,
-  ) => {
-    const hasMultipleRequirements = (review.requirements?.length ?? 0) > 1;
-
-    if (/\b(works|worked|working|fixed|done|finished|complete|completed)\b/i.test(submittedContent)) {
-      return "Great. I can check your work now and let you know whether you're ready to continue.";
-    }
-
-    if (/\b(check|review|validate|grade)\b/i.test(submittedContent)) {
-      return hasMultipleRequirements
-        ? "I can check your progress and show what looks complete and what to work on next."
-        : "I can check your work and let you know whether you're ready to continue.";
-    }
-
-    return "When you're ready, I can check your work and let you know whether you're ready to continue.";
-  }, []);
-
   const handleTutorSubmit = useCallback(async (
     message: string,
     conversation: ChatMessage[],
@@ -167,17 +134,23 @@ export function useWebLab2TutorFlow({
   ) => {
     const workflow = {
       hasActivePlan: hasActivePlan(currentFileStructure),
-      lastAssistantAskedPlanningQuestion: didLastAssistantAskPlanningQuestion(conversation),
-      lastAssistantSuggestedEditableWork: didLastAssistantSuggestEditableWork(conversation),
+      lastAssistantAskedPlanningQuestion: lastAssistantAskedPlanningQuestion(conversation),
+      lastAssistantSuggestedEditableWork: lastAssistantInvitedEditableFollowUp(conversation),
+      lastAssistantOfferedReview: lastAssistantOfferedValidationReview(conversation),
       hasPendingProposal: hasPendingAiChanges,
       skipEditClarification: options.skipEditClarification,
     };
-    const action = resolveTutorAction({
+    const turn = await resolveTutorTurn({
       message,
       requestMode,
       policy: tutorPolicy,
       workflow,
+      instruction: {
+        guide: instructionGuide,
+        guideState: instructionGuideState,
+      },
     });
+    const { action, instructionCoachResult, instructionFocus } = turn;
 
     if (routingDiagnostics) {
       logTutorEvent("ui action resolved", {
@@ -190,14 +163,6 @@ export function useWebLab2TutorFlow({
       });
     }
 
-    const instructionCoachResult = action.kind === "guidance"
-      ? resolveInstructionCoachResponse({
-          message,
-          guide: instructionGuide,
-          guideState: instructionGuideState,
-        })
-      : null;
-    const instructionFocus = instructionCoachResult?.instructionFocus;
     if (instructionCoachResult && instructionGuide) {
       logTutorEvent("instruction coach handled student message", {
         messagePreview: message.slice(0, 180),
@@ -216,11 +181,7 @@ export function useWebLab2TutorFlow({
         title: validationReviewOffer.title,
         status: validationReviewOffer.status,
       });
-      return {
-        role: "assistant",
-        content: buildValidationOfferMessage(message, validationReviewOffer),
-        validationReview: validationReviewOffer,
-      } satisfies ChatMessage;
+      return buildValidationReviewOfferChatMessage(message, validationReviewOffer);
     }
 
     if (action.kind === "validationReview" || action.kind === "denied") {
@@ -236,7 +197,7 @@ export function useWebLab2TutorFlow({
 
     if (action.kind === "editClarification") {
       const clarification = await runEditClarification({
-        message,
+        message: action.message,
         conversation,
         files: currentFileStructure,
         additionalSystemPrompt: runnerContracts.build ?? "",
@@ -246,6 +207,8 @@ export function useWebLab2TutorFlow({
       });
       logTutorEvent("edit clarification result received", {
         messagePreview: message.slice(0, 180),
+        clarificationSource: action.source,
+        clarificationMessagePreview: action.message.slice(0, 180),
         hasEditOptions: Boolean(clarification.editOptions),
         optionCount: clarification.editOptions?.options.length ?? 0,
         introLength: clarification.message.length,
@@ -257,8 +220,10 @@ export function useWebLab2TutorFlow({
       } satisfies ChatMessage;
     }
 
-    const resolvedRequestMode: TutorRequestMode =
-      action.kind === "edit" ? "build" : action.kind === "plan" ? "plan" : "help";
+    const runnerAction =
+      action.kind === "edit" || action.kind === "guidance" || action.kind === "plan"
+        ? action
+        : undefined;
     const wasEmptyOrPlanOnlyProject = !hasWorkspaceProjectFiles(currentFileStructure);
     const result = await tutorClient({
       message,
@@ -268,11 +233,11 @@ export function useWebLab2TutorFlow({
       levelInstructionsMarkdown,
       levelProgress,
       instructionFocus,
-      requestMode: resolvedRequestMode,
+      resolvedAction: runnerAction,
       supportContext: tutorSupportContext,
     });
     logTutorEvent("functional tutor result received", {
-      resolvedRequestMode,
+      resolvedAction: runnerAction?.kind,
       changeCount: result.changes.length,
       changes: result.changes.map((change) => ({
         fileName: change.fileName,
@@ -336,10 +301,7 @@ export function useWebLab2TutorFlow({
     } satisfies ChatMessage;
   }, [
     beginAiProposal,
-    buildValidationOfferMessage,
     currentFileStructure,
-    didLastAssistantAskPlanningQuestion,
-    didLastAssistantSuggestEditableWork,
     hasActivePlan,
     hasPendingAiChanges,
     levelInstructionsMarkdown,
