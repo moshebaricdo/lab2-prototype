@@ -1,0 +1,35 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  background: var(--ds-background-neutral-secondary);
+}
+
+.canvasWrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--ds-background-neutral-primary);
+}
+
+.flow {
+  width: 100%;
+  height: 100%;
+}
+
+.flow :global(.react-flow__background) {
+  color: var(--ds-background-neutral-secondary);
+}
+
+.flowGrab :global(.react-flow__pane) {
+  cursor: grab;
+}
+
+.flowGrab :global(.react-flow__pane:active) {
+  cursor: grabbing;
+}
+
+.flowSelect :global(.react-flow__pane) {
+  cursor: default;
+}

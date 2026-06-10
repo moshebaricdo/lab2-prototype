@@ -21,6 +21,7 @@
     "@radix-ui/react-popover": "^1.1.6",
     "@radix-ui/react-scroll-area": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@xyflow/react": "^12.11.0",
     "clsx": "^2.1.1",
     "html-to-image": "^1.11.13",
     "lz-string": "^1.5.0",
@@ -61,6 +62,8 @@
     "test:tutor:live": "vitest run src/lib/tutor/**/*.liveeval.test.ts",
     "test:tutor:live:analysis": "vitest run src/lib/tutor/instruction/instructionAnalysisRunner.liveeval.test.ts",
     "test:tutor:live:intent": "vitest run src/lib/tutor/intent/requestIntentClassifier.liveeval.test.ts",
+    "test:tutor:live:clarification": "vitest run src/lib/tutor/routing/editClarificationClassifier.liveeval.test.ts",
+    "test:tutor:live:validation": "vitest run src/lib/validation/validationReviewIntentClassifier.liveeval.test.ts",
     "typecheck": "tsc --noEmit"
   }
 }

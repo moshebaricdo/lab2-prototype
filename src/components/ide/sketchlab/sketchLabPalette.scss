@@ -1,0 +1,52 @@
+/* Sketch Lab preset palette — spec values from design mocks (light + dark). */
+
+:root,
+[data-theme="light"] {
+  --sketch-palette-bg-gray: #dfe3e9;
+  --sketch-palette-bg-red: #ffe2e2;
+  --sketch-palette-bg-yellow: #fef3c6;
+  --sketch-palette-bg-green: #d0fae5;
+  --sketch-palette-bg-blue: #dbeafe;
+  --sketch-palette-bg-purple: #f3e8ff;
+  --sketch-palette-bg-pink: #fce7f3;
+
+  --sketch-palette-stroke-neutral: #292f36;
+  --sketch-palette-text-neutral: #292f36;
+
+  --sketch-palette-text-red: #e7000b;
+  --sketch-palette-text-yellow: #d08700;
+  --sketch-palette-text-green: #009966;
+  --sketch-palette-text-blue: #155dfc;
+  --sketch-palette-text-purple: #9810fa;
+  --sketch-palette-text-pink: #e60076;
+}
+
+[data-theme="dark"] {
+  --sketch-palette-bg-gray: #576575;
+  --sketch-palette-bg-red: #82181a;
+  --sketch-palette-bg-yellow: #733e0a;
+  --sketch-palette-bg-green: #006045;
+  --sketch-palette-bg-blue: #1c398e;
+  --sketch-palette-bg-purple: #59168b;
+  --sketch-palette-bg-pink: #861043;
+
+  --sketch-palette-stroke-neutral: #ffffff;
+  --sketch-palette-text-neutral: #ffffff;
+
+  --sketch-palette-text-red: #ffc9c9;
+  --sketch-palette-text-yellow: #fff085;
+  --sketch-palette-text-green: #a4f4cf;
+  --sketch-palette-text-blue: #bedbff;
+  --sketch-palette-text-purple: #e9d4ff;
+  --sketch-palette-text-pink: #fccee8;
+}
+
+/* Chromatic stroke colors are shared across themes. */
+:root {
+  --sketch-palette-stroke-red: #fb2c36;
+  --sketch-palette-stroke-yellow: #f0b100;
+  --sketch-palette-stroke-green: #00bc7d;
+  --sketch-palette-stroke-blue: #2b7fff;
+  --sketch-palette-stroke-purple: #ad46ff;
+  --sketch-palette-stroke-pink: #f6339a;
+}
