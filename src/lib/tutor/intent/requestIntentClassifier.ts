@@ -6,11 +6,8 @@ import {
 } from "../provider/openAiProvider";
 import {
   applyPlanRevisionOverride,
-  classifyTutorRequestIntent,
-  isAmbiguousTutorRequestIntent,
   type TutorRequestIntent,
 } from "./requestIntent";
-import { asksForExplicitAnswer, mentionsConcept } from "./studentIntentSignals";
 import { logTutorEvent } from "../conversation/tutorDebugLogger";
 import type { TutorChatMessage } from "../types";
 
@@ -26,8 +23,9 @@ export interface RequestIntentClassification {
   isConcept: boolean;
   /** The student explicitly wants the exact answer/fix spelled out. */
   asksForAnswer: boolean;
-  /** Whether the verdict came from the model or the deterministic fallback. */
+  /** Whether the verdict came from the model or a non-model fallback. */
   source: "model" | "deterministic";
+  reason?: string;
 }
 
 const INTENT_CLASSIFIER_SYSTEM_PROMPT = `You route a student's chat message in a coding lab to one of three behaviors. Judge the student's INTENT in context, not individual keywords. A verb like "build" or "fix" used inside a question ("why won't this build?", "how do I fix this?") is a help request, not an edit request. Conversely, an indirect request that implies a change ("the heading feels small", "these buttons are boring") is an edit request even with no edit verb.
@@ -72,28 +70,30 @@ function isTutorRequestIntent(value: unknown): value is TutorRequestIntent {
   return value === "guidance" || value === "planning" || value === "edit";
 }
 
-/**
- * Deterministic fallback verdict. Reuses the existing regex cascade for `intent`
- * and the shared lexicon for the concept/answer flags, so the no-key path keeps
- * today's exact behavior.
- */
-function deterministicClassification(
-  message: string,
-  context: RequestIntentClassifierContext,
+function tutorApiKeyAvailable() {
+  try {
+    return Boolean(getTutorApiKey().trim());
+  } catch {
+    return false;
+  }
+}
+
+/** Safe default when functional routing cannot call the model. */
+export function failClosedGuidanceIntent(
+  reason = "api-key-required",
 ): RequestIntentClassification {
   return {
-    intent: classifyTutorRequestIntent(message, context),
-    isConcept: mentionsConcept(message),
-    asksForAnswer: asksForExplicitAnswer(message),
+    intent: "guidance",
+    isConcept: false,
+    asksForAnswer: false,
     source: "deterministic",
+    reason,
   };
 }
 
 /**
- * Classifies a student message with the model when a session key is present,
- * falling back to the deterministic regex cascade on no-key, malformed output,
- * or request failure. The deterministic path is always a valid result, so the
- * lab keeps working with no key and the model call can never hard-fail routing.
+ * Classifies a student message with the model. Functional Tutor requires an
+ * API key; without one, returns guidance (use mock Tutor mode for demos).
  */
 export async function classifyTutorRequestIntentWithModel({
   message,
@@ -104,10 +104,8 @@ export async function classifyTutorRequestIntentWithModel({
   context?: RequestIntentClassifierContext;
   provider?: TutorRequestIntentProvider;
 }): Promise<RequestIntentClassification> {
-  const fallback = deterministicClassification(message, context);
-
-  if (provider === openAiTutorProvider && !getTutorApiKey().trim()) {
-    return fallback;
+  if (provider === openAiTutorProvider && !tutorApiKeyAvailable()) {
+    return failClosedGuidanceIntent();
   }
 
   let response;
@@ -116,37 +114,33 @@ export async function classifyTutorRequestIntentWithModel({
       buildIntentClassifierMessages(message, context),
     );
   } catch (error) {
-    logTutorEvent("intent classifier failed, using deterministic fallback", error, "warn");
-    return fallback;
+    logTutorEvent("intent classifier failed, fail-closed to guidance", error, "warn");
+    return failClosedGuidanceIntent("classifier-error");
   }
 
   if (!response || !isTutorRequestIntent(response.intent)) {
-    logTutorEvent("intent classifier returned no usable intent, using deterministic fallback", {
+    logTutorEvent("intent classifier returned no usable intent, fail-closed to guidance", {
       hasResponse: Boolean(response),
     }, "warn");
-    return fallback;
+    return failClosedGuidanceIntent("classifier-invalid-output");
+  }
+
+  if (response.confidence === "low") {
+    return failClosedGuidanceIntent("classifier-low-confidence");
   }
 
   return {
     intent: response.intent,
-    isConcept:
-      typeof response.isConcept === "boolean"
-        ? response.isConcept
-        : fallback.isConcept,
-    asksForAnswer:
-      typeof response.asksForAnswer === "boolean"
-        ? response.asksForAnswer
-        : fallback.asksForAnswer,
+    isConcept: response.isConcept === true,
+    asksForAnswer: response.asksForAnswer === true,
     source: "model",
+    reason: typeof response.reason === "string" ? response.reason : undefined,
   };
 }
 
 /**
- * Resolves the intent for an `auto`-mode request: trusts the deterministic
- * verdict when the regex is confident (instant, no network), and only defers to
- * the model classifier when the regex is ambiguous. The plan-revision guard is
- * applied to both paths so they share semantics. Explicit overrides
- * (build/plan/help) are handled upstream and never reach this resolver.
+ * Resolves intent for an `auto`-mode request via the model classifier when keyed.
+ * Explicit composer modes (build/plan/help) are handled upstream in tutorAction.
  */
 export async function resolveAutoTutorRequestIntent({
   message,
@@ -157,17 +151,11 @@ export async function resolveAutoTutorRequestIntent({
   context?: RequestIntentClassifierContext;
   provider?: TutorRequestIntentProvider;
 }): Promise<RequestIntentClassification> {
-  let classification: RequestIntentClassification;
-
-  if (isAmbiguousTutorRequestIntent(message, context)) {
-    classification = await classifyTutorRequestIntentWithModel({
-      message,
-      context,
-      provider,
-    });
-  } else {
-    classification = deterministicClassification(message, context);
-  }
+  const classification = await classifyTutorRequestIntentWithModel({
+    message,
+    context,
+    provider,
+  });
 
   return {
     ...classification,

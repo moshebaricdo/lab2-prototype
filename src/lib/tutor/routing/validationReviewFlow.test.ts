@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ValidationReviewCardData } from "../../../types/validationReview";
 import {
+  appendChatTriggeredValidationReview,
   appendValidationReviewResultToConversation,
   buildValidationOfferMessage,
   buildValidationReviewOfferChatMessage,
@@ -50,5 +51,22 @@ describe("validationReviewFlow", () => {
     const next = hideValidationReviewOfferActionsWithAlert(conversation);
     expect(next.filter((message) => message.isAlert)).toHaveLength(1);
     expect(next[0].validationReview).toBeUndefined();
+  });
+
+  it("appends alert and summary when chat triggers review without an offer card", () => {
+    const summary = { ...offer, kind: "summary" as const, status: "likely_complete" as const };
+    const next = appendChatTriggeredValidationReview(
+      [{ role: "user" as const, content: "check my work" }],
+      summary,
+      "Nice work.",
+    );
+
+    expect(next).toHaveLength(3);
+    expect(next[1]).toMatchObject({
+      isAlert: true,
+      alertVariant: "validation",
+      content: "You requested a review.",
+    });
+    expect(next[2]?.validationReview?.kind).toBe("summary");
   });
 });

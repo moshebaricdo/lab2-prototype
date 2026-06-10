@@ -89,7 +89,15 @@ function applyInstructionCoach(
 export async function resolveTutorTurn(
   options: ResolveTutorTurnOptions,
 ): Promise<ResolvedTutorTurn> {
-  const { instruction, policy, ...actionOptions } = options;
-  const action = await resolveTutorAction({ ...actionOptions, policy });
+  const { instruction, policy, editClarification, ...actionOptions } = options;
+  const action = await resolveTutorAction({
+    ...actionOptions,
+    policy,
+    editClarification: {
+      ...editClarification,
+      guide: editClarification?.guide ?? instruction?.guide,
+      guideState: editClarification?.guideState ?? instruction?.guideState,
+    },
+  });
   return applyInstructionCoach(actionOptions.message, action, instruction, policy);
 }

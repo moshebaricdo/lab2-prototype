@@ -9,6 +9,7 @@ import {
   stripInstructionAuthoringMetadata,
 } from "./instructionGuide";
 import { buildProgrammaticInstructionOpening } from "./instructionOpeningRunner";
+import { formatInstructionOpeningMessage } from "./tutorOpening";
 import {
   openAiTutorProvider,
   type TutorInstructionAnalysisProvider,
@@ -87,9 +88,9 @@ Return JSON only with this shape:
   "mode": "linear|open-ended",
   "tone": "debug|concept|creative|procedure",
   "overview": "short phrase naming the whole task or, for open-ended, the shared goal",
-  "goal": "one complete sentence framing what the student will work on",
-  "success": "optional one sentence describing what a strong result looks like; use \"\" if unclear",
-  "firstMove": "one complete, inviting sentence for how to begin",
+  "goal": "paragraph 1 of the student opening — warm, succinct task framing aligned with the instructions",
+  "success": "optional coach-only note on what done looks like; use \"\" — never shown in the student opening",
+  "firstMove": "paragraph 2 — a helpful starting point; invite them to try the first step and share what they notice or want to focus on",
   "constraints": ["short rule the student must respect", "..."],
   "steps": [
     {
@@ -108,12 +109,15 @@ Steps:
 - "editOriented" is true when acting on the step means changing code (asking Tutor to make an edit), false for read/observe/reflect steps.
 - Include only real steps from the instructions and assessment context. Never invent steps, files, or classroom materials. 1 to 6 steps.
 
-Voice (this is the priority for goal, success, firstMove, and every summary):
+Voice (this is the priority for goal, firstMove, and every summary):
 - Friendly and guiding, never bossy. A warm lab partner inviting the student in, not an instructor issuing orders.
+- goal and firstMove are the complete student opening, shown in order with a blank line between them. Write them as finished copy — the app does not add greetings, wrappers, or extra sentences.
+- Be succinct and aligned with the level instructions. Frame what you'll work on in goal; give a concrete starting point in firstMove.
+- Vary phrasing naturally across levels. Avoid a fixed opener formula (do not lean on the same greeting or "In this level" every time).
 - Prefer collaborative framing ("Let's figure out…", "We'll…", "Take a look at…", "Try…") over commanding imperatives. Avoid "You will…", "You must…", and forceful words like "exactly" or "carefully".
-- Each of goal, success, firstMove is exactly one complete sentence, roughly 8-20 words, with normal capitalization and a single ending mark. No run-ons, no semicolons, no fragments, no double punctuation.
-- For "linear", firstMove points to the genuine first step. For "open-ended", firstMove invites the student to pick a direction (you may name a couple of focus areas as examples) and asks what they want to try first.
-- Do NOT start goal with throat-clearing like "This level is about" or "Your goal is to"; the app adds no wrapper.
+- Do not add a separate success/outcome sentence to the opening — no "A strong result is…", "You'll know you're on track when…", or similar. The success field is coach-only and not shown to students.
+- Each of goal and firstMove is exactly one complete sentence, roughly 8-22 words, with normal capitalization and a single ending mark. No run-ons, no semicolons, no fragments, no double punctuation.
+- For "linear", firstMove points to the genuine first step and asks what they observe. For "open-ended", firstMove invites the student to pick a direction (you may name a couple of focus areas as examples) and asks what they want to try first.
 - Never echo raw worksheet labels (numbered step titles, section headers like "Do This"), and never paste the instructions markdown.`;
 
 export function buildInstructionAnalysisUserPayload({
@@ -323,8 +327,7 @@ function buildResultFromResponse(
       .join(",")}`,
   };
 
-  const firstParagraph = [opening.goal, opening.success].filter(Boolean).join(" ");
-  const content = [firstParagraph, opening.firstMove].filter(Boolean).join("\n\n");
+  const content = formatInstructionOpeningMessage(opening);
 
   return { guide, opening, content, stepSummaries };
 }

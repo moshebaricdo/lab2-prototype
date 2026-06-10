@@ -43,6 +43,7 @@ describe("createAiWebLab2ValidationReview", () => {
                 status: "likely_complete",
                 confidence: "high",
                 headline: "Everything looks complete.",
+                summaryMessage: "Your hover styles show real experimentation — you're good to continue.",
                 items: [
                   {
                     label: "Interactive styles are polished.",
@@ -73,6 +74,9 @@ describe("createAiWebLab2ValidationReview", () => {
       status: "missing",
       detail: expect.stringContaining("own refinement"),
     }));
+    expect(review?.summaryMessage).toBe(
+      "Your hover styles show real experimentation — you're good to continue.",
+    );
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.openai.com/v1/chat/completions",
       expect.objectContaining({

@@ -34,6 +34,8 @@ export interface ValidationReviewCardData {
   requirementLabels?: string[];
   nextStep?: string;
   followUpPreference?: ValidationReviewFollowUpPreference;
+  /** Optional LLM-authored chat text shown above the review card UI. */
+  summaryMessage?: string;
 }
 
 export interface LevelProgressCriterion {

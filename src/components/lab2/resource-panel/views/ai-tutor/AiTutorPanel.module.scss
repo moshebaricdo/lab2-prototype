@@ -1253,3 +1253,141 @@
   gap: 8px;
   padding: 4px 0;
 }
+
+/* ─── Agent context receipt — collapsible "Read N items" activity node ─── */
+
+.agentReceiptNode {
+  margin-bottom: 8px;
+}
+
+.agentReceiptToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-tertiary);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ds-text-neutral-primary);
+  }
+}
+
+.agentReceiptChevron {
+  font-size: 9px;
+  opacity: 0.7;
+}
+
+.agentReceiptList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 6px 0 0;
+  padding: 0 0 0 8px;
+  list-style: none;
+}
+
+.agentReceiptListItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ds-text-neutral-tertiary);
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+}
+
+/* ─── Agent transition divider (switch / unlock) ─────────────────────── */
+
+.agentDivider {
+  --agent-divider-accent: var(--ds-text-info-primary);
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.agentDividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.agentDividerPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+
+  &[data-accent="violet"] { --agent-divider-accent: #6c4ccf; }
+  &[data-accent="blue"] { --agent-divider-accent: #1a7ee6; }
+  &[data-accent="magenta"] { --agent-divider-accent: #d6479d; }
+  &[data-accent="green"] { --agent-divider-accent: #0e9f6e; }
+
+  background: color-mix(in srgb, var(--agent-divider-accent) 10%, transparent);
+  color: var(--agent-divider-accent);
+}
+
+.agentDividerDetail {
+  flex-shrink: 0;
+  max-width: 45%;
+  overflow: hidden;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Agent hand-off card (inline switch offer) ──────────────────────── */
+
+.agentHandOffCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--ds-background-neutral-primary);
+}
+
+.agentHandOffIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--ds-background-info-extra-light);
+  color: var(--ds-text-info-primary);
+}
+
+.agentHandOffBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.agentHandOffLabel {
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-primary);
+}
+
+.agentHandOffReason {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.35;
+}

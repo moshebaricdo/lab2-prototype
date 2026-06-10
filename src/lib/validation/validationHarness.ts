@@ -381,6 +381,7 @@ export function createValidationReview({
   chatMessages,
   versionHistorySummary,
   aiEvaluationsByGoalIndex,
+  summaryMessage,
 }: {
   config: WebLab2ValidationReviewConfig;
   instructionsMarkdown?: string;
@@ -389,6 +390,7 @@ export function createValidationReview({
   chatMessages: ChatMessage[];
   versionHistorySummary?: VersionHistoryValidationSummary;
   aiEvaluationsByGoalIndex?: Partial<Record<number, AiGoalEvaluation>>;
+  summaryMessage?: string;
 }): ValidationReviewCardData {
   const profile = resolveValidationReviewProfile(config, { instructionsMarkdown });
   const evidence = buildValidationReviewEvidence({
@@ -416,6 +418,7 @@ export function createValidationReview({
     requirementLabels: config.goalLabels,
     evidence: buildEvidenceSummary({ evidence }),
     nextStep: getNextStep(summary.status, items),
+    ...(summaryMessage?.trim() ? { summaryMessage: summaryMessage.trim() } : {}),
   };
 }
 

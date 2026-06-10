@@ -20,7 +20,12 @@ import { resolveTutorTurn } from "../../../lib/tutor/routing/resolveTutorTurn";
 import { logTutorEvent } from "../../../lib/tutor/conversation/tutorDebugLogger";
 import {
   buildValidationReviewOfferChatMessage,
+  appendChatTriggeredValidationReview,
 } from "../../../lib/tutor/routing/validationReviewFlow";
+import {
+  generateValidationOfferMessage,
+  resolveValidationResultMessage,
+} from "../../../lib/validation/validationReviewMessaging";
 import {
   lastAssistantAskedPlanningQuestion,
   lastAssistantInvitedEditableFollowUp,
@@ -57,6 +62,7 @@ interface UseWebLab2TutorFlowOptions {
   tutorPolicy: TutorPolicy;
   routingDiagnostics?: boolean;
   validationReviewOffer?: ValidationReviewCardData;
+  onValidationReview?: () => Promise<ValidationReviewCardData>;
   useFilePreview: boolean;
   selectedPlanPath: string;
   hasPendingAiChanges: boolean;
@@ -89,6 +95,7 @@ export function useWebLab2TutorFlow({
   tutorPolicy,
   routingDiagnostics = true,
   validationReviewOffer,
+  onValidationReview,
   useFilePreview,
   selectedPlanPath,
   hasPendingAiChanges,
@@ -149,6 +156,17 @@ export function useWebLab2TutorFlow({
         guide: instructionGuide,
         guideState: instructionGuideState,
       },
+      editClarification: {
+        conversation,
+        files: currentFileStructure,
+        levelInstructionsMarkdown,
+        levelProgress,
+      },
+      validationReviewIntent: {
+        conversation,
+        levelInstructionsMarkdown,
+        levelProgress,
+      },
     });
     const { action, instructionCoachResult, instructionFocus } = turn;
 
@@ -176,12 +194,38 @@ export function useWebLab2TutorFlow({
       }));
     }
 
+    if (action.kind === "validationReview" && validationReviewOffer && onValidationReview) {
+      logTutorEvent("validation review auto-run from chat", {
+        title: validationReviewOffer.title,
+        messagePreview: message.slice(0, 180),
+      });
+      try {
+        const review = await onValidationReview();
+        setChatMessages((current) =>
+          appendChatTriggeredValidationReview(
+            current,
+            review,
+            resolveValidationResultMessage(review),
+          ),
+        );
+        return undefined;
+      } catch (error) {
+        logTutorEvent("validation review auto-run failed; falling back to offer card", error, "warn");
+      }
+    }
+
     if (action.kind === "validationReview" && validationReviewOffer) {
       logTutorEvent("validation review offer returned", {
         title: validationReviewOffer.title,
         status: validationReviewOffer.status,
       });
-      return buildValidationReviewOfferChatMessage(message, validationReviewOffer);
+      const offerMessage = await generateValidationOfferMessage({
+        studentMessage: message,
+        review: validationReviewOffer,
+        chatMessages: conversation,
+        instructionsMarkdown: levelInstructionsMarkdown,
+      });
+      return buildValidationReviewOfferChatMessage(message, validationReviewOffer, offerMessage);
     }
 
     if (action.kind === "validationReview" || action.kind === "denied") {
@@ -312,6 +356,8 @@ export function useWebLab2TutorFlow({
     openFile,
     routingDiagnostics,
     runnerContracts,
+    setChatMessages,
+    onValidationReview,
     setIsFileManagerCollapsed,
     setViewMode,
     tutorPolicy,

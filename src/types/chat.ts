@@ -80,6 +80,38 @@ export interface FileChange {
   linesRemoved?: number;
 }
 
+/**
+ * Slim inline divider marking an agent transition (switch, unlock) — replaces
+ * full-width alerts for agent events to keep the stream light. Self-contained
+ * so the chat layer needs no agent registry.
+ */
+export interface AgentDividerData {
+  /** Functional label, e.g. "Spec writer". */
+  label: string;
+  /** Font Awesome glyph shown in the divider pill. */
+  iconName?: string;
+  /** Accent key matching the agent row tints. */
+  accent?: string;
+  /** Short muted suffix, e.g. "fresh context" or "new agent unlocked". */
+  detail?: string;
+  /** Full explanation surfaced on hover (e.g. the packed-context list). */
+  title?: string;
+}
+
+/**
+ * In-chat hand-off to another specialist agent. Self-contained (label + icon
+ * travel with the message) so the chat layer needs no agent registry.
+ */
+export interface AgentHandOffCardData {
+  agentId: string;
+  /** Functional label, e.g. "Style agent". */
+  label: string;
+  /** Font Awesome glyph rendered on the card. */
+  iconName?: string;
+  /** One-line reason shown on the card, e.g. "It builds from the spec." */
+  reason?: string;
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -92,6 +124,12 @@ export interface ChatMessage {
   editOptions?: EditOptionsCardData;
   /** Files the tutor created, modified, or deleted in this response. */
   fileChanges?: FileChange[];
+  /** Paths the responding agent actually had in context — rendered as a collapsible "Read" node. */
+  agentContextReceipt?: string[];
+  /** Offer to switch to another specialist agent, rendered as an inline card. */
+  agentHandOff?: AgentHandOffCardData;
+  /** Renders as a slim agent-transition divider instead of a chat bubble. */
+  agentDivider?: AgentDividerData;
   /** Short AI-generated summary used when accepted changes create a history save. */
   aiSaveTitle?: string;
   /** Accept/reject status for generated code changes. Shows action buttons when "pending". */

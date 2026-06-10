@@ -2,6 +2,7 @@ import { getTutorApiKey, getTutorCodeModel } from "../../../hooks/useTutorApiSet
 import type {
   TutorChatMessage,
   TutorEditClarificationResponse,
+  TutorEditClarificationNeedResponse,
   TutorGuidanceResponse,
   TutorInstructionAnalysisResponse,
   TutorInstructionOptionSelectionResponse,
@@ -12,6 +13,7 @@ import type {
   TutorToolAssistantMessage,
   TutorToolChatMessage,
   TutorToolDefinition,
+  TutorValidationReviewIntentResponse,
 } from "../types";
 import { logTutorEvent } from "../conversation/tutorDebugLogger";
 
@@ -66,10 +68,22 @@ export interface TutorEditClarificationProvider {
   ): Promise<TutorEditClarificationResponse | null>;
 }
 
+export interface TutorEditClarificationNeedProvider {
+  requestEditClarificationNeed(
+    messages: TutorChatMessage[],
+  ): Promise<TutorEditClarificationNeedResponse | null>;
+}
+
 export interface TutorRequestIntentProvider {
   requestIntentClassification(
     messages: TutorChatMessage[],
   ): Promise<TutorRequestIntentResponse | null>;
+}
+
+export interface TutorValidationReviewIntentProvider {
+  requestValidationReviewIntent(
+    messages: TutorChatMessage[],
+  ): Promise<TutorValidationReviewIntentResponse | null>;
 }
 
 export interface TutorInstructionAnalysisProvider {
@@ -181,7 +195,9 @@ export class OpenAiTutorProvider
     TutorStructuredEditProvider,
     TutorGuidanceProvider,
     TutorEditClarificationProvider,
+    TutorEditClarificationNeedProvider,
     TutorRequestIntentProvider,
+    TutorValidationReviewIntentProvider,
     TutorInstructionAnalysisProvider,
     TutorInstructionOptionSelectionProvider
 {
@@ -247,12 +263,30 @@ export class OpenAiTutorProvider
     });
   }
 
+  async requestEditClarificationNeed(messages: TutorChatMessage[]) {
+    return requestChatCompletionJson<TutorEditClarificationNeedResponse>({
+      messages,
+      maxTokens: 200,
+      temperature: 0,
+      logPrefix: "TutorEditClarificationNeed",
+    });
+  }
+
   async requestIntentClassification(messages: TutorChatMessage[]) {
     return requestChatCompletionJson<TutorRequestIntentResponse>({
       messages,
       maxTokens: 200,
       temperature: 0,
       logPrefix: "TutorIntentClassifier",
+    });
+  }
+
+  async requestValidationReviewIntent(messages: TutorChatMessage[]) {
+    return requestChatCompletionJson<TutorValidationReviewIntentResponse>({
+      messages,
+      maxTokens: 200,
+      temperature: 0,
+      logPrefix: "TutorValidationReviewIntent",
     });
   }
 

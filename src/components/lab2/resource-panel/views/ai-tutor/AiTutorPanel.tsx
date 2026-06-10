@@ -39,11 +39,14 @@ import {
   buildCustomEditOptionChoice,
   enrichEditOptionPrompt,
 } from "../../../../../lib/tutor/routing/editClarification";
-import type {
-  LevelProgressSnapshot,
-  ValidationReviewCardData,
-} from "../../../../../types/validationReview";
+import type { ValidationReviewCardData } from "../../../../../types/validationReview";
 import { buildLevelProgressSnapshot } from "../../../../../lib/validation/levelProgress";
+import {
+  buildValidationReviewOfferMessage,
+  buildValidationReviewResultMessage,
+  resolveValidationResultMessage,
+  shortValidationCriterionLabel,
+} from "../../../../../lib/validation/validationReviewMessaging";
 import { AiTutorComposer } from "./AiTutorComposer";
 import { AiTutorMessageList } from "./AiTutorMessageList";
 import {
@@ -192,6 +195,12 @@ interface AiTutorPanelProps {
   setChatMessages: (messages: ChatMessage[]) => void;
   chatInput: string;
   setChatInput: (input: string) => void;
+  /** Optional content pinned between the conversation and the composer (e.g. specialist agent strip). */
+  agentStrip?: ReactNode;
+  /** Switch the active specialist agent when an in-chat hand-off card is actioned. */
+  onAgentHandOff?: (agentId: string) => void;
+  /** Override the thinking-state label (e.g. "Style agent · reading 3 files"). */
+  thinkingLabelOverride?: string;
   showInstructionsDrawer?: boolean;
   instructionsDrawerDefaultOpen?: boolean;
   instructionsDrawerInitialHeightRatio?: number;
@@ -262,86 +271,10 @@ function truncatePreviewText(text: string) {
   return `${normalized.slice(0, 29)}...`;
 }
 
-export function buildValidationReviewOfferMessage(
-  submittedContent: string,
-  review: ValidationReviewCardData,
-) {
-  const hasMultipleRequirements = (review.requirements?.length ?? 0) > 1;
-
-  if (/\b(works|worked|working|fixed|done|finished|complete|completed)\b/i.test(submittedContent)) {
-    return "Great. I can check your work now and let you know whether you're ready to continue.";
-  }
-
-  if (/\b(check|review|validate|grade)\b/i.test(submittedContent)) {
-    return hasMultipleRequirements
-      ? "I can check your progress and show what looks complete and what to work on next."
-      : "I can check your work and let you know whether you're ready to continue.";
-  }
-
-  return "When you're ready, I can check your work and let you know whether you're ready to continue.";
-}
-
-function shortCriterionLabel(label: string) {
-  const normalized = label.replace(/\s+/g, " ").trim();
-  if (normalized.length <= 90) return normalized;
-  return `${normalized.slice(0, 87)}...`;
-}
-
-function validationReviewRetryAction(
-  review: ValidationReviewCardData,
-  progress: LevelProgressSnapshot | undefined,
-) {
-  const incompleteCount = progress?.incompleteCriteria.length ?? 0;
-  const remainingTarget = incompleteCount > 1 ? "the remaining items" : "the next item";
-  const nextLabel = progress?.nextIncompleteCriterion?.label;
-
-  if (nextLabel && nextLabel.length <= 70) {
-    return `Next up: ${nextLabel}. Check again when that step is ready.`;
-  }
-
-  if (nextLabel) {
-    return "Next up: use the remaining checklist item in the review card as your next step, then check again when it is ready.";
-  }
-
-  if (review.mode === "technical") {
-    return `Work through ${remainingTarget}, then check again.`;
-  }
-
-  if (review.mode === "open-ended") {
-    return `Keep refining ${remainingTarget}, then check again.`;
-  }
-
-  return `Revisit ${remainingTarget}, then check again.`;
-}
-
-export function buildValidationReviewResultMessage(review: ValidationReviewCardData) {
-  const progress = buildLevelProgressSnapshot(review);
-  const passedCount = progress?.passedCriteria.length ?? 0;
-  const incompleteCount = progress?.incompleteCriteria.length ?? 0;
-
-  if (review.status === "likely_complete") {
-    return passedCount > 1
-      ? "Nice work, the checklist looks complete. You can continue now."
-      : "Nice work, this looks ready to continue.";
-  }
-
-  if (passedCount > 0 && incompleteCount > 0) {
-    const completedSummary = passedCount > 1
-      ? `${passedCount} checklist items look complete`
-      : `${shortCriterionLabel(progress?.passedCriteria[0]?.label ?? "one checklist item")} looks complete`;
-    return `Nice, ${completedSummary}. ${validationReviewRetryAction(review, progress)}`;
-  }
-
-  if (review.status === "needs_work") {
-    return `Not quite yet. ${validationReviewRetryAction(review, progress)}`;
-  }
-
-  if (review.status === "in_progress") {
-    return `You're making progress. ${validationReviewRetryAction(review, progress)}`;
-  }
-
-  return "I don't see a project change yet. Make one focused update, then check again.";
-}
+export {
+  buildValidationReviewOfferMessage,
+  buildValidationReviewResultMessage,
+} from "../../../../../lib/validation/validationReviewMessaging";
 
 function latestSummaryReview(messages: ChatMessage[]) {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -358,7 +291,7 @@ export function buildValidationReviewActionPrompt(
   const progress = buildLevelProgressSnapshot(review);
   const nextCriterion = progress?.nextIncompleteCriterion?.label;
   const target = nextCriterion
-    ? ` for this next checklist item: ${shortCriterionLabel(nextCriterion)}`
+    ? ` for this next checklist item: ${shortValidationCriterionLabel(nextCriterion)}`
     : " for what to check next";
 
   if (action === "debug") {
@@ -405,6 +338,9 @@ export function AiTutorPanel({
   setChatMessages,
   chatInput,
   setChatInput,
+  agentStrip,
+  onAgentHandOff,
+  thinkingLabelOverride,
   showInstructionsDrawer = true,
   instructionsDrawerDefaultOpen = true,
   instructionsDrawerInitialHeightRatio,
@@ -1403,7 +1339,7 @@ export function AiTutorPanel({
         const nextMessages = appendValidationReviewResultToConversation(
           chatMessagesRef.current,
           review,
-          buildValidationReviewResultMessage(review),
+          resolveValidationResultMessage(review),
         );
         pendingAssistantScrollIndexRef.current = nextMessages.length - 1;
         setChatMessages(nextMessages);
@@ -1462,6 +1398,12 @@ export function AiTutorPanel({
       onTutorSubmit(submittedContent, newMessages, requestMode, submitOptions)
         .then((response) => {
           if (requestSerialRef.current !== requestId) return;
+          if (response === undefined) {
+            setIsThinking(false);
+            setGeneratedTutorResponse(null);
+            scrollToBottom();
+            return;
+          }
           logTutorEvent("functional tutor request resolved", {
             requestId,
             hasResponse: Boolean(response),
@@ -1891,6 +1833,7 @@ export function AiTutorPanel({
               ? "Evaluating"
               : undefined
         }
+        thinkingLabelPrefix={thinkingLabelOverride}
         inputExperiment={inputExperiment}
         enableUploadAddActions={false}
         onThinkingComplete={handleThinkingComplete}
@@ -1910,7 +1853,10 @@ export function AiTutorPanel({
         validationReviewRunning={isValidationReviewRunning}
         onOpenFileChangeInEditor={onOpenFileChangeInEditor}
         onOpenFileChangeInPreview={onOpenFileChangeInPreview}
+        onAgentHandOff={onAgentHandOff}
       />
+
+      {agentStrip}
 
       <div ref={inputRef}>
         <AiTutorComposer

@@ -96,13 +96,17 @@ function pickRandomTerms(count: number): string[] {
 interface ThinkingAnimationProps {
   onComplete?: () => void;
   autoComplete?: boolean;
+  /** Static label that replaces the cycling terms (stops the animation cycle). */
   label?: string;
+  /** Prefix prepended to the cycling terms (keeps cycling, e.g. agent name). */
+  labelPrefix?: string;
 }
 
 export function ThinkingAnimation({
   onComplete,
   autoComplete = true,
   label,
+  labelPrefix,
 }: ThinkingAnimationProps) {
   const steps = useMemo(() => pickRandomTerms(SPINNER_TERMS.length), []);
   const [stepIndex, setStepIndex] = useState(0);
@@ -134,7 +138,8 @@ export function ThinkingAnimation({
         <img src={robotGif} alt="" className={styles.icon} />
       </div>
       <span key={`label-${stepIndex}`} className={styles.label}>
-        {label ?? `${steps[stepIndex]}...`}
+        {label ??
+          `${labelPrefix ? `${labelPrefix} · ` : ""}${steps[stepIndex]}...`}
       </span>
     </div>
   );

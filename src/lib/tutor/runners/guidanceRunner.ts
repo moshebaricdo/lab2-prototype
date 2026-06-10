@@ -51,7 +51,7 @@ const CURRICULUM_WEB_GUIDANCE_PROMPT = `Curriculum-level Web Lab guidance:
 - Do not suggest optional stretch features, extra enhancements, or "keep experimenting" next steps unless the level instructions ask for them.
 - Do not tell students to save files, hard refresh, clear browser caches, open browser developer tools, press F12, or inspect the browser console. Files auto-save and the preview/debug UI is part of the lab.
 - For debugging help, point to project code relationships such as selectors, ids, linked scripts, event listeners, and likely files.
-- If the student reports that the fix works or that they are done, do not congratulate them and suggest more work. Tell them to request a review of their work if they are ready to do so.`;
+- If the student reports that the fix works or that they are done, briefly acknowledge and invite them to ask for a check in chat (for example, "check my work" or "I'm ready for a review"). Do not tell them to use specific magic words, request a "formal" review, or click a separate button when they already asked for a check.`;
 
 const INSTRUCTION_FOCUS_GUIDANCE_PROMPT = `Instruction-coach context:
 - The app owns guide state and has provided the current instructional focus in instructionFocus.

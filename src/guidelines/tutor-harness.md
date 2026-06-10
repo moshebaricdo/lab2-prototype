@@ -6,6 +6,36 @@ The Tutor harness powers the functional AI Tutor prototype for Web Lab 2 and Pyt
 
 This remains a client-side prototype. Project state, API keys, prompt overrides, accepted workspace state, and version history are stored locally in browser session state rather than server-backed persistence.
 
+## Routing philosophy: orchestrate LLM gates, not regex lists
+
+The Tutor harness is moving **away from regex-as-classifier** toward **careful orchestration of small, focused model calls**. Student phrasing is too varied for synonym lists and pattern tables to stay accurate — every regex expansion creates drift, false positives, and "magic word" UX where Tutor understands intent in prose but routing does not.
+
+**Prefer this pattern for new routing decisions:**
+
+1. **Small classifier call** — one cheap JSON verdict (`shouldClarify`, `intent`, `shouldRunReview`, …) with conversation + level context in the payload.
+2. **Hard skips only (deterministic)** — safety guards that are not semantic judgments: negated readiness, obvious troubleshooting asks, workflow flags (`skipEditClarification`, pending proposal), teacher/system build requests.
+3. **Fast paths (deterministic)** — latency shortcuts with clear preconditions (bare `"yes"` after Tutor offered a check; explicit composer Build/Plan/Help modes).
+4. **Explicit fail bias** — fail-open when blocking would frustrate (`editClarification` → direct edit) vs fail-closed when a false trigger has higher cost (`validationReviewIntent` → normal help). Document the bias per gate.
+5. **Labeled fixtures + live eval** — add real chat-log phrasings to a fixture corpus and an opt-in key-gated liveeval test before relying on prompt changes.
+
+**Do not** add new student-phrasing synonyms to regex tables when a model gate exists or is planned. **Do not** post-scrub runner output with regex sanitizers — enforce voice and safety in the system prompt at generation time.
+
+### Functional Tutor requires an API key
+
+Smart chat routing (intent, clarification gate, Check My Work from chat, instruction analysis) **requires a session Tutor API key**. Without a key:
+
+- Use **mock Tutor mode** in the dev panel for scripted demos.
+- **Check my work** and explicit composer modes still work where the page wires them without classifiers.
+- Auto-routing fail-closed to safe defaults (guidance, no chat-triggered review) rather than regex guesses.
+
+**Regex and deterministic code still belong** where they are the right tool:
+
+- **Infrastructure** — project analysis, context packing, checklist rollup, version-history snapshots, instruction-guide markdown parsing (structural).
+- **Hard skips** — negated readiness, troubleshooting asks, workflow flags — not semantic intent.
+- **Assessment truth** — pass/warn/missing status and Continue gating stay deterministic in `validationHarness.ts` regardless of how chat routed there.
+
+Existing model gates (non-exhaustive): `requestIntentClassifier`, `editClarificationClassifier`, `validationReviewIntentClassifier`, `instructionAnalysisRunner`, `instructionStepSatisfaction`, `instructionOptionSelector`. When adding a new student-intent fork, start here — not with a new `\b(check|review|…)\b` alternation.
+
 ## Entry Points
 
 - UI panel: `src/components/lab2/resource-panel/views/ai-tutor/AiTutorPanel.tsx`
@@ -46,19 +76,20 @@ The harness lives in `src/lib/tutor`, grouped by responsibility. Root-level file
 
 ### `intent/` — request classification
 
-- `requestIntent.ts` classifies requests as guidance, planning, or edit before any edit generation starts. `classifyTutorRequestIntentVerdict()` returns the intent plus a `confident` flag; `isAmbiguousTutorRequestIntent()` exposes the inverse, which is the gate the model classifier uses to decide whether a request is worth a round-trip. The plan-revision guard is factored into `applyPlanRevisionOverride()` and shared across paths.
-- `requestIntentClassifier.ts` is the model-assisted intent layer. `resolveAutoTutorRequestIntent()` trusts the deterministic verdict when the regex is confident (instant, no network) and only calls the model for ambiguous phrasings (indirect requests, unusual verbs, a verb inside a question). It always falls back to the deterministic verdict on no key, malformed output, or request failure, so routing can never hard-fail and the no-key lab keeps today's behavior exactly. `requestIntentFixtures.ts` is the labeled corpus and `requestIntentClassifier.liveeval.test.ts` is an opt-in (key-gated) accuracy harness over it.
-- `studentIntentSignals.ts` is the shared deterministic lexicon for reading student-message intent (`EDIT_VERBS`/`EDIT_VERB_GROUP`, vague-edit quality terms, `mentionsConcept`, `asksForExplicitAnswer`, `mentionsHelpRequest`, `asksTutorAQuestion`, `reportsSuccess`, `asksToContinue`, `isAffirmation`, `messageIndicatesCompletionOrReadiness`). `requestIntent.ts`, `guidanceRunner.ts`, `editClarification.ts`, and `instructionCoach.ts` import from it so the same intent is not re-detected by divergent regexes. It is intentionally a vocabulary, not a classifier: `validationReviewIntent.ts` keeps its own conservative readiness gate, and `requestIntent`'s broad routing patterns stay wider than these focused predicates.
+- `requestIntent.ts` exports shared types and `applyPlanRevisionOverride()` (post-classifier plan-revision guard). The regex cascade was removed — intent routing is model-only when keyed.
+- `requestIntentClassifier.ts` is the intent layer. `resolveAutoTutorRequestIntent()` always calls the model when a session API key is present; without a key it fail-closed to guidance. Malformed or low-confidence model output also fail-closed to guidance. `requestIntentFixtures.ts` + `requestIntentClassifier.liveeval.test.ts` (`npm run test:tutor:live:intent`).
+- `studentIntentSignals.ts` holds lightweight predicates still used by coach/focus-pick helpers until those paths migrate to classifiers. Do not add new routing authority here.
 
 ### `routing/` — turn resolution and UI-facing actions
 
-- `validationReviewFlow.ts` owns validation offer copy and the shared append helpers used by chat NL readiness, offer-card clicks, and the Continue header action. Page `handleValidationReview()` remains the single execution path for running a review.
-- `editClarification.ts` detects broad, underspecified implementation requests before code generation starts.
+- `validationReviewFlow.ts` owns shared append helpers for validation offer cards and review results. Offer/result chat copy lives in `validationReviewMessaging.ts` (LLM when keyed, programmatic fallback). Page `handleValidationReview()` remains the single execution path for running a review. When chat routes to `validationReview`, `useWebLab2TutorFlow` auto-runs that path and appends the validation alert + summary card — students should not need a second "click Check my work" step after asking in chat. Composer/header **Check my work** still uses the offer-card or direct review button paths.
+- `editClarification.ts` holds focus-pick routing and option-card normalization. `isUnderspecifiedEditRequest()` remains for focus-pick message shaping only — it is not the clarification gate.
+- `editClarificationClassifier.ts` is the clarification gate. When keyed, a small model call is the sole semantic judge (conversation, level instructions, instruction guide, level progress, project summary). Default bias is direct edit: clarify only for greenfield feature starts or subjective polish without a concrete target; incremental edits on existing project elements (duplicate more, change layout direction) should proceed without the card. Workflow hard skips only: `skipEditClarification` and teacher/system build-from-plan requests. No key or model failure fail-open to direct edit. `editClarificationFixtures.ts` + `editClarificationClassifier.liveeval.test.ts` (`npm run test:tutor:live:clarification`).
 - `editClarificationRunner.ts` asks the model for a short intro plus project-aware direction options, then the UI renders them in an edit-options card.
 - `tutorAction.ts` resolves UI-facing Tutor actions, including when to return an edit-options card instead of calling the model immediately.
 - `resolveTutorTurn.ts` is the **single pre-runner decision point** for Web Lab 2: it runs `resolveTutorAction`, then instruction-coach / focus-pick upgrade when the base action is guidance. `useWebLab2TutorFlow` executes the returned action and does not invent parallel routes (focus → edit-clarification uses `editClarification` with `source: "focus-pick"`).
 - `tutorComposerMode.ts` owns composer request-mode lifecycle (one-shot Build/Plan from cards; Auto reset after curriculum composer sends unless the dev model selector keeps modes sticky).
-- `tutorActionRunner.ts` maps a resolved `TutorAction` to runner intent; `tutorClient()` accepts `resolvedAction` and skips the legacy `resolveTutorRequestPolicy` pass when present.
+- `tutorActionRunner.ts` maps a resolved `TutorAction` to runner intent; `tutorClient()` requires `resolvedAction` from `resolveTutorTurn` for auto-mode Web Lab requests (legacy regex policy routing was removed).
 
 ### `runners/` — model execution paths
 
@@ -82,7 +113,7 @@ The harness lives in `src/lib/tutor`, grouped by responsibility. Root-level file
 - `instructionStepSatisfaction.ts` optionally checks weak linear-step replies with a cheap model call when a Tutor API key is present; strong signals (success/readiness, ask-for-help steps) and no-key paths stay fail-open. Wired through `instructionCoach.ts`.
 - `instructionOptionSelector.ts` (P4 / I10, foundation present) resolves which open-ended focus a student message selects: deterministic word-overlap first, then a small model call only when overlap is ambiguous, returning null on no key, error, or an unknown id.
 - `instructionOpeningRunner.ts` exports `buildProgrammaticInstructionOpening()` — programmatic opening + step summaries used when instruction analysis is unkeyed or fails.
-- `tutorOpening.ts` deterministically derives the programmatic fallback opening. It strips worksheet labels such as "Expected Behavior" and "Do This", never echoes raw numbered step titles such as `1: Create a New Feature`, and applies tone-specific templates (`This level is about …`, `Aim for a page where …`) so the fallback stays stable across students without live per-student generation. These templates are used only for the fallback, not for LLM output.
+- `tutorOpening.ts` deterministically derives the programmatic fallback opening. It strips worksheet labels such as "Expected Behavior" and "Do This", never echoes raw numbered step titles such as `1: Create a New Feature`, and emits complete goal + firstMove sentences with no injected greetings or wrappers. LLM-authored openings use the same passthrough formatter (`formatInstructionOpeningMessage`) — the model writes finished copy per the analysis prompt voice rules.
 - `instructionCoach.ts` owns deterministic guide state helpers and next-move decisions for Tutor-primary instruction delivery. Linear-guide advancement is fail-open for strong signals (success/readiness, ask-for-help steps). Weak substantive replies optionally pass through `instructionStepSatisfaction.ts` when keyed. The guide holds on the current step while the student is still asking Tutor for help/explanation without reporting a result. Advancement never marks validation criteria complete, so over-advancing only shifts conversational focus. When validation reports `ready_to_continue`, `syncInstructionGuideStateWithLevelProgress()` marks the guide complete so the drawer pin can show **Ready to continue** even on levels without crisp per-step artifacts. `deriveInstructionPinnedStep()` uses validation phase for **Ready to continue**. When `validationReviewConfig` is present, the pin is **`Step N of M`** from assessment goals and `levelProgress`; otherwise it follows the instruction guide (linear steps or open-ended focus). `getActiveInstructionStep()` no longer falls back to step 1 after completion. Open-ended focus matching uses `selectInstructionOption` when overlap is ambiguous.
 - `instructionDelivery.ts` — copy for no-key / loading pinned-step states.
 - `instructionPinnedStep.ts` — pinned-step derivation for the instructions drawer.
@@ -95,6 +126,14 @@ The harness lives in `src/lib/tutor`, grouped by responsibility. Root-level file
 - `workspaceEditor.ts` is the scratch in-memory workspace used by both structured edits and tool calls.
 - `saveTitle.ts` normalizes model-provided save titles into short commit-style labels.
 - `responseSummary.ts` builds diff-aware summaries when model copy is too generic.
+
+### `lib/validation/` — assessment review (cross-cutting)
+
+Validation checklist logic lives outside `lib/tutor` but shares routing with the harness:
+
+- `validationHarness.ts` — deterministic checklist assembly, rollup, and review execution helpers.
+- `validationReviewIntent.ts` — hard-skip guards only (negated readiness, troubleshooting, meta help questions).
+- `validationReviewIntentClassifier.ts` — model-assisted Check My Work chat gate when keyed. Bare affirmations after a review offer skip the model. No key → fail-closed (use Check my work button or mock Tutor). `validationReviewIntentFixtures.ts` + `validationReviewIntentClassifier.liveeval.test.ts` (`npm run test:tutor:live:validation`).
 
 ### `provider/` — OpenAI transport and prompts
 
@@ -115,7 +154,7 @@ The harness lives in `src/lib/tutor`, grouped by responsibility. Root-level file
 4. The student composer stays mode-neutral. Web Lab 2 infers whether a request is Help, Plan, or Build, then checks route/dev-panel capabilities before calling the model. `resolveTutorAction()` can also return an app-owned edit-options card when a Build-bound request lacks enough concrete direction for Tutor to choose an outcome responsibly. Readiness to validate (`I'm done`, `check my work`, etc.) is resolved **before** explicit Build/Plan/Help composer mode so a sticky Build state after an edit-options pick cannot swallow the validation entry.
 5. `WebLab2LevelPage.tsx` also passes a normalized Tutor policy. Standalone projects use `standalone-project`, where broad project-building requests can become edits. Curriculum/instruction levels use `curriculum-level`, where explanation, debugging, ideas, and instruction-breakdown requests stay guidance unless the student explicitly asks Tutor to implement a change. Direct implementation phrasing such as "make", "update", "improve", "help me make", "I need you to update", or "the instructions say to ask Tutor to make..." routes to code generation when Build is enabled.
 6. Build, Plan, and Help can be enabled or disabled independently by route props or Web Lab 2 dev-panel overrides. Disabled capabilities are denied before model calls, so levels can allow guidance/debugging while preventing direct project code generation.
-7. `tutorClient()` resolves a policy with `resolveTutorRequestPolicy()` from `requestIntent.ts`, including intent and whether workspace or plan edits are allowed.
+7. `tutorClient()` receives the resolved runner action from `resolveTutorTurn` and maps it to guidance, planning, or edit execution. Auto-mode requests without `resolvedAction` fail-closed to guidance (tests may hit this path; functional Web Lab always passes the resolved action).
 8. If the message is a conceptual, how-to, instruction-breakdown, debugging, or project-navigation question, `guidanceRunner.ts` returns a project-aware explanation and no file changes.
 9. If the message asks to plan, brainstorm, ask guiding questions, or make a spec before building in a standalone context, `planningRunner.ts` returns a constrained Markdown proposal for `Plans/PROJECT_PLAN.md`.
 10. Otherwise, explicit edit requests go to `editSessionRunner.ts`, which analyzes the project, packs compact context, and asks the provider for structured JSON edits. Broad requests such as "make the buttons more exciting" first return an inline edit-options card in chat; only after the student picks a direction does the UI submit an enriched Build request and call the model. On open-ended (choice-based) instruction levels, a short focus pick after the opening invitation — e.g. replying `nav links` when the seed message invited that choice — also routes to the edit-options card when the matched focus is edit-oriented (`style-polish`, `content-choice`, or `editOriented: true`), instead of stopping at conversational guidance. Readiness/completion phrasing (`I'm done`, `nav links are done`, `check my work`, etc.) always routes to validation review when that capability is enabled — it must not re-trigger focus selection or edit clarification.
@@ -134,11 +173,11 @@ Python Lab skips request-intent routing entirely. It calls the guidance runner d
 Guidance mode is for questions such as "can you explain functions?", "what is a Promise?", "what are the instructions asking me to do?", "how do you make things responsive?", "how would I make my map interactive?", or "where can I find the responsive CSS?". These requests should not modify the project.
 
 - `requestIntent.ts` treats explicit guidance, instruction-help, debugging, and project-navigation cues as guidance. In curriculum context, code-topic questions also stay guidance unless there is a direct edit command. Direct edit verbs include make/update/improve/use (for example, "use this image for that card" or "use blue for the heading"). "Help me make/update/improve..." is a direct edit request, while "help me understand how to..." remains guidance.
-- In Auto mode, when the deterministic regex is confident, that verdict is used directly. When it is ambiguous (indirect requests like "the heading feels too small", unusual verbs like "jazz up the hero", or a verb inside a question) and a Tutor API key is present, `resolveAutoTutorRequestIntent()` asks a small model classifier to judge intent in context. This is what lets the harness understand intent rather than literal keywords. With no key it stays on the deterministic verdict, so behavior is unchanged.
+- In Auto mode, `resolveAutoTutorRequestIntent()` always calls the model classifier when a session API key is present. Without a key, routing fail-closed to guidance — use mock Tutor mode for unkeyed demos.
 - Project-adjacent how-to phrasing stays guidance: "How would I make my map interactive?" should teach strategy and likely files, while "Let's make the map interactive" routes to edit generation.
 - `guidanceRunner.ts` still receives packed project context so it can point to likely files, selectors, functions, ids, or snippets.
 - For "does this look right?", "are my answers right?", and similar informal check questions, Tutor should inspect the packed `projectContext` and reason from visible workspace state instead of asking the student to paste/share answers, code, or files that Tutor already has. Formal readiness still goes through the validation review/check affordance when the student is trying to continue.
-- The validation-review trigger is deterministic (`isValidationReviewIntent`), but `resolveTutorAction()` also fires a review when the student gives a bare affirmation (`isAffirmation`) and the previous Tutor turn offered one (`workflow.lastAssistantOfferedReview`, derived in `useWebLab2TutorFlow.ts`). This handles "Tutor: …request a review." / "Student: yes" without making the readiness gate itself looser. A false trigger is low-harm because the review re-derives completion truth.
+- The validation-review chat gate lives in `validationReviewIntentClassifier.ts`. Hard skips and bare affirmations after a review offer stay deterministic; when keyed, a small model call decides whether to run Check My Work. Without a key, chat does not trigger review — use the Check my work button.
 - `validationHarness.ts` evaluates **assessment goals only**. Each goal maps to an evaluator (`ai`, `version-history-save`, `version-history-revert`) via requirement-text patterns in `validationGoalEvaluators.ts`. Effort policy gates AI-evaluated goals without adding extra checklist rows. Version-history snapshots run when assessment goals require them, not when instructions mention Version History.
 - In curriculum-level Web Lab contexts, guidance is scoped to the level's instructions and current project code. It should avoid generic browser troubleshooting such as saving files, clearing cache, hard refreshes, opening devtools/F12, or inspecting the browser console, and it should not suggest optional stretch features outside the level goals.
 - Web Lab 2 help uses a light Socratic disclosure policy for curriculum guidance. It now applies by default to every curriculum turn — including observations and symptom-sharing, not just explicit hint/debug keywords — and only steps aside when the student explicitly asks for the answer (`EXPLICIT_ANSWER_REQUEST_PATTERN`). The policy: start with the goal, give one small next check, ask at most one focused observation question, nudge toward the discovery rather than confirming the exact problem, and avoid naming exact project-only selectors, ids, values, or replacement text (even when visible in `projectContext`) unless the student supplied them, the level instructions contain them, or the student explicitly asks for the answer.
@@ -176,8 +215,8 @@ When any AI proposal is pending, the Tutor composer disables send actions and En
 
 For broad implementation requests, Web Lab 2 can pause before code generation and surface a direction picker in chat.
 
-- `editClarification.ts` treats a request as underspecified when it is already a direct edit request but only names vague quality goals such as "better", "exciting", "nicer", or "pop" without concrete properties like color, spacing, hover/focus, layout counts, selectors, or behavior wiring.
-- `resolveTutorAction()` returns `editClarification` for those requests in Auto and Build modes. Build mode means the eventual path is code generation, not that the student's wording is specific enough to skip clarification.
+- `editClarificationClassifier.ts` decides whether to show the card. When keyed, the model judges underspecification in context with a default bias toward direct edit — clarify mainly for greenfield feature starts or vague polish, not incremental layout/count changes on existing elements. Hard skips are workflow-only: `skipEditClarification` and build-from-plan system requests. No key or model failure fail-open to direct edit (the options card requires a key to generate anyway).
+- `resolveTutorAction()` returns `editClarification` when the gate says to clarify, in Auto and Build modes. Build mode means the eventual path is code generation, not that the student's wording is specific enough to skip clarification.
 - `runEditClarification()` packs project context and asks the model for JSON `{ message, options[] }` where each option includes a student-facing `label` and a complete `enrichPrompt` for the later build step. Option wording is not hard-coded in the app.
 - `useWebLab2TutorFlow.ts` calls `runEditClarification()`, returns the model-authored intro in `content`, attaches `editOptions` for the card, and does not call `tutorClient()` until the student selects an option or submits custom text.
 - `EditOptionsCard.tsx` renders the picker vertically while `editOptions.status` is `pending`. Selecting an option removes the card from the assistant message, posts the chosen label as the visible user turn, and submits the option's enriched Build prompt with `skipEditClarification: true`.
@@ -276,10 +315,27 @@ Validation protects the workspace from common model failure modes:
 
 Paths below are relative to `src/lib/tutor/` unless noted.
 
-- Change guidance/planning/edit routing in `intent/requestIntent.ts`. The deterministic cascade also drives the model classifier's ambiguity gate via `classifyTutorRequestIntentVerdict()`'s `confident` flag — widen `confident` to call the model less, narrow it to call the model more.
-- Change the model-assisted classifier prompt, gate, or fallback in `intent/requestIntentClassifier.ts`. Add tricky phrasings to `intent/requestIntentFixtures.ts` and run the key-gated `intent/requestIntentClassifier.liveeval.test.ts` to measure real model accuracy before relying on it.
-- Change shared student-intent vocabulary (edit verbs, concept/help/answer/readiness phrases) in `intent/studentIntentSignals.ts` so the fix lands once across `requestIntent`, `guidanceRunner`, and `instructionCoach`.
-- Change broad edit clarification heuristics or option copy in `routing/editClarification.ts` and `routing/tutorAction.ts`.
+### Routing and intent — prefer model gates over regex growth
+
+When student phrasing should trigger a new behavior (clarify before edit, run Check My Work, switch guide focus, …):
+
+- **Add or extend a classifier** with prompt, context payload, fixtures, and liveeval — follow existing gates as templates.
+- **Do not** extend regex synonym lists in `validationReviewIntent.ts`, `requestIntent.ts`, or ad-hoc panel logic for semantic readiness or intent.
+- **Do** extend `studentIntentSignals.ts` only when multiple runners need the same **vocabulary predicate** (not when routing should change).
+
+| Change | Where |
+|---|---|
+| Guidance / planning / edit routing | `intent/requestIntentClassifier.ts` (+ fixtures/liveeval). `requestIntent.ts` — plan-revision override only. |
+| Edit-options card gate | `routing/editClarificationClassifier.ts` — `npm run test:tutor:live:clarification` |
+| Check My Work chat gate | `lib/validation/validationReviewIntentClassifier.ts` — `npm run test:tutor:live:validation`. Hard skips only in `validationReviewIntent.ts`. |
+| Coach/focus helpers (migrate later) | `intent/studentIntentSignals.ts` |
+
+### Other harness changes
+
+- Change guidance/planning/edit routing in `intent/requestIntentClassifier.ts` (+ fixtures/liveeval). Tune `applyPlanRevisionOverride()` in `requestIntent.ts` only for plan-revision edge cases.
+- Change the edit-clarification gate prompt/context in `routing/editClarificationClassifier.ts` and `provider/openAiProvider.ts` (`requestEditClarificationNeed`); add tricky phrasings to `routing/editClarificationFixtures.ts` and run `npm run test:tutor:live:clarification`. Change option generation in `routing/editClarificationRunner.ts` (`requestEditClarification`).
+- Change the validation-review chat gate in `lib/validation/validationReviewIntentClassifier.ts` and `provider/openAiProvider.ts` (`requestValidationReviewIntent`); add phrasings to `lib/validation/validationReviewIntentFixtures.ts` and run `npm run test:tutor:live:validation`.
+- Change shared student-intent vocabulary (edit verbs, concept/help/answer phrases) in `intent/studentIntentSignals.ts` when multiple consumers need the same predicate — not as a substitute for a classifier.
 - Change Web Lab 2 Tutor capability presets, Build/Plan/Help gates, and scoped contract addenda in `pages/weblab2/tutorDevSettings.ts`, `pages/weblab2/webLab2DevPanel.ts`, and `WebLab2LevelPage.tsx`.
 - Change programmatic fallback opening copy in `instruction/tutorOpening.ts` and `instruction/instructionOpeningRunner.ts` (`buildProgrammaticInstructionOpening`), pinned-step copy in `instruction/instructionPinnedStep.ts`, instruction guide derivation in `instruction/instructionGuide.ts`, and deterministic guide-state behavior in `instruction/instructionCoach.ts`. Keep intended instruction flow separate from `levelProgress`; delivering or advancing a guide step must not mark validation criteria complete.
 - Change model-assisted guide-shape inference in `instruction/instructionAnalysisRunner.ts` and `provider/openAiProvider.ts` (`requestInstructionAnalysis`); add tricky levels to `instruction/instructionAnalysisFixtures.ts` and run `npm run test:tutor:live:analysis` (key-gated) to measure real shape accuracy. Change open-ended choice-selection in `instruction/instructionOptionSelector.ts` (`requestInstructionOptionSelection`). Change weak linear-step advancement in `instruction/instructionStepSatisfaction.ts` (`requestInstructionStepSatisfaction`). Level load wiring lives in `WebLab2LevelPage.tsx` (key-gated `runInstructionAnalysis`, loading + API-key placeholder states) and `AiTutorPanel.tsx` (cached opening seed). Copy for no-key / loading pinned steps lives in `instruction/instructionDelivery.ts`.

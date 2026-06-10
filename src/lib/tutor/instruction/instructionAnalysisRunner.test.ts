@@ -172,6 +172,7 @@ describe("runInstructionAnalysis", () => {
     expect(result.guide.steps[1]?.expectedStudentMove).toBe("code-change");
     expect(result.opening.tone).toBe("debug");
     expect(result.content).toContain("Let's find why the loader never finishes");
+    expect(result.content).not.toContain("You'll know it's working");
     expect(result.content).toContain("Take a look at the while loop");
     expect(result.stepSummaries).toHaveLength(3);
     expect(result.stepSummaries[0]?.shortLabel).toBe("Find the loop");

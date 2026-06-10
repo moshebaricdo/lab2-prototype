@@ -26,6 +26,7 @@ interface AiReviewResponse {
     detail?: string;
   }>;
   headline?: string;
+  summaryMessage?: string;
 }
 
 function normalizeItemStatus(value: unknown): ValidationReviewItemStatus {
@@ -117,11 +118,12 @@ export async function createAiWebLab2ValidationReview({
           "Use ONLY the supplied project files, project map, and recent conversation.",
           "Do not reveal exact fixes, exact code, selectors to change, or step-by-step solutions.",
           "Return JSON only with this shape:",
-          "{ \"headline\": string, \"items\": [{ \"label\": string, \"status\": \"pass|warn|missing\", \"detail\": string }] }",
+          "{ \"summaryMessage\": string, \"items\": [{ \"label\": string, \"status\": \"pass|warn|missing\", \"detail\": string }] }",
           "Create exactly one item per requirement, in the same order as the requirements array.",
           "Use 'pass' only when there is clear evidence. Use 'warn' when partially addressed. Use 'missing' when not addressed.",
           "Use the supplied effort evidence when judging open-ended refinement work. If the current files match the starter and effortPolicy is required, do not treat starter polish as enough evidence that the student experimented.",
-          "Keep details brief, student-safe, and non-spoiler; examples: 'Evidence found.', 'Needs more evidence.', 'Keep working on this area.'",
+          "summaryMessage is 1-2 friendly sentences for the student above the checklist card. Acknowledge progress, name what to focus on next when work remains, and celebrate when ready to continue. Do not repeat every checklist row or give exact fixes.",
+          "Keep item details brief, student-safe, and non-spoiler; be specific when you can without revealing the solution.",
         ].join("\n"),
       },
       {
@@ -180,6 +182,21 @@ export async function createAiWebLab2ValidationReview({
       aiGoalIndices,
       config,
     );
+    const summaryMessage =
+      parsed.summaryMessage?.trim() ||
+      parsed.headline?.trim() ||
+      undefined;
+
+    return createValidationReview({
+      config,
+      instructionsMarkdown,
+      currentFileStructure,
+      initialFileStructure,
+      chatMessages,
+      versionHistorySummary,
+      aiEvaluationsByGoalIndex,
+      summaryMessage,
+    });
   }
 
   return createValidationReview({

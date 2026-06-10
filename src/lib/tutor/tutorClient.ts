@@ -15,7 +15,6 @@ import {
   runnerAllowsWorkspaceEdits,
   runnerIntentFromTutorAction,
 } from "./routing/tutorActionRunner";
-import { resolveTutorRequestPolicy } from "./intent/requestIntent";
 import { buildRunnerSystemPromptAddendum } from "./runners/runnerContracts";
 import { logTutorEvent } from "./conversation/tutorDebugLogger";
 import { lastAssistantAskedPlanningQuestion } from "./conversation/tutorConversationSignals";
@@ -91,17 +90,50 @@ function resolveRunnerFromRequest(
     };
   }
 
-  const policy = resolveTutorRequestPolicy(message, requestMode ?? "auto", {
-    hasActivePlan: hasActivePlan(files),
-    lastAssistantAskedPlanningQuestion: didLastAssistantAskPlanningQuestion(conversation),
-    supportContext,
-  });
+  if (requestMode === "build") {
+    return {
+      intent: "edit" as const,
+      allowWorkspaceEdits: true,
+      allowPlanEdits: false,
+      supportContext: supportContext ?? "standalone-project",
+      routingSource: "composer-mode" as const,
+      resolvedActionKind: undefined,
+    };
+  }
+
+  if (requestMode === "plan") {
+    return {
+      intent: "planning" as const,
+      allowWorkspaceEdits: false,
+      allowPlanEdits: true,
+      supportContext: supportContext ?? "standalone-project",
+      routingSource: "composer-mode" as const,
+      resolvedActionKind: undefined,
+    };
+  }
+
+  if (requestMode === "help") {
+    return {
+      intent: "guidance" as const,
+      allowWorkspaceEdits: false,
+      allowPlanEdits: false,
+      supportContext: supportContext ?? "standalone-project",
+      routingSource: "composer-mode" as const,
+      resolvedActionKind: undefined,
+    };
+  }
+
+  logTutorEvent(
+    "tutorClient auto request missing resolvedAction; defaulting to guidance",
+    { messagePreview: message.slice(0, 180) },
+    "warn",
+  );
   return {
-    intent: policy.intent,
-    allowWorkspaceEdits: policy.allowWorkspaceEdits,
-    allowPlanEdits: policy.allowPlanEdits,
-    supportContext: policy.supportContext,
-    routingSource: "legacy-request-mode" as const,
+    intent: "guidance" as const,
+    allowWorkspaceEdits: false,
+    allowPlanEdits: false,
+    supportContext: supportContext ?? "standalone-project",
+    routingSource: "missing-resolved-action" as const,
     resolvedActionKind: undefined,
   };
 }

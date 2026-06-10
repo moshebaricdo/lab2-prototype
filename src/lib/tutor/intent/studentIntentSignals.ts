@@ -9,14 +9,9 @@
  * vocabularies so the next "add a synonym" fix lands once.
  *
  * Scope note: this is deliberately a deterministic vocabulary, not a classifier.
- * `validationReviewIntent.ts` keeps its own carefully-guarded readiness gate
- * (it is the completion-truth entry point and must stay conservative), and the
- * broad routing patterns in `requestIntent.ts` are intentionally wider than the
- * focused predicates here. Callers compose these predicates; they do not have to
- * collapse to a single one.
+ * Semantic routing (Check My Work, guidance vs edit) lives in model classifiers.
+ * Keep predicates here for coach/focus-pick helpers until those paths migrate too.
  */
-
-import { isValidationReviewIntent } from "../../validation/validationReviewIntent";
 
 /**
  * Canonical edit-action verbs. Exposed as both an array (for reuse/inspection)
@@ -106,10 +101,18 @@ const VAGUE_EDIT_QUALITY_PATTERN = new RegExp(
 );
 
 const CONCRETE_EDIT_DIRECTIVE_PATTERN =
-  /\b(blue|red|green|yellow|orange|purple|pink|black|white|gray|grey|teal|navy|#[0-9a-f]{3,8}\b|rgb\(|hsl\(|color|colour|background|font|fontsize|font-size|spacing|padding|margin|border|radius|shadow|hover|focus|visited|underline|transition|animation|animate|column|columns|row|rows|grid|flex|width|height|px|rem|em|%|selector|\.[a-z][\w-]*|#[a-z][\w-]*|index\.html|style\.css|script\.js|javascript|\bjs\b|click|toggle|dropdown|modal|2\s*column|two\s*column|three\s*column|left|right|center|align|wrap|gap|padding-top|margin-top|outline|focus-visible|aria|label|caption|copy|text|image|photo|upload|src=)\b/i;
+  /\b(blue|red|green|yellow|orange|purple|pink|black|white|gray|grey|teal|navy|#[0-9a-f]{3,8}\b|rgb\(|hsl\(|color|colour|background|font|fontsize|font-size|spacing|padding|margin|border|radius|shadow|hover|focus|visited|underline|transition|animation|animate|column|columns|row|rows|grid|flex|width|height|px|rem|em|%|selector|\.[a-z][\w-]*|#[a-z][\w-]*|index\.html|style\.css|script\.js|javascript|\bjs\b|click|toggle|dropdown|modal|2\s*column|two\s*column|three\s*column|left|right|center|align|wrap|gap|padding-top|margin-top|outline|focus-visible|aria|label|caption|copy|text|images?|photo|upload|src=|below|above|under|beneath)\b/i;
+
+/** Counts, placement, or content hints that make a feature-add specific enough to edit directly. */
+const CONCRETE_FEATURE_SPEC_PATTERN =
+  /\b(\d+\s+(card|cards|column|columns|link|links|item|items|row|rows|button|buttons|section|sections)|with\s+(images?|titles?|headings?|links?|icons?)|below\s+the|above\s+the|under\s+the)\b/i;
 
 const COMPLETION_STATUS_IN_FOCUS_PATTERN =
   /\b(are|is|was|were)\s+(done|finished|complete|completed|ready)\b/i;
+
+/** Bare "I'm done / finished / ready" — focus-pick guard only, not validation routing. */
+const BARE_COMPLETION_PATTERN =
+  /\b(i'?m|i am)\s+(done|finished|ready)\b|\b(i'?m|i am)\s+finished\s+with\b/i;
 
 const CONCEPT_QUESTION_PATTERN =
   /\b(what is|what'?s|what are|define|meaning of|i don'?t understand|i don'?t know|can you explain)\b/i;
@@ -177,9 +180,11 @@ export function hasVagueEditQualityGoal(message: string) {
   return VAGUE_EDIT_QUALITY_PATTERN.test(message.trim());
 }
 
-/** The student names a concrete styling, layout, or file/selector directive. */
+/** The student names a concrete styling, layout, feature spec, or file/selector directive. */
 export function hasConcreteEditDirective(message: string) {
-  return CONCRETE_EDIT_DIRECTIVE_PATTERN.test(message.trim());
+  const trimmed = message.trim();
+  return CONCRETE_EDIT_DIRECTIVE_PATTERN.test(trimmed) ||
+    CONCRETE_FEATURE_SPEC_PATTERN.test(trimmed);
 }
 
 /**
@@ -190,6 +195,11 @@ export function mentionsCompletionStatus(message: string) {
   return COMPLETION_STATUS_IN_FOCUS_PATTERN.test(message.trim());
 }
 
+/** Whole-message completion phrasing ("I'm done", "I'm finished with the links"). */
+export function mentionsBareCompletion(message: string) {
+  return BARE_COMPLETION_PATTERN.test(message.trim());
+}
+
 /**
  * Shared readiness/completion guard for focus-pick routing and instruction coach.
  * Composes the conservative validation gate with lighter progress signals.
@@ -197,8 +207,8 @@ export function mentionsCompletionStatus(message: string) {
 export function messageIndicatesCompletionOrReadiness(message: string) {
   const trimmed = message.trim();
   if (!trimmed) return false;
-  if (isValidationReviewIntent(trimmed)) return true;
   if (reportsSuccess(trimmed) || asksToContinue(trimmed)) return true;
+  if (mentionsBareCompletion(trimmed)) return true;
   if (mentionsCompletionStatus(trimmed)) return true;
   return false;
 }

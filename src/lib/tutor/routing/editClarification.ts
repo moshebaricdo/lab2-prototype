@@ -1,6 +1,5 @@
 import type { EditOptionChoice, EditOptionsCardData } from "../../../types/chat";
 import type { InstructionFocusContext, InstructionOption } from "../../../types/tutor";
-import { asksForDirectEdit } from "../intent/requestIntent";
 import {
   hasConcreteEditDirective,
   hasVagueEditQualityGoal,
@@ -51,7 +50,7 @@ export function shouldOfferEditClarificationForFocusSelection(
 
 export function isUnderspecifiedEditRequest(message: string) {
   const trimmed = message.trim();
-  if (!trimmed || !asksForDirectEdit(trimmed)) return false;
+  if (!trimmed) return false;
   if (!hasVagueEditQualityGoal(trimmed)) return false;
   if (hasConcreteEditDirective(trimmed)) return false;
   return true;

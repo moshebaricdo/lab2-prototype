@@ -14,6 +14,7 @@
 |---|---|
 | `validationGoalEvaluators.ts` | Resolve evaluator kind per goal index |
 | `validationHarness.ts` | Evidence, checklist assembly, rollup, offer/fallback review |
+| `validationReviewMessaging.ts` | Programmatic validation chat copy, LLM offer/result messaging helpers |
 | `aiWebLab2Review.ts` | AI path for `ai` goals only; merges via harness |
 
 ## Goal → evaluator patterns
@@ -33,6 +34,14 @@
 When a route passes `validationReviewConfig`, the collapsed instructions pin uses **`Step N of M`** where `M` is the assessment goal count and `N` comes from the first incomplete criterion after Check My Work (or `1` before any review). Summary text uses review detail when present, otherwise the assessment goal label. Instruction guide shape (linear vs choice-based) does not affect the pin.
 
 Levels without validation config keep guide-driven pinning (linear steps or open-ended focus).
+
+## Student-facing validation copy
+
+- Checklist rows, pass/warn/missing status, and Continue gating stay deterministic in `validationHarness.ts`.
+- Chat text above the review card may be LLM-authored when a Tutor API key is present:
+  - **Offer entry point** (natural-language readiness in chat): `generateValidationOfferMessage()` in `validationReviewMessaging.ts`
+  - **Review results** (composer/card/Continue paths): `summaryMessage` from `createAiWebLab2ValidationReview()`, resolved via `resolveValidationResultMessage()`
+- Both paths fall back to programmatic copy in `validationReviewMessaging.ts` when unkeyed or on model failure. The inline Check my work card UI is unchanged.
 
 ## Level builder contract
 

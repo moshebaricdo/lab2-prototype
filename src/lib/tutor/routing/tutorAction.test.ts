@@ -2,6 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 import type { TutorPolicy } from "../../../types/tutor";
 import { resolveTutorAction } from "./tutorAction";
 
+vi.mock("../../../hooks/useTutorApiSettings", () => ({
+  getTutorApiKey: () => "",
+  getTutorCodeModel: () => "gpt-4.1",
+}));
+
 const basePolicy: TutorPolicy = {
   lab: "weblab2",
   supportContext: "curriculum-level",
@@ -19,11 +24,40 @@ const basePolicy: TutorPolicy = {
   routingProfile: "validation-checkpoint",
 };
 
+const validationReviewYes = {
+  requestValidationReviewIntent: vi.fn(async () => ({
+    shouldRunReview: true,
+    confidence: "high" as const,
+  })),
+};
+
+const intentEdit = {
+  requestIntentClassification: vi.fn(async () => ({
+    intent: "edit" as const,
+    confidence: "high" as const,
+  })),
+};
+
+const intentGuidance = {
+  requestIntentClassification: vi.fn(async () => ({
+    intent: "guidance" as const,
+    confidence: "high" as const,
+  })),
+};
+
+const editClarifyYes = {
+  requestEditClarificationNeed: vi.fn(async () => ({
+    shouldClarify: true,
+    confidence: "high" as const,
+  })),
+};
+
 describe("resolveTutorAction", () => {
   it("routes ambiguous readiness messages to validation review in checkpoint levels", async () => {
     expect(await resolveTutorAction({
       message: "Can I continue?",
       policy: basePolicy,
+      validationReviewIntentProvider: validationReviewYes,
     })).toMatchObject({
       kind: "validationReview",
       source: "review-offer",
@@ -39,6 +73,7 @@ describe("resolveTutorAction", () => {
     expect(await resolveTutorAction({
       message: "I'm done",
       policy: guidedPolicy,
+      validationReviewIntentProvider: validationReviewYes,
     })).toMatchObject({
       kind: "validationReview",
       source: "review-offer",
@@ -50,6 +85,7 @@ describe("resolveTutorAction", () => {
       message: "I'm done!",
       requestMode: "build",
       policy: basePolicy,
+      validationReviewIntentProvider: validationReviewYes,
     })).toMatchObject({
       kind: "validationReview",
       source: "review-offer",
@@ -60,6 +96,7 @@ describe("resolveTutorAction", () => {
     expect(await resolveTutorAction({
       message: "I got the Next button working.",
       policy: basePolicy,
+      validationReviewIntentProvider: validationReviewYes,
     })).toMatchObject({
       kind: "validationReview",
       source: "review-offer",
@@ -68,6 +105,7 @@ describe("resolveTutorAction", () => {
     expect(await resolveTutorAction({
       message: "That seems to work now.",
       policy: basePolicy,
+      validationReviewIntentProvider: validationReviewYes,
     })).toMatchObject({
       kind: "validationReview",
       source: "review-offer",
@@ -87,15 +125,18 @@ describe("resolveTutorAction", () => {
     expect(await resolveTutorAction({
       message: "Improve the nav link hover styles.",
       policy: basePolicy,
+      intentProvider: intentEdit,
     })).toMatchObject({
       kind: "edit",
     });
   });
 
-  it("returns edit clarification for broad underspecified edit requests in auto mode", async () => {
+  it("returns edit clarification when the model gate says to clarify", async () => {
     expect(await resolveTutorAction({
       message: "make all of the buttons more exciting",
       policy: basePolicy,
+      intentProvider: intentEdit,
+      editClarificationProvider: editClarifyYes,
     })).toMatchObject({
       kind: "editClarification",
       message: "make all of the buttons more exciting",
@@ -104,17 +145,29 @@ describe("resolveTutorAction", () => {
     expect(await resolveTutorAction({
       message: "Let's refine the buttons",
       policy: basePolicy,
+      intentProvider: intentEdit,
+      editClarificationProvider: editClarifyYes,
     })).toMatchObject({
       kind: "editClarification",
       message: "Let's refine the buttons",
     });
   });
 
-  it("returns edit clarification for broad build-mode requests", async () => {
+  it("fail-closes to guidance without a key when providers are not injected", async () => {
+    expect(await resolveTutorAction({
+      message: "make all of the buttons more exciting",
+      policy: basePolicy,
+    })).toMatchObject({
+      kind: "guidance",
+    });
+  });
+
+  it("returns edit clarification for broad build-mode requests when the model gate says to clarify", async () => {
     expect(await resolveTutorAction({
       message: "make the buttons better",
       requestMode: "build",
       policy: basePolicy,
+      editClarificationProvider: editClarifyYes,
     })).toMatchObject({
       kind: "editClarification",
     });
@@ -155,6 +208,7 @@ describe("resolveTutorAction", () => {
     expect(await resolveTutorAction({
       message: "Improve the nav link hover styles.",
       policy,
+      intentProvider: intentEdit,
     })).toMatchObject({
       kind: "denied",
       requested: "edit",
@@ -231,22 +285,34 @@ describe("resolveTutorAction", () => {
     });
   });
 
+  it("routes chat-log echo phrases through the validation intent classifier when keyed", async () => {
+    expect(await resolveTutorAction({
+      message: "ready to request a review",
+      policy: basePolicy,
+      workflow: { lastAssistantOfferedReview: true },
+      validationReviewIntentProvider: validationReviewYes,
+    })).toMatchObject({
+      kind: "validationReview",
+      source: "review-offer",
+    });
+  });
+
   it("does not treat a bare affirmation as a review when no review was offered", async () => {
-    const intentProvider = {
-      requestIntentClassification: vi.fn(async () => ({ intent: "guidance" as const })),
-    };
     const action = await resolveTutorAction({
       message: "yes",
       policy: basePolicy,
       workflow: { lastAssistantOfferedReview: false },
-      intentProvider,
+      intentProvider: intentGuidance,
     });
     expect(action.kind).not.toBe("validationReview");
   });
 
-  it("does not call the model classifier for a confident imperative edit", async () => {
+  it("routes imperative edit requests through the injected intent classifier", async () => {
     const intentProvider = {
-      requestIntentClassification: vi.fn(async () => ({ intent: "guidance" as const })),
+      requestIntentClassification: vi.fn(async () => ({
+        intent: "edit" as const,
+        confidence: "high" as const,
+      })),
     };
 
     const action = await resolveTutorAction({
@@ -255,7 +321,7 @@ describe("resolveTutorAction", () => {
       intentProvider,
     });
 
-    expect(intentProvider.requestIntentClassification).not.toHaveBeenCalled();
+    expect(intentProvider.requestIntentClassification).toHaveBeenCalledOnce();
     expect(action).toMatchObject({ kind: "edit" });
   });
 });

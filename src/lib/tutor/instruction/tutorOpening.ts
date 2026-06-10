@@ -116,33 +116,42 @@ function titleSubject(title: string) {
     .trim();
 }
 
-function deriveDebugGoal(title: string, success: string) {
-  if (/next button/i.test(success)) {
-    return "debug why the Next button is not working correctly";
+function deriveDebugGoal(title: string, success: string, markdown: string) {
+  if (/next button|photo|carousel|caption/i.test(`${success} ${markdown}`)) {
+    return "In this level, we'll debug and fix the Next button in the photo carousel.";
   }
-  if (title) return `debug the ${titleSubject(title).toLowerCase()}`;
-  return "debug what is not working yet";
+  if (title && !/^do this$/i.test(title)) {
+    return `Let's debug and fix ${titleSubject(title).toLowerCase()}.`;
+  }
+  return "Let's figure out what's not working yet and fix it together.";
 }
 
 function deriveConceptGoal(markdown: string, title: string) {
   if (/\bpromise/i.test(markdown)) {
-    return "tracing how Promises change state over time";
+    return "We'll trace how Promises change state over time.";
   }
-  return title ? `understanding ${titleSubject(title).toLowerCase()}` : "understanding the code behavior";
+  return title
+    ? `Let's explore ${titleSubject(title).toLowerCase()}.`
+    : "Let's understand how this code behaves.";
 }
 
 function deriveProcedureGoal(markdown: string, title: string) {
   if (/\bloader|ship|cargo|freez/i.test(markdown)) {
-    return "fix the loader so the ship can fill up without freezing the browser";
+    return "Let's fix the loader so the ship can fill up without freezing the browser.";
   }
-  return title ? `work through ${titleSubject(title).toLowerCase()}` : "work through the code one piece at a time";
+  return title
+    ? `We'll work through ${titleSubject(title).toLowerCase()} step by step.`
+    : "We'll work through the code one piece at a time.";
 }
 
 function deriveCreativeGoal(guide: ChoiceBasedInstructionGuide) {
-  return stripWorksheetPrefix(guide.goal)
+  const subject = stripWorksheetPrefix(guide.goal)
     .replace(/^with the help of ai,\s*/i, "")
-    .replace(/^improve\s+/i, "polishing ")
+    .replace(/^improve\s+/i, "polish ")
     .replace(/\.$/, "");
+  return subject.match(/^polish/i)
+    ? `We'll ${subject}.`
+    : `Let's work on ${subject}.`;
 }
 
 function deriveSuccess(markdown: string, guide: InstructionGuide, tone: TutorOpeningTone) {
@@ -169,16 +178,19 @@ function deriveFirstMove(markdown: string, guide: InstructionGuide, tone: TutorO
   if (guide.type === "choice-based") {
     const labels = guide.options.map((option) => option.label.toLowerCase()).slice(0, 4);
     return labels.length > 0
-      ? `Pick one area to improve first, like ${labels.join(", ")}. Tell me what you want to focus on.`
-      : "Pick one area to improve first, then tell me what you want to focus on.";
+      ? `Pick one area to improve first — maybe ${labels.join(", ")} — and tell me what you'd like to focus on.`
+      : "Pick one area to improve first and tell me what you'd like to focus on.";
   }
 
   const firstAction = firstNumberedAction(guide);
   if (tone === "concept" && /\bpromise/i.test(markdown)) {
-    return "Start with the first numbered comment in the code. Tell me what state you think the Promise is in.";
+    return "Start with the first numbered comment in the code and tell me what state you think the Promise is in.";
   }
   if (/\bwhile\s+loop|runBtn/i.test(markdown)) {
-    return "Start by finding the while loop inside the runBtn event listener. Tell me what you notice around the missing-code comments.";
+    return "Start by finding the while loop inside the runBtn event listener and tell me what you notice around the missing-code comments.";
+  }
+  if (/\bnext button|click the next/i.test(`${markdown} ${firstAction}`)) {
+    return "Start by clicking the Next button and tell me what you observe.";
   }
   if (firstAction) {
     const actionOnly = firstAction
@@ -187,24 +199,11 @@ function deriveFirstMove(markdown: string, guide: InstructionGuide, tone: TutorO
       .trim();
     if (looksLikeNumberedStepTitle(actionOnly)) {
       const cleaned = stripWorksheetPrefix(actionOnly);
-      return `Start with "${cleaned}". Tell me what you'd like to do first.`;
+      return `Start with "${cleaned}" and tell me what you'd like to do first.`;
     }
-    return `First, ${actionOnly.charAt(0).toLowerCase()}${actionOnly.slice(1)}. Tell me what you notice.`;
+    return `Start by ${actionOnly.charAt(0).toLowerCase()}${actionOnly.slice(1)} and tell me what you observe.`;
   }
-  return "Try the first small step, then tell me what you notice.";
-}
-
-function formatGoalSentence(tone: TutorOpeningTone, goal: string) {
-  if (tone === "debug") return `Let's ${goal}.`;
-  if (tone === "creative") return `This level is about ${goal}.`;
-  if (tone === "concept") return `This level is about ${goal}.`;
-  return `In this level, you'll ${goal}.`;
-}
-
-function formatSuccessSentence(tone: TutorOpeningTone, success: string) {
-  if (tone === "debug") return `When the page works, ${success.charAt(0).toLowerCase()}${success.slice(1)}`;
-  if (tone === "creative") return `Aim for a page where ${success}.`;
-  return `You'll know you're on track when ${success}.`;
+  return "Try the first small step and tell me what you observe.";
 }
 
 export function buildTutorOpening(markdown: string, guide: InstructionGuide): TutorOpening {
@@ -216,7 +215,7 @@ export function buildTutorOpening(markdown: string, guide: InstructionGuide): Tu
     guide.type === "choice-based"
       ? deriveCreativeGoal(guide)
       : tone === "debug"
-        ? deriveDebugGoal(title, success)
+        ? deriveDebugGoal(title, success, markdown)
         : tone === "concept"
           ? deriveConceptGoal(markdown, title)
           : deriveProcedureGoal(markdown, title)
@@ -233,14 +232,9 @@ export function buildTutorOpening(markdown: string, guide: InstructionGuide): Tu
 }
 
 export function formatInstructionOpeningMessage(opening: TutorOpening) {
-  const goalSentence = formatGoalSentence(opening.tone, opening.goal);
-  const success = opening.success?.trim();
-  const successPart =
-    success && isUsableSuccessPhrase(success)
-      ? ` ${formatSuccessSentence(opening.tone, success)}`
-      : "";
-
-  return [goalSentence + successPart, opening.firstMove].filter(Boolean).join("\n\n");
+  const goal = opening.goal?.trim();
+  const firstMove = opening.firstMove?.trim();
+  return [goal, firstMove].filter(Boolean).join("\n\n");
 }
 
 export function formatTutorOpening(opening: TutorOpening) {

@@ -74,6 +74,18 @@ export interface TutorEditClarificationResponse {
   options?: TutorEditClarificationOptionResponse[];
 }
 
+export interface TutorEditClarificationNeedResponse {
+  shouldClarify?: boolean;
+  confidence?: "high" | "low";
+  reason?: string;
+}
+
+export interface TutorValidationReviewIntentResponse {
+  shouldRunReview?: boolean;
+  confidence?: "high" | "low";
+  reason?: string;
+}
+
 export interface TutorEditClarificationResult {
   message: string;
   editOptions?: EditOptionsCardData;

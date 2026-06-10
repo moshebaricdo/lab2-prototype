@@ -26,6 +26,20 @@ const basePolicy: TutorPolicy = {
   routingProfile: "validation-checkpoint",
 };
 
+const validationReviewYes = {
+  requestValidationReviewIntent: vi.fn(async () => ({
+    shouldRunReview: true,
+    confidence: "high" as const,
+  })),
+};
+
+const intentEdit = {
+  requestIntentClassification: vi.fn(async () => ({
+    intent: "edit" as const,
+    confidence: "high" as const,
+  })),
+};
+
 const polishGuideMarkdown = `
 # Polish the Style
 **Improve the links and buttons while keeping the page usable.**
@@ -41,6 +55,7 @@ describe("resolveTutorTurn", () => {
       message: "I'm done!",
       requestMode: "build",
       policy: basePolicy,
+      validationReviewIntentProvider: validationReviewYes,
     });
 
     expect(turn.action).toMatchObject({
@@ -49,10 +64,17 @@ describe("resolveTutorTurn", () => {
     });
   });
 
-  it("returns edit clarification for vague edit requests (log 13)", async () => {
+  it("returns edit clarification when the model gate says to clarify (log 13)", async () => {
     const turn = await resolveTutorTurn({
       message: "Let's refine the buttons",
       policy: basePolicy,
+      intentProvider: intentEdit,
+      editClarificationProvider: {
+        requestEditClarificationNeed: vi.fn(async () => ({
+          shouldClarify: true,
+          confidence: "high" as const,
+        })),
+      },
     });
 
     expect(turn.action).toMatchObject({
@@ -87,6 +109,7 @@ describe("resolveTutorTurn", () => {
       message: "I'm done",
       policy: basePolicy,
       instruction: { guide, guideState },
+      validationReviewIntentProvider: validationReviewYes,
     });
 
     expect(turn.action.kind).toBe("validationReview");

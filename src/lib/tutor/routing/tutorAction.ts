@@ -3,15 +3,22 @@ import type {
   TutorPolicy,
   TutorRequestMode,
 } from "../../../types/tutor";
-import { isValidationReviewIntent } from "../../validation/validationReviewIntent";
-import { isUnderspecifiedEditRequest } from "./editClarification";
-import { isAffirmation } from "../intent/studentIntentSignals";
+import {
+  resolveValidationReviewIntent,
+  type ValidationReviewIntentClassifierContext,
+} from "../../validation/validationReviewIntentClassifier";
 import { type TutorRequestIntent } from "../intent/requestIntent";
 import { resolveAutoTutorRequestIntent } from "../intent/requestIntentClassifier";
 import {
   openAiTutorProvider,
+  type TutorEditClarificationNeedProvider,
   type TutorRequestIntentProvider,
+  type TutorValidationReviewIntentProvider,
 } from "../provider/openAiProvider";
+import {
+  resolveEditClarificationNeed,
+  type EditClarificationClassifierContext,
+} from "./editClarificationClassifier";
 
 export interface TutorActionWorkflowState {
   hasActivePlan?: boolean;
@@ -25,17 +32,77 @@ export interface TutorActionWorkflowState {
   skipEditClarification?: boolean;
 }
 
+export interface EditClarificationRoutingContext extends EditClarificationClassifierContext {}
+
+export interface ValidationReviewIntentRoutingContext
+  extends ValidationReviewIntentClassifierContext {}
+
 export interface ResolveTutorActionOptions {
   message: string;
   requestMode?: TutorRequestMode;
   policy: TutorPolicy;
   workflow?: TutorActionWorkflowState;
+  editClarification?: EditClarificationRoutingContext;
+  validationReviewIntent?: ValidationReviewIntentRoutingContext;
   /** Override the intent classifier provider (tests inject a stub). */
   intentProvider?: TutorRequestIntentProvider;
+  /** Override the edit-clarification gate provider (tests inject a stub). */
+  editClarificationProvider?: TutorEditClarificationNeedProvider;
+  /** Override the validation-review intent gate provider (tests inject a stub). */
+  validationReviewIntentProvider?: TutorValidationReviewIntentProvider;
 }
 
-const CONCRETE_BUILD_REQUEST_PATTERN =
-  /\b(build the project described in|update the plan status|check off the completed items|ready to build the project from this plan)\b/i;
+function buildEditClarificationContext(
+  policy: TutorPolicy,
+  routingContext: EditClarificationRoutingContext | undefined,
+): EditClarificationClassifierContext {
+  return {
+    supportContext: policy.supportContext,
+    conversation: routingContext?.conversation,
+    files: routingContext?.files,
+    levelInstructionsMarkdown: routingContext?.levelInstructionsMarkdown,
+    levelProgress: routingContext?.levelProgress,
+    guide: routingContext?.guide,
+    guideState: routingContext?.guideState,
+  };
+}
+
+async function resolveEditAction({
+  message,
+  policy,
+  source,
+  workflow,
+  editClarification,
+  editClarificationProvider = openAiTutorProvider,
+}: {
+  message: string;
+  policy: TutorPolicy;
+  source: "message" | "ui";
+  workflow: TutorActionWorkflowState;
+  editClarification?: EditClarificationRoutingContext;
+  editClarificationProvider?: TutorEditClarificationNeedProvider;
+}): Promise<TutorAction> {
+  if (!policy.capabilities.workspaceEdits) {
+    return denyAction("edit");
+  }
+
+  const need = await resolveEditClarificationNeed({
+    message,
+    context: buildEditClarificationContext(policy, editClarification),
+    workflow,
+    provider: editClarificationProvider,
+  });
+
+  if (need.shouldClarify) {
+    return {
+      kind: "editClarification",
+      source,
+      message,
+    };
+  }
+
+  return { kind: "edit", source, message };
+}
 
 function deniedMessage(requested: "guidance" | "plan" | "edit" | "validationReview") {
   if (requested === "guidance") {
@@ -60,60 +127,38 @@ function denyAction(requested: "guidance" | "plan" | "edit" | "validationReview"
   };
 }
 
-function shouldClarifyBeforeEdit(
-  message: string,
-  workflow: TutorActionWorkflowState,
-) {
-  if (workflow.skipEditClarification) return false;
-  if (CONCRETE_BUILD_REQUEST_PATTERN.test(message)) return false;
-  return isUnderspecifiedEditRequest(message);
-}
-
-function resolveEditAction({
-  message,
-  policy,
-  source,
-  workflow,
-}: {
-  message: string;
-  policy: TutorPolicy;
-  source: "message" | "ui";
-  workflow: TutorActionWorkflowState;
-}): TutorAction {
-  if (!policy.capabilities.workspaceEdits) {
-    return denyAction("edit");
-  }
-
-  if (shouldClarifyBeforeEdit(message, workflow)) {
-    return {
-      kind: "editClarification",
-      source,
-      message,
-    };
-  }
-
-  return { kind: "edit", source, message };
-}
-
 function actionForIntent(
   intent: TutorRequestIntent,
   message: string,
   policy: TutorPolicy,
   workflow: TutorActionWorkflowState,
-): TutorAction {
+  editClarification?: EditClarificationRoutingContext,
+  editClarificationProvider?: TutorEditClarificationNeedProvider,
+): Promise<TutorAction> {
   if (intent === "edit") {
-    return resolveEditAction({ message, policy, source: "message", workflow });
+    return resolveEditAction({
+      message,
+      policy,
+      source: "message",
+      workflow,
+      editClarification,
+      editClarificationProvider,
+    });
   }
 
   if (intent === "planning") {
-    return policy.capabilities.planning
-      ? { kind: "plan", source: "message", message }
-      : denyAction("plan");
+    return Promise.resolve(
+      policy.capabilities.planning
+        ? { kind: "plan", source: "message", message }
+        : denyAction("plan"),
+    );
   }
 
-  return policy.capabilities.guidance
-    ? { kind: "guidance", source: "message", message }
-    : denyAction("guidance");
+  return Promise.resolve(
+    policy.capabilities.guidance
+      ? { kind: "guidance", source: "message", message }
+      : denyAction("guidance"),
+  );
 }
 
 function isDoThatFollowUp(message: string) {
@@ -126,7 +171,11 @@ export async function resolveTutorAction({
   requestMode = "auto",
   policy,
   workflow = {},
+  editClarification,
+  validationReviewIntent,
   intentProvider = openAiTutorProvider,
+  editClarificationProvider = openAiTutorProvider,
+  validationReviewIntentProvider = openAiTutorProvider,
 }: ResolveTutorActionOptions): Promise<TutorAction> {
   if (workflow.hasPendingProposal) {
     return {
@@ -150,21 +199,31 @@ export async function resolveTutorAction({
 
   // Readiness to validate overrides sticky Build/Plan/Help composer mode (e.g. after
   // picking a direction on the edit-options card, which temporarily sets Build).
-  if (
-    policy.capabilities.validationReview &&
-    (isValidationReviewIntent(message) ||
-      // "yes" / "sure" / "go ahead" confirming a review Tutor just offered.
-      (workflow.lastAssistantOfferedReview && isAffirmation(message)))
-  ) {
-    return {
-      kind: "validationReview",
-      source: "review-offer",
+  if (policy.capabilities.validationReview) {
+    const reviewIntent = await resolveValidationReviewIntent({
       message,
-    };
+      context: validationReviewIntent,
+      workflow: { lastAssistantOfferedReview: workflow.lastAssistantOfferedReview },
+      provider: validationReviewIntentProvider,
+    });
+    if (reviewIntent.shouldRunReview) {
+      return {
+        kind: "validationReview",
+        source: "review-offer",
+        message,
+      };
+    }
   }
 
   if (requestMode === "build") {
-    return resolveEditAction({ message, policy, source: "ui", workflow });
+    return resolveEditAction({
+      message,
+      policy,
+      source: "ui",
+      workflow,
+      editClarification,
+      editClarificationProvider,
+    });
   }
 
   if (requestMode === "plan") {
@@ -197,5 +256,12 @@ export async function resolveTutorAction({
     provider: intentProvider,
   });
 
-  return actionForIntent(intent, message, policy, workflow);
+  return actionForIntent(
+    intent,
+    message,
+    policy,
+    workflow,
+    editClarification,
+    editClarificationProvider,
+  );
 }

@@ -1,34 +1,25 @@
 import type { ChatMessage } from "../../../types/chat";
 import type { ValidationReviewCardData } from "../../../types/validationReview";
+import { buildValidationReviewOfferMessage } from "../../validation/validationReviewMessaging";
 
 export type ValidationReviewRequestSource = "card" | "composer" | "continue";
 
+/** @deprecated Import from validationReviewMessaging instead. */
 export function buildValidationOfferMessage(
   submittedContent: string,
   review: ValidationReviewCardData,
 ) {
-  const hasMultipleRequirements = (review.requirements?.length ?? 0) > 1;
-
-  if (/\b(works|worked|working|fixed|done|finished|complete|completed)\b/i.test(submittedContent)) {
-    return "Great. I can check your work now and let you know whether you're ready to continue.";
-  }
-
-  if (/\b(check|review|validate|grade)\b/i.test(submittedContent)) {
-    return hasMultipleRequirements
-      ? "I can check your progress and show what looks complete and what to work on next."
-      : "I can check your work and let you know whether you're ready to continue.";
-  }
-
-  return "When you're ready, I can check your work and let you know whether you're ready to continue.";
+  return buildValidationReviewOfferMessage(submittedContent, review);
 }
 
 export function buildValidationReviewOfferChatMessage(
   studentMessage: string,
   offer: ValidationReviewCardData,
+  offerMessage?: string,
 ): ChatMessage {
   return {
     role: "assistant",
-    content: buildValidationOfferMessage(studentMessage, offer),
+    content: offerMessage ?? buildValidationReviewOfferMessage(studentMessage, offer),
     validationReview: offer,
   };
 }
@@ -69,6 +60,28 @@ export function appendValidationReviewResultToConversation(
 ): ChatMessage[] {
   return [
     ...hideValidationReviewOfferActionsWithAlert(messages),
+    {
+      role: "assistant",
+      content: resultMessage,
+      validationReview: review,
+    },
+  ];
+}
+
+/** Chat-triggered review (no prior offer card): alert + summary result. */
+export function appendChatTriggeredValidationReview(
+  messages: ChatMessage[],
+  review: ValidationReviewCardData,
+  resultMessage: string,
+): ChatMessage[] {
+  return [
+    ...messages,
+    {
+      role: "assistant",
+      content: "You requested a review.",
+      isAlert: true,
+      alertVariant: "validation",
+    },
     {
       role: "assistant",
       content: resultMessage,
