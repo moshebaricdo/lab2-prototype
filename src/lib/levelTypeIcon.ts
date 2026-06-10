@@ -22,10 +22,13 @@ const WEB_LAB_PATH_PREFIXES = [
   "/levels/progression-weblab",
   "/levels/progression-branch-",
   "/levels/progression-upload-mechanisms",
+  "/levels/progression-backpack-filter",
   "/levels/progression-weblab2-validation",
 ];
 
 const PYTHON_LAB_PATH_PREFIXES = ["/levels/pythonlab"];
+
+const SKETCH_LAB_PATH_PREFIXES = ["/levels/sketchlab"];
 
 const AI_CHAT_LAB_PATH_PREFIXES = ["/levels/aichatlab"];
 
@@ -42,6 +45,10 @@ export function getLevelTypeIconConfig(path: string): LevelTypeIconConfig {
 
   if (PYTHON_LAB_PATH_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix))) {
     return { family: "brands", name: "python" };
+  }
+
+  if (SKETCH_LAB_PATH_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix))) {
+    return { family: "solid", name: "diagram-project" };
   }
 
   if (WEB_LAB_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {

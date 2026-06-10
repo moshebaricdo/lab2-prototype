@@ -13,6 +13,7 @@ import type { SavedVariant } from "../hooks/useSavedVariants";
 import { generatePromotedCode } from "../utils/promoteToCode";
 import type { PromotedCode } from "../utils/promoteToCode";
 import {
+  agenticProgressionLinks,
   aiChatLabLevelLinks,
   bubbleChoiceLevelLinks,
   freeResponseLevelLinks,
@@ -20,9 +21,11 @@ import {
   matchLevelLinks,
   multiChoiceLevelLinks,
   pythonLabLevelLinks,
+  sketchLabLevelLinks,
   sampleProgressionLinks,
   drawerImprovementsExperimentLinks,
   uploadMechanismsProgressionLinks,
+  backpackFilterProgressionLinks,
   webLab2ExperimentLinks,
   webLab2ValidationProgressionLinks,
   webLab2LevelLinks,
@@ -72,6 +75,11 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
         description: "Python IDE with console output",
         pages: pythonLabLevelLinks,
       },
+      {
+        levelType: "Sketch Lab",
+        description: "Whiteboard and diagramming canvas",
+        pages: sketchLabLevelLinks,
+      },
     ],
   },
   {
@@ -118,11 +126,13 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/match-connector": "Match",
   "/levels/match-swipe-cards": "Match",
   "/levels/pythonlab": "Python Lab",
+  "/levels/sketchlab": "Sketch Lab",
   "/levels/aichatlab": "AI Chat Lab",
   "/levels/weblab2": "Web Lab 2",
   "/levels/levelgroup": "Levelgroup",
   "/levels/bubble-choice": "Bubble choice",
   "/levels/progression-upload-mechanisms": "Sample progression",
+  "/levels/progression-backpack-filter": "Sample progression",
   "/levels/progression": "Sample progression",
 };
 
@@ -466,6 +476,61 @@ export function LevelsIndexPage() {
                 </div>
                 <div className={styles.bubbleRow}>
                   {uploadMechanismsProgressionLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>Backpack Filtering</h3>
+                  <p className={styles.cardDescription}>
+                    Compare source sections, filter pills, a supported toggle, and a dropdown.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {backpackFilterProgressionLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>Agentic AI Explorations</h3>
+                  <p className={styles.cardDescription}>
+                    Two directions for teaching agentic AI: specialist agents
+                    in the tutor panel, and student-run mission control.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {agenticProgressionLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       content={page.name}

@@ -28,6 +28,12 @@ const AiChatLabModelCardLevelPage = lazyPage(
   AiChatLabPages,
   "AiChatLabModelCardLevelPage",
 );
+const SketchLabPages = () => import("./pages/sketchlab/SketchLabLevelPage");
+const SketchLabLevelPage = lazyPage(SketchLabPages, "SketchLabLevelPage");
+const SketchLabBlankProjectLevelPage = lazyPage(
+  SketchLabPages,
+  "SketchLabBlankProjectLevelPage",
+);
 const BubbleChoiceLevelPage = lazyPage(
   () => import("./pages/bubble-choice/BubbleChoiceLevelPage"),
   "BubbleChoiceLevelPage",
@@ -148,6 +154,14 @@ const MultiChoiceLevelPage = lazyPage(
   () => import("./pages/multi-choice/MultiChoiceLevelPage"),
   "MultiChoiceLevelPage",
 );
+const AgenticCrewLevelPage = lazyPage(
+  () => import("./pages/progression/AgenticCrewLevelPage"),
+  "AgenticCrewLevelPage",
+);
+const AgenticMissionLevelPage = lazyPage(
+  () => import("./pages/progression/AgenticMissionLevelPage"),
+  "AgenticMissionLevelPage",
+);
 const ProgressionBranchWebLabPage = () =>
   import("./pages/progression/ProgressionBranchWebLabPage");
 const ProgressionBranchColorPage = lazyPage(
@@ -228,6 +242,24 @@ const UploadMechanismsFileChipLevelPage = lazyPage(
   WebLab2UploadMechanismsPages,
   "UploadMechanismsFileChipLevelPage",
 );
+const WebLab2BackpackFilteringPages = () =>
+  import("./pages/weblab2/WebLab2BackpackFilteringLevelPage");
+const BackpackFilterSectionsLevelPage = lazyPage(
+  WebLab2BackpackFilteringPages,
+  "BackpackFilterSectionsLevelPage",
+);
+const BackpackFilterPillsLevelPage = lazyPage(
+  WebLab2BackpackFilteringPages,
+  "BackpackFilterPillsLevelPage",
+);
+const BackpackFilterToggleLevelPage = lazyPage(
+  WebLab2BackpackFilteringPages,
+  "BackpackFilterToggleLevelPage",
+);
+const BackpackFilterDropdownLevelPage = lazyPage(
+  WebLab2BackpackFilteringPages,
+  "BackpackFilterDropdownLevelPage",
+);
 const WebLab2ValidationLevel = lazyPage(
   () => import("./pages/weblab2/WebLab2ValidationLevel"),
   "WebLab2ValidationLevel",
@@ -267,6 +299,11 @@ export default function App() {
         <Route
           path="/levels/aichatlab-model-card"
           element={<AiChatLabModelCardLevelPage />}
+        />
+        <Route path="/levels/sketchlab" element={<SketchLabLevelPage />} />
+        <Route
+          path="/levels/sketchlab-blank"
+          element={<SketchLabBlankProjectLevelPage />}
         />
         <Route path="/levels/pythonlab" element={<PythonLabLevelPage />} />
         <Route
@@ -316,6 +353,31 @@ export default function App() {
         <Route
           path="/levels/progression-upload-mechanisms-file-chip"
           element={<UploadMechanismsFileChipLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-filter-sections"
+          element={<BackpackFilterSectionsLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-filter-pills"
+          element={<BackpackFilterPillsLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-filter-toggle"
+          element={<BackpackFilterToggleLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-filter-dropdown"
+          element={<BackpackFilterDropdownLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-filter"
+          element={
+            <Navigate
+              to="/levels/progression-backpack-filter-sections"
+              replace
+            />
+          }
         />
         <Route
           path="/levels/progression-weblab2-validation-fix"
@@ -484,6 +546,11 @@ export default function App() {
         <Route
           path="/levels/progression-levelgroup"
           element={<ProgressionLevelGroupPage />}
+        />
+        <Route path="/levels/agentic-crew" element={<AgenticCrewLevelPage />} />
+        <Route
+          path="/levels/agentic-mission"
+          element={<AgenticMissionLevelPage />}
         />
         <Route path="*" element={<Navigate to="/levels" replace />} />
       </Routes>

@@ -57,7 +57,7 @@ The console header includes controls to run code, clear output, and toggle betwe
 
 ## Sidebar Config
 
-The Python Lab page uses the standard `Lab2Shell` with `Sidebar` and includes validation, functional version history, instructions drawer, collapsible sidebar, and dev panel support. Version history is powered by `useVersionHistoryState`; selecting an older snapshot shows that file tree in read-only mode until the student returns to Current Version. The blank standalone route disables the instructions drawer and validation by default, then starts the resource panel collapsed while keeping the rail available.
+The Python Lab page uses the standard `Lab2Shell` with `Sidebar` and includes validation, functional version history, Backpack (shared `localStorage` store with Web Lab; import allow-list in `backpackImportAllowlist.ts` permits `.py`, `.txt`, `.md`, `.csv` only), instructions drawer, collapsible sidebar, and dev panel support. Version history is powered by `useVersionHistoryState`; selecting an older snapshot shows that file tree in read-only mode until the student returns to Current Version. The blank standalone route disables the instructions drawer and validation by default, then starts the resource panel collapsed while keeping the rail available.
 
 The default guided-route instructions drawer copy lives with the Python starter fixture as raw Markdown in `src/data/pythonlab/projects/default/instructions.md`; route wrappers can override it with `instructionsMarkdown` or provide custom React content with `instructionsContent`.
 

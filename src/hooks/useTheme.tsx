@@ -24,7 +24,7 @@ interface ThemeProviderProps {
 const THEME_STORAGE_KEY = "lab2:theme";
 const BRAND_THEME_STORAGE_KEY = "lab2:brand-theme";
 const DEFAULT_THEME: ThemeMode = "light";
-const DEFAULT_BRAND_THEME: BrandTheme = "codeOrg";
+const DEFAULT_BRAND_THEME: BrandTheme = "codeAi";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function normalizeTheme(value: string | null): ThemeMode {

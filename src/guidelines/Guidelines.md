@@ -4,7 +4,7 @@
 
 This repository is a **Lab2 frame/base**, not a Web Lab-only codebase.
 
-It currently powers Web Lab 2, Python Lab, AI Chat Lab, and assessment-style prototypes. The architecture should continue to support additional Lab2-powered environments with minimal structural churn.
+It currently powers Web Lab 2, Python Lab, Sketch Lab, AI Chat Lab, and assessment-style prototypes. The architecture should continue to support additional Lab2-powered environments with minimal structural churn.
 
 When making changes, optimize for:
 
@@ -31,6 +31,7 @@ src/
     ide/weblab2/views/     # Web Lab-specific workspace chrome (preview, split view, etc.)
     ide/pythonlab/views/   # Python Lab-specific workspace chrome (console, run)
     ide/pythonlab/runtime/ # Python execution runtime
+    ide/sketchlab/views/   # Sketch Lab whiteboard canvas chrome
     ide/aichatlab/views/   # AI Chat Lab-specific chat/config workspace chrome
     assessment/            # Assessment level types (shared, multi, match, free-response, levelgroup, bubble-choice)
   pages/                   # Route-level entry points, grouped by level type
@@ -51,7 +52,7 @@ src/
 - `assessment/` contains assessment-specific workspace components; shared assessment chrome belongs in `assessment/shared`.
 - `pages/` owns route composition and dev-panel defaults. Keep route files grouped by level type (`pages/weblab2`, `pages/pythonlab`, `pages/aichatlab`, etc.).
 - As new IDE labs are introduced, add `ide/<labname>/views/` and reuse shared components from `ide/shared/`.
-- `lib/tutor/` contains the functional Tutor harness for guidance routing, project analysis, compact context packing, staged structured edits, validation, repair, tool-loop fallback, and save-title generation. See `src/guidelines/tutor-harness.md`.
+- `lib/tutor/` contains the functional Tutor harness for guidance routing, project analysis, compact context packing, staged structured edits, validation, repair, tool-loop fallback, and save-title generation. See `src/guidelines/tutor-harness.md` — especially **Routing philosophy** for how we prefer small model classifiers over growing regex intent lists.
 
 ---
 

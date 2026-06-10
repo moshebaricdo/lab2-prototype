@@ -24,6 +24,10 @@ export const webLab2ExperimentLinks: LevelProgressLink[] = [
     name: "Validation test",
     path: "/levels/weblab2-validation-test",
   },
+  {
+    name: "Backpack filtering",
+    path: "/levels/progression-backpack-filter-sections",
+  },
 ];
 
 export const drawerImprovementsExperimentLinks: LevelProgressLink[] = [
@@ -145,6 +149,11 @@ export const pythonLabLevelLinks: LevelProgressLink[] = [
   { name: "Standalone Project (Blank)", path: "/levels/pythonlab-blank" },
 ];
 
+export const sketchLabLevelLinks: LevelProgressLink[] = [
+  { name: "Sketch Lab Level", path: "/levels/sketchlab" },
+  { name: "Standalone Project (Blank)", path: "/levels/sketchlab-blank" },
+];
+
 export const aiChatLabLevelLinks: LevelProgressLink[] = [
   { name: "Chat Only Level", path: "/levels/aichatlab" },
   { name: "Setup Only Level", path: "/levels/aichatlab-setup" },
@@ -157,6 +166,11 @@ export const sampleProgressionLinks: LevelProgressLink[] = [
   { name: "Choose Your Path", path: "/levels/progression-bubble-choice" },
   { name: "Practice Project", path: "/levels/progression-branch-color" },
   { name: "HTML & CSS Checkpoint", path: "/levels/progression-levelgroup" },
+];
+
+export const agenticProgressionLinks: LevelProgressLink[] = [
+  { name: "Specialist agents (in the tutor panel)", path: "/levels/agentic-crew" },
+  { name: "Mission Control (you run the agents)", path: "/levels/agentic-mission" },
 ];
 
 export const webLab2ValidationProgressionLinks: LevelProgressLink[] = [
@@ -194,6 +208,25 @@ export const uploadMechanismsProgressionLinks: LevelProgressLink[] = [
   {
     name: "Plus-button chips",
     path: "/levels/progression-upload-mechanisms-file-chip",
+  },
+];
+
+export const backpackFilterProgressionLinks: LevelProgressLink[] = [
+  {
+    name: "Source sections",
+    path: "/levels/progression-backpack-filter-sections",
+  },
+  {
+    name: "Filter pills",
+    path: "/levels/progression-backpack-filter-pills",
+  },
+  {
+    name: "Supported toggle",
+    path: "/levels/progression-backpack-filter-toggle",
+  },
+  {
+    name: "Filter dropdown",
+    path: "/levels/progression-backpack-filter-dropdown",
   },
 ];
 
