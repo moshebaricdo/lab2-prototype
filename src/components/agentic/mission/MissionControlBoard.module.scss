@@ -1,0 +1,423 @@
+@use "../../../styles/_mixins.scss" as *;
+
+$good: #0e9f6e;
+$warn: #d97706;
+$bad: #d64545;
+
+.root {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--muted);
+}
+
+.scroller {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 24px 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Mission header */
+
+.missionHeader {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--background);
+}
+
+.missionIntro {
+  max-width: 640px;
+}
+
+.missionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  color: var(--foreground);
+}
+
+.missionBrief {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+
+  p {
+    margin: 0 0 8px;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  strong {
+    color: var(--foreground);
+  }
+}
+
+.missionActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.missionHint {
+  max-width: 260px;
+  font-size: 11.5px;
+  text-align: right;
+  color: var(--muted-foreground);
+}
+
+/* Debrief */
+
+.debrief {
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, #{$good} 45%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, #{$good} 8%, var(--background));
+
+  p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--foreground);
+  }
+}
+
+.debriefTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: $good;
+}
+
+/* Task grid */
+
+.taskGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.taskCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--background);
+}
+
+.taskHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.taskTitle {
+  margin: 0;
+  font-size: 15px;
+  color: var(--foreground);
+}
+
+.taskBrief {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statusToneIdle {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.statusToneBusy {
+  background: color-mix(in srgb, #1a7ee6 12%, transparent);
+  color: #1a7ee6;
+}
+
+.statusToneGood {
+  background: color-mix(in srgb, #{$good} 12%, transparent);
+  color: $good;
+}
+
+.statusToneWarn {
+  background: color-mix(in srgb, #{$warn} 14%, transparent);
+  color: $warn;
+}
+
+.spin {
+  animation: missionSpin 1s linear infinite;
+}
+
+@keyframes missionSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fields */
+
+.fieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.specialistSelect {
+  flex-basis: 100%;
+  margin-top: 4px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  font-family: inherit;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.specialistNote {
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+
+/* Briefcase */
+
+.briefcase {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--muted) 50%, var(--background));
+}
+
+.briefcaseItems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.briefcaseItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.1s ease;
+
+  &:hover {
+    background: var(--muted);
+  }
+
+  input {
+    accent-color: var(--primary);
+  }
+}
+
+.briefcaseItemPacked {
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.briefcaseItemLocked {
+  cursor: default;
+  opacity: 0.75;
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+.briefcaseItemLabel {
+  flex: 1;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12px;
+}
+
+.briefcaseItemTokens {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.meterRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meterTrack {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--muted);
+  overflow: hidden;
+}
+
+.meterFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.meterFillStarved {
+  background: #b9b3d6;
+}
+
+.meterFillFocused {
+  background: $good;
+}
+
+.meterFillOverloaded {
+  background: $warn;
+}
+
+.meterBudgetMark {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  background: var(--muted-foreground);
+  opacity: 0.55;
+}
+
+.meterLabel {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.meterLabelStarved {
+  color: var(--muted-foreground);
+}
+
+.meterLabelFocused {
+  color: $good;
+}
+
+.meterLabelOverloaded {
+  color: $warn;
+}
+
+/* Outcomes */
+
+.outcomeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.outcomeGood {
+  border-color: color-mix(in srgb, #{$good} 40%, transparent);
+  background: color-mix(in srgb, #{$good} 6%, transparent);
+}
+
+.outcomeWarn {
+  border-color: color-mix(in srgb, #{$warn} 45%, transparent);
+  background: color-mix(in srgb, #{$warn} 7%, transparent);
+}
+
+.outcomeHeadline {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.outcomeSummary {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--foreground);
+
+  p {
+    margin: 0;
+  }
+}
+
+.outcomeBullets {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+
+  li + li {
+    margin-top: 2px;
+  }
+}
+
+/* Actions */
+
+.taskActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.approvedNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $good;
+}
+
+.boardFootnote {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  text-align: center;
+}

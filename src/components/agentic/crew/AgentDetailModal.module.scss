@@ -1,0 +1,132 @@
+@use "../../../styles/_mixins.scss" as *;
+
+.headerIcon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+
+  &[data-accent="violet"] { --agent-accent: #6c4ccf; }
+  &[data-accent="blue"] { --agent-accent: #1a7ee6; }
+  &[data-accent="magenta"] { --agent-accent: #d6479d; }
+  &[data-accent="green"] { --agent-accent: #0e9f6e; }
+
+  background: color-mix(in srgb, var(--agent-accent, #6c4ccf) 12%, transparent);
+  color: var(--agent-accent, #6c4ccf);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--font-body);
+}
+
+.tagline {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionLabel {
+  @include panel-header-label;
+  margin: 0;
+}
+
+.fixedChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.fixedChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-primary);
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+}
+
+.fileChecklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ds-text-neutral-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.hint {
+  margin: 0;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: 11px;
+}
+
+.contractInput {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.contractText {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.limitLine {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.limitIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.footerNote {
+  flex: 1;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: 11px;
+}

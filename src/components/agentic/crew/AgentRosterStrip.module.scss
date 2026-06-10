@@ -1,0 +1,173 @@
+@use "../../../styles/_mixins.scss" as *;
+
+/* Soft functional color coding — a tint per agent, not a persona. */
+.root {
+  --agent-violet: #6c4ccf;
+  --agent-blue: #1a7ee6;
+  --agent-magenta: #d6479d;
+  --agent-green: #0e9f6e;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--ds-text-neutral-tertiary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  &[data-accent="violet"] { --agent-accent: var(--agent-violet); }
+  &[data-accent="blue"] { --agent-accent: var(--agent-blue); }
+  &[data-accent="magenta"] { --agent-accent: var(--agent-magenta); }
+  &[data-accent="green"] { --agent-accent: var(--agent-green); }
+
+  &:hover:not(:disabled) {
+    background: var(--ds-background-neutral-secondary);
+    color: var(--ds-text-neutral-primary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.chipActive {
+  background: color-mix(in srgb, var(--agent-accent) 12%, transparent);
+  color: var(--agent-accent);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--agent-accent) 16%, transparent);
+    color: var(--agent-accent);
+  }
+}
+
+.chipLocked {
+  opacity: 0.4;
+}
+
+.lockGlyph {
+  font-size: 8px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.infoButton {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--ds-text-neutral-quaternary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--ds-background-neutral-secondary);
+    color: var(--ds-text-neutral-primary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+/* ─── Simplified context card ────────────────────────── */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  font-family: var(--font-body);
+
+  &[data-accent="violet"] { --agent-accent: #6c4ccf; }
+  &[data-accent="blue"] { --agent-accent: #1a7ee6; }
+  &[data-accent="magenta"] { --agent-accent: #d6479d; }
+  &[data-accent="green"] { --agent-accent: #0e9f6e; }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardHeaderIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--agent-accent) 12%, transparent);
+  color: var(--agent-accent);
+}
+
+.cardRole {
+  margin: 0;
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-primary);
+}
+
+.cardTagline {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.4;
+}
+
+.scopeChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.scopeChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-primary);
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+}
+
+.cardLimit {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.45;
+}
+
+.cardLimitIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
