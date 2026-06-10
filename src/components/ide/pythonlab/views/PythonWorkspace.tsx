@@ -253,6 +253,7 @@ export function PythonWorkspace({
       onToggleCollapse={() => handleFileManagerCollapseChange(true)}
       onNewFile={readOnly ? undefined : () => setIsCreateFileModalOpen(true)}
       showRightBorder={false}
+      backpackSourceLab="pythonlab"
     />
   );
 

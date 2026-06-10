@@ -6,12 +6,14 @@ import { AppButton } from "../../ui/AppButton";
 import { Tooltip } from "../../ui/Tooltip";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import type { FileItem } from "../../../types/file";
+import { useOptionalBackpack } from "../../../hooks/BackpackContext";
 import { getFileTypeIconConfigForFileItem } from "../../../lib/fileTypeIcons";
 import styles from "./FileManager.module.scss";
 
 const FILE_TREE_DRAG_MIME = "application/x-weblab-file-tree-item";
 const PLAN_FOLDER_NAME = "Plans";
 const PLAN_FILE_EXTENSION = ".md";
+const OPEN_BACKPACK_PANEL_EVENT = "lab2:open-backpack-panel";
 
 interface FileManagerProps {
   fileStructure: FileItem[];
@@ -37,6 +39,7 @@ interface FileManagerProps {
   showOnlyFilesWithContent?: boolean;
   showRightBorder?: boolean;
   transparentCollapsedBackground?: boolean;
+  backpackSourceLab?: "weblab2" | "pythonlab" | "generic";
 }
 
 function hasFileContent(item: FileItem): boolean {
@@ -142,7 +145,9 @@ export function FileManager({
   showOnlyFilesWithContent = false,
   showRightBorder = true,
   transparentCollapsedBackground = false,
+  backpackSourceLab = "generic",
 }: FileManagerProps) {
+  const backpack = useOptionalBackpack();
   const [hoveredItem, setHoveredItem] = useState<string | null>(
     null,
   );
@@ -444,12 +449,21 @@ export function FileManager({
                         iconName: "download" as FaIconName,
                         onSelect: () => downloadFile(item),
                       },
-                      {
-                        id: "save-to-backpack",
-                        label: "Save to Backpack",
-                        iconName: "backpack" as FaIconName,
-                        onSelect: () => console.log("Save to backpack", item.name),
-                      },
+                      ...(backpack
+                        ? [{
+                            id: "save-to-backpack",
+                            label: "Save to Backpack",
+                            iconName: "backpack" as FaIconName,
+                            onSelect: () => {
+                              const result = backpack.saveFileToBackpack(item, {
+                                sourceLab: backpackSourceLab,
+                              });
+                              if (result === true) {
+                                window.dispatchEvent(new CustomEvent(OPEN_BACKPACK_PANEL_EVENT));
+                              }
+                            },
+                          }]
+                        : []),
                       ...(onDeleteFile
                         ? [{
                             id: "delete",
@@ -563,7 +577,9 @@ export function FileManager({
                         onSelect: () => uploadInputRef.current?.click(),
                       }]
                     : []),
-                  { id: "import-backpack", label: "Import from Backpack", iconName: "backpack" as FaIconName, onSelect: () => console.log("Import from backpack") },
+                  ...(backpack
+                    ? [{ id: "import-backpack", label: "Import from Backpack", iconName: "backpack" as FaIconName, onSelect: () => window.dispatchEvent(new CustomEvent(OPEN_BACKPACK_PANEL_EVENT)) }]
+                    : []),
                 ]}
               />
               <input

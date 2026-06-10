@@ -24,6 +24,8 @@ import {
 import { AnnotationOverlay } from "./dev/AnnotationOverlay";
 import { Dialog } from "../ui/Dialog";
 import { AppButton } from "../ui/AppButton";
+import { BackpackProvider } from "../../hooks/BackpackContext";
+import { BackpackSeedEffect } from "./BackpackSeedEffect";
 import styles from "./Lab2Shell.module.scss";
 
 type Lab2ShellProps =
@@ -176,24 +178,27 @@ export function Lab2Shell(props: Lab2ShellProps) {
     sidebarProps.surfaceVariant === "card";
 
   return (
-    <div className={styles.root}>
-      <TopNavigation {...resolvedTopNavigationProps} />
-      <div className={themeScopeClassName} data-theme={theme}>
-        <div className={styles.body}>
-          <Sidebar
-            {...sidebarProps}
-            annotations={isShareMode ? undefined : annotationsResult}
-            onCollapsedChange={(collapsed) => {
-              setSidebarCollapsed(collapsed);
-              sidebarProps.onCollapsedChange?.(collapsed);
-            }}
-          />
-          {!resizeDisabled && <ResizableHandle onResize={onResize} />}
-          {children}
+    <BackpackProvider>
+      <BackpackSeedEffect items={sidebarProps.backpackSeedItemsIfEmpty} />
+      <div className={styles.root}>
+        <TopNavigation {...resolvedTopNavigationProps} />
+        <div className={themeScopeClassName} data-theme={theme}>
+          <div className={styles.body}>
+            <Sidebar
+              {...sidebarProps}
+              annotations={isShareMode ? undefined : annotationsResult}
+              onCollapsedChange={(collapsed) => {
+                setSidebarCollapsed(collapsed);
+                sidebarProps.onCollapsedChange?.(collapsed);
+              }}
+            />
+            {!resizeDisabled && <ResizableHandle onResize={onResize} />}
+            {children}
+          </div>
+          {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
+          {flowCompletionDialog}
         </div>
-        {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
-        {flowCompletionDialog}
       </div>
-    </div>
+    </BackpackProvider>
   );
 }

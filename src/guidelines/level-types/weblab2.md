@@ -25,6 +25,11 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - `/levels/progression-upload-mechanisms-staged`
 - `/levels/progression-upload-mechanisms-action-card`
 - `/levels/progression-upload-mechanisms-file-chip`
+- `/levels/progression-backpack-filter` → redirects to `progression-backpack-filter-sections`
+- `/levels/progression-backpack-filter-sections`
+- `/levels/progression-backpack-filter-pills`
+- `/levels/progression-backpack-filter-toggle`
+- `/levels/progression-backpack-filter-dropdown`
 - `/levels/progression-weblab2-validation-fix`
 - `/levels/progression-weblab2-validation-create`
 - `/levels/progression-weblab2-validation-refine`
@@ -43,6 +48,7 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - `src/pages/weblab2/WebLab2BlankDemoProjectLevelPage.tsx`
 - `src/pages/weblab2/WebLab2TutorActionCardLevelPage.tsx`
 - `src/pages/weblab2/WebLab2UploadMechanismsLevelPage.tsx`
+- `src/pages/weblab2/WebLab2BackpackFilteringLevelPage.tsx`
 - `src/pages/weblab2/WebLab2ValidationLevel.tsx`
 - `src/pages/weblab2/WebLab2ValidationPhotoCarouselLevelPage.tsx`
 - `src/pages/weblab2/WebLab2ValidationLoopStylePolishLevelPage.tsx`
@@ -65,7 +71,9 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - Web Lab 2's file manager plus menu supports uploading project files and image assets from the student's computer. Uploaded UI assets are session-scoped; image contents are stored as data URLs in the in-memory/session file tree and are not encoded into share URLs.
 - Tutor chat uploads are staged into an `uploads/` project folder as soon as they are attached in the composer; removing the attachment before send deletes the staged file. Tutor then decides from message intent whether to reference those files in code. When that same send produces a code edit proposal, staged image uploads from the user message also appear as **new** rows in the assistant Files modified card (alongside Tutor's HTML/CSS/JS edits) and in pending AI file highlighting. Staged uploads stay silent: they do not add chat success/failure messages, count as project content for the new-project empty state, switch view mode, expand the file manager, or auto-open in the editor. Once the workspace is visible for real project files, the `uploads/` folder appears in the file manager.
 - The Upload Mechanisms progression compares the current functional staged-upload flow with two mock-only alternatives: an in-chat add-files action card and upload file chips with plus buttons. The mock alternatives intentionally do not mutate the project tree.
-- Tabbed resource panel integration (AI Tutor, Version History; optional tabs supported)
+- The Backpack Filtering progression (`WebLab2BackpackFilteringLevelPage.tsx`) seeds mixed demo files when the backpack is empty and compares four panel layouts via `backpackFilterExperiment`: **default** (Sketch Lab section divider + flat list), **content-pills** (All / Supported here / Images / Code / Documents), **compatibility-toggle** (show only lab-supported files), and **filter-dropdown** (compact native select). Production routes keep `backpackFilterExperiment` unset (`default`).
+- Tabbed resource panel integration (AI Tutor, Version History, Backpack; optional tabs supported)
+- **Backpack** — shared cross-level file store persisted in `localStorage` (`lab2:backpack`). The Backpack rail tab sits after Version History. Students can save project files from the file manager context menu (**Save to Backpack**) or header menu (**Import from Backpack** opens the panel). Saved items render as file chips with add-to-project, download, and delete actions. Per-lab import allow-lists (`backpackImportAllowlist.ts`) disable **+** with a “Not supported in this lab” tooltip when the file type does not match the active lab (e.g. `.py` in Web Lab, `.html` in Python Lab). Items tagged with `sourceLab: "sketch-lab"` appear under a **Sketch Lab** section divider for future Sketch Lab → Web Lab flows. Web Lab routes wire `onImportBackpackItem` so the panel **+** button copies backpack file content into the active project tree.
 - Resources tab support with placeholder cards for student lesson resources, lab documentation, and restartable walkthroughs; Web Lab 2 dev controls can toggle each card independently.
 - Functional AI Tutor prototype can respond with no-edit guidance, Markdown planning proposals, or validated project edit proposals when a session API key is present. Route-level Tutor proposal orchestration lives in `useWebLab2TutorFlow`, while `WebLab2LevelPage` stays focused on composing the Lab2 shell, resource panel, workspace, and modals. Web Lab 2 routes choose a Tutor support context: standalone project routes allow broader co-building behavior, while curriculum/validation routes keep instruction breakdown, debugging, concept, and idea requests in guidance unless the student explicitly asks for implementation. Direct curriculum implementation requests such as "help me make/update/improve..." route to code generation when the level enables Build, especially when level instructions tell students to ask Tutor to make a change. Curriculum guidance is scoped to the level's instructions and project code, avoiding generic browser/cache/devtools troubleshooting or optional stretch-feature nudges.
 - Tutor response length is controlled in the runner prompts and runner-specific style contracts before generation. Help should answer the immediate question and stop, Plan should give a quick project-coach handoff, and Build should give a quick edit handoff rather than a changelog.

@@ -28,6 +28,9 @@ import { pythonLabLevelLinks } from "../levelTypeLinks";
 import { defaultMockTutorConfig } from "../../data/weblab2";
 import { pythonTutorClient } from "../../lib/tutor/tutorClient";
 import type { ChatMessage } from "../../types/chat";
+import type { BackpackItem } from "../../types/backpack";
+import { importBackpackItemToTree } from "../../lib/backpack/importBackpackItemToTree";
+import { canImportBackpackItemToLab } from "../../lib/backpack/backpackImportAllowlist";
 import type { FileItem } from "../../types/file";
 import type { TutorMode, TutorRequestMode } from "../../types/tutor";
 import type { ValidationTestDefinition } from "../../types/validation";
@@ -399,6 +402,36 @@ export function PythonLabLevelPage({
     () => flattenTutorContextFiles(currentFileStructure),
     [currentFileStructure],
   );
+  const handleImportBackpackItem = useCallback((item: BackpackItem): true | string => {
+    if (isViewingHistoryVersion) {
+      return "Switch back to the current version before importing from your backpack.";
+    }
+    if (!canImportBackpackItemToLab(item, "pythonlab")) {
+      return "This file type is not supported in Python Lab.";
+    }
+
+    const importResult = importBackpackItemToTree(currentFileStructure, item);
+    if (typeof importResult === "string") {
+      return importResult;
+    }
+
+    replaceFileStructure(importResult.tree);
+    setIsFileManagerCollapsed(false);
+    setOpenFiles((current) =>
+      current.some((file) => file.name === importResult.file.name)
+        ? current
+        : [...current, importResult.file],
+    );
+    setSelectedFile(importResult.file);
+    return true;
+  }, [
+    currentFileStructure,
+    isViewingHistoryVersion,
+    replaceFileStructure,
+    setIsFileManagerCollapsed,
+    setOpenFiles,
+    setSelectedFile,
+  ]);
   const handleTutorSubmit = useCallback(async (
     message: string,
     conversation: ChatMessage[],
@@ -464,6 +497,8 @@ export function PythonLabLevelPage({
           mockTutorConfig: resolvedMockTutorConfig,
           instructionsContent: resolvedInstructionsContent,
           availableTutorContextFiles,
+          onImportBackpackItem: handleImportBackpackItem,
+          backpackImportLab: "pythonlab",
           onTutorSubmit: resolvedTutorModeKind === "functional" ? handleTutorSubmit : undefined,
           isTutorRequestRunning,
           onTutorRequestRunningChange: setIsTutorRequestRunning,

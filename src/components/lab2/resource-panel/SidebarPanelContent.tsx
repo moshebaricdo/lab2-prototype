@@ -12,6 +12,7 @@ import { downloadChatLog } from "./views/ai-tutor/exportChatLog";
 import { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
 import { RubricPanel } from "./views/RubricPanel";
 import { ResourcesPanel } from "./views/ResourcesPanel";
+import { BackpackPanel } from "./views/BackpackPanel";
 import type { SidebarProps, SidebarTab } from "./Sidebar.types";
 import styles from "./Sidebar.module.scss";
 
@@ -23,6 +24,9 @@ interface SidebarPanelContentProps {
   setChatMessages: SidebarProps["setChatMessages"];
   chatInput: SidebarProps["chatInput"];
   setChatInput: SidebarProps["setChatInput"];
+  aiTutorAgentStrip: SidebarProps["aiTutorAgentStrip"];
+  onAgentHandOff: SidebarProps["onAgentHandOff"];
+  aiTutorThinkingLabel: SidebarProps["aiTutorThinkingLabel"];
   selectedHistoryVersion: SidebarProps["selectedHistoryVersion"];
   setSelectedHistoryVersion: SidebarProps["setSelectedHistoryVersion"];
   onSaveVersion: SidebarProps["onSaveVersion"];
@@ -82,6 +86,10 @@ interface SidebarPanelContentProps {
   newProjectPlanQuestionnaireSignal: NonNullable<SidebarProps["newProjectPlanQuestionnaireSignal"]>;
   historyVersions: SidebarProps["historyVersions"];
   showNewProjectHistoryEmptyState: NonNullable<SidebarProps["showNewProjectHistoryEmptyState"]>;
+  onImportBackpackItem: SidebarProps["onImportBackpackItem"];
+  backpackImportLab: SidebarProps["backpackImportLab"];
+  backpackFilterExperiment: SidebarProps["backpackFilterExperiment"];
+  backpackSeedItemsIfEmpty: SidebarProps["backpackSeedItemsIfEmpty"];
   devPanelFields: SidebarProps["devPanelFields"];
   devPanelOverrideResult: SidebarProps["devPanelOverrideResult"];
   devPanelSessionValues: SidebarProps["devPanelSessionValues"];
@@ -101,6 +109,7 @@ const PANEL_LABEL: Record<SidebarTab, string> = {
   checklist: "VALIDATION",
   "ai-tutor": "AI TUTOR",
   history: "VERSION HISTORY",
+  backpack: "BACKPACK",
   classroom: "TEACHER RESOURCES",
   rubric: "RUBRIC",
   resources: "RESOURCES",
@@ -115,6 +124,9 @@ export function SidebarPanelContent({
   setChatMessages,
   chatInput,
   setChatInput,
+  aiTutorAgentStrip,
+  onAgentHandOff,
+  aiTutorThinkingLabel,
   selectedHistoryVersion,
   setSelectedHistoryVersion,
   onSaveVersion,
@@ -174,6 +186,10 @@ export function SidebarPanelContent({
   newProjectPlanQuestionnaireSignal,
   historyVersions,
   showNewProjectHistoryEmptyState,
+  onImportBackpackItem,
+  backpackImportLab,
+  backpackFilterExperiment,
+  backpackSeedItemsIfEmpty,
   devPanelFields,
   devPanelOverrideResult,
   devPanelSessionValues,
@@ -246,6 +262,9 @@ export function SidebarPanelContent({
           setChatMessages={setChatMessages}
           chatInput={chatInput}
           setChatInput={setChatInput}
+          agentStrip={aiTutorAgentStrip}
+          onAgentHandOff={onAgentHandOff}
+          thinkingLabelOverride={aiTutorThinkingLabel}
           showInstructionsDrawer={showInstructionsDrawer}
           instructionsDrawerDefaultOpen={instructionsDrawerDefaultOpen}
           instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
@@ -302,6 +321,13 @@ export function SidebarPanelContent({
           showSaveSuccessAlert={showSaveSuccessAlert}
           setShowSaveSuccessAlert={setShowSaveSuccessAlert}
           showNewProjectEmptyState={showNewProjectHistoryEmptyState}
+        />
+      )}
+      {activeTab === "backpack" && (
+        <BackpackPanel
+          importLab={backpackImportLab}
+          onImportItem={onImportBackpackItem}
+          filterExperiment={backpackFilterExperiment ?? "default"}
         />
       )}
       {activeTab === "classroom" && <TeacherResourcesPanel />}

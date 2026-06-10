@@ -5,6 +5,7 @@ export type ResourcePanelTab =
   | "checklist"
   | "ai-tutor"
   | "history"
+  | "backpack"
   | "classroom"
   | "rubric"
   | "resources"

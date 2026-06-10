@@ -18,6 +18,7 @@ import type {
   InstructionsDrawerExperiment,
   InstructionsDrawerVisualCue,
 } from "./InstructionsDrawer";
+import type { BackpackFilterExperiment, BackpackImportLab, BackpackItem } from "../../../types/backpack";
 import type { VersionHistory } from "./views/VersionHistory";
 import type { RubricData } from "./views/RubricPanel";
 import type { FileItem } from "../../../types/file";
@@ -29,6 +30,7 @@ export type SidebarTab =
   | "checklist"
   | "ai-tutor"
   | "history"
+  | "backpack"
   | "classroom"
   | "rubric"
   | "resources"
@@ -46,6 +48,12 @@ export interface SidebarProps {
   setChatMessages: (messages: ChatMessage[]) => void;
   chatInput: string;
   setChatInput: (input: string) => void;
+  /** Optional content pinned between the AI Tutor conversation and composer (e.g. specialist agent strip). */
+  aiTutorAgentStrip?: ReactNode;
+  /** Switch the active specialist agent when an in-chat hand-off card is actioned. */
+  onAgentHandOff?: (agentId: string) => void;
+  /** Override the AI Tutor thinking-state label (e.g. "Style agent · reading 3 files"). */
+  aiTutorThinkingLabel?: string;
   selectedHistoryVersion: string;
   setSelectedHistoryVersion: (version: string) => void;
   onSaveVersion?: (description: string) => void;
@@ -66,6 +74,11 @@ export interface SidebarProps {
   validationTests?: ValidationTestDefinition[];
   showAiTutorTab?: boolean;
   showHistoryTab?: boolean;
+  showBackpackTab?: boolean;
+  backpackImportLab?: BackpackImportLab;
+  onImportBackpackItem?: (item: BackpackItem) => true | string | void;
+  backpackFilterExperiment?: BackpackFilterExperiment;
+  backpackSeedItemsIfEmpty?: BackpackItem[];
   showTeacherResourcesTab?: boolean;
   showRubricTab?: boolean;
   showStudentLessonResource?: boolean;

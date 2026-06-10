@@ -342,6 +342,7 @@ export function Workspace({
       builtPlanPaths={builtPlanPaths}
       showOnlyFilesWithContent={showOnlyFilesWithContent}
       showRightBorder={false}
+      backpackSourceLab="weblab2"
     />
   );
 

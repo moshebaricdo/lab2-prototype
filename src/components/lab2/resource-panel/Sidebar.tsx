@@ -7,6 +7,7 @@ import type { SidebarProps, SidebarTab } from "./Sidebar.types";
 import styles from "./Sidebar.module.scss";
 
 const OPEN_TUTOR_PANEL_EVENT = "weblab:open-tutor-panel";
+const OPEN_BACKPACK_PANEL_EVENT = "lab2:open-backpack-panel";
 const TUTOR_PANEL_READY_EVENT = "weblab:tutor-panel-ready";
 const SIDEBAR_WIDTH_ANIMATION_MS = 220;
 
@@ -22,6 +23,9 @@ export function Sidebar({
   setChatMessages,
   chatInput,
   setChatInput,
+  aiTutorAgentStrip,
+  onAgentHandOff,
+  aiTutorThinkingLabel,
   selectedHistoryVersion,
   setSelectedHistoryVersion,
   onSaveVersion,
@@ -39,6 +43,11 @@ export function Sidebar({
   validationTests,
   showAiTutorTab = true,
   showHistoryTab = true,
+  showBackpackTab = true,
+  backpackImportLab,
+  onImportBackpackItem,
+  backpackFilterExperiment = "default",
+  backpackSeedItemsIfEmpty,
   showTeacherResourcesTab = false,
   showRubricTab = false,
   showStudentLessonResource = false,
@@ -152,6 +161,19 @@ export function Sidebar({
     return () => window.removeEventListener(OPEN_TUTOR_PANEL_EVENT, openTutorPanel);
   }, [collapsible, isCollapsed, setActiveTab, showAiTutorTab]);
 
+  useEffect(() => {
+    const openBackpackPanel = () => {
+      if (!showBackpackTab) return;
+      setActiveTab("backpack");
+      if (collapsible) {
+        setIsCollapsed(false);
+      }
+    };
+
+    window.addEventListener(OPEN_BACKPACK_PANEL_EVENT, openBackpackPanel);
+    return () => window.removeEventListener(OPEN_BACKPACK_PANEL_EVENT, openBackpackPanel);
+  }, [collapsible, setActiveTab, showBackpackTab]);
+
   const onCollapsedChangeRef = useRef(onCollapsedChange);
   onCollapsedChangeRef.current = onCollapsedChange;
 
@@ -181,6 +203,7 @@ export function Sidebar({
     if (showValidationTab) validTabs.push("checklist");
     if (showAiTutorTab) validTabs.push("ai-tutor");
     if (showHistoryTab) validTabs.push("history");
+    if (showBackpackTab) validTabs.push("backpack");
     if (showTeacherResourcesTab) validTabs.push("classroom");
     if (showRubricTab) validTabs.push("rubric");
     if (showResourcesTab) validTabs.push("resources");
@@ -195,6 +218,7 @@ export function Sidebar({
     showAiTutorTab,
     showInstructionsTab,
     showHistoryTab,
+    showBackpackTab,
     showTeacherResourcesTab,
     showRubricTab,
     showValidationTab,
@@ -290,6 +314,7 @@ export function Sidebar({
         showValidationTab={showValidationTab}
         showAiTutorTab={showAiTutorTab}
         showHistoryTab={showHistoryTab}
+        showBackpackTab={showBackpackTab}
         showTeacherResourcesTab={showTeacherResourcesTab}
         showRubricTab={showRubricTab}
         showResourcesTab={showResourcesTab}
@@ -321,6 +346,9 @@ export function Sidebar({
             setChatMessages={setChatMessages}
             chatInput={chatInput}
             setChatInput={setChatInput}
+            aiTutorAgentStrip={aiTutorAgentStrip}
+            onAgentHandOff={onAgentHandOff}
+            aiTutorThinkingLabel={aiTutorThinkingLabel}
             selectedHistoryVersion={selectedHistoryVersion}
             setSelectedHistoryVersion={setSelectedHistoryVersion}
             onSaveVersion={onSaveVersion}
@@ -380,6 +408,10 @@ export function Sidebar({
             newProjectPlanQuestionnaireSignal={newProjectPlanQuestionnaireSignal}
             historyVersions={historyVersions}
             showNewProjectHistoryEmptyState={showNewProjectHistoryEmptyState}
+            onImportBackpackItem={onImportBackpackItem}
+            backpackImportLab={backpackImportLab}
+            backpackFilterExperiment={backpackFilterExperiment}
+            backpackSeedItemsIfEmpty={backpackSeedItemsIfEmpty}
             devPanelFields={devPanelFields}
             devPanelOverrideResult={devPanelOverrideResult}
             devPanelSessionValues={devPanelSessionValues}

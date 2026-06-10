@@ -61,13 +61,16 @@ import { logTutorEvent } from "../../lib/tutor/conversation/tutorDebugLogger";
 import {
   appendValidationReviewResultToConversation,
 } from "../../lib/tutor/routing/validationReviewFlow";
-import { buildValidationReviewResultMessage } from "../../components/lab2/resource-panel/views/ai-tutor/AiTutorPanel";
+import { resolveValidationResultMessage } from "../../lib/validation/validationReviewMessaging";
 import {
   decodeStarterSharePayload,
   encodeStarterSharePayload,
   STARTER_SHARE_PARAM,
   starterSharePayloadToUpload,
 } from "../../lib/starterShare";
+import type { BackpackFilterExperiment, BackpackItem } from "../../types/backpack";
+import { importBackpackItemToTree } from "../../lib/backpack/importBackpackItemToTree";
+import { canImportBackpackItemToLab } from "../../lib/backpack/backpackImportAllowlist";
 import type { FileItem } from "../../types/file";
 import type {
   AiTutorInputExperiment,
@@ -282,6 +285,8 @@ interface WebLab2LevelPageProps {
   continueLabel?: string;
   onContinue?: () => void;
   hideProgression?: boolean;
+  backpackFilterExperiment?: BackpackFilterExperiment;
+  backpackSeedItemsIfEmpty?: BackpackItem[];
 }
 
 export function WebLab2LevelPage({
@@ -334,6 +339,8 @@ export function WebLab2LevelPage({
   continueLabel,
   onContinue,
   hideProgression = false,
+  backpackFilterExperiment = "default",
+  backpackSeedItemsIfEmpty,
 }: WebLab2LevelPageProps = {}) {
   const shareMode = useLevelShareMode();
   const { hasApiKey: hasTutorApiKey } = useTutorApiSettings();
@@ -1039,6 +1046,7 @@ export function WebLab2LevelPage({
     tutorPolicy,
     routingDiagnostics: tutorDevSettings.routingDiagnostics,
     validationReviewOffer,
+    onValidationReview: effectiveValidationReviewConfig ? handleValidationReview : undefined,
     useFilePreview: resolvedUseFilePreview,
     selectedPlanPath,
     hasPendingAiChanges,
@@ -1263,6 +1271,44 @@ export function WebLab2LevelPage({
     setOpenFiles,
     setSelectedFile,
   ]);
+  const handleImportBackpackItem = useCallback((item: BackpackItem): true | string => {
+    if (isViewingHistoryVersion) {
+      return "Switch back to the current version before importing from your backpack.";
+    }
+    if (!canImportBackpackItemToLab(item, "weblab2")) {
+      return "This file type is not supported in Web Lab.";
+    }
+
+    const baseTree = fileStructureState ?? fileStructureOverride ?? fileStructure;
+    const importResult = importBackpackItemToTree(baseTree, item);
+    if (typeof importResult === "string") {
+      return importResult;
+    }
+
+    replaceFileStructure(importResult.tree);
+    setIsFileManagerCollapsed(false);
+    setOpenFiles((current) =>
+      current.some((file) => file.name === importResult.file.name)
+        ? current
+        : [...current, importResult.file],
+    );
+    setSelectedFile(importResult.file);
+    if (importResult.file.type === "html") {
+      const entry = findFileEntryInTree(importResult.tree, importResult.file.name);
+      setPreviewPath(entry?.path ?? importResult.file.name);
+    }
+    return true;
+  }, [
+    fileStructure,
+    fileStructureOverride,
+    fileStructureState,
+    isViewingHistoryVersion,
+    replaceFileStructure,
+    setIsFileManagerCollapsed,
+    setOpenFiles,
+    setPreviewPath,
+    setSelectedFile,
+  ]);
   useEffect(() => {
     if (!starterShareParam || !starterSharePayload) return;
     if (appliedStarterShareParamRef.current === starterShareParam) return;
@@ -1407,7 +1453,7 @@ export function WebLab2LevelPage({
         setChatMessages((current) => appendValidationReviewResultToConversation(
           current,
           review,
-          buildValidationReviewResultMessage(review),
+          resolveValidationResultMessage(review),
         ));
       })
       .catch((error) => {
@@ -1498,6 +1544,10 @@ export function WebLab2LevelPage({
     aiTutorInputExperiment,
     mockTutorConfig: resolvedMockTutorConfig,
     existingProjectFileNames,
+    onImportBackpackItem: handleImportBackpackItem,
+    backpackImportLab: "weblab2",
+    backpackFilterExperiment,
+    backpackSeedItemsIfEmpty,
     onStageTutorUpload: enableTutorUploadStaging ? handleStageTutorUpload : undefined,
     onAddTutorUploadToProject: enableTutorUploadStaging
       ? undefined

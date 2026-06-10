@@ -26,6 +26,7 @@ interface SidebarTabRailProps {
   showValidationTab: boolean;
   showAiTutorTab: boolean;
   showHistoryTab: boolean;
+  showBackpackTab: boolean;
   showTeacherResourcesTab: boolean;
   showRubricTab: boolean;
   showResourcesTab: boolean;
@@ -150,6 +151,7 @@ export function SidebarTabRail({
   showValidationTab,
   showAiTutorTab,
   showHistoryTab,
+  showBackpackTab,
   showTeacherResourcesTab,
   showRubricTab,
   showResourcesTab,
@@ -190,6 +192,12 @@ export function SidebarTabRail({
       tooltip: "Version History",
       iconName: "clock-rotate-left",
       visible: showHistoryTab,
+    },
+    {
+      tab: "backpack",
+      tooltip: "Backpack",
+      iconName: "backpack",
+      visible: showBackpackTab,
     },
     {
       tab: "classroom",
