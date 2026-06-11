@@ -1,6 +1,7 @@
 import { AppButton } from "../../ui/AppButton";
 import { PanelHeader } from "../../ui/PanelHeader";
 import { Tooltip } from "../../ui/Tooltip";
+import { useOptionalBackpack } from "../../../hooks/BackpackContext";
 import { DevPanelContent, DevPanelHeaderActions } from "../dev";
 import { ContinueButton } from "./ContinueButton";
 import { SettingsPanel } from "./views/SettingsPanel";
@@ -27,6 +28,7 @@ interface SidebarPanelContentProps {
   aiTutorAgentStrip: SidebarProps["aiTutorAgentStrip"];
   onAgentHandOff: SidebarProps["onAgentHandOff"];
   aiTutorThinkingLabel: SidebarProps["aiTutorThinkingLabel"];
+  aiTutorThinkingAccent: SidebarProps["aiTutorThinkingAccent"];
   selectedHistoryVersion: SidebarProps["selectedHistoryVersion"];
   setSelectedHistoryVersion: SidebarProps["setSelectedHistoryVersion"];
   onSaveVersion: SidebarProps["onSaveVersion"];
@@ -127,6 +129,7 @@ export function SidebarPanelContent({
   aiTutorAgentStrip,
   onAgentHandOff,
   aiTutorThinkingLabel,
+  aiTutorThinkingAccent,
   selectedHistoryVersion,
   setSelectedHistoryVersion,
   onSaveVersion,
@@ -203,6 +206,8 @@ export function SidebarPanelContent({
   onClearTutorChat,
   onTutorRequestRunningChange,
 }: SidebarPanelContentProps) {
+  const backpack = useOptionalBackpack();
+
   return (
     <div className={styles.content}>
       <PanelHeader
@@ -237,6 +242,17 @@ export function SidebarPanelContent({
                 />
               </Tooltip>
             </div>
+          ) : activeTab === "backpack" && backpack ? (
+            <Tooltip content="Refresh backpack" position="bottom">
+              <AppButton
+                variant="tertiary"
+                tone="gray"
+                size="xs"
+                iconName="arrows-rotate"
+                onClick={backpack.refreshBackpack}
+                aria-label="Refresh backpack"
+              />
+            </Tooltip>
           ) : activeTab === "dev" && devPanelOverrideResult ? (
             <DevPanelHeaderActions
               hasShareParams={devPanelHasShareParams}
@@ -265,6 +281,7 @@ export function SidebarPanelContent({
           agentStrip={aiTutorAgentStrip}
           onAgentHandOff={onAgentHandOff}
           thinkingLabelOverride={aiTutorThinkingLabel}
+          thinkingAccent={aiTutorThinkingAccent}
           showInstructionsDrawer={showInstructionsDrawer}
           instructionsDrawerDefaultOpen={instructionsDrawerDefaultOpen}
           instructionsDrawerInitialHeightRatio={instructionsDrawerInitialHeightRatio}
@@ -327,7 +344,7 @@ export function SidebarPanelContent({
         <BackpackPanel
           importLab={backpackImportLab}
           onImportItem={onImportBackpackItem}
-          filterExperiment={backpackFilterExperiment ?? "default"}
+          filterExperiment={backpackFilterExperiment ?? "type-availability"}
         />
       )}
       {activeTab === "classroom" && <TeacherResourcesPanel />}

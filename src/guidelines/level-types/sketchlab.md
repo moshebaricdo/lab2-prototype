@@ -25,7 +25,7 @@ resolved in `src/lib/levelTypeIcon.ts`.
 
 ```text
 SketchLabWorkspace (main, fills space beside the sidebar)
-├── SketchLabHeader            Download · WORKSPACE · Start over
+├── SketchLabHeader            Save sketch icon menu (device / backpack) · WORKSPACE · Start over
 └── canvasWrap (position: relative)
     ├── ReactFlow              dotted-grid canvas, Background + Controls
     │   ├── ShapeNode          rectangle / triangle / circle / diamond
@@ -55,6 +55,7 @@ matching the Figma toolbar permutations:
 - Property panel: `views/panel/PropertyPanel.tsx` + `PropertyControls.tsx`
 - Canvas state: `src/hooks/useSketchLabState.ts`
 - Inline-edit bridge: `views/SketchLabActionsContext.tsx`
+- PNG export: `src/components/ide/sketchlab/exportSketchToPng.ts`
 - Options / token resolvers: `src/components/ide/sketchlab/sketchLabOptions.ts`
 - Icons: `src/components/ide/sketchlab/sketchLabIcons.tsx`
 - Types: `src/types/sketchLab.ts`
@@ -110,6 +111,6 @@ stylesheet (`@xyflow/react/dist/style.css`) is imported once in
 ## Known Gaps
 
 - AI Tutor runs in mock mode (no functional Sketch Tutor harness yet).
-- Download exports the canvas as JSON; PNG/SVG export is not implemented.
+- **Save sketch** (floppy-disk icon button) opens a menu: **Save to device** (downloads a full-resolution `sketch.png`) or **Save to backpack** (a compact `sketch.jpg`, `type: "image"`, `sourceLab: "sketch-lab"`). Both render the canvas via `exportSketchImage` in `exportSketchToPng.ts` (`getNodesBounds` + `html-to-image`), framed to the bounding box of **every** node so the artifact always captures the full creation regardless of the live pan/zoom. Connection handles, line endpoint knobs, and selection rings are filtered out, and `skipFonts` is set to avoid cross-origin webfont embedding errors (export uses the system fallback font). The backpack capture is downscaled (`maxDimension` 1600, JPEG quality) so the data URL fits the `localStorage` quota; `persistBackpackItems` now swallows quota/write failures and raises the standard save-error alert instead of crashing. Because saved sketches are real images, they re-import onto the canvas via the images-only backpack allow-list. Empty-canvas saves are a no-op. SVG export is still not implemented.
 - Custom FontAwesome icons are placeholders (see above).
 - No validation harness integration.

@@ -53,4 +53,4 @@ Prototype environment for levels where the lab surface is an AI chat stream. Som
 ## Known Gaps
 
 - No real LLM provider, retrieval index, publishing backend, or saved model-card persistence.
-- The Backpack/resource distinction is still represented through the existing shared Resources tab.
+- The Backpack tab uses the production type-availability panel with an **aichatlab** allow-list that permits all file types for now. **+** (tooltip: "Add to chat") attaches the item as a composer file chip in the workspace chat via `weblab:add-backpack-item-to-chat`.

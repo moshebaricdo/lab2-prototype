@@ -2,7 +2,7 @@ import type { ComponentProps, Dispatch, ReactNode, SetStateAction } from "react"
 import type { DevPanelField } from "../dev";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import type { UseAnnotationsResult } from "../../../hooks/useAnnotations";
-import type { ChatAttachment, ChatMessage, FileChange } from "../../../types/chat";
+import type { AgentHandOffCardData, ChatAttachment, ChatMessage, FileChange } from "../../../types/chat";
 import type {
   AiTutorInputExperiment,
   InstructionGuide,
@@ -50,10 +50,12 @@ export interface SidebarProps {
   setChatInput: (input: string) => void;
   /** Optional content pinned between the AI Tutor conversation and composer (e.g. specialist agent strip). */
   aiTutorAgentStrip?: ReactNode;
-  /** Switch the active specialist agent when an in-chat hand-off card is actioned. */
-  onAgentHandOff?: (agentId: string) => void;
+  /** In-chat hand-off card actioned: switch to the agent (dispatch cards also run their brief). */
+  onAgentHandOff?: (handOff: AgentHandOffCardData, msgIndex: number) => void;
   /** Override the AI Tutor thinking-state label (e.g. "Style agent · reading 3 files"). */
   aiTutorThinkingLabel?: string;
+  /** Accent for the agent thinking dot (agent variant of the thinking state). */
+  aiTutorThinkingAccent?: string;
   selectedHistoryVersion: string;
   setSelectedHistoryVersion: (version: string) => void;
   onSaveVersion?: (description: string) => void;

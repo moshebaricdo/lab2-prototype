@@ -1,62 +1,52 @@
-@use "../../../styles/_mixins.scss" as *;
-
-.headerIcon {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-
-  &[data-accent="violet"] { --agent-accent: #6c4ccf; }
-  &[data-accent="blue"] { --agent-accent: #1a7ee6; }
-  &[data-accent="magenta"] { --agent-accent: #d6479d; }
-  &[data-accent="green"] { --agent-accent: #0e9f6e; }
-
-  background: color-mix(in srgb, var(--agent-accent, #6c4ccf) 12%, transparent);
-  color: var(--agent-accent, #6c4ccf);
-}
-
 .body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   font-family: var(--font-body);
 }
 
-.tagline {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 13px;
-  line-height: 1.45;
+/* Card sections — same vocabulary as other Lab2 panels. */
+.card {
+  overflow: hidden;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 8px;
+  background: var(--ds-background-neutral-primary);
 }
 
-.section {
+.cardTitle {
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 32px;
+  margin: 0;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.cardBody {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding: 12px;
 }
 
-.sectionLabel {
-  @include panel-header-label;
-  margin: 0;
-}
-
-.fixedChips {
+.field {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.fixedChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: var(--ds-background-neutral-secondary);
+.fieldLabel {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
-  font-size: 11px;
-  font-weight: var(--font-weight-medium);
 }
 
 .fileChecklist {
@@ -70,52 +60,15 @@
   align-items: center;
   gap: 8px;
   color: var(--ds-text-neutral-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   cursor: pointer;
-}
-
-.hint {
-  margin: 0;
-  color: var(--ds-text-neutral-quaternary);
-  font-size: 11px;
-}
-
-.contractInput {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--background);
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
-  font-size: 13px;
-  line-height: 1.5;
-  resize: vertical;
-
-  &:focus-visible {
-    @include focus-ring;
-  }
 }
 
 .contractText {
   margin: 0;
   color: var(--ds-text-neutral-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   line-height: 1.5;
-}
-
-.limitLine {
-  display: flex;
-  gap: 6px;
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.limitIcon {
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .footer {
@@ -125,8 +78,226 @@
   width: 100%;
 }
 
-.footerNote {
+.footerSpacer {
   flex: 1;
+}
+
+/* Tools summary (view mode) */
+.toolList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toolRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+}
+
+.toolRowLabel {
+  flex: 1;
+  color: var(--ds-text-neutral-primary);
+}
+
+.writeScopePacker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.effortField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.effortSummary {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.effortValue {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* @deprecated — replaced by .toolList */
+.permissionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.permissionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+}
+
+.permissionRowLabel {
+  flex: 1;
+  color: var(--ds-text-neutral-primary);
+}
+
+.permissionNote {
+  margin: 0;
+  padding-left: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: 11px;
+  font-size: var(--text-label);
+  line-height: 1.4;
+  list-style: none;
+}
+
+.cardIntro {
+  margin: 0;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  line-height: 1.45;
+}
+
+.filePacker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.filePackerHint {
+  margin: 0;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  line-height: 1.4;
+}
+
+/* Permission toggles (edit mode) — single row uses same toggle styles */
+.toggleList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggleText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.toggleLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--ds-text-neutral-primary);
+}
+
+.toggleDescription {
+  font-size: var(--text-label);
+  color: var(--ds-text-neutral-quaternary);
+  line-height: 1.35;
+}
+
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--ds-background-neutral-quaternary);
+  transition: background 0.15s ease;
+
+  input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  input:focus-visible + .switchThumb {
+    outline: 2px solid var(--ds-borders-brand-teal-primary);
+    outline-offset: 2px;
+  }
+}
+
+.switchOn {
+  background: var(--ds-background-brand-purple-primary);
+}
+
+.switchDisabled {
+  opacity: 0.5;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ds-background-neutral-primary);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 20%, transparent);
+  transition: transform 0.15s ease;
+  pointer-events: none;
+}
+
+.switchOn .switchThumb {
+  transform: translateX(14px);
+}
+
+/* Context category rows */
+.contextList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contextRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+}
+
+.contextRowIcon {
+  flex-shrink: 0;
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.contextRowLabel {
+  flex: 1;
+  color: var(--ds-text-neutral-primary);
+}
+
+.contextRowOn {
+  color: var(--ds-text-success-primary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-medium);
+}
+
+.contextRowOff {
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
 }

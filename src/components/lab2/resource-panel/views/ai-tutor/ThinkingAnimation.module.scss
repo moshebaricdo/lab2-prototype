@@ -94,3 +94,35 @@
     background-position: 0% 0;
   }
 }
+
+/* ─── Agent variant — accent pulse dot instead of the bot head ───────── */
+
+.agentDot {
+  --agent-thinking-accent: var(--ds-text-info-primary);
+
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--agent-thinking-accent);
+  animation: agentDotPulse 1.5s ease-in-out infinite;
+
+  &[data-accent="violet"] { --agent-thinking-accent: #6c4ccf; }
+  &[data-accent="blue"] { --agent-thinking-accent: #1a7ee6; }
+  &[data-accent="magenta"] { --agent-thinking-accent: #d6479d; }
+  &[data-accent="green"] { --agent-thinking-accent: #0e9f6e; }
+}
+
+@keyframes agentDotPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}

@@ -13,7 +13,7 @@ import {
   initialChatMessages,
   defaultMockTutorConfig,
 } from "../../data/weblab2";
-import type { ChatAttachment, ChatMessage, FileChange } from "../../types/chat";
+import type { AgentHandOffCardData, ChatAttachment, ChatMessage, FileChange } from "../../types/chat";
 import { hydrateChatMessageUploadImages } from "../../lib/chat/chatSessionStorage";
 import { useChatState } from "../../hooks/useChatState";
 import { useDevPanelInitialOpenFiles } from "../../hooks/useDevPanelInitialOpenFiles";
@@ -130,6 +130,29 @@ import {
   TUTOR_POLICY_PRESET_DEV_KEY,
   TUTOR_ROUTING_DIAGNOSTICS_DEV_KEY,
 } from "./tutorDevSettings";
+import {
+  AGENT_ALLOW_CUSTOMIZATION_DEV_KEY,
+  AGENT_ALLOW_LIBRARY_DEV_KEY,
+  AGENT_INITIAL_ID_DEV_KEY,
+  AGENT_LOCKED_IDS_DEV_KEY,
+  AGENT_TUTOR_ROLE_DEV_KEY,
+  AGENTS_ENABLED_DEV_KEY,
+} from "./webLab2DevPanel";
+import { AgentRosterStrip } from "../../components/agentic/crew/AgentRosterStrip";
+import { AgentLevelModals } from "../../components/agentic/crew/AgentLevelModals";
+import { useAgentLevelState } from "../../components/agentic/crew/useAgentLevelState";
+import {
+  collectScopableFiles,
+  findPlanPath,
+} from "../../components/agentic/crew/agentContext";
+import { crewSpecialists } from "../../data/agentic";
+import type {
+  AgentLevelConfig,
+  AgentSpecialist,
+  AgentTutorRole,
+} from "../../types/agentLab";
+import { createBlankAgentSpecialist } from "../../lib/backpack/agentBackpack";
+import { BackpackProvider } from "../../hooks/BackpackContext";
 import {
   buildFileTreeFromUploadedStarter,
   buildFileTreeWithUploadedFiles,
@@ -277,6 +300,8 @@ interface WebLab2LevelPageProps {
   tutorHelpContract?: string;
   validationReviewConfig?: WebLab2ValidationReviewConfig;
   validationContinueMode?: ValidationContinueMode;
+  /** Mounts the specialist-agent capability (strip, modal, per-agent routing). */
+  agentConfig?: AgentLevelConfig;
   levelLinks?: LevelProgressLink[];
   completedLevelPaths?: string[];
   currentLevel?: number;
@@ -331,6 +356,7 @@ export function WebLab2LevelPage({
   tutorHelpContract = "",
   validationReviewConfig,
   validationContinueMode = "standard",
+  agentConfig,
   levelLinks,
   completedLevelPaths,
   currentLevel = 9,
@@ -339,7 +365,7 @@ export function WebLab2LevelPage({
   continueLabel,
   onContinue,
   hideProgression = false,
-  backpackFilterExperiment = "default",
+  backpackFilterExperiment = "type-availability",
   backpackSeedItemsIfEmpty,
 }: WebLab2LevelPageProps = {}) {
   const shareMode = useLevelShareMode();
@@ -385,6 +411,12 @@ export function WebLab2LevelPage({
     [TUTOR_PLAN_CONTRACT_DEV_KEY]: tutorPlanContract,
     [TUTOR_HELP_CONTRACT_DEV_KEY]: tutorHelpContract,
     [TUTOR_ROUTING_DIAGNOSTICS_DEV_KEY]: true,
+    [AGENTS_ENABLED_DEV_KEY]: Boolean(agentConfig),
+    [AGENT_INITIAL_ID_DEV_KEY]: agentConfig?.initialAgentId ?? "tutor",
+    [AGENT_LOCKED_IDS_DEV_KEY]: (agentConfig?.lockedAgentIds ?? []).join(","),
+    [AGENT_ALLOW_CUSTOMIZATION_DEV_KEY]: agentConfig?.allowCustomization ?? false,
+    [AGENT_ALLOW_LIBRARY_DEV_KEY]: agentConfig?.allowAgentLibrary ?? false,
+    [AGENT_TUTOR_ROLE_DEV_KEY]: agentConfig?.tutorRole ?? "tutor",
     continueButtonPlacement,
     initialViewMode,
     collapseFileManagerByDefault,
@@ -957,8 +989,8 @@ export function WebLab2LevelPage({
     ],
   );
   const visibleSelectedFile = selectedFile
-    ? findFileByNameInTree(visibleFileStructure, selectedFile.name) ?? selectedFile
-    : selectedFile;
+    ? findFileByNameInTree(visibleFileStructure, selectedFile.name)
+    : null;
   const visibleOpenFiles = mapFilesToTree(openFiles, visibleFileStructure);
   const visibleHasPendingAiChanges = isViewingHistoryVersion ? false : hasPendingAiChanges;
   const selectedPlanEntry = visibleSelectedFile
@@ -1009,8 +1041,54 @@ export function WebLab2LevelPage({
     resolvedTutorInstructionsDelivery,
   ]);
 
-  const tutorPolicy = tutorDevSettings.policy;
-  const tutorRunnerContracts = tutorDevSettings.runnerContracts;
+  // ── Specialist agents (V4 spec) — derived config: route prop + dev panel ──
+  const resolvedAgentConfig = useMemo<AgentLevelConfig | undefined>(() => {
+    if (!resolved[AGENTS_ENABLED_DEV_KEY]) return undefined;
+    const base = agentConfig ?? { specialists: crewSpecialists };
+    const lockedFromDev = String(resolved[AGENT_LOCKED_IDS_DEV_KEY] ?? "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+    const tutorRoleFromDev = String(
+      resolved[AGENT_TUTOR_ROLE_DEV_KEY] || base.tutorRole || "tutor",
+    ) as AgentTutorRole;
+    return {
+      ...base,
+      initialAgentId: String(
+        resolved[AGENT_INITIAL_ID_DEV_KEY] || base.initialAgentId || "tutor",
+      ),
+      lockedAgentIds: lockedFromDev,
+      allowCustomization: Boolean(resolved[AGENT_ALLOW_CUSTOMIZATION_DEV_KEY]),
+      allowAgentLibrary: Boolean(resolved[AGENT_ALLOW_LIBRARY_DEV_KEY]),
+      tutorRole: tutorRoleFromDev,
+    };
+  }, [resolved, agentConfig]);
+
+  const scopableProjectFiles = useMemo(
+    () => collectScopableFiles(currentFileStructure),
+    [currentFileStructure],
+  );
+
+  const agents = useAgentLevelState({
+    config: resolvedAgentConfig,
+    scopableFiles: scopableProjectFiles,
+    levelPolicy: tutorDevSettings.policy,
+    levelContracts: tutorDevSettings.runnerContracts,
+    setChatMessages,
+  });
+  const [agentModalOpen, setAgentModalOpen] = useState(false);
+  const [agentCreateDraft, setAgentCreateDraft] = useState<AgentSpecialist | null>(
+    null,
+  );
+
+  // When a specialist is active, its policy/contract/context parameterize the
+  // SAME flow the level always uses — no parallel pipeline.
+  const tutorPolicy = agents.tutorPolicy;
+  const tutorRunnerContracts = agents.runnerContracts;
+  const tutorFlowFileStructure = useMemo(
+    () => agents.filterFilesForActiveAgent(currentFileStructure),
+    [agents, currentFileStructure],
+  );
   const handleRejectAiChanges = useCallback(() => {
     logTutorEvent("proposal rejected", {
       pendingFileCount: Object.keys(aiChangedFiles ?? {}).length,
@@ -1022,7 +1100,6 @@ export function WebLab2LevelPage({
     buildingPlanPath,
     handleAcceptAiChanges,
     handleAddFileToTutor,
-    handleBannerAiChangeAction,
     handleBuildCurrentPlan,
     handleStartWithTutor,
     handleTutorSubmit,
@@ -1035,7 +1112,7 @@ export function WebLab2LevelPage({
     chatMessages,
     setChatMessages,
     setChatInput,
-    currentFileStructure,
+    currentFileStructure: tutorFlowFileStructure,
     runnerContracts: tutorRunnerContracts,
     levelInstructionsMarkdown: resolvedInstructionsMarkdown,
     levelProgress,
@@ -1044,6 +1121,8 @@ export function WebLab2LevelPage({
     onInstructionGuideStateChange: setInstructionGuideState,
     tutorSupportContext: tutorPolicy.supportContext,
     tutorPolicy,
+    planningFileName: agents.enabled ? agents.planningFileName : undefined,
+    clampProposalChanges: agents.enabled ? agents.clampActiveAgentChanges : undefined,
     routingDiagnostics: tutorDevSettings.routingDiagnostics,
     validationReviewOffer,
     onValidationReview: effectiveValidationReviewConfig ? handleValidationReview : undefined,
@@ -1059,6 +1138,106 @@ export function WebLab2LevelPage({
     setIsFileManagerCollapsed,
     setViewMode,
   });
+  // Lazy switch dividers: flushed only when a message is actually sent.
+  const agentAwareTutorSubmit = useMemo(
+    () =>
+      agents.enabled ? agents.wrapTutorSubmit(handleTutorSubmit) : handleTutorSubmit,
+    [agents, handleTutorSubmit],
+  );
+
+  // ── Orchestrator-assisted dispatch (spec Decision C) ────────────────────
+  // Run on a hand-off card: switch to the named specialist, then submit the
+  // Tutor-authored brief through the same flow as any student message.
+  const [pendingAgentDispatch, setPendingAgentDispatch] = useState<{
+    agentId: string;
+    brief: string;
+  } | null>(null);
+
+  const handleAgentHandOff = useCallback(
+    (handOff: AgentHandOffCardData, msgIndex: number) => {
+      agents.selectAgent(handOff.agentId);
+      if (!handOff.brief) return; // plain switch offer — nothing to run
+      setChatMessages((current) =>
+        current.map((message, index) =>
+          index === msgIndex && message.agentHandOff
+            ? {
+                ...message,
+                agentHandOff: { ...message.agentHandOff, status: "dispatched" as const },
+              }
+            : message,
+        ),
+      );
+      setPendingAgentDispatch({ agentId: handOff.agentId, brief: handOff.brief });
+    },
+    [agents, setChatMessages],
+  );
+
+  // The run waits a render for the agent switch to land so the brief executes
+  // with the specialist's policy, contract, and context filter — not the
+  // orchestrating Tutor's.
+  useEffect(() => {
+    if (!pendingAgentDispatch) return;
+    if (agents.activeId !== pendingAgentDispatch.agentId) return;
+    if (isTutorRequestRunning || hasPendingAiChanges) return;
+    const { agentId, brief } = pendingAgentDispatch;
+    setPendingAgentDispatch(null);
+    const userMessage: ChatMessage = { role: "user", content: brief };
+    const nextMessages = [...chatMessages, userMessage];
+    logTutorEvent("agent dispatch run started", {
+      agentId,
+      briefPreview: brief.slice(0, 180),
+      conversationTurns: nextMessages.length,
+    });
+    setChatMessages(nextMessages);
+    setIsTutorRequestRunning(true);
+    void agentAwareTutorSubmit(brief, nextMessages, "auto")
+      .then((assistantMessage) => {
+        if (!assistantMessage) return;
+        // Functional append — the wrapped submit already spliced the switch
+        // divider into state, which a captured-array set would wipe.
+        setChatMessages((current) => [...current, assistantMessage]);
+      })
+      .catch((error) => {
+        logTutorEvent("agent dispatch run failed", error, "error");
+        setChatMessages((current) => [
+          ...current,
+          {
+            role: "assistant",
+            content:
+              "I had trouble sending that work to the agent. Try Run again in a moment.",
+          },
+        ]);
+      })
+      .finally(() => setIsTutorRequestRunning(false));
+  }, [
+    pendingAgentDispatch,
+    agents.activeId,
+    isTutorRequestRunning,
+    hasPendingAiChanges,
+    chatMessages,
+    setChatMessages,
+    agentAwareTutorSubmit,
+    setIsTutorRequestRunning,
+  ]);
+
+  // Orchestrator-auto (the earned top rung): dispatches run without per-step
+  // approval. The card still renders — marked "Sent" — as the receipt of what
+  // was dispatched, and results still land as reviewable proposals.
+  useEffect(() => {
+    if (agents.tutorRole !== "orchestrator-auto") return;
+    if (pendingAgentDispatch || isTutorRequestRunning || hasPendingAiChanges) return;
+    const msgIndex = chatMessages.length - 1;
+    const handOff = chatMessages[msgIndex]?.agentHandOff;
+    if (!handOff?.brief || handOff.status !== "pending") return;
+    handleAgentHandOff(handOff, msgIndex);
+  }, [
+    agents.tutorRole,
+    chatMessages,
+    pendingAgentDispatch,
+    isTutorRequestRunning,
+    hasPendingAiChanges,
+    handleAgentHandOff,
+  ]);
   const isSelectedPlanCompleted =
     builtPlanPaths.has(selectedPlanPath) ||
     hasAcceptedCompletedPlanStatus(selectedPlanEntry?.file);
@@ -1554,7 +1733,32 @@ export function WebLab2LevelPage({
       : handleAddTutorUploadToProjectRoot,
     onRemoveStagedTutorUpload: enableTutorUploadStaging ? handleRemoveStagedTutorUpload : undefined,
     availableTutorContextFiles,
-    onTutorSubmit: resolvedTutorModeKind === "functional" ? handleTutorSubmit : undefined,
+    aiTutorAgentStrip:
+      agents.enabled && agents.activeSpecialist ? (
+        <AgentRosterStrip
+          specialists={agents.specialists}
+          activeId={agents.activeId}
+          unlockedIds={agents.unlockedIds}
+          onSelect={agents.selectAgent}
+          onOpenDetails={() => setAgentModalOpen(true)}
+          showAgentLibrary={agents.allowAgentLibrary}
+          providedAgents={agents.providedCatalog}
+          projectSpecialistIds={agents.projectSpecialistIds}
+          activeSavedBackpackItemIds={agents.activeSavedBackpackItemIds}
+          onAddProvided={agents.addProvidedToProject}
+          onRecallSaved={(specialist, backpackItemId) =>
+            agents.addRecalledAgent(specialist, { backpackItemId })
+          }
+          onCreateAgent={() => {
+            setAgentCreateDraft(createBlankAgentSpecialist());
+          }}
+          disabled={hasPendingAiChanges || isTutorRequestRunning}
+        />
+      ) : undefined,
+    onAgentHandOff: agents.enabled ? handleAgentHandOff : undefined,
+    aiTutorThinkingLabel: agents.thinkingLabelPrefix,
+    aiTutorThinkingAccent: agents.enabled ? agents.activeSpecialist?.accent : undefined,
+    onTutorSubmit: resolvedTutorModeKind === "functional" ? agentAwareTutorSubmit : undefined,
     onAcceptAiChanges: resolvedTutorModeKind === "functional" ? handleAcceptAiChanges : undefined,
     onRejectAiChanges: resolvedTutorModeKind === "functional" ? handleRejectAiChanges : undefined,
     isTutorRequestRunning,
@@ -1634,8 +1838,6 @@ export function WebLab2LevelPage({
     selectedHistoryVersionLabel,
     onReturnToCurrentVersion: handleReturnToCurrentVersion,
     aiChangedFiles: isViewingHistoryVersion ? undefined : aiChangedFiles,
-    onAcceptAiChanges: () => handleBannerAiChangeAction("accepted"),
-    onRejectAiChanges: () => handleBannerAiChangeAction("rejected"),
     builtPlanPaths,
     onFileContentChange: isViewingHistoryVersion ? undefined : updateFileContent,
     showPlanActionBar,
@@ -1669,7 +1871,7 @@ export function WebLab2LevelPage({
   }, [effectiveLevelLinks, shareMode]);
 
   return (
-    <>
+    <BackpackProvider>
       <Lab2Shell
         shareModeConfig={shareModeConfig}
         topNavigationProps={topNavigationProps}
@@ -1684,6 +1886,26 @@ export function WebLab2LevelPage({
         onClose={() => setIsCreateFileModalOpen(false)}
         onCreate={handleCreateFile}
       />
+
+      {agents.enabled && (
+        <AgentLevelModals
+          agents={agents}
+          scopableProjectFiles={scopableProjectFiles}
+          planPath={findPlanPath(currentFileStructure)}
+          hasLevelInstructions={Boolean(resolvedInstructionsMarkdown.trim())}
+          baseSpecialistForActive={
+            resolvedAgentConfig?.specialists.find(
+              (s) => s.id === agents.activeId,
+            ) ??
+            agents.activeSpecialist ??
+            createBlankAgentSpecialist()
+          }
+          agentModalOpen={agentModalOpen}
+          onAgentModalOpenChange={setAgentModalOpen}
+          agentCreateDraft={agentCreateDraft}
+          onAgentCreateDraftChange={setAgentCreateDraft}
+        />
+      )}
       <NameInputModal
         isOpen={isCreateFolderModalOpen}
         title="Create a new folder"
@@ -1718,6 +1940,6 @@ export function WebLab2LevelPage({
           return renameFile(renameTarget.path, value);
         }}
       />
-    </>
+    </BackpackProvider>
   );
 }

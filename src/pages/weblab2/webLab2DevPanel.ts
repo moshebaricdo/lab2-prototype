@@ -29,6 +29,12 @@ export const INSTRUCTIONS_MARKDOWN_DEV_KEY = "instructionsMarkdown";
 export const TUTOR_INSTRUCTIONS_DELIVERY_DEV_KEY = "tutorInstructionsDelivery";
 export const STARTER_CODE_UPLOAD_DEV_KEY = "starterCodeUpload";
 export const VALIDATION_REQUIREMENTS_DEV_KEY = "validationRequirementsConfig";
+export const AGENTS_ENABLED_DEV_KEY = "agentsEnabled";
+export const AGENT_INITIAL_ID_DEV_KEY = "agentInitialId";
+export const AGENT_LOCKED_IDS_DEV_KEY = "agentLockedIds";
+export const AGENT_ALLOW_CUSTOMIZATION_DEV_KEY = "agentAllowCustomization";
+export const AGENT_ALLOW_LIBRARY_DEV_KEY = "agentAllowLibrary";
+export const AGENT_TUTOR_ROLE_DEV_KEY = "agentTutorRole";
 
 export type VersionHistoryMode = "mock" | "functional";
 export type RubricDevStatus = RubricSubmissionStatus | "not-graded";
@@ -440,6 +446,72 @@ const webLab2ValidationReviewDevFields: DevPanelField[] = [
   },
 ];
 
+const webLab2AgentDevFields: DevPanelField[] = [
+  {
+    key: AGENTS_ENABLED_DEV_KEY,
+    label: "Specialist agents",
+    description:
+      "Mount the agent strip and route tutor turns through the active specialist. Pair with functional tutor mode for live runs.",
+    type: "boolean",
+    group: "Agents",
+  },
+  {
+    key: AGENT_INITIAL_ID_DEV_KEY,
+    label: "Initial agent",
+    type: "select",
+    options: [
+      { label: "Tutor", value: "tutor" },
+      { label: "Plan", value: "spec-writer" },
+      { label: "Design", value: "designer" },
+      { label: "Debug", value: "debug" },
+      { label: "Accessibility", value: "a11y" },
+    ],
+    group: "Agents",
+    visibleWhen: (values) => Boolean(values[AGENTS_ENABLED_DEV_KEY]),
+  },
+  {
+    key: AGENT_LOCKED_IDS_DEV_KEY,
+    label: "Locked agents",
+    description:
+      "Comma-separated agent ids hidden from the roster (e.g. \"a11y\"). Prefer per-level specialist lists for progression.",
+    type: "text",
+    group: "Agents",
+    visibleWhen: (values) => Boolean(values[AGENTS_ENABLED_DEV_KEY]),
+  },
+  {
+    key: AGENT_ALLOW_CUSTOMIZATION_DEV_KEY,
+    label: "Agent customization",
+    description:
+      "Students can edit standing instructions and context scope in the agent modal.",
+    type: "boolean",
+    group: "Agents",
+    visibleWhen: (values) => Boolean(values[AGENTS_ENABLED_DEV_KEY]),
+  },
+  {
+    key: AGENT_ALLOW_LIBRARY_DEV_KEY,
+    label: "Agent library",
+    description:
+      "Students can save, recall, and create agents via the backpack (+ menu).",
+    type: "boolean",
+    group: "Agents",
+    visibleWhen: (values) => Boolean(values[AGENTS_ENABLED_DEV_KEY]),
+  },
+  {
+    key: AGENT_TUTOR_ROLE_DEV_KEY,
+    label: "Tutor role",
+    description:
+      "Orchestrator roles make the Tutor propose specialist dispatches (Run card) instead of doing the work itself.",
+    type: "select",
+    options: [
+      { label: "Tutor (student routes)", value: "tutor" },
+      { label: "Orchestrator — assisted", value: "orchestrator-assisted" },
+      { label: "Orchestrator — auto", value: "orchestrator-auto" },
+    ],
+    group: "Agents",
+    visibleWhen: (values) => Boolean(values[AGENTS_ENABLED_DEV_KEY]),
+  },
+];
+
 export const webLab2BaseDevFields: DevPanelField[] = [
   ...webLab2ChromeDevFields,
   ...webLab2ResourcePanelDevFields,
@@ -447,6 +519,7 @@ export const webLab2BaseDevFields: DevPanelField[] = [
   ...globalEditorDevFields,
   ...webLab2ValidationReviewDevFields,
   ...webLab2TutorDevFields,
+  ...webLab2AgentDevFields,
   ...webLab2VersionHistoryDevFields,
 ];
 

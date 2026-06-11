@@ -86,7 +86,7 @@ export interface FileChange {
  * so the chat layer needs no agent registry.
  */
 export interface AgentDividerData {
-  /** Functional label, e.g. "Spec writer". */
+  /** Functional label, e.g. "Plan". */
   label: string;
   /** Font Awesome glyph shown in the divider pill. */
   iconName?: string;
@@ -101,15 +101,21 @@ export interface AgentDividerData {
 /**
  * In-chat hand-off to another specialist agent. Self-contained (label + icon
  * travel with the message) so the chat layer needs no agent registry.
+ * With a `brief` it is an orchestrator dispatch: Run switches to the agent
+ * AND submits the brief. Without one it is a plain switch offer.
  */
 export interface AgentHandOffCardData {
   agentId: string;
-  /** Functional label, e.g. "Style agent". */
+  /** Functional label, e.g. "Design". */
   label: string;
   /** Font Awesome glyph rendered on the card. */
   iconName?: string;
   /** One-line reason shown on the card, e.g. "It builds from the spec." */
   reason?: string;
+  /** Orchestrator-authored work request submitted to the agent on Run. */
+  brief?: string;
+  /** Dispatch lifecycle; "dispatched" disables the Run action. */
+  status?: "pending" | "dispatched";
 }
 
 export interface ChatMessage {

@@ -6,10 +6,12 @@ import { getFileChipIconProps, fileExtensionLabelFromName } from "../../../../ui
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { ActionRow } from "./ActionRow";
 import { EditOptionsCard } from "./EditOptionsCard";
+import { AgentHandOffCard } from "./AgentHandOffCard";
 import { NewProjectPlanQuestionnaireCard } from "./NewProjectPlanQuestionnaireCard";
 import { TutorActionCard } from "./TutorActionCard";
 import { ThinkingAnimation } from "./ThinkingAnimation";
 import type {
+  AgentHandOffCardData,
   ChatAttachment,
   ChatMessage,
   EditOptionChoice,
@@ -43,6 +45,8 @@ interface AiTutorMessageListProps {
   thinkingLabel?: string;
   /** Prefix on the cycling thinking terms (e.g. active agent role). */
   thinkingLabelPrefix?: string;
+  /** Accent for the agent thinking dot; presence of a prefix selects the agent variant. */
+  thinkingAccent?: string;
   inputExperiment: AiTutorInputExperiment;
   onThinkingComplete: () => void;
   onMarkAttachmentAdded: (msgIndex: number, attachmentPath: string) => void;
@@ -66,48 +70,11 @@ interface AiTutorMessageListProps {
   validationReviewRunning?: boolean;
   onOpenFileChangeInEditor?: (change: FileChange) => void;
   onOpenFileChangeInPreview?: (change: FileChange) => void;
-  /** Switch the active specialist agent when a hand-off card is actioned. */
-  onAgentHandOff?: (agentId: string) => void;
-}
-
-/**
- * Collapsible "Read N files" node at the top of agent replies — the
- * transparency receipt as an in-stream activity step (streaming-ready: with
- * live streaming this is where read/write steps will accumulate).
- */
-function AgentReceiptNode({ paths }: { paths: string[] }) {
-  const [expanded, setExpanded] = useState(false);
-  const fileCount = paths.length;
-  return (
-    <div className={styles.agentReceiptNode}>
-      <button
-        type="button"
-        className={styles.agentReceiptToggle}
-        aria-expanded={expanded}
-        onClick={() => setExpanded((current) => !current)}
-      >
-        <FaIcon name="eye" size="inherit" />
-        <span>
-          Read {fileCount} {fileCount === 1 ? "item" : "items"}
-        </span>
-        <FaIcon
-          name={expanded ? "chevron-up" : "chevron-down"}
-          size="inherit"
-          className={styles.agentReceiptChevron}
-        />
-      </button>
-      {expanded && (
-        <ul className={styles.agentReceiptList}>
-          {paths.map((path) => (
-            <li key={path} className={styles.agentReceiptListItem}>
-              <FaIcon name="file-lines" size="inherit" />
-              <span>{path}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
+  /**
+   * Hand-off card actioned: switch to the agent (and, for dispatch cards
+   * carrying a brief, run it). The index lets the owner mark the card.
+   */
+  onAgentHandOff?: (handOff: AgentHandOffCardData, msgIndex: number) => void;
 }
 
 function metadataLabelForAttachment(att: ChatAttachment) {
@@ -254,6 +221,7 @@ function hasAssistantCardContent(message: ChatMessage) {
     message.validationReview ||
     message.instructionGuide ||
     message.actionCard ||
+    message.agentHandOff ||
     (message.fileChanges && message.fileChanges.length > 0),
   );
 }
@@ -518,6 +486,7 @@ export function AiTutorMessageList({
   autoCompleteThinking,
   thinkingLabel,
   thinkingLabelPrefix,
+  thinkingAccent,
   inputExperiment,
   onThinkingComplete,
   onMarkAttachmentAdded,
@@ -567,24 +536,9 @@ export function AiTutorMessageList({
           )}
 
           {chatMessages.map((msg, idx) => {
-            const hasCardContent = hasAssistantCardContent(msg);
-            const hasLaterChatMessage = hasLaterChatMessageForTest(chatMessages, idx);
-
-            return (
-              <div
-                key={idx}
-                className={styles.messageBlock}
-                data-tutor-message-index={idx}
-              >
-                <MessageAttachments
-                  msg={msg}
-                  idx={idx}
-                  inputExperiment={inputExperiment}
-                  enableUploadAddActions={enableUploadAddActions}
-                  onMarkAttachmentAdded={onMarkAttachmentAdded}
-                />
-
-                {msg.agentDivider ? (
+            if (msg.agentDivider) {
+              return (
+                <div key={idx} className={styles.messageBlock}>
                   <div
                     className={styles.agentDivider}
                     title={msg.agentDivider.title}
@@ -602,14 +556,30 @@ export function AiTutorMessageList({
                       )}
                       {msg.agentDivider.label}
                     </span>
-                    {msg.agentDivider.detail && (
-                      <span className={styles.agentDividerDetail}>
-                        {msg.agentDivider.detail}
-                      </span>
-                    )}
                     <span className={styles.agentDividerLine} />
                   </div>
-                ) : msg.isAlert ? (
+                </div>
+              );
+            }
+
+            const hasCardContent = hasAssistantCardContent(msg);
+            const hasLaterChatMessage = hasLaterChatMessageForTest(chatMessages, idx);
+
+            return (
+              <div
+                key={idx}
+                className={styles.messageBlock}
+                data-tutor-message-index={idx}
+              >
+                <MessageAttachments
+                  msg={msg}
+                  idx={idx}
+                  inputExperiment={inputExperiment}
+                  enableUploadAddActions={enableUploadAddActions}
+                  onMarkAttachmentAdded={onMarkAttachmentAdded}
+                />
+
+                {msg.isAlert ? (
                   <div className={styles.messageRow}>
                     <div className={[
                       styles.alertBubble,
@@ -646,12 +616,6 @@ export function AiTutorMessageList({
                           hasCardContent ? styles.messageBubbleWithCard : "",
                         ].filter(Boolean).join(" ")}
                       >
-                        {msg.role === "assistant" &&
-                          msg.agentContextReceipt &&
-                          msg.agentContextReceipt.length > 0 && (
-                          <AgentReceiptNode paths={msg.agentContextReceipt} />
-                        )}
-
                         {renderMessageContent(msg.content)}
 
                         {msg.role === "assistant" && msg.newProjectPlanQuestionnaire && (
@@ -739,37 +703,14 @@ export function AiTutorMessageList({
                         )}
 
                         {msg.role === "assistant" && msg.agentHandOff && (
-                          <div className={styles.agentHandOffCard}>
-                            <span className={styles.agentHandOffIcon}>
-                              <FaIcon
-                                name={(msg.agentHandOff.iconName ?? "robot") as FaIconName}
-                                size="s"
-                              />
-                            </span>
-                            <div className={styles.agentHandOffBody}>
-                              <span className={styles.agentHandOffLabel}>
-                                {msg.agentHandOff.label}
-                              </span>
-                              {msg.agentHandOff.reason && (
-                                <span className={styles.agentHandOffReason}>
-                                  {msg.agentHandOff.reason}
-                                </span>
-                              )}
-                            </div>
-                            <AppButton
-                              variant="primary"
-                              tone="purple"
-                              size="s"
-                              iconName="arrow-right"
-                              disabled={interactiveCardsDisabled || !onAgentHandOff}
-                              onClick={() =>
-                                msg.agentHandOff &&
-                                onAgentHandOff?.(msg.agentHandOff.agentId)
-                              }
-                            >
-                              Switch
-                            </AppButton>
-                          </div>
+                          <AgentHandOffCard
+                            handOff={msg.agentHandOff}
+                            disabled={interactiveCardsDisabled || !onAgentHandOff}
+                            onAction={() =>
+                              msg.agentHandOff &&
+                              onAgentHandOff?.(msg.agentHandOff, idx)
+                            }
+                          />
                         )}
                       </div>
                     </div>
@@ -813,6 +754,8 @@ export function AiTutorMessageList({
                   autoComplete={autoCompleteThinking}
                   label={thinkingLabel}
                   labelPrefix={thinkingLabelPrefix}
+                  variant={thinkingLabelPrefix ? "agent" : "bot"}
+                  accent={thinkingAccent}
                   onComplete={onThinkingComplete}
                 />
               </div>

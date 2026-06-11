@@ -1,0 +1,121 @@
+.viewBody {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.viewAvatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  font-size: var(--text-h4);
+
+  &[data-accent="violet"] { --agent-accent: #6c4ccf; }
+  &[data-accent="blue"] { --agent-accent: #1a7ee6; }
+  &[data-accent="magenta"] { --agent-accent: #d6479d; }
+  &[data-accent="green"] { --agent-accent: #0e9f6e; }
+
+  background: color-mix(in srgb, var(--agent-accent, #6c4ccf) 12%, transparent);
+  color: var(--agent-accent, #6c4ccf);
+}
+
+.viewText {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.viewName {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.48;
+}
+
+.viewDescription {
+  margin: 0;
+  color: var(--ds-text-neutral-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.editBody {
+  --identity-control-height: 30px;
+  --app-text-field-label-size: var(--text-label);
+  --app-text-field-label-line-height: 1.64;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.topRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 108px 120px;
+  gap: 8px;
+  align-items: end;
+}
+
+.fieldShell {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fieldLabel {
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--app-text-field-label-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--app-text-field-label-line-height);
+}
+
+.identityControl {
+  height: var(--identity-control-height);
+  min-height: var(--identity-control-height);
+  padding-block: 0;
+  padding-inline: 10px;
+  line-height: 1.54;
+}
+
+.menuField {
+  width: 100%;
+  min-width: 0;
+  gap: 4px;
+  height: var(--identity-control-height);
+  min-height: var(--identity-control-height);
+  padding: 0 10px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.54;
+}
+
+.menuList {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.menuItemCheck {
+  margin-left: auto;
+  color: var(--ds-text-brand-purple-primary);
+}
+
+.accentDot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 50%;
+
+  &[data-accent="violet"] { background: #6c4ccf; }
+  &[data-accent="blue"] { background: #1a7ee6; }
+  &[data-accent="magenta"] { background: #d6479d; }
+  &[data-accent="green"] { background: #0e9f6e; }
+}

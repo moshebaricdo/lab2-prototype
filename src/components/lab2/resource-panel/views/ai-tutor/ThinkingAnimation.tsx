@@ -100,6 +100,13 @@ interface ThinkingAnimationProps {
   label?: string;
   /** Prefix prepended to the cycling terms (keeps cycling, e.g. agent name). */
   labelPrefix?: string;
+  /**
+   * "bot" (default) keeps the robot-head treatment used across Web Lab 2.
+   * "agent" swaps the head for an accent pulse dot — specialist-agent runs.
+   */
+  variant?: "bot" | "agent";
+  /** Accent key for the agent dot (matches the agent strip tints). */
+  accent?: string;
 }
 
 export function ThinkingAnimation({
@@ -107,6 +114,8 @@ export function ThinkingAnimation({
   autoComplete = true,
   label,
   labelPrefix,
+  variant = "bot",
+  accent,
 }: ThinkingAnimationProps) {
   const steps = useMemo(() => pickRandomTerms(SPINNER_TERMS.length), []);
   const [stepIndex, setStepIndex] = useState(0);
@@ -131,12 +140,16 @@ export function ThinkingAnimation({
 
   return (
     <div className={styles.container}>
-      <div
-        key={animKey}
-        className={`${styles.iconWrap} ${stepIndex > 0 ? styles.iconPop : ""}`}
-      >
-        <img src={robotGif} alt="" className={styles.icon} />
-      </div>
+      {variant === "agent" ? (
+        <span className={styles.agentDot} data-accent={accent} />
+      ) : (
+        <div
+          key={animKey}
+          className={`${styles.iconWrap} ${stepIndex > 0 ? styles.iconPop : ""}`}
+        >
+          <img src={robotGif} alt="" className={styles.icon} />
+        </div>
+      )}
       <span key={`label-${stepIndex}`} className={styles.label}>
         {label ??
           `${labelPrefix ? `${labelPrefix} · ` : ""}${steps[stepIndex]}...`}

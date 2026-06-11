@@ -16,6 +16,7 @@ import type {
   InstructionsDrawerVisualCue,
 } from "../../InstructionsDrawer";
 import type {
+  AgentHandOffCardData,
   AttachmentStatusContext,
   ChatAttachment,
   ChatMessage,
@@ -197,10 +198,12 @@ interface AiTutorPanelProps {
   setChatInput: (input: string) => void;
   /** Optional content pinned between the conversation and the composer (e.g. specialist agent strip). */
   agentStrip?: ReactNode;
-  /** Switch the active specialist agent when an in-chat hand-off card is actioned. */
-  onAgentHandOff?: (agentId: string) => void;
+  /** In-chat hand-off card actioned: switch to the agent (dispatch cards also run their brief). */
+  onAgentHandOff?: (handOff: AgentHandOffCardData, msgIndex: number) => void;
   /** Override the thinking-state label (e.g. "Style agent · reading 3 files"). */
   thinkingLabelOverride?: string;
+  /** Accent for the agent thinking dot (agent variant of the thinking state). */
+  thinkingAccent?: string;
   showInstructionsDrawer?: boolean;
   instructionsDrawerDefaultOpen?: boolean;
   instructionsDrawerInitialHeightRatio?: number;
@@ -341,6 +344,7 @@ export function AiTutorPanel({
   agentStrip,
   onAgentHandOff,
   thinkingLabelOverride,
+  thinkingAccent,
   showInstructionsDrawer = true,
   instructionsDrawerDefaultOpen = true,
   instructionsDrawerInitialHeightRatio,
@@ -894,6 +898,37 @@ export function AiTutorPanel({
 
     window.addEventListener("weblab:add-preview-element-to-tutor", handler);
     return () => window.removeEventListener("weblab:add-preview-element-to-tutor", handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        attachment: ChatAttachment;
+        result: true | string;
+      }>).detail;
+      const attachment = detail?.attachment;
+      if (!attachment?.path) {
+        if (detail) detail.result = "That file could not be attached.";
+        return;
+      }
+      if (attachedFilesRef.current.includes(attachment.path)) {
+        detail.result = `${attachment.fileName} is already attached.`;
+        return;
+      }
+
+      uploadedAttachmentContextsRef.current = {
+        ...uploadedAttachmentContextsRef.current,
+        [attachment.path]: attachment,
+      };
+      setUploadedAttachmentContexts(uploadedAttachmentContextsRef.current);
+      attachedFilesRef.current = [...attachedFilesRef.current, attachment.path];
+      setAttachedFiles(attachedFilesRef.current);
+      detail.result = true;
+    };
+
+    window.addEventListener("weblab:add-backpack-item-to-chat", handler);
+    return () =>
+      window.removeEventListener("weblab:add-backpack-item-to-chat", handler);
   }, []);
 
   const hasPendingNewProjectPlanQuestionnaire = chatMessages.some(
@@ -1834,6 +1869,7 @@ export function AiTutorPanel({
               : undefined
         }
         thinkingLabelPrefix={thinkingLabelOverride}
+        thinkingAccent={thinkingAccent}
         inputExperiment={inputExperiment}
         enableUploadAddActions={false}
         onThinkingComplete={handleThinkingComplete}

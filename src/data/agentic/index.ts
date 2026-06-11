@@ -9,22 +9,12 @@ export {
   tutorSpecialist,
   specWriterSpecialist,
   designerSpecialist,
+  debugSpecialist,
   accessibilitySpecialist,
   crewSpecialists,
+  crewLevel1Specialists,
   missionSpecialists,
 } from "./specialists";
-export {
-  crewScripts,
-  buildSwitchNote,
-  a11yUnlockNote,
-  crewAcceptFollowUps,
-  type CrewProposalKey,
-  type CrewKeywordRule,
-  type CrewProposal,
-  type CrewScriptedReply,
-  type CrewSpecialistScript,
-  type CrewStagedChange,
-} from "./crewScript";
 export {
   galleryMission,
   missionTaskScripts,

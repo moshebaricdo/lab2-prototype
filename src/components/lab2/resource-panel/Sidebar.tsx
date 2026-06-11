@@ -26,6 +26,7 @@ export function Sidebar({
   aiTutorAgentStrip,
   onAgentHandOff,
   aiTutorThinkingLabel,
+  aiTutorThinkingAccent,
   selectedHistoryVersion,
   setSelectedHistoryVersion,
   onSaveVersion,
@@ -46,7 +47,7 @@ export function Sidebar({
   showBackpackTab = true,
   backpackImportLab,
   onImportBackpackItem,
-  backpackFilterExperiment = "default",
+  backpackFilterExperiment = "type-availability",
   backpackSeedItemsIfEmpty,
   showTeacherResourcesTab = false,
   showRubricTab = false,
@@ -349,6 +350,7 @@ export function Sidebar({
             aiTutorAgentStrip={aiTutorAgentStrip}
             onAgentHandOff={onAgentHandOff}
             aiTutorThinkingLabel={aiTutorThinkingLabel}
+            aiTutorThinkingAccent={aiTutorThinkingAccent}
             selectedHistoryVersion={selectedHistoryVersion}
             setSelectedHistoryVersion={setSelectedHistoryVersion}
             onSaveVersion={onSaveVersion}
