@@ -14,8 +14,8 @@ import type {
 } from "../../../types/tutor";
 import { runEditClarification } from "../../../lib/tutor/routing/editClarificationRunner";
 import type { ValidationReviewCardData } from "../../../types/validationReview";
-import { PROJECT_PLAN_FILE } from "../../../lib/tutor/runners/planningRunner";
 import { tutorClient } from "../../../lib/tutor/tutorClient";
+import type { TutorValidatedChange } from "../../../lib/tutor/types";
 import { resolveTutorTurn } from "../../../lib/tutor/routing/resolveTutorTurn";
 import { logTutorEvent } from "../../../lib/tutor/conversation/tutorDebugLogger";
 import {
@@ -60,6 +60,17 @@ interface UseWebLab2TutorFlowOptions {
   onInstructionGuideStateChange?: Dispatch<SetStateAction<InstructionGuideState>>;
   tutorSupportContext: TutorSupportContext;
   tutorPolicy: TutorPolicy;
+  /** Target plan file for the planning runner. Defaults to Plans/PROJECT_PLAN.md. */
+  planningFileName?: string;
+  /**
+   * Optional write-scope clamp for the active specialist agent. Splits proposed
+   * changes into the ones the agent may write and a student-facing note about
+   * the ones it may not — the enforcement IS the lesson (spec V4, item 4).
+   */
+  clampProposalChanges?: (changes: TutorValidatedChange[]) => {
+    allowed: TutorValidatedChange[];
+    note: string;
+  };
   routingDiagnostics?: boolean;
   validationReviewOffer?: ValidationReviewCardData;
   onValidationReview?: () => Promise<ValidationReviewCardData>;
@@ -93,6 +104,8 @@ export function useWebLab2TutorFlow({
   onInstructionGuideStateChange,
   tutorSupportContext,
   tutorPolicy,
+  planningFileName,
+  clampProposalChanges,
   routingDiagnostics = true,
   validationReviewOffer,
   onValidationReview,
@@ -277,43 +290,60 @@ export function useWebLab2TutorFlow({
       levelInstructionsMarkdown,
       levelProgress,
       instructionFocus,
+      planningFileName,
       resolvedAction: runnerAction,
       supportContext: tutorSupportContext,
     });
+
+    // Write-scope clamp: drop changes the active specialist may not write and
+    // surface why. Pruned context makes out-of-scope writes unlikely, but the
+    // clamp (and its explanation) is the real lesson for agent levels.
+    const clamp = clampProposalChanges?.(result.changes);
+    const proposedChanges = clamp ? clamp.allowed : result.changes;
+    const messageWithScopeNote = clamp?.note
+      ? `${result.message}${clamp.note}`
+      : result.message;
+    if (clamp && clamp.allowed.length !== result.changes.length) {
+      logTutorEvent("specialist write scope clamped proposal", {
+        proposed: result.changes.map((change) => change.fileName),
+        allowed: clamp.allowed.map((change) => change.fileName),
+      }, "warn");
+    }
+
     logTutorEvent("functional tutor result received", {
       resolvedAction: runnerAction?.kind,
-      changeCount: result.changes.length,
-      changes: result.changes.map((change) => ({
+      changeCount: proposedChanges.length,
+      changes: proposedChanges.map((change) => ({
         fileName: change.fileName,
         status: change.status,
         linesAdded: change.linesAdded,
         linesRemoved: change.linesRemoved,
       })),
       hasSaveTitle: Boolean(result.saveTitle),
-      messageLength: result.message.length,
+      messageLength: messageWithScopeNote.length,
     });
 
-    if (result.changes.length > 0) {
-      const isPlanOnlyChange = isPlanOnlyTutorChange(result.changes);
+    if (proposedChanges.length > 0) {
+      const isPlanOnlyChange = isPlanOnlyTutorChange(proposedChanges);
       const shouldSwitchToPreviewAfterPlanBuild =
         buildFromPlanRequestRef.current && !isPlanOnlyChange && useFilePreview;
       buildFromPlanRequestRef.current = false;
       setIsFileManagerCollapsed(false);
-      beginAiProposal(result.changes);
+      beginAiProposal(proposedChanges);
       logTutorEvent("ai proposal started", {
         isPlanOnlyChange,
-        changeCount: result.changes.length,
+        changeCount: proposedChanges.length,
         shouldSwitchToPreviewAfterPlanBuild,
         wasEmptyOrPlanOnlyProject,
       });
       if (isPlanOnlyChange) {
         setViewMode("code");
         openFile({
-          name: pathBasename(PROJECT_PLAN_FILE),
+          name: pathBasename(proposedChanges[0].fileName),
           type: "text",
           content: "",
-          proposedContent: result.changes[0].content ?? "",
-          proposedStatus: result.changes[0].status,
+          proposedContent: proposedChanges[0].content ?? "",
+          proposedStatus: proposedChanges[0].status,
         });
       } else if (shouldSwitchToPreviewAfterPlanBuild || (wasEmptyOrPlanOnlyProject && useFilePreview)) {
         setViewMode("preview");
@@ -323,8 +353,8 @@ export function useWebLab2TutorFlow({
     }
 
     const tutorFileChanges =
-      result.changes.length > 0
-        ? result.changes.map(({ fileName, status, linesAdded, linesRemoved }) => ({
+      proposedChanges.length > 0
+        ? proposedChanges.map(({ fileName, status, linesAdded, linesRemoved }) => ({
             fileName,
             status,
             linesAdded,
@@ -332,19 +362,20 @@ export function useWebLab2TutorFlow({
           }))
         : [];
     const fileChanges =
-      tutorFileChanges.length > 0 && !isPlanOnlyTutorChange(result.changes)
+      tutorFileChanges.length > 0 && !isPlanOnlyTutorChange(proposedChanges)
         ? mergeStagedUploadImagesIntoFileChanges(conversation, tutorFileChanges)
         : tutorFileChanges;
 
     return {
       role: "assistant",
-      content: result.message,
+      content: messageWithScopeNote,
       fileChanges: fileChanges.length > 0 ? fileChanges : undefined,
-      aiSaveTitle: result.changes.length > 0 ? result.saveTitle : undefined,
-      codeChangeStatus: result.changes.length > 0 ? "pending" : undefined,
+      aiSaveTitle: proposedChanges.length > 0 ? result.saveTitle : undefined,
+      codeChangeStatus: proposedChanges.length > 0 ? "pending" : undefined,
     } satisfies ChatMessage;
   }, [
     beginAiProposal,
+    clampProposalChanges,
     currentFileStructure,
     hasActivePlan,
     hasPendingAiChanges,
@@ -354,6 +385,7 @@ export function useWebLab2TutorFlow({
     instructionGuideState,
     onInstructionGuideStateChange,
     openFile,
+    planningFileName,
     routingDiagnostics,
     runnerContracts,
     setChatMessages,

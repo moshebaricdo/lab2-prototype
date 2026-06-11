@@ -95,8 +95,6 @@ interface WorkspaceProps {
   selectedHistoryVersionLabel?: string;
   onReturnToCurrentVersion: () => void;
   aiChangedFiles?: Record<string, "new" | "modified" | "deleted">;
-  onAcceptAiChanges?: () => void;
-  onRejectAiChanges?: () => void;
   builtPlanPaths?: Set<string>;
   onFileContentChange?: (fileName: string, content: string) => void;
   showPlanActionBar?: boolean;
@@ -143,8 +141,6 @@ export function Workspace({
   selectedHistoryVersionLabel,
   onReturnToCurrentVersion,
   aiChangedFiles,
-  onAcceptAiChanges,
-  onRejectAiChanges,
   builtPlanPaths,
   onFileContentChange,
   showPlanActionBar = false,
@@ -285,8 +281,14 @@ export function Workspace({
   ];
   const isViewingHistoryVersion = selectedHistoryVersion !== "current";
   const isEmptyProject = !hasWorkspaceProjectFiles(fileStructure);
+  const planFileNames = getPlanFileNames(fileStructure);
+  const isPlanOpen = planFileNames.has(selectedFile?.name ?? "") &&
+    openFiles.some((file) => file.name === selectedFile?.name);
+  // A plan-only project is "empty" of buildable files but still has an artifact
+  // to show. When that plan is open, surface the editor instead of the start
+  // screen so the freshly generated plan is visible right away.
   const shouldShowNewProjectEmptyState =
-    isEmptyProject && showNewProjectEmptyState && !isViewingHistoryVersion;
+    isEmptyProject && showNewProjectEmptyState && !isViewingHistoryVersion && !isPlanOpen;
   const hasPendingAiChanges = !!aiChangedFiles && Object.keys(aiChangedFiles).length > 0;
   const hasPreviewContent =
     openFiles.length > 0 ||
@@ -295,9 +297,6 @@ export function Workspace({
     Boolean(preview.htmlFiles.length);
   const hasPreviewSurface = preview.kind === "react" || Boolean(preview.srcDoc);
   const hasDebugActivity = consoleMessages.length > 0 || networkRequests.length > 0;
-  const planFileNames = getPlanFileNames(fileStructure);
-  const isPlanOpen = planFileNames.has(selectedFile?.name ?? "") &&
-    openFiles.some((file) => file.name === selectedFile?.name);
   const resolvedShowPlanActionBar = showPlanActionBar && isPlanOpen;
   const editorOpenFiles = resolvedShowPlanActionBar
     ? openFiles
@@ -357,8 +356,6 @@ export function Workspace({
           />
         )}
         aiChangesActive={hasPendingAiChanges}
-        onAcceptAiChanges={onAcceptAiChanges}
-        onRejectAiChanges={onRejectAiChanges}
       />
 
       {selectedHistoryVersion !== "current" && (

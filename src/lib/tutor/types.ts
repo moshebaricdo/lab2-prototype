@@ -169,6 +169,8 @@ export interface TutorRequest {
   instructionFocus?: InstructionFocusContext;
   requestMode?: TutorRequestMode;
   supportContext?: TutorSupportContext;
+  /** Target file for the planning runner. Defaults to Plans/PROJECT_PLAN.md. */
+  planningFileName?: string;
 }
 
 export type TutorChatMessageContent =

@@ -1,4 +1,3 @@
-import { PROJECT_PLAN_FILE } from "../../../lib/tutor/runners/planningRunner";
 import type { FileItem } from "../../../types/file";
 import {
   findFileEntryInTree as findFileEntryInTreeBase,
@@ -240,7 +239,7 @@ export function hasNonPlanProjectFiles(tree: FileItem[], parentPath = ""): boole
 
 export function isPlanOnlyTutorChange(changes: { fileName: string; status: string }[]) {
   return changes.length === 1 &&
-    changes[0].fileName === PROJECT_PLAN_FILE &&
+    isPlanFilePath(changes[0].fileName) &&
     changes[0].status !== "deleted";
 }
 

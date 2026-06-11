@@ -2,6 +2,7 @@ import { tutorClient } from "../tutorClient";
 import type { TutorValidatedChange } from "../types";
 import type { ChatMessage } from "../../../types/chat";
 import type { FileItem } from "../../../types/file";
+import type { TutorRequestMode } from "../../../types/tutor";
 import type { AgentSpecialist } from "../../../types/agentLab";
 
 /**
@@ -21,7 +22,7 @@ import type { AgentSpecialist } from "../../../types/agentLab";
 
 const NO_PERSONA_RULE =
   "Style rule: you are a tool, not a character. No name, no persona, no emoji. " +
-  "Refer to other agents by their functional label (e.g. \"the Spec writer\").";
+  "Refer to other agents by their functional label (e.g. \"Plan\" or \"Design\").";
 
 /** Project-relative path of a node inside the (single) root project folder. */
 function withRelativePaths(
@@ -100,21 +101,46 @@ export function packedContextPaths(
   return paths;
 }
 
-/** Capability → deterministic composer mode. The agent's capability IS its mode. */
+/** Capability → deterministic composer mode for specialist turns. */
+export function specialistComposerMode(
+  specialist: AgentSpecialist,
+): TutorRequestMode {
+  if (specialist.capabilities.planning && !specialist.capabilities.workspaceEdits) {
+    return "plan";
+  }
+  if (specialist.capabilities.workspaceEdits) {
+    return "build";
+  }
+  return "help";
+}
+
+/** @deprecated Prefer `specialistComposerMode`. */
 export function agentRequestMode(specialist: AgentSpecialist): "build" | "help" {
-  return specialist.capabilities.workspaceEdits || specialist.produces.length > 0
-    ? "build"
-    : "help";
+  return specialistComposerMode(specialist) === "build" ? "build" : "help";
 }
 
 export function buildAgentSystemPrompt(specialist: AgentSpecialist): string {
-  const writable = specialist.writablePaths.length
-    ? `You may only create or modify these files: ${specialist.writablePaths.join(", ")}. ` +
-      "If the request needs other files changed, say which agent handles that instead."
+  const writable = specialist.capabilities.workspaceEdits
+    ? specialist.writablePaths.length
+      ? `You may only create or modify these files: ${specialist.writablePaths.join(", ")}. ` +
+        "If the request needs other files changed, say which agent handles that instead."
+      : "You may propose file edits, but no write paths are configured yet — describe changes instead of proposing them."
     : "You must not propose any file changes.";
+
+  const runtime = specialist.capabilities.readLivePreview
+    ? "When live preview or console output is available in context, use it to diagnose rendering and runtime issues."
+    : "You do not receive live preview or console output — rely on project files and the student's description.";
+
+  const effort =
+    (specialist.effort ?? "quick") === "careful"
+      ? "Think step-by-step before answering. Prefer thorough analysis over speed."
+      : "Be concise and direct. Prefer fast, actionable answers.";
+
   return [
     `You are the "${specialist.role}" agent. ${specialist.contract}`,
     writable,
+    runtime,
+    effort,
     NO_PERSONA_RULE,
   ].join("\n\n");
 }
@@ -136,6 +162,18 @@ export function clampSpecialistChanges(
       .push(change);
   }
   return { allowed, blocked };
+}
+
+/**
+ * Student-facing note explaining which proposed changes fell outside the
+ * agent's write scope and were dropped. Empty when nothing was blocked.
+ */
+export function formatBlockedScopeNote(blocked: TutorValidatedChange[]): string {
+  if (blocked.length === 0) return "";
+  const names = blocked.map((change) => `\`${change.fileName}\``).join(", ");
+  return `\n\n*${names} ${
+    blocked.length === 1 ? "is" : "are"
+  } outside this agent's write scope — that change was not applied.*`;
 }
 
 export interface SpecialistTurnOptions {
@@ -170,7 +208,7 @@ export async function runSpecialistTurn({
     message,
     conversation,
     files: scopedTree,
-    requestMode: agentRequestMode(specialist),
+    requestMode: specialistComposerMode(specialist),
     supportContext: "curriculum-level",
     runnerContracts: { build: contract, plan: contract, help: contract },
     levelInstructionsMarkdown: specialist.contextScope.includesInstructions
@@ -179,16 +217,11 @@ export async function runSpecialistTurn({
   });
 
   const { allowed, blocked } = clampSpecialistChanges(result.changes, specialist);
-  const blockedNote = blocked.length
-    ? `\n\n*${blocked.map((c) => `\`${c.fileName}\``).join(", ")} ${
-        blocked.length === 1 ? "is" : "are"
-      } outside this agent's write scope — that change was not applied.*`
-    : "";
+  const blockedNote = formatBlockedScopeNote(blocked);
 
   const chatMessage: ChatMessage = {
     role: "assistant",
     content: `${result.message}${blockedNote}`,
-    agentContextReceipt: packedContextPaths(files, specialist),
     ...(allowed.length > 0
       ? {
           fileChanges: allowed.map((change) => ({

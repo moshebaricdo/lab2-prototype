@@ -177,6 +177,7 @@ Editing rules:
 - If no code edit is needed, return an empty changes array and answer pedagogically.
 - Do not include markdown fences in file content.
 - Do not invent external assets. Use existing file names or simple CSS/HTML/JavaScript.
+- Generate only HTML, CSS, and JavaScript files. Keep any data the app needs inline in JavaScript (arrays/objects/constants); do not create separate data files (e.g. .json, .csv, .txt) or load local files with fetch()/XMLHttpRequest, since the preview runs a single inlined HTML/CSS/JS bundle and cannot serve local file requests.
 - Search strings must match the current file content exactly, including whitespace.
 - If the same exact search text intentionally needs to be changed everywhere it appears, set "replaceAll": true.
 - Use "replaceAll": true only when every match should change for the user's request.

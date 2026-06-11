@@ -34,6 +34,7 @@ Rules:
 - Return JSON only.
 - Do not use markdown fences.
 - Do not invent external libraries, frameworks, or unavailable assets.
+- Generate only HTML, CSS, and JavaScript files. Keep any data the app needs inline in JavaScript (arrays/objects/constants). Do not create separate data files (e.g. .json, .csv, .txt) and do not load local files with fetch() or XMLHttpRequest — the preview runs a single inlined HTML/CSS/JS bundle and cannot serve local file requests.
 - Prefer searchReplace edits when only snippets/previews were provided for a file.
 - Use replace only when you can provide the complete final contents of that file.
 - Preserve unrelated code and project intent.

@@ -149,6 +149,7 @@ export async function tutorClient({
   instructionFocus,
   requestMode = "auto",
   supportContext = "standalone-project",
+  planningFileName,
   resolvedAction,
   guidanceProvider = openAiTutorProvider,
   structuredProvider = openAiTutorProvider,
@@ -232,6 +233,7 @@ export async function tutorClient({
         additionalSystemPrompt: runnerSystemPromptAddendum,
         levelInstructionsMarkdown,
         levelProgress,
+        planningFileName,
         provider: structuredProvider,
       });
 
