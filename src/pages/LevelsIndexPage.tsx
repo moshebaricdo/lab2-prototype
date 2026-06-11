@@ -498,7 +498,7 @@ export function LevelsIndexPage() {
                 <div className={styles.cardHeader}>
                   <h3 className={styles.cardTitle}>Backpack Filtering</h3>
                   <p className={styles.cardDescription}>
-                    Compare source sections, filter pills, a supported toggle, and a dropdown.
+                    Compare source sections, filter pills, a supported toggle, a dropdown, and a type dropdown with availability sorting.
                   </p>
                 </div>
                 <div className={styles.bubbleRow}>

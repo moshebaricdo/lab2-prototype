@@ -169,8 +169,12 @@ export const sampleProgressionLinks: LevelProgressLink[] = [
 ];
 
 export const agenticProgressionLinks: LevelProgressLink[] = [
-  { name: "Specialist agents (in the tutor panel)", path: "/levels/agentic-crew" },
-  { name: "Mission Control (you run the agents)", path: "/levels/agentic-mission" },
+  { name: "1 · Meet the agents", path: "/levels/agentic-crew" },
+  { name: "2 · Look inside an agent", path: "/levels/agentic-inspect" },
+  { name: "3 · Tune your crew", path: "/levels/agentic-configure" },
+  { name: "4 · Let the Tutor route", path: "/levels/agentic-orchestrate" },
+  { name: "5 · Blank project + agents", path: "/levels/agentic-standalone" },
+  { name: "Mission Control (concept widget)", path: "/levels/agentic-mission" },
 ];
 
 export const webLab2ValidationProgressionLinks: LevelProgressLink[] = [
@@ -227,6 +231,10 @@ export const backpackFilterProgressionLinks: LevelProgressLink[] = [
   {
     name: "Filter dropdown",
     path: "/levels/progression-backpack-filter-dropdown",
+  },
+  {
+    name: "Type + availability (default)",
+    path: "/levels/progression-backpack-filter-type-availability",
   },
 ];
 

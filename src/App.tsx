@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ComponentType } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { usePageTitle } from "./hooks/usePageTitle";
 
 function lazyPage<TModule, TName extends keyof TModule>(
   loader: () => Promise<TModule>,
@@ -158,6 +159,12 @@ const AgenticCrewLevelPage = lazyPage(
   () => import("./pages/progression/AgenticCrewLevelPage"),
   "AgenticCrewLevelPage",
 );
+const AgenticProgressionPages = () =>
+  import("./pages/progression/AgenticProgressionPages");
+const AgenticLevel2Page = lazyPage(AgenticProgressionPages, "AgenticLevel2Page");
+const AgenticLevel3Page = lazyPage(AgenticProgressionPages, "AgenticLevel3Page");
+const AgenticLevel4Page = lazyPage(AgenticProgressionPages, "AgenticLevel4Page");
+const AgenticLevel5Page = lazyPage(AgenticProgressionPages, "AgenticLevel5Page");
 const AgenticMissionLevelPage = lazyPage(
   () => import("./pages/progression/AgenticMissionLevelPage"),
   "AgenticMissionLevelPage",
@@ -260,6 +267,10 @@ const BackpackFilterDropdownLevelPage = lazyPage(
   WebLab2BackpackFilteringPages,
   "BackpackFilterDropdownLevelPage",
 );
+const BackpackFilterTypeAvailabilityLevelPage = lazyPage(
+  WebLab2BackpackFilteringPages,
+  "BackpackFilterTypeAvailabilityLevelPage",
+);
 const WebLab2ValidationLevel = lazyPage(
   () => import("./pages/weblab2/WebLab2ValidationLevel"),
   "WebLab2ValidationLevel",
@@ -286,6 +297,8 @@ const WebLab2FeatureRouletteLevelPage = lazyPage(
 );
 
 export default function App() {
+  usePageTitle();
+
   return (
     <Suspense fallback={null}>
       <Routes>
@@ -369,6 +382,10 @@ export default function App() {
         <Route
           path="/levels/progression-backpack-filter-dropdown"
           element={<BackpackFilterDropdownLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-filter-type-availability"
+          element={<BackpackFilterTypeAvailabilityLevelPage />}
         />
         <Route
           path="/levels/progression-backpack-filter"
@@ -548,6 +565,19 @@ export default function App() {
           element={<ProgressionLevelGroupPage />}
         />
         <Route path="/levels/agentic-crew" element={<AgenticCrewLevelPage />} />
+        <Route path="/levels/agentic-inspect" element={<AgenticLevel2Page />} />
+        <Route
+          path="/levels/agentic-configure"
+          element={<AgenticLevel3Page />}
+        />
+        <Route
+          path="/levels/agentic-orchestrate"
+          element={<AgenticLevel4Page />}
+        />
+        <Route
+          path="/levels/agentic-standalone"
+          element={<AgenticLevel5Page />}
+        />
         <Route
           path="/levels/agentic-mission"
           element={<AgenticMissionLevelPage />}
