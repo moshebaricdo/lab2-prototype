@@ -1109,6 +1109,101 @@ function injectPreviewDebugRuntime(html: string) {
   return `${previewDebugRuntime}\n${html}`;
 }
 
+function getPreviewDataMimeType(name: string) {
+  const lower = name.toLowerCase();
+  if (lower.endsWith(".json")) return "application/json";
+  if (lower.endsWith(".csv")) return "text/csv";
+  if (lower.endsWith(".xml")) return "application/xml";
+  if (lower.endsWith(".md")) return "text/markdown";
+  return "text/plain";
+}
+
+/**
+ * Project text/data files the preview can serve through a fetch shim. HTML, CSS,
+ * JS, and images are already inlined or rewritten into the document, so only
+ * loadable data files (json/csv/txt/...) are included to keep the srcDoc lean.
+ */
+function buildPreviewLocalFileMap(
+  flatFiles: FlatFile[],
+  useProposedContent: boolean,
+): Record<string, { content: string; type: string }> {
+  const map: Record<string, { content: string; type: string }> = {};
+  for (const file of flatFiles) {
+    if (file.item.type === "image") continue;
+    if (/\.(?:html?|css|m?js|png|jpe?g|gif|webp|svg|bmp|ico)$/i.test(file.name)) continue;
+    const content = getEffectiveContent(file.item, useProposedContent);
+    if (typeof content !== "string") continue;
+    const entry = { content, type: getPreviewDataMimeType(file.name) };
+    map[file.path] = entry;
+    if (!(file.name in map)) map[file.name] = entry;
+  }
+  return map;
+}
+
+/**
+ * Fetch shim installed before the debug runtime so a relative `fetch("data.json")`
+ * resolves to a project file instead of throwing on the unparseable `blob:` base
+ * URL. Unmatched references fall through to the real fetch (then the debug
+ * runtime wraps this for network logging).
+ */
+function buildPreviewDataRuntime(
+  fileMap: Record<string, { content: string; type: string }>,
+): string {
+  if (Object.keys(fileMap).length === 0) return "";
+  const serialized = JSON.stringify(fileMap).replace(/</g, "\\u003c");
+  return `
+<script>
+(() => {
+  if (window.__weblabPreviewLocalFilesInstalled) return;
+  window.__weblabPreviewLocalFilesInstalled = true;
+  const files = ${serialized};
+  function normalizeRef(ref) {
+    if (typeof ref !== "string") return null;
+    let path = ref.trim().split(/[?#]/)[0];
+    if (!path) return null;
+    if (/^(?:[a-z][a-z0-9+.-]*:)?\\/\\//i.test(path)) return null;
+    if (/^(?:data|blob|mailto|tel|javascript):/i.test(path)) return null;
+    return path.replace(/^\\.\\//, "").replace(/^\\/+/, "");
+  }
+  function lookup(ref) {
+    const path = normalizeRef(ref);
+    if (!path) return null;
+    if (Object.prototype.hasOwnProperty.call(files, path)) return files[path];
+    const base = path.split("/").pop();
+    if (base && Object.prototype.hasOwnProperty.call(files, base)) return files[base];
+    return null;
+  }
+  function urlOf(input) {
+    if (typeof input === "string") return input;
+    if (input && typeof URL !== "undefined" && input instanceof URL) return input.href;
+    if (input && typeof Request !== "undefined" && input instanceof Request) return input.url;
+    return String(input || "");
+  }
+  const originalFetch = typeof window.fetch === "function" ? window.fetch.bind(window) : null;
+  window.fetch = function weblabLocalFetch(input, init) {
+    const file = lookup(urlOf(input));
+    if (file) {
+      return Promise.resolve(new Response(file.content, {
+        status: 200,
+        statusText: "OK",
+        headers: { "Content-Type": file.type }
+      }));
+    }
+    if (originalFetch) return originalFetch(input, init);
+    return Promise.reject(new TypeError("Failed to fetch"));
+  };
+})();
+</script>`;
+}
+
+function injectPreviewDataRuntime(html: string, runtime: string) {
+  if (!runtime) return html;
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/<head([^>]*)>/i, `<head$1>\n${runtime}`);
+  }
+  return `${runtime}\n${html}`;
+}
+
 function isImageAssetFile(file: FlatFile, useProposedContent: boolean) {
   const lowerName = file.name.toLowerCase();
   return (
@@ -1382,5 +1477,14 @@ export function buildPreviewSrcDoc(
       )}</style>`,
   );
 
-  return injectPreviewRuntime(injectPreviewDebugRuntime(constrainProjectLinks(htmlWithResolvedInlineStyleAssets)));
+  const dataRuntime = buildPreviewDataRuntime(
+    buildPreviewLocalFileMap(flatFiles, useProposedContent),
+  );
+
+  return injectPreviewRuntime(
+    injectPreviewDataRuntime(
+      injectPreviewDebugRuntime(constrainProjectLinks(htmlWithResolvedInlineStyleAssets)),
+      dataRuntime,
+    ),
+  );
 }
