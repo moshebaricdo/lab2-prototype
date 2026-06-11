@@ -733,21 +733,9 @@ export function useFileWorkspaceState(
     const { tree: nextTree, deletedFile } = deleteFileFromTree(baseTree, filePath);
     if (!deletedFile) return "That file could not be found.";
 
-    const syncedTree = cloneFileTree(nextTree);
-    const remainingFiles = openFiles
-      .filter((file) => file.name !== deletedFile.name)
-      .map((file) => findFileByName(syncedTree, file.name) ?? file);
-    const fallbackSelectedFile = remainingFiles[0] ?? null;
-
-    setFileStructureState(syncedTree);
-    setOpenFiles(remainingFiles);
-    setSelectedFile((currentSelected) => {
-      if (!currentSelected) return null;
-      if (currentSelected.name === deletedFile.name) return fallbackSelectedFile;
-      return findFileByName(syncedTree, currentSelected.name) ?? currentSelected;
-    });
+    replaceFileStructure(nextTree);
     return true;
-  }, [fileStructureState, initialFileStructure, openFiles]);
+  }, [fileStructureState, initialFileStructure, replaceFileStructure]);
 
   const moveFileTreeItem = useCallback((
     sourcePath: string,

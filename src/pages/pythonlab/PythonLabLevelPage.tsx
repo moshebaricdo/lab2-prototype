@@ -378,8 +378,8 @@ export function PythonLabLevelPage({
     ? selectedHistoryFileStructure
     : currentFileStructure;
   const visibleSelectedFile = selectedFile
-    ? findFileByNameInTree(visibleFileStructure, selectedFile.name) ?? selectedFile
-    : selectedFile;
+    ? findFileByNameInTree(visibleFileStructure, selectedFile.name)
+    : null;
   const visibleOpenFiles = mapFilesToTree(openFiles, visibleFileStructure);
   const resolvedInstructionsContent =
     instructionsContent ?? <MarkdownInstructions markdown={instructionsMarkdown} />;

@@ -86,7 +86,10 @@ function findFileEntryInTreeRecursive(
 }
 
 export function mapFilesToTree(files: FileItem[], tree: FileItem[]) {
-  return files.map((file) => findFileByNameInTree(tree, file.name) ?? file);
+  return files.flatMap((file) => {
+    const syncedFile = findFileByNameInTree(tree, file.name);
+    return syncedFile ? [syncedFile] : [];
+  });
 }
 
 export function findFirstFile(tree: FileItem[]): FileItem | null {
