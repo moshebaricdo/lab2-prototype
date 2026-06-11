@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { backpackItemToChatAttachment } from "../../lib/backpack/backpackItemToChatAttachment";
+import type { BackpackItem } from "../../types/backpack";
+import type { ChatAttachment } from "../../types/chat";
 import { Lab2Shell } from "../../components/lab2/Lab2Shell";
 import { MarkdownInstructions } from "../../components/lab2/resource-panel/MarkdownInstructions";
 import { AiChatLabWorkspace } from "../../components/ide/aichatlab/views";
@@ -84,6 +87,20 @@ export function AiChatLabLevelPage({
   const resolved = overrideResult.props;
   const [isShareModeActive, setIsShareModeActive] = useState(false);
   const levelIndex = currentLevelIndex(currentLevelPath);
+  const handleImportBackpackItem = useCallback((item: BackpackItem) => {
+    const attachment = backpackItemToChatAttachment(item);
+    const detail: { attachment: ChatAttachment; result: true | string } = {
+      attachment,
+      result: true,
+    };
+    window.dispatchEvent(
+      new CustomEvent("weblab:add-backpack-item-to-chat", { detail }),
+    );
+    if (detail.result === true) {
+      window.dispatchEvent(new CustomEvent("weblab:focus-tutor-input"));
+    }
+    return detail.result;
+  }, []);
   const surfaceVariant = resolved.surfaceVariant === "edge" ? "edge" : "card";
   const continueInHeader = resolved.continueButtonPlacement === "header";
   const showContinueButton = Boolean(resolved.showContinueButton);
@@ -157,6 +174,8 @@ export function AiChatLabLevelPage({
         ),
         devPanelFields: AI_CHAT_LAB_DEV_FIELDS,
         devPanelOverrideResult: overrideResult,
+        backpackImportLab: "aichatlab",
+        onImportBackpackItem: handleImportBackpackItem,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(280, Math.min(520, prev + delta)));

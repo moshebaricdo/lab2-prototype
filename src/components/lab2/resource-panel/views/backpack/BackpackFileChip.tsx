@@ -6,6 +6,7 @@ import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import {
   formatBackpackSavedDate,
 } from "../../../../../lib/backpack/backpackItemFromFile";
+import { isAgentBackpackItem } from "../../../../../lib/backpack/agentBackpack";
 import { fileExtensionLabelFromName, getFileChipIconProps } from "../../../../ui/fileChipMeta";
 import type { BackpackItem } from "../../../../../types/backpack";
 import styles from "./BackpackFileChip.module.scss";
@@ -13,24 +14,38 @@ import styles from "./BackpackFileChip.module.scss";
 interface BackpackFileChipProps {
   item: BackpackItem;
   addedToProject?: boolean;
+  /** When true, render the + affordance (enabled or disabled per lab allow-list). */
+  showImportButton?: boolean;
   importSupported?: boolean;
   importDisabledTooltip?: string;
+  importActionTooltip?: string;
+  /** Glyph to render instead of the file-extension icon (e.g. a saved agent). */
+  iconNameOverride?: FaIconName;
+  /** Subtitle to render instead of the file-extension label. */
+  metaLabelOverride?: string;
   onAddToProject?: () => void;
   onDownload?: () => void;
+  onRename?: () => void;
   onDelete?: () => void;
 }
 
 export function BackpackFileChip({
   item,
   addedToProject = false,
+  showImportButton = false,
   importSupported = true,
   importDisabledTooltip = "Not supported in this lab",
+  importActionTooltip = "Add to project",
+  iconNameOverride,
+  metaLabelOverride,
   onAddToProject,
   onDownload,
+  onRename,
   onDelete,
 }: BackpackFileChipProps) {
+  const isAgent = isAgentBackpackItem(item);
   const { iconName, iconFamily } = getFileChipIconProps(item.name);
-  const extensionLabel = fileExtensionLabelFromName(item.name);
+  const extensionLabel = metaLabelOverride ?? fileExtensionLabelFromName(item.name);
   const savedDateLabel = formatBackpackSavedDate(item.savedAt);
   const thumbnailSrc = item.thumbnailSrc;
   const menuItems = [
@@ -40,6 +55,14 @@ export function BackpackFileChip({
           label: "Download",
           iconName: "download" as FaIconName,
           onSelect: onDownload,
+        }]
+      : []),
+    ...(onRename
+      ? [{
+          id: "rename",
+          label: "Rename",
+          iconName: "pencil" as FaIconName,
+          onSelect: onRename,
         }]
       : []),
     ...(onDelete
@@ -61,6 +84,8 @@ export function BackpackFileChip({
       >
         {thumbnailSrc ? (
           <img alt="" className={styles.thumbnail} src={thumbnailSrc} />
+        ) : iconNameOverride ? (
+          <FaIcon name={iconNameOverride} size="inherit" className={styles.iconGlyph} />
         ) : (
           <FaIcon
             family={iconFamily}
@@ -87,21 +112,23 @@ export function BackpackFileChip({
       </div>
 
       <div className={styles.actions}>
-        {addedToProject ? (
+        {isAgent ? null : addedToProject ? (
           <span className={styles.addedBadge} aria-label="Added to project">
             <FaIcon name="check" size="xs" className={styles.addedBadgeIcon} />
             <span className={styles.addedBadgeLabel}>Added</span>
           </span>
-        ) : onAddToProject ? (
-          importSupported ? (
-            <AppButton
-              variant="secondary"
-              tone="gray"
-              size="xs"
-              iconName="plus"
-              aria-label={`Add ${item.name} to project`}
-              onClick={onAddToProject}
-            />
+        ) : showImportButton ? (
+          importSupported && onAddToProject ? (
+            <Tooltip content={importActionTooltip} position="top">
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="plus"
+                aria-label={`${importActionTooltip}: ${item.name}`}
+                onClick={onAddToProject}
+              />
+            </Tooltip>
           ) : (
             <Tooltip content={importDisabledTooltip} position="top">
               <span className={styles.addButtonWrap}>
@@ -111,7 +138,7 @@ export function BackpackFileChip({
                   size="xs"
                   iconName="plus"
                   disabled
-                  aria-label={`Add ${item.name} to project (${importDisabledTooltip})`}
+                  aria-label={`${importActionTooltip}: ${item.name} (${importDisabledTooltip})`}
                 />
               </span>
             </Tooltip>

@@ -21,7 +21,12 @@ export interface AgentCapabilities {
   guidance: boolean;
   planning: boolean;
   workspaceEdits: boolean;
+  /** When true, runtime context (live preview + console errors) may be packed. */
+  readLivePreview: boolean;
 }
+
+/** Student-facing abstraction of model depth / reasoning effort. */
+export type AgentEffort = "quick" | "careful";
 
 /**
  * Constrained accent palette for the agent row — soft functional color coding
@@ -71,6 +76,10 @@ export interface AgentSpecialist {
    * enforcement IS the lesson ("the style agent can't touch script.js").
    */
   writablePaths: string[];
+  /** How much reasoning depth this agent uses. Default: "quick". */
+  effort?: AgentEffort;
+  /** Hint-first vs direct answers. Unset ⇒ inherits the level's pedagogy. */
+  revealPolicy?: "hint-first" | "direct-when-asked";
   /** Things this agent can do, in student language ("Propose CSS changes"). */
   canDo: string[];
   /** Things this agent will refuse, in student language ("Edit JavaScript"). */
@@ -102,18 +111,52 @@ export interface AgentSpecialist {
 export interface AgentCustomization {
   /** Replaces the agent's contract (its standing instructions). */
   contract?: string;
-  /** Replaces the agent's in-scope project files. */
+  /** Replaces the agent's in-scope project files (Advanced — wins over seeProjectCode). */
   filePaths?: string[];
+  /** Toggle: may this agent propose file edits? → capabilities.workspaceEdits */
+  workspaceEdits?: boolean;
+  /** Toggle: may this agent read live preview + console output? */
+  readLivePreview?: boolean;
+  /** Replaces the agent's write scope (paths it may edit). */
+  writablePaths?: string[];
+  /** Replaces the agent's reasoning effort level. */
+  effort?: AgentEffort;
+  /** Toggle: is project code in this agent's context? false ⇒ no code files. */
+  seeProjectCode?: boolean;
+  /** Toggle: hints first vs direct answers. → pedagogy.revealPolicy */
+  revealPolicy?: "hint-first" | "direct-when-asked";
+  /** Saved-agent identity overrides (name, glyph, accent, description). */
+  role?: string;
+  tagline?: string;
+  iconName?: FaIconName;
+  accent?: AgentAccent;
 }
 
 /**
- * Per-level crew configuration (Direction A). Intended to become a page prop on
- * WebLab2LevelPage (same pattern as validationReviewConfig) once promoted.
+ * Autonomy ladder for the general Tutor (see docs/agentic-v4-spec.md, Decision C).
+ * "tutor": student routes manually. "orchestrator-assisted": Tutor proposes
+ * dispatches the student approves. "orchestrator-auto": dispatches run without
+ * per-step approval (results still land as reviewable proposals).
  */
-export interface AgentCrewLevelConfig {
+export type AgentTutorRole = "tutor" | "orchestrator-assisted" | "orchestrator-auto";
+
+/**
+ * Per-level agent configuration — a prop on WebLab2LevelPage, same pattern as
+ * validationReviewConfig. Absent ⇒ the page behaves exactly as before.
+ */
+export interface AgentLevelConfig {
+  /** Authored roster. Include the Tutor entry; it always anchors the strip. */
   specialists: AgentSpecialist[];
-  /** Specialist active when the level loads. */
-  initialSpecialistId: string;
+  /** Agent active when the level loads. Default: "tutor". */
+  initialAgentId?: string;
+  /** Agent ids omitted from the roster until revealed on this level (dev panel). */
+  lockedAgentIds?: string[];
+  /** When true, the agent modal exposes toggles + standing-instruction editing. */
+  allowCustomization?: boolean;
+  /** When true, students can save/recall/create agents via the roster + menu. Default: false. */
+  allowAgentLibrary?: boolean;
+  /** Autonomy ladder for the Tutor. Default: "tutor". */
+  tutorRole?: AgentTutorRole;
 }
 
 // ---------------------------------------------------------------------------

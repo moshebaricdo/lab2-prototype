@@ -42,7 +42,10 @@ export const SKETCH_LAB_BACKPACK_IMPORT_EXTENSIONS = [
   "svg",
 ] as const;
 
-const ALLOWLISTS: Record<BackpackImportLab, ReadonlySet<string>> = {
+const ALLOWLISTS: Record<
+  Exclude<BackpackImportLab, "aichatlab">,
+  ReadonlySet<string>
+> = {
   weblab2: new Set(WEBLAB2_BACKPACK_IMPORT_EXTENSIONS),
   pythonlab: new Set(PYTHONLAB_BACKPACK_IMPORT_EXTENSIONS),
   "sketch-lab": new Set(SKETCH_LAB_BACKPACK_IMPORT_EXTENSIONS),
@@ -60,6 +63,10 @@ export function canImportBackpackItemToLab(
   item: BackpackItem,
   lab: BackpackImportLab,
 ): boolean {
+  if (lab === "aichatlab") {
+    return true;
+  }
+
   const extension = extensionFromBackpackItemName(item.name);
   if (!extension) {
     return false;

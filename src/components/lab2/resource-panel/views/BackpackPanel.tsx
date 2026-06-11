@@ -14,13 +14,26 @@ import {
   canImportBackpackItemToLab,
 } from "../../../../lib/backpack/backpackImportAllowlist";
 import {
+  deserializeAgentBackpackItem,
+  isAgentBackpackItem,
+} from "../../../../lib/backpack/agentBackpack";
+import {
+  BACKPACK_TYPE_FILTER_ALL,
   filterBackpackItems,
+  filterBackpackItemsByType,
   getBackpackFilterOptions,
+  getBackpackTypeFilterOptions,
+  partitionBackpackItemsByAvailability,
+  sortBackpackItemsByName,
   type BackpackFilterId,
+  type BackpackSortDirection,
+  type BackpackTypeFilterId,
 } from "../../../../lib/backpack/backpackFilters";
 import { BackpackFilterDropdown } from "./backpack/BackpackFilterDropdown";
 import { BackpackFilterPills } from "./backpack/BackpackFilterPills";
+import { BackpackTypeFilterControls } from "./backpack/BackpackTypeFilterControls";
 import { BackpackSupportedToggle } from "./backpack/BackpackSupportedToggle";
+import { NameInputModal } from "../../../ide/weblab2/views/NameInputModal";
 import { BackpackFileChip } from "./backpack/BackpackFileChip";
 import styles from "./BackpackPanel.module.scss";
 
@@ -91,11 +104,12 @@ function FilteredEmptyState({
 export function BackpackPanel({
   importLab,
   onImportItem,
-  filterExperiment = "default",
+  filterExperiment = "type-availability",
 }: BackpackPanelProps) {
   const {
     items,
     removeItem,
+    renameItem,
     showSaveSuccessAlert,
     setShowSaveSuccessAlert,
     showSaveErrorAlert,
@@ -108,12 +122,27 @@ export function BackpackPanel({
   const [importedItemIds, setImportedItemIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [renameTarget, setRenameTarget] = useState<BackpackItem | null>(null);
   const [activeFilter, setActiveFilter] = useState<BackpackFilterId>("all");
+  const [activeTypeFilter, setActiveTypeFilter] = useState<BackpackTypeFilterId>(
+    BACKPACK_TYPE_FILTER_ALL,
+  );
+  const [typeSortDirection, setTypeSortDirection] =
+    useState<BackpackSortDirection>("asc");
   const [showSupportedOnly, setShowSupportedOnly] = useState(false);
+  const [isUnsupportedExpanded, setIsUnsupportedExpanded] = useState(false);
 
   const filterOptions = useMemo(
     () => getBackpackFilterOptions(items, importLab),
     [items, importLab],
+  );
+
+  const typeFilterOptions = useMemo(
+    () =>
+      filterExperiment === "type-availability"
+        ? getBackpackTypeFilterOptions(items)
+        : [],
+    [filterExperiment, items],
   );
 
   const supportedCount = useMemo(
@@ -134,13 +163,21 @@ export function BackpackPanel({
     ) {
       return filterBackpackItems(items, activeFilter, importLab);
     }
+    if (filterExperiment === "type-availability") {
+      return sortBackpackItemsByName(
+        filterBackpackItemsByType(items, activeTypeFilter),
+        typeSortDirection,
+      );
+    }
     return items;
   }, [
     activeFilter,
+    activeTypeFilter,
     filterExperiment,
     importLab,
     items,
     showSupportedOnly,
+    typeSortDirection,
   ]);
 
   const { generalItems, sketchLabItems } = useMemo(
@@ -148,11 +185,31 @@ export function BackpackPanel({
     [filteredItems],
   );
 
+  const availabilityPartition = useMemo(
+    () =>
+      filterExperiment === "type-availability"
+        ? partitionBackpackItemsByAvailability(filteredItems, importLab)
+        : null,
+    [filterExperiment, filteredItems, importLab],
+  );
+
   useEffect(() => {
     if (!filterOptions.some((option) => option.id === activeFilter)) {
       setActiveFilter("all");
     }
   }, [activeFilter, filterOptions]);
+
+  useEffect(() => {
+    if (
+      filterExperiment === "type-availability" &&
+      !typeFilterOptions.some((option) => option.id === activeTypeFilter)
+    ) {
+      setActiveTypeFilter(BACKPACK_TYPE_FILTER_ALL);
+    }
+  }, [activeTypeFilter, filterExperiment, typeFilterOptions]);
+
+  const importActionTooltip =
+    importLab === "aichatlab" ? "Add to chat" : "Add to project";
 
   const handleAddToProject = (item: BackpackItem) => {
     if (!onImportItem || !importLab) return;
@@ -164,26 +221,53 @@ export function BackpackPanel({
       return;
     }
     setImportedItemIds((current) => new Set(current).add(item.id));
+    window.setTimeout(() => {
+      setImportedItemIds((current) => {
+        if (!current.has(item.id)) return current;
+        const next = new Set(current);
+        next.delete(item.id);
+        return next;
+      });
+    }, 2000);
   };
 
   const renderItem = (item: BackpackItem) => {
-    const canImport = Boolean(
-      onImportItem &&
-        importLab &&
-        canImportBackpackItemToLab(item, importLab),
-    );
+    // Saved agents recall into the roster, not the file tree — render them with
+    // the agent glyph + "AGENT" label and no add-to-project affordance.
+    if (isAgentBackpackItem(item)) {
+      const specialist = deserializeAgentBackpackItem(item);
+      return (
+        <BackpackFileChip
+          key={item.id}
+          item={item}
+          iconNameOverride={specialist?.iconName}
+          metaLabelOverride="AGENT"
+          onDownload={() => downloadBackpackItem(item)}
+          onRename={() => setRenameTarget(item)}
+          onDelete={() => removeItem(item.id)}
+        />
+      );
+    }
+
+    const importAllowedByLab = importLab
+      ? canImportBackpackItemToLab(item, importLab)
+      : false;
+    const canPerformImport = Boolean(onImportItem && importAllowedByLab);
 
     return (
       <BackpackFileChip
         key={item.id}
         item={item}
         addedToProject={importedItemIds.has(item.id)}
-        importSupported={canImport}
+        showImportButton={Boolean(importLab)}
+        importSupported={importAllowedByLab}
         importDisabledTooltip={BACKPACK_IMPORT_UNSUPPORTED_TOOLTIP}
+        importActionTooltip={importActionTooltip}
         onAddToProject={
-          onImportItem && importLab ? () => handleAddToProject(item) : undefined
+          canPerformImport ? () => handleAddToProject(item) : undefined
         }
         onDownload={() => downloadBackpackItem(item)}
+        onRename={() => setRenameTarget(item)}
         onDelete={() => removeItem(item.id)}
       />
     );
@@ -211,11 +295,60 @@ export function BackpackPanel({
     </>
   );
 
+  const renderAvailabilitySortedList = () => {
+    if (!availabilityPartition) return null;
+    const { supported, unsupported } = availabilityPartition;
+
+    return (
+      <>
+        {supported.length > 0 ? renderFlatItemList(supported) : null}
+        {unsupported.length > 0 ? (
+          <>
+            <div className={styles.sectionDivider}>
+              <span className={styles.sectionDividerLine} aria-hidden="true" />
+              <div className={styles.unsupportedToggle}>
+                <AppButton
+                  type="button"
+                  variant="tertiary"
+                  tone="gray"
+                  size="xs"
+                  iconName={
+                    isUnsupportedExpanded ? "chevron-up" : "chevron-down"
+                  }
+                  iconPosition="end"
+                  aria-expanded={isUnsupportedExpanded}
+                  aria-controls="backpack-unsupported-list"
+                  onClick={() =>
+                    setIsUnsupportedExpanded((previous) => !previous)
+                  }
+                >
+                  Not supported in this lab ({unsupported.length})
+                </AppButton>
+              </div>
+              <span className={styles.sectionDividerLine} aria-hidden="true" />
+            </div>
+            {isUnsupportedExpanded ? (
+              <div
+                id="backpack-unsupported-list"
+                className={styles.itemList}
+              >
+                {unsupported.map(renderItem)}
+              </div>
+            ) : null}
+          </>
+        ) : null}
+      </>
+    );
+  };
+
   const renderFilteredItems = () => {
     if (filteredItems.length === 0) {
       const activeFilterLabel =
-        filterOptions.find((option) => option.id === activeFilter)?.label ??
-        "current filter";
+        filterExperiment === "type-availability"
+          ? (typeFilterOptions.find((option) => option.id === activeTypeFilter)
+              ?.label ?? "current filter")
+          : (filterOptions.find((option) => option.id === activeFilter)
+              ?.label ?? "current filter");
 
       return (
         <FilteredEmptyState
@@ -226,6 +359,7 @@ export function BackpackPanel({
           }
           onReset={() => {
             setActiveFilter("all");
+            setActiveTypeFilter(BACKPACK_TYPE_FILTER_ALL);
             setShowSupportedOnly(false);
           }}
         />
@@ -234,6 +368,10 @@ export function BackpackPanel({
 
     if (filterExperiment === "default") {
       return renderSectionedItemList();
+    }
+
+    if (filterExperiment === "type-availability" && availabilityPartition) {
+      return renderAvailabilitySortedList();
     }
 
     return renderFlatItemList(filteredItems);
@@ -249,7 +387,23 @@ export function BackpackPanel({
         <BackpackFilterPills
           options={filterOptions}
           value={activeFilter}
-          onChange={setActiveFilter}
+          onChange={(next) => setActiveFilter(next)}
+        />
+      );
+    }
+
+    if (filterExperiment === "type-availability") {
+      return (
+        <BackpackTypeFilterControls
+          options={typeFilterOptions}
+          value={activeTypeFilter}
+          onChange={(next) => setActiveTypeFilter(next)}
+          sortDirection={typeSortDirection}
+          onToggleSort={() =>
+            setTypeSortDirection((current) =>
+              current === "asc" ? "desc" : "asc",
+            )
+          }
         />
       );
     }
@@ -259,7 +413,7 @@ export function BackpackPanel({
         <BackpackFilterDropdown
           options={filterOptions}
           value={activeFilter}
-          onChange={setActiveFilter}
+          onChange={(next) => setActiveFilter(next)}
         />
       );
     }
@@ -278,16 +432,17 @@ export function BackpackPanel({
     return null;
   };
 
-  const hasAlerts =
+  const hasToasts =
     showSaveSuccessAlert || showSaveErrorAlert || showImportErrorAlert;
 
   return (
+    <>
     <div className={styles.root}>
       <ScrollArea
         className={styles.scrollArea}
         viewportClassName={styles.scrollViewport}
       >
-        {items.length === 0 && !hasAlerts ? (
+        {items.length === 0 ? (
           <div className={styles.emptyWrap}>
             <div className={styles.emptyState}>
               <div className={styles.emptyStateIcon}>
@@ -301,49 +456,78 @@ export function BackpackPanel({
           </div>
         ) : (
           <div className={styles.content}>
-            {hasAlerts ? (
-              <div className={styles.alertStack}>
-                {showSaveSuccessAlert ? (
-                  <AlertBanner
-                    sentiment="success"
-                    size="s"
-                    showIcon
-                    dismissible
-                    onDismiss={() => setShowSaveSuccessAlert(false)}
-                  >
-                    File successfully saved to Backpack!
-                  </AlertBanner>
-                ) : null}
-                {showSaveErrorAlert ? (
-                  <AlertBanner
-                    sentiment="danger"
-                    size="s"
-                    showIcon
-                    dismissible
-                    onDismiss={() => setShowSaveErrorAlert(false)}
-                  >
-                    An error occurred while saving to the Backpack, please try again.
-                  </AlertBanner>
-                ) : null}
-                {showImportErrorAlert ? (
-                  <AlertBanner
-                    sentiment="danger"
-                    size="s"
-                    showIcon
-                    dismissible
-                    onDismiss={() => setShowImportErrorAlert(false)}
-                  >
-                    An error occurred while adding the file to your project, please try again.
-                  </AlertBanner>
-                ) : null}
-              </div>
-            ) : null}
-
-            {renderFilterControls()}
+            {(() => {
+              const filterControls = renderFilterControls();
+              if (!filterControls) return null;
+              const rowClassName =
+                filterExperiment === "type-availability"
+                  ? `${styles.filterRow} ${styles.filterRowFixed}`
+                  : styles.filterRow;
+              return <div className={rowClassName}>{filterControls}</div>;
+            })()}
             {renderFilteredItems()}
           </div>
         )}
       </ScrollArea>
+
+      {hasToasts ? (
+        <div className={styles.toastWrap}>
+          {showSaveSuccessAlert ? (
+            <AlertBanner
+              sentiment="success"
+              size="xs"
+              showIcon
+              dismissible
+              duration={2000}
+              presentation="toast"
+              onDismiss={() => setShowSaveSuccessAlert(false)}
+            >
+              File successfully saved to Backpack!
+            </AlertBanner>
+          ) : null}
+          {showSaveErrorAlert ? (
+            <AlertBanner
+              sentiment="danger"
+              size="xs"
+              showIcon
+              dismissible
+              duration={2000}
+              presentation="toast"
+              onDismiss={() => setShowSaveErrorAlert(false)}
+            >
+              An error occurred while saving to the Backpack, please try again.
+            </AlertBanner>
+          ) : null}
+          {showImportErrorAlert ? (
+            <AlertBanner
+              sentiment="danger"
+              size="xs"
+              showIcon
+              dismissible
+              duration={2000}
+              presentation="toast"
+              onDismiss={() => setShowImportErrorAlert(false)}
+            >
+              An error occurred while adding the file to your project, please try again.
+            </AlertBanner>
+          ) : null}
+        </div>
+      ) : null}
     </div>
+    <NameInputModal
+      isOpen={renameTarget !== null}
+      title="Rename file"
+      description="Choose a new name for this backpack file."
+      fieldLabel="File name"
+      placeholder="Enter file name"
+      confirmLabel="Rename file"
+      initialValue={renameTarget?.name}
+      onClose={() => setRenameTarget(null)}
+      onSubmit={(value) => {
+        if (!renameTarget) return "No file selected.";
+        return renameItem(renameTarget.id, value);
+      }}
+    />
+    </>
   );
 }

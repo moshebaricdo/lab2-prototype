@@ -47,6 +47,7 @@ const paths = {
   pills: "/levels/progression-backpack-filter-pills",
   toggle: "/levels/progression-backpack-filter-toggle",
   dropdown: "/levels/progression-backpack-filter-dropdown",
+  typeAvailability: "/levels/progression-backpack-filter-type-availability",
 } as const;
 
 function commonProps(
@@ -115,9 +116,21 @@ export function BackpackFilterToggleLevelPage() {
 }
 
 export function BackpackFilterDropdownLevelPage() {
+  const navigate = useShareAwareNavigate();
+
   return (
     <WebLab2LevelPage
       {...commonProps(paths.dropdown, 4, "filter-dropdown")}
+      continueLabel="Try type + availability"
+      onContinue={() => navigate(paths.typeAvailability)}
+    />
+  );
+}
+
+export function BackpackFilterTypeAvailabilityLevelPage() {
+  return (
+    <WebLab2LevelPage
+      {...commonProps(paths.typeAvailability, 5, "type-availability")}
       continueLabel="Done"
     />
   );

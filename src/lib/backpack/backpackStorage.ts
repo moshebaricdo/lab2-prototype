@@ -15,9 +15,20 @@ export function loadBackpackItems(): BackpackItem[] {
   }
 }
 
-export function persistBackpackItems(items: BackpackItem[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(BACKPACK_STORAGE_KEY, JSON.stringify(items));
+/**
+ * Persist the backpack to localStorage. Returns `false` (instead of throwing)
+ * when the write fails — most commonly a `QuotaExceededError` from large image
+ * data URLs — so callers can surface an error without crashing the app.
+ */
+export function persistBackpackItems(items: BackpackItem[]): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    window.localStorage.setItem(BACKPACK_STORAGE_KEY, JSON.stringify(items));
+    return true;
+  } catch (error) {
+    console.error("[backpack] Failed to persist items to localStorage", error);
+    return false;
+  }
 }
 
 function isBackpackItem(value: unknown): value is BackpackItem {

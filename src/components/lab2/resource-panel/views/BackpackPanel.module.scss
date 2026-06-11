@@ -18,15 +18,32 @@
 .content {
   display: flex;
   width: 100%;
+  min-width: 0;
   flex-direction: column;
   gap: 8px;
   padding: 8px;
+  box-sizing: border-box;
 }
 
-.alertStack {
+.filterRow {
+  padding-bottom: 2px;
+}
+
+.filterRowFixed {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.toastWrap {
+  position: absolute;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  top: 8px;
+  right: 8px;
+  left: 8px;
+  z-index: 2;
 }
 
 .emptyWrap {
@@ -91,14 +108,20 @@
 
 .sectionDividerLabel {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-sm);
+  font-size: var(--text-label);
   line-height: 1.54;
   margin: 0;
   white-space: nowrap;
 }
 
+.unsupportedToggle {
+  flex-shrink: 0;
+}
+
 .itemList {
   display: flex;
+  width: 100%;
+  min-width: 0;
   flex-direction: column;
   gap: 8px;
 }

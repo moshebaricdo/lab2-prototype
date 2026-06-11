@@ -26,6 +26,11 @@ export function importBackpackItemToTree(
   tree: FileItem[],
   item: BackpackItem,
 ): { tree: FileItem[]; file: FileItem } | string {
+  // Saved agents recall into the agent roster, never the file tree.
+  if (item.fileKind === "agent") {
+    return "Agents are added to the agent row, not the file tree.";
+  }
+
   if (findFileByNameInTree(tree, item.name)) {
     return `A file named ${item.name} already exists in this project.`;
   }

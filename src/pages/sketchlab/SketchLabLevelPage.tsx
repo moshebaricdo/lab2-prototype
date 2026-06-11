@@ -1,3 +1,4 @@
+import { useCallback, useRef } from "react";
 import { Lab2Shell } from "../../components/lab2/Lab2Shell";
 import { MarkdownInstructions } from "../../components/lab2/resource-panel/MarkdownInstructions";
 import { SketchLabWorkspace } from "../../components/ide/sketchlab/views";
@@ -12,6 +13,7 @@ import {
   sketchLabStarterEdges,
   sketchLabStarterNodes,
 } from "../../data/sketchlab";
+import type { BackpackItem } from "../../types/backpack";
 import type { SketchLegacyEdge, SketchNode } from "../../types/sketchLab";
 import { sketchLabLevelLinks } from "../levelTypeLinks";
 
@@ -60,6 +62,13 @@ export function SketchLabLevelPage({
     { storageKey: `sketchlab:${currentLevelPath}:chat` },
   );
   const versionHistoryState = useVersionHistoryState();
+  const backpackImportRef = useRef<(item: BackpackItem) => true | string>(() =>
+    "Sketch canvas is not ready yet.",
+  );
+  const handleImportBackpackItem = useCallback(
+    (item: BackpackItem) => backpackImportRef.current(item),
+    [],
+  );
 
   const overrideResult = usePropsOverride({
     showInstructionsTab: true,
@@ -112,6 +121,8 @@ export function SketchLabLevelPage({
           "Describe what you want to diagram and the tutor can suggest shapes and connections.",
         devPanelFields: sketchLabDevFields,
         devPanelOverrideResult: overrideResult,
+        backpackImportLab: "sketch-lab",
+        onImportBackpackItem: handleImportBackpackItem,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));
@@ -121,6 +132,9 @@ export function SketchLabLevelPage({
         initialNodes={initialNodes}
         initialEdges={initialEdges}
         storageKey={`sketchlab:${currentLevelPath}:canvas`}
+        onRegisterBackpackImport={(handler) => {
+          backpackImportRef.current = handler;
+        }}
       />
     </Lab2Shell>
   );

@@ -1,32 +1,38 @@
 import { AppNativeSelect } from "../../../../ui/AppDropdown";
-import type {
-  BackpackFilterId,
-  BackpackFilterOption,
-} from "../../../../../lib/backpack/backpackFilters";
 import styles from "./BackpackFilterDropdown.module.scss";
 
-interface BackpackFilterDropdownProps {
-  options: BackpackFilterOption[];
-  value: BackpackFilterId;
-  onChange: (value: BackpackFilterId) => void;
+interface BackpackFilterDropdownOption<Id extends string> {
+  id: Id;
+  label: string;
+  count: number;
 }
 
-export function BackpackFilterDropdown({
+interface BackpackFilterDropdownProps<Id extends string> {
+  options: BackpackFilterDropdownOption<Id>[];
+  value: Id;
+  onChange: (value: Id) => void;
+  label?: string;
+  selectId?: string;
+}
+
+export function BackpackFilterDropdown<Id extends string>({
   options,
   value,
   onChange,
-}: BackpackFilterDropdownProps) {
+  label = "Show",
+  selectId = "backpack-filter-select",
+}: BackpackFilterDropdownProps<Id>) {
   if (options.length <= 1) {
     return null;
   }
 
   return (
     <div className={styles.root}>
-      <label className={styles.label} htmlFor="backpack-filter-select">
-        Show
+      <label className={styles.label} htmlFor={selectId}>
+        {label}
       </label>
       <AppNativeSelect
-        id="backpack-filter-select"
+        id={selectId}
         size="xs"
         tone="gray"
         fullWidth
@@ -35,7 +41,7 @@ export function BackpackFilterDropdown({
           value: option.id,
           label: `${option.label} (${option.count})`,
         }))}
-        onValueChange={(nextValue) => onChange(nextValue as BackpackFilterId)}
+        onValueChange={(nextValue) => onChange(nextValue as Id)}
       />
     </div>
   );

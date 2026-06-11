@@ -19,10 +19,26 @@ export const BACKPACK_FILTER_EXPERIMENT_DEMO_ITEMS: BackpackItem[] = [
     sourceLab: "weblab2",
   },
   {
+    id: "backpack-filter-demo-script-js",
+    name: "script.js",
+    savedAt: "2026-06-01T12:10:00.000Z",
+    content: "document.querySelector('h1').textContent = 'Hello!';",
+    fileKind: "file",
+    sourceLab: "weblab2",
+  },
+  {
     id: "backpack-filter-demo-main-py",
     name: "main.py",
     savedAt: "2026-06-02T09:00:00.000Z",
     content: "print('Hello from Python Lab')",
+    fileKind: "python",
+    sourceLab: "pythonlab",
+  },
+  {
+    id: "backpack-filter-demo-helpers-py",
+    name: "helpers.py",
+    savedAt: "2026-06-02T09:15:00.000Z",
+    content: "def greet(name):\n    return f'Hello, {name}!'",
     fileKind: "python",
     sourceLab: "pythonlab",
   },
@@ -50,7 +66,9 @@ export const BACKPACK_FILTER_EXPERIMENT_INSTRUCTIONS = `# Backpack filtering exp
 
 Open the **Backpack** tab in the resource panel.
 
-This progression compares four ways to browse saved files from multiple labs. Some files work in Web Lab (HTML, CSS, images) and some do not (for example \`.py\`).
+This progression compares five ways to browse saved files from multiple labs. Some files work in Web Lab (HTML, CSS, images) and some do not (for example \`.py\`).
+
+The final level combines two dimensions: filter by file type with the pills, while files that are not supported in this lab always sort to the bottom of the list.
 
 Save additional files from the file manager if you want to test with your own mix. Demo files are added automatically when your backpack is empty.
 `;

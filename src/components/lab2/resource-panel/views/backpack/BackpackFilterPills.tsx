@@ -1,21 +1,23 @@
 import { AppButton } from "../../../../ui/AppButton";
-import type {
-  BackpackFilterId,
-  BackpackFilterOption,
-} from "../../../../../lib/backpack/backpackFilters";
 import styles from "./BackpackFilterPills.module.scss";
 
-interface BackpackFilterPillsProps {
-  options: BackpackFilterOption[];
-  value: BackpackFilterId;
-  onChange: (value: BackpackFilterId) => void;
+interface BackpackFilterPillOption<Id extends string> {
+  id: Id;
+  label: string;
+  count: number;
 }
 
-export function BackpackFilterPills({
+interface BackpackFilterPillsProps<Id extends string> {
+  options: BackpackFilterPillOption<Id>[];
+  value: Id;
+  onChange: (value: Id) => void;
+}
+
+export function BackpackFilterPills<Id extends string>({
   options,
   value,
   onChange,
-}: BackpackFilterPillsProps) {
+}: BackpackFilterPillsProps<Id>) {
   if (options.length <= 1) {
     return null;
   }
