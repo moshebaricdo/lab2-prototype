@@ -91,6 +91,15 @@ The harness lives in `src/lib/tutor`, grouped by responsibility. Root-level file
 - `tutorComposerMode.ts` owns composer request-mode lifecycle (one-shot Build/Plan from cards; Auto reset after curriculum composer sends unless the dev model selector keeps modes sticky).
 - `tutorActionRunner.ts` maps a resolved `TutorAction` to runner intent; `tutorClient()` requires `resolvedAction` from `resolveTutorTurn` for auto-mode Web Lab requests (legacy regex policy routing was removed).
 
+### `agents/` — Web Lab 2 specialist adapter
+
+When a route passes `agentConfig` to `WebLab2LevelPage`. See `src/guidelines/level-types/weblab2-agents.md`.
+
+- `specialistRun.ts` — pruned context tree, system prompt, composer mode (`plan` / `build` / `help`), write-scope clamp.
+- `orchestration.ts` — orchestrator Tutor contract + `DISPATCH:` line parser → `agentHandOff` chat card.
+
+Page wiring: `useAgentLevelState` swaps policy/contracts/file filter into `useWebLab2TutorFlow`; `wrapTutorSubmit` inserts switch dividers and attaches dispatch cards.
+
 ### `runners/` — model execution paths
 
 - `guidanceRunner.ts` returns project-aware explanations with `changes: []`; it supports separate Web Lab and Python Lab guidance prompts.

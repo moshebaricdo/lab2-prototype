@@ -6,9 +6,8 @@ import { agenticProgressionLinks } from "../levelTypeLinks";
 import type { FileItem } from "../../types/file";
 
 /**
- * Levels 2–5 of the agentic sample progression (V4 spec, Track 3).
- * The arc: discover → inspect → configure → orchestrate → own.
- * Every level is a plain WebLab2LevelPage + agentConfig — that's the point.
+ * Levels 2–5 of the agent sample progression.
+ * Every level is a plain WebLab2LevelPage + agentConfig.
  * (Level 1 lives in AgenticCrewLevelPage.tsx.)
  */
 
@@ -126,8 +125,7 @@ export function AgenticLevel4Page() {
         specialists: crewSpecialists,
         allowCustomization: true,
         allowAgentLibrary: true,
-        // The Tutor proposes dispatches as Run cards; the student approves
-        // every run (docs/agentic-v4-spec.md, Decision C).
+        // Tutor proposes dispatches as Run cards; student approves each run.
         tutorRole: "orchestrator-assisted",
       }}
       continueLabel="Continue"
@@ -160,8 +158,7 @@ export function AgenticLevel5Page() {
         specialists: crewSpecialists,
         allowCustomization: true,
         allowAgentLibrary: true,
-        // Earned autonomy: dispatches run without per-step approval; results
-        // still land as reviewable proposals (Decision C, top rung).
+        // Dispatches auto-run; results still land as reviewable proposals.
         tutorRole: "orchestrator-auto",
       }}
     />

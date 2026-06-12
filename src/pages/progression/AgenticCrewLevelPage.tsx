@@ -20,10 +20,8 @@ composer, and use ⓘ to inspect what the active one can and can't see.
 `;
 
 /**
- * Direction A on the real harness: a standard WebLab2LevelPage with
- * `agentConfig` — no custom page machinery (V4 spec, Track 1). Live tutor
- * runs only; without an API key the panel returns the standard
- * "add an API key" fallback.
+ * Sample level: specialist agents on the real Web Lab 2 harness via `agentConfig`.
+ * Live Tutor runs only; without an API key the panel uses the standard fallback.
  */
 export function AgenticCrewLevelPage() {
   const navigate = useShareAwareNavigate();

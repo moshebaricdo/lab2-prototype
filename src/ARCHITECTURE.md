@@ -41,7 +41,10 @@ src/
 │       ├── instruction/            # Tutor-primary curriculum delivery
 │       ├── edit/                   # Proposal application & validation
 │       ├── provider/               # OpenAI transport & prompts
-│       └── conversation/           # Transcript signals & debug logging
+│       ├── conversation/           # Transcript signals & debug logging
+│       └── agents/                 # Specialist adapter + orchestrator dispatch
+│           ├── specialistRun.ts
+│           └── orchestration.ts
 ├── components/
 │   ├── ui/                         # Universal primitives
 │   │   ├── AppButton.tsx
@@ -122,6 +125,9 @@ src/
 │   │       ├── AiChatLabModelCardPanel.tsx
 │   │       ├── AiChatLabChatPanel.tsx
 │   │       └── aiChatLabModel.ts
+│   └── agentic/                    # Optional Web Lab 2 specialist agents
+│       ├── crew/                   # Roster strip, modal, useAgentLevelState
+│       └── mission/                # Mission Control concept widget
 │   └── assessment/                 # Assessment level types
 │       ├── shared/
 │       ├── bubble-choice/
@@ -191,6 +197,10 @@ Web Lab 2 adds UI behavior around the harness result through lab-specific orches
 Web Lab 2 validation experiments can opt into a Tutor review card through a route-provided validation review config. Web Lab routes also choose a Tutor support context: standalone project routes allow broader co-building behavior, while curriculum/validation routes keep instruction breakdown, debugging, concept, and idea requests in guidance unless the student explicitly asks for implementation. Curriculum guidance is scoped to the level's instructions, project code, and latest validation progress, avoiding generic browser/cache/devtools troubleshooting and optional stretch-feature nudges. It also uses a light Socratic disclosure policy for help and hint requests so Tutor gives one focused next check without immediately revealing exact project-only selectors or values. Validation review offers use a model-assisted readiness gate when keyed (`validationReviewIntentClassifier.ts`); clear readiness in chat auto-runs Check My Work without a second button click. Ordinary debug asks stay in the Tutor help flow. The Web Lab 2 dev panel can override the route's plain-language review goals with one Validation requirements line per requirement. When a session Tutor API key is present, the review path sends packed project context and those explicit requirements to an AI evaluator that returns non-spoiler statuses; if no key is present or the AI call fails, the card falls back to the local evidence summary. Validation configs can also opt into effort evidence with `effortPolicy: "none" | "advisory" | "required"` and `minimumChangedFiles`; this compares the current project to the starter and should only block completion for open-ended refinement levels that explicitly require student iteration. AI review results are post-processed with the same effort item so starter-perfect projects cannot bypass required iteration evidence. Partial reviews produce a compact progress snapshot so follow-up hints and debug prompts target the next incomplete criterion rather than already-passed checklist items. Validation routes can also make Continue incumbent on a successful review: the Continue button runs a review and shows **Check my work** until the latest review is likely complete, and successful review cards can surface a Continue action in-chat. The validation progression routes demonstrate photo-carousel debugging, style polish, Promise tracing, and loop debugging without adding those demos to the standard Web Lab 2 example list.
 
 Preview-specific diagnostics live inside `components/ide/weblab2/views/preview-panel`, with transient debug state owned by `Workspace` so the panel can span the full workspace below code/preview/split surfaces. Lab-specific helpers in `components/ide/weblab2/webLab2FileTree.ts` and `components/ide/weblab2/webLab2Uploads.ts` handle Web Lab-specific file tree shaping, starter uploads, shareable upload filtering, inline fixture image hydration, and plan-file detection before data reaches the shared workspace. File previews inject a small runtime into the generated `srcDoc` to relay console output and `fetch`/`XMLHttpRequest` activity back to the workspace-level debug panel, including panel height and the network-block toggle.
+
+## Web Lab 2 specialist agents
+
+Optional `agentConfig?: AgentLevelConfig` on `WebLab2LevelPage` mounts the specialist roster and routes each Tutor turn through the active agent on the existing harness — no second chat pipeline. `useAgentLevelState` (`components/agentic/crew`) derives the active agent's `TutorPolicy`, runner contracts, file-tree filter, write-scope clamp, plan filename, and submit wrapper (switch divider, forced composer mode, orchestrator dispatch parsing). Specialist definitions live in `src/types/agentLab.ts` and `src/data/agentic/`; adapter logic in `src/lib/tutor/agents/`. Saved custom agents use backpack kind `"agent"` (`lib/backpack/agentBackpack.ts`) and never enter the project file tree. See `src/guidelines/level-types/weblab2-agents.md`.
 
 ## Empty States
 

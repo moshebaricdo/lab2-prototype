@@ -2,10 +2,9 @@ import type { ChatMessage, AgentHandOffCardData } from "../../../types/chat";
 import type { AgentSpecialist } from "../../../types/agentLab";
 
 /**
- * Orchestrator-assisted dispatch (V4 spec, Decision C).
+ * Orchestrator-assisted dispatch when `agentConfig.tutorRole` is an orchestrator role.
  *
- * When the level's tutorRole is an orchestrator role and the Tutor is the
- * active agent, its runner contracts get the addendum below: instead of doing
+ * The Tutor's runner contracts include `buildOrchestrationContract`: instead of doing
  * specialist work itself, the Tutor names the right specialist, writes a brief,
  * and ends its reply with a single machine-readable DISPATCH line. The line is
  * parsed out of the reply and rendered as an `agentHandOff` card whose Run

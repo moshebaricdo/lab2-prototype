@@ -37,6 +37,13 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - `/levels/progression-weblab2-validation-sandbox`
 - `/levels/progression-weblab2-validation-feature-roulette`
 
+### Specialist agents (Sample Progressions index)
+
+See **`src/guidelines/level-types/weblab2-agents.md`** for the full capability doc. Routes:
+
+- `/levels/agentic-crew` … `/levels/agentic-standalone` (five-level sample progression)
+- `/levels/agentic-mission` (Mission Control concept widget)
+
 ## Key Files
 
 - `src/pages/weblab2/WebLab2LevelPage.tsx`
@@ -62,6 +69,7 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - `src/components/ide/weblab2/views/preview-panel/PreviewDebugPanel.tsx`
 - `src/lib/tutor/tutorClient.ts`
 - `src/guidelines/tutor-harness.md`
+- `src/guidelines/level-types/weblab2-agents.md` (optional specialist-agent capability)
 - `src/hooks/useFileWorkspaceState.ts`
 - `src/data/weblab2`
 - `src/assets/empty-states`

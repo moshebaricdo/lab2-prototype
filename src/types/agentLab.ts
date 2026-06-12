@@ -1,18 +1,17 @@
 import type { FaIconName } from "../icons/faProRegularCodepoints";
 
 /**
- * Shared vocabulary for the agentic AI explorations (see docs/agentic-directions.md).
+ * Types for Web Lab 2 specialist agents (`agentConfig` on WebLab2LevelPage).
+ * See `src/guidelines/level-types/weblab2-agents.md`.
  *
- * These types are deliberately written so a single `AgentSpecialist` definition can
- * power both demo directions, and so each field maps 1:1 onto an existing harness
- * extension point — promoting a direction means wiring, not redesign:
+ * Each `AgentSpecialist` field maps onto an existing harness extension point:
  *
- * - `capabilities`        → `TutorPolicy.capabilities` (src/pages/weblab2/tutorDevSettings.ts)
- * - `contract`            → `TutorRunnerContracts` addenda (src/lib/tutor/runners/runnerContracts.ts)
- * - `contextScope`        → file filter on `buildProjectContext` (src/lib/tutor/context/contextBuilder.ts)
+ * - `capabilities`        → `TutorPolicy.capabilities`
+ * - `contract`              → `TutorRunnerContracts` addenda
+ * - `contextScope`          → file filter before context packing
  *
  * Naming note: per curricular guidelines we avoid humanizing LLMs — agents carry
- * functional labels ("Spec writer"), functional glyphs (not avatars), and no
+ * functional labels ("Plan"), functional glyphs (not avatars), and no
  * human names or personas anywhere in student-facing copy.
  */
 
@@ -133,7 +132,8 @@ export interface AgentCustomization {
 }
 
 /**
- * Autonomy ladder for the general Tutor (see docs/agentic-v4-spec.md, Decision C).
+ * Autonomy ladder for the general Tutor when `agentConfig.tutorRole` is set.
+ * See `src/guidelines/level-types/weblab2-agents.md`.
  * "tutor": student routes manually. "orchestrator-assisted": Tutor proposes
  * dispatches the student approves. "orchestrator-auto": dispatches run without
  * per-step approval (results still land as reviewable proposals).

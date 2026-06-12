@@ -506,7 +506,7 @@ export function MissionControlBoard({
         <footer className={styles.boardFootnote}>
           Demo level — agent runs are scripted, but the outcomes are computed
           from your real packing choices. On integration each run becomes a
-          scoped tutor call (see docs/agentic-directions.md).
+          scoped Tutor call (see `src/guidelines/level-types/weblab2-agents.md`).
         </footer>
       </div>
     </div>

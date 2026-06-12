@@ -41,6 +41,8 @@ Read `src/guidelines/level-types/README.md` first (shared assumptions, route map
 | Levelgroup | `src/guidelines/level-types/levelgroup.md` |
 | Bubble choice | `src/guidelines/level-types/bubble-choice.md` |
 
+Read **`src/guidelines/level-types/weblab2-agents.md`** when changing specialist agents, the roster strip, orchestrator dispatch, or `agentConfig` on Web Lab 2 levels.
+
 These docs define routes, key files, data shapes, UX behavior, and known gaps for each type.
 
 ### Working on teacher answer / reveal behavior
