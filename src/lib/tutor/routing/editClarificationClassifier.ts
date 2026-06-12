@@ -47,20 +47,21 @@ Judge underspecification in context — not keywords. Use conversation history a
 
 Prefer shouldClarify TRUE only when:
 - The student is starting a new feature area with no established pattern in the project yet (e.g. first navbar, first card section, first footer) AND layout, structure, styling approach, content, or behavior are still wide open.
-- The student asks for subjective polish without naming a concrete target or CSS/HTML property — e.g. "better", "more exciting", "refine the buttons", "less ugly", "make it pop", "make the cards better" when "better" could mean many unrelated changes.
+- The student asks for subjective polish of a broad page area or component without naming a concrete CSS/HTML property or direction — e.g. "better", "more exciting", "refine the buttons", "improve the nav links", "less ugly", "make it pop", "make the cards better" when several style directions would all be reasonable.
+- The student is on an open-ended choice-based polish level and appears to be selecting a focus area from Tutor's invitation (nav links, buttons, card links, fonts) but has not chosen a concrete treatment yet.
 - Recent conversation shows Tutor just added something and the student wants vague improvement, not a named structural or stylistic change.
 
 Prefer shouldClarify FALSE when:
 - The student is iterating on elements that already exist in the project: duplicating/extending them ("add 2 more cards", "another card like this"), changing their layout ("horizontal", "vertical", "in a row", "side by side", "stack them"), spacing, alignment, or count.
-- The student named concrete properties: specific colors, counts with placement/content (e.g. "3 cards with images below the nav"), link labels, selectors, hover/focus behavior, file targets, or layout structure/direction.
+- The student named concrete properties or treatments: specific colors, counts with placement/content (e.g. "3 cards with images below the nav"), link labels, selectors, hover/focus behavior, underline/focus outline, file targets, or layout structure/direction.
 - The message is a teacher/system build-from-plan instruction (build the project described in Plans/PROJECT_PLAN.md, update plan status, check off completed items).
 - The level is linear / prescribed and a reasonable default implementation matches the step (e.g. "add a footer with my name" on a footer step).
 - The student already chose a direction in this conversation and is giving the next incremental instruction.
 - A direct edit with sensible defaults is clearly what the level expects — especially when projectSummary shows matching HTML/CSS already in place.
 
 Examples (shouldClarify):
-- TRUE: "I want to add a navbar", "make it less ugly", "add cards" (no cards in project yet), "make the cards better", "make all of the buttons more exciting", "Let's refine the buttons"
-- FALSE: "make all buttons blue", "Improve the nav link hover styles", "add 3 cards with images below the nav", "add a footer with my name and the year", "let's add 2 more cards" (cards already exist), "Make the cards horizontal", "duplicate the existing card", "put them in a row"
+- TRUE: "I want to add a navbar", "make it less ugly", "add cards" (no cards in project yet), "make the cards better", "make all of the buttons more exciting", "Let's refine the buttons", "I want to improve the nav links"
+- FALSE: "make all buttons blue", "Improve the nav link hover styles", "Make the nav bar links feel interactive: add hover underline that animates, and a strong focus-visible outline", "add 3 cards with images below the nav", "add a footer with my name and the year", "let's add 2 more cards" (cards already exist), "Make the cards horizontal", "duplicate the existing card", "put them in a row"
 
 Return JSON only:
 {

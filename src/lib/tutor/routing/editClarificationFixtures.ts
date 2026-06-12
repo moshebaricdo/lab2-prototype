@@ -171,6 +171,37 @@ export const EDIT_CLARIFICATION_FIXTURES: EditClarificationFixture[] = [
     expectedShouldClarify: true,
     note: "Refinement request after cards exist.",
   },
+  {
+    message: "I want to improve the nav links",
+    context: {
+      ...curriculum,
+      levelInstructionsMarkdown: openEndedFeatureInstructions,
+      guide: {
+        ...openEndedGuide,
+        id: "style-polish",
+        goal: "Polish the page styling",
+        options: [
+          {
+            id: "polish-nav-links",
+            label: "Polish nav links",
+            prompt: "Make the nav bar links feel interactive",
+            intent: "style-polish",
+            editOriented: true,
+          },
+          {
+            id: "improve-buttons",
+            label: "Improve buttons",
+            prompt: "Make the buttons feel distinct and polished",
+            intent: "style-polish",
+            editOriented: true,
+          },
+        ],
+      },
+      guideState: openEndedGuideState,
+    },
+    expectedShouldClarify: true,
+    note: "Chat-log phrasing from the loop polish level: broad focus selection, not a concrete treatment.",
+  },
 
   // --- Should proceed without an options card ---
   {
