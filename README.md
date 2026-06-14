@@ -16,7 +16,14 @@ The app opens to a categorized level catalog at **`/levels`**. From there you ca
 |-----|-------------------|--------------|
 | **Web Lab 2** | Full HTML/CSS/JS IDE with live preview, file manager, version history, functional AI Tutor, and validation review | `/levels/weblab2-level`, `/levels/weblab2-demo-project` |
 | **Python Lab** | Python IDE with Pyodide runtime, console I/O, guidance-only Tutor | `/levels/pythonlab` |
+| **Sketch Lab** | Whiteboarding/diagramming canvas with shape, text, image, and line nodes, contextual property controls, and image export/backpack save | `/levels/sketchlab`, `/levels/sketchlab-blank` |
 | **AI Chat Lab** | Model configuration, chat stream, and published model-card layouts (no Tutor support yet) | `/levels/aichatlab` |
+
+### Web Lab 2 Agentic AI
+
+Optional specialist-agent levels run on top of the same Web Lab 2 Tutor harness with scoped agents, roster UI, hand-off cards, and saved custom agents in Backpack.
+
+**Entry routes:** `/levels/agentic-crew` through `/levels/agentic-standalone`, plus `/levels/agentic-mission`
 
 ### Assessment Level-types
 
@@ -39,7 +46,7 @@ Three subsystems define what makes this environment more than a UI mockup:
 Every level type renders inside the same chrome:
 
 - `TopNavigation` + level progress bubbles
-- Resource panel (instructions, Tutor, validation, version history, resources, settings)
+- Resource panel (instructions, Tutor, validation, version history, Backpack, resources, settings)
 - Dev panel and annotation overlay for rapid iteration
 - Brand theme + light/dark token switching
 
@@ -51,6 +58,8 @@ Powers the AI Tutor panel for Web Lab 2 and Python Lab:
 
 - **Web Lab 2** — guidance, project planning (`Plans/PROJECT_PLAN.md`), structured code edits with accept/reject proposals, tool-loop fallback, instruction delivery, and validation-aware coaching
 - **Python Lab** — guidance-only; reads project files but never proposes edits
+
+Web Lab 2 can also mount specialist agents via `agentConfig`; those agents add policy, context, and write-scope constraints without creating a separate chat pipeline.
 
 Orchestration lives in `src/lib/tutor/`. UI wiring starts at `src/components/lab2/resource-panel/views/ai-tutor/`.
 
@@ -72,7 +81,8 @@ Web Lab 2 curriculum levels can opt into **Check my work** review:
 │  Lab2 Frame (nav · resource panel · dev tools)          │
 ├─────────────────────────────────────────────────────────┤
 │  Level surface                                          │
-│    IDE labs ──► Tutor harness ──► Validation harness    │
+│    IDE labs ──► Tutor/agent harness ──► Validation      │
+│    Sketch Lab ─► ReactFlow canvas + Backpack images     │
 │    Assessment types (local submit · teacher reveal)     │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -107,9 +117,11 @@ If you're new to the repo, this sequence covers the major surfaces quickly:
 
 1. **`/levels`** — browse the categorized index
 2. **`/levels/weblab2-demo-project`** — full IDE + Tutor + version history
-3. **`/levels/progression-weblab2-validation-fix`** — validation review + Continue gating (add API key)
-4. **`/levels/multi`** — assessment multi-choice with local feedback
-5. **`/levels/aichatlab-model-card`** — AI Chat Lab model-card layout
+3. **`/levels/sketchlab`** — diagram canvas + property panel + Backpack image save
+4. **`/levels/agentic-crew`** — Web Lab 2 specialist-agent roster
+5. **`/levels/progression-weblab2-validation-fix`** — validation review + Continue gating (add API key)
+6. **`/levels/multi`** — assessment multi-choice with local feedback
+7. **`/levels/aichatlab-model-card`** — AI Chat Lab model-card layout
 
 ### Validate changes
 
@@ -130,6 +142,8 @@ Key-gated live eval suites (require a session API key):
 npm run test:tutor:live              # all live eval tests
 npm run test:tutor:live:analysis   # instruction guide-shape inference
 npm run test:tutor:live:intent       # request intent classifier
+npm run test:tutor:live:clarification # edit clarification classifier
+npm run test:tutor:live:validation    # validation-review intent classifier
 ```
 
 ---
@@ -144,6 +158,7 @@ npm run test:tutor:live:intent       # request intent classifier
 | Python runtime | Pyodide (web worker; requires COOP/COEP headers — configured in `vite.config.ts`) |
 | Markdown | react-markdown + remark-gfm |
 | Drag-and-drop | @dnd-kit, react-dnd |
+| Diagram canvas | @xyflow/react + html-to-image export |
 | Icons | Font Awesome (via `FaIcon`) |
 | Styling tokens | Generated CSS variables (`--ds-*`) + `globals.css` typography tokens |
 | AI provider | OpenAI (client-side, session key) |
@@ -162,9 +177,12 @@ Tailwind exists for base/theme plumbing. **New component styling should use SCSS
 | IDE — shared | `src/components/ide/shared/` | CodeEditor, FileManager, EmptyState |
 | IDE — Web Lab 2 | `src/components/ide/weblab2/` | Preview, uploads, Tutor flow helpers |
 | IDE — Python Lab | `src/components/ide/pythonlab/` | Console workspace, Pyodide runtime |
+| IDE — Sketch Lab | `src/components/ide/sketchlab/` | ReactFlow canvas, node palette, property panel, image export |
 | IDE — AI Chat Lab | `src/components/ide/aichatlab/` | Config, chat, model-card panels |
+| Agentic AI | `src/components/agentic/`, `src/data/agentic/` | Optional Web Lab 2 specialist roster, modals, and specialist definitions |
 | Assessment | `src/components/assessment/` | Per-type workspace views + shared chrome |
 | Data / fixtures | `src/data/` | Project trees, `instructions.md`, `assessment.md`, assessment mocks |
+| Backpack | `src/lib/backpack/` | Cross-lab file/image/agent persistence and import helpers |
 | Tutor harness | `src/lib/tutor/` | Intent, routing, runners, context, instruction, edit, provider |
 | Validation harness | `src/lib/validation/` | Goal evaluators, review rollup, AI review path |
 | State hooks | `src/hooks/` | Layout, file workspace, chat, version history, themes, share variants |
@@ -184,6 +202,8 @@ Demo content is colocated under `src/data/`:
 
 - **Web Lab 2 projects** — `src/data/weblab2/projects/<slug>/` with `index.ts`, `instructions.md`, optional `assessment.md`, and `files/`
 - **Python Lab** — `src/data/pythonlab/projects/default/`
+- **Sketch Lab** — `src/data/sketchlab/`
+- **Agentic Web Lab** — `src/data/agentic/` for specialist definitions and `src/data/weblab2/projects/agentic-portfolio/` for the sample starter project
 - **Assessment fixtures** — `src/data/assessment/` (multi, match, free response, levelgroup, bubble choice)
 - **Progressions** — `src/data/progression/`
 
@@ -249,6 +269,8 @@ Keep these in mind when evaluating behavior or planning integrations:
 | **API keys** | Entered in Lab Settings; never stored in repo or env files for production use |
 | **AI proposals** | Pending Tutor edits are ephemeral until accepted; reload marks them rejected |
 | **Pyodide** | Python Lab needs cross-origin isolation headers (set in Vite dev/preview config) |
+| **Sketch export** | Sketch Lab exports images client-side; Backpack saves downscaled JPGs to fit localStorage quota |
+| **Agentic levels** | Specialist agents scope the existing Tutor harness; they are prototype tools, not separate assistants or backends |
 | **Out of repo** | The `presentation/` folder is a standalone static deck, separate from the Vite app |
 
 ---
@@ -263,7 +285,9 @@ Keep these in mind when evaluating behavior or planning integrations:
 | Add shared editor features | `src/components/ide/shared/` |
 | Add Web Lab workspace chrome | `src/components/ide/weblab2/views/` |
 | Add Python Lab workspace chrome | `src/components/ide/pythonlab/views/` |
+| Add Sketch Lab canvas chrome | `src/components/ide/sketchlab/views/` |
 | Add AI Chat Lab workspace chrome | `src/components/ide/aichatlab/views/` |
+| Add or tune Web Lab 2 specialist agents | `src/data/agentic/`, `src/components/agentic/`, `src/lib/tutor/agents/` |
 | Add an assessment type | `src/components/assessment/<type>/views/` |
 | Add a new page / route | `src/pages/<level-type>/` + route in `App.tsx` |
 | Add mock data | `src/data/<domain>/` |
@@ -297,7 +321,9 @@ Full placement rules and styling standards: [`src/guidelines/Guidelines.md`](src
 |-----|------------|
 | [`src/guidelines/level-types/README.md`](src/guidelines/level-types/README.md) | Overview + shared assumptions |
 | [`src/guidelines/level-types/weblab2.md`](src/guidelines/level-types/weblab2.md) | Web Lab 2 |
+| [`src/guidelines/level-types/weblab2-agents.md`](src/guidelines/level-types/weblab2-agents.md) | Web Lab 2 specialist agents |
 | [`src/guidelines/level-types/pythonlab.md`](src/guidelines/level-types/pythonlab.md) | Python Lab |
+| [`src/guidelines/level-types/sketchlab.md`](src/guidelines/level-types/sketchlab.md) | Sketch Lab |
 | [`src/guidelines/level-types/aichatlab.md`](src/guidelines/level-types/aichatlab.md) | AI Chat Lab |
 | [`src/guidelines/level-types/multi-choice.md`](src/guidelines/level-types/multi-choice.md) | Multi-choice |
 | [`src/guidelines/level-types/free-response.md`](src/guidelines/level-types/free-response.md) | Free response |
@@ -324,6 +350,8 @@ Full placement rules and styling standards: [`src/guidelines/Guidelines.md`](src
 | `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
 | `npm run test:tutor` | Tutor harness unit tests (Vitest) |
 | `npm run test:tutor:live` | Key-gated live model eval tests |
+| `npm run test:tutor:live:clarification` | Key-gated edit clarification classifier evals |
+| `npm run test:tutor:live:validation` | Key-gated validation-review intent evals |
 | `npm run token:generate` | Regenerate `src/styles/tokens.css` |
 | `npm run generate:fa-codepoints` | Regenerate FA icon codepoint map |
 | `npm run deploy` | Build and push to `gh-pages` branch |

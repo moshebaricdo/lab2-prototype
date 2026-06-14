@@ -25,6 +25,7 @@ Progression links: `agenticProgressionLinks` in `src/pages/levelTypeLinks.ts`.
 | Roster + modal UI | `src/components/agentic/crew/` (`AgentRosterStrip`, `AgentDetailModal`, `AgentLevelModals`, `useAgentLevelState`) |
 | Types | `src/types/agentLab.ts` |
 | Default roster data | `src/data/agentic/specialists.ts`, `src/data/agentic/index.ts` |
+| Progression starter project | `src/data/weblab2/projects/agentic-portfolio/` (`agenticPortfolioFileStructure`; shared via `agenticProgressionCommon.ts`) |
 | Specialist adapter | `src/lib/tutor/agents/specialistRun.ts` |
 | Orchestrator dispatch | `src/lib/tutor/agents/orchestration.ts` |
 | Saved agents (backpack) | `src/lib/backpack/agentBackpack.ts` |
