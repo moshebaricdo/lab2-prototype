@@ -6,16 +6,21 @@ import { AppActionDropdown } from "../../ui/AppDropdown";
 import { AppTextArea } from "../../ui/AppTextField";
 import { AppSlider } from "../../ui/AppSlider";
 import { FaIcon } from "../../ui/icons/FaIcon";
-import {
-  AGENT_EFFORT_DESCRIPTIONS,
-  AGENT_EFFORT_LABELS,
-} from "../../../lib/backpack/agentBackpack";
 import type {
   AgentAccent,
   AgentCustomization,
   AgentEffort,
   AgentSpecialist,
 } from "../../../types/agentLab";
+import {
+  AGENT_EFFORT_DESCRIPTIONS,
+  AGENT_EFFORT_FIELD_HELPER,
+  AGENT_EFFORT_LABELS,
+  AGENT_EFFORT_STEPS,
+  agentEffortFromIndex,
+  agentEffortIndex,
+  normalizeAgentEffort,
+} from "../../../lib/backpack/agentBackpack";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import { AgentIdentityCard } from "./AgentIdentityCard";
 import {
@@ -187,7 +192,7 @@ export function AgentDetailModal({
     specialist.writablePaths,
   );
   const [effort, setEffort] = useState<AgentEffort>(
-    specialist.effort ?? "quick",
+    normalizeAgentEffort(specialist.effort),
   );
   const [filePaths, setFilePaths] = useState<string[]>(
     specialist.contextScope.filePaths,
@@ -211,7 +216,7 @@ export function AgentDetailModal({
       setCanEdit(next.capabilities.workspaceEdits);
       setReadLivePreview(next.capabilities.readLivePreview);
       setWritablePaths(resolveWritablePaths(next));
-      setEffort(next.effort ?? "quick");
+      setEffort(normalizeAgentEffort(next.effort));
       setFilePaths(
         allProjectFiles.filter((path) =>
           next.contextScope.filePaths.some((selected) =>
@@ -319,7 +324,7 @@ export function AgentDetailModal({
     contract !== specialist.contract ||
     canEdit !== specialist.capabilities.workspaceEdits ||
     readLivePreview !== specialist.capabilities.readLivePreview ||
-    effort !== (specialist.effort ?? "quick") ||
+    effort !== normalizeAgentEffort(specialist.effort) ||
     writablePathsDirty ||
     filePathsDirty;
 
@@ -357,7 +362,7 @@ export function AgentDetailModal({
     if (readLivePreview !== baseSpecialist.capabilities.readLivePreview) {
       customization.readLivePreview = readLivePreview;
     }
-    if (effort !== (baseSpecialist.effort ?? "quick")) {
+    if (effort !== normalizeAgentEffort(baseSpecialist.effort)) {
       customization.effort = effort;
     }
     if (allowIdentityEdit || isCreateMode) {
@@ -585,67 +590,84 @@ export function AgentDetailModal({
           </h2>
           <div className={styles.cardBody}>
             {isEditingConfig ? (
-              <>
-                <div className={styles.toggleList}>
+              <div className={styles.toggleList}>
+                <div className={styles.editToolGroup}>
                   <ToggleRow
                     label="Edit files"
                     description="When on, it can propose changes for you to review. Off means explain-only."
                     checked={canEdit}
                     onChange={handleCanEditChange}
                   />
-                  <ToggleRow
-                    label="Read live preview & console"
-                    description="When on, it can use the rendered page and any console errors when helping."
-                    checked={readLivePreview}
-                    onChange={setReadLivePreview}
-                  />
-                </div>
-                {canEdit && allProjectFiles.length > 0 ? (
-                  <div className={styles.writeScopePacker}>
-                    <span className={styles.fieldLabel}>Write scope</span>
-                    <p className={styles.filePackerHint}>
-                      Which project files this agent may change. Proposed edits
-                      always need your approval first.
-                    </p>
-                    <div className={styles.fileChecklist}>
-                      {allProjectFiles.map((path) => (
-                        <label key={path} className={styles.fileRow}>
-                          <AppCheckbox
-                            checkboxSize="s"
-                            checked={writablePaths.some((selected) =>
-                              pathsMatch(selected, path),
-                            )}
-                            onChange={() => toggleWritablePath(path)}
-                          />
-                          <span>{path}</span>
-                        </label>
-                      ))}
+                  {canEdit && allProjectFiles.length > 0 ? (
+                    <div className={styles.writeScopePacker}>
+                      <div className={styles.writeScopeHeader}>
+                        <FaIcon
+                          name="arrow-turn-down-right"
+                          size="xs"
+                          className={styles.toolSubIcon}
+                          aria-hidden="true"
+                        />
+                        <span className={styles.fieldLabel}>Write scope</span>
+                      </div>
+                      <p className={styles.filePackerHint}>
+                        Which project files this agent may change. Proposed edits
+                        always need your approval first.
+                      </p>
+                      <div className={styles.fileChecklist}>
+                        {allProjectFiles.map((path) => (
+                          <label key={path} className={styles.fileRow}>
+                            <AppCheckbox
+                              checkboxSize="s"
+                              checked={writablePaths.some((selected) =>
+                                pathsMatch(selected, path),
+                              )}
+                              onChange={() => toggleWritablePath(path)}
+                            />
+                            <span>{path}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ) : null}
-                {canEdit && allProjectFiles.length === 0 ? (
-                  <p className={styles.filePackerHint}>
-                    No project files are available to assign yet.
-                  </p>
-                ) : null}
-              </>
+                  ) : null}
+                  {canEdit && allProjectFiles.length === 0 ? (
+                    <p className={styles.filePackerHint}>
+                      No project files are available to assign yet.
+                    </p>
+                  ) : null}
+                </div>
+                <ToggleRow
+                  label="Read live preview & console"
+                  description="When on, it can use the rendered page and any console errors when helping."
+                  checked={readLivePreview}
+                  onChange={setReadLivePreview}
+                />
+              </div>
             ) : (
               <ul className={styles.toolList}>
-                <ToolRow
-                  label="Edit files"
-                  enabled={specialist.capabilities.workspaceEdits}
-                />
+                <li className={styles.toolGroup}>
+                  <ToolRow
+                    label="Edit files"
+                    enabled={specialist.capabilities.workspaceEdits}
+                  />
+                  {specialist.capabilities.workspaceEdits ? (
+                    <div className={styles.toolSubRow}>
+                      <FaIcon
+                        name="arrow-turn-down-right"
+                        size="xs"
+                        className={styles.toolSubIcon}
+                        aria-hidden="true"
+                      />
+                      <span className={styles.toolSubLabel}>Write scope</span>
+                      <span className={styles.toolSubDetail}>
+                        {writeScopeNote}
+                      </span>
+                    </div>
+                  ) : null}
+                </li>
                 <ToolRow
                   label="Read live preview & console"
                   enabled={specialist.capabilities.readLivePreview}
                 />
-                {specialist.capabilities.workspaceEdits ? (
-                  <ToolRow
-                    label="Write scope"
-                    enabled
-                    detail={writeScopeNote}
-                  />
-                ) : null}
               </ul>
             )}
           </div>
@@ -661,36 +683,48 @@ export function AgentDetailModal({
           <div className={styles.cardBody}>
             {isEditingConfig ? (
               <div className={styles.effortField}>
-                <span className={styles.fieldLabel} id="agent-effort-label">
-                  Effort
-                </span>
+                <div className={styles.effortHeader}>
+                  <div className={styles.effortLabelRow}>
+                    <span className={styles.fieldLabel} id="agent-effort-label">
+                      Effort
+                    </span>
+                    <span className={styles.effortInputValue}>
+                      {AGENT_EFFORT_LABELS[effort]}
+                    </span>
+                  </div>
+                  <p className={styles.effortHelper}>
+                    {AGENT_EFFORT_FIELD_HELPER}
+                  </p>
+                </div>
                 <AppSlider
-                  value={effort === "careful" ? 1 : 0}
+                  id="agent-effort-slider"
+                  value={agentEffortIndex(effort)}
                   min={0}
-                  max={1}
+                  max={AGENT_EFFORT_STEPS.length - 1}
                   step={1}
                   size="s"
                   tone="brand"
-                  minLabel="Quick"
-                  maxLabel="Careful"
+                  showLabel={false}
+                  showControlButtons
                   showStepper
-                  stepperLabels={["Quick", "Careful"]}
+                  stepperLabels={AGENT_EFFORT_STEPS.map(
+                    (step) => AGENT_EFFORT_LABELS[step],
+                  )}
                   aria-labelledby="agent-effort-label"
+                  decrementAriaLabel="Lower effort"
+                  incrementAriaLabel="Raise effort"
                   onValueChange={(value) =>
-                    setEffort(value >= 1 ? "careful" : "quick")
+                    setEffort(agentEffortFromIndex(value))
                   }
                 />
-                <p className={styles.filePackerHint}>
-                  {AGENT_EFFORT_DESCRIPTIONS[effort]}
-                </p>
               </div>
             ) : (
               <p className={styles.effortSummary}>
                 <span className={styles.effortValue}>
-                  {AGENT_EFFORT_LABELS[specialist.effort ?? "quick"]}
+                  {AGENT_EFFORT_LABELS[normalizeAgentEffort(specialist.effort)]}
                 </span>
                 {" — "}
-                {AGENT_EFFORT_DESCRIPTIONS[specialist.effort ?? "quick"]}
+                {AGENT_EFFORT_DESCRIPTIONS[normalizeAgentEffort(specialist.effort)]}
               </p>
             )}
           </div>

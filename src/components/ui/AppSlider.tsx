@@ -194,11 +194,16 @@ export const AppSlider = forwardRef<HTMLInputElement, AppSliderProps>(
           <div className={styles.stepperRow}>
             {showControlButtons ? <span className={styles.sideSpacer} /> : null}
             <div className={styles.stepper} aria-hidden="true">
-              {stepValues.map((stepValue, index) => (
+              {stepValues.map((stepValue, index) => {
+                const isFirst = index === 0;
+                const isLast = index === stepValues.length - 1;
+                return (
                 <span
                   key={stepValue}
                   className={[
                     styles.stepItem,
+                    isFirst ? styles.stepItemStart : "",
+                    isLast ? styles.stepItemEnd : "",
                     stepValue <= value ? styles.stepMarkActive : "",
                   ]
                     .filter(Boolean)
@@ -211,12 +216,21 @@ export const AppSlider = forwardRef<HTMLInputElement, AppSliderProps>(
                 >
                   <span className={styles.stepMark} />
                   {stepperHasLabels ? (
-                    <span className={styles.stepLabel}>
+                    <span
+                      className={[
+                        styles.stepLabel,
+                        isFirst ? styles.stepLabelStart : "",
+                        isLast ? styles.stepLabelEnd : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
                       {stepperLabels?.[index] ?? ""}
                     </span>
                   ) : null}
                 </span>
-              ))}
+              );
+              })}
             </div>
             {showControlButtons ? <span className={styles.sideSpacer} /> : null}
           </div>

@@ -55,15 +55,60 @@ export const AGENT_ACCENT_LABELS: Record<AgentAccent, string> = {
   green: "Green",
 };
 
+export const AGENT_EFFORT_STEPS: AgentEffort[] = [
+  "low",
+  "medium",
+  "high",
+  "extra-high",
+];
+
 export const AGENT_EFFORT_LABELS: Record<AgentEffort, string> = {
-  quick: "Quick",
-  careful: "Careful",
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  "extra-high": "Extra high",
 };
 
 export const AGENT_EFFORT_DESCRIPTIONS: Record<AgentEffort, string> = {
-  quick: "Fast, direct answers.",
-  careful: "Thinks longer before responding.",
+  low: "Fast, direct answers.",
+  medium: "Balanced depth and speed.",
+  high: "Thinks longer before responding.",
+  "extra-high": "Maximum reasoning depth.",
 };
+
+/** Static copy for the effort slider in the agent detail modal. */
+export const AGENT_EFFORT_FIELD_HELPER =
+  "Sets how much reasoning this agent applies on each turn.";
+
+const LEGACY_EFFORT_MAP: Record<string, AgentEffort> = {
+  quick: "low",
+  careful: "high",
+};
+
+export function normalizeAgentEffort(
+  effort: string | undefined,
+  fallback: AgentEffort = "medium",
+): AgentEffort {
+  if (
+    effort === "low" ||
+    effort === "medium" ||
+    effort === "high" ||
+    effort === "extra-high"
+  ) {
+    return effort;
+  }
+  return LEGACY_EFFORT_MAP[effort ?? ""] ?? fallback;
+}
+
+export function agentEffortIndex(effort: AgentEffort | undefined): number {
+  const normalized = normalizeAgentEffort(effort);
+  const index = AGENT_EFFORT_STEPS.indexOf(normalized);
+  return index >= 0 ? index : AGENT_EFFORT_STEPS.indexOf("medium");
+}
+
+export function agentEffortFromIndex(index: number): AgentEffort {
+  return AGENT_EFFORT_STEPS[index] ?? "medium";
+}
 
 interface SavedAgentEnvelope {
   schema: typeof AGENT_BACKPACK_SCHEMA;
@@ -103,7 +148,7 @@ export function createBlankAgentSpecialist(): AgentSpecialist {
       workspaceEdits: false,
       readLivePreview: false,
     },
-    effort: "quick",
+    effort: "medium",
     contextScope: {
       // Non-empty marker ⇒ this agent may pack project code (defaults to all
       // scopable files in the live project via resolveContextFilePaths).

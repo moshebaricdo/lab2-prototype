@@ -9,19 +9,19 @@
 .card {
   overflow: hidden;
   border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 8px;
+  border-radius: 4px;
   background: var(--ds-background-neutral-primary);
 }
 
 .cardTitle {
-  font-size: 10px;
+  font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  height: 32px;
+  height: 36px;
   margin: 0;
   padding: 0 12px;
   border-bottom: 1px solid var(--ds-borders-neutral-primary);
@@ -104,18 +104,92 @@
   color: var(--ds-text-neutral-primary);
 }
 
+.toolGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.toolSubRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 2px;
+}
+
+.toolSubIcon {
+  flex-shrink: 0;
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.toolSubLabel {
+  flex-shrink: 0;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  line-height: 1.4;
+}
+
+.toolSubDetail {
+  flex: 1;
+  min-width: 0;
+  color: var(--ds-text-neutral-primary);
+  font-size: var(--text-label);
+  line-height: 1.4;
+  text-align: right;
+}
+
+.editToolGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .writeScopePacker {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--ds-borders-neutral-primary);
+  padding-left: 12px;
+}
+
+.writeScopeHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .effortField {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.effortHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.effortLabelRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.effortInputValue {
+  flex-shrink: 0;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.64;
+}
+
+.effortHelper {
+  margin: 0;
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  line-height: 1.4;
 }
 
 .effortSummary {

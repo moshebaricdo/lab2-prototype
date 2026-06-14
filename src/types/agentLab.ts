@@ -25,7 +25,7 @@ export interface AgentCapabilities {
 }
 
 /** Student-facing abstraction of model depth / reasoning effort. */
-export type AgentEffort = "quick" | "careful";
+export type AgentEffort = "low" | "medium" | "high" | "extra-high";
 
 /**
  * Constrained accent palette for the agent row — soft functional color coding
@@ -75,7 +75,7 @@ export interface AgentSpecialist {
    * enforcement IS the lesson ("the style agent can't touch script.js").
    */
   writablePaths: string[];
-  /** How much reasoning depth this agent uses. Default: "quick". */
+  /** How much reasoning depth this agent uses. Default: "medium". */
   effort?: AgentEffort;
   /** Hint-first vs direct answers. Unset ⇒ inherits the level's pedagogy. */
   revealPolicy?: "hint-first" | "direct-when-asked";

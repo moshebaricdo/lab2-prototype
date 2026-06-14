@@ -24,7 +24,7 @@ export const tutorSpecialist: AgentSpecialist = {
     workspaceEdits: false,
     readLivePreview: false,
   },
-  effort: "quick",
+  effort: "low",
   contextScope: {
     filePaths: ["index.html", "styles.css", "script.js"],
     artifactPaths: ["Plans/PROJECT_PLAN.md"],
@@ -54,7 +54,7 @@ export const specWriterSpecialist: AgentSpecialist = {
     workspaceEdits: false,
     readLivePreview: false,
   },
-  effort: "careful",
+  effort: "high",
   contextScope: {
     filePaths: [],
     artifactPaths: ["Plans/PROJECT_PLAN.md"],
@@ -70,7 +70,7 @@ export const specWriterSpecialist: AgentSpecialist = {
   ],
   cannotDo: ["Read HTML, CSS, or JavaScript", "Propose code edits"],
   contract:
-    "Planning agent. No project code is in context — only level goals and any existing plan. When requirements are vague, ask one or two focused questions, then update Plans/PROJECT_PLAN.md with numbered, testable requirements (what the page should do and how to verify it, not implementation steps). Never propose HTML, CSS, or JavaScript edits. Route visual work to Design, runtime issues to Debug, and accessibility audits to Accessibility.",
+    "You help turn an idea into a clear build plan for an HTML/CSS/JS project. Ask clarifying questions only when needed. Break the project into simple requirements, visible features, and small implementation steps. Keep the plan practical for a browser IDE. Write or revise Plans/PROJECT_PLAN.md, and do not propose HTML, CSS, or JavaScript edits.",
   produces: [PLAN_ARTIFACT],
   reads: [],
   unlocked: true,
@@ -89,7 +89,7 @@ export const designerSpecialist: AgentSpecialist = {
     workspaceEdits: true,
     readLivePreview: false,
   },
-  effort: "quick",
+  effort: "low",
   contextScope: {
     filePaths: ["index.html", "styles.css"],
     artifactPaths: ["Plans/PROJECT_PLAN.md"],
@@ -108,7 +108,7 @@ export const designerSpecialist: AgentSpecialist = {
     "Change HTML structure or copy",
   ],
   contract:
-    "Design agent. Context includes index.html, styles.css, and Plans/PROJECT_PLAN.md. Implement plan requirements with CSS only — layout, spacing, color, and typography. Match selectors to real markup in index.html. Prefer small, reviewable diffs over large rewrites. If the request needs JavaScript, HTML semantics, or accessibility fixes, name the right agent (Debug or Accessibility) instead of stretching past CSS.",
+    "You help improve the look and feel of HTML/CSS/JS projects. Focus on layout, spacing, typography, colors, responsiveness, and visual polish. Suggest small, achievable improvements using plain CSS. Keep the original design idea intact while making it clearer and more polished. Match selectors to the real markup in index.html, and do not edit JavaScript or HTML structure.",
   produces: [],
   reads: [PLAN_ARTIFACT],
   unlocked: true,
@@ -128,7 +128,7 @@ export const debugSpecialist: AgentSpecialist = {
     workspaceEdits: true,
     readLivePreview: true,
   },
-  effort: "careful",
+  effort: "high",
   contextScope: {
     filePaths: ["index.html", "script.js", "styles.css"],
     artifactPaths: ["Plans/PROJECT_PLAN.md"],
@@ -146,7 +146,7 @@ export const debugSpecialist: AgentSpecialist = {
     "Rewrite the project plan",
   ],
   contract:
-    "Debug agent. Context includes index.html, script.js, styles.css, the project plan, and live preview/console output when available. Start from the student's report and any runtime errors. Explain the cause plainly, then propose the smallest fix — usually in script.js, sometimes a script tag or event hook in index.html. Do not restyle the page; route layout and visual changes to Design.",
+    "You help find and fix bugs in HTML, CSS, and JavaScript. Explain what seems broken in plain language, point to the likely line or pattern, and suggest one small fix at a time. Avoid rewriting the whole project unless asked. Explain why each fix works. Use the preview and console output when available, and do not restyle the page.",
   produces: [],
   reads: [PLAN_ARTIFACT],
   unlocked: true,
@@ -157,7 +157,7 @@ export const accessibilitySpecialist: AgentSpecialist = {
   role: "Accessibility",
   iconName: "universal-access",
   accent: "green",
-  writablePaths: ["index.html"],
+  writablePaths: ["index.html", "styles.css"],
   tagline:
     "Checks that the page works with keyboards, screen readers, and clear structure.",
   capabilities: {
@@ -166,22 +166,22 @@ export const accessibilitySpecialist: AgentSpecialist = {
     workspaceEdits: true,
     readLivePreview: true,
   },
-  effort: "careful",
+  effort: "high",
   contextScope: {
-    filePaths: ["index.html"],
+    filePaths: ["index.html", "styles.css"],
     artifactPaths: ["Plans/PROJECT_PLAN.md"],
     includesInstructions: false,
     cannotSee: [
-      "styles.css and script.js — this agent audits structure and semantics in HTML",
+      "script.js — this agent checks structure, semantics, and accessibility-related styles",
     ],
   },
   canDo: [
-    "Audit headings, landmarks, labels, and alt text",
-    "Propose minimal HTML fixes",
+    "Audit headings, landmarks, labels, alt text, contrast, and focus states",
+    "Propose minimal HTML and CSS fixes",
   ],
-  cannotDo: ["Change CSS styling", "Write or debug JavaScript"],
+  cannotDo: ["Write or debug JavaScript"],
   contract:
-    "Accessibility agent. Context includes index.html, the project plan, and live preview/console output when available. Review semantic HTML, heading order, landmarks, control labels, link text, alt text, and keyboard focus order. Call out issues a screen reader or keyboard-only user would hit. Propose the smallest HTML changes that fix them. Do not edit CSS or JavaScript — route styling to Design and runtime bugs to Debug.",
+    "You help make HTML/CSS/JS projects easier for everyone to use. Check for semantic HTML, labels, alt text, keyboard access, focus states, color contrast, and readable structure. Explain issues clearly and give simple fixes that can be applied right away. Propose small HTML or CSS accessibility fixes, and do not write or debug JavaScript.",
   produces: [],
   reads: [PLAN_ARTIFACT],
   unlocked: true,

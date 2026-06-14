@@ -68,6 +68,8 @@ export function AgentLevelModals({
 
   const allowIdentityEdit =
     isCreateMode || agents.recalledAgentIds.has(activeId);
+  const allowAgentManagement =
+    agents.allowCustomization || agents.allowAgentLibrary;
 
   return (
     <AgentDetailModal
@@ -100,7 +102,9 @@ export function AgentLevelModals({
         addBackpackItem(createAgentBackpackItem(specialist));
       }}
       canRemoveFromProject={
-        !isCreateMode && agents.canRemoveFromProject(activeId)
+        allowAgentManagement &&
+        !isCreateMode &&
+        agents.canRemoveFromProject(activeId)
       }
       onRemoveFromProject={() => agents.removeAgentFromProject(activeId)}
     />

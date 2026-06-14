@@ -3,7 +3,8 @@ import type { TutorValidatedChange } from "../types";
 import type { ChatMessage } from "../../../types/chat";
 import type { FileItem } from "../../../types/file";
 import type { TutorRequestMode } from "../../../types/tutor";
-import type { AgentSpecialist } from "../../../types/agentLab";
+import type { AgentEffort, AgentSpecialist } from "../../../types/agentLab";
+import { normalizeAgentEffort } from "../../../lib/backpack/agentBackpack";
 
 /**
  * Specialist agents on top of the live tutor pipeline.
@@ -119,6 +120,14 @@ export function agentRequestMode(specialist: AgentSpecialist): "build" | "help" 
   return specialistComposerMode(specialist) === "build" ? "build" : "help";
 }
 
+const AGENT_EFFORT_PROMPTS: Record<AgentEffort, string> = {
+  low: "Be concise and direct. Prefer fast, actionable answers.",
+  medium: "Balance clarity with enough detail to be useful.",
+  high: "Think step-by-step before answering. Prefer thorough analysis over speed.",
+  "extra-high":
+    "Take maximum reasoning depth. Explore edge cases and explain your reasoning clearly.",
+};
+
 export function buildAgentSystemPrompt(specialist: AgentSpecialist): string {
   const writable = specialist.capabilities.workspaceEdits
     ? specialist.writablePaths.length
@@ -132,9 +141,7 @@ export function buildAgentSystemPrompt(specialist: AgentSpecialist): string {
     : "You do not receive live preview or console output — rely on project files and the student's description.";
 
   const effort =
-    (specialist.effort ?? "quick") === "careful"
-      ? "Think step-by-step before answering. Prefer thorough analysis over speed."
-      : "Be concise and direct. Prefer fast, actionable answers.";
+    AGENT_EFFORT_PROMPTS[normalizeAgentEffort(specialist.effort)];
 
   return [
     `You are the "${specialist.role}" agent. ${specialist.contract}`,

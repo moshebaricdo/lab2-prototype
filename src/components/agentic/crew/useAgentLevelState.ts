@@ -12,6 +12,7 @@ import type {
   AgentLevelConfig,
   AgentSpecialist,
 } from "../../../types/agentLab";
+import { normalizeAgentEffort } from "../../../lib/backpack/agentBackpack";
 import type { TutorValidatedChange } from "../../../lib/tutor/types";
 import {
   buildAgentSystemPrompt,
@@ -49,7 +50,9 @@ function applyCustomization(
     iconName: customization.iconName ?? specialist.iconName,
     accent: customization.accent ?? specialist.accent,
     contract: customization.contract ?? specialist.contract,
-    effort: customization.effort ?? specialist.effort,
+    effort: normalizeAgentEffort(
+      customization.effort ?? specialist.effort,
+    ),
     revealPolicy: customization.revealPolicy ?? specialist.revealPolicy,
     writablePaths: customization.writablePaths ?? specialist.writablePaths,
     capabilities: {

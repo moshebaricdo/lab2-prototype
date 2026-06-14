@@ -227,6 +227,14 @@
   color: var(--slider-text-color);
 }
 
+.stepItemStart {
+  align-items: flex-start;
+}
+
+.stepItemEnd {
+  align-items: flex-end;
+}
+
 .stepMark {
   width: 1px;
   height: 6px;
@@ -235,12 +243,12 @@
   opacity: 0.8;
 }
 
-.stepMarkActive {
+.stepItem.stepMarkActive .stepMark {
   background: var(--ds-background-neutral-secondary);
 }
 
 .stepLabel {
-  max-width: 48px;
+  max-width: 72px;
   overflow: hidden;
   color: var(--ds-text-neutral-tertiary);
   font-family: var(--font-body);
@@ -249,6 +257,16 @@
   line-height: 1.64;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.stepLabelStart {
+  max-width: none;
+  text-align: left;
+}
+
+.stepLabelEnd {
+  max-width: none;
+  text-align: right;
 }
 
 .labels {
