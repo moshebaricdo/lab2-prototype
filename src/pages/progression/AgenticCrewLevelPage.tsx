@@ -1,8 +1,10 @@
-import { useMemo } from "react";
 import { WebLab2LevelPage } from "../weblab2/WebLab2LevelPage";
-import { buildAgenticStarterTree, crewLevel1Specialists } from "../../data/agentic";
+import { crewLevel1Specialists } from "../../data/agentic";
 import { useShareAwareNavigate } from "../../hooks/useLevelShareMode";
-import { agenticProgressionLinks } from "../levelTypeLinks";
+import {
+  agenticProgressionCommonProps,
+  agenticProgressionPaths,
+} from "./agenticProgressionCommon";
 
 const instructionsMarkdown = `# Working with specialist agents
 
@@ -25,28 +27,19 @@ composer, and use ⓘ to inspect what the active one can and can't see.
  */
 export function AgenticCrewLevelPage() {
   const navigate = useShareAwareNavigate();
-  const starterTree = useMemo(() => buildAgenticStarterTree(), []);
 
   return (
     <WebLab2LevelPage
+      {...agenticProgressionCommonProps(agenticProgressionPaths.crew, 1)}
       title="Web Lab 2: Meet the Agents"
-      currentLevelPath="/levels/agentic-crew"
-      levelLinks={agenticProgressionLinks}
-      currentLevel={1}
-      totalLevels={5}
-      tutorMode={{ kind: "functional" }}
-      useFilePreview
-      initialViewMode="split"
-      fileStructureOverride={starterTree}
       instructionsMarkdown={instructionsMarkdown}
-      storageKeySuffix="agentic-crew-v4"
       agentConfig={{
         specialists: crewLevel1Specialists,
         allowCustomization: false,
         allowAgentLibrary: false,
       }}
       continueLabel="Continue"
-      onContinue={() => navigate("/levels/agentic-inspect")}
+      onContinue={() => navigate(agenticProgressionPaths.inspect)}
     />
   );
 }

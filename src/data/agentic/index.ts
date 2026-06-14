@@ -1,10 +1,12 @@
 export {
-  buildAgenticStarterTree,
+  agenticPortfolioFileStructure,
+  agenticPortfolioWithSpecFileStructure,
+  AGENTIC_PORTFOLIO_ROOT_NAME,
   gallerySpecMarkdown,
   styledGalleryCss,
   accessibleIndexHtml,
   PROJECT_ROOT_NAME,
-} from "./starterProject";
+} from "../weblab2/projects/agentic-portfolio";
 export {
   tutorSpecialist,
   specWriterSpecialist,

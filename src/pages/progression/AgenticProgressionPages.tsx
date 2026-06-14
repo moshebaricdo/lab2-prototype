@@ -1,9 +1,11 @@
-import { useMemo } from "react";
-import { WebLab2LevelPage } from "../weblab2/WebLab2LevelPage";
-import { buildAgenticStarterTree, crewSpecialists } from "../../data/agentic";
-import { useShareAwareNavigate } from "../../hooks/useLevelShareMode";
-import { agenticProgressionLinks } from "../levelTypeLinks";
 import type { FileItem } from "../../types/file";
+import { WebLab2LevelPage } from "../weblab2/WebLab2LevelPage";
+import { crewSpecialists } from "../../data/agentic";
+import { useShareAwareNavigate } from "../../hooks/useLevelShareMode";
+import {
+  agenticProgressionCommonProps,
+  agenticProgressionPaths,
+} from "./agenticProgressionCommon";
 
 /**
  * Levels 2–5 of the agent sample progression.
@@ -53,74 +55,50 @@ const blankFileStructure: FileItem[] = [];
 
 export function AgenticLevel2Page() {
   const navigate = useShareAwareNavigate();
-  const starterTree = useMemo(() => buildAgenticStarterTree(), []);
+
   return (
     <WebLab2LevelPage
+      {...agenticProgressionCommonProps(agenticProgressionPaths.inspect, 2)}
       title="Web Lab 2: Look Inside an Agent"
-      currentLevelPath="/levels/agentic-inspect"
-      levelLinks={agenticProgressionLinks}
-      currentLevel={2}
-      totalLevels={5}
-      tutorMode={{ kind: "functional" }}
-      useFilePreview
-      initialViewMode="split"
-      fileStructureOverride={starterTree}
       instructionsMarkdown={level2Instructions}
-      storageKeySuffix="agentic-l2"
       agentConfig={{
         specialists: crewSpecialists,
         allowCustomization: false,
         allowAgentLibrary: false,
       }}
       continueLabel="Continue"
-      onContinue={() => navigate("/levels/agentic-configure")}
+      onContinue={() => navigate(agenticProgressionPaths.configure)}
     />
   );
 }
 
 export function AgenticLevel3Page() {
   const navigate = useShareAwareNavigate();
-  const starterTree = useMemo(() => buildAgenticStarterTree(), []);
+
   return (
     <WebLab2LevelPage
+      {...agenticProgressionCommonProps(agenticProgressionPaths.configure, 3)}
       title="Web Lab 2: Tune Your Crew"
-      currentLevelPath="/levels/agentic-configure"
-      levelLinks={agenticProgressionLinks}
-      currentLevel={3}
-      totalLevels={5}
-      tutorMode={{ kind: "functional" }}
-      useFilePreview
-      initialViewMode="split"
-      fileStructureOverride={starterTree}
       instructionsMarkdown={level3Instructions}
-      storageKeySuffix="agentic-l3"
       agentConfig={{
         specialists: crewSpecialists,
         allowCustomization: true,
         allowAgentLibrary: true,
       }}
       continueLabel="Continue"
-      onContinue={() => navigate("/levels/agentic-orchestrate")}
+      onContinue={() => navigate(agenticProgressionPaths.orchestrate)}
     />
   );
 }
 
 export function AgenticLevel4Page() {
   const navigate = useShareAwareNavigate();
-  const starterTree = useMemo(() => buildAgenticStarterTree(), []);
+
   return (
     <WebLab2LevelPage
+      {...agenticProgressionCommonProps(agenticProgressionPaths.orchestrate, 4)}
       title="Web Lab 2: Let the Tutor Route"
-      currentLevelPath="/levels/agentic-orchestrate"
-      levelLinks={agenticProgressionLinks}
-      currentLevel={4}
-      totalLevels={5}
-      tutorMode={{ kind: "functional" }}
-      useFilePreview
-      initialViewMode="split"
-      fileStructureOverride={starterTree}
       instructionsMarkdown={level4Instructions}
-      storageKeySuffix="agentic-l4"
       agentConfig={{
         specialists: crewSpecialists,
         allowCustomization: true,
@@ -129,7 +107,7 @@ export function AgenticLevel4Page() {
         tutorRole: "orchestrator-assisted",
       }}
       continueLabel="Continue"
-      onContinue={() => navigate("/levels/agentic-standalone")}
+      onContinue={() => navigate(agenticProgressionPaths.standalone)}
     />
   );
 }
@@ -142,18 +120,13 @@ export function AgenticLevel4Page() {
 export function AgenticLevel5Page() {
   return (
     <WebLab2LevelPage
+      {...agenticProgressionCommonProps(agenticProgressionPaths.standalone, 5)}
       title="Web Lab 2: New Project"
-      currentLevelPath="/levels/agentic-standalone"
-      levelLinks={agenticProgressionLinks}
-      currentLevel={5}
-      totalLevels={5}
-      tutorMode={{ kind: "functional" }}
       tutorSupportContext="standalone-project"
-      useFilePreview
       showOnlyFilesWithContent
       showInstructionsDrawer={false}
       fileStructureOverride={blankFileStructure}
-      storageKeySuffix="agentic-l5"
+      storageKeySuffix="agentic-standalone-v1"
       agentConfig={{
         specialists: crewSpecialists,
         allowCustomization: true,
