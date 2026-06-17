@@ -32,11 +32,11 @@ SketchLabWorkspace (main, fills space beside the sidebar)
     │   ├── TextNode           free text label
     │   ├── ImageNode          image + alt text
     │   └── LineNode           standalone line (color/thickness/style/shape/arrowheads)
-    ├── NodePalette            floating left rail — grab/select tools, then add shape/text/image/line
+    ├── NodePalette            floating left rail — select/grab tools, then add shape/text/image/line
     └── PropertyPanel          floating right panel — morphs by selection
 ```
 
-The property panel renders one of four states based on the current selection,
+The property panel renders one of several states based on the current selection,
 matching the Figma toolbar permutations:
 
 - **Shape** — Appearance (Background, Border), Typography (Size, Alignment,
@@ -44,6 +44,10 @@ matching the Figma toolbar permutations:
 - **Line** — Color, Thickness, Style, Shape, Arrowheads, Actions
 - **Text** — Size, Alignment, Color, Rotation, Actions
 - **Image** — Rotation, Alt Text, Actions
+- **Multi-select** — header shows `N items selected`; Actions with Group items,
+  Send to front/back, Delete
+- **Group** — Shapes / Lines / Text / Transform sections (shown when the group
+  contains those node kinds); Actions include Ungroup (`object-ungroup`)
 
 ## Component Structure
 
@@ -57,6 +61,7 @@ matching the Figma toolbar permutations:
 - Inline-edit bridge: `views/SketchLabActionsContext.tsx`
 - PNG export: `src/components/ide/sketchlab/exportSketchToPng.ts`
 - Options / token resolvers: `src/components/ide/sketchlab/sketchLabOptions.ts`
+- Grouping helpers: `src/components/ide/sketchlab/sketchLabGrouping.ts`
 - Icons: `src/components/ide/sketchlab/sketchLabIcons.tsx`
 - Types: `src/types/sketchLab.ts`
 - Seed data: `src/data/sketchlab/index.ts`
@@ -78,10 +83,12 @@ Dragging between two shapes creates a new line node; dragging between a line
 endpoint and a shape attaches that endpoint. The palette line tool adds a standalone
 line to the canvas.
 
-The left toolbar starts with **Grab** (default — drag empty canvas to pan) and
-**Select** (drag empty canvas to marquee-select; Shift+click to add to selection).
-Grouping and multi-select property editing are not implemented yet, but select
-mode wires up React Flow's `selectionOnDrag` for that path.
+The left toolbar starts with **Select** (default — drag empty canvas to
+marquee-select; Shift+click to add to selection) and **Grab** (drag empty canvas
+to pan). **⌘/Ctrl+G** groups the current multi-selection (two or more ungrouped
+nodes). Grouped items move together via a parent `group` node; selecting any
+member (or the group) opens the **Group** property panel. Ungroup from the
+group panel action row.
 
 Line nodes always show **start/end endpoint handles** (larger than shape handles).
 Select a line to bring it above overlapping shapes. Drag an endpoint to connect;
