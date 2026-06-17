@@ -11,13 +11,20 @@ import {
   createLineBetweenNodes,
   createLineNodeFromPoints,
   findEndpointSnap,
+  getNodeAbsolutePosition,
   lineNodeFromLegacyEdge,
   repositionLineEndpoint,
   syncLineAttachments,
   type SketchLineStyling,
   type SketchPoint,
 } from "../components/ide/sketchlab/sketchLabLineGeometry";
+import {
+  computeGroupBounds,
+  resolveGroupSelection,
+  sortNodesParentFirst,
+} from "../components/ide/sketchlab/sketchLabGrouping";
 import type {
+  SketchGroupNodeData,
   SketchImageNodeData,
   SketchLegacyEdge,
   SketchLineAttachment,
@@ -25,6 +32,7 @@ import type {
   SketchNode,
   SketchNodeData,
   SketchNodeKind,
+  SketchSelectionContext,
   SketchShapeKind,
   SketchShapeNodeData,
   SketchTextNodeData,
@@ -378,7 +386,7 @@ export function useSketchLabState({
       commitNodes((current) =>
         current.map((node) => {
           if (node.id !== lineId || node.data.kind !== "line") return node;
-          const moved = repositionLineEndpoint(node, endpoint, absPoint, false);
+          const moved = repositionLineEndpoint(node, endpoint, absPoint, false, current);
           const data = moved.data as SketchLineNodeData;
           const attachmentKey = endpoint === "start" ? "startAttachment" : "endAttachment";
           return {
@@ -425,6 +433,7 @@ export function useSketchLabState({
           targetNode,
           targetHandle,
           DEFAULT_LINE_STYLING,
+          current,
         );
 
         return [...current.map((node) => ({ ...node, selected: false })), newLine];
@@ -548,14 +557,22 @@ export function useSketchLabState({
 
   const deleteNode = useCallback(
     (id: string) => {
-      commitNodesWithHistory((current) =>
-        current
-          .filter((node) => node.id !== id)
+      commitNodesWithHistory((current) => {
+        const target = current.find((node) => node.id === id);
+        const idsToRemove = new Set<string>([id]);
+        if (target?.data.kind === "group") {
+          for (const node of current) {
+            if (node.parentId === id) idsToRemove.add(node.id);
+          }
+        }
+
+        return current
+          .filter((node) => !idsToRemove.has(node.id))
           .map((node) => {
             if (node.data.kind !== "line") return node;
             const data = node.data as SketchLineNodeData;
-            const clearsStart = data.startAttachment?.nodeId === id;
-            const clearsEnd = data.endAttachment?.nodeId === id;
+            const clearsStart = data.startAttachment && idsToRemove.has(data.startAttachment.nodeId);
+            const clearsEnd = data.endAttachment && idsToRemove.has(data.endAttachment.nodeId);
             if (!clearsStart && !clearsEnd) return node;
             return {
               ...node,
@@ -565,7 +582,158 @@ export function useSketchLabState({
                 endAttachment: clearsEnd ? null : data.endAttachment,
               },
             };
-          }),
+          });
+      });
+    },
+    [commitNodesWithHistory],
+  );
+
+  const deleteSelectedNodes = useCallback(() => {
+    commitNodesWithHistory((current) => {
+      const idsToRemove = new Set<string>();
+      for (const node of current) {
+        if (!node.selected) continue;
+        idsToRemove.add(node.id);
+        if (node.data.kind === "group") {
+          for (const child of current) {
+            if (child.parentId === node.id) idsToRemove.add(child.id);
+          }
+        }
+      }
+      if (!idsToRemove.size) return current;
+
+      return current
+        .filter((node) => !idsToRemove.has(node.id))
+        .map((node) => {
+          if (node.data.kind !== "line") return node;
+          const data = node.data as SketchLineNodeData;
+          const clearsStart = data.startAttachment && idsToRemove.has(data.startAttachment.nodeId);
+          const clearsEnd = data.endAttachment && idsToRemove.has(data.endAttachment.nodeId);
+          if (!clearsStart && !clearsEnd) return node;
+          return {
+            ...node,
+            data: {
+              ...data,
+              startAttachment: clearsStart ? null : data.startAttachment,
+              endAttachment: clearsEnd ? null : data.endAttachment,
+            },
+          };
+        });
+    });
+  }, [commitNodesWithHistory]);
+
+  const bringSelectedForward = useCallback(() => {
+    commitNodesWithHistory((current) => {
+      const selected = current.filter((node) => node.selected);
+      if (!selected.length) return current;
+      const selectedIds = new Set(selected.map((node) => node.id));
+      const rest = current.filter((node) => !selectedIds.has(node.id));
+      return [...rest, ...selected];
+    });
+  }, [commitNodesWithHistory]);
+
+  const sendSelectedToBack = useCallback(() => {
+    commitNodesWithHistory((current) => {
+      const selected = current.filter((node) => node.selected);
+      if (!selected.length) return current;
+      const selectedIds = new Set(selected.map((node) => node.id));
+      const rest = current.filter((node) => !selectedIds.has(node.id));
+      return [...selected, ...rest];
+    });
+  }, [commitNodesWithHistory]);
+
+  const groupSelectedNodes = useCallback(() => {
+    commitNodesWithHistory((current) => {
+      const selected = current.filter(
+        (node) => node.selected && node.data.kind !== "group",
+      );
+      if (selected.length < 2) return current;
+
+      const selectedIds = new Set(selected.map((node) => node.id));
+      const flattened = current.map((node) => {
+        if (!selectedIds.has(node.id) || !node.parentId) return node;
+        return {
+          ...node,
+          parentId: undefined,
+          extent: undefined,
+          position: getNodeAbsolutePosition(node, current),
+        };
+      });
+
+      const bounds = computeGroupBounds(flattened, selectedIds);
+      const groupId = nextId("group");
+      const groupNode: SketchNode = {
+        id: groupId,
+        type: "group",
+        position: { x: bounds.x, y: bounds.y },
+        width: bounds.width,
+        height: bounds.height,
+        selected: true,
+        data: { kind: "group" } satisfies SketchGroupNodeData,
+      };
+
+      const minIndex = Math.min(
+        ...selected.map((node) => flattened.findIndex((item) => item.id === node.id)),
+      );
+
+      let next = flattened.map((node) => {
+        if (!selectedIds.has(node.id)) {
+          return node.selected ? { ...node, selected: false } : node;
+        }
+        const abs = getNodeAbsolutePosition(node, flattened);
+        return {
+          ...node,
+          parentId: groupId,
+          extent: "parent" as const,
+          position: { x: abs.x - bounds.x, y: abs.y - bounds.y },
+          selected: false,
+        };
+      });
+
+      next = next.filter(
+        (node) =>
+          node.data.kind !== "group" || next.some((child) => child.parentId === node.id),
+      );
+
+      next = [...next.slice(0, minIndex), groupNode, ...next.slice(minIndex)];
+      return sortNodesParentFirst(next);
+    });
+  }, [commitNodesWithHistory, nextId]);
+
+  const ungroupNodes = useCallback(
+    (groupId: string) => {
+      commitNodesWithHistory((current) => {
+        const group = current.find((node) => node.id === groupId);
+        if (!group || group.data.kind !== "group") return current;
+
+        return current
+          .filter((node) => node.id !== groupId)
+          .map((node) => {
+            if (node.parentId !== groupId) return node;
+            return {
+              ...node,
+              parentId: undefined,
+              extent: undefined,
+              position: getNodeAbsolutePosition(node, current),
+              selected: true,
+            };
+          });
+      });
+    },
+    [commitNodesWithHistory],
+  );
+
+  const updateGroupMembers = useCallback(
+    (
+      groupId: string,
+      match: (node: SketchNode) => boolean,
+      partial: Partial<SketchNodeData>,
+    ) => {
+      commitNodesWithHistory((current) =>
+        current.map((node) => {
+          if (node.parentId !== groupId || !match(node)) return node;
+          return { ...node, data: { ...node.data, ...partial } } as SketchNode;
+        }),
       );
     },
     [commitNodesWithHistory],
@@ -590,6 +758,28 @@ export function useSketchLabState({
     [nodes],
   );
 
+  const selectionContext = useMemo((): SketchSelectionContext | null => {
+    const selected = nodes.filter((node) => node.selected);
+    if (!selected.length) return null;
+
+    const groupSelection = resolveGroupSelection(nodes, selected);
+    if (groupSelection) {
+      return {
+        mode: "group",
+        groupId: groupSelection.groupId,
+        members: groupSelection.members,
+      };
+    }
+
+    if (selected.length >= 2) {
+      return { mode: "multi", nodes: selected };
+    }
+
+    const node = selected[0]!;
+    if (node.data.kind === "group") return null;
+    return { mode: "single", node };
+  }, [nodes]);
+
   return {
     nodes,
     onNodesChange,
@@ -605,14 +795,21 @@ export function useSketchLabState({
     setConnectHintId,
     isValidConnection,
     selectedNode,
+    selectionContext,
     addNode,
     addLine,
     addImage,
     updateNodeData,
+    updateGroupMembers,
     duplicateNode,
     bringNodeForward,
     sendNodeToBack,
+    bringSelectedForward,
+    sendSelectedToBack,
+    groupSelectedNodes,
+    ungroupNodes,
     deleteNode,
+    deleteSelectedNodes,
     clearSelection,
     resetCanvas,
   };

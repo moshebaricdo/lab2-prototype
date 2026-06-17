@@ -5,6 +5,26 @@
   justify-content: center;
 }
 
+.groupNode {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.groupNode.selected {
+  pointer-events: all;
+}
+
+.groupSelectionRing {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--ds-borders-brand-teal-primary);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
 .handlesHidden .handle {
   opacity: 0 !important;
   pointer-events: none;

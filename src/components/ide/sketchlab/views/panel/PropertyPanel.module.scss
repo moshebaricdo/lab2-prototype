@@ -284,6 +284,27 @@
   background: var(--ds-background-error-primary) !important;
 }
 
+.multiSelectActions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.groupItemsButton {
+  width: 100%;
+  justify-content: center;
+}
+
+.multiSelectIconRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.multiSelectIconRow .actionDelete {
+  margin-left: auto;
+}
+
 .altField {
   width: 100%;
 }

@@ -485,6 +485,136 @@ export interface SketchActionHandlers {
   onDelete: () => void;
 }
 
+export function GroupActionsRow({
+  onDuplicate,
+  onBringForward,
+  onUngroup,
+  onToggleLayer,
+  onDelete,
+}: {
+  onDuplicate: () => void;
+  onBringForward: () => void;
+  onUngroup: () => void;
+  onToggleLayer: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className={styles.actions}>
+      <Tooltip content="Duplicate" position="top">
+        <AppButton
+          variant="secondary"
+          tone="gray"
+          size="xs"
+          icon={<SketchIcon icon="action-duplicate" size="xs" />}
+          aria-label="Duplicate"
+          onClick={onDuplicate}
+        />
+      </Tooltip>
+      <Tooltip content="Send to front" position="top">
+        <AppButton
+          variant="secondary"
+          tone="gray"
+          size="xs"
+          icon={<SketchIcon icon="action-bring-forward" size="xs" />}
+          aria-label="Send to front"
+          onClick={onBringForward}
+        />
+      </Tooltip>
+      <Tooltip content="Ungroup" position="top">
+        <AppButton
+          variant="secondary"
+          tone="gray"
+          size="xs"
+          icon={<SketchIcon icon="action-ungroup" size="xs" />}
+          aria-label="Ungroup"
+          onClick={onUngroup}
+        />
+      </Tooltip>
+      <Tooltip content="Send to back" position="top">
+        <AppButton
+          variant="secondary"
+          tone="gray"
+          size="xs"
+          icon={<SketchIcon icon="action-send-back" size="xs" />}
+          aria-label="Send to back"
+          onClick={onToggleLayer}
+        />
+      </Tooltip>
+      <Tooltip content="Delete" position="top">
+        <AppButton
+          variant="secondary"
+          tone="gray"
+          size="xs"
+          className={styles.actionDelete}
+          icon={<SketchIcon icon="action-delete" size="xs" />}
+          aria-label="Delete"
+          onClick={onDelete}
+        />
+      </Tooltip>
+    </div>
+  );
+}
+
+export function MultiSelectActionsRow({
+  onGroup,
+  onBringForward,
+  onToggleLayer,
+  onDelete,
+}: {
+  onGroup: () => void;
+  onBringForward: () => void;
+  onToggleLayer: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className={styles.multiSelectActions}>
+      <AppButton
+        className={styles.groupItemsButton}
+        variant="secondary"
+        tone="gray"
+        size="xs"
+        icon={<SketchIcon icon="action-group" size="xs" />}
+        onClick={onGroup}
+      >
+        Group items
+      </AppButton>
+      <div className={styles.multiSelectIconRow}>
+        <Tooltip content="Send to front" position="top">
+          <AppButton
+            variant="secondary"
+            tone="gray"
+            size="xs"
+            icon={<SketchIcon icon="action-bring-forward" size="xs" />}
+            aria-label="Send to front"
+            onClick={onBringForward}
+          />
+        </Tooltip>
+        <Tooltip content="Send to back" position="top">
+          <AppButton
+            variant="secondary"
+            tone="gray"
+            size="xs"
+            icon={<SketchIcon icon="action-send-back" size="xs" />}
+            aria-label="Send to back"
+            onClick={onToggleLayer}
+          />
+        </Tooltip>
+        <Tooltip content="Delete" position="top">
+          <AppButton
+            variant="secondary"
+            tone="gray"
+            size="xs"
+            className={styles.actionDelete}
+            icon={<SketchIcon icon="action-delete" size="xs" />}
+            aria-label="Delete"
+            onClick={onDelete}
+          />
+        </Tooltip>
+      </div>
+    </div>
+  );
+}
+
 export function ActionsRow({
   onDuplicate,
   onBringForward,

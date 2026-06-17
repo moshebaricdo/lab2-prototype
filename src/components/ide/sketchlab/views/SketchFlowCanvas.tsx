@@ -28,10 +28,11 @@ function isTypingTarget(target: EventTarget | null) {
 }
 
 export function SketchFlowCanvas({ canvas, canvasTool }: SketchFlowCanvasProps) {
-  const { undo, redo } = canvas;
+  const { undo, redo, groupSelectedNodes } = canvas;
   const isGrabTool = canvasTool === "grab";
 
   // Standard undo/redo shortcuts: ⌘/Ctrl+Z, and ⌘/Ctrl+Shift+Z or Ctrl+Y.
+  // ⌘/Ctrl+G groups the current multi-selection.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || isTypingTarget(event.target)) return;
@@ -43,11 +44,14 @@ export function SketchFlowCanvas({ canvas, canvasTool }: SketchFlowCanvasProps) 
       } else if (key === "y") {
         event.preventDefault();
         redo();
+      } else if (key === "g") {
+        event.preventDefault();
+        groupSelectedNodes();
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [undo, redo]);
+  }, [undo, redo, groupSelectedNodes]);
 
   return (
     <ReactFlow

@@ -33,7 +33,7 @@ export function SketchLabWorkspace({
 }: SketchLabWorkspaceProps) {
   const canvas = useSketchLabState({ initialNodes, initialEdges, storageKey });
   const { saveFileToBackpack, setShowSaveErrorAlert } = useBackpack();
-  const [canvasTool, setCanvasTool] = useState<SketchCanvasTool>("grab");
+  const [canvasTool, setCanvasTool] = useState<SketchCanvasTool>("select");
   const canvasWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -134,12 +134,18 @@ export function SketchLabWorkspace({
               onAddLine={canvas.addLine}
             />
             <PropertyPanel
-              selectedNode={canvas.selectedNode}
+              selection={canvas.selectionContext}
               onUpdateNodeData={canvas.updateNodeData}
+              onUpdateGroupMembers={canvas.updateGroupMembers}
               onDuplicate={canvas.duplicateNode}
               onBringForward={canvas.bringNodeForward}
               onSendToBack={canvas.sendNodeToBack}
               onDeleteNode={canvas.deleteNode}
+              onGroupSelected={canvas.groupSelectedNodes}
+              onUngroup={canvas.ungroupNodes}
+              onBringSelectedForward={canvas.bringSelectedForward}
+              onSendSelectedToBack={canvas.sendSelectedToBack}
+              onDeleteSelected={canvas.deleteSelectedNodes}
               onClose={canvas.clearSelection}
             />
           </ReactFlowProvider>

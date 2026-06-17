@@ -30,17 +30,74 @@ const DEFAULT_NODE_SIZE: Record<string, { width: number; height: number }> = {
   text: { width: 100, height: 32 },
   image: { width: 160, height: 120 },
   line: { width: 180, height: 80 },
+  group: { width: 120, height: 72 },
 };
 
-function nodeSize(node: SketchNode) {
+export function getNodeDimensions(node: SketchNode) {
   return {
-    width: node.measured?.width ?? node.width ?? DEFAULT_NODE_SIZE[node.type ?? "shape"]?.width ?? 120,
-    height: node.measured?.height ?? node.height ?? DEFAULT_NODE_SIZE[node.type ?? "shape"]?.height ?? 72,
+    width:
+      node.measured?.width ??
+      node.width ??
+      DEFAULT_NODE_SIZE[node.type ?? "shape"]?.width ??
+      120,
+    height:
+      node.measured?.height ??
+      node.height ??
+      DEFAULT_NODE_SIZE[node.type ?? "shape"]?.height ??
+      72,
   };
 }
 
+function nodeSize(node: SketchNode) {
+  return getNodeDimensions(node);
+}
+
+export function getNodeAbsolutePosition(node: SketchNode, nodes: SketchNode[]) {
+  const byId = new Map(nodes.map((item) => [item.id, item]));
+  let x = node.position.x;
+  let y = node.position.y;
+  let parentId = node.parentId;
+  while (parentId) {
+    const parent = byId.get(parentId);
+    if (!parent) break;
+    x += parent.position.x;
+    y += parent.position.y;
+    parentId = parent.parentId;
+  }
+  return { x, y };
+}
+
+export function getNodeAbsoluteBounds(node: SketchNode, nodes: SketchNode[]) {
+  const origin = getNodeAbsolutePosition(node, nodes);
+  if (node.data.kind === "line") {
+    const data = node.data as SketchLineNodeData;
+    const start = { x: origin.x + data.start.x, y: origin.y + data.start.y };
+    const end = { x: origin.x + data.end.x, y: origin.y + data.end.y };
+    return getLineBounds(start, end, 0);
+  }
+  const { width, height } = getNodeDimensions(node);
+  return { x: origin.x, y: origin.y, width, height };
+}
+
+/** Convert an absolute canvas point to a node's local position (parent-aware). */
+export function absoluteToNodePosition(
+  absPoint: SketchPoint,
+  node: SketchNode,
+  nodes: SketchNode[],
+): SketchPoint {
+  if (!node.parentId) return absPoint;
+  const parent = nodes.find((item) => item.id === node.parentId);
+  if (!parent) return absPoint;
+  const parentOrigin = getNodeAbsolutePosition(parent, nodes);
+  return { x: absPoint.x - parentOrigin.x, y: absPoint.y - parentOrigin.y };
+}
+
 /** Absolute canvas position for a node's connection handle. */
-export function getNodeHandlePosition(node: SketchNode, handleId: string): SketchPoint {
+export function getNodeHandlePosition(
+  node: SketchNode,
+  handleId: string,
+  nodes: SketchNode[],
+): SketchPoint {
   if (node.data.kind === "line") {
     const data = node.data as SketchLineNodeData;
     const point = handleId === "start" ? data.start : data.end;
@@ -48,7 +105,7 @@ export function getNodeHandlePosition(node: SketchNode, handleId: string): Sketc
   }
 
   const { width, height } = nodeSize(node);
-  const { x, y } = node.position;
+  const { x, y } = getNodeAbsolutePosition(node, nodes);
 
   switch (handleId) {
     case "top":
@@ -86,7 +143,7 @@ export function findEndpointSnap(
     if (node.id === excludeId || node.data.kind === "line") continue;
 
     const { width, height } = nodeSize(node);
-    const { x, y } = node.position;
+    const { x, y } = getNodeAbsolutePosition(node, nodes);
     if (
       point.x < x - radius ||
       point.x > x + width + radius ||
@@ -97,7 +154,7 @@ export function findEndpointSnap(
     }
 
     for (const handleId of SHAPE_HANDLE_IDS) {
-      const handle = getNodeHandlePosition(node, handleId);
+      const handle = getNodeHandlePosition(node, handleId, nodes);
       const dist = Math.hypot(handle.x - point.x, handle.y - point.y);
       if (dist < bestDist) {
         bestDist = dist;
@@ -232,11 +289,12 @@ export function createLineBetweenNodes(
   targetNode: SketchNode,
   targetHandle: string,
   data: SketchLineStyling,
+  nodes: SketchNode[],
 ): SketchNode {
   return createLineNodeFromPoints({
     id,
-    startAbs: getNodeHandlePosition(sourceNode, sourceHandle),
-    endAbs: getNodeHandlePosition(targetNode, targetHandle),
+    startAbs: getNodeHandlePosition(sourceNode, sourceHandle, nodes),
+    endAbs: getNodeHandlePosition(targetNode, targetHandle, nodes),
     startAttachment: { nodeId: sourceNode.id, handleId: sourceHandle },
     endAttachment: { nodeId: targetNode.id, handleId: targetHandle },
     data,
@@ -249,17 +307,24 @@ export function repositionLineEndpoint(
   endpoint: "start" | "end",
   absPoint: SketchPoint,
   clearAttachment = true,
+  nodes: SketchNode[] = [],
 ): SketchNode {
+  const nodeOrigin = nodes.length
+    ? getNodeAbsolutePosition(node, nodes)
+    : node.position;
   const data = node.data as SketchLineNodeData;
-  const startAbs = { x: node.position.x + data.start.x, y: node.position.y + data.start.y };
-  const endAbs = { x: node.position.x + data.end.x, y: node.position.y + data.end.y };
+  const startAbs = { x: nodeOrigin.x + data.start.x, y: nodeOrigin.y + data.start.y };
+  const endAbs = { x: nodeOrigin.x + data.end.x, y: nodeOrigin.y + data.end.y };
   const nextStartAbs = endpoint === "start" ? absPoint : startAbs;
   const nextEndAbs = endpoint === "end" ? absPoint : endAbs;
   const bounds = getLineBounds(nextStartAbs, nextEndAbs);
+  const position = nodes.length
+    ? absoluteToNodePosition({ x: bounds.x, y: bounds.y }, node, nodes)
+    : { x: bounds.x, y: bounds.y };
 
   return {
     ...node,
-    position: { x: bounds.x, y: bounds.y },
+    position,
     width: bounds.width,
     height: bounds.height,
     data: {
@@ -288,8 +353,9 @@ export function syncLineAttachments(nodes: SketchNode[]): SketchNode[] {
     if (data.startAttachment) {
       const attached = nodeById.get(data.startAttachment.nodeId);
       if (attached) {
-        const abs = getNodeHandlePosition(attached, data.startAttachment.handleId);
-        const next = absoluteToRelative(abs, node.position);
+        const abs = getNodeHandlePosition(attached, data.startAttachment.handleId, nodes);
+        const lineOrigin = getNodeAbsolutePosition(node, nodes);
+        const next = absoluteToRelative(abs, lineOrigin);
         if (next.x !== start.x || next.y !== start.y) {
           start = next;
           changed = true;
@@ -300,8 +366,9 @@ export function syncLineAttachments(nodes: SketchNode[]): SketchNode[] {
     if (data.endAttachment) {
       const attached = nodeById.get(data.endAttachment.nodeId);
       if (attached) {
-        const abs = getNodeHandlePosition(attached, data.endAttachment.handleId);
-        const next = absoluteToRelative(abs, node.position);
+        const abs = getNodeHandlePosition(attached, data.endAttachment.handleId, nodes);
+        const lineOrigin = getNodeAbsolutePosition(node, nodes);
+        const next = absoluteToRelative(abs, lineOrigin);
         if (next.x !== end.x || next.y !== end.y) {
           end = next;
           changed = true;
@@ -311,24 +378,26 @@ export function syncLineAttachments(nodes: SketchNode[]): SketchNode[] {
 
     if (!changed) return node;
 
+    const lineOrigin = getNodeAbsolutePosition(node, nodes);
     const bounds = getLineBounds(
-      { x: node.position.x + start.x, y: node.position.y + start.y },
-      { x: node.position.x + end.x, y: node.position.y + end.y },
+      { x: lineOrigin.x + start.x, y: lineOrigin.y + start.y },
+      { x: lineOrigin.x + end.x, y: lineOrigin.y + end.y },
     );
+    const position = absoluteToNodePosition({ x: bounds.x, y: bounds.y }, node, nodes);
 
     return {
       ...node,
-      position: { x: bounds.x, y: bounds.y },
+      position,
       width: bounds.width,
       height: bounds.height,
       data: {
         ...data,
         start: absoluteToRelative(
-          { x: node.position.x + start.x, y: node.position.y + start.y },
+          { x: lineOrigin.x + start.x, y: lineOrigin.y + start.y },
           bounds,
         ),
         end: absoluteToRelative(
-          { x: node.position.x + end.x, y: node.position.y + end.y },
+          { x: lineOrigin.x + end.x, y: lineOrigin.y + end.y },
           bounds,
         ),
       },
@@ -363,5 +432,6 @@ export function lineNodeFromLegacyEdge(
     targetNode,
     targetHandle,
     { ...defaultData, ...edge.data },
+    nodes,
   );
 }

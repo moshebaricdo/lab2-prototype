@@ -7,6 +7,7 @@ import type {
   SketchLineNodeData,
   SketchNode,
   SketchNodeData,
+  SketchSelectionContext,
   SketchShapeNodeData,
   SketchTextNodeData,
 } from "../../../../../types/sketchLab";
@@ -21,6 +22,8 @@ import {
   ActionsRow,
   AlignmentDropdown,
   ColorDropdown,
+  GroupActionsRow,
+  MultiSelectActionsRow,
   OptionDropdown,
   PropertyRow,
   PropertySection,
@@ -30,24 +33,52 @@ import {
 import styles from "./PropertyPanel.module.scss";
 
 interface PropertyPanelProps {
-  selectedNode: SketchNode | null;
+  selection: SketchSelectionContext | null;
   onUpdateNodeData: (id: string, partial: Partial<SketchNodeData>) => void;
+  onUpdateGroupMembers: (
+    groupId: string,
+    match: (node: SketchNode) => boolean,
+    partial: Partial<SketchNodeData>,
+  ) => void;
   onDuplicate: (id: string) => void;
   onBringForward: (id: string) => void;
   onSendToBack: (id: string) => void;
   onDeleteNode: (id: string) => void;
+  onGroupSelected: () => void;
+  onUngroup: (groupId: string) => void;
+  onBringSelectedForward: () => void;
+  onSendSelectedToBack: () => void;
+  onDeleteSelected: () => void;
   onClose: () => void;
 }
 
 export function PropertyPanel(props: PropertyPanelProps) {
-  const { selectedNode } = props;
-  if (!selectedNode) return null;
+  const { selection } = props;
+  if (!selection) return null;
 
-  const kind = selectedNode.data.kind;
-  if (kind === "shape") return <ShapePanel node={selectedNode} {...props} />;
-  if (kind === "text") return <TextPanel node={selectedNode} {...props} />;
-  if (kind === "line") return <LinePanel node={selectedNode} {...props} />;
-  return <ImagePanel node={selectedNode} {...props} />;
+  if (selection.mode === "multi") {
+    return <MultiSelectPanel nodes={selection.nodes} {...props} />;
+  }
+  if (selection.mode === "group") {
+    return (
+      <GroupPanel
+        groupId={selection.groupId}
+        members={selection.members}
+        {...props}
+      />
+    );
+  }
+
+  const { node } = selection;
+  const kind = node.data.kind;
+  if (kind === "shape") return <ShapePanel node={node} {...props} />;
+  if (kind === "text") return <TextPanel node={node} {...props} />;
+  if (kind === "line") return <LinePanel node={node} {...props} />;
+  return <ImagePanel node={node} {...props} />;
+}
+
+function membersByKind(members: SketchNode[], kind: SketchNodeData["kind"]) {
+  return members.filter((node) => node.data.kind === kind);
 }
 
 /** Drag the floating panel by its header (ignoring the close button). */
@@ -57,7 +88,6 @@ function usePanelDrag() {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
 
   const onHeaderPointerDown = useCallback((event: ReactPointerEvent) => {
-    // Let the close button (the only button in the header) work normally.
     if ((event.target as HTMLElement).closest("button")) return;
     const panel = panelRef.current;
     const parent = panel?.offsetParent as HTMLElement | null;
@@ -70,7 +100,6 @@ function usePanelDrag() {
       offsetX: event.clientX - panelRect.left,
       offsetY: event.clientY - panelRect.top,
     };
-    // Pin to the current spot so right-anchoring releases cleanly before drag.
     setPos({ x: panelRect.left - parentRect.left, y: panelRect.top - parentRect.top });
     event.currentTarget.setPointerCapture?.(event.pointerId);
     event.preventDefault();
@@ -83,7 +112,6 @@ function usePanelDrag() {
     if (!panel || !parent) return;
     const parentRect = parent.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
-    // Keep the panel fully inside the canvas with an 8px gutter on every side.
     const gutter = 8;
     const maxX = parent.clientWidth - panelRect.width - gutter;
     const maxY = parent.clientHeight - panelRect.height - gutter;
@@ -150,6 +178,219 @@ function nodeActions(node: SketchNode, props: PropertyPanelProps) {
     onToggleLayer: () => props.onSendToBack(node.id),
     onDelete: () => props.onDeleteNode(node.id),
   };
+}
+
+function MultiSelectPanel({
+  nodes,
+  onGroupSelected,
+  onBringSelectedForward,
+  onSendSelectedToBack,
+  onDeleteSelected,
+  onClose,
+}: { nodes: SketchNode[] } & PropertyPanelProps) {
+  const label = `${nodes.length} items selected`;
+  return (
+    <PanelShell label={label} onClose={onClose}>
+      <PropertySection title="Actions">
+        <MultiSelectActionsRow
+          onGroup={onGroupSelected}
+          onBringForward={onBringSelectedForward}
+          onToggleLayer={onSendSelectedToBack}
+          onDelete={onDeleteSelected}
+        />
+      </PropertySection>
+    </PanelShell>
+  );
+}
+
+function GroupPanel({
+  groupId,
+  members,
+  onUpdateGroupMembers,
+  onBringForward,
+  onSendToBack,
+  onDeleteNode,
+  onUngroup,
+  onDuplicate,
+  onClose,
+}: {
+  groupId: string;
+  members: SketchNode[];
+} & PropertyPanelProps) {
+  const shapes = membersByKind(members, "shape");
+  const lines = membersByKind(members, "line");
+  const textNodes = membersByKind(members, "text");
+  const images = membersByKind(members, "image");
+  const typographyTargets = [...textNodes, ...shapes];
+  const rotatable = [...shapes, ...textNodes, ...images];
+
+  const updateShapes = (partial: Partial<SketchShapeNodeData>) => {
+    onUpdateGroupMembers(groupId, (node) => node.data.kind === "shape", partial);
+  };
+  const updateLines = (partial: Partial<SketchLineNodeData>) => {
+    onUpdateGroupMembers(groupId, (node) => node.data.kind === "line", partial);
+  };
+  const updateTextNodes = (partial: Partial<SketchTextNodeData>) => {
+    onUpdateGroupMembers(
+      groupId,
+      (node) => node.data.kind === "text" || node.data.kind === "shape",
+      partial,
+    );
+  };
+  const updateRotatable = (partial: Partial<SketchNodeData>) => {
+    onUpdateGroupMembers(
+      groupId,
+      (node) =>
+        node.data.kind === "shape" ||
+        node.data.kind === "text" ||
+        node.data.kind === "image",
+      partial,
+    );
+  };
+
+  const firstShape = shapes[0]?.data as SketchShapeNodeData | undefined;
+  const firstLine = lines[0]?.data as SketchLineNodeData | undefined;
+  const firstText = typographyTargets[0]?.data as
+    | SketchTextNodeData
+    | SketchShapeNodeData
+    | undefined;
+  const firstRotatable = rotatable[0]?.data as
+    | SketchShapeNodeData
+    | SketchTextNodeData
+    | SketchImageNodeData
+    | undefined;
+
+  const textColor =
+    firstText?.kind === "text"
+      ? firstText.color
+      : firstText?.kind === "shape"
+        ? firstText.textColor
+        : "black";
+
+  return (
+    <PanelShell label="Group" onClose={onClose}>
+      {shapes.length ? (
+        <PropertySection title="Shapes">
+          <PropertyRow label="Background">
+            <ColorDropdown
+              palette="background"
+              value={firstShape?.background ?? "blue"}
+              onChange={(background) => updateShapes({ background })}
+            />
+          </PropertyRow>
+          <PropertyRow label="Borders">
+            <ColorDropdown
+              palette="border"
+              value={firstShape?.border ?? "blue"}
+              onChange={(border) => updateShapes({ border })}
+            />
+          </PropertyRow>
+        </PropertySection>
+      ) : null}
+
+      {lines.length ? (
+        <PropertySection title="Lines">
+          <PropertyRow label="Color">
+            <ColorDropdown
+              palette="text"
+              value={firstLine?.color ?? "black"}
+              onChange={(color) => updateLines({ color })}
+            />
+          </PropertyRow>
+          <PropertyRow label="Thickness">
+            <OptionDropdown
+              ariaLabel="Thickness"
+              categoryIcon="line-weight"
+              options={SKETCH_THICKNESS_OPTIONS}
+              value={firstLine?.thickness ?? "medium"}
+              onChange={(thickness) => updateLines({ thickness })}
+            />
+          </PropertyRow>
+          <PropertyRow label="Style">
+            <OptionDropdown
+              ariaLabel="Style"
+              categoryIcon="line-style"
+              options={SKETCH_LINE_STYLE_OPTIONS}
+              value={firstLine?.style ?? "solid"}
+              onChange={(style) => updateLines({ style })}
+            />
+          </PropertyRow>
+          <PropertyRow label="Shape">
+            <OptionDropdown
+              ariaLabel="Shape"
+              categoryIcon="line-shape"
+              options={SKETCH_LINE_SHAPE_OPTIONS}
+              value={firstLine?.shape ?? "straight"}
+              onChange={(shape) => updateLines({ shape })}
+            />
+          </PropertyRow>
+          <PropertyRow label="Arrowheads">
+            <OptionDropdown
+              ariaLabel="Arrowheads"
+              options={SKETCH_ARROWHEAD_OPTIONS}
+              value={firstLine?.arrowheads ?? "none"}
+              onChange={(arrowheads) => updateLines({ arrowheads })}
+            />
+          </PropertyRow>
+        </PropertySection>
+      ) : null}
+
+      {typographyTargets.length ? (
+        <PropertySection title="Text">
+          <PropertyRow label="Size">
+            <SizeDropdown
+              sizeKey={firstText?.fontSizeKey ?? "medium"}
+              customFontSize={firstText?.customFontSize}
+              onChange={(fontSizeKey, customFontSize) =>
+                updateTextNodes({ fontSizeKey, customFontSize })
+              }
+            />
+          </PropertyRow>
+          <PropertyRow label="Alignment">
+            <AlignmentDropdown
+              value={firstText?.align ?? "center"}
+              onChange={(align) => updateTextNodes({ align })}
+            />
+          </PropertyRow>
+          <PropertyRow label="Color">
+            <ColorDropdown
+              palette="text"
+              value={textColor}
+              onChange={(color) => {
+                onUpdateGroupMembers(groupId, (node) => node.data.kind === "text", { color });
+                onUpdateGroupMembers(groupId, (node) => node.data.kind === "shape", {
+                  textColor: color,
+                });
+              }}
+            />
+          </PropertyRow>
+        </PropertySection>
+      ) : null}
+
+      {rotatable.length ? (
+        <PropertySection title="Transform">
+          <PropertyRow label="Rotation">
+            <RotationControl
+              value={firstRotatable?.rotation ?? 0}
+              onChange={(rotation) => updateRotatable({ rotation })}
+            />
+          </PropertyRow>
+        </PropertySection>
+      ) : null}
+
+      <PropertySection title="Actions">
+        <GroupActionsRow
+          onDuplicate={() => {
+            for (const member of members) onDuplicate(member.id);
+          }}
+          onBringForward={() => onBringForward(groupId)}
+          onUngroup={() => onUngroup(groupId)}
+          onToggleLayer={() => onSendToBack(groupId)}
+          onDelete={() => onDeleteNode(groupId)}
+        />
+      </PropertySection>
+    </PanelShell>
+  );
 }
 
 function ShapePanel({ node, ...props }: { node: SketchNode } & PropertyPanelProps) {

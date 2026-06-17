@@ -62,6 +62,8 @@ export type SketchIconKey =
   | "action-bring-forward"
   | "action-send-back"
   | "action-delete"
+  | "action-group"
+  | "action-ungroup"
   // Chrome
   | "close"
   | "download"
@@ -112,6 +114,8 @@ export const SKETCH_ICONS: Record<SketchIconKey, IconDef> = {
   "action-bring-forward": { name: "bring-front" },
   "action-send-back": { name: "send-back" },
   "action-delete": { name: "trash" },
+  "action-group": { name: "object-group" },
+  "action-ungroup": { name: "object-ungroup" },
   // Chrome
   close: { name: "xmark" },
   download: { name: "download" },

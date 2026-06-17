@@ -464,9 +464,18 @@ export function LineNode({ id, data, selected }: NodeProps<SketchNode>) {
   );
 }
 
+export function GroupNode({ selected }: NodeProps<SketchNode>) {
+  return (
+    <div className={`${styles.groupNode} ${selected ? styles.selected : ""}`}>
+      {selected ? <div className={styles.groupSelectionRing} /> : null}
+    </div>
+  );
+}
+
 export const sketchNodeTypes = {
   shape: ShapeNode,
   text: TextNode,
   image: ImageNode,
   line: LineNode,
+  group: GroupNode,
 };

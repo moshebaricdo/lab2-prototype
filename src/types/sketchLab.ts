@@ -7,7 +7,7 @@
 
 import type { Node } from "@xyflow/react";
 
-export type SketchNodeKind = "shape" | "text" | "image" | "line";
+export type SketchNodeKind = "shape" | "text" | "image" | "line" | "group";
 
 /** Canvas interaction mode — grab pans; select enables marquee multi-select. */
 export type SketchCanvasTool = "grab" | "select";
@@ -85,6 +85,11 @@ export interface SketchImageNodeData {
   [key: string]: unknown;
 }
 
+export interface SketchGroupNodeData {
+  kind: "group";
+  [key: string]: unknown;
+}
+
 export interface SketchLineNodeData {
   kind: "line";
   start: SketchLinePoint;
@@ -104,7 +109,14 @@ export type SketchNodeData =
   | SketchShapeNodeData
   | SketchTextNodeData
   | SketchImageNodeData
-  | SketchLineNodeData;
+  | SketchLineNodeData
+  | SketchGroupNodeData;
+
+/** Property panel selection modes beyond single-node editing. */
+export type SketchSelectionContext =
+  | { mode: "single"; node: SketchNode }
+  | { mode: "multi"; nodes: SketchNode[] }
+  | { mode: "group"; groupId: string; members: SketchNode[] };
 
 /** @deprecated Legacy edge payload — migrated to standalone line nodes on load. */
 export interface SketchEdgeData {
