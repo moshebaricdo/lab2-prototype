@@ -1,0 +1,107 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.passage {
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.85;
+  margin-top: 24px;
+  text-wrap: pretty;
+}
+
+.passageMultiBlank {
+  line-height: 2;
+}
+
+.passageText {
+  white-space: pre-wrap;
+}
+
+.blankWrap {
+  display: inline;
+  line-height: 1;
+  margin: 0 0.12em;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.blankWrap:focus-within .blankInput:not(:disabled) {
+  border-bottom-color: var(--ds-borders-brand-teal-primary);
+  border-bottom-style: solid;
+}
+
+.blankInput {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px dashed var(--ds-borders-neutral-strong);
+  border-radius: 0;
+  box-sizing: content-box;
+  color: var(--ds-text-neutral-primary);
+  display: inline-block;
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  height: auto;
+  text-align: center;
+  line-height: 1;
+  margin: 0;
+  max-width: min(100%, 24ch);
+  min-height: 0;
+  min-width: 5ch;
+  padding: 0 1px;
+  vertical-align: baseline;
+}
+
+.blankInput::placeholder {
+  color: var(--ds-text-neutral-placeholder);
+}
+
+.blankInput:focus {
+  outline: none;
+}
+
+.blankInput:focus-visible {
+  @include focus-ring;
+  border-bottom: 1px solid var(--ds-borders-neutral-solid);
+}
+
+.blankInputCorrect {
+  border-bottom-color: var(--ds-borders-success-primary);
+  border-bottom-style: solid;
+  color: var(--ds-text-success-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.blankInputIncorrect {
+  border-bottom-color: var(--ds-borders-error-primary);
+  border-bottom-style: solid;
+  color: var(--ds-text-error-primary);
+}
+
+.blankInputRevealed {
+  border-bottom-color: var(--ds-borders-success-primary);
+  border-bottom-style: solid;
+  color: var(--ds-text-success-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.blankInput:disabled {
+  cursor: not-allowed;
+  opacity: 0.92;
+}
+
+.feedbackIcon {
+  display: inline-flex;
+  font-size: var(--text-label);
+  margin-left: 0.15em;
+  vertical-align: 0.05em;
+}
+
+.feedbackCorrect {
+  color: var(--ds-text-success-primary);
+}
+
+.feedbackIncorrect {
+  color: var(--ds-text-error-primary);
+}
+
