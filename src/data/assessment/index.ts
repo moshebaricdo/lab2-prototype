@@ -33,6 +33,8 @@ export {
   type MatchTerm,
 } from "./match";
 export {
+  levelGroupDragDropToPayload,
+  levelGroupFillInBlankToPayload,
   levelGroupFreeToPayload,
   levelGroupMatchToPayload,
   levelGroupMultiToPayload,
@@ -42,6 +44,8 @@ export {
   mockLevelGroupSteppedWithIntro,
   mockLevelGroupSurveyWithIntro,
   type LevelGroupAssessmentIntro,
+  type LevelGroupDragDropQuestion,
+  type LevelGroupFillInBlankQuestion,
   type LevelGroupFlowPayload,
   type LevelGroupQuestionBlock,
 } from "./levelGroup";
@@ -52,6 +56,39 @@ export {
   type BubbleChoiceLevelPayload,
   type BubbleChoiceOptionLabelStyle,
 } from "./bubbleChoice";
+export {
+  buildInitialParsonsSolution,
+  getDragDropItemLabel,
+  getParsonsCorrectIndents,
+  isParsonsSolutionComplete,
+  isParsonsSolutionCorrect,
+  mockDragDropCategorizationLevel,
+  mockDragDropCategorizationLongTextLevel,
+  mockDragDropParsonsCodeRefLevel,
+  mockDragDropParsonsLevel,
+  type DragDropBucket,
+  type DragDropCategorizationItem,
+  type DragDropCategorizationQuestion,
+  type DragDropCodeRefPayload,
+  type DragDropItem,
+  type DragDropLevelPayload,
+  parsonsNestingEnabled,
+  type DragDropParsonsQuestion,
+  type DragDropQuestion,
+  type ParsonsSolutionLine,
+  type ParsonsSolutionState,
+} from "./dragDrop";
+export {
+  isBlankAnswerCorrect,
+  mockFillInBlankCodeRefLevel,
+  mockFillInBlankLevel,
+  mockFillInBlankMultiLevel,
+  normalizeBlankAnswer,
+  type FillInBlankCodeRefPayload,
+  type FillInBlankDefinition,
+  type FillInBlankLevelPayload,
+  type FillInBlankSegment,
+} from "./fillInBlank";
 export {
   type CodePanelConfig,
   type CodePanelFile,

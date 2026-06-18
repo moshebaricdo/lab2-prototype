@@ -129,17 +129,23 @@ src/
 │       ├── crew/                   # Roster strip, modal, useAgentLevelState
 │       └── mission/                # Mission Control concept widget
 │   └── assessment/                 # Assessment level types
+│       ├── builder/                # In-lab assessment authoring + preview
 │       ├── shared/
 │       ├── bubble-choice/
+│       ├── drag-drop/
+│       ├── fill-in-blank/
 │       ├── free-response/
 │       ├── levelgroup/
 │       ├── match/
 │       └── multi/
+├── lib/
+│   └── assessmentBuilder/          # Canonical schema adapters, bank/draft storage, scoring
 ├── pages/                          # Route-level entry points grouped by level type
 │   ├── aichatlab/
 │   ├── bubble-choice/
 │   ├── free-response/
 │   ├── levelgroup/
+│   ├── assessment-builder/
 │   ├── match/
 │   ├── multi-choice/
 │   ├── progression/
@@ -161,6 +167,8 @@ src/
 2. `Lab2Shell` from `components/lab2`
 3. `Sidebar` from `components/lab2/resource-panel`
 4. A level-specific workspace, such as `components/ide/weblab2/views/Workspace`, `components/ide/pythonlab/views/PythonWorkspace`, `components/ide/sketchlab/views/SketchLabWorkspace`, `components/ide/aichatlab/views/AiChatLabWorkspace`, or an assessment workspace under `components/assessment/<type>/views`
+
+Assessment builder pages compose `AssessmentBuilderWorkspace`, which adds a resource-panel **Builder** tab and previews canonical `AssessmentArtifact` content via adapters in `lib/assessmentBuilder/`.
 
 This keeps feature rendering close to feature folders while the hooks layer keeps cross-cutting state logic isolated.
 

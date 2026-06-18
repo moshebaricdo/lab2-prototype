@@ -14,7 +14,10 @@ Use these docs as handoff context for follow-up threads.
 - [Multi-choice](./multi-choice.md)
 - [Free response](./free-response.md)
 - [Match](./match.md)
+- [Drag and drop](./drag-drop.md)
+- [Fill in the blank](./fill-in-blank.md)
 - [Levelgroup](./levelgroup.md)
+- [Assessment builder](./assessment-builder.md)
 - [Bubble choice](./bubble-choice.md)
 - [Teacher Answer Key Pattern](./teacher-answer-key.md)
 
@@ -40,5 +43,8 @@ Use these docs as handoff context for follow-up threads.
 - `/levels/multi` (and other multi-choice demo routes — see `multi-choice.md`)
 - `/levels/free-response` (and `/levels/free-response-reveal`, `/levels/free-response-markdown`, `/levels/free-response-upload` — see `free-response.md`)
 - `/levels/match-definition-bank`, `/levels/match-connector`, `/levels/match-connector-images`, `/levels/match-connector-code` (see `match.md`)
+- `/levels/drag-drop-parsons`, `/levels/drag-drop-categorization`, `/levels/drag-drop-parsons-code-ref` (see `drag-drop.md`)
+- `/levels/fill-in-blank`, `/levels/fill-in-blank-multi`, `/levels/fill-in-blank-code-ref` (see `fill-in-blank.md`)
 - `/levels/levelgroup-scroll`, `/levels/levelgroup-stepped` (see `levelgroup.md`)
+- `/levels/assessment-builder-checkpoint` through `/levels/assessment-builder-exam` (see `assessment-builder.md`)
 - `/levels/bubble-choice` and `/levels/bubble-choice-images`

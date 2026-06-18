@@ -107,6 +107,23 @@ const LevelsIndexPage = lazyPage(
   () => import("./pages/LevelsIndexPage"),
   "LevelsIndexPage",
 );
+const AssessmentBuilderPages = () => import("./pages/assessment-builder/AssessmentBuilderCheckpointPage");
+const AssessmentBuilderCheckpointPage = lazyPage(
+  AssessmentBuilderPages,
+  "AssessmentBuilderCheckpointPage",
+);
+const AssessmentBuilderSurveyPage = lazyPage(
+  () => import("./pages/assessment-builder/AssessmentBuilderSurveyPage"),
+  "AssessmentBuilderSurveyPage",
+);
+const AssessmentBuilderQuizPage = lazyPage(
+  () => import("./pages/assessment-builder/AssessmentBuilderQuizPage"),
+  "AssessmentBuilderQuizPage",
+);
+const AssessmentBuilderExamPage = lazyPage(
+  () => import("./pages/assessment-builder/AssessmentBuilderExamPage"),
+  "AssessmentBuilderExamPage",
+);
 const MatchConnectorCodeLevelPage = lazyPage(
   () => import("./pages/match/MatchConnectorCodeLevelPage"),
   "MatchConnectorCodeLevelPage",
@@ -130,6 +147,34 @@ const MatchSwipeCodeLevelPage = lazyPage(
 const MatchSwipeLevelPage = lazyPage(
   () => import("./pages/match/MatchSwipeLevelPage"),
   "MatchSwipeLevelPage",
+);
+const DragDropParsonsLevelPage = lazyPage(
+  () => import("./pages/drag-drop/DragDropParsonsLevelPage"),
+  "DragDropParsonsLevelPage",
+);
+const DragDropCategorizationLevelPage = lazyPage(
+  () => import("./pages/drag-drop/DragDropCategorizationLevelPage"),
+  "DragDropCategorizationLevelPage",
+);
+const DragDropCategorizationLongTextLevelPage = lazyPage(
+  () => import("./pages/drag-drop/DragDropCategorizationLongTextLevelPage"),
+  "DragDropCategorizationLongTextLevelPage",
+);
+const DragDropParsonsCodeRefLevelPage = lazyPage(
+  () => import("./pages/drag-drop/DragDropParsonsCodeRefLevelPage"),
+  "DragDropParsonsCodeRefLevelPage",
+);
+const FillInBlankLevelPage = lazyPage(
+  () => import("./pages/fill-in-blank/FillInBlankLevelPage"),
+  "FillInBlankLevelPage",
+);
+const FillInBlankMultiLevelPage = lazyPage(
+  () => import("./pages/fill-in-blank/FillInBlankMultiLevelPage"),
+  "FillInBlankMultiLevelPage",
+);
+const FillInBlankCodeRefLevelPage = lazyPage(
+  () => import("./pages/fill-in-blank/FillInBlankCodeRefLevelPage"),
+  "FillInBlankCodeRefLevelPage",
 );
 const MultiChoiceAllThatApplyLevelPage = lazyPage(
   () => import("./pages/multi-choice/MultiChoiceAllThatApplyLevelPage"),
@@ -482,6 +527,47 @@ export default function App() {
         <Route
           path="/levels/match-swipe-code"
           element={<MatchSwipeCodeLevelPage />}
+        />
+        <Route
+          path="/levels/drag-drop-parsons"
+          element={<DragDropParsonsLevelPage />}
+        />
+        <Route
+          path="/levels/drag-drop-categorization"
+          element={<DragDropCategorizationLevelPage />}
+        />
+        <Route
+          path="/levels/drag-drop-categorization-long-text"
+          element={<DragDropCategorizationLongTextLevelPage />}
+        />
+        <Route
+          path="/levels/drag-drop-parsons-code-ref"
+          element={<DragDropParsonsCodeRefLevelPage />}
+        />
+        <Route path="/levels/fill-in-blank" element={<FillInBlankLevelPage />} />
+        <Route
+          path="/levels/fill-in-blank-multi"
+          element={<FillInBlankMultiLevelPage />}
+        />
+        <Route
+          path="/levels/fill-in-blank-code-ref"
+          element={<FillInBlankCodeRefLevelPage />}
+        />
+        <Route
+          path="/levels/assessment-builder-checkpoint"
+          element={<AssessmentBuilderCheckpointPage />}
+        />
+        <Route
+          path="/levels/assessment-builder-survey"
+          element={<AssessmentBuilderSurveyPage />}
+        />
+        <Route
+          path="/levels/assessment-builder-quiz"
+          element={<AssessmentBuilderQuizPage />}
+        />
+        <Route
+          path="/levels/assessment-builder-exam"
+          element={<AssessmentBuilderExamPage />}
         />
         <Route
           path="/levels/levelgroup-scroll"
