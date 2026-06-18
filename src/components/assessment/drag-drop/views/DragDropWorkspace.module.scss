@@ -1,0 +1,474 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.sectionLabel {
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.srOnly {
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.parsonsLayout {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 24px;
+  margin-top: 24px;
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .parsonsLayout {
+    flex-direction: column;
+  }
+}
+
+.solutionColumn,
+.bankColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.solutionColumn,
+.bankColumn {
+  flex: 1 1 0;
+}
+
+.solutionSlots {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.slot,
+.bucketDropzone {
+  border-radius: var(--radius);
+  min-width: 0;
+}
+
+.slot {
+  align-items: stretch;
+  background: var(--ds-background-neutral-primary);
+  border: 1px dashed var(--ds-borders-neutral-primary);
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-start;
+  min-height: 72px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.parsonsSlotContent {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 72px;
+  min-width: 0;
+  transition: margin-left 0.12s ease;
+}
+
+.parsonsSlotDepthPreview {
+  background: var(--ds-background-brand-teal-extra-light);
+  border: 1px dashed var(--ds-borders-brand-teal-primary);
+  border-radius: var(--radius);
+}
+
+.parsonsDepthBadge {
+  color: var(--ds-text-brand-teal-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.slotFilled .parsonsSlotContent {
+  justify-content: stretch;
+  min-height: 0;
+}
+
+.slot:focus-visible {
+  @include focus-ring;
+}
+
+.slotFilled {
+  align-items: stretch;
+  background: transparent;
+  border-color: transparent;
+  justify-content: stretch;
+  min-height: 0;
+  padding: 0;
+}
+
+.slotOver {
+  background: var(--ds-background-brand-teal-extra-light);
+  border-color: var(--ds-borders-brand-teal-primary);
+}
+
+.slotFilled.slotOver {
+  box-shadow: inset 0 0 0 2px var(--ds-borders-brand-teal-primary);
+}
+
+.slotSelected {
+  border-color: var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 1px var(--ds-borders-brand-teal-primary);
+}
+
+.slotFilled.slotSelected {
+  box-shadow: inset 0 0 0 2px var(--ds-borders-brand-teal-primary);
+}
+
+.slotCorrect {
+  background: var(--ds-background-success-extra-light);
+  border-color: var(--ds-borders-success-primary);
+}
+
+.slotIncorrect {
+  background: var(--ds-background-error-extra-light);
+  border-color: var(--ds-borders-error-primary);
+}
+
+.slotRevealed {
+  background: var(--ds-background-success-extra-light);
+  border-color: var(--ds-borders-success-primary);
+  border-style: solid;
+}
+
+.slotEmptyLabel {
+  color: var(--ds-text-neutral-placeholder);
+  display: inline-flex;
+}
+
+.bankList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.bankListWrap {
+  align-content: flex-start;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.bankListWrap .blockCard {
+  flex: 0 1 auto;
+  max-width: min(100%, 280px);
+  min-height: 48px;
+  width: auto;
+}
+
+.bankListEmpty {
+  background: var(--ds-background-neutral-primary);
+  border: 1px dashed var(--ds-borders-neutral-primary);
+  border-radius: var(--radius);
+  min-height: 72px;
+}
+
+.bankEmptyState {
+  min-height: 72px;
+  width: 100%;
+}
+
+.bankReturnSlot {
+  background: var(--ds-background-brand-teal-extra-light);
+  border: 1px dashed var(--ds-borders-brand-teal-primary);
+  border-radius: var(--radius);
+  flex-shrink: 0;
+  min-height: 72px;
+  width: 100%;
+}
+
+.bankReturnSlotWrap {
+  flex: 0 1 auto;
+  max-width: min(100%, 280px);
+  min-height: 48px;
+  min-width: 72px;
+  width: auto;
+}
+
+.bankReturnSlotMirror.blockCard {
+  background: var(--ds-background-brand-teal-extra-light);
+  border: 1px dashed var(--ds-borders-brand-teal-primary);
+  box-shadow: none;
+  cursor: default;
+  pointer-events: none;
+}
+
+.bankReturnSlotMirror .blockHandle,
+.bankReturnSlotMirror .blockCardBody {
+  opacity: 0;
+}
+
+.blockCard {
+  align-items: center;
+  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: var(--radius);
+  color: var(--ds-text-neutral-primary);
+  cursor: grab;
+  display: flex;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  gap: 12px;
+  min-height: 72px;
+  min-width: 0;
+  padding: 12px;
+  text-align: left;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.blockCard:hover:not(.blockCardCorrect):not(.blockCardIncorrect):not(.blockCardRevealed):not(.blockCardDragging) {
+  border-color: var(--ds-borders-neutral-strong);
+}
+
+.blockCardInSlot {
+  min-height: 100%;
+  width: 100%;
+}
+
+.blockCardInBucket {
+  flex: 0 1 auto;
+  max-width: min(100%, 280px);
+  min-height: 48px;
+  width: auto;
+}
+
+.blockCard:active {
+  cursor: grabbing;
+}
+
+.blockCard:focus-visible {
+  @include focus-ring;
+}
+
+.blockCardSelected {
+  border-color: var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 1px var(--ds-borders-brand-teal-primary);
+}
+
+.blockCardDragging {
+  opacity: 0.45;
+}
+
+.blockCardDragging:focus,
+.blockCardDragging:focus-visible {
+  outline: none;
+}
+
+.dragOverlayCard {
+  align-items: center;
+  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--ds-borders-neutral-strong);
+  border-radius: var(--radius);
+  box-shadow:
+    0 12px 24px -8px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 28%, transparent),
+    0 2px 6px -2px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 20%, transparent);
+  color: var(--ds-text-neutral-primary);
+  cursor: grabbing;
+  display: flex;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.dragOverlayCardChip {
+  min-height: 48px;
+  width: auto;
+}
+
+.blockCardCorrect {
+  background: var(--ds-background-success-extra-light);
+  border-color: var(--ds-borders-success-primary);
+}
+
+.blockCardIncorrect {
+  background: var(--ds-background-error-extra-light);
+  border-color: var(--ds-borders-error-primary);
+}
+
+.blockCardRevealed {
+  background: var(--ds-background-success-extra-light);
+  border-color: var(--ds-borders-success-primary);
+  cursor: default;
+}
+
+.blockHandle {
+  align-self: center;
+  color: var(--ds-text-neutral-quaternary);
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.blockCardBody {
+  display: grid;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.blockText {
+  line-height: 1.45;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.codeBlock {
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: var(--text-code);
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 8px 10px;
+  white-space: pre;
+  width: 100%;
+}
+
+.codeBlock code {
+  font-family: inherit;
+}
+
+.imageBlock {
+  margin: 0;
+  width: 100%;
+}
+
+.imageBlock img {
+  border-radius: var(--radius);
+  display: block;
+  max-width: 100%;
+}
+
+.imageCaption {
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  margin-top: 4px;
+}
+
+.categorizationLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 24px;
+  min-width: 0;
+  width: 100%;
+}
+
+.bucketsGrid {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  min-width: 0;
+  width: 100%;
+}
+
+.bucketCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bucketHeader {
+  margin: 0;
+}
+
+.bucketTitle {
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+.bucketDescription {
+  color: var(--ds-text-neutral-quaternary);
+  font-size: var(--text-label);
+  margin: 4px 0 0;
+}
+
+.bucketDropzone {
+  align-items: flex-start;
+  background: var(--ds-background-neutral-primary);
+  border: 1px dashed var(--ds-borders-neutral-primary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 72px;
+  padding: 8px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.bucketDropzone:focus-visible {
+  @include focus-ring;
+}
+
+.bucketDropzoneOver {
+  background: var(--ds-background-brand-teal-extra-light);
+  border-color: var(--ds-borders-brand-teal-primary);
+}
+
+.bucketDropzoneSelected {
+  border-color: var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 1px var(--ds-borders-brand-teal-primary);
+}
+
+.bucketDropzoneEmpty {
+  align-items: center;
+  justify-content: center;
+}
+
+.bucketEmptyIcon {
+  color: var(--ds-text-neutral-placeholder);
+  display: inline-flex;
+}
+
+.bucketItems {
+  align-content: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+}
+
