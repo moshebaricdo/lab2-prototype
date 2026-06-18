@@ -1,0 +1,21 @@
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-default);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-normal);
+  white-space: nowrap;
+}
+
+.neutral {
+  background: var(--ds-background-neutral-quaternary);
+  color: var(--ds-text-neutral-secondary);
+}
+
+.purple {
+  background: var(--ds-background-neutral-quaternary);
+  color: var(--ds-text-neutral-secondary);
+}
