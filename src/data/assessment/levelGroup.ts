@@ -2,6 +2,17 @@ import type {
   FreeResponseLevelPayload,
   FreeResponseTeacherAnswer,
 } from "./freeResponse";
+import type {
+  DragDropCategorizationItem,
+  DragDropItem,
+  DragDropLevelPayload,
+  DragDropBucket,
+} from "./dragDrop";
+import type {
+  FillInBlankDefinition,
+  FillInBlankLevelPayload,
+  FillInBlankSegment,
+} from "./fillInBlank";
 import type { MatchLevelPayload } from "./match";
 import type {
   MultiChoiceAnswerContentBlock,
@@ -38,6 +49,26 @@ export interface LevelGroupMatchQuestion {
   prompts: Array<{ id: string; text: string; correctTermId: string }>;
 }
 
+export interface LevelGroupDragDropQuestion {
+  id: string;
+  prompt: string;
+  mode: "parsons" | "categorization";
+  blocks?: DragDropItem[];
+  correctOrder?: string[];
+  correctIndents?: number[];
+  distractorIds?: string[];
+  buckets?: DragDropBucket[];
+  items?: DragDropCategorizationItem[];
+}
+
+export interface LevelGroupFillInBlankQuestion {
+  id: string;
+  prompt: string;
+  segments: FillInBlankSegment[];
+  blanks: FillInBlankDefinition[];
+  revealAnswerEnabled?: boolean;
+}
+
 interface LevelGroupQuestionBlockBase {
   blockId: string;
   /** Optional code-space shown alongside this specific question block. */
@@ -57,6 +88,14 @@ export type LevelGroupQuestionBlock =
   | ({
       kind: "match";
       question: LevelGroupMatchQuestion;
+    } & LevelGroupQuestionBlockBase)
+  | ({
+      kind: "dragDrop";
+      question: LevelGroupDragDropQuestion;
+    } & LevelGroupQuestionBlockBase)
+  | ({
+      kind: "fillInBlank";
+      question: LevelGroupFillInBlankQuestion;
     } & LevelGroupQuestionBlockBase);
 
 /** Optional “before you begin” screen for stepped levelgroups (header-track UI). */
@@ -209,6 +248,44 @@ const levelGroupFlowSteps: LevelGroupQuestionBlock[] = [
         { id: "d", text: "A receipt arrives for a purchase you recognize." },
       ],
       correctAnswerId: "a",
+    },
+  },
+  {
+    kind: "dragDrop",
+    blockId: "block-dd1",
+    question: {
+      id: "drag-1",
+      prompt: "Order the steps to create a strong password.",
+      mode: "parsons",
+      blocks: [
+        { id: "s1", text: "Use at least 12 characters." },
+        { id: "s2", text: "Avoid reusing passwords across sites." },
+        { id: "s3", text: "Mix letters, numbers, and symbols." },
+        { id: "s4", text: "Share it in a group chat for safekeeping." },
+      ],
+      correctOrder: ["s1", "s3", "s2"],
+      distractorIds: ["s4"],
+    },
+  },
+  {
+    kind: "fillInBlank",
+    blockId: "block-fib1",
+    question: {
+      id: "fib-1",
+      prompt: "Complete the sentence about two-factor authentication.",
+      segments: [
+        { type: "text", text: "Two-factor authentication adds a second " },
+        { type: "blank", blankId: "factor" },
+        { type: "text", text: " beyond your password." },
+      ],
+      blanks: [
+        {
+          id: "factor",
+          placeholder: "factor",
+          acceptedAnswers: ["factor", "verification step", "check"],
+        },
+      ],
+      revealAnswerEnabled: true,
     },
   },
 ];
@@ -459,6 +536,61 @@ export function levelGroupMatchToPayload(
           text: p.text,
           correctTermId: p.correctTermId,
         })),
+      },
+      metadata: flowLevel.metadata,
+    },
+  };
+}
+
+/** Map a levelgroup drag-drop block to the standalone drag-drop payload shape. */
+export function levelGroupDragDropToPayload(
+  block: Extract<LevelGroupQuestionBlock, { kind: "dragDrop" }>,
+  flowLevel: LevelGroupFlowPayload["level"],
+  stepIndex: number,
+): DragDropLevelPayload {
+  const q = block.question;
+  return {
+    level: {
+      id: flowLevel.id * 100 + stepIndex,
+      name: flowLevel.name,
+      type: "DragDrop",
+      stem: { question: q.prompt },
+      question:
+        q.mode === "parsons"
+          ? {
+              mode: "parsons",
+              blocks: q.blocks ?? [],
+              correctOrder: q.correctOrder ?? [],
+              correctIndents: q.correctIndents,
+              distractorIds: q.distractorIds,
+            }
+          : {
+              mode: "categorization",
+              buckets: q.buckets ?? [],
+              items: q.items ?? [],
+            },
+      metadata: flowLevel.metadata,
+    },
+  };
+}
+
+/** Map a levelgroup fill-in-blank block to the standalone payload shape. */
+export function levelGroupFillInBlankToPayload(
+  block: Extract<LevelGroupQuestionBlock, { kind: "fillInBlank" }>,
+  flowLevel: LevelGroupFlowPayload["level"],
+  stepIndex: number,
+): FillInBlankLevelPayload {
+  const q = block.question;
+  return {
+    level: {
+      id: flowLevel.id * 100 + stepIndex,
+      name: flowLevel.name,
+      type: "FillInBlank",
+      stem: { question: q.prompt },
+      question: {
+        segments: q.segments,
+        blanks: q.blanks,
+        revealAnswerEnabled: q.revealAnswerEnabled,
       },
       metadata: flowLevel.metadata,
     },

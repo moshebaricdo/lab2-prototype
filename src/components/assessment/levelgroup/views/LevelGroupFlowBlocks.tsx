@@ -7,12 +7,21 @@ import {
   type SetStateAction,
 } from "react";
 import {
+  levelGroupDragDropToPayload,
+  levelGroupFillInBlankToPayload,
   levelGroupFreeToPayload,
   levelGroupMatchToPayload,
   levelGroupMultiToPayload,
   type LevelGroupFlowPayload,
   type LevelGroupQuestionBlock,
 } from "../../../../data/assessment/levelGroup";
+import { isBlankAnswerCorrect } from "../../../../data/assessment/fillInBlank";
+import {
+  DragDropWorkspace,
+  type CategorizationAssignments,
+  type ParsonsSolutionState,
+} from "../../drag-drop/views/DragDropWorkspace";
+import { FillInBlankWorkspace, type FillInBlankResponses } from "../../fill-in-blank/views/FillInBlankWorkspace";
 import { FreeResponseWorkspace } from "../../free-response/views/FreeResponseWorkspace";
 import { MatchConnectorWorkspace } from "../../match/views/MatchConnectorWorkspace";
 import { MultiChoiceWorkspace } from "../../multi/views/MultiChoiceWorkspace";
@@ -46,10 +55,35 @@ function buildInitialAssignments(promptIds: string[]): MatchAssignments {
   }, {});
 }
 
+function buildInitialParsonsSolution(correctOrder: string[]): ParsonsSolutionState {
+  return correctOrder.map(() => ({ blockId: null, depth: 0 }));
+}
+
+function buildInitialCategorizationAssignments(
+  itemIds: string[],
+): CategorizationAssignments {
+  return itemIds.reduce<CategorizationAssignments>((acc, itemId) => {
+    acc[itemId] = null;
+    return acc;
+  }, {});
+}
+
+function buildInitialFillInBlankResponses(
+  blankIds: string[],
+): FillInBlankResponses {
+  return blankIds.reduce<FillInBlankResponses>((acc, blankId) => {
+    acc[blankId] = "";
+    return acc;
+  }, {});
+}
+
 export interface LevelGroupFlowState {
   selectedMulti: Record<string, string | null>;
   freeText: Record<string, string>;
   matchAssignments: Record<string, MatchAssignments>;
+  dragDropParsons: Record<string, ParsonsSolutionState>;
+  dragDropCategorization: Record<string, CategorizationAssignments>;
+  fillInBlankResponses: Record<string, FillInBlankResponses>;
 }
 
 export function useLevelGroupFlowState(steps: LevelGroupQuestionBlock[]) {
@@ -65,23 +99,79 @@ export function useLevelGroupFlowState(steps: LevelGroupQuestionBlock[]) {
     return acc;
   }, [steps]);
 
+  const initialDragDropParsons = useMemo(() => {
+    const acc: Record<string, ParsonsSolutionState> = {};
+    for (const step of steps) {
+      if (step.kind === "dragDrop" && step.question.mode === "parsons") {
+        acc[step.blockId] = buildInitialParsonsSolution(
+          step.question.correctOrder ?? [],
+        );
+      }
+    }
+    return acc;
+  }, [steps]);
+
+  const initialDragDropCategorization = useMemo(() => {
+    const acc: Record<string, CategorizationAssignments> = {};
+    for (const step of steps) {
+      if (step.kind === "dragDrop" && step.question.mode === "categorization") {
+        acc[step.blockId] = buildInitialCategorizationAssignments(
+          step.question.items?.map((item) => item.id) ?? [],
+        );
+      }
+    }
+    return acc;
+  }, [steps]);
+
+  const initialFillInBlank = useMemo(() => {
+    const acc: Record<string, FillInBlankResponses> = {};
+    for (const step of steps) {
+      if (step.kind === "fillInBlank") {
+        acc[step.blockId] = buildInitialFillInBlankResponses(
+          step.question.blanks.map((blank) => blank.id),
+        );
+      }
+    }
+    return acc;
+  }, [steps]);
+
   const [selectedMulti, setSelectedMulti] = useState<
     Record<string, string | null>
   >({});
   const [freeText, setFreeText] = useState<Record<string, string>>({});
   const [matchAssignments, setMatchAssignments] =
     useState<Record<string, MatchAssignments>>(initialMatch);
+  const [dragDropParsons, setDragDropParsons] = useState<
+    Record<string, ParsonsSolutionState>
+  >(initialDragDropParsons);
+  const [dragDropCategorization, setDragDropCategorization] = useState<
+    Record<string, CategorizationAssignments>
+  >(initialDragDropCategorization);
+  const [fillInBlankResponses, setFillInBlankResponses] = useState<
+    Record<string, FillInBlankResponses>
+  >(initialFillInBlank);
 
   const resetFlow = useCallback(() => {
     setSelectedMulti({});
     setFreeText({});
     setMatchAssignments(initialMatch);
-  }, [initialMatch]);
+    setDragDropParsons(initialDragDropParsons);
+    setDragDropCategorization(initialDragDropCategorization);
+    setFillInBlankResponses(initialFillInBlank);
+  }, [
+    initialMatch,
+    initialDragDropParsons,
+    initialDragDropCategorization,
+    initialFillInBlank,
+  ]);
 
   const state: LevelGroupFlowState = {
     selectedMulti,
     freeText,
     matchAssignments,
+    dragDropParsons,
+    dragDropCategorization,
+    fillInBlankResponses,
   };
 
   return {
@@ -89,6 +179,9 @@ export function useLevelGroupFlowState(steps: LevelGroupQuestionBlock[]) {
     setSelectedMulti,
     setFreeText,
     setMatchAssignments,
+    setDragDropParsons,
+    setDragDropCategorization,
+    setFillInBlankResponses,
     resetFlow,
   };
 }
@@ -117,6 +210,32 @@ function isMatchComplete(
   );
 }
 
+function isDragDropComplete(
+  block: Extract<LevelGroupQuestionBlock, { kind: "dragDrop" }>,
+  flow: LevelGroupFlowState,
+): boolean {
+  if (block.question.mode === "parsons") {
+    const solution = flow.dragDropParsons[block.blockId];
+    if (!solution) return false;
+    return solution.every((line) => Boolean(line.blockId));
+  }
+  const assignments = flow.dragDropCategorization[block.blockId];
+  if (!assignments) return false;
+  return (block.question.items ?? []).every((item) =>
+    Boolean(assignments[item.id]),
+  );
+}
+
+function isFillInBlankComplete(
+  block: Extract<LevelGroupQuestionBlock, { kind: "fillInBlank" }>,
+  responses: FillInBlankResponses | undefined,
+): boolean {
+  if (!responses) return false;
+  return block.question.blanks.every(
+    (blank) => responses[blank.id]?.trim().length > 0,
+  );
+}
+
 export function isBlockComplete(
   block: LevelGroupQuestionBlock,
   flow: LevelGroupFlowState,
@@ -127,7 +246,16 @@ export function isBlockComplete(
   if (block.kind === "freeResponse") {
     return isFreeComplete(block, flow.freeText[block.blockId]);
   }
-  return isMatchComplete(block, flow.matchAssignments[block.blockId]);
+  if (block.kind === "match") {
+    return isMatchComplete(block, flow.matchAssignments[block.blockId]);
+  }
+  if (block.kind === "dragDrop") {
+    return isDragDropComplete(block, flow);
+  }
+  return isFillInBlankComplete(
+    block,
+    flow.fillInBlankResponses[block.blockId],
+  );
 }
 
 export function allBlocksComplete(
@@ -154,10 +282,37 @@ function sectionScore(
   if (block.kind === "freeResponse") {
     return isFreeComplete(block, flow.freeText[block.blockId]);
   }
-  const assignments = flow.matchAssignments[block.blockId];
-  if (!assignments) return false;
-  return block.question.prompts.every(
-    (prompt) => assignments[prompt.id] === prompt.correctTermId,
+  if (block.kind === "match") {
+    const assignments = flow.matchAssignments[block.blockId];
+    if (!assignments) return false;
+    return block.question.prompts.every(
+      (prompt) => assignments[prompt.id] === prompt.correctTermId,
+    );
+  }
+  if (block.kind === "dragDrop") {
+    if (block.question.mode === "parsons") {
+      const solution = flow.dragDropParsons[block.blockId];
+      if (!solution) return false;
+      const indents =
+        block.question.correctIndents ??
+        (block.question.correctOrder ?? []).map(() => 0);
+      return (block.question.correctOrder ?? []).every(
+        (blockId, index) =>
+          solution[index]?.blockId === blockId &&
+          solution[index]?.depth === indents[index],
+      );
+    }
+    const assignments = flow.dragDropCategorization[block.blockId];
+    if (!assignments) return false;
+    return (block.question.items ?? []).every((item) => {
+      const bucketId = assignments[item.id];
+      return bucketId != null && item.correctBucketIds.includes(bucketId);
+    });
+  }
+  const responses = flow.fillInBlankResponses[block.blockId];
+  if (!responses) return false;
+  return block.question.blanks.every((blank) =>
+    isBlankAnswerCorrect(responses[blank.id] ?? "", blank),
   );
 }
 
@@ -196,6 +351,15 @@ export interface LevelGroupEmbeddedBlockProps {
   setMatchAssignments: Dispatch<
     SetStateAction<Record<string, MatchAssignments>>
   >;
+  setDragDropParsons: Dispatch<
+    SetStateAction<Record<string, ParsonsSolutionState>>
+  >;
+  setDragDropCategorization: Dispatch<
+    SetStateAction<Record<string, CategorizationAssignments>>
+  >;
+  setFillInBlankResponses: Dispatch<
+    SetStateAction<Record<string, FillInBlankResponses>>
+  >;
   /**
    * `scrollGroup`: one shared card, step counter in stem eyebrow.
    * `stepped`: type-only eyebrow (counter lives in the level-group header).
@@ -208,7 +372,15 @@ export interface LevelGroupEmbeddedBlockProps {
 function blockEyebrowLabel(block: LevelGroupQuestionBlock): string {
   if (block.kind === "multi") return "Multiple choice";
   if (block.kind === "freeResponse") return "Free response";
-  return "Match";
+  if (block.kind === "match") return "Match";
+  if (block.kind === "dragDrop") {
+    return block.question.mode === "parsons"
+      ? "Parsons problem"
+      : "Categorization";
+  }
+  return block.question.blanks.length > 1
+    ? "Fill in the blanks"
+    : "Fill in the blank";
 }
 
 export function LevelGroupEmbeddedBlock({
@@ -221,6 +393,9 @@ export function LevelGroupEmbeddedBlock({
   setSelectedMulti,
   setFreeText,
   setMatchAssignments,
+  setDragDropParsons,
+  setDragDropCategorization,
+  setFillInBlankResponses,
   layout = "default",
   groupTeacherReveal,
 }: LevelGroupEmbeddedBlockProps) {
@@ -283,6 +458,84 @@ export function LevelGroupEmbeddedBlock({
         controlledResponseText={flow.freeText[block.blockId] ?? ""}
         onControlledResponseTextChange={(text) =>
           setFreeText((prev) => ({ ...prev, [block.blockId]: text }))
+        }
+      />,
+    );
+  }
+
+  if (block.kind === "dragDrop") {
+    const payload = levelGroupDragDropToPayload(block, flowLevel, stepIndex);
+    const parsonsSolution =
+      flow.dragDropParsons[block.blockId] ??
+      buildInitialParsonsSolution(block.question.correctOrder ?? []);
+    const catAssignments =
+      flow.dragDropCategorization[block.blockId] ??
+      buildInitialCategorizationAssignments(
+        block.question.items?.map((item) => item.id) ?? [],
+      );
+
+    return wrapStepped(
+      <DragDropWorkspace
+        embedded
+        codePanel={block.codePanel}
+        embeddedInScrollGroup={scrollGroup}
+        embeddedInSteppedGroup={steppedTypeOnly}
+        embeddedStepEyebrow={embeddedStepEyebrowForChild}
+        payload={payload}
+        groupSubmitted={isSubmitted}
+        groupTeacherReveal={groupTeacherReveal}
+        controlledParsonsSolution={
+          block.question.mode === "parsons" ? parsonsSolution : undefined
+        }
+        onControlledParsonsSolutionChange={
+          block.question.mode === "parsons"
+            ? (next) =>
+                setDragDropParsons((prev) => ({
+                  ...prev,
+                  [block.blockId]: next,
+                }))
+            : undefined
+        }
+        controlledCategorizationAssignments={
+          block.question.mode === "categorization" ? catAssignments : undefined
+        }
+        onControlledCategorizationAssignmentsChange={
+          block.question.mode === "categorization"
+            ? (next) =>
+                setDragDropCategorization((prev) => ({
+                  ...prev,
+                  [block.blockId]: next,
+                }))
+            : undefined
+        }
+      />,
+    );
+  }
+
+  if (block.kind === "fillInBlank") {
+    const payload = levelGroupFillInBlankToPayload(block, flowLevel, stepIndex);
+    const responses =
+      flow.fillInBlankResponses[block.blockId] ??
+      buildInitialFillInBlankResponses(
+        block.question.blanks.map((blank) => blank.id),
+      );
+
+    return wrapStepped(
+      <FillInBlankWorkspace
+        embedded
+        codePanel={block.codePanel}
+        embeddedInScrollGroup={scrollGroup}
+        embeddedInSteppedGroup={steppedTypeOnly}
+        embeddedStepEyebrow={embeddedStepEyebrowForChild}
+        payload={payload}
+        groupSubmitted={isSubmitted}
+        groupTeacherReveal={groupTeacherReveal}
+        controlledResponses={responses}
+        onControlledResponsesChange={(next) =>
+          setFillInBlankResponses((prev) => ({
+            ...prev,
+            [block.blockId]: next,
+          }))
         }
       />,
     );

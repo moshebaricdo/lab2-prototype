@@ -90,6 +90,9 @@ export function LevelGroupSteppedWorkspace({
     setSelectedMulti,
     setFreeText,
     setMatchAssignments,
+    setDragDropParsons,
+    setDragDropCategorization,
+    setFillInBlankResponses,
     resetFlow,
   } = useLevelGroupFlowState(steps);
 
@@ -490,6 +493,9 @@ export function LevelGroupSteppedWorkspace({
                       setSelectedMulti={setSelectedMulti}
                       setFreeText={setFreeText}
                       setMatchAssignments={setMatchAssignments}
+                      setDragDropParsons={setDragDropParsons}
+                      setDragDropCategorization={setDragDropCategorization}
+                      setFillInBlankResponses={setFillInBlankResponses}
                       layout="stepped"
                       groupTeacherReveal={
                         isBottomDots || usePostIntroTimedLayout
@@ -517,6 +523,9 @@ export function LevelGroupSteppedWorkspace({
                       setSelectedMulti={setSelectedMulti}
                       setFreeText={setFreeText}
                       setMatchAssignments={setMatchAssignments}
+                      setDragDropParsons={setDragDropParsons}
+                      setDragDropCategorization={setDragDropCategorization}
+                      setFillInBlankResponses={setFillInBlankResponses}
                       layout="stepped"
                       groupTeacherReveal={
                         isBottomDots || usePostIntroTimedLayout

@@ -85,6 +85,9 @@ export function LevelGroupScrollWorkspace({
     setSelectedMulti,
     setFreeText,
     setMatchAssignments,
+    setDragDropParsons,
+    setDragDropCategorization,
+    setFillInBlankResponses,
     resetFlow,
   } = useLevelGroupFlowState(steps);
 
@@ -142,6 +145,9 @@ export function LevelGroupScrollWorkspace({
         setSelectedMulti={setSelectedMulti}
         setFreeText={setFreeText}
         setMatchAssignments={setMatchAssignments}
+        setDragDropParsons={setDragDropParsons}
+        setDragDropCategorization={setDragDropCategorization}
+        setFillInBlankResponses={setFillInBlankResponses}
         layout="scrollGroup"
         groupTeacherReveal={surveyMode ? false : groupTeacherReveal}
       />
