@@ -34,9 +34,12 @@ import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
   AssessmentCodeRefLayout,
+  AssessmentLevelShell,
   AssessmentStemSection,
   AssessmentSuccessFeedback,
+  assessmentLevelShellVariant,
 } from "../../shared";
+import stemStyles from "../../shared/AssessmentStemSection.module.scss";
 import styles from "./MultiChoiceWorkspace.module.scss";
 
 interface MultiChoiceWorkspaceProps {
@@ -426,7 +429,7 @@ export function MultiChoiceWorkspace({
           <AssessmentStemSection
             eyebrow={stemEyebrow}
             eyebrowClassName={
-              useStepCounterEyebrowStyle ? styles.stepCounterEyebrow : undefined
+              useStepCounterEyebrowStyle ? stemStyles.stepCounterEyebrow : undefined
             }
             question={level.stem.question}
             description={level.stem.description}
@@ -644,21 +647,13 @@ export function MultiChoiceWorkspace({
     </>
   );
 
+  const shellVariant = assessmentLevelShellVariant(
+    embedded,
+    embeddedFlatInParent,
+  );
+
   const mainBody = (
-    <main
-      className={[
-        embedded ? styles.workspaceEmbedded : styles.workspace,
-        embeddedFlatInParent ? styles.workspaceEmbeddedScrollGroup : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      {embeddedFlatInParent ? (
-        cardContents
-      ) : (
-        <div className={styles.card}>{cardContents}</div>
-      )}
-    </main>
+    <AssessmentLevelShell variant={shellVariant}>{cardContents}</AssessmentLevelShell>
   );
 
   if (embedded && codePanel) {

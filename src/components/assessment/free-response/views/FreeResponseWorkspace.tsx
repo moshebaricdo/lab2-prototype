@@ -27,8 +27,11 @@ import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
   AssessmentCodeRefLayout,
+  AssessmentLevelShell,
   AssessmentStemSection,
+  assessmentLevelShellVariant,
 } from "../../shared";
+import stemStyles from "../../shared/AssessmentStemSection.module.scss";
 import { FaIcon } from "@/icons";
 import { UploadedFileChip } from "./UploadedFileChip";
 import styles from "./FreeResponseWorkspace.module.scss";
@@ -246,7 +249,7 @@ export function FreeResponseWorkspace({
           <AssessmentStemSection
             eyebrow={stemEyebrow}
             eyebrowClassName={
-              useStepCounterEyebrowStyle ? styles.stepCounterEyebrow : undefined
+              useStepCounterEyebrowStyle ? stemStyles.stepCounterEyebrow : undefined
             }
             question={level.stem.question}
             description={level.stem.description}
@@ -426,21 +429,13 @@ export function FreeResponseWorkspace({
     </>
   );
 
+  const shellVariant = assessmentLevelShellVariant(
+    embedded,
+    embeddedFlatInParent,
+  );
+
   const mainBody = (
-    <main
-      className={[
-        embedded ? styles.workspaceEmbedded : styles.workspace,
-        embeddedFlatInParent ? styles.workspaceEmbeddedScrollGroup : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      {embeddedFlatInParent ? (
-        cardContents
-      ) : (
-        <div className={styles.card}>{cardContents}</div>
-      )}
-    </main>
+    <AssessmentLevelShell variant={shellVariant}>{cardContents}</AssessmentLevelShell>
   );
 
   if (embedded) {

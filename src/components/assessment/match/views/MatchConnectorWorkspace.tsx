@@ -34,9 +34,12 @@ import { resourcePanelCompactDevField } from "../../../lab2/dev";
 import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
+  AssessmentLevelShell,
   AssessmentStemSection,
   AssessmentSuccessFeedback,
+  assessmentLevelShellVariant,
 } from "../../shared";
+import stemStyles from "../../shared/AssessmentStemSection.module.scss";
 import styles from "./MatchConnectorWorkspace.module.scss";
 
 /* ── Helpers ───────────────────────────────────────────────────── */
@@ -224,7 +227,6 @@ export function MatchConnectorWorkspace({
 
   const { level } = resolvedPayload;
 
-  const instructionsId = useId();
   const matchBoardId = useId();
 
   const promptIdsKey = level.question.prompts.map((p) => p.id).join("\0");
@@ -894,17 +896,11 @@ export function MatchConnectorWorkspace({
           <AssessmentStemSection
             eyebrow={stemEyebrow}
             eyebrowClassName={
-              useStepCounterEyebrowStyle ? styles.stepCounterEyebrow : undefined
+              useStepCounterEyebrowStyle ? stemStyles.stepCounterEyebrow : undefined
             }
             question={level.stem.question}
             description={level.stem.description}
           >
-            <div className={styles.taskToolbar}>
-              <p className={styles.instruction} id={instructionsId}>
-                Match each item by clicking, dragging, or using the keyboard.
-              </p>
-            </div>
-
             <div
               className={styles.visuallyHidden}
               aria-live="polite"
@@ -919,7 +915,6 @@ export function MatchConnectorWorkspace({
               className={styles.board}
               role="group"
               aria-label="Match terms to definitions"
-              aria-describedby={instructionsId}
             >
               <svg className={styles.svgOverlay} aria-hidden="true">
                 {connectorSegments.map((seg) => (
@@ -1325,21 +1320,13 @@ export function MatchConnectorWorkspace({
     </>
   );
 
+  const shellVariant = assessmentLevelShellVariant(
+    embedded,
+    embeddedFlatInParent,
+  );
+
   const mainBody = (
-    <main
-      className={[
-        embedded ? styles.workspaceEmbedded : styles.workspace,
-        embeddedFlatInParent ? styles.workspaceEmbeddedScrollGroup : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      {embeddedFlatInParent ? (
-        cardContents
-      ) : (
-        <div className={styles.card}>{cardContents}</div>
-      )}
-    </main>
+    <AssessmentLevelShell variant={shellVariant}>{cardContents}</AssessmentLevelShell>
   );
 
   if (embedded) {

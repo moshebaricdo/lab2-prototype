@@ -9,7 +9,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppButton } from "../../../ui/AppButton";
 import { FaIcon } from "../../../ui/icons/FaIcon";
@@ -30,6 +30,7 @@ import { resourcePanelCompactDevField } from "../../../lab2/dev";
 import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
+  AssessmentLevelShell,
   AssessmentStemSection,
   AssessmentSuccessFeedback,
 } from "../../shared";
@@ -274,7 +275,6 @@ export function MatchDefinitionBankWorkspace({
   const [isTeacherAnswerRevealed, setIsTeacherAnswerRevealed] = useState(false);
   const [activeSlotTermId, setActiveSlotTermId] = useState<string | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
-  const instructionsId = useId();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -595,18 +595,12 @@ export function MatchDefinitionBankWorkspace({
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));
       }}
     >
-      <main className={styles.workspace}>
-        <div className={styles.card}>
-          <AssessmentStemSection
+      <AssessmentLevelShell>
+        <AssessmentStemSection
             eyebrow="Match"
             question={level.stem.question}
             description={level.stem.description}
           >
-            <div className={styles.taskToolbar}>
-              <p className={styles.instruction} id={instructionsId}>
-                Match each item by clicking, dragging, or using the keyboard.
-              </p>
-            </div>
             <DndContext
               sensors={sensors}
               onDragStart={handleDragStart}
@@ -618,7 +612,6 @@ export function MatchDefinitionBankWorkspace({
                 className={styles.matchGrid}
                 role="group"
                 aria-label="Match terms with definitions"
-                aria-describedby={instructionsId}
                 onKeyDown={handleGridKeyDown}
               >
                 <div className={styles.termsColumn}>
@@ -828,8 +821,7 @@ export function MatchDefinitionBankWorkspace({
               </>
             }
           />
-        </div>
-      </main>
+      </AssessmentLevelShell>
     </Lab2Shell>
   );
 }

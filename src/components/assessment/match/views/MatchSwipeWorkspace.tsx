@@ -1,6 +1,5 @@
 import {
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -28,6 +27,7 @@ import { resourcePanelCompactDevField } from "../../../lab2/dev";
 import { usePropsOverride } from "../../../../hooks/usePropsOverride";
 import {
   AssessmentBottomRow,
+  AssessmentLevelShell,
   AssessmentStemSection,
   AssessmentSuccessFeedback,
 } from "../../shared";
@@ -207,7 +207,6 @@ export function MatchSwipeWorkspace({
   } = useVersionHistoryState();
 
   const { level } = resolvedPayload;
-  const instructionsId = useId();
 
   const terms = level.question.terms;
   const prompts = level.question.prompts;
@@ -432,20 +431,12 @@ export function MatchSwipeWorkspace({
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));
       }}
     >
-      <main className={styles.workspace}>
-        <div className={styles.card}>
-          <AssessmentStemSection
+      <AssessmentLevelShell>
+        <AssessmentStemSection
             eyebrow="Match"
             question={level.stem.question}
             description={level.stem.description}
           >
-            <div className={styles.taskToolbar}>
-              <p id={instructionsId} className={styles.instruction}>
-                Swipe or step through term and definition cards, then lock in each pair with
-                Match current pair.
-              </p>
-            </div>
-
             <div className={styles.visuallyHidden} aria-live="polite" aria-atomic="true">
               {a11yStatus}
             </div>
@@ -454,7 +445,6 @@ export function MatchSwipeWorkspace({
               className={styles.swipeBoard}
               role="group"
               aria-label="Swipe match cards"
-              aria-describedby={instructionsId}
             >
               <section className={styles.deck}>
                 <div className={styles.deckHeader}>
@@ -895,8 +885,7 @@ export function MatchSwipeWorkspace({
               </>
             }
           />
-        </div>
-      </main>
+      </AssessmentLevelShell>
     </Lab2Shell>
   );
 }
