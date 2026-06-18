@@ -3,7 +3,7 @@ import { SidebarPanelContent } from "./SidebarPanelContent";
 import { SidebarTabRail } from "./SidebarTabRail";
 import { useEffect, useRef, useState } from "react";
 import { defaultMockTutorConfig } from "../../../data/weblab2";
-import type { SidebarProps, SidebarTab } from "./Sidebar.types";
+import { BUILDER_SIDEBAR_TABS, type SidebarProps, type SidebarTab } from "./Sidebar.types";
 import styles from "./Sidebar.module.scss";
 
 const OPEN_TUTOR_PANEL_EVENT = "weblab:open-tutor-panel";
@@ -113,6 +113,8 @@ export function Sidebar({
   onDevPanelSessionValueChange,
   onDevPanelSessionValueReset,
   annotations,
+  showBuilderTab = false,
+  builderPanelContent,
 }: SidebarProps) {
   const showDevTab = Boolean(devPanelFields && devPanelOverrideResult);
   const showResourcesTab = Boolean(
@@ -208,6 +210,7 @@ export function Sidebar({
     if (showTeacherResourcesTab) validTabs.push("classroom");
     if (showRubricTab) validTabs.push("rubric");
     if (showResourcesTab) validTabs.push("resources");
+    if (showBuilderTab) validTabs.push(...BUILDER_SIDEBAR_TABS);
     if (showDevTab) validTabs.push("dev");
 
     if (!validTabs.includes(activeTab) && validTabs.length > 0) {
@@ -225,6 +228,7 @@ export function Sidebar({
     showValidationTab,
     showDevTab,
     showResourcesTab,
+    showBuilderTab,
   ]);
 
   useEffect(() => {
@@ -319,6 +323,7 @@ export function Sidebar({
         showTeacherResourcesTab={showTeacherResourcesTab}
         showRubricTab={showRubricTab}
         showResourcesTab={showResourcesTab}
+        showBuilderTab={showBuilderTab}
         showDevTab={showDevTab}
         devPanelHasOverrides={devPanelOverrideResult?.hasOverrides}
         showAiTutorTabNotification={showAiTutorTabNotification}
@@ -421,6 +426,7 @@ export function Sidebar({
             devPanelShareParams={devPanelShareParams}
             onDevPanelSessionValueChange={onDevPanelSessionValueChange}
             onDevPanelSessionValueReset={onDevPanelSessionValueReset}
+            builderPanelContent={builderPanelContent}
             hasComposerContent={hasComposerContent}
             isTutorRequestRunning={effectiveTutorRequestRunning}
             clearTutorChatSignal={clearTutorChatSignal}

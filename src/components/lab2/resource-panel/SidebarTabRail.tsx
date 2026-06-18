@@ -30,6 +30,7 @@ interface SidebarTabRailProps {
   showTeacherResourcesTab: boolean;
   showRubricTab: boolean;
   showResourcesTab: boolean;
+  showBuilderTab: boolean;
   showDevTab: boolean;
   devPanelHasOverrides?: boolean;
   showAiTutorTabNotification?: boolean;
@@ -155,6 +156,7 @@ export function SidebarTabRail({
   showTeacherResourcesTab,
   showRubricTab,
   showResourcesTab,
+  showBuilderTab,
   showDevTab,
   devPanelHasOverrides = false,
   showAiTutorTabNotification = false,
@@ -216,6 +218,27 @@ export function SidebarTabRail({
       tooltip: "Resources",
       iconName: "compass",
       visible: showResourcesTab,
+    },
+    {
+      tab: "builder-bank",
+      tooltip: "Question bank",
+      iconName: "layer-group",
+      iconSize: "m",
+      visible: showBuilderTab,
+    },
+    {
+      tab: "builder-editor",
+      tooltip: "Question editor",
+      iconName: "file-pen",
+      iconSize: "m",
+      visible: showBuilderTab,
+    },
+    {
+      tab: "builder-settings",
+      tooltip: "Assessment settings",
+      iconName: "sliders",
+      iconSize: "m",
+      visible: showBuilderTab,
     },
     {
       tab: "dev",

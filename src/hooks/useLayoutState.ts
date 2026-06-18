@@ -9,6 +9,9 @@ export type ResourcePanelTab =
   | "classroom"
   | "rubric"
   | "resources"
+  | "builder-editor"
+  | "builder-bank"
+  | "builder-settings"
   | "dev";
 
 export function useLayoutState(initialTab: ResourcePanelTab = "ai-tutor") {

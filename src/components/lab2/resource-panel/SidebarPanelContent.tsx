@@ -14,7 +14,7 @@ import { TeacherResourcesPanel } from "./views/TeacherResourcesPanel";
 import { RubricPanel } from "./views/RubricPanel";
 import { ResourcesPanel } from "./views/ResourcesPanel";
 import { BackpackPanel } from "./views/BackpackPanel";
-import type { SidebarProps, SidebarTab } from "./Sidebar.types";
+import { isBuilderTab, type SidebarProps, type SidebarTab } from "./Sidebar.types";
 import styles from "./Sidebar.module.scss";
 
 interface SidebarPanelContentProps {
@@ -99,6 +99,7 @@ interface SidebarPanelContentProps {
   devPanelShareParams: SidebarProps["devPanelShareParams"];
   onDevPanelSessionValueChange: SidebarProps["onDevPanelSessionValueChange"];
   onDevPanelSessionValueReset: SidebarProps["onDevPanelSessionValueReset"];
+  builderPanelContent: SidebarProps["builderPanelContent"];
   hasComposerContent: boolean;
   isTutorRequestRunning: boolean;
   clearTutorChatSignal: number;
@@ -115,6 +116,9 @@ const PANEL_LABEL: Record<SidebarTab, string> = {
   classroom: "TEACHER RESOURCES",
   rubric: "RUBRIC",
   resources: "RESOURCES",
+  "builder-editor": "QUESTION EDITOR",
+  "builder-bank": "QUESTION BANK",
+  "builder-settings": "ASSESSMENT SETTINGS",
   dev: "DEV PANEL",
 };
 
@@ -200,6 +204,7 @@ export function SidebarPanelContent({
   devPanelShareParams,
   onDevPanelSessionValueChange,
   onDevPanelSessionValueReset,
+  builderPanelContent,
   hasComposerContent,
   isTutorRequestRunning,
   clearTutorChatSignal,
@@ -369,6 +374,7 @@ export function SidebarPanelContent({
           onSessionValueReset={onDevPanelSessionValueReset}
         />
       )}
+      {isBuilderTab(activeTab) && builderPanelContent}
 
       {showContinueButton && (
         <div className={styles.continueBar}>

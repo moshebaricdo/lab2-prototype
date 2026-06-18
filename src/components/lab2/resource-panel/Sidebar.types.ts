@@ -34,7 +34,21 @@ export type SidebarTab =
   | "classroom"
   | "rubric"
   | "resources"
+  | "builder-editor"
+  | "builder-bank"
+  | "builder-settings"
   | "dev";
+
+/** Ordered builder sub-tabs surfaced in the rail when `showBuilderTab` is true. */
+export const BUILDER_SIDEBAR_TABS = [
+  "builder-bank",
+  "builder-editor",
+  "builder-settings",
+] as const satisfies readonly SidebarTab[];
+
+export function isBuilderTab(tab: SidebarTab): boolean {
+  return (BUILDER_SIDEBAR_TABS as readonly string[]).includes(tab);
+}
 
 export type DevPanelShareParamsProvider = () => Record<string, string> | null;
 
@@ -175,4 +189,7 @@ export interface SidebarProps {
   onDevPanelSessionValueReset?: (key: string) => void;
   /** Annotation mode state — passed down from Lab2Shell. */
   annotations?: UseAnnotationsResult;
+  /** Assessment builder tab — in-lab authoring surface. */
+  showBuilderTab?: boolean;
+  builderPanelContent?: ReactNode;
 }
