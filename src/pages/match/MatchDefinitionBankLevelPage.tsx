@@ -1,12 +1,12 @@
 import { MatchDefinitionBankWorkspace } from "../../components/assessment/match";
 import { mockMatchDefinitionBankLevel } from "../../data/assessment";
-import { matchLevelLinks } from "../levelTypeLinks";
+import { matchExperimentLinks } from "../levelTypeLinks";
 
 export function MatchDefinitionBankLevelPage() {
   return (
     <MatchDefinitionBankWorkspace
       payload={mockMatchDefinitionBankLevel}
-      levelLinks={matchLevelLinks}
+      levelLinks={matchExperimentLinks}
       currentLevelPath="/levels/match-definition-bank"
     />
   );

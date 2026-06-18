@@ -1,12 +1,12 @@
 import { mockLevelGroupScroll } from "../../data/assessment";
 import { LevelGroupScrollWorkspace } from "../../components/assessment/levelgroup";
-import { levelGroupLevelLinks } from "../levelTypeLinks";
+import { levelGroupExperimentLinks } from "../levelTypeLinks";
 
 export function LevelGroupScrollLevelPage() {
   return (
     <LevelGroupScrollWorkspace
       payload={mockLevelGroupScroll}
-      levelLinks={levelGroupLevelLinks}
+      levelLinks={levelGroupExperimentLinks}
       currentLevelPath="/levels/levelgroup-scroll"
     />
   );

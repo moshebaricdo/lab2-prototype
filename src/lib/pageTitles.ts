@@ -1,12 +1,16 @@
 import type { LevelProgressLink } from "../components/ui/header/LevelProgressBubbles";
 import {
   agenticProgressionLinks,
+  assessmentExperimentLinks,
+  assessmentSetLevelLinks,
+  assessmentBuilderLevelLinks,
   aiChatLabLevelLinks,
   backpackFilterProgressionLinks,
   bubbleChoiceLevelLinks,
+  dragDropLevelLinks,
   drawerImprovementsExperimentLinks,
+  fillInBlankLevelLinks,
   freeResponseLevelLinks,
-  levelGroupLevelLinks,
   matchLevelLinks,
   multiChoiceLevelLinks,
   pythonLabLevelLinks,
@@ -32,7 +36,10 @@ const LEVEL_PAGE_GROUPS: LevelPageGroup[] = [
   { levelType: "Multi-choice", pages: multiChoiceLevelLinks },
   { levelType: "Free response", pages: freeResponseLevelLinks },
   { levelType: "Match", pages: matchLevelLinks },
-  { levelType: "Levelgroup", pages: levelGroupLevelLinks },
+  { levelType: "Drag and drop", pages: dragDropLevelLinks },
+  { levelType: "Fill in the blank", pages: fillInBlankLevelLinks },
+  { levelType: "Assessment sets", pages: assessmentSetLevelLinks },
+  { levelType: "Assessment builder", pages: assessmentBuilderLevelLinks },
   { levelType: "Bubble choice", pages: bubbleChoiceLevelLinks },
   { levelType: "Intro to HTML & CSS", pages: sampleProgressionLinks },
   {
@@ -44,6 +51,7 @@ const LEVEL_PAGE_GROUPS: LevelPageGroup[] = [
   { levelType: "Agentic AI Explorations", pages: agenticProgressionLinks },
   { levelType: "Drawer Improvements", pages: drawerImprovementsExperimentLinks },
   { levelType: "Web Lab 2 Experiments", pages: webLab2ExperimentLinks },
+  { levelType: "Assessment Experiments", pages: assessmentExperimentLinks },
 ];
 
 /** Branch paths reachable from bubble choice but not listed in link arrays. */

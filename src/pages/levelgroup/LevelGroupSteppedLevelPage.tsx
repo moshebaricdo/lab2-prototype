@@ -1,12 +1,12 @@
 import { mockLevelGroupStepped } from "../../data/assessment";
 import { LevelGroupSteppedWorkspace } from "../../components/assessment/levelgroup";
-import { levelGroupLevelLinks } from "../levelTypeLinks";
+import { assessmentSetLevelLinks } from "../levelTypeLinks";
 
 export function LevelGroupSteppedLevelPage() {
   return (
     <LevelGroupSteppedWorkspace
       payload={mockLevelGroupStepped}
-      levelLinks={levelGroupLevelLinks}
+      levelLinks={assessmentSetLevelLinks}
       currentLevelPath="/levels/levelgroup-stepped"
     />
   );

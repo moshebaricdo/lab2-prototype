@@ -1,12 +1,12 @@
 import { MatchConnectorWorkspace } from "../../components/assessment/match";
 import { mockMatchConnectorImageLevel } from "../../data/assessment";
-import { matchLevelLinks } from "../levelTypeLinks";
+import { matchExperimentLinks } from "../levelTypeLinks";
 
 export function MatchConnectorImageLevelPage() {
   return (
     <MatchConnectorWorkspace
       payload={mockMatchConnectorImageLevel}
-      levelLinks={matchLevelLinks}
+      levelLinks={matchExperimentLinks}
       currentLevelPath="/levels/match-connector-images"
     />
   );

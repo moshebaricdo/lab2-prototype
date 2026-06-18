@@ -1,12 +1,12 @@
 import { mockLevelGroupScrollStickyFooter } from "../../data/assessment";
 import { LevelGroupScrollWorkspace } from "../../components/assessment/levelgroup";
-import { levelGroupLevelLinks } from "../levelTypeLinks";
+import { levelGroupExperimentLinks } from "../levelTypeLinks";
 
 export function LevelGroupScrollStickyFooterLevelPage() {
   return (
     <LevelGroupScrollWorkspace
       payload={mockLevelGroupScrollStickyFooter}
-      levelLinks={levelGroupLevelLinks}
+      levelLinks={levelGroupExperimentLinks}
       currentLevelPath="/levels/levelgroup-scroll-sticky-footer"
       stickyFooter
     />

@@ -1,12 +1,12 @@
 import { MultiChoiceWorkspace } from "../../components/assessment/multi";
 import { mockMultiChoiceArrayListLevel } from "../../data/assessment";
-import { multiChoiceLevelLinks } from "../levelTypeLinks";
+import { multiChoiceExperimentLinks } from "../levelTypeLinks";
 
 export function MultiChoiceAuthoringArrayListLevelPage() {
   return (
     <MultiChoiceWorkspace
       payload={mockMultiChoiceArrayListLevel}
-      levelLinks={multiChoiceLevelLinks}
+      levelLinks={multiChoiceExperimentLinks}
       currentLevelPath="/levels/multi-authoring-arraylist"
     />
   );

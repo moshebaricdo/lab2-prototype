@@ -28,13 +28,13 @@
   font-family: var(--font-body);
   font-size: var(--text-base);
   color: var(--muted-foreground);
-  margin: 8px 0 0;
+  margin: 4px 0 0;
 }
 
 /* ── Category sections ── */
 
 .categories {
-  margin-top: 16px;
+  margin-top: 32px;
   display: flex;
   flex-direction: column;
   gap: 16px;

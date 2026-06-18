@@ -1,12 +1,12 @@
 import { MatchSwipeWorkspace } from "../../components/assessment/match";
 import { mockMatchSwipeCardsLevel } from "../../data/assessment";
-import { matchLevelLinks } from "../levelTypeLinks";
+import { matchExperimentLinks } from "../levelTypeLinks";
 
 export function MatchSwipeLevelPage() {
   return (
     <MatchSwipeWorkspace
       payload={mockMatchSwipeCardsLevel}
-      levelLinks={matchLevelLinks}
+      levelLinks={matchExperimentLinks}
       currentLevelPath="/levels/match-swipe-cards"
     />
   );

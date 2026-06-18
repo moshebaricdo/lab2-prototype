@@ -1,12 +1,12 @@
 import { FreeResponseWorkspace } from "../../components/assessment/free-response";
 import { mockFreeResponseLevel } from "../../data/assessment";
-import { freeResponseLevelLinks } from "../levelTypeLinks";
+import { freeResponseExperimentLinks } from "../levelTypeLinks";
 
 export function FreeResponseLevelPage() {
   return (
     <FreeResponseWorkspace
       payload={mockFreeResponseLevel}
-      levelLinks={freeResponseLevelLinks}
+      levelLinks={freeResponseExperimentLinks}
       currentLevelPath="/levels/free-response"
     />
   );

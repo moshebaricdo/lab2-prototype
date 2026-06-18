@@ -1,12 +1,12 @@
 import { MultiChoiceWorkspace } from "../../components/assessment/multi";
 import { mockMultiChoiceMediaOptionsLevel } from "../../data/assessment";
-import { multiChoiceLevelLinks } from "../levelTypeLinks";
+import { multiChoiceExperimentLinks } from "../levelTypeLinks";
 
 export function MultiChoiceAuthoringMediaLevelPage() {
   return (
     <MultiChoiceWorkspace
       payload={mockMultiChoiceMediaOptionsLevel}
-      levelLinks={multiChoiceLevelLinks}
+      levelLinks={multiChoiceExperimentLinks}
       currentLevelPath="/levels/multi-authoring-media"
     />
   );

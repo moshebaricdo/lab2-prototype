@@ -32,6 +32,18 @@ const PATH_TO_WORKSPACE: Record<string, WorkspaceMapping> = {
     linksVar: "matchLevelLinks",
     pageDirectory: "match",
   },
+  "/levels/drag-drop-parsons": {
+    component: "DragDropWorkspace",
+    importPath: "../../components/assessment/drag-drop",
+    linksVar: "dragDropLevelLinks",
+    pageDirectory: "drag-drop",
+  },
+  "/levels/fill-in-blank": {
+    component: "FillInBlankWorkspace",
+    importPath: "../../components/assessment/fill-in-blank",
+    linksVar: "fillInBlankLevelLinks",
+    pageDirectory: "fill-in-blank",
+  },
   "/levels/match-swipe-cards": {
     component: "MatchSwipeWorkspace",
     importPath: "../../components/assessment/match",

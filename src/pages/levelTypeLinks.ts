@@ -46,95 +46,131 @@ export const drawerImprovementsExperimentLinks: LevelProgressLink[] = [
 ];
 
 export const multiChoiceLevelLinks: LevelProgressLink[] = [
-  { name: "Question-only variant", path: "/levels/multi" },
+  { name: "Single-select: radio options", path: "/levels/multi" },
   {
-    name: "Fish movement prompt",
-    path: "/levels/multi-authoring",
-  },
-  {
-    name: "Animation image options",
-    path: "/levels/multi-authoring-code",
-  },
-  {
-    name: "Survey responses cleanup",
-    path: "/levels/multi-authoring-media",
-  },
-  {
-    name: "ArrayList code segment",
-    path: "/levels/multi-authoring-arraylist",
-  },
-  {
-    name: "Select all that apply (reflection)",
+    name: "Multi-select: select all that apply",
     path: "/levels/multi-all-that-apply",
   },
   {
-    name: "Code reference panel (AP CS trace)",
+    name: "Code reference: trace code",
     path: "/levels/multi-code-ref",
   },
+];
+
+export const multiChoiceExperimentLinks: LevelProgressLink[] = [
   {
-    name: "Code ref — multi-file (HTML/CSS/JS)",
+    name: "Multi-choice experiment: authored prompt",
+    path: "/levels/multi-authoring",
+  },
+  {
+    name: "Multi-choice experiment: image options",
+    path: "/levels/multi-authoring-code",
+  },
+  {
+    name: "Multi-choice experiment: media prompt",
+    path: "/levels/multi-authoring-media",
+  },
+  {
+    name: "Multi-choice experiment: ArrayList prompt",
+    path: "/levels/multi-authoring-arraylist",
+  },
+  {
+    name: "Multi-choice experiment: multi-file code reference",
     path: "/levels/multi-code-ref-multifile",
   },
   {
-    name: "Code ref — editable (predict output)",
+    name: "Multi-choice experiment: editable code reference",
     path: "/levels/multi-code-ref-editable",
   },
 ];
 
 export const freeResponseLevelLinks: LevelProgressLink[] = [
-  { name: "Simple text prompt", path: "/levels/free-response" },
-  { name: "With reveal answer", path: "/levels/free-response-reveal" },
   {
-    name: "Markdown description only",
-    path: "/levels/free-response-markdown",
+    name: "Reveal answer: exemplar and rubric",
+    path: "/levels/free-response-reveal",
   },
-  { name: "File upload option", path: "/levels/free-response-upload" },
+  { name: "File upload: response attachment", path: "/levels/free-response-upload" },
   {
-    name: "Code reference panel (AP CS trace)",
+    name: "Code reference: written response",
     path: "/levels/free-response-code-ref",
   },
 ];
 
-export const matchLevelLinks: LevelProgressLink[] = [
-  { name: "Card-slot definition bank", path: "/levels/match-definition-bank" },
-  { name: "Connector lines", path: "/levels/match-connector" },
-  { name: "Connector — image cards", path: "/levels/match-connector-images" },
-  { name: "Connector — code & output", path: "/levels/match-connector-code" },
-  { name: "Swipe cards (small-screen demo)", path: "/levels/match-swipe-cards" },
-  { name: "Swipe cards — code ↔ output", path: "/levels/match-swipe-code" },
+export const freeResponseExperimentLinks: LevelProgressLink[] = [
+  { name: "Free response experiment: simple text prompt", path: "/levels/free-response" },
+  {
+    name: "Free response experiment: markdown prompt",
+    path: "/levels/free-response-markdown",
+  },
 ];
 
-export const levelGroupLevelLinks: LevelProgressLink[] = [
+export const matchLevelLinks: LevelProgressLink[] = [
+  { name: "Connector: text pairs", path: "/levels/match-connector" },
+  { name: "Connector: code and output", path: "/levels/match-connector-code" },
+];
+
+export const matchExperimentLinks: LevelProgressLink[] = [
+  { name: "Match experiment: definition bank", path: "/levels/match-definition-bank" },
+  { name: "Match experiment: image cards", path: "/levels/match-connector-images" },
+  { name: "Match experiment: swipe cards", path: "/levels/match-swipe-cards" },
+  { name: "Match experiment: swipe code and output", path: "/levels/match-swipe-code" },
+];
+
+export const assessmentSetLevelLinks: LevelProgressLink[] = [
   {
-    name: "Demo quiz (screencast — all question types)",
-    path: "/levels/levelgroup-demo-quiz",
-  },
-  {
-    name: "Survey-style: all questions on one page",
-    path: "/levels/levelgroup-scroll",
-  },
-  {
-    name: "Survey-style: sticky footer (scroll inside card)",
-    path: "/levels/levelgroup-scroll-sticky-footer",
-  },
-  {
-    name: "Quiz-style: step through with in-level progress",
-    path: "/levels/levelgroup-stepped",
-  },
-  {
-    name: "Quiz-style: dots in footer, no top bar",
-    path: "/levels/levelgroup-stepped-dots",
-  },
-  {
-    name: "Quiz-style: intro screen, then stepped progress",
-    path: "/levels/levelgroup-stepped-intro",
-  },
-  {
-    name: "Survey-style: intro, then all questions on one page",
+    name: "Survey: all questions with intro",
     path: "/levels/levelgroup-survey-intro",
   },
   {
-    name: "Code reference panel (AP CS quiz)",
+    name: "Practice quiz: stepped questions",
+    path: "/levels/levelgroup-stepped",
+  },
+  {
+    name: "Exam: multi-question checkpoint",
+    path: "/levels/levelgroup-demo-quiz",
+  },
+];
+
+export const assessmentBuilderLevelLinks: LevelProgressLink[] = [
+  {
+    name: "Builder: single-question checkpoint",
+    path: "/levels/assessment-builder-checkpoint",
+  },
+  {
+    name: "Builder: survey assembly",
+    path: "/levels/assessment-builder-survey",
+  },
+  {
+    name: "Builder: practice quiz",
+    path: "/levels/assessment-builder-quiz",
+  },
+  {
+    name: "Builder: practice exam",
+    path: "/levels/assessment-builder-exam",
+  },
+];
+
+export const levelGroupLevelLinks: LevelProgressLink[] = assessmentSetLevelLinks;
+
+export const levelGroupExperimentLinks: LevelProgressLink[] = [
+  {
+    name: "Legacy levelgroup: scroll survey",
+    path: "/levels/levelgroup-scroll",
+  },
+  {
+    name: "Legacy levelgroup: sticky footer survey",
+    path: "/levels/levelgroup-scroll-sticky-footer",
+  },
+  {
+    name: "Legacy levelgroup: intro then stepped quiz",
+    path: "/levels/levelgroup-stepped-intro",
+  },
+  {
+    name: "Legacy levelgroup: footer dots",
+    path: "/levels/levelgroup-stepped-dots",
+  },
+  {
+    name: "Legacy levelgroup: code reference quiz",
     path: "/levels/levelgroup-code-ref",
   },
 ];
@@ -142,6 +178,38 @@ export const levelGroupLevelLinks: LevelProgressLink[] = [
 export const bubbleChoiceLevelLinks: LevelProgressLink[] = [
   { name: "With image cards", path: "/levels/bubble-choice-images" },
   { name: "Choose-your-path selector", path: "/levels/bubble-choice" },
+];
+
+export const dragDropLevelLinks: LevelProgressLink[] = [
+  { name: "Parsons: order code blocks", path: "/levels/drag-drop-parsons" },
+  {
+    name: "Categorization: sort into buckets",
+    path: "/levels/drag-drop-categorization",
+  },
+  {
+    name: "Categorization: long labels (temp)",
+    path: "/levels/drag-drop-categorization-long-text",
+  },
+  {
+    name: "Code reference: Parsons problem",
+    path: "/levels/drag-drop-parsons-code-ref",
+  },
+];
+
+export const fillInBlankLevelLinks: LevelProgressLink[] = [
+  { name: "Single blank: short answer", path: "/levels/fill-in-blank" },
+  { name: "Multi-blank: passage", path: "/levels/fill-in-blank-multi" },
+  {
+    name: "Code reference: fill in blanks",
+    path: "/levels/fill-in-blank-code-ref",
+  },
+];
+
+export const assessmentExperimentLinks: LevelProgressLink[] = [
+  ...multiChoiceExperimentLinks,
+  ...freeResponseExperimentLinks,
+  ...matchExperimentLinks,
+  ...levelGroupExperimentLinks,
 ];
 
 export const pythonLabLevelLinks: LevelProgressLink[] = [

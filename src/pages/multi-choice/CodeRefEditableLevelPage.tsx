@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { MultiChoiceWorkspace } from "../../components/assessment/multi";
 import { mockCodeRefEditable } from "../../data/assessment";
 import type { CodePanelConfig } from "../../data/assessment/codePanel";
-import { multiChoiceLevelLinks } from "../levelTypeLinks";
+import { multiChoiceExperimentLinks } from "../levelTypeLinks";
 
 export function CodeRefEditableLevelPage() {
   const [files, setFiles] = useState(mockCodeRefEditable.codePanel.files);
@@ -24,7 +24,7 @@ export function CodeRefEditableLevelPage() {
       codePanel={codePanel}
       codePanelEditable
       onCodeContentChange={handleContentChange}
-      levelLinks={multiChoiceLevelLinks}
+      levelLinks={multiChoiceExperimentLinks}
       currentLevelPath="/levels/multi-code-ref-editable"
     />
   );

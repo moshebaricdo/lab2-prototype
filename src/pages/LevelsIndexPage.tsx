@@ -14,10 +14,14 @@ import { generatePromotedCode } from "../utils/promoteToCode";
 import type { PromotedCode } from "../utils/promoteToCode";
 import {
   agenticProgressionLinks,
+  assessmentExperimentLinks,
+  assessmentSetLevelLinks,
+  assessmentBuilderLevelLinks,
   aiChatLabLevelLinks,
   bubbleChoiceLevelLinks,
+  dragDropLevelLinks,
+  fillInBlankLevelLinks,
   freeResponseLevelLinks,
-  levelGroupLevelLinks,
   matchLevelLinks,
   multiChoiceLevelLinks,
   pythonLabLevelLinks,
@@ -101,9 +105,24 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
         pages: matchLevelLinks,
       },
       {
-        levelType: "Levelgroup",
-        description: "Combined assessment step groups",
-        pages: levelGroupLevelLinks,
+        levelType: "Drag and drop",
+        description: "Parsons ordering and categorization buckets",
+        pages: dragDropLevelLinks,
+      },
+      {
+        levelType: "Fill in the blank",
+        description: "Keyed short-answer blanks in a passage",
+        pages: fillInBlankLevelLinks,
+      },
+      {
+        levelType: "Assessment sets",
+        description: "Survey, practice quiz, and exam-style multi-question flows",
+        pages: assessmentSetLevelLinks,
+      },
+      {
+        levelType: "Assessment builder",
+        description: "In-lab authoring with live preview and question bank",
+        pages: assessmentBuilderLevelLinks,
       },
     ],
   },
@@ -122,14 +141,21 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
 const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/multi": "Multi-choice",
   "/levels/free-response": "Free response",
+  "/levels/match": "Match",
   "/levels/match-definition-bank": "Match",
   "/levels/match-connector": "Match",
   "/levels/match-swipe-cards": "Match",
+  "/levels/drag-drop": "Drag and drop",
+  "/levels/drag-drop-parsons": "Drag and drop",
+  "/levels/fill-in-blank": "Fill in the blank",
+  "/levels/levelgroup-survey-intro": "Assessment sets",
+  "/levels/levelgroup-stepped": "Assessment sets",
+  "/levels/levelgroup-demo-quiz": "Assessment sets",
   "/levels/pythonlab": "Python Lab",
   "/levels/sketchlab": "Sketch Lab",
   "/levels/aichatlab": "AI Chat Lab",
   "/levels/weblab2": "Web Lab 2",
-  "/levels/levelgroup": "Levelgroup",
+  "/levels/levelgroup": "Assessment experiment",
   "/levels/bubble-choice": "Bubble choice",
   "/levels/progression-upload-mechanisms": "Sample progression",
   "/levels/progression-backpack-filter": "Sample progression",
@@ -279,6 +305,8 @@ function SavedVariantsSection() {
     );
   }, []);
 
+  if (variants.length === 0) return null;
+
   return (
     <div className={styles.variantsSection}>
       {promoteTarget && (
@@ -292,13 +320,8 @@ function SavedVariantsSection() {
         expanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
       >
-        {variants.length === 0 ? (
-          <p className={styles.emptySectionText}>
-            No saved variants yet. Save a variant from a level page and it will show up here.
-          </p>
-        ) : (
-          <div className={styles.variantsList}>
-            {variants.map((v) => (
+        <div className={styles.variantsList}>
+          {variants.map((v) => (
               <div key={v.id} className={styles.variantRow}>
                 <div className={styles.variantInfo}>
                   <Link
@@ -380,16 +403,15 @@ function SavedVariantsSection() {
                   </Tooltip>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
       </CollapsibleSectionCard>
     </div>
   );
 }
 
 export function LevelsIndexPage() {
-  const [sampleExpanded, setSampleExpanded] = useState(true);
+  const [experimentsExpanded, setExperimentsExpanded] = useState(true);
   const [levelTypesExpanded, setLevelTypesExpanded] = useState(true);
 
   return (
@@ -404,9 +426,54 @@ export function LevelsIndexPage() {
 
         <div className={styles.categories}>
           <CollapsibleSectionCard
-            title="Sample Progressions"
-            expanded={sampleExpanded}
-            onToggle={() => setSampleExpanded((current) => !current)}
+            title="Level Types"
+            expanded={levelTypesExpanded}
+            onToggle={() => setLevelTypesExpanded((current) => !current)}
+          >
+            {LEVEL_CATEGORIES.map((category) => (
+              <section key={category.title} className={styles.levelTypeGroup}>
+                <h2 className={styles.sectionHeading}>{category.title}</h2>
+                <div className={styles.entryGrid}>
+                  {category.entries.map((entry) => (
+                    <div
+                      key={entry.levelType}
+                      className={`${styles.card} ${styles.cardWithDescription}`}
+                    >
+                      <div className={styles.cardHeader}>
+                        <h3 className={styles.cardTitle}>{entry.levelType}</h3>
+                        <p className={styles.cardDescription}>
+                          {entry.description}
+                        </p>
+                      </div>
+                      <div className={styles.bubbleRow}>
+                        {entry.pages.map((page, index) => (
+                          <Tooltip
+                            key={page.path}
+                            content={page.name}
+                            position="top"
+                            sideOffset={8}
+                          >
+                            <Link
+                              to={page.path}
+                              aria-label={`Open ${page.name}`}
+                              className={styles.bubble}
+                            >
+                              {index + 1}
+                            </Link>
+                          </Tooltip>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </CollapsibleSectionCard>
+
+          <CollapsibleSectionCard
+            title="Experiments"
+            expanded={experimentsExpanded}
+            onToggle={() => setExperimentsExpanded((current) => !current)}
           >
             <div className={styles.entryGrid}>
               <div className={`${styles.card} ${styles.cardWithDescription}`}>
@@ -603,53 +670,36 @@ export function LevelsIndexPage() {
                   ))}
                 </div>
               </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>Assessment Experiments</h3>
+                  <p className={styles.cardDescription}>
+                    Non-core assessment variants and legacy levelgroup flows.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {assessmentExperimentLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
             </div>
           </CollapsibleSectionCard>
 
-          <CollapsibleSectionCard
-            title="Level Types"
-            expanded={levelTypesExpanded}
-            onToggle={() => setLevelTypesExpanded((current) => !current)}
-          >
-            {LEVEL_CATEGORIES.map((category) => (
-              <section key={category.title} className={styles.levelTypeGroup}>
-                <h2 className={styles.sectionHeading}>{category.title}</h2>
-              <div className={styles.entryGrid}>
-                {category.entries.map((entry) => (
-                  <div
-                    key={entry.levelType}
-                    className={`${styles.card} ${styles.cardWithDescription}`}
-                  >
-                    <div className={styles.cardHeader}>
-                      <h3 className={styles.cardTitle}>{entry.levelType}</h3>
-                      <p className={styles.cardDescription}>
-                        {entry.description}
-                      </p>
-                    </div>
-                    <div className={styles.bubbleRow}>
-                      {entry.pages.map((page, index) => (
-                        <Tooltip
-                          key={page.path}
-                          content={page.name}
-                          position="top"
-                          sideOffset={8}
-                        >
-                          <Link
-                            to={page.path}
-                            aria-label={`Open ${page.name}`}
-                            className={styles.bubble}
-                          >
-                            {index + 1}
-                          </Link>
-                        </Tooltip>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              </section>
-            ))}
-          </CollapsibleSectionCard>
         </div>
       </div>
     </main>
