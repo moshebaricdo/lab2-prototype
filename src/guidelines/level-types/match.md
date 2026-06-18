@@ -15,6 +15,7 @@ Bubble navigation and demos are listed in `src/pages/levelTypeLinks.ts` (`matchL
 
 ## Key Files
 
+- `src/components/assessment/shared/AssessmentLevelShell.tsx` — shared outer card chrome
 - `src/components/assessment/shared/AssessmentStemSection.tsx` — eyebrow, optional `stem.question`, optional markdown `stem.description`, then task UI
 - `src/components/assessment/shared/AssessmentBottomRow.tsx` — footer row (Reveal answer left; Submit / Try again / Continue + feedback right)
 - `src/components/assessment/match/views/MatchDefinitionBankWorkspace.tsx` (+ `.module.scss`) — bank + row slots

@@ -1,3 +1,5 @@
+@use "../../../styles/_mixins.scss" as *;
+
 .root {
   background: var(--ds-background-neutral-primary);
   display: flex;
@@ -9,7 +11,7 @@
   padding: 24px;
 }
 
-/* ---------- Eyebrow — mirrors AssessmentStemSection.eyebrow ---------- */
+/* ---------- Eyebrow — shared with AssessmentStemSection ---------- */
 
 .eyebrowRow {
   align-items: center;
@@ -21,12 +23,7 @@
 }
 
 .eyebrow {
-  color: var(--muted-foreground);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.06em;
-  margin: 0;
-  text-transform: uppercase;
+  @include assessment-stem-eyebrow;
 }
 
 .eyebrowActions {

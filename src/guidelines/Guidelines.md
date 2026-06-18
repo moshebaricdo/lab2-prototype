@@ -33,7 +33,7 @@ src/
     ide/pythonlab/runtime/ # Python execution runtime
     ide/sketchlab/views/   # Sketch Lab whiteboard canvas chrome
     ide/aichatlab/views/   # AI Chat Lab-specific chat/config workspace chrome
-    assessment/            # Assessment level types (shared, multi, match, free-response, levelgroup, bubble-choice)
+    assessment/            # Assessment level types (shared, multi, match, free-response, drag-drop, fill-in-blank, levelgroup, bubble-choice)
   pages/                   # Route-level entry points, grouped by level type
   data/                    # Demo project data and assessment fixtures
   hooks/                   # App-level state hooks
@@ -125,8 +125,13 @@ Design tokens and globals are layered:
   - `src/components/ide/aichatlab/views` (AI Chat Lab)
 - Assessment workspace views:
   - `src/components/assessment/<type>/views`
+- Assessment shared chrome (`src/components/assessment/shared/`):
+  - **`AssessmentLevelShell`** — outer scroll area + centered card (`standalone` | `embedded` | `embeddedFlat`). Use for every standard assessment level page; do not re-declare `.workspace` / `.card` in type-specific SCSS.
+  - **`AssessmentStemSection`** — eyebrow, optional `stem.question`, optional markdown `stem.description`, then task UI. Required for all standard assessment types (not bubble-choice). Typography uses shared mixins in `src/styles/_mixins.scss` (`assessment-stem-*`).
+  - **`AssessmentBottomRow`** — footer row (teacher tools left, submit/continue right).
+  - **`AssessmentCodeRefLayout`** — optional split code-reference panel.
 
-When adding a feature, ask:
+When adding a new assessment level type, compose: `Lab2Shell` → `AssessmentCodeRefLayout` (optional) → `AssessmentLevelShell` → `AssessmentStemSection` + task UI + `AssessmentBottomRow`.
 
 1. Could this be used by multiple Lab2 environments?
 2. If yes, place in shared directories and keep APIs generic.

@@ -51,6 +51,7 @@
   --chart-4: var(--ds-background-warning-primary);
   --chart-5: var(--ds-background-error-primary);
   --radius: 4px;
+  --radius-default: 6px;
   --radius-card: 8px;
   --sidebar: var(--ds-background-neutral-primary);
   --sidebar-foreground: var(--ds-text-neutral-primary);

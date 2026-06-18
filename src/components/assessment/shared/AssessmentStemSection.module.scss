@@ -1,23 +1,21 @@
+@use "../../../styles/_mixins.scss" as *;
+
 .root {
   margin-top: 8px;
   padding: 16px 24px 0;
 }
 
 .eyebrow {
-  color: var(--muted-foreground);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.06em;
-  margin: 0;
+  @include assessment-stem-eyebrow;
+}
+
+.stepCounterEyebrow {
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .question {
-  color: var(--foreground);
-  font-family: var(--font-heading);
-  font-size: var(--text-h4);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.3;
+  @include assessment-stem-question;
   margin: 8px 0 0;
 }
 
@@ -43,16 +41,13 @@
 .descriptionOnly :global(h4),
 .descriptionOnly :global(h5),
 .descriptionOnly :global(h6) {
-  color: var(--foreground);
-  font-family: var(--font-heading);
-  font-size: var(--text-base);
-  font-weight: var(--font-weight-semibold);
+  @include assessment-stem-description-heading;
   margin: 0 0 8px;
 }
 
 .description :global(p),
 .descriptionOnly :global(p) {
-  color: var(--foreground);
+  @include assessment-stem-description-body;
   margin: 0 0 8px;
 }
 
@@ -66,7 +61,7 @@
 
 .description :global(li),
 .descriptionOnly :global(li) {
-  color: var(--foreground);
+  @include assessment-stem-description-body;
   margin-bottom: 4px;
 }
 
@@ -92,7 +87,7 @@
 .description :global(pre),
 .descriptionOnly :global(pre) {
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: var(--text-label);
@@ -111,7 +106,7 @@
 
 .description :global(img),
 .descriptionOnly :global(img) {
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: var(--radius);
   display: block;
   margin-top: 8px;
