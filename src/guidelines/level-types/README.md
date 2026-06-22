@@ -46,5 +46,5 @@ Use these docs as handoff context for follow-up threads.
 - `/levels/drag-drop-parsons`, `/levels/drag-drop-categorization`, `/levels/drag-drop-parsons-code-ref` (see `drag-drop.md`)
 - `/levels/fill-in-blank`, `/levels/fill-in-blank-multi`, `/levels/fill-in-blank-code-ref` (see `fill-in-blank.md`)
 - `/levels/levelgroup-scroll`, `/levels/levelgroup-stepped` (see `levelgroup.md`)
-- `/levels/assessment-builder-checkpoint` through `/levels/assessment-builder-exam` (see `assessment-builder.md`)
+- `/levels/assessment-builder-new` and `/levels/assessment-builder-seeded` (see `assessment-builder.md`)
 - `/levels/bubble-choice` and `/levels/bubble-choice-images`

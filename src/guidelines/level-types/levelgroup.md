@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Grouped assessment experiences where multiple question types (multi, free response, match, drag and drop, fill in the blank) are composed from the same workspace components used by standalone levels, with a single submit for the whole group.
+Grouped assessment experiences where multiple question types (multi, free response, match, drag and drop, fill in the blank) are composed from the same workspace components used by standalone levels, with a single submit for the whole group. Standalone type docs: [drag-drop](./drag-drop.md), [fill-in-blank](./fill-in-blank.md). The canonical multi-question model going forward is [assessment builder](./assessment-builder.md); levelgroup routes remain as rendering reference.
 
 ## Routes
 

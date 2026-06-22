@@ -33,24 +33,26 @@ src/
     ide/pythonlab/runtime/ # Python execution runtime
     ide/sketchlab/views/   # Sketch Lab whiteboard canvas chrome
     ide/aichatlab/views/   # AI Chat Lab-specific chat/config workspace chrome
-    assessment/            # Assessment level types (shared, multi, match, free-response, drag-drop, fill-in-blank, levelgroup, bubble-choice)
+    assessment/            # Assessment level types (shared, multi, match, free-response, drag-drop, fill-in-blank, levelgroup, builder, bubble-choice)
   pages/                   # Route-level entry points, grouped by level type
   data/                    # Demo project data and assessment fixtures
   hooks/                   # App-level state hooks
   lib/tutor/               # Functional Tutor harness (grouped: intent/, routing/, runners/, context/, instruction/, edit/, provider/, conversation/)
+  lib/assessmentBuilder/   # Assessment builder schema adapters, bank/draft storage, scoring, exam runtime
   styles/                  # Tokens, globals, and SCSS helpers
-  types/                   # Shared type contracts
+  types/                   # Shared type contracts (includes assessmentBuilder.ts)
   guidelines/              # This document
 ```
 
 ### Naming Intent
 
-- `ui/` contains all universal primitives: buttons, text fields, sliders, tooltips, icons, panel headers, etc.
+- `ui/` contains all universal primitives: buttons, text fields, sliders, tooltips, icons, panel headers, tags (`AppTag`), etc.
 - `lab2/` groups the Lab2 frame shell (`Lab2Shell`, resource panel, dev tools) shared across all Lab2 level types.
 - `ide/shared/` contains shared editor components (CodeEditor, FileManager, EmptyState) used by IDE-type labs.
 - `ide/weblab2/views`, `ide/pythonlab/views`, and `ide/aichatlab/views` hold lab-specific workspace composition.
-- `assessment/` contains assessment-specific workspace components; shared assessment chrome belongs in `assessment/shared`.
-- `pages/` owns route composition and dev-panel defaults. Keep route files grouped by level type (`pages/weblab2`, `pages/pythonlab`, `pages/aichatlab`, etc.).
+- `assessment/` contains assessment-specific workspace components; shared assessment chrome belongs in `assessment/shared`; in-lab authoring lives in `assessment/builder/`.
+- `lib/assessmentBuilder/` holds canonical assessment schema adapters, bank/draft persistence, scoring, and exam runtime helpers used by builder routes and preview.
+- `pages/` owns route composition and dev-panel defaults. Keep route files grouped by level type (`pages/weblab2`, `pages/pythonlab`, `pages/aichatlab`, `pages/assessment-builder`, etc.).
 - As new IDE labs are introduced, add `ide/<labname>/views/` and reuse shared components from `ide/shared/`.
 - `lib/tutor/` contains the functional Tutor harness for guidance routing, project analysis, compact context packing, staged structured edits, validation, repair, tool-loop fallback, and save-title generation. See `src/guidelines/tutor-harness.md` — especially **Routing philosophy** for how we prefer small model classifiers over growing regex intent lists.
 
@@ -145,6 +147,7 @@ Keep `App.tsx` focused on routing. Put level composition in route pages, and mov
 - `useFileWorkspaceState`
 - `useChatState` for sidebar Tutor chat state
 - `useVersionHistoryState`
+- `useAssessmentBuilderState` / `useQuestionBank` for assessment builder artifact + bank persistence
 
 Prefer typed props and small, explicit interfaces over broad untyped objects.
 
@@ -177,7 +180,7 @@ Recent organization cleanup established:
 
 - `TopNavigation` + `LevelProgressBubbles` in `src/components/ui/header`
 - resource panel views in `src/components/lab2/resource-panel/views`
-- shared atoms (`AppButton`, `AppTextField`/`AppTextArea`, `AppSlider`, `Tooltip`, `AlertBanner`) in `src/components/ui`
+- shared atoms (`AppButton`, `AppTextField`/`AppTextArea`, `AppSlider`, `AppTag`, `Tooltip`, `AlertBanner`) in `src/components/ui`
 - AI Chat Lab workspace chrome in `src/components/ide/aichatlab/views`
 - icon components in `src/components/ui/icons`
 - dev tools in `src/components/lab2/dev`

@@ -168,15 +168,28 @@ src/
 3. `Sidebar` from `components/lab2/resource-panel`
 4. A level-specific workspace, such as `components/ide/weblab2/views/Workspace`, `components/ide/pythonlab/views/PythonWorkspace`, `components/ide/sketchlab/views/SketchLabWorkspace`, `components/ide/aichatlab/views/AiChatLabWorkspace`, or an assessment workspace under `components/assessment/<type>/views`
 
-Assessment builder pages compose `AssessmentBuilderWorkspace`, which adds a resource-panel **Builder** tab and previews canonical `AssessmentArtifact` content via adapters in `lib/assessmentBuilder/`.
+Assessment builder pages compose `AssessmentBuilderWorkspace`, which adds resource-panel **Builder** tabs (`builder-bank`, `builder-settings` via `showBuilderTab`) and previews canonical `AssessmentArtifact` content via adapters in `lib/assessmentBuilder/`. The build outline and inline question editor live in the center canvas (`AssessmentBuildCanvas` + `QuestionItemEditor`). Resource panel width follows the shared `useLayoutState` default (400px; resize 300–600px).
 
 This keeps feature rendering close to feature folders while the hooks layer keeps cross-cutting state logic isolated.
+
+## Assessment Builder
+
+Assessment builder is a Lab2 level type with its own workspace chrome under `components/assessment/builder/views/`:
+
+- **`AssessmentBuilderWorkspace`** — `Lab2Shell` composition, `PanelHeader` + Build/Preview toggle, sidebar width defaults, question selection
+- **`AssessmentBuildCanvas`** — draggable question outline, add zone, type tile grid
+- **`AssessmentBuilderPanel`** — bank (with course/domain/difficulty filters), question editor, settings (card-based layout)
+- **`AssessmentArtifactWorkspace`** — embedded preview of the full assessment flow
+
+Canonical schema and runtime helpers live in `types/assessmentBuilder.ts` and `lib/assessmentBuilder/` (adapters, bank/draft `localStorage`, scoring, exam pool draw). Mock fixtures: `data/assessmentBuilder/`. See `src/guidelines/level-types/assessment-builder.md` for routes, UX, and known gaps.
 
 ## State Ownership
 
 Route pages get state and handlers from dedicated hooks:
 
 - `useLayoutState` for tab/layout/sidebar width
+- `useAssessmentBuilderState` for loading/updating an `AssessmentArtifact`, resolving bank questions, and draft persistence (assessment builder routes)
+- `useQuestionBank` for upserting `QuestionItem` records to the course bank (`localStorage` in prototype)
 - `useFileWorkspaceState` for selected/open files and file view behavior
 - `useChatState` for Tutor messages/input where the sidebar Tutor is visible. Web Lab 2 and Python Lab pass route-scoped session storage keys so chat history survives reload alongside file workspace state.
 - `useVersionHistoryState` for version selection/save/restore feedback

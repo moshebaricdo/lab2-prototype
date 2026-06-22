@@ -38,7 +38,10 @@ Read `src/guidelines/level-types/README.md` first (shared assumptions, route map
 | Multi-choice | `src/guidelines/level-types/multi-choice.md` |
 | Free response | `src/guidelines/level-types/free-response.md` |
 | Match | `src/guidelines/level-types/match.md` |
+| Drag and drop | `src/guidelines/level-types/drag-drop.md` |
+| Fill in the blank | `src/guidelines/level-types/fill-in-blank.md` |
 | Levelgroup | `src/guidelines/level-types/levelgroup.md` |
+| Assessment builder | `src/guidelines/level-types/assessment-builder.md` (see also `src/guidelines/level-types/assessment-builder-levelbuilder-contract.md` for save/handoff boundaries) |
 | Bubble choice | `src/guidelines/level-types/bubble-choice.md` |
 
 Read **`src/guidelines/level-types/weblab2-agents.md`** when changing specialist agents, the roster strip, orchestrator dispatch, or `agentConfig` on Web Lab 2 levels.
@@ -67,6 +70,7 @@ Read `src/REFACTORING_SUMMARY.md` — documents what changed in the last reorg, 
 | Add Web Lab workspace chrome | `src/components/ide/weblab2/views` |
 | Add Python Lab workspace chrome | `src/components/ide/pythonlab/views` |
 | Add a new assessment type | `src/components/assessment/<type>/views` |
+| Add assessment builder schema/adapters/storage | `src/lib/assessmentBuilder/` + types in `src/types/assessmentBuilder.ts` |
 | Add cross-cutting behavior | Hook in `src/hooks` + contract in `src/types` |
 | Add mock data for a level type | `src/data/<domain>/` |
 | Add a new page/route | `src/pages/` |
