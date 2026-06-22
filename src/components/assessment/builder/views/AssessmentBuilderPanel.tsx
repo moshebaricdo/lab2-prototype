@@ -1,23 +1,21 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { AppMultiSelectDropdown } from "../../../ui/AppDropdown";
 import { AppButton } from "../../../ui/AppButton";
-import { AppTextArea, AppTextField } from "../../../ui/AppTextField";
+import { AppTextField } from "../../../ui/AppTextField";
 import { AppCheckbox } from "../../../ui/AppCheckbox";
 import { AppTag } from "../../../ui/AppTag";
-import { FaIcon } from "../../../ui/icons/FaIcon";
+import { Tooltip } from "../../../ui/Tooltip";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { SidebarTab } from "../../../lab2/resource-panel/Sidebar.types";
 import {
-  getAllCourseBanks,
+  getAllCourseBanksSnapshot,
   QUESTION_DIFFICULTIES,
   QUESTION_DIFFICULTY_LABELS,
 } from "../../../../lib/assessmentBuilder";
 import type {
   AssessmentArtifact,
-  AssessmentCourseBank,
   DomainTag,
   QuestionDifficulty,
-  QuestionItem,
 } from "../../../../types/assessmentBuilder";
 import styles from "./AssessmentBuilderPanel.module.scss";
 
@@ -32,13 +30,10 @@ function subscribeToBankStorage(callback: () => void) {
 interface AssessmentBuilderPanelProps {
   activeTab: SidebarTab;
   artifact: AssessmentArtifact;
-  courseBank: AssessmentCourseBank | undefined;
-  selectedBankId: string | null;
-  onSelectBankId: (bankId: string | null) => void;
   onUpdateArtifact: (updater: (current: AssessmentArtifact) => AssessmentArtifact) => void;
-  onUpdateQuestion: (question: QuestionItem) => void;
   onAddBankQuestion: (bankId: string) => void;
-  onOpenEditor?: () => void;
+  /** Focus and expand a question already in the outline. */
+  onFocusQuestionInOutline?: (bankId: string) => void;
 }
 
 const ITEM_KIND_LABELS: Record<string, string> = {
@@ -56,40 +51,26 @@ function itemKindLabel(kind: string): string {
 export function AssessmentBuilderPanel({
   activeTab,
   artifact,
-  courseBank,
-  selectedBankId,
-  onSelectBankId,
   onUpdateArtifact,
-  onUpdateQuestion,
   onAddBankQuestion,
-  onOpenEditor,
+  onFocusQuestionInOutline,
 }: AssessmentBuilderPanelProps) {
   const allCourseBanks = useSyncExternalStore(
     subscribeToBankStorage,
-    getAllCourseBanks,
-    getAllCourseBanks,
+    getAllCourseBanksSnapshot,
+    getAllCourseBanksSnapshot,
   );
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const [selectedDomainIds, setSelectedDomainIds] = useState<string[]>([]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<
     QuestionDifficulty[]
   >([]);
-  const graded = artifact.mode !== "survey" && artifact.surveyMode !== true;
 
   useEffect(() => {
     setSelectedCourseIds([artifact.courseId]);
     setSelectedDomainIds([]);
     setSelectedDifficulties([]);
   }, [artifact.courseId]);
-
-  const selectedQuestion = useMemo(() => {
-    if (!selectedBankId) return null;
-    for (const bank of allCourseBanks) {
-      const question = bank.questions.find((entry) => entry.bankId === selectedBankId);
-      if (question) return question;
-    }
-    return courseBank?.questions.find((entry) => entry.bankId === selectedBankId) ?? null;
-  }, [allCourseBanks, courseBank?.questions, selectedBankId]);
 
   const resolvedQuestionIds = artifact.questionRefs.map((ref) =>
     ref.type === "bank" ? ref.bankId : ref.item.bankId,
@@ -162,243 +143,38 @@ export function AssessmentBuilderPanel({
     selectedDifficulties,
   ]);
 
-  const handleSelectQuestion = (bankId: string) => {
-    onSelectBankId(bankId);
-    onOpenEditor?.();
+  const handleBankRowClick = (bankId: string, inAssessment: boolean) => {
+    if (inAssessment) {
+      onFocusQuestionInOutline?.(bankId);
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCourseIds([artifact.courseId]);
+    setSelectedDomainIds([]);
+    setSelectedDifficulties([]);
   };
 
   return (
     <ScrollArea className={styles.root}>
       <div className={styles.inner}>
-        {activeTab === "builder-editor" && !selectedQuestion && (
-          <section className={styles.section}>
-            <div className={styles.groupCard}>
-              <div className={styles.groupBody}>
-                <div className={styles.emptyState}>
-                  <FaIcon name="file-pen" size="l" className={styles.emptyIcon} />
-                  <p className={styles.emptyTitle}>No question selected</p>
-                  <p className={styles.hint}>
-                    Choose a question from the Outline or Question bank tab to edit it here.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {activeTab === "builder-editor" && selectedQuestion && (
-          <section className={styles.section}>
-            <div className={styles.groupCard}>
-              <div className={styles.groupHeader}>
-                <h3 className={styles.groupHeading}>Question</h3>
-                <AppTag>{itemKindLabel(selectedQuestion.item.kind)}</AppTag>
-              </div>
-              <div className={styles.groupBody}>
-              <AppTextField
-                label="Title"
-                size="s"
-                tone="gray"
-                value={selectedQuestion.title}
-                onChange={(event) =>
-                  onUpdateQuestion({ ...selectedQuestion, title: event.target.value })
-                }
-              />
-
-              {graded && (
-                <AppTextField
-                  label="Points"
-                  size="s"
-                  tone="gray"
-                  inputMode="numeric"
-                  value={String(selectedQuestion.points ?? 1)}
-                  onChange={(event) => {
-                    const points = Number.parseInt(event.target.value, 10);
-                    onUpdateQuestion({
-                      ...selectedQuestion,
-                      points: Number.isFinite(points) ? Math.max(0, points) : undefined,
-                    });
-                  }}
-                />
-              )}
-
-              {selectedQuestion.item.kind === "multi" &&
-                (() => {
-                  const content = selectedQuestion.item.content;
-                  return (
-                    <>
-                      <AppTextArea
-                        label="Prompt"
-                        size="s"
-                        tone="gray"
-                        value={content.prompt}
-                        onChange={(event) =>
-                          onUpdateQuestion({
-                            ...selectedQuestion,
-                            item: {
-                              kind: "multi",
-                              content: { ...content, prompt: event.target.value },
-                            },
-                          })
-                        }
-                      />
-                      <AppTextField
-                        label="Correct answer id"
-                        size="s"
-                        tone="gray"
-                        value={content.correctAnswerId ?? ""}
-                        onChange={(event) =>
-                          onUpdateQuestion({
-                            ...selectedQuestion,
-                            item: {
-                              kind: "multi",
-                              content: {
-                                ...content,
-                                correctAnswerId: event.target.value,
-                              },
-                            },
-                          })
-                        }
-                      />
-                      <label className={styles.checkRow}>
-                        <AppCheckbox
-                          checkboxSize="s"
-                          checked={content.surveyMode === true}
-                          onChange={(event) =>
-                            onUpdateQuestion({
-                              ...selectedQuestion,
-                              item: {
-                                kind: "multi",
-                                content: {
-                                  ...content,
-                                  surveyMode: event.target.checked,
-                                  ...(event.target.checked
-                                    ? { correctAnswerId: undefined }
-                                    : {}),
-                                },
-                              },
-                            })
-                          }
-                        />
-                        <span>Survey mode (ungraded)</span>
-                      </label>
-                    </>
-                  );
-                })()}
-
-              {selectedQuestion.item.kind === "match" &&
-                (() => {
-                  const content = selectedQuestion.item.content;
-                  return (
-                    <AppTextArea
-                      label="Prompt"
-                      size="s"
-                      tone="gray"
-                      value={content.prompt}
-                      onChange={(event) =>
-                        onUpdateQuestion({
-                          ...selectedQuestion,
-                          item: {
-                            kind: "match",
-                            content: { ...content, prompt: event.target.value },
-                          },
-                        })
-                      }
-                    />
-                  );
-                })()}
-
-              {selectedQuestion.item.kind === "freeResponse" &&
-                (() => {
-                  const content = selectedQuestion.item.content;
-                  return (
-                    <AppTextArea
-                      label="Prompt"
-                      size="s"
-                      tone="gray"
-                      value={content.prompt}
-                      onChange={(event) =>
-                        onUpdateQuestion({
-                          ...selectedQuestion,
-                          item: {
-                            kind: "freeResponse",
-                            content: { ...content, prompt: event.target.value },
-                          },
-                        })
-                      }
-                    />
-                  );
-                })()}
-              </div>
-            </div>
-
-            <div className={styles.groupCard}>
-              <div className={styles.groupHeader}>
-                <h3 className={styles.groupHeading}>Reveal</h3>
-              </div>
-              <div className={styles.groupBody}>
-              <label className={styles.checkRow}>
-                <AppCheckbox
-                  checkboxSize="s"
-                  checked={selectedQuestion.reveal.enabled}
-                  onChange={(event) =>
-                    onUpdateQuestion({
-                      ...selectedQuestion,
-                      reveal: {
-                        ...selectedQuestion.reveal,
-                        enabled: event.target.checked,
-                      },
-                    })
-                  }
-                />
-                <span>Reveal answer after submit</span>
-              </label>
-              {selectedQuestion.reveal.enabled && (
-                <AppTextArea
-                  label="Explanation"
-                  size="s"
-                  tone="gray"
-                  value={selectedQuestion.reveal.explanation ?? ""}
-                  onChange={(event) =>
-                    onUpdateQuestion({
-                      ...selectedQuestion,
-                      reveal: {
-                        ...selectedQuestion.reveal,
-                        explanation: event.target.value,
-                      },
-                    })
-                  }
-                />
-              )}
-              </div>
-            </div>
-
-            {selectedQuestion.tags.length > 0 && (
-              <div className={styles.groupCard}>
-                <div className={styles.groupHeader}>
-                  <h3 className={styles.groupHeading}>Domains &amp; standards</h3>
-                </div>
-                <div className={styles.groupBody}>
-                  <div className={styles.tagRow}>
-                    {selectedQuestion.tags.map((tag) => (
-                      <AppTag key={tag.id}>{tag.label}</AppTag>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-        )}
-
         {activeTab === "builder-bank" && (
           <section className={styles.section}>
             <div className={styles.groupCard}>
-              <div className={styles.groupHeader}>
+              <div className={`${styles.groupHeader} ${styles.groupHeaderWithAction}`}>
                 <h3 className={styles.groupHeading}>Filters</h3>
+                <Tooltip content="Clear all filters" position="bottom">
+                  <AppButton
+                    variant="tertiary"
+                    tone="gray"
+                    size="xs"
+                    iconName="arrow-rotate-left"
+                    aria-label="Clear all filters"
+                    onClick={handleClearFilters}
+                  />
+                </Tooltip>
               </div>
               <div className={styles.groupBody}>
-                <p className={styles.hint}>
-                  Edits propagate to every assessment referencing a bank question.
-                </p>
                 <div className={styles.filterFields}>
                   <div className={styles.filterField}>
                     <span className={styles.filterLabel}>Course</span>
@@ -413,34 +189,36 @@ export function AssessmentBuilderPanel({
                       iconName="book"
                     />
                   </div>
-                  <div className={styles.filterField}>
-                    <span className={styles.filterLabel}>Domains</span>
-                    <AppMultiSelectDropdown
-                      options={domainOptions}
-                      selectedValues={selectedDomainIds}
-                      onSelectedValuesChange={setSelectedDomainIds}
-                      placeholder="All domains"
-                      size="xs"
-                      tone="gray"
-                      fullWidth
-                      iconName="tag"
-                      disabled={domainOptions.length === 0}
-                    />
-                  </div>
-                  <div className={styles.filterField}>
-                    <span className={styles.filterLabel}>Difficulty</span>
-                    <AppMultiSelectDropdown
-                      options={difficultyOptions}
-                      selectedValues={selectedDifficulties}
-                      onSelectedValuesChange={(values) =>
-                        setSelectedDifficulties(values as QuestionDifficulty[])
-                      }
-                      placeholder="All levels"
-                      size="xs"
-                      tone="gray"
-                      fullWidth
-                      iconName="signal"
-                    />
+                  <div className={styles.filterRow}>
+                    <div className={styles.filterField}>
+                      <span className={styles.filterLabel}>Domains</span>
+                      <AppMultiSelectDropdown
+                        options={domainOptions}
+                        selectedValues={selectedDomainIds}
+                        onSelectedValuesChange={setSelectedDomainIds}
+                        placeholder="All domains"
+                        size="xs"
+                        tone="gray"
+                        fullWidth
+                        iconName="tag"
+                        disabled={domainOptions.length === 0}
+                      />
+                    </div>
+                    <div className={styles.filterField}>
+                      <span className={styles.filterLabel}>Difficulty</span>
+                      <AppMultiSelectDropdown
+                        options={difficultyOptions}
+                        selectedValues={selectedDifficulties}
+                        onSelectedValuesChange={(values) =>
+                          setSelectedDifficulties(values as QuestionDifficulty[])
+                        }
+                        placeholder="All levels"
+                        size="xs"
+                        tone="gray"
+                        fullWidth
+                        iconName="signal"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -467,7 +245,10 @@ export function AssessmentBuilderPanel({
                           <button
                             type="button"
                             className={styles.bankRowMain}
-                            onClick={() => handleSelectQuestion(question.bankId)}
+                            disabled={!inAssessment}
+                            onClick={() =>
+                              handleBankRowClick(question.bankId, inAssessment)
+                            }
                           >
                             <span className={styles.rowLabel}>{question.title}</span>
                             <span className={styles.rowMeta}>

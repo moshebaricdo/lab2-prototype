@@ -1,0 +1,110 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionHeading {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.optionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.optionControl {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 36px;
+}
+
+.optionField {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: 36px;
+}
+
+.addRow {
+  align-self: flex-start;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--ds-text-neutral-primary);
+  cursor: pointer;
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hint {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.selectField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.selectLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-primary);
+}
+
+.select {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: var(--radius-default);
+  background: var(--ds-background-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--ds-text-neutral-primary);
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline-offset: 1px;
+}

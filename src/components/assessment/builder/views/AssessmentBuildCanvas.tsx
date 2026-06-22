@@ -1,16 +1,30 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCenter,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+  type DraggableAttributes,
+} from "@dnd-kit/core";
+import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { AppButton } from "../../../ui/AppButton";
 import { FaIcon } from "../../../ui/icons/FaIcon";
+import { Tooltip } from "../../../ui/Tooltip";
 import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
 import { ScrollArea } from "../../../ui/scroll-area";
-import {
-  questionKindLabel,
-  type BlankQuestionKind,
-} from "../../../../lib/assessmentBuilder";
+import type { BlankQuestionKind } from "../../../../lib/assessmentBuilder";
 import type {
   AssessmentArtifact,
   QuestionItem,
 } from "../../../../types/assessmentBuilder";
+import { QuestionItemEditor } from "./QuestionItemEditor";
 import styles from "./AssessmentBuildCanvas.module.scss";
 
 interface AssessmentBuildCanvasProps {
@@ -21,23 +35,38 @@ interface AssessmentBuildCanvasProps {
   graded: boolean;
   onEditQuestion: (bankId: string) => void;
   onCloseQuestion: () => void;
+  onUpdateQuestion: (question: QuestionItem) => void;
   onRemoveQuestion: (index: number) => void;
   onReorderQuestion: (fromIndex: number, toIndex: number) => void;
   onOpenBank: () => void;
   onAddOneOff: (kind: BlankQuestionKind) => void;
 }
 
+type QuestionKindTone = "green" | "orange" | "purple" | "red" | "blue";
+
 interface QuestionKindBadge {
   label: string;
   iconName: FaIconName;
+  tone: QuestionKindTone;
 }
 
 interface CreateQuestionTile {
   kind: BlankQuestionKind;
   label: string;
   iconName: FaIconName;
-  tone: "green" | "orange" | "purple" | "red" | "blue";
+  tone: QuestionKindTone;
 }
+
+const QUESTION_ITEM_KIND_TONES: Record<
+  QuestionItem["item"]["kind"],
+  QuestionKindTone
+> = {
+  multi: "orange",
+  freeResponse: "green",
+  match: "purple",
+  dragDrop: "red",
+  fillInBlank: "blue",
+};
 
 const CREATE_QUESTION_TILES: CreateQuestionTile[] = [
   {
@@ -77,18 +106,189 @@ function questionPrompt(question: QuestionItem): string {
 }
 
 function questionKindBadge(question: QuestionItem): QuestionKindBadge {
+  const tone = QUESTION_ITEM_KIND_TONES[question.item.kind];
   switch (question.item.kind) {
     case "multi":
-      return { label: "Multiple Choice", iconName: "list" };
+      return { label: "Multiple Choice", iconName: "list", tone };
     case "freeResponse":
-      return { label: "Free Response", iconName: "comment" };
+      return { label: "Free Response", iconName: "comment", tone };
     case "match":
-      return { label: "Matching", iconName: "cards" };
+      return { label: "Matching", iconName: "cards", tone };
     case "dragDrop":
-      return { label: "Drag & Drop", iconName: "hand" };
+      return { label: "Drag & Drop", iconName: "hand", tone };
     case "fillInBlank":
-      return { label: "Fill in the Blank", iconName: "input-text" };
+      return { label: "Fill in the Blank", iconName: "input-text", tone };
   }
+}
+
+function reorderPreview<T>(items: T[], fromIndex: number, toIndex: number): T[] {
+  if (fromIndex === toIndex) return items;
+  const next = [...items];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
+interface QuestionCardHeaderProps {
+  question: QuestionItem;
+  sequenceNumber: number;
+  badge: QuestionKindBadge;
+  expanded: boolean;
+  dragHandleListeners?: SyntheticListenerMap;
+  dragHandleAttributes?: DraggableAttributes;
+  showActions?: boolean;
+  onEditQuestion?: (bankId: string) => void;
+  onCloseQuestion?: () => void;
+  onRemoveQuestion?: () => void;
+}
+
+function QuestionCardHeader({
+  question,
+  sequenceNumber,
+  badge,
+  expanded,
+  dragHandleListeners,
+  dragHandleAttributes,
+  showActions = true,
+  onEditQuestion,
+  onCloseQuestion,
+  onRemoveQuestion,
+}: QuestionCardHeaderProps) {
+  return (
+    <div className={styles.cardHeader}>
+      <AppButton
+        variant="tertiary"
+        tone="gray"
+        size="xs"
+        iconName="grip-vertical"
+        aria-label="Reorder question"
+        className={styles.dragHandle}
+        {...dragHandleListeners}
+        {...dragHandleAttributes}
+      />
+      <span className={styles.cardIndex}>{sequenceNumber}</span>
+      <p className={styles.cardPrompt}>{questionPrompt(question)}</p>
+      <Tooltip content={badge.label} position="top">
+        <span
+          className={[styles.typeBadge, styles[`tone${badge.tone}`]]
+            .filter(Boolean)
+            .join(" ")}
+          aria-label={badge.label}
+        >
+          <FaIcon name={badge.iconName} size="xs" aria-hidden />
+        </span>
+      </Tooltip>
+      {showActions ? (
+        <>
+          <span className={styles.cardActionsDivider} aria-hidden />
+          <div className={styles.cardActions}>
+            {expanded ? (
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="floppy-disk"
+                aria-label="Save question"
+                onClick={onCloseQuestion}
+              />
+            ) : (
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="pen-to-square"
+                aria-label="Edit question"
+                onClick={() => onEditQuestion?.(question.bankId)}
+              />
+            )}
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName="minus"
+              aria-label="Remove question"
+              className={styles.deleteButton}
+              onClick={onRemoveQuestion}
+            />
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+interface SortableQuestionCardProps {
+  question: QuestionItem;
+  displayIndex: number;
+  expanded: boolean;
+  isPlaceholder: boolean;
+  graded: boolean;
+  onEditQuestion: (bankId: string) => void;
+  onCloseQuestion: () => void;
+  onUpdateQuestion: (question: QuestionItem) => void;
+  onRemoveQuestion: () => void;
+  setCardRef: (node: HTMLLIElement | null) => void;
+}
+
+function SortableQuestionCard({
+  question,
+  displayIndex,
+  expanded,
+  isPlaceholder,
+  graded,
+  onEditQuestion,
+  onCloseQuestion,
+  onUpdateQuestion,
+  onRemoveQuestion,
+  setCardRef,
+}: SortableQuestionCardProps) {
+  const badge = questionKindBadge(question);
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: question.bankId,
+  });
+  const { setNodeRef: setDroppableRef } = useDroppable({
+    id: question.bankId,
+  });
+
+  const setNode = (node: HTMLLIElement | null) => {
+    setNodeRef(node);
+    setDroppableRef(node);
+    setCardRef(node);
+  };
+
+  return (
+    <li
+      ref={setNode}
+      className={[
+        styles.card,
+        expanded ? styles.cardExpanded : "",
+        isPlaceholder ? styles.cardPlaceholder : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <QuestionCardHeader
+        question={question}
+        sequenceNumber={displayIndex + 1}
+        badge={badge}
+        expanded={expanded}
+        dragHandleListeners={listeners}
+        dragHandleAttributes={attributes}
+        onEditQuestion={onEditQuestion}
+        onCloseQuestion={onCloseQuestion}
+        onRemoveQuestion={onRemoveQuestion}
+      />
+      {expanded && !isPlaceholder && (
+        <div className={styles.cardEditor}>
+          <QuestionItemEditor
+            question={question}
+            graded={graded}
+            onUpdateQuestion={onUpdateQuestion}
+          />
+        </div>
+      )}
+    </li>
+  );
 }
 
 export function AssessmentBuildCanvas({
@@ -98,25 +298,97 @@ export function AssessmentBuildCanvas({
   graded,
   onEditQuestion,
   onCloseQuestion,
+  onUpdateQuestion,
   onRemoveQuestion,
   onReorderQuestion,
   onOpenBank,
   onAddOneOff,
 }: AssessmentBuildCanvasProps) {
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
+  const [overlayWidth, setOverlayWidth] = useState<number | null>(null);
+  const cardRefs = useRef<Map<string, HTMLLIElement>>(new Map());
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+  );
+
+  useEffect(() => {
+    if (!selectedBankId) return;
+    const node = cardRefs.current.get(selectedBankId);
+    node?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedBankId]);
 
   const totalPoints = questions.reduce(
     (sum, question) => sum + (question.points ?? 1),
     0,
   );
 
-  const handleDrop = (target: number) => {
-    if (dragIndex != null && dragIndex !== target) {
-      onReorderQuestion(dragIndex, target);
+  const displayQuestions = useMemo(() => {
+    if (activeId == null || dragIndex == null || overIndex == null) {
+      return questions;
     }
+    if (dragIndex === overIndex) return questions;
+    return reorderPreview(questions, dragIndex, overIndex);
+  }, [activeId, dragIndex, overIndex, questions]);
+
+  const activeQuestion = useMemo(
+    () => questions.find((question) => question.bankId === activeId) ?? null,
+    [activeId, questions],
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const id = String(event.active.id);
+    const index = questions.findIndex((question) => question.bankId === id);
+    if (index === -1) return;
+
+    const card = cardRefs.current.get(id);
+    if (card) setOverlayWidth(card.offsetWidth);
+
+    setActiveId(id);
+    setDragIndex(index);
+    setOverIndex(index);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
+    if (!over) return;
+
+    const nextOverIndex = questions.findIndex(
+      (question) => question.bankId === over.id,
+    );
+    if (nextOverIndex === -1 || nextOverIndex === overIndex) return;
+    setOverIndex(nextOverIndex);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const fromIndex = questions.findIndex(
+        (question) => question.bankId === active.id,
+      );
+      const toIndex = questions.findIndex(
+        (question) => question.bankId === over.id,
+      );
+      if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+        onReorderQuestion(fromIndex, toIndex);
+      }
+    }
+
+    setActiveId(null);
     setDragIndex(null);
     setOverIndex(null);
+    setOverlayWidth(null);
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setDragIndex(null);
+    setOverIndex(null);
+    setOverlayWidth(null);
   };
 
   return (
@@ -138,96 +410,60 @@ export function AssessmentBuildCanvas({
         </header>
 
         {questions.length > 0 && (
-          <ul className={styles.list}>
-            {questions.map((question, index) => {
-              const expanded = selectedBankId === question.bankId;
-              const badge = questionKindBadge(question);
-              return (
-                <li
-                  key={`${question.bankId}-${index}`}
-                  className={[
-                    styles.card,
-                    expanded ? styles.cardExpanded : "",
-                    overIndex === index && dragIndex !== index
-                      ? styles.cardDropTarget
-                      : "",
-                    dragIndex === index ? styles.cardDragging : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <ul className={styles.list}>
+              {displayQuestions.map((question, displayIndex) => {
+                const originalIndex = questions.findIndex(
+                  (entry) => entry.bankId === question.bankId,
+                );
+                const expanded = selectedBankId === question.bankId;
+                return (
+                  <SortableQuestionCard
+                    key={question.bankId}
+                    question={question}
+                    displayIndex={displayIndex}
+                    expanded={expanded}
+                    isPlaceholder={activeId === question.bankId}
+                    graded={graded}
+                    onEditQuestion={onEditQuestion}
+                    onCloseQuestion={onCloseQuestion}
+                    onUpdateQuestion={onUpdateQuestion}
+                    onRemoveQuestion={() => onRemoveQuestion(originalIndex)}
+                    setCardRef={(node) => {
+                      if (node) cardRefs.current.set(question.bankId, node);
+                      else cardRefs.current.delete(question.bankId);
+                    }}
+                  />
+                );
+              })}
+            </ul>
+
+            <DragOverlay dropAnimation={null}>
+              {activeQuestion ? (
+                <div
+                  className={styles.dragOverlayCard}
+                  style={overlayWidth ? { width: overlayWidth } : undefined}
                 >
-                  <div
-                    className={styles.cardHeader}
-                    draggable
-                    onDragStart={() => setDragIndex(index)}
-                    onDragEnd={() => {
-                      setDragIndex(null);
-                      setOverIndex(null);
-                    }}
-                    onDragOver={(event) => {
-                      event.preventDefault();
-                      if (overIndex !== index) setOverIndex(index);
-                    }}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      handleDrop(index);
-                    }}
-                  >
-                    <span className={styles.dragHandle} aria-hidden>
-                      <FaIcon name="grip" size="s" />
-                    </span>
-                    <span className={styles.cardIndex}>{index + 1}</span>
-                    <p className={styles.cardPrompt}>{questionPrompt(question)}</p>
-                    <span className={styles.typeBadge}>
-                      <FaIcon name={badge.iconName} size="xs" aria-hidden />
-                      {badge.label}
-                    </span>
-                    <div className={styles.cardActions}>
-                      {expanded ? (
-                        <AppButton
-                          variant="secondary"
-                          tone="gray"
-                          size="xs"
-                          iconName="floppy-disk"
-                          aria-label="Save question"
-                          onClick={onCloseQuestion}
-                        />
-                      ) : (
-                        <AppButton
-                          variant="secondary"
-                          tone="gray"
-                          size="xs"
-                          iconName="pen-to-square"
-                          aria-label="Edit question"
-                          onClick={() => onEditQuestion(question.bankId)}
-                        />
-                      )}
-                      <AppButton
-                        variant="secondary"
-                        tone="gray"
-                        size="xs"
-                        iconName="circle-minus"
-                        aria-label="Remove question"
-                        className={styles.deleteButton}
-                        onClick={() => onRemoveQuestion(index)}
-                      />
-                    </div>
-                  </div>
-                  {expanded && (
-                    <div className={styles.cardEditor}>
-                      <p className={styles.editorHint}>
-                        Edit question fields in the Question Editor panel.
-                      </p>
-                      <p className={styles.editorMeta}>
-                        {questionKindLabel(question)}
-                        {question.title ? ` · ${question.title}` : ""}
-                      </p>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                  <QuestionCardHeader
+                    question={activeQuestion}
+                    sequenceNumber={
+                      (overIndex ?? dragIndex ?? 0) + 1
+                    }
+                    badge={questionKindBadge(activeQuestion)}
+                    expanded={false}
+                    showActions={false}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         )}
 
         <div
@@ -241,26 +477,17 @@ export function AssessmentBuildCanvas({
           <p className={styles.addDropZoneLabel}>
             Add a question from the bank or create a new one:
           </p>
-          <button
-            type="button"
-            className={styles.bankLink}
-            onClick={onOpenBank}
-          >
-            Drop a question from the bank here
-          </button>
           <div className={styles.typeGrid}>
             {CREATE_QUESTION_TILES.map((tile) => (
               <button
                 key={tile.kind}
                 type="button"
-                className={styles.typeTile}
+                className={[styles.typeTile, styles[`tone${tile.tone}`]]
+                  .filter(Boolean)
+                  .join(" ")}
                 onClick={() => onAddOneOff(tile.kind)}
               >
-                <span
-                  className={[styles.typeTileIcon, styles[`tone${tile.tone}`]]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
+                <span className={styles.typeTileIcon}>
                   <FaIcon name={tile.iconName} size="m" aria-hidden />
                 </span>
                 <span className={styles.typeTileLabel}>{tile.label}</span>

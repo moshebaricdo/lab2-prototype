@@ -227,13 +227,6 @@ export function SidebarTabRail({
       visible: showBuilderTab,
     },
     {
-      tab: "builder-editor",
-      tooltip: "Question editor",
-      iconName: "file-pen",
-      iconSize: "m",
-      visible: showBuilderTab,
-    },
-    {
       tab: "builder-settings",
       tooltip: "Assessment settings",
       iconName: "sliders",

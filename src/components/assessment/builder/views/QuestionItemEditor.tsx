@@ -1,0 +1,891 @@
+import { AppButton } from "../../../ui/AppButton";
+import { AppCheckbox } from "../../../ui/AppCheckbox";
+import { AppRadio } from "../../../ui/AppRadio";
+import { AppTag } from "../../../ui/AppTag";
+import { AppTextArea, AppTextField } from "../../../ui/AppTextField";
+import type { QuestionItem } from "../../../../types/assessmentBuilder";
+import styles from "./QuestionItemEditor.module.scss";
+
+interface QuestionItemEditorProps {
+  question: QuestionItem;
+  graded: boolean;
+  onUpdateQuestion: (question: QuestionItem) => void;
+}
+
+function createId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function updateQuestion(
+  question: QuestionItem,
+  onUpdateQuestion: (question: QuestionItem) => void,
+  patch: Partial<QuestionItem>,
+) {
+  onUpdateQuestion({ ...question, ...patch });
+}
+
+export function QuestionItemEditor({
+  question,
+  graded,
+  onUpdateQuestion,
+}: QuestionItemEditorProps) {
+  const patch = (next: Partial<QuestionItem>) =>
+    updateQuestion(question, onUpdateQuestion, next);
+
+  return (
+    <div className={styles.root}>
+      <div className={styles.section}>
+        <AppTextField
+          label="Title"
+          size="s"
+          tone="gray"
+          value={question.title}
+          onChange={(event) => patch({ title: event.target.value })}
+        />
+        {graded && (
+          <AppTextField
+            label="Points"
+            size="s"
+            tone="gray"
+            inputMode="numeric"
+            value={String(question.points ?? 1)}
+            onChange={(event) => {
+              const points = Number.parseInt(event.target.value, 10);
+              patch({
+                points: Number.isFinite(points) ? Math.max(0, points) : undefined,
+              });
+            }}
+          />
+        )}
+      </div>
+
+      <QuestionContentEditor
+        question={question}
+        onUpdateQuestion={onUpdateQuestion}
+      />
+
+      <div className={styles.section}>
+        <h4 className={styles.sectionHeading}>Reveal</h4>
+        <label className={styles.checkRow}>
+          <AppCheckbox
+            checkboxSize="s"
+            checked={question.reveal.enabled}
+            onChange={(event) =>
+              patch({
+                reveal: { ...question.reveal, enabled: event.target.checked },
+              })
+            }
+          />
+          <span>Reveal answer after submit</span>
+        </label>
+        {question.reveal.enabled && (
+          <AppTextArea
+            label="Explanation"
+            size="s"
+            tone="gray"
+            value={question.reveal.explanation ?? ""}
+            onChange={(event) =>
+              patch({
+                reveal: { ...question.reveal, explanation: event.target.value },
+              })
+            }
+          />
+        )}
+      </div>
+
+      {question.tags.length > 0 && (
+        <div className={styles.section}>
+          <h4 className={styles.sectionHeading}>Domains &amp; standards</h4>
+          <div className={styles.tagRow}>
+            {question.tags.map((tag) => (
+              <AppTag key={tag.id}>{tag.label}</AppTag>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface QuestionContentEditorProps {
+  question: QuestionItem;
+  onUpdateQuestion: (question: QuestionItem) => void;
+}
+
+function QuestionContentEditor({
+  question,
+  onUpdateQuestion,
+}: QuestionContentEditorProps) {
+  switch (question.item.kind) {
+    case "multi":
+      return (
+        <MultiChoiceEditor question={question} onUpdateQuestion={onUpdateQuestion} />
+      );
+    case "freeResponse":
+      return (
+        <FreeResponseEditor question={question} onUpdateQuestion={onUpdateQuestion} />
+      );
+    case "match":
+      return (
+        <MatchEditor question={question} onUpdateQuestion={onUpdateQuestion} />
+      );
+    case "dragDrop":
+      return question.item.content.mode === "categorization" ? (
+        <DragDropCategorizationEditor
+          question={question}
+          onUpdateQuestion={onUpdateQuestion}
+        />
+      ) : (
+        <DragDropParsonsEditor question={question} onUpdateQuestion={onUpdateQuestion} />
+      );
+    case "fillInBlank":
+      return (
+        <FillInBlankEditor question={question} onUpdateQuestion={onUpdateQuestion} />
+      );
+  }
+}
+
+interface KindEditorProps {
+  question: QuestionItem;
+  onUpdateQuestion: (question: QuestionItem) => void;
+}
+
+function MultiChoiceEditor({ question, onUpdateQuestion }: KindEditorProps) {
+  if (question.item.kind !== "multi") return null;
+  const content = question.item.content;
+  const isMultiple = content.selectionMode === "multiple";
+
+  const updateContent = (
+    next: Partial<typeof content>,
+  ) => {
+    onUpdateQuestion({
+      ...question,
+      item: { kind: "multi", content: { ...content, ...next } },
+    });
+  };
+
+  const updateAnswer = (id: string, text: string) => {
+    updateContent({
+      answers: content.answers.map((answer) =>
+        answer.id === id ? { ...answer, text } : answer,
+      ),
+    });
+  };
+
+  const setCorrectSingle = (id: string) => {
+    updateContent({ correctAnswerId: id });
+  };
+
+  const toggleCorrectMultiple = (id: string, checked: boolean) => {
+    const current = new Set(content.correctAnswerIds ?? []);
+    if (checked) current.add(id);
+    else current.delete(id);
+    updateContent({ correctAnswerIds: Array.from(current) });
+  };
+
+  const addAnswer = () => {
+    const id = createId("opt");
+    updateContent({
+      answers: [...content.answers, { id, text: "New option" }],
+    });
+  };
+
+  const removeAnswer = (id: string) => {
+    if (content.answers.length <= 2) return;
+    const answers = content.answers.filter((answer) => answer.id !== id);
+    const next: Partial<typeof content> = { answers };
+    if (!isMultiple && content.correctAnswerId === id) {
+      next.correctAnswerId = answers[0]?.id;
+    }
+    if (isMultiple) {
+      next.correctAnswerIds = (content.correctAnswerIds ?? []).filter(
+        (answerId) => answerId !== id,
+      );
+    }
+    updateContent(next);
+  };
+
+  return (
+    <div className={styles.section}>
+      <AppTextArea
+        label="Prompt"
+        size="s"
+        tone="gray"
+        value={content.prompt}
+        onChange={(event) => updateContent({ prompt: event.target.value })}
+      />
+      <h4 className={styles.sectionHeading}>
+        Answer options{isMultiple ? " (select all correct)" : ""}
+      </h4>
+      <div className={styles.optionList}>
+        {content.answers.map((answer) => (
+          <div key={answer.id} className={styles.optionRow}>
+            <div className={styles.optionControl}>
+              {isMultiple ? (
+                <AppCheckbox
+                  checkboxSize="s"
+                  checked={(content.correctAnswerIds ?? []).includes(answer.id)}
+                  onChange={(event) =>
+                    toggleCorrectMultiple(answer.id, event.target.checked)
+                  }
+                  aria-label={`Mark ${answer.text ?? answer.id} as correct`}
+                />
+              ) : (
+                <AppRadio
+                  radioSize="s"
+                  name={`correct-${question.bankId}`}
+                  checked={content.correctAnswerId === answer.id}
+                  onChange={() => setCorrectSingle(answer.id)}
+                  aria-label={`Mark ${answer.text ?? answer.id} as correct`}
+                />
+              )}
+            </div>
+            <div className={styles.optionField}>
+              <AppTextField
+                size="s"
+                tone="gray"
+                value={answer.text ?? ""}
+                onChange={(event) => updateAnswer(answer.id, event.target.value)}
+              />
+            </div>
+            <div className={styles.rowActions}>
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="circle-minus"
+                aria-label="Remove option"
+                disabled={content.answers.length <= 2}
+                onClick={() => removeAnswer(answer.id)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <AppButton
+        variant="secondary"
+        tone="gray"
+        size="xs"
+        iconName="plus"
+        className={styles.addRow}
+        onClick={addAnswer}
+      >
+        Add option
+      </AppButton>
+      {!isMultiple && (
+        <label className={styles.checkRow}>
+          <AppCheckbox
+            checkboxSize="s"
+            checked={content.surveyMode === true}
+            onChange={(event) =>
+              updateContent({
+                surveyMode: event.target.checked,
+                ...(event.target.checked ? { correctAnswerId: undefined } : {}),
+              })
+            }
+          />
+          <span>Survey mode (ungraded)</span>
+        </label>
+      )}
+    </div>
+  );
+}
+
+function FreeResponseEditor({ question, onUpdateQuestion }: KindEditorProps) {
+  if (question.item.kind !== "freeResponse") return null;
+  const content = question.item.content;
+
+  const updateContent = (next: Partial<typeof content>) => {
+    onUpdateQuestion({
+      ...question,
+      item: { kind: "freeResponse", content: { ...content, ...next } },
+    });
+  };
+
+  return (
+    <div className={styles.section}>
+      <AppTextArea
+        label="Prompt"
+        size="s"
+        tone="gray"
+        value={content.prompt}
+        onChange={(event) => updateContent({ prompt: event.target.value })}
+      />
+      <AppTextField
+        label="Placeholder"
+        size="s"
+        tone="gray"
+        value={content.placeholder}
+        onChange={(event) => updateContent({ placeholder: event.target.value })}
+      />
+      <AppTextField
+        label="Minimum characters"
+        size="s"
+        tone="gray"
+        inputMode="numeric"
+        value={String(content.minCharacters)}
+        onChange={(event) => {
+          const minCharacters = Number.parseInt(event.target.value, 10);
+          updateContent({
+            minCharacters: Number.isFinite(minCharacters)
+              ? Math.max(0, minCharacters)
+              : 0,
+          });
+        }}
+      />
+    </div>
+  );
+}
+
+function MatchEditor({ question, onUpdateQuestion }: KindEditorProps) {
+  if (question.item.kind !== "match") return null;
+  const content = question.item.content;
+
+  const updateContent = (next: Partial<typeof content>) => {
+    onUpdateQuestion({
+      ...question,
+      item: { kind: "match", content: { ...content, ...next } },
+    });
+  };
+
+  const updateTerm = (id: string, text: string) => {
+    updateContent({
+      terms: content.terms.map((term) => (term.id === id ? { ...term, text } : term)),
+    });
+  };
+
+  const updatePrompt = (
+    id: string,
+    patch: Partial<(typeof content.prompts)[number]>,
+  ) => {
+    updateContent({
+      prompts: content.prompts.map((prompt) =>
+        prompt.id === id ? { ...prompt, ...patch } : prompt,
+      ),
+    });
+  };
+
+  const addTerm = () => {
+    const id = createId("term");
+    updateContent({
+      terms: [...content.terms, { id, text: "New term" }],
+    });
+  };
+
+  const removeTerm = (id: string) => {
+    if (content.terms.length <= 2) return;
+    const terms = content.terms.filter((term) => term.id !== id);
+    updateContent({
+      terms,
+      prompts: content.prompts.map((prompt) =>
+        prompt.correctTermId === id
+          ? { ...prompt, correctTermId: terms[0]?.id ?? prompt.correctTermId }
+          : prompt,
+      ),
+    });
+  };
+
+  const addPrompt = () => {
+    const id = createId("prompt");
+    updateContent({
+      prompts: [
+        ...content.prompts,
+        {
+          id,
+          text: "New definition",
+          correctTermId: content.terms[0]?.id ?? "",
+        },
+      ],
+    });
+  };
+
+  const removePrompt = (id: string) => {
+    if (content.prompts.length <= 2) return;
+    updateContent({
+      prompts: content.prompts.filter((prompt) => prompt.id !== id),
+    });
+  };
+
+  return (
+    <div className={styles.section}>
+      <AppTextArea
+        label="Prompt"
+        size="s"
+        tone="gray"
+        value={content.prompt}
+        onChange={(event) => updateContent({ prompt: event.target.value })}
+      />
+
+      <h4 className={styles.sectionHeading}>Terms</h4>
+      <div className={styles.optionList}>
+        {content.terms.map((term) => (
+          <div key={term.id} className={styles.optionRow}>
+            <div className={styles.optionField}>
+              <AppTextField
+                size="s"
+                tone="gray"
+                value={term.text}
+                onChange={(event) => updateTerm(term.id, event.target.value)}
+              />
+            </div>
+            <div className={styles.rowActions}>
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="circle-minus"
+                aria-label="Remove term"
+                disabled={content.terms.length <= 2}
+                onClick={() => removeTerm(term.id)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <AppButton
+        variant="secondary"
+        tone="gray"
+        size="xs"
+        iconName="plus"
+        className={styles.addRow}
+        onClick={addTerm}
+      >
+        Add term
+      </AppButton>
+
+      <h4 className={styles.sectionHeading}>Definitions</h4>
+      <div className={styles.optionList}>
+        {content.prompts.map((prompt) => (
+          <div key={prompt.id} className={styles.optionRow}>
+            <div className={styles.optionField}>
+              <AppTextField
+                size="s"
+                tone="gray"
+                value={prompt.text}
+                onChange={(event) => updatePrompt(prompt.id, { text: event.target.value })}
+              />
+              <div className={styles.selectField}>
+                <span className={styles.selectLabel}>Matches term</span>
+                <select
+                  className={styles.select}
+                  value={prompt.correctTermId}
+                  onChange={(event) =>
+                    updatePrompt(prompt.id, { correctTermId: event.target.value })
+                  }
+                >
+                  {content.terms.map((term) => (
+                    <option key={term.id} value={term.id}>
+                      {term.text || term.id}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className={styles.rowActions}>
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="circle-minus"
+                aria-label="Remove definition"
+                disabled={content.prompts.length <= 2}
+                onClick={() => removePrompt(prompt.id)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <AppButton
+        variant="secondary"
+        tone="gray"
+        size="xs"
+        iconName="plus"
+        className={styles.addRow}
+        onClick={addPrompt}
+      >
+        Add definition
+      </AppButton>
+    </div>
+  );
+}
+
+function DragDropParsonsEditor({ question, onUpdateQuestion }: KindEditorProps) {
+  if (question.item.kind !== "dragDrop") return null;
+  const content = question.item.content;
+
+  const updateContent = (next: Partial<typeof content>) => {
+    onUpdateQuestion({
+      ...question,
+      item: { kind: "dragDrop", content: { ...content, ...next } },
+    });
+  };
+
+  const blocks = content.blocks ?? [];
+
+  const updateBlock = (id: string, text: string) => {
+    const nextBlocks = blocks.map((block) =>
+      block.id === id ? { ...block, text } : block,
+    );
+    updateContent({
+      blocks: nextBlocks,
+      correctOrder: nextBlocks.map((block) => block.id),
+    });
+  };
+
+  const addBlock = () => {
+    const id = createId("block");
+    const nextBlocks = [...blocks, { id, text: "New line" }];
+    updateContent({
+      blocks: nextBlocks,
+      correctOrder: nextBlocks.map((block) => block.id),
+    });
+  };
+
+  const removeBlock = (id: string) => {
+    if (blocks.length <= 2) return;
+    const nextBlocks = blocks.filter((block) => block.id !== id);
+    updateContent({
+      blocks: nextBlocks,
+      correctOrder: nextBlocks.map((block) => block.id),
+    });
+  };
+
+  return (
+    <div className={styles.section}>
+      <AppTextArea
+        label="Prompt"
+        size="s"
+        tone="gray"
+        value={content.prompt}
+        onChange={(event) => updateContent({ prompt: event.target.value })}
+      />
+      <h4 className={styles.sectionHeading}>Lines (correct order top to bottom)</h4>
+      <div className={styles.optionList}>
+        {blocks.map((block, index) => (
+          <div key={block.id} className={styles.optionRow}>
+            <div className={styles.optionControl}>
+              <span className={styles.hint}>{index + 1}</span>
+            </div>
+            <div className={styles.optionField}>
+              <AppTextField
+                size="s"
+                tone="gray"
+                value={block.text}
+                onChange={(event) => updateBlock(block.id, event.target.value)}
+              />
+            </div>
+            <div className={styles.rowActions}>
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="circle-minus"
+                aria-label="Remove line"
+                disabled={blocks.length <= 2}
+                onClick={() => removeBlock(block.id)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <AppButton
+        variant="secondary"
+        tone="gray"
+        size="xs"
+        iconName="plus"
+        className={styles.addRow}
+        onClick={addBlock}
+      >
+        Add line
+      </AppButton>
+    </div>
+  );
+}
+
+function DragDropCategorizationEditor({ question, onUpdateQuestion }: KindEditorProps) {
+  if (question.item.kind !== "dragDrop") return null;
+  const content = question.item.content;
+  const buckets = content.buckets ?? [];
+  const items = content.items ?? [];
+
+  const updateContent = (next: Partial<typeof content>) => {
+    onUpdateQuestion({
+      ...question,
+      item: { kind: "dragDrop", content: { ...content, ...next } },
+    });
+  };
+
+  const updateBucket = (id: string, label: string) => {
+    updateContent({
+      buckets: buckets.map((bucket) =>
+        bucket.id === id ? { ...bucket, label } : bucket,
+      ),
+    });
+  };
+
+  const addBucket = () => {
+    const id = createId("bucket");
+    updateContent({ buckets: [...buckets, { id, label: "New category" }] });
+  };
+
+  const removeBucket = (id: string) => {
+    if (buckets.length <= 2) return;
+    const nextBuckets = buckets.filter((bucket) => bucket.id !== id);
+    updateContent({
+      buckets: nextBuckets,
+      items: items.map((item) => ({
+        ...item,
+        correctBucketIds: (item.correctBucketIds ?? []).filter(
+          (bucketId) => bucketId !== id,
+        ),
+      })),
+    });
+  };
+
+  const updateItem = (
+    id: string,
+    patch: Partial<(typeof items)[number]>,
+  ) => {
+    updateContent({
+      items: items.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    });
+  };
+
+  const addItem = () => {
+    const id = createId("item");
+    updateContent({
+      items: [
+        ...items,
+        {
+          id,
+          text: "New item",
+          correctBucketIds: buckets[0]?.id ? [buckets[0].id] : [],
+        },
+      ],
+    });
+  };
+
+  const removeItem = (id: string) => {
+    if (items.length <= 2) return;
+    updateContent({ items: items.filter((item) => item.id !== id) });
+  };
+
+  return (
+    <div className={styles.section}>
+      <AppTextArea
+        label="Prompt"
+        size="s"
+        tone="gray"
+        value={content.prompt}
+        onChange={(event) => updateContent({ prompt: event.target.value })}
+      />
+
+      <h4 className={styles.sectionHeading}>Categories</h4>
+      <div className={styles.optionList}>
+        {buckets.map((bucket) => (
+          <div key={bucket.id} className={styles.optionRow}>
+            <div className={styles.optionField}>
+              <AppTextField
+                size="s"
+                tone="gray"
+                value={bucket.label}
+                onChange={(event) => updateBucket(bucket.id, event.target.value)}
+              />
+            </div>
+            <div className={styles.rowActions}>
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="circle-minus"
+                aria-label="Remove category"
+                disabled={buckets.length <= 2}
+                onClick={() => removeBucket(bucket.id)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <AppButton
+        variant="secondary"
+        tone="gray"
+        size="xs"
+        iconName="plus"
+        className={styles.addRow}
+        onClick={addBucket}
+      >
+        Add category
+      </AppButton>
+
+      <h4 className={styles.sectionHeading}>Items</h4>
+      <div className={styles.optionList}>
+        {items.map((item) => (
+          <div key={item.id} className={styles.optionRow}>
+            <div className={styles.optionField}>
+              <AppTextField
+                size="s"
+                tone="gray"
+                value={item.text}
+                onChange={(event) => updateItem(item.id, { text: event.target.value })}
+              />
+              <div className={styles.selectField}>
+                <span className={styles.selectLabel}>Correct category</span>
+                <select
+                  className={styles.select}
+                  value={item.correctBucketIds?.[0] ?? ""}
+                  onChange={(event) =>
+                    updateItem(item.id, { correctBucketIds: [event.target.value] })
+                  }
+                >
+                  {buckets.map((bucket) => (
+                    <option key={bucket.id} value={bucket.id}>
+                      {bucket.label || bucket.id}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className={styles.rowActions}>
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="circle-minus"
+                aria-label="Remove item"
+                disabled={items.length <= 2}
+                onClick={() => removeItem(item.id)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <AppButton
+        variant="secondary"
+        tone="gray"
+        size="xs"
+        iconName="plus"
+        className={styles.addRow}
+        onClick={addItem}
+      >
+        Add item
+      </AppButton>
+    </div>
+  );
+}
+
+function FillInBlankEditor({ question, onUpdateQuestion }: KindEditorProps) {
+  if (question.item.kind !== "fillInBlank") return null;
+  const content = question.item.content;
+
+  const updateContent = (next: Partial<typeof content>) => {
+    onUpdateQuestion({
+      ...question,
+      item: { kind: "fillInBlank", content: { ...content, ...next } },
+    });
+  };
+
+  const updateBlank = (
+    id: string,
+    patch: Partial<(typeof content.blanks)[number]>,
+  ) => {
+    updateContent({
+      blanks: content.blanks.map((blank) =>
+        blank.id === id ? { ...blank, ...patch } : blank,
+      ),
+    });
+  };
+
+  const addBlank = () => {
+    const id = createId("blank");
+    updateContent({
+      blanks: [
+        ...content.blanks,
+        { id, placeholder: "answer", acceptedAnswers: ["answer"] },
+      ],
+      segments: [
+        ...content.segments,
+        { type: "text", text: " " },
+        { type: "blank", blankId: id },
+      ],
+    });
+  };
+
+  const removeBlank = (id: string) => {
+    if (content.blanks.length <= 1) return;
+    updateContent({
+      blanks: content.blanks.filter((blank) => blank.id !== id),
+      segments: content.segments.filter(
+        (segment) => segment.type !== "blank" || segment.blankId !== id,
+      ),
+    });
+  };
+
+  return (
+    <div className={styles.section}>
+      <AppTextArea
+        label="Prompt"
+        size="s"
+        tone="gray"
+        value={content.prompt}
+        onChange={(event) => updateContent({ prompt: event.target.value })}
+      />
+      <p className={styles.hint}>
+        Edit each blank&apos;s accepted answers (comma-separated). New blanks append to
+        the sentence.
+      </p>
+      <h4 className={styles.sectionHeading}>Blanks</h4>
+      <div className={styles.optionList}>
+        {content.blanks.map((blank, index) => (
+          <div key={blank.id} className={styles.optionRow}>
+            <div className={styles.optionField}>
+              <AppTextField
+                label={`Blank ${index + 1} placeholder`}
+                size="s"
+                tone="gray"
+                value={blank.placeholder}
+                onChange={(event) =>
+                  updateBlank(blank.id, { placeholder: event.target.value })
+                }
+              />
+              <AppTextField
+                label="Accepted answers"
+                size="s"
+                tone="gray"
+                value={blank.acceptedAnswers.join(", ")}
+                onChange={(event) =>
+                  updateBlank(blank.id, {
+                    acceptedAnswers: event.target.value
+                      .split(",")
+                      .map((value) => value.trim())
+                      .filter(Boolean),
+                  })
+                }
+              />
+            </div>
+            <div className={styles.rowActions}>
+              <AppButton
+                variant="secondary"
+                tone="gray"
+                size="xs"
+                iconName="circle-minus"
+                aria-label="Remove blank"
+                disabled={content.blanks.length <= 1}
+                onClick={() => removeBlank(blank.id)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <AppButton
+        variant="secondary"
+        tone="gray"
+        size="xs"
+        iconName="plus"
+        className={styles.addRow}
+        onClick={addBlank}
+      >
+        Add blank
+      </AppButton>
+    </div>
+  );
+}

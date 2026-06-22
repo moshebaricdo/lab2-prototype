@@ -34,7 +34,6 @@ export type SidebarTab =
   | "classroom"
   | "rubric"
   | "resources"
-  | "builder-editor"
   | "builder-bank"
   | "builder-settings"
   | "dev";
@@ -42,7 +41,6 @@ export type SidebarTab =
 /** Ordered builder sub-tabs surfaced in the rail when `showBuilderTab` is true. */
 export const BUILDER_SIDEBAR_TABS = [
   "builder-bank",
-  "builder-editor",
   "builder-settings",
 ] as const satisfies readonly SidebarTab[];
 

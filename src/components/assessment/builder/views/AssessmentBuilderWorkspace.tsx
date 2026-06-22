@@ -31,15 +31,12 @@ interface AssessmentBuilderWorkspaceProps {
   currentLevelPath?: string;
 }
 
-const BUILDER_SIDEBAR_WIDTH = 550;
-const BUILDER_SIDEBAR_MAX_WIDTH = 720;
-
 export function AssessmentBuilderWorkspace({
   assessmentId,
   levelLinks,
   currentLevelPath,
 }: AssessmentBuilderWorkspaceProps) {
-  const { artifact, bankQuestions, courseBank, resolvedQuestions, updateArtifact } =
+  const { artifact, bankQuestions, resolvedQuestions, updateArtifact } =
     useAssessmentBuilderState(assessmentId);
   const { saveQuestion } = useQuestionBank(artifact?.courseId ?? "aif-cert");
 
@@ -62,10 +59,6 @@ export function AssessmentBuilderWorkspace({
     setActiveTab("builder-bank");
   }, [setActiveTab]);
 
-  useEffect(() => {
-    setSidebarWidth(BUILDER_SIDEBAR_WIDTH);
-  }, [setSidebarWidth]);
-
   if (!artifact) {
     return null;
   }
@@ -78,6 +71,7 @@ export function AssessmentBuilderWorkspace({
       ...current,
       questionRefs: [...current.questionRefs, { type: "bank", bankId }],
     }));
+    setSelectedBankId(bankId);
   };
 
   const handleRemoveQuestion = (index: number) => {
@@ -104,7 +98,6 @@ export function AssessmentBuilderWorkspace({
 
   const handleEditQuestion = (bankId: string) => {
     setSelectedBankId(bankId);
-    setActiveTab("builder-editor");
   };
 
   const handleAddOneOff = (kind: BlankQuestionKind) => {
@@ -118,7 +111,6 @@ export function AssessmentBuilderWorkspace({
       ],
     }));
     setSelectedBankId(question.bankId);
-    setActiveTab("builder-editor");
   };
 
   return (
@@ -161,20 +153,14 @@ export function AssessmentBuilderWorkspace({
           <AssessmentBuilderPanel
             activeTab={activeTab}
             artifact={artifact}
-            courseBank={courseBank}
-            selectedBankId={selectedBankId}
-            onSelectBankId={setSelectedBankId}
             onUpdateArtifact={updateArtifact}
-            onUpdateQuestion={saveQuestion}
             onAddBankQuestion={handleAddBankQuestion}
-            onOpenEditor={() => setActiveTab("builder-editor")}
+            onFocusQuestionInOutline={setSelectedBankId}
           />
         ),
       }}
       onResize={(delta) => {
-        setSidebarWidth((prev) =>
-          Math.max(300, Math.min(BUILDER_SIDEBAR_MAX_WIDTH, prev + delta)),
-        );
+        setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));
       }}
     >
       <div className={styles.workspace}>
@@ -197,6 +183,7 @@ export function AssessmentBuilderWorkspace({
               graded={graded}
               onEditQuestion={handleEditQuestion}
               onCloseQuestion={() => setSelectedBankId(null)}
+              onUpdateQuestion={saveQuestion}
               onRemoveQuestion={handleRemoveQuestion}
               onReorderQuestion={handleReorderQuestion}
               onOpenBank={() => setActiveTab("builder-bank")}

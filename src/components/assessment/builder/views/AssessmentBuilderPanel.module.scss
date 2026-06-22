@@ -34,6 +34,10 @@
   background: var(--ds-background-neutral-secondary);
 }
 
+.groupHeaderWithAction {
+  padding-right: 8px;
+}
+
 .groupHeading {
   margin: 0;
   font-family: var(--font-body);
@@ -62,6 +66,16 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.filterRow {
+  display: flex;
+  gap: 10px;
+}
+
+.filterRow .filterField {
+  flex: 1;
+  min-width: 0;
 }
 
 .filterField {

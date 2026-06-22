@@ -116,7 +116,6 @@ const PANEL_LABEL: Record<SidebarTab, string> = {
   classroom: "TEACHER RESOURCES",
   rubric: "RUBRIC",
   resources: "RESOURCES",
-  "builder-editor": "QUESTION EDITOR",
   "builder-bank": "QUESTION BANK",
   "builder-settings": "ASSESSMENT SETTINGS",
   dev: "DEV PANEL",
