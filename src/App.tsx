@@ -107,22 +107,13 @@ const LevelsIndexPage = lazyPage(
   () => import("./pages/LevelsIndexPage"),
   "LevelsIndexPage",
 );
-const AssessmentBuilderPages = () => import("./pages/assessment-builder/AssessmentBuilderCheckpointPage");
-const AssessmentBuilderCheckpointPage = lazyPage(
-  AssessmentBuilderPages,
-  "AssessmentBuilderCheckpointPage",
+const AssessmentBuilderNewPage = lazyPage(
+  () => import("./pages/assessment-builder/AssessmentBuilderNewPage"),
+  "AssessmentBuilderNewPage",
 );
-const AssessmentBuilderSurveyPage = lazyPage(
-  () => import("./pages/assessment-builder/AssessmentBuilderSurveyPage"),
-  "AssessmentBuilderSurveyPage",
-);
-const AssessmentBuilderQuizPage = lazyPage(
-  () => import("./pages/assessment-builder/AssessmentBuilderQuizPage"),
-  "AssessmentBuilderQuizPage",
-);
-const AssessmentBuilderExamPage = lazyPage(
-  () => import("./pages/assessment-builder/AssessmentBuilderExamPage"),
-  "AssessmentBuilderExamPage",
+const AssessmentBuilderSeededPage = lazyPage(
+  () => import("./pages/assessment-builder/AssessmentBuilderSeededPage"),
+  "AssessmentBuilderSeededPage",
 );
 const MatchConnectorCodeLevelPage = lazyPage(
   () => import("./pages/match/MatchConnectorCodeLevelPage"),
@@ -554,20 +545,12 @@ export default function App() {
           element={<FillInBlankCodeRefLevelPage />}
         />
         <Route
-          path="/levels/assessment-builder-checkpoint"
-          element={<AssessmentBuilderCheckpointPage />}
+          path="/levels/assessment-builder-new"
+          element={<AssessmentBuilderNewPage />}
         />
         <Route
-          path="/levels/assessment-builder-survey"
-          element={<AssessmentBuilderSurveyPage />}
-        />
-        <Route
-          path="/levels/assessment-builder-quiz"
-          element={<AssessmentBuilderQuizPage />}
-        />
-        <Route
-          path="/levels/assessment-builder-exam"
-          element={<AssessmentBuilderExamPage />}
+          path="/levels/assessment-builder-seeded"
+          element={<AssessmentBuilderSeededPage />}
         />
         <Route
           path="/levels/levelgroup-scroll"

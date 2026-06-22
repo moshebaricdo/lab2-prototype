@@ -1,12 +1,12 @@
 import { AssessmentBuilderWorkspace } from "../../components/assessment/builder";
 import { assessmentBuilderLevelLinks } from "../levelTypeLinks";
 
-export function AssessmentBuilderSurveyPage() {
+export function AssessmentBuilderSeededPage() {
   return (
     <AssessmentBuilderWorkspace
-      assessmentId="draft-survey"
+      assessmentId="draft-seeded"
       levelLinks={assessmentBuilderLevelLinks}
-      currentLevelPath="/levels/assessment-builder-survey"
+      currentLevelPath="/levels/assessment-builder-seeded"
     />
   );
 }

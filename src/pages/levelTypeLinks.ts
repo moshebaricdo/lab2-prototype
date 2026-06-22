@@ -133,20 +133,12 @@ export const assessmentSetLevelLinks: LevelProgressLink[] = [
 
 export const assessmentBuilderLevelLinks: LevelProgressLink[] = [
   {
-    name: "Builder: single-question checkpoint",
-    path: "/levels/assessment-builder-checkpoint",
+    name: "New assessment (blank)",
+    path: "/levels/assessment-builder-new",
   },
   {
-    name: "Builder: survey assembly",
-    path: "/levels/assessment-builder-survey",
-  },
-  {
-    name: "Builder: practice quiz",
-    path: "/levels/assessment-builder-quiz",
-  },
-  {
-    name: "Builder: practice exam",
-    path: "/levels/assessment-builder-exam",
+    name: "Seeded assessment (6 questions)",
+    path: "/levels/assessment-builder-seeded",
   },
 ];
 
