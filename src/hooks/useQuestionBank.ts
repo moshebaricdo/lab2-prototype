@@ -2,7 +2,7 @@ import { useCallback, useSyncExternalStore } from "react";
 import type { QuestionItem } from "../types/assessmentBuilder";
 import {
   deleteBankQuestion,
-  getCourseBank,
+  getCourseBankSnapshot,
   upsertBankQuestion,
 } from "../lib/assessmentBuilder/bankStorage";
 
@@ -17,8 +17,8 @@ function subscribe(callback: () => void) {
 export function useQuestionBank(courseId: string) {
   const bank = useSyncExternalStore(
     subscribe,
-    () => getCourseBank(courseId),
-    () => getCourseBank(courseId),
+    () => getCourseBankSnapshot(courseId),
+    () => getCourseBankSnapshot(courseId),
   );
 
   const saveQuestion = useCallback(

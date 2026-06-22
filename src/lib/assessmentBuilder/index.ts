@@ -19,14 +19,18 @@ export {
 export {
   deleteBankQuestion,
   getAllCourseBanks,
+  getAllCourseBanksSnapshot,
   getBankQuestion,
   getBankQuestionMap,
+  getBankQuestionMapSnapshot,
   getCourseBank,
+  getCourseBankSnapshot,
   resetCourseBank,
   upsertBankQuestion,
 } from "./bankStorage";
 export {
   getAssessmentDraft,
+  getAssessmentDraftSnapshot,
   getAssessmentDrafts,
   resetAssessmentDrafts,
   upsertAssessmentDraft,

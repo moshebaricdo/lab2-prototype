@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import type { AssessmentArtifact, QuestionItem } from "../types/assessmentBuilder";
 import {
-  getAssessmentDraft,
-  getBankQuestionMap,
-  getCourseBank,
+  getAssessmentDraftSnapshot,
+  getBankQuestionMapSnapshot,
+  getCourseBankSnapshot,
   upsertAssessmentDraft,
 } from "../lib/assessmentBuilder";
 
@@ -22,20 +22,22 @@ function subscribe(callback: () => void) {
 }
 
 function getArtifactSnapshot(assessmentId: string) {
-  return () => getAssessmentDraft(assessmentId);
+  return () => getAssessmentDraftSnapshot(assessmentId);
 }
 
 function getBankQuestionsSnapshot(assessmentId: string) {
   return () => {
-    const courseId = getAssessmentDraft(assessmentId)?.courseId ?? "aif-cert";
-    return getBankQuestionMap(courseId);
+    const courseId =
+      getAssessmentDraftSnapshot(assessmentId)?.courseId ?? "aif-cert";
+    return getBankQuestionMapSnapshot(courseId);
   };
 }
 
-function getCourseBankSnapshot(assessmentId: string) {
+function getCourseBankSnapshotForAssessment(assessmentId: string) {
   return () => {
-    const courseId = getAssessmentDraft(assessmentId)?.courseId ?? "aif-cert";
-    return getCourseBank(courseId);
+    const courseId =
+      getAssessmentDraftSnapshot(assessmentId)?.courseId ?? "aif-cert";
+    return getCourseBankSnapshot(courseId);
   };
 }
 
@@ -54,8 +56,8 @@ export function useAssessmentBuilderState(assessmentId: string) {
 
   const courseBank = useSyncExternalStore(
     subscribe,
-    getCourseBankSnapshot(assessmentId),
-    getCourseBankSnapshot(assessmentId),
+    getCourseBankSnapshotForAssessment(assessmentId),
+    getCourseBankSnapshotForAssessment(assessmentId),
   );
 
   const resolvedQuestions = useMemo(() => {

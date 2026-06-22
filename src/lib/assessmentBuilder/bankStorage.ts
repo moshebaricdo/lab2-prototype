@@ -5,8 +5,11 @@ const STORAGE_KEY = "lab2:assessment-bank";
 
 let cachedRaw: string | null = null;
 let cachedBanks: AssessmentCourseBank[] | null = null;
-let cachedQuestionMapKey: string | null = null;
-let cachedQuestionMap: Map<string, QuestionItem> = new Map();
+
+let bankSnapshotRawKey: string | null = null;
+let banksListSnapshot: AssessmentCourseBank[] = [];
+const courseBankSnapshots = new Map<string, AssessmentCourseBank | undefined>();
+const questionMapSnapshots = new Map<string, Map<string, QuestionItem>>();
 
 function readBanks(): AssessmentCourseBank[] {
   try {
@@ -32,9 +35,10 @@ function readBanks(): AssessmentCourseBank[] {
   }
 }
 
-function invalidateQuestionMapCache() {
-  cachedQuestionMapKey = null;
-  cachedQuestionMap = new Map();
+function invalidateSyncSnapshots() {
+  bankSnapshotRawKey = null;
+  courseBankSnapshots.clear();
+  questionMapSnapshots.clear();
 }
 
 function writeBanks(banks: AssessmentCourseBank[], options?: { notify?: boolean }) {
@@ -42,10 +46,59 @@ function writeBanks(banks: AssessmentCourseBank[], options?: { notify?: boolean 
   localStorage.setItem(STORAGE_KEY, json);
   cachedRaw = json;
   cachedBanks = banks;
-  invalidateQuestionMapCache();
+  invalidateSyncSnapshots();
   if (options?.notify !== false) {
     window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
   }
+}
+
+function refreshBankSnapshotsIfNeeded() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw === bankSnapshotRawKey) return;
+  bankSnapshotRawKey = raw;
+  banksListSnapshot = readBanks();
+  courseBankSnapshots.clear();
+  questionMapSnapshots.clear();
+}
+
+function buildQuestionMap(courseId: string): Map<string, QuestionItem> {
+  const bank = banksListSnapshot.find((entry) => entry.courseId === courseId);
+  const map = new Map<string, QuestionItem>();
+  if (bank) {
+    for (const question of bank.questions) {
+      map.set(question.bankId, question);
+    }
+  }
+  return map;
+}
+
+/** Cached snapshot for `useSyncExternalStore` — stable reference until storage changes. */
+export function getAllCourseBanksSnapshot(): AssessmentCourseBank[] {
+  refreshBankSnapshotsIfNeeded();
+  return banksListSnapshot;
+}
+
+/** Cached snapshot for `useSyncExternalStore` — stable reference until storage changes. */
+export function getCourseBankSnapshot(courseId: string): AssessmentCourseBank | undefined {
+  refreshBankSnapshotsIfNeeded();
+  if (!courseBankSnapshots.has(courseId)) {
+    courseBankSnapshots.set(
+      courseId,
+      banksListSnapshot.find((bank) => bank.courseId === courseId),
+    );
+  }
+  return courseBankSnapshots.get(courseId);
+}
+
+/** Cached snapshot for `useSyncExternalStore` — stable reference until storage changes. */
+export function getBankQuestionMapSnapshot(courseId: string): Map<string, QuestionItem> {
+  refreshBankSnapshotsIfNeeded();
+  let map = questionMapSnapshots.get(courseId);
+  if (!map) {
+    map = buildQuestionMap(courseId);
+    questionMapSnapshots.set(courseId, map);
+  }
+  return map;
 }
 
 export function getCourseBank(courseId: string): AssessmentCourseBank | undefined {
@@ -64,20 +117,7 @@ export function getBankQuestion(
 }
 
 export function getBankQuestionMap(courseId: string): Map<string, QuestionItem> {
-  const mapKey = `${cachedRaw ?? ""}:${courseId}`;
-  if (cachedQuestionMapKey === mapKey) return cachedQuestionMap;
-
-  const bank = getCourseBank(courseId);
-  const map = new Map<string, QuestionItem>();
-  if (bank) {
-    for (const question of bank.questions) {
-      map.set(question.bankId, question);
-    }
-  }
-
-  cachedQuestionMapKey = mapKey;
-  cachedQuestionMap = map;
-  return cachedQuestionMap;
+  return getBankQuestionMapSnapshot(courseId);
 }
 
 export function upsertBankQuestion(
