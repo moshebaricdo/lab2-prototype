@@ -8,6 +8,11 @@ import type { SketchPoint } from "../sketchLabLineGeometry";
 interface SketchLabActions {
   updateNodeData: (id: string, partial: Partial<SketchNodeData>) => void;
   selectNode: (id: string) => void;
+  toggleNodeSelection: (id: string) => void;
+  resizeNode: (
+    id: string,
+    next: { position: SketchPoint; width: number; height: number },
+  ) => void;
   dragLineEndpoint: (
     lineId: string,
     endpoint: "start" | "end",

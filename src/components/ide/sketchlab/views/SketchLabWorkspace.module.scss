@@ -33,3 +33,8 @@
 .flowSelect :global(.react-flow__pane) {
   cursor: default;
 }
+
+.flow :global(.react-flow__nodesselection),
+.flow :global(.react-flow__nodesselection-rect) {
+  display: none;
+}

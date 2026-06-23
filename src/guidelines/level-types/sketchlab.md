@@ -85,14 +85,18 @@ endpoint and a shape attaches that endpoint. The palette line tool adds a standa
 line to the canvas.
 
 The left toolbar starts with **Select** (default — drag empty canvas to
-marquee-select; Shift+click to add to selection) and **Hand Tool** (drag empty canvas
-to pan). **⌘/Ctrl+G** groups the current multi-selection (two or more ungrouped
+marquee-select; Shift+click toggles individual nodes in or out of the selection)
+and **Hand Tool** (drag empty canvas to pan). **⌘/Ctrl+G** groups the current multi-selection (two or more ungrouped
 nodes). Grouped items move together via a parent `group` node; selecting the
 group wrapper or all group members opens the **Group** property panel, while
 selecting a single member opens that member's own panel so its properties can
 override group-level styling. Ungroup from the group panel action row. The group
 boundary is hidden by default, appears as a neutral dashed outline on hover, and
 switches to a solid brand outline when selected.
+
+Selected shape, text, and image nodes resize from the selection outline: drag any
+edge to resize horizontally or vertically, or drag a corner to resize diagonally.
+Line nodes keep their start/end endpoint knobs as the resize/connection affordance.
 
 Line nodes always show **start/end endpoint handles** (larger than shape handles).
 Select a line to bring it above overlapping shapes. Drag an endpoint to connect;

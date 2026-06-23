@@ -117,6 +117,8 @@ export function SketchLabWorkspace({
           value={{
             updateNodeData: canvas.updateNodeData,
             selectNode: canvas.selectNode,
+            toggleNodeSelection: canvas.toggleNodeSelection,
+            resizeNode: canvas.resizeNode,
             dragLineEndpoint: canvas.dragLineEndpoint,
             beginHistoryStep: canvas.beginHistoryStep,
             connectHintId: canvas.connectHintId,

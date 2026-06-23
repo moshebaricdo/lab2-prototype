@@ -33,14 +33,25 @@ const DEFAULT_NODE_SIZE: Record<string, { width: number; height: number }> = {
   group: { width: 120, height: 72 },
 };
 
+function numericDimension(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function getNodeDimensions(node: SketchNode) {
+  const styleWidth = numericDimension(node.style?.width);
+  const styleHeight = numericDimension(node.style?.height);
   return {
     width:
+      styleWidth ??
       node.measured?.width ??
       node.width ??
       DEFAULT_NODE_SIZE[node.type ?? "shape"]?.width ??
       120,
     height:
+      styleHeight ??
       node.measured?.height ??
       node.height ??
       DEFAULT_NODE_SIZE[node.type ?? "shape"]?.height ??
@@ -107,6 +118,19 @@ export function getNodeHandlePosition(
   const { width, height } = nodeSize(node);
   const { x, y } = getNodeAbsolutePosition(node, nodes);
 
+  if (node.data.kind === "shape" && node.data.shape === "triangle") {
+    switch (handleId) {
+      case "left":
+        return { x: x + width * 0.25, y: y + height * 0.5 };
+      case "right":
+        return { x: x + width * 0.75, y: y + height * 0.5 };
+      case "bottom":
+        return { x: x + width * 0.5, y: y + height };
+      default:
+        return { x: x + width * 0.5, y: y + height * 0.5 };
+    }
+  }
+
   switch (handleId) {
     case "top":
       return { x: x + width / 2, y };
@@ -121,7 +145,12 @@ export function getNodeHandlePosition(
   }
 }
 
-const SHAPE_HANDLE_IDS = ["top", "right", "bottom", "left"] as const;
+function getShapeHandleIds(node: SketchNode) {
+  if (node.data.kind === "shape" && node.data.shape === "triangle") {
+    return ["left", "right", "bottom"] as const;
+  }
+  return ["top", "right", "bottom", "left"] as const;
+}
 
 /**
  * Find the closest shape handle to snap a line endpoint to.
@@ -153,7 +182,7 @@ export function findEndpointSnap(
       continue;
     }
 
-    for (const handleId of SHAPE_HANDLE_IDS) {
+    for (const handleId of getShapeHandleIds(node)) {
       const handle = getNodeHandlePosition(node, handleId, nodes);
       const dist = Math.hypot(handle.x - point.x, handle.y - point.y);
       if (dist < bestDist) {

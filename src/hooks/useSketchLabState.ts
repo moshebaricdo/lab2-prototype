@@ -95,6 +95,13 @@ function makeNodeData(kind: SketchNodeKind, shape?: SketchShapeKind): SketchNode
   } satisfies SketchImageNodeData;
 }
 
+function coerceDimension(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 interface StoredCanvas {
   nodes: SketchNode[];
   edges?: SketchLegacyEdge[];
@@ -369,6 +376,52 @@ export function useSketchLabState({
       });
     },
     [setNodes],
+  );
+
+  const toggleNodeSelection = useCallback(
+    (id: string) => {
+      setNodes((current) => {
+        const target = current.find((node) => node.id === id);
+        if (!target) return current;
+        return [
+          ...current.filter((node) => node.id !== id),
+          { ...target, selected: !target.selected },
+        ];
+      });
+    },
+    [setNodes],
+  );
+
+  const resizeNode = useCallback(
+    (
+      id: string,
+      next: { position: SketchPoint; width: number; height: number },
+    ) => {
+      commitNodes((current) =>
+        current.map((node) => {
+          if (node.id !== id) return node;
+          const styleWidth = coerceDimension(node.style?.width);
+          const styleHeight = coerceDimension(node.style?.height);
+          const width = Number.isFinite(next.width) ? next.width : styleWidth ?? node.width ?? 120;
+          const height = Number.isFinite(next.height)
+            ? next.height
+            : styleHeight ?? node.height ?? 72;
+          return {
+            ...node,
+            position: next.position,
+            width,
+            height,
+            selected: true,
+            style: {
+              ...node.style,
+              width,
+              height,
+            },
+          };
+        }),
+      );
+    },
+    [commitNodes],
   );
 
   /**
@@ -785,6 +838,8 @@ export function useSketchLabState({
     onNodesChange,
     onConnect,
     selectNode,
+    toggleNodeSelection,
+    resizeNode,
     dragLineEndpoint,
     beginHistoryStep,
     undo,

@@ -32,6 +32,24 @@ const HANDLE_SIDES = [
   { id: "left", position: Position.Left },
 ] as const;
 
+const TRIANGLE_HANDLE_SIDES = [
+  {
+    id: "left",
+    position: Position.Left,
+    style: { left: "25%", right: "auto", top: "50%" },
+  },
+  {
+    id: "right",
+    position: Position.Right,
+    style: { left: "75%", right: "auto", top: "50%" },
+  },
+  {
+    id: "bottom",
+    position: Position.Bottom,
+    style: { left: "50%", bottom: "auto", top: "100%" },
+  },
+] as const;
+
 const VECTOR_SHAPE_VIEWBOX = { width: 120, height: 96 } as const;
 
 const VECTOR_POLYGON: Record<"triangle" | "diamond", string> = {
@@ -39,17 +57,204 @@ const VECTOR_POLYGON: Record<"triangle" | "diamond", string> = {
   diamond: "60,2 118,48 60,94 2,48",
 };
 
-/** Four source handles (Loose connection mode lets them receive edges too). */
-function NodeHandles() {
+const MIN_NODE_SIZE: Record<"shape" | "text" | "image", { width: number; height: number }> = {
+  shape: { width: 72, height: 48 },
+  text: { width: 60, height: 28 },
+  image: { width: 80, height: 60 },
+};
+
+const FALLBACK_NODE_SIZE: Record<"shape" | "text" | "image", { width: number; height: number }> = {
+  shape: { width: 120, height: 72 },
+  text: { width: 100, height: 40 },
+  image: { width: 160, height: 120 },
+};
+
+type ResizeHandleId =
+  | "top"
+  | "right"
+  | "bottom"
+  | "left"
+  | "topRight"
+  | "bottomRight"
+  | "bottomLeft"
+  | "topLeft";
+
+const RESIZE_HANDLES: ResizeHandleId[] = [
+  "top",
+  "right",
+  "bottom",
+  "left",
+  "topRight",
+  "bottomRight",
+  "bottomLeft",
+  "topLeft",
+];
+
+/** Source handles (Loose connection mode lets them receive edges too). */
+function NodeHandles({ shape }: { shape?: SketchShapeKind }) {
+  const sides = shape === "triangle" ? TRIANGLE_HANDLE_SIDES : HANDLE_SIDES;
   return (
     <>
-      {HANDLE_SIDES.map((side) => (
+      {sides.map((side) => (
         <Handle
           key={side.id}
           id={side.id}
           type="source"
           position={side.position}
-          className={styles.handle}
+          className={`${styles.handle} ${"style" in side ? styles.positionedHandle : ""}`}
+          style={"style" in side ? side.style : undefined}
+        />
+      ))}
+    </>
+  );
+}
+
+function useShiftClickSelection(id: string) {
+  const { toggleNodeSelection } = useSketchLabActions();
+
+  const onPointerDownCapture = useCallback(
+    (event: ReactPointerEvent) => {
+      if (!event.shiftKey) return;
+      event.stopPropagation();
+      event.preventDefault();
+      toggleNodeSelection(id);
+    },
+    [id, toggleNodeSelection],
+  );
+
+  return { onPointerDownCapture };
+}
+
+function readSize(
+  kind: "shape" | "text" | "image",
+  width: number | undefined,
+  height: number | undefined,
+  shape?: SketchShapeKind,
+) {
+  if (shape === "circle") {
+    const fallback = width ?? height ?? 96;
+    const size = Math.max(width ?? fallback, height ?? fallback);
+    return { width: size, height: size };
+  }
+  if (shape === "triangle" || shape === "diamond") {
+    return {
+      width: width ?? 120,
+      height: height ?? 96,
+    };
+  }
+  return {
+    width: width ?? FALLBACK_NODE_SIZE[kind].width,
+    height: height ?? FALLBACK_NODE_SIZE[kind].height,
+  };
+}
+
+function ResizeHandles({
+  id,
+  kind,
+  shape,
+  selected,
+  width,
+  height,
+}: {
+  id: string;
+  kind: "shape" | "text" | "image";
+  shape?: SketchShapeKind;
+  selected: boolean;
+  width?: number;
+  height?: number;
+}) {
+  const { getNode, screenToFlowPosition } = useReactFlow<SketchNode>();
+  const { resizeNode, beginHistoryStep } = useSketchLabActions();
+  const active = useRef<{
+    handle: ResizeHandleId;
+    pointerId: number;
+    startPointer: { x: number; y: number };
+    startPosition: { x: number; y: number };
+    startWidth: number;
+    startHeight: number;
+  } | null>(null);
+
+  const size = readSize(kind, width, height, shape);
+  const min = MIN_NODE_SIZE[kind];
+
+  const resizeFromPointer = useCallback(
+    (event: PointerEvent) => {
+      if (!active.current || event.pointerId !== active.current.pointerId) return;
+      event.preventDefault();
+      const current = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      const dx = current.x - active.current.startPointer.x;
+      const dy = current.y - active.current.startPointer.y;
+      let nextX = active.current.startPosition.x;
+      let nextY = active.current.startPosition.y;
+      let nextWidth = active.current.startWidth;
+      let nextHeight = active.current.startHeight;
+      const handle = active.current.handle;
+
+      if (handle === "left" || handle.endsWith("Left")) {
+        nextWidth = Math.max(min.width, active.current.startWidth - dx);
+        nextX = active.current.startPosition.x + active.current.startWidth - nextWidth;
+      } else if (handle === "right" || handle.endsWith("Right")) {
+        nextWidth = Math.max(min.width, active.current.startWidth + dx);
+      }
+
+      if (handle === "top" || handle.startsWith("top")) {
+        nextHeight = Math.max(min.height, active.current.startHeight - dy);
+        nextY = active.current.startPosition.y + active.current.startHeight - nextHeight;
+      } else if (handle === "bottom" || handle.startsWith("bottom")) {
+        nextHeight = Math.max(min.height, active.current.startHeight + dy);
+      }
+
+      resizeNode(id, {
+        position: { x: nextX, y: nextY },
+        width: nextWidth,
+        height: nextHeight,
+      });
+    },
+    [id, min.height, min.width, resizeNode, screenToFlowPosition],
+  );
+
+  const endResize = useCallback((event: PointerEvent) => {
+    if (!active.current || event.pointerId !== active.current.pointerId) return;
+    active.current = null;
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("pointermove", resizeFromPointer);
+    window.addEventListener("pointerup", endResize);
+    window.addEventListener("pointercancel", endResize);
+    return () => {
+      window.removeEventListener("pointermove", resizeFromPointer);
+      window.removeEventListener("pointerup", endResize);
+      window.removeEventListener("pointercancel", endResize);
+    };
+  }, [endResize, resizeFromPointer]);
+
+  if (!selected) return null;
+
+  const startResize = (handle: ResizeHandleId) => (event: ReactPointerEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    beginHistoryStep();
+    const startPointer = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    const node = getNode(id);
+    active.current = {
+      handle,
+      pointerId: event.pointerId,
+      startPointer,
+      startPosition: node?.position ?? { x: 0, y: 0 },
+      startWidth: size.width,
+      startHeight: size.height,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+
+  return (
+    <>
+      {RESIZE_HANDLES.map((handle) => (
+        <div
+          key={handle}
+          className={`nodrag nopan ${styles.resizeZone} ${styles[`resizeZone${handle[0].toUpperCase()}${handle.slice(1)}`]}`}
+          onPointerDown={startResize(handle)}
         />
       ))}
     </>
@@ -230,11 +435,12 @@ function useInlineEditor(id: string, value: string, editing: boolean) {
   return { ref, draft, setDraft, commit };
 }
 
-export function ShapeNode({ id, data, selected }: NodeProps<SketchNode>) {
+export function ShapeNode({ id, data, selected, width, height }: NodeProps<SketchNode>) {
   const shape = data as SketchShapeNodeData;
   const [editing, setEditing] = useState(false);
   const { ref, draft, setDraft, commit } = useInlineEditor(id, shape.text, editing);
   const { connectHintId } = useSketchLabActions();
+  const shiftClickSelection = useShiftClickSelection(id);
 
   const fontSize = resolveFontSize(shape.fontSizeKey, shape.customFontSize);
   const background = resolveColor(shape.background, "background");
@@ -247,6 +453,7 @@ export function ShapeNode({ id, data, selected }: NodeProps<SketchNode>) {
       } ${shape.handlesHidden ? styles.handlesHidden : ""}`}
       style={{ transform: `rotate(${shape.rotation}deg)` }}
       onDoubleClick={() => setEditing(true)}
+      {...shiftClickSelection}
     >
       {selected ? (
         <div
@@ -255,6 +462,14 @@ export function ShapeNode({ id, data, selected }: NodeProps<SketchNode>) {
           } ${shape.shape === "triangle" || shape.shape === "diamond" ? styles.selectionRingVector : ""}`}
         />
       ) : null}
+      <ResizeHandles
+        id={id}
+        kind="shape"
+        shape={shape.shape}
+        selected={selected}
+        width={width}
+        height={height}
+      />
       <ShapeSurface shape={shape.shape} background={background} border={border}>
         {editing ? (
           <textarea
@@ -294,16 +509,17 @@ export function ShapeNode({ id, data, selected }: NodeProps<SketchNode>) {
           </span>
         )}
       </ShapeSurface>
-      <NodeHandles />
+      <NodeHandles shape={shape.shape} />
     </div>
   );
 }
 
-export function TextNode({ id, data, selected }: NodeProps<SketchNode>) {
+export function TextNode({ id, data, selected, width, height }: NodeProps<SketchNode>) {
   const text = data as SketchTextNodeData;
   const [editing, setEditing] = useState(false);
   const { ref, draft, setDraft, commit } = useInlineEditor(id, text.text, editing);
   const { connectHintId } = useSketchLabActions();
+  const shiftClickSelection = useShiftClickSelection(id);
   const fontSize = resolveFontSize(text.fontSizeKey, text.customFontSize);
 
   return (
@@ -313,8 +529,10 @@ export function TextNode({ id, data, selected }: NodeProps<SketchNode>) {
       } ${text.handlesHidden ? styles.handlesHidden : ""}`}
       style={{ transform: `rotate(${text.rotation}deg)` }}
       onDoubleClick={() => setEditing(true)}
+      {...shiftClickSelection}
     >
       {selected ? <div className={styles.selectionRing} /> : null}
+      <ResizeHandles id={id} kind="text" selected={selected} width={width} height={height} />
       {editing ? (
         <textarea
           ref={ref}
@@ -357,17 +575,20 @@ export function TextNode({ id, data, selected }: NodeProps<SketchNode>) {
   );
 }
 
-export function ImageNode({ id, data, selected }: NodeProps<SketchNode>) {
+export function ImageNode({ id, data, selected, width, height }: NodeProps<SketchNode>) {
   const image = data as SketchImageNodeData;
   const { connectHintId } = useSketchLabActions();
+  const shiftClickSelection = useShiftClickSelection(id);
   return (
     <div
       className={`${styles.node} ${styles.imageNode} ${selected ? styles.selected : ""} ${
         connectHintId === id ? styles.connectHint : ""
       } ${image.handlesHidden ? styles.handlesHidden : ""}`}
       style={{ transform: `rotate(${image.rotation}deg)` }}
+      {...shiftClickSelection}
     >
       {selected ? <div className={styles.selectionRing} /> : null}
+      <ResizeHandles id={id} kind="image" selected={selected} width={width} height={height} />
       <img className={styles.image} src={image.src} alt={image.alt} draggable={false} />
       <NodeHandles />
     </div>
@@ -376,6 +597,7 @@ export function ImageNode({ id, data, selected }: NodeProps<SketchNode>) {
 
 export function LineNode({ id, data, selected }: NodeProps<SketchNode>) {
   const line = data as SketchLineNodeData;
+  const shiftClickSelection = useShiftClickSelection(id);
   const stroke = resolveColor(line.color, "text");
   const strokeWidth = resolveStrokeWidth(line.thickness);
   const dashArray = resolveDashArray(line.style, strokeWidth);
@@ -398,6 +620,7 @@ export function LineNode({ id, data, selected }: NodeProps<SketchNode>) {
       className={`${styles.lineNode} ${selected ? styles.selected : ""} ${
         line.handlesHidden ? styles.handlesHidden : ""
       }`}
+      {...shiftClickSelection}
     >
       {/* Hide the bounding-box focus ring while dragging an endpoint — it
           balloons across the canvas and distracts from the line itself. */}
