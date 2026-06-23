@@ -17,12 +17,60 @@
   pointer-events: all;
 }
 
-.groupSelectionRing {
+.groupOutline {
+  --group-outline-offset: 8px;
+
   position: absolute;
-  inset: 0;
-  border: 2px solid var(--ds-borders-brand-teal-primary);
-  border-radius: 4px;
+  inset: calc(-1 * var(--group-outline-offset));
+  width: calc(100% + var(--group-outline-offset) * 2);
+  height: calc(100% + var(--group-outline-offset) * 2);
+  overflow: visible;
   pointer-events: none;
+}
+
+.groupOutlineHover,
+.groupOutlineSelected {
+  x: 1px;
+  y: 1px;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  rx: 8px;
+  ry: 8px;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+
+.groupOutlineHover {
+  stroke: var(--ds-borders-neutral-strong);
+  stroke-width: 1px;
+  stroke-dasharray: 6 4;
+}
+
+.groupOutlineSelected {
+  stroke: var(--ds-borders-brand-purple-primary);
+  stroke-width: 2px;
+}
+
+// ReactFlow gives group nodes a visible default border. Keep groups visually
+// transparent until hover/selection, then let the SVG overlay draw the affordance.
+:global(.react-flow__node.react-flow__node-group) {
+  background: transparent !important;
+  border: none !important;
+  outline: none;
+  box-shadow: none !important;
+}
+
+:global(.react-flow__node.react-flow__node-group:hover) .groupOutlineHover {
+  opacity: 1;
+}
+
+:global(.react-flow__node.react-flow__node-group.selected) .groupOutlineHover {
+  opacity: 0;
+}
+
+:global(.react-flow__node.react-flow__node-group.selected) .groupOutlineSelected {
+  opacity: 1;
 }
 
 .handlesHidden .handle {

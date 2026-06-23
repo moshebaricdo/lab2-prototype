@@ -467,7 +467,10 @@ export function LineNode({ id, data, selected }: NodeProps<SketchNode>) {
 export function GroupNode({ selected }: NodeProps<SketchNode>) {
   return (
     <div className={`${styles.groupNode} ${selected ? styles.selected : ""}`}>
-      {selected ? <div className={styles.groupSelectionRing} /> : null}
+      <svg className={styles.groupOutline} aria-hidden="true">
+        <rect className={styles.groupOutlineHover} />
+        <rect className={styles.groupOutlineSelected} />
+      </svg>
     </div>
   );
 }

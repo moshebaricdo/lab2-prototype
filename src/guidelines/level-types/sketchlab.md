@@ -44,10 +44,11 @@ matching the Figma toolbar permutations:
 - **Line** — Color, Thickness, Style, Shape, Arrowheads, Actions
 - **Text** — Size, Alignment, Color, Rotation, Actions
 - **Image** — Rotation, Alt Text, Actions
-- **Multi-select** — header shows `N items selected`; Actions with Group items,
-  Send to front/back, Delete
+- **Multi-select** — header shows `N items selected`; Group items appears first,
+  followed by an Actions section with Duplicate all, Send all to front/back, and Delete all
 - **Group** — Shapes / Lines / Text / Transform sections (shown when the group
-  contains those node kinds); Actions include Ungroup (`object-ungroup`)
+  contains those node kinds); Actions include Send to front/back before Ungroup
+  (`object-ungroup`)
 
 ## Component Structure
 
@@ -84,11 +85,14 @@ endpoint and a shape attaches that endpoint. The palette line tool adds a standa
 line to the canvas.
 
 The left toolbar starts with **Select** (default — drag empty canvas to
-marquee-select; Shift+click to add to selection) and **Grab** (drag empty canvas
+marquee-select; Shift+click to add to selection) and **Hand Tool** (drag empty canvas
 to pan). **⌘/Ctrl+G** groups the current multi-selection (two or more ungrouped
-nodes). Grouped items move together via a parent `group` node; selecting any
-member (or the group) opens the **Group** property panel. Ungroup from the
-group panel action row.
+nodes). Grouped items move together via a parent `group` node; selecting the
+group wrapper or all group members opens the **Group** property panel, while
+selecting a single member opens that member's own panel so its properties can
+override group-level styling. Ungroup from the group panel action row. The group
+boundary is hidden by default, appears as a neutral dashed outline on hover, and
+switches to a solid brand outline when selected.
 
 Line nodes always show **start/end endpoint handles** (larger than shape handles).
 Select a line to bring it above overlapping shapes. Drag an endpoint to connect;

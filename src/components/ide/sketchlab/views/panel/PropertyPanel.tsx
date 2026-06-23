@@ -23,6 +23,7 @@ import {
   AlignmentDropdown,
   ColorDropdown,
   GroupActionsRow,
+  MultiSelectGroupButton,
   MultiSelectActionsRow,
   OptionDropdown,
   PropertyRow,
@@ -183,6 +184,7 @@ function nodeActions(node: SketchNode, props: PropertyPanelProps) {
 function MultiSelectPanel({
   nodes,
   onGroupSelected,
+  onDuplicate,
   onBringSelectedForward,
   onSendSelectedToBack,
   onDeleteSelected,
@@ -191,9 +193,14 @@ function MultiSelectPanel({
   const label = `${nodes.length} items selected`;
   return (
     <PanelShell label={label} onClose={onClose}>
+      <PropertySection>
+        <MultiSelectGroupButton onGroup={onGroupSelected} />
+      </PropertySection>
       <PropertySection title="Actions">
         <MultiSelectActionsRow
-          onGroup={onGroupSelected}
+          onDuplicate={() => {
+            for (const node of nodes) onDuplicate(node.id);
+          }}
           onBringForward={onBringSelectedForward}
           onToggleLayer={onSendSelectedToBack}
           onDelete={onDeleteSelected}

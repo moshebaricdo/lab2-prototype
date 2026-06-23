@@ -39,9 +39,8 @@ export function resolveGroupSelection(nodes: SketchNode[], selected: SketchNode[
   const selectedIds = new Set(selected.map((node) => node.id));
   const allMembersSelected =
     selected.length === members.length && members.every((member) => selectedIds.has(member.id));
-  const singleMemberSelected = selected.length === 1 && selected[0]?.parentId === groupId;
 
-  if (allMembersSelected || singleMemberSelected) {
+  if (allMembersSelected) {
     return { groupId, members };
   }
 
