@@ -16,7 +16,7 @@ interface NodePaletteProps {
 
 const CANVAS_TOOLS: { tool: SketchCanvasTool; icon: SketchIconKey; label: string }[] = [
   { tool: "select", icon: "tool-select", label: "Select" },
-  { tool: "grab", icon: "tool-grab", label: "Grab" },
+  { tool: "grab", icon: "tool-grab", label: "Hand Tool" },
 ];
 
 const SHAPE_TOOLS: { shape: SketchShapeKind; icon: SketchIconKey; label: string }[] = [
