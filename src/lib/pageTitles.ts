@@ -9,6 +9,7 @@ import {
   bubbleChoiceLevelLinks,
   dragDropLevelLinks,
   drawerImprovementsExperimentLinks,
+  fileChipTabsExperimentLinks,
   fillInBlankLevelLinks,
   freeResponseLevelLinks,
   matchLevelLinks,
@@ -50,6 +51,7 @@ const LEVEL_PAGE_GROUPS: LevelPageGroup[] = [
   { levelType: "Backpack Filtering", pages: backpackFilterProgressionLinks },
   { levelType: "Agentic AI Explorations", pages: agenticProgressionLinks },
   { levelType: "Drawer Improvements", pages: drawerImprovementsExperimentLinks },
+  { levelType: "File Chip Tabs", pages: fileChipTabsExperimentLinks },
   { levelType: "Web Lab 2 Experiments", pages: webLab2ExperimentLinks },
   { levelType: "Assessment Experiments", pages: assessmentExperimentLinks },
 ];

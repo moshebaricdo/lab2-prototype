@@ -28,6 +28,7 @@ import {
   sketchLabLevelLinks,
   sampleProgressionLinks,
   drawerImprovementsExperimentLinks,
+  fileChipTabsExperimentLinks,
   uploadMechanismsProgressionLinks,
   backpackFilterProgressionLinks,
   webLab2ExperimentLinks,
@@ -625,6 +626,33 @@ export function LevelsIndexPage() {
                 </div>
                 <div className={styles.bubbleRow}>
                   {drawerImprovementsExperimentLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>File Chip Tabs</h3>
+                  <p className={styles.cardDescription}>
+                    Compare floating chip tabs with full-row edge tabs inspired by Cursor — icons, close buttons, drag reorder, and horizontal scroll.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {fileChipTabsExperimentLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       content={page.name}

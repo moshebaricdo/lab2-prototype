@@ -107,6 +107,10 @@ const LevelsIndexPage = lazyPage(
   () => import("./pages/LevelsIndexPage"),
   "LevelsIndexPage",
 );
+const ColorSandboxPage = lazyPage(
+  () => import("./pages/design-system/ColorSandboxPage"),
+  "ColorSandboxPage",
+);
 const AssessmentBuilderNewPage = lazyPage(
   () => import("./pages/assessment-builder/AssessmentBuilderNewPage"),
   "AssessmentBuilderNewPage",
@@ -259,6 +263,10 @@ const WebLab2TutorActionCardLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2TutorActionCardLevelPage"),
   "WebLab2TutorActionCardLevelPage",
 );
+const WebLab2FileChipTabsLevelPage = lazyPage(
+  () => import("./pages/weblab2/WebLab2FileChipTabsLevelPage"),
+  "WebLab2FileChipTabsLevelPage",
+);
 const WebLab2DrawerImprovementsLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2DrawerImprovementsLevelPage"),
   "WebLab2DrawerImprovementsLevelPage",
@@ -340,6 +348,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/levels" replace />} />
         <Route path="/levels" element={<LevelsIndexPage />} />
+        <Route path="/design-system/colors" element={<ColorSandboxPage />} />
         <Route path="/levels/aichatlab" element={<AiChatLabLevelPage />} />
         <Route
           path="/levels/aichatlab-setup"
@@ -362,6 +371,10 @@ export default function App() {
         <Route
           path="/levels/weblab2-tutor-action-card"
           element={<WebLab2TutorActionCardLevelPage />}
+        />
+        <Route
+          path="/levels/weblab2-file-chip-tabs"
+          element={<WebLab2FileChipTabsLevelPage />}
         />
         <Route
           path="/levels/weblab2-drawer-improvements"

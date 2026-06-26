@@ -8,9 +8,11 @@ import type { FileItem } from "../../../../types/file";
 import { getFileTypeIconConfigForFileItem } from "../../../../lib/fileTypeIcons";
 import { AppButton } from "../../../ui/AppButton";
 import { FaIcon } from "../../../ui/icons/FaIcon";
+import { Tooltip } from "../../../ui/Tooltip";
 import { EmptyState } from "../EmptyState";
 import { CodeMirrorHost } from "./CodeMirrorHost";
 import { useEditorReadOnlyOverride } from "../../../../hooks/useEditorReadOnly";
+import type { FileTabVariant } from "../../../../types/ui";
 import styles from "./CodeEditor.module.scss";
 
 interface CodeEditorProps {
@@ -33,6 +35,10 @@ interface CodeEditorProps {
   readOnly?: boolean;
   planActionBar?: ReactNode;
   hideFileTabs?: boolean;
+  /** Chip tabs (default) or full-row edge tabs (Cursor-style). */
+  fileTabVariant?: FileTabVariant;
+  /** Edge tabs only — square file-manager opener when the panel is collapsed. */
+  onFileManagerExpand?: () => void;
   contentOverride?: (props: {
     code: string;
     file: FileItem;
@@ -49,6 +55,7 @@ interface DraggableTabProps {
   moveTab: (dragIndex: number, hoverIndex: number) => void;
   enableDragToTutor?: boolean;
   isAiChanged?: boolean;
+  variant?: FileTabVariant;
 }
 
 const ItemType = {
@@ -64,6 +71,7 @@ function DraggableTab({
   moveTab,
   enableDragToTutor = false,
   isAiChanged = false,
+  variant = "chip",
 }: DraggableTabProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -112,53 +120,73 @@ function DraggableTab({
 
   const isActive = selectedFile?.name === file.name;
   const fileIcon = getFileTypeIconConfigForFileItem(file);
+  const isEdge = variant === "edge";
+
+  const tabStateClass = isEdge
+    ? isAiChanged
+      ? isActive
+        ? styles.tabEdgeAiChangedActive
+        : styles.tabEdgeAiChanged
+      : isActive
+        ? styles.tabEdgeActive
+        : styles.tabEdgeIdle
+    : isAiChanged
+      ? isActive
+        ? styles.tabAiChangedActive
+        : styles.tabAiChanged
+      : isActive
+        ? styles.tabActive
+        : styles.tabIdle;
+
+  const iconStateClass = isEdge
+    ? isActive
+      ? styles.tabEdgeIconActive
+      : styles.tabEdgeIconInactive
+    : isActive
+      ? styles.tabIconActive
+      : styles.tabIconInactive;
+
+  const nameStateClass = isEdge
+    ? isActive
+      ? styles.tabEdgeNameActive
+      : styles.tabEdgeNameInactive
+    : isActive
+      ? styles.tabNameActive
+      : styles.tabNameInactive;
 
   return (
     <div
       ref={ref}
+      role="tab"
+      aria-selected={isActive}
+      tabIndex={isActive ? 0 : -1}
       onClick={() => onFileSelect(file)}
       onDragStart={handleTabDragStart}
-      className={`${styles.tab} ${
+      className={`${isEdge ? styles.tabEdge : styles.tab} ${
         enableDragToTutor ? styles.tabDragToTutor : ""
-      } ${
-        isAiChanged
-          ? isActive
-            ? styles.tabAiChangedActive
-            : styles.tabAiChanged
-          : isActive
-            ? styles.tabActive
-            : styles.tabIdle
-      } ${isDragging ? "opacity-50" : "opacity-100"}`}
+      } ${tabStateClass} ${isDragging ? "opacity-50" : "opacity-100"}`}
     >
       <div className={styles.tabIconWrap}>
         <FaIcon
           family={fileIcon.family}
           name={fileIcon.name}
           size="s"
-          className={`${styles.tabIcon} ${
-            isActive ? styles.tabIconActive : styles.tabIconInactive
-          }`}
+          className={`${styles.tabIcon} ${iconStateClass}`}
         />
       </div>
-      <p
-        className={`${styles.tabName} ${
-          isActive ? styles.tabNameActive : styles.tabNameInactive
-        }`}
-      >
+      <p className={`${styles.tabName} ${nameStateClass}`}>
         {file.name}
       </p>
       <button
+        type="button"
+        aria-label={`Close ${file.name}`}
         onClick={(e) => {
           e.stopPropagation();
           onCloseFile(file);
         }}
-        className={styles.tabClose}
+        className={isEdge ? styles.tabEdgeClose : styles.tabClose}
       >
-        <span
-          className={`${styles.tabCloseIcon} ${
-            isActive ? styles.tabIconActive : styles.tabIconInactive
-          }`}
-        >
+        <span className={`${styles.tabCloseIcon} ${iconStateClass}`}>
           <FontAwesomeIcon icon={faXmark} className="leading-[1.25]" />
         </span>
       </button>
@@ -189,6 +217,8 @@ export function CodeEditor({
   readOnly,
   planActionBar,
   hideFileTabs = false,
+  fileTabVariant = "chip",
+  onFileManagerExpand,
   contentOverride,
 }: CodeEditorProps) {
   const [localOpenFiles, setLocalOpenFiles] = useState(openFiles);
@@ -294,24 +324,62 @@ export function CodeEditor({
     updateEditorFades,
   ]);
 
+  const showTabBar =
+    !hideFileTabs &&
+    (localOpenFiles.length > 0 ||
+      (fileTabVariant === "edge" && onFileManagerExpand));
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className={styles.root}>
-        {/* File Tabs */}
-        {localOpenFiles.length > 0 && !hideFileTabs && (
+        {showTabBar ? (
           <div
             className={`${styles.tabsViewport} ${
+              fileTabVariant === "edge" ? styles.tabsViewportEdge : ""
+            } ${
+              fileTabVariant === "edge" && onFileManagerExpand
+                ? styles.tabsViewportEdgeWithFileManager
+                : ""
+            } ${
               showTabsStartFade ? styles.tabsViewportStartFadeVisible : ""
             } ${
               showTabsEndFade ? styles.tabsViewportFadeVisible : ""
             }`}
           >
+            {fileTabVariant === "edge" && onFileManagerExpand ? (
+              <Tooltip
+                content="Open file manager"
+                position="bottom"
+                sideOffset={4}
+              >
+                <button
+                  type="button"
+                  className={styles.tabEdgeFileManager}
+                  onClick={onFileManagerExpand}
+                  aria-label="Open file manager"
+                >
+                  <FaIcon
+                    name="folder"
+                    size="s"
+                    className={styles.tabEdgeFileManagerIcon}
+                  />
+                </button>
+              </Tooltip>
+            ) : null}
             <div
               ref={tabsRowRef}
+              role="tablist"
+              aria-label="Open files"
               className={`${styles.tabsRow} ${
+                fileTabVariant === "edge" ? styles.tabsRowEdge : ""
+              } ${
                 isFileManagerCollapsed
-                  ? styles.tabsRowCollapsed
-                  : styles.tabsRowExpanded
+                  ? fileTabVariant === "edge"
+                    ? styles.tabsRowEdgeCollapsed
+                    : styles.tabsRowCollapsed
+                  : fileTabVariant === "edge"
+                    ? styles.tabsRowEdgeExpanded
+                    : styles.tabsRowExpanded
               }`}
             >
               {localOpenFiles.map((file, idx) => (
@@ -325,11 +393,12 @@ export function CodeEditor({
                   moveTab={moveTab}
                   enableDragToTutor={enableDragToTutor}
                   isAiChanged={!!(file.name && aiChangedFiles?.[file.name])}
+                  variant={fileTabVariant}
                 />
               ))}
             </div>
           </div>
-        )}
+        ) : null}
 
         {planActionBar ? (
           <div
@@ -341,7 +410,6 @@ export function CodeEditor({
           </div>
         ) : null}
 
-        {/* Code Content */}
         <div className={styles.contentWrap}>
           {localOpenFiles.length === 0 ? (
             <EmptyState

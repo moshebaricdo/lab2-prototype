@@ -15,6 +15,13 @@ export const webLab2LevelLinks: LevelProgressLink[] = [
   },
 ];
 
+export const fileChipTabsExperimentLinks: LevelProgressLink[] = [
+  {
+    name: "Cursor-style edge tabs",
+    path: "/levels/weblab2-file-chip-tabs",
+  },
+];
+
 export const webLab2ExperimentLinks: LevelProgressLink[] = [
   {
     name: "Tutor action card (F2)",

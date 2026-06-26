@@ -358,3 +358,190 @@
   justify-content: center;
   color: var(--ds-text-neutral-quaternary);
 }
+
+/* ---------- Edge tabs (Cursor-style full row) ---------- */
+
+.tabsViewport.tabsViewportEdge {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  overflow: visible;
+  background: var(--ds-background-neutral-secondary);
+}
+
+.tabsViewportEdge::before {
+  background: linear-gradient(
+    to left,
+    rgb(0 0 0 / 0%),
+    var(--ds-background-neutral-secondary)
+  );
+}
+
+.tabsViewportEdge::after {
+  background: linear-gradient(
+    to right,
+    rgb(0 0 0 / 0%),
+    var(--ds-background-neutral-secondary)
+  );
+}
+
+.tabsViewportEdgeWithFileManager::before {
+  left: 40px;
+}
+
+.tabsRow.tabsRowEdge {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  min-height: 40px;
+  gap: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow-x: auto;
+  overflow-y: visible;
+  background: var(--ds-background-neutral-secondary);
+  box-shadow: inset 0 -1px 0 var(--ds-borders-neutral-primary);
+}
+
+.tabsRowEdgeCollapsed,
+.tabsRowEdgeExpanded {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.tabEdgeFileManager {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-right: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 0;
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-quaternary);
+  cursor: pointer;
+  transition: background-color 0.05s ease-in;
+}
+
+.tabEdgeFileManager:hover {
+  background: var(--ds-background-neutral-tertiary);
+}
+
+.tabEdgeFileManager:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ds-borders-brand-teal-primary);
+}
+
+.tabEdgeFileManagerIcon {
+  font-size: var(--text-label);
+  line-height: 1;
+}
+
+.tabEdge {
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-right: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  padding: 0 12px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background-color 0.05s ease-in, color 0.05s ease-in,
+    border-color 0.05s ease-in;
+}
+
+.tabEdge:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ds-borders-brand-teal-primary);
+}
+
+.tabEdgeIdle {
+  border-bottom-color: var(--ds-borders-neutral-primary);
+  background: var(--ds-background-neutral-secondary);
+}
+
+.tabEdgeIdle:hover {
+  background: var(--ds-background-neutral-tertiary);
+}
+
+.tabEdgeActive {
+  border-bottom-color: var(--ds-background-neutral-primary);
+  background: var(--ds-background-neutral-primary);
+}
+
+.tabEdgeActive:hover {
+  background: var(--ds-background-neutral-primary);
+}
+
+.tabEdgeAiChanged {
+  border-bottom-color: var(--ds-borders-neutral-primary);
+  background: var(--ds-background-brand-aqua-extra-light);
+}
+
+.tabEdgeAiChanged:hover {
+  background: var(--ds-background-brand-aqua-light);
+}
+
+.tabEdgeAiChanged .tabIcon {
+  color: var(--ds-text-brand-aqua-secondary);
+}
+
+.tabEdgeAiChanged .tabName {
+  color: var(--ds-text-neutral-primary);
+}
+
+.tabEdgeAiChangedActive {
+  border-bottom-color: var(--ds-background-neutral-primary);
+  background: var(--ds-background-brand-aqua-strong);
+}
+
+.tabEdgeAiChangedActive .tabIcon,
+.tabEdgeAiChangedActive .tabName,
+.tabEdgeAiChangedActive .tabCloseIcon {
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.tabEdgeIconActive {
+  color: var(--ds-text-neutral-primary);
+}
+
+.tabEdgeIconInactive {
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.tabEdgeNameActive {
+  color: var(--ds-text-neutral-primary);
+}
+
+.tabEdgeNameInactive {
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.tabEdge .tabName {
+  font-size: var(--text-label);
+  line-height: 1.54;
+}
+
+.tabEdgeClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  opacity: 0.75;
+  transition: opacity 0.05s ease-in;
+}
+
+.tabEdgeClose:hover {
+  opacity: 1;
+  cursor: pointer;
+}

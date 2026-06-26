@@ -16,7 +16,7 @@ import { WorkspaceHeader } from "./WorkspaceHeader";
 import { versionLabels } from "../../../../data/weblab2";
 import type { FileItem } from "../../../../types/file";
 import type { TutorRequestMode, TutorStartOptions } from "../../../../types/tutor";
-import type { ViewMode } from "../../../../types/ui";
+import type { ViewMode, FileTabVariant } from "../../../../types/ui";
 import type { WebLabPreviewConfig } from "./PreviewPanel";
 import type {
   PreviewConsoleMessage,
@@ -105,6 +105,7 @@ interface WorkspaceProps {
   showBuildPlan?: boolean;
   buildPlanDisabled?: boolean;
   buildPlanRunning?: boolean;
+  fileTabVariant?: FileTabVariant;
 }
 
 export function Workspace({
@@ -151,6 +152,7 @@ export function Workspace({
   showBuildPlan = true,
   buildPlanDisabled = false,
   buildPlanRunning = false,
+  fileTabVariant = "chip",
 }: WorkspaceProps) {
   const [splitViewCodeWidth, setSplitViewCodeWidth] = useState<number | null>(
     null
@@ -397,6 +399,7 @@ export function Workspace({
                   : undefined
             }
           >
+            {!(isFileManagerCollapsed && fileTabVariant === "edge") ? (
             <div
               className={`${styles.fileManagerRail} ${isFileManagerCollapsed ? styles.fileManagerRailCollapsed : ""}`}
               style={isFileManagerCollapsed ? undefined : { width: `${fileManagerWidth}px` }}
@@ -424,6 +427,7 @@ export function Workspace({
                 </div>
               )}
             </div>
+            ) : null}
 
             {fileManagerTransition === "collapsing" && (
               <div
@@ -474,6 +478,12 @@ export function Workspace({
                 aiChangedFiles={aiChangedFiles}
                 onFileContentChange={onFileContentChange}
                 readOnly={isViewingHistoryVersion ? true : undefined}
+                fileTabVariant={fileTabVariant}
+                onFileManagerExpand={
+                  fileTabVariant === "edge" && isFileManagerCollapsed
+                    ? () => handleFileManagerCollapseChange(false)
+                    : undefined
+                }
                 hideFileTabs={resolvedShowPlanActionBar}
                 planActionBar={resolvedShowPlanActionBar ? (
                   <PlanActionBar

@@ -80,7 +80,7 @@ import type {
   TutorSupportContext,
   InstructionGuideState,
 } from "../../types/tutor";
-import type { ViewMode } from "../../types/ui";
+import type { ViewMode, FileTabVariant } from "../../types/ui";
 import {
   findFileByNameInTree,
   flattenTutorContextFiles,
@@ -312,6 +312,7 @@ interface WebLab2LevelPageProps {
   hideProgression?: boolean;
   backpackFilterExperiment?: BackpackFilterExperiment;
   backpackSeedItemsIfEmpty?: BackpackItem[];
+  fileTabVariant?: FileTabVariant;
 }
 
 export function WebLab2LevelPage({
@@ -367,6 +368,7 @@ export function WebLab2LevelPage({
   hideProgression = false,
   backpackFilterExperiment = "type-availability",
   backpackSeedItemsIfEmpty,
+  fileTabVariant = "chip",
 }: WebLab2LevelPageProps = {}) {
   const shareMode = useLevelShareMode();
   const { hasApiKey: hasTutorApiKey } = useTutorApiSettings();
@@ -1848,6 +1850,7 @@ export function WebLab2LevelPage({
     showBuildPlan: !isSelectedPlanBuiltOrPending,
     buildPlanDisabled: isTutorRequestRunning || hasPendingAiChanges,
     buildPlanRunning: isSelectedPlanBuilding,
+    fileTabVariant,
   };
   const handleSidebarResize = (delta: number) => {
     setSidebarWidth((prev) =>
