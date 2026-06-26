@@ -1,21 +1,209 @@
 .tag {
+  --tag-bg: var(--ds-background-neutral-secondary);
+  --tag-text: var(--ds-text-neutral-primary);
+  --tag-icon: var(--ds-text-neutral-quaternary);
+
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: var(--radius-default);
+  border-radius: 999px;
+  background: var(--tag-bg);
+  color: var(--tag-text);
   font-family: var(--font-body);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.neutral {
-  background: var(--ds-background-neutral-quaternary);
-  color: var(--ds-text-neutral-secondary);
+.label {
+  min-width: 0;
 }
 
-.purple {
-  background: var(--ds-background-neutral-quaternary);
-  color: var(--ds-text-neutral-secondary);
+/* Text-only tags use symmetric padding; icon sides tighten and label gains room. */
+.hasLeadIcon .label,
+.hasTrailIcon .label {
+  padding-inline: 2px;
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.leadIcon,
+.trailIcon {
+  color: var(--tag-icon);
+}
+
+.fillSolid .leadIcon,
+.fillSolid .trailIcon,
+.fillSolid .dismissIcon {
+  color: inherit;
+}
+
+/* Sizes — default padding is text-only; icon modifiers tighten the icon edge. */
+.sizeS {
+  gap: 4px;
+  height: 20px;
+  padding-block: 2px;
+  padding-inline: 10px;
+  font-size: var(--text-xs);
+}
+
+.sizeS.hasLeadIcon {
+  padding-inline-start: 6px;
+}
+
+.sizeS.hasTrailIcon {
+  padding-inline-end: 6x;
+}
+
+.sizeM {
+  gap: 4px;
+  height: 22px;
+  padding-block: 2px;
+  padding-inline: 12px;
+  font-size: var(--text-label);
+}
+
+.sizeM.hasLeadIcon {
+  padding-inline-start: 8px;
+}
+
+.sizeM.hasTrailIcon {
+  padding-inline-end: 8px;
+}
+
+.sizeL {
+  gap: 6px;
+  height: 24px;
+  padding-block: 4px;
+  padding-inline: 12px;
+  font-size: var(--text-sm);
+}
+
+.sizeL.hasLeadIcon {
+  padding-inline-start: 8px;
+}
+
+.sizeL.hasTrailIcon {
+  padding-inline-end: 8px;
+}
+
+/* Light fill — semantic backgrounds, neutral text, colored icons */
+.fillLight.colorGray {
+  --tag-bg: var(--ds-background-neutral-tertiary);
+  --tag-icon: var(--ds-text-neutral-primary);
+}
+
+.fillLight.colorPurple {
+  --tag-bg: var(--ds-background-brand-purple-light);
+  --tag-icon: var(--ds-text-brand-purple-primary);
+}
+
+.fillLight.colorTeal {
+  --tag-bg: var(--ds-background-brand-teal-light);
+  --tag-icon: var(--ds-text-brand-teal-primary);
+}
+
+.fillLight.colorAqua {
+  --tag-bg: var(--ds-background-brand-aqua-light);
+  --tag-icon: var(--ds-text-brand-aqua-primary-fixed);
+}
+
+.fillLight.colorError {
+  --tag-bg: var(--ds-background-error-light);
+  --tag-icon: var(--ds-text-error-primary);
+}
+
+.fillLight.colorSuccess {
+  --tag-bg: var(--ds-background-success-light);
+  --tag-icon: var(--ds-text-success-primary);
+}
+
+.fillLight.colorWarning {
+  --tag-bg: var(--ds-background-warning-light);
+  --tag-text: var(--ds-text-neutral-black-fixed);
+  --tag-icon: var(--ds-text-warning-primary);
+}
+
+.fillLight.colorInfo {
+  --tag-bg: var(--ds-background-info-light);
+  --tag-icon: var(--ds-text-info-primary);
+}
+
+/* Solid fill — primary backgrounds, inverse text (warning uses fixed black) */
+.fillSolid.colorGray {
+  --tag-bg: var(--ds-background-neutral-septenary);
+  --tag-text: var(--ds-text-neutral-white-fixed);
+}
+
+.fillSolid.colorPurple {
+  --tag-bg: var(--ds-background-brand-purple-primary);
+  --tag-text: var(--ds-text-neutral-white-fixed);
+}
+
+.fillSolid.colorTeal {
+  --tag-bg: var(--ds-background-brand-teal-primary);
+  --tag-text: var(--ds-text-neutral-white-fixed);
+}
+
+.fillSolid.colorAqua {
+  --tag-bg: var(--ds-background-brand-aqua-primary);
+  --tag-text: var(--ds-text-neutral-white-fixed);
+}
+
+.fillSolid.colorError {
+  --tag-bg: var(--ds-background-error-primary);
+  --tag-text: var(--ds-text-neutral-white-fixed);
+}
+
+.fillSolid.colorSuccess {
+  --tag-bg: var(--ds-background-success-primary);
+  --tag-text: var(--ds-text-neutral-white-fixed);
+}
+
+.fillSolid.colorWarning {
+  --tag-bg: var(--ds-background-warning-primary);
+  --tag-text: var(--ds-text-neutral-black-fixed);
+}
+
+.fillSolid.colorInfo {
+  --tag-bg: var(--ds-background-info-primary);
+  --tag-text: var(--ds-text-neutral-white-fixed);
+}
+
+/* Disabled — uniform across fill types and colors */
+.disabled {
+  --tag-bg: var(--ds-background-neutral-disabled);
+  --tag-text: var(--ds-text-neutral-disabled);
+  --tag-icon: var(--ds-text-neutral-disabled);
+
+  cursor: not-allowed;
+}
+
+.dismissButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.dismissButton:focus-visible {
+  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline-offset: 1px;
+}
+
+.dismissButton:disabled {
+  cursor: not-allowed;
 }
