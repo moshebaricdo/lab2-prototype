@@ -143,6 +143,8 @@ src/
 ├── pages/                          # Route-level entry points grouped by level type
 │   ├── aichatlab/
 │   ├── bubble-choice/
+│   ├── design-system/              # Standalone DS tooling routes (not level index entries)
+│   │   └── tokens/                 # Bundled prod token exports (DTCG/Figma JSON) that drive the color sandbox
 │   ├── free-response/
 │   ├── levelgroup/
 │   ├── assessment-builder/
@@ -236,6 +238,10 @@ Model configuration controls use shared UI primitives where possible. The temper
 ## Sketch Lab
 
 Sketch Lab lives under `components/ide/sketchlab/views` on a customized `@xyflow/react` canvas. `SketchLabLevelPage.tsx` composes `Lab2Shell` with Instructions + mock AI Tutor tabs (Version History hidden) and passes canvas state through `useSketchLabState` with route-scoped storage keys. The workspace header exposes **Save sketch** (local JSON download or save to Backpack) and start-over actions; node palette and property panel float over the canvas. Backpack uses `backpackImportLab: "sketch-lab"` (images only) with `importBackpackItemToSketch` wiring image imports onto the canvas. See `src/guidelines/level-types/sketchlab.md`.
+
+## Color Sandbox (design-system tooling)
+
+`pages/design-system/ColorSandboxPage.tsx` is a standalone `@xyflow/react` canvas (route `/design-system/colors`, not in the level index) for workshopping the token system. It is driven by the real prod token exports bundled under `pages/design-system/tokens/` (DTCG/Figma JSON): `codeOrgPrimitives.json` plus `semanticsLight.json` / `semanticsDark.json`. `colorSystemData.ts` parses those into an editable `ColorSystem` document (`collection → family → step` primitive ramps + light/dark semantic tokens that carry real primitive references via `com.figma.aliasData`). The page treats the system as a per-brand document persisted to `localStorage` (Code.org is the imported base; CodeAI starts as a clone to diverge), and supports editing primitive hexes, remapping semantics per mode, and adding/renaming/deleting collections and families. `ColorSystemNodes.tsx` renders the collection-header, primitive-family, and semantic-family nodes. This tooling does not read from `styles/tokens.css`; it is intentionally seeded from the exports because the repo CSS is not 1:1 with prod.
 
 ## Migration Notes
 

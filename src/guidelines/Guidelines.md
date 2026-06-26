@@ -52,7 +52,7 @@ src/
 - `ide/weblab2/views`, `ide/pythonlab/views`, and `ide/aichatlab/views` hold lab-specific workspace composition.
 - `assessment/` contains assessment-specific workspace components; shared assessment chrome belongs in `assessment/shared`; in-lab authoring lives in `assessment/builder/`.
 - `lib/assessmentBuilder/` holds canonical assessment schema adapters, bank/draft persistence, scoring, and exam runtime helpers used by builder routes and preview.
-- `pages/` owns route composition and dev-panel defaults. Keep route files grouped by level type (`pages/weblab2`, `pages/pythonlab`, `pages/aichatlab`, `pages/assessment-builder`, etc.).
+- `pages/` owns route composition and dev-panel defaults. Keep route files grouped by level type (`pages/weblab2`, `pages/pythonlab`, `pages/aichatlab`, `pages/assessment-builder`, etc.). Standalone design-system tooling belongs under `pages/design-system` and should not be linked from the level index unless it becomes a learner-facing prototype.
 - As new IDE labs are introduced, add `ide/<labname>/views/` and reuse shared components from `ide/shared/`.
 - `lib/tutor/` contains the functional Tutor harness for guidance routing, project analysis, compact context packing, staged structured edits, validation, repair, tool-loop fallback, and save-title generation. See `src/guidelines/tutor-harness.md` — especially **Routing philosophy** for how we prefer small model classifiers over growing regex intent lists.
 
