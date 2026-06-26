@@ -176,6 +176,104 @@
   border-radius: var(--radius-default);
 }
 
+.addDropZoneEmpty {
+  gap: 20px;
+  padding: 24px 20px 20px;
+}
+
+.bankCallout {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--ds-borders-brand-teal-primary);
+  border-radius: var(--radius-default);
+  background: var(--ds-background-brand-teal-extra-light);
+}
+
+.bankCalloutIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-default);
+  background: var(--ds-background-neutral-primary);
+  color: var(--ds-text-brand-teal-primary);
+}
+
+.bankCalloutBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bankCalloutHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.bankCalloutTitle {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-primary);
+}
+
+.bankCalloutText {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--ds-text-neutral-secondary);
+}
+
+.sectionDivider {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionDividerLine {
+  height: 1px;
+  min-width: 0;
+  flex: 1;
+  background: var(--ds-borders-neutral-primary);
+}
+
+.sectionDividerLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-quaternary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.createSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.createSectionLabel {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--ds-text-neutral-quaternary);
+  text-align: center;
+}
+
 .addDropZoneLabel {
   margin: 0;
   font-family: var(--font-body);
@@ -313,5 +411,14 @@
 
   .typeBadge {
     display: none;
+  }
+
+  .bankCallout {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .bankCalloutHeading {
+    justify-content: center;
   }
 }

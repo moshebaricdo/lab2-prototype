@@ -78,6 +78,7 @@ function multiContentToLevelGroup(
   return {
     id,
     prompt: content.prompt,
+    ...(content.description ? { description: content.description } : {}),
     answers: content.answers,
     ...(content.surveyMode
       ? {}
@@ -94,6 +95,7 @@ function freeContentToLevelGroup(
   return {
     id,
     prompt: content.prompt,
+    ...(content.description ? { description: content.description } : {}),
     placeholder: content.placeholder,
     minCharacters: content.minCharacters,
     revealAnswerEnabled: content.revealAnswerEnabled ?? content.teacherAnswer != null,
@@ -109,6 +111,7 @@ function matchContentToLevelGroup(
   return {
     id,
     prompt: content.prompt,
+    ...(content.description ? { description: content.description } : {}),
     terms: content.terms,
     prompts: content.prompts,
   };
@@ -121,6 +124,7 @@ function dragDropContentToLevelGroup(
   return {
     id,
     prompt: content.prompt,
+    ...(content.description ? { description: content.description } : {}),
     mode: content.mode,
     blocks: content.blocks,
     correctOrder: content.correctOrder,
@@ -138,6 +142,7 @@ function fillInBlankContentToLevelGroup(
   return {
     id,
     prompt: content.prompt,
+    ...(content.description ? { description: content.description } : {}),
     segments: content.segments,
     blanks: content.blanks,
     revealAnswerEnabled: content.revealAnswerEnabled,

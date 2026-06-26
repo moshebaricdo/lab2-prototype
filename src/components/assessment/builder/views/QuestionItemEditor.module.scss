@@ -10,6 +10,43 @@
   gap: 10px;
 }
 
+.metaRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(72px, 96px);
+  gap: 10px;
+  align-items: start;
+}
+
+.compactRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(72px, 120px);
+  gap: 10px;
+  align-items: start;
+}
+
+.numericField {
+  max-width: 96px;
+}
+
+.bankMetaRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bankMetaField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bankMetaLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ds-text-neutral-primary);
+}
+
 .sectionHeading {
   margin: 0;
   font-family: var(--font-body);

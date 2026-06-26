@@ -47,3 +47,7 @@ export {
   questionKindLabel,
   type BlankQuestionKind,
 } from "./blankQuestion";
+export {
+  cloneQuestionItem,
+  isQuestionDraftDirty,
+} from "./questionDraft";

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
   SegmentedControl,
@@ -12,7 +12,14 @@ import { useQuestionBank } from "../../../../hooks/useQuestionBank";
 import { useChatState } from "../../../../hooks/useChatState";
 import { useLayoutState } from "../../../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState";
-import { createBlankQuestion, type BlankQuestionKind } from "../../../../lib/assessmentBuilder";
+import {
+  cloneQuestionItem,
+  createBlankQuestion,
+  getAllCourseBanksSnapshot,
+  isQuestionDraftDirty,
+  type BlankQuestionKind,
+} from "../../../../lib/assessmentBuilder";
+import type { QuestionItem } from "../../../../types/assessmentBuilder";
 import { AssessmentBuilderPanel } from "./AssessmentBuilderPanel";
 import { AssessmentBuildCanvas } from "./AssessmentBuildCanvas";
 import { AssessmentArtifactWorkspace } from "./AssessmentArtifactWorkspace";
@@ -41,7 +48,68 @@ export function AssessmentBuilderWorkspace({
   const { saveQuestion } = useQuestionBank(artifact?.courseId ?? "aif-cert");
 
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
+  const [editingDraft, setEditingDraft] = useState<QuestionItem | null>(null);
+  const [editingBaseline, setEditingBaseline] = useState<QuestionItem | null>(null);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("edit");
+
+  const allCourseBanks = useSyncExternalStore(
+    (callback) => {
+      const handler = (event: StorageEvent) => {
+        if (event.key === "lab2:assessment-bank" || event.key === null) callback();
+      };
+      window.addEventListener("storage", handler);
+      return () => window.removeEventListener("storage", handler);
+    },
+    getAllCourseBanksSnapshot,
+    getAllCourseBanksSnapshot,
+  );
+
+  const courseOptions = useMemo(
+    () =>
+      allCourseBanks.map((bank) => ({
+        value: bank.courseId,
+        label: bank.courseName,
+      })),
+    [allCourseBanks],
+  );
+
+  const getDomainOptionsForCourse = (courseId: string) => {
+    const bank = allCourseBanks.find((entry) => entry.courseId === courseId);
+    return (bank?.domains ?? []).map((domain) => ({
+      value: domain.id,
+      label: domain.label,
+    }));
+  };
+
+  useEffect(() => {
+    if (!selectedBankId) {
+      setEditingDraft(null);
+      setEditingBaseline(null);
+      return;
+    }
+
+    const question = resolvedQuestions.find(
+      (entry) => entry.bankId === selectedBankId,
+    );
+    if (!question) {
+      setEditingDraft(null);
+      setEditingBaseline(null);
+      return;
+    }
+
+    const baseline = cloneQuestionItem(question);
+    setEditingBaseline(baseline);
+    setEditingDraft(baseline);
+  }, [selectedBankId, resolvedQuestions]);
+
+  const canvasQuestions = useMemo(() => {
+    if (!selectedBankId || !editingDraft) return resolvedQuestions;
+    return resolvedQuestions.map((question) =>
+      question.bankId === selectedBankId ? editingDraft : question,
+    );
+  }, [editingDraft, resolvedQuestions, selectedBankId]);
+
+  const isQuestionDirty = isQuestionDraftDirty(editingBaseline, editingDraft);
 
   const {
     activeTab,
@@ -102,15 +170,52 @@ export function AssessmentBuilderWorkspace({
 
   const handleAddOneOff = (kind: BlankQuestionKind) => {
     const question = createBlankQuestion(kind, courseId);
-    saveQuestion(question);
     updateArtifact((current) => ({
       ...current,
       questionRefs: [
         ...current.questionRefs,
-        { type: "bank", bankId: question.bankId },
+        { type: "inline", item: question },
       ],
     }));
     setSelectedBankId(question.bankId);
+  };
+
+  const commitDraftToAssessment = (draft: QuestionItem) => {
+    updateArtifact((current) => ({
+      ...current,
+      questionRefs: current.questionRefs.map((ref) => {
+        const refBankId =
+          ref.type === "bank" ? ref.bankId : ref.item.bankId;
+        if (refBankId !== draft.bankId) return ref;
+        return { type: "inline", item: { ...draft, updatedAt: Date.now() } };
+      }),
+    }));
+  };
+
+  const handleSaveForAssessment = () => {
+    if (!editingDraft) return;
+    commitDraftToAssessment(editingDraft);
+    setSelectedBankId(null);
+  };
+
+  const handleSaveToQuestionBank = () => {
+    if (!editingDraft) return;
+    const saved = { ...editingDraft, updatedAt: Date.now() };
+    saveQuestion(saved);
+    updateArtifact((current) => ({
+      ...current,
+      questionRefs: current.questionRefs.map((ref) => {
+        const refBankId =
+          ref.type === "bank" ? ref.bankId : ref.item.bankId;
+        if (refBankId !== saved.bankId) return ref;
+        return { type: "bank", bankId: saved.bankId };
+      }),
+    }));
+    setSelectedBankId(null);
+  };
+
+  const handleUpdateQuestionDraft = (question: QuestionItem) => {
+    setEditingDraft(question);
   };
 
   return (
@@ -178,12 +283,16 @@ export function AssessmentBuilderWorkspace({
           {workspaceMode === "edit" ? (
             <AssessmentBuildCanvas
               artifact={artifact}
-              questions={resolvedQuestions}
+              questions={canvasQuestions}
               selectedBankId={selectedBankId}
               graded={graded}
+              courseOptions={courseOptions}
+              getDomainOptionsForCourse={getDomainOptionsForCourse}
+              isQuestionDirty={isQuestionDirty}
               onEditQuestion={handleEditQuestion}
-              onCloseQuestion={() => setSelectedBankId(null)}
-              onUpdateQuestion={saveQuestion}
+              onSaveForAssessment={handleSaveForAssessment}
+              onSaveToQuestionBank={handleSaveToQuestionBank}
+              onUpdateQuestion={handleUpdateQuestionDraft}
               onRemoveQuestion={handleRemoveQuestion}
               onReorderQuestion={handleReorderQuestion}
               onOpenBank={() => setActiveTab("builder-bank")}

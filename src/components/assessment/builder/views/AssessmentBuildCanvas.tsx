@@ -15,6 +15,8 @@ import {
 } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { AppButton } from "../../../ui/AppButton";
+import { AppActionDropdown } from "../../../ui/AppDropdown";
+import { AppTag } from "../../../ui/AppTag";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Tooltip } from "../../../ui/Tooltip";
 import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
@@ -33,8 +35,12 @@ interface AssessmentBuildCanvasProps {
   questions: QuestionItem[];
   selectedBankId: string | null;
   graded: boolean;
+  courseOptions: Array<{ value: string; label: string }>;
+  getDomainOptionsForCourse: (courseId: string) => Array<{ value: string; label: string }>;
+  isQuestionDirty: boolean;
   onEditQuestion: (bankId: string) => void;
-  onCloseQuestion: () => void;
+  onSaveForAssessment: () => void;
+  onSaveToQuestionBank: () => void;
   onUpdateQuestion: (question: QuestionItem) => void;
   onRemoveQuestion: (index: number) => void;
   onReorderQuestion: (fromIndex: number, toIndex: number) => void;
@@ -138,7 +144,8 @@ interface QuestionCardHeaderProps {
   dragHandleAttributes?: DraggableAttributes;
   showActions?: boolean;
   onEditQuestion?: (bankId: string) => void;
-  onCloseQuestion?: () => void;
+  onSaveForAssessment?: () => void;
+  onSaveToQuestionBank?: () => void;
   onRemoveQuestion?: () => void;
 }
 
@@ -151,7 +158,8 @@ function QuestionCardHeader({
   dragHandleAttributes,
   showActions = true,
   onEditQuestion,
-  onCloseQuestion,
+  onSaveForAssessment,
+  onSaveToQuestionBank,
   onRemoveQuestion,
 }: QuestionCardHeaderProps) {
   return (
@@ -183,13 +191,34 @@ function QuestionCardHeader({
           <span className={styles.cardActionsDivider} aria-hidden />
           <div className={styles.cardActions}>
             {expanded ? (
-              <AppButton
-                variant="secondary"
-                tone="gray"
+              <AppActionDropdown
+                align="end"
+                side="bottom"
                 size="xs"
-                iconName="floppy-disk"
-                aria-label="Save question"
-                onClick={onCloseQuestion}
+                listLabel="Save question"
+                trigger={
+                  <AppButton
+                    variant="secondary"
+                    tone="gray"
+                    size="xs"
+                    iconName="floppy-disk"
+                    aria-label="Save question"
+                  />
+                }
+                items={[
+                  {
+                    id: "save-assessment",
+                    label: "Save for this assessment",
+                    iconName: "floppy-disk",
+                    onSelect: onSaveForAssessment,
+                  },
+                  {
+                    id: "save-bank",
+                    label: "Save to question bank",
+                    iconName: "clipboard-question",
+                    onSelect: onSaveToQuestionBank,
+                  },
+                ]}
               />
             ) : (
               <AppButton
@@ -223,8 +252,11 @@ interface SortableQuestionCardProps {
   expanded: boolean;
   isPlaceholder: boolean;
   graded: boolean;
+  courseOptions: Array<{ value: string; label: string }>;
+  domainOptions: Array<{ value: string; label: string }>;
   onEditQuestion: (bankId: string) => void;
-  onCloseQuestion: () => void;
+  onSaveForAssessment: () => void;
+  onSaveToQuestionBank: () => void;
   onUpdateQuestion: (question: QuestionItem) => void;
   onRemoveQuestion: () => void;
   setCardRef: (node: HTMLLIElement | null) => void;
@@ -236,8 +268,11 @@ function SortableQuestionCard({
   expanded,
   isPlaceholder,
   graded,
+  courseOptions,
+  domainOptions,
   onEditQuestion,
-  onCloseQuestion,
+  onSaveForAssessment,
+  onSaveToQuestionBank,
   onUpdateQuestion,
   onRemoveQuestion,
   setCardRef,
@@ -275,7 +310,8 @@ function SortableQuestionCard({
         dragHandleListeners={listeners}
         dragHandleAttributes={attributes}
         onEditQuestion={onEditQuestion}
-        onCloseQuestion={onCloseQuestion}
+        onSaveForAssessment={onSaveForAssessment}
+        onSaveToQuestionBank={onSaveToQuestionBank}
         onRemoveQuestion={onRemoveQuestion}
       />
       {expanded && !isPlaceholder && (
@@ -283,6 +319,8 @@ function SortableQuestionCard({
           <QuestionItemEditor
             question={question}
             graded={graded}
+            courseOptions={courseOptions}
+            domainOptions={domainOptions}
             onUpdateQuestion={onUpdateQuestion}
           />
         </div>
@@ -296,8 +334,12 @@ export function AssessmentBuildCanvas({
   questions,
   selectedBankId,
   graded,
+  courseOptions,
+  getDomainOptionsForCourse,
+  isQuestionDirty,
   onEditQuestion,
-  onCloseQuestion,
+  onSaveForAssessment,
+  onSaveToQuestionBank,
   onUpdateQuestion,
   onRemoveQuestion,
   onReorderQuestion,
@@ -432,10 +474,24 @@ export function AssessmentBuildCanvas({
                     expanded={expanded}
                     isPlaceholder={activeId === question.bankId}
                     graded={graded}
+                    courseOptions={courseOptions}
+                    domainOptions={getDomainOptionsForCourse(question.courseId)}
                     onEditQuestion={onEditQuestion}
-                    onCloseQuestion={onCloseQuestion}
+                    onSaveForAssessment={onSaveForAssessment}
+                    onSaveToQuestionBank={onSaveToQuestionBank}
                     onUpdateQuestion={onUpdateQuestion}
-                    onRemoveQuestion={() => onRemoveQuestion(originalIndex)}
+                    onRemoveQuestion={() => {
+                      if (
+                        expanded &&
+                        isQuestionDirty &&
+                        !window.confirm(
+                          "Discard unsaved changes to this question?",
+                        )
+                      ) {
+                        return;
+                      }
+                      onRemoveQuestion(originalIndex);
+                    }}
                     setCardRef={(node) => {
                       if (node) cardRefs.current.set(question.bankId, node);
                       else cardRefs.current.delete(question.bankId);
@@ -467,33 +523,108 @@ export function AssessmentBuildCanvas({
         )}
 
         <div
-          className={styles.addDropZone}
+          className={[
+            styles.addDropZone,
+            questions.length === 0 ? styles.addDropZoneEmpty : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault();
             onOpenBank();
           }}
         >
-          <p className={styles.addDropZoneLabel}>
-            Add a question from the bank or create a new one:
-          </p>
-          <div className={styles.typeGrid}>
-            {CREATE_QUESTION_TILES.map((tile) => (
-              <button
-                key={tile.kind}
-                type="button"
-                className={[styles.typeTile, styles[`tone${tile.tone}`]]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => onAddOneOff(tile.kind)}
-              >
-                <span className={styles.typeTileIcon}>
-                  <FaIcon name={tile.iconName} size="m" aria-hidden />
+          {questions.length === 0 ? (
+            <>
+              <div className={styles.bankCallout}>
+                <span className={styles.bankCalloutIcon} aria-hidden>
+                  <FaIcon name="clipboard-question" size="m" />
                 </span>
-                <span className={styles.typeTileLabel}>{tile.label}</span>
-              </button>
-            ))}
-          </div>
+                <div className={styles.bankCalloutBody}>
+                  <div className={styles.bankCalloutHeading}>
+                    <h2 className={styles.bankCalloutTitle}>
+                      Add from question bank
+                    </h2>
+                    <AppTag size="s">Recommended</AppTag>
+                  </div>
+                  <p className={styles.bankCalloutText}>
+                    Reuse existing questions so updates stay in sync across
+                    assessments.
+                  </p>
+                </div>
+                <AppButton
+                  variant="primary"
+                  tone="teal"
+                  size="s"
+                  iconName="clipboard-question"
+                  onClick={onOpenBank}
+                >
+                  Browse question bank
+                </AppButton>
+              </div>
+
+              <div className={styles.sectionDivider}>
+                <span className={styles.sectionDividerLine} aria-hidden />
+                <span className={styles.sectionDividerLabel}>OR</span>
+                <span className={styles.sectionDividerLine} aria-hidden />
+              </div>
+
+              <div className={styles.createSection}>
+                <p className={styles.createSectionLabel}>
+                  Create a new question:
+                </p>
+                <div className={styles.typeGrid}>
+                  {CREATE_QUESTION_TILES.map((tile) => (
+                    <button
+                      key={tile.kind}
+                      type="button"
+                      className={[
+                        styles.typeTile,
+                        styles[`tone${tile.tone}`],
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => onAddOneOff(tile.kind)}
+                    >
+                      <span className={styles.typeTileIcon}>
+                        <FaIcon name={tile.iconName} size="m" aria-hidden />
+                      </span>
+                      <span className={styles.typeTileLabel}>
+                        {tile.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className={styles.addDropZoneLabel}>
+                Add a question from the bank or create a new one:
+              </p>
+              <div className={styles.typeGrid}>
+                {CREATE_QUESTION_TILES.map((tile) => (
+                  <button
+                    key={tile.kind}
+                    type="button"
+                    className={[
+                      styles.typeTile,
+                      styles[`tone${tile.tone}`],
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    onClick={() => onAddOneOff(tile.kind)}
+                  >
+                    <span className={styles.typeTileIcon}>
+                      <FaIcon name={tile.iconName} size="m" aria-hidden />
+                    </span>
+                    <span className={styles.typeTileLabel}>{tile.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </ScrollArea>

@@ -56,12 +56,14 @@ export interface FreeResponseQuestionContent {
 
 export interface MatchQuestionContent {
   prompt: string;
+  description?: string;
   terms: Array<{ id: string; text: string }>;
   prompts: Array<{ id: string; text: string; correctTermId: string }>;
 }
 
 export interface DragDropQuestionContent {
   prompt: string;
+  description?: string;
   mode: "parsons" | "categorization";
   blocks?: DragDropItem[];
   correctOrder?: string[];
@@ -73,6 +75,7 @@ export interface DragDropQuestionContent {
 
 export interface FillInBlankQuestionContent {
   prompt: string;
+  description?: string;
   segments: FillInBlankSegment[];
   blanks: FillInBlankDefinition[];
   revealAnswerEnabled?: boolean;

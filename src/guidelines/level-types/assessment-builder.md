@@ -38,9 +38,11 @@ Legacy levelgroup routes remain under Assessment sets / Experiments for comparis
 | Builder state hook | `src/hooks/useAssessmentBuilderState.ts` |
 | Bank hook | `src/hooks/useQuestionBank.ts` |
 | Mock bank + drafts | `src/data/assessmentBuilder/` |
-| Tag chip primitive (bank domain/difficulty) | `src/components/ui/AppTag.tsx` |
+| Tag chip primitive (bank domain/difficulty; DS-aligned `fill`/`color`/`size`, overline caps, optional start/end icons, `onDismiss` close) | `src/components/ui/AppTag.tsx` |
 
 ## Canonical schema
+
+> Product model specs live in the repo root `docs/` folder: [Question Types & Field Requirements](../../../docs/question-types-and-fields.md) and [Assessment Configuration & Modes](../../../docs/assessment-config-and-modes.md). Implementation-oriented field notes for the inline editors also live in [assessment-builder-question-schema.md](./assessment-builder-question-schema.md).
 
 ### `QuestionItem`
 
@@ -101,20 +103,31 @@ Rendered in **Build** mode. The canvas is the assessment **outline** (the old `b
 
 - Vertical cards with shadow; each row shows: **drag handle**, **index**, **prompt**, **type pill** (icon + label such as `Multiple Choice`, `Drag & Drop`), and action buttons.
 - **Reorder** via native HTML5 drag on the card header (writes `questionRefs` order).
-- **`Edit`** expands the card inline with type-specific fields (prompt, answer options, match pairs, drag-drop lines/categories, fill-in-blank answers, reveal, points).
-- **Save** (floppy-disk icon) collapses the expanded card by clearing selection.
-- **Remove** drops the ref from `questionRefs` and clears selection if that question was active.
+- **`Edit`** expands the card inline with type-specific fields (question stem, answer options, match pairs, drag-drop lines/categories, fill-in-blank answers, points). Per-item **reveal** is assessment-level config (Settings tab / exam mode), not edited on the question card.
+- **Save** (floppy-disk menu) offers **Save for this assessment** (inline snapshot; does not update the shared bank) or **Save to question bank** (upserts bank record + live ref). Edits are held in a local draft until save.
+- **Remove** drops the ref from `questionRefs`; if the expanded card has unsaved edits, a browser confirm dialog appears first.
 - Domain tags, bank provenance chips, and per-card points are **not** shown on cards — totals live in the header stats line.
 
 **Add question zone**
 
-- Dashed drop zone at the bottom (no filled background).
-- Copy: *Add a question from the bank or create a new one:* plus a teal **bank link** (*Drop a question from the bank here*) that opens the Bank tab. The zone also accepts bank-item drops (same as opening the bank).
-- **Type tile grid** — five one-off entry points (Free Response, Multiple Choice, Matching, Drag & Drop, Fill in the Blank), each with a colored icon tile. One-offs are scaffolded via `createBlankQuestion` (`blankQuestion.ts`), saved to the bank, appended as a live `bank` ref, and expanded inline for editing.
+- Dashed drop zone at the bottom (no filled background). The zone accepts bank-item drops (same as opening the bank).
+- **Empty outline** — teal **question bank callout** (*Add from question bank*, tagged *Recommended*, *Browse question bank* CTA) above an **OR** divider, then *Create a new question:* with the type tile grid below.
+- **Non-empty outline** — copy *Add a question from the bank or create a new one:* plus the type tile grid.
+- **Type tile grid** — five one-off entry points (Free Response, Multiple Choice, Matching, Drag & Drop, Fill in the Blank), each with a colored icon tile. One-offs are scaffolded via `createBlankQuestion` (`blankQuestion.ts`), appended as an **inline** ref (assessment-only until saved to the bank), and expanded inline for editing.
+
+### Inline question editor (`QuestionItemEditor`)
+
+Expanded outline cards use **`QuestionItemEditor`** for type-specific fields plus shared chrome:
+
+- **Bank label** + compact **Points** (numeric, same row when graded) — label is the internal bank listing name, not the student-facing question.
+- **Question** (plain heading) + **Body (markdown)** (optional supplemental stem rendered below the heading in preview).
+- Type-specific fields (e.g. free response **Placeholder** + **Min characters** on one row).
+- **Question bank metadata** — course, difficulty, domains (for bank save / filtering).
+- No per-question **reveal** controls (owned by assessment config).
 
 ### Resource panel (sidebar) — `AssessmentBuilderPanel`
 
-Three dedicated rail tabs: **Question bank** (`layer-group`) and **Settings** (`sliders`). Question editing lives inline in expanded outline cards (`QuestionItemEditor`). The shared `SidebarTab` union carries these as `builder-bank` / `builder-settings` (see `BUILDER_SIDEBAR_TABS` + `isBuilderTab` in `Sidebar.types.ts`); `showBuilderTab` gates both.
+Three dedicated rail tabs: **Question bank** (`clipboard-question`) and **Settings** (`sliders`). Question editing lives inline in expanded outline cards (`QuestionItemEditor`). The shared `SidebarTab` union carries these as `builder-bank` / `builder-settings` (see `BUILDER_SIDEBAR_TABS` + `isBuilderTab` in `Sidebar.types.ts`); `showBuilderTab` gates both.
 
 **Card-based layout**
 

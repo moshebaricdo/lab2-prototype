@@ -222,14 +222,14 @@ export function SidebarTabRail({
     {
       tab: "builder-bank",
       tooltip: "Question bank",
-      iconName: "layer-group",
+      iconName: "clipboard-question",
       iconSize: "m",
       visible: showBuilderTab,
     },
     {
       tab: "builder-settings",
       tooltip: "Assessment settings",
-      iconName: "sliders",
+      iconName: "wrench",
       iconSize: "m",
       visible: showBuilderTab,
     },

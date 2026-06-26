@@ -20,9 +20,16 @@ import type {
 } from "./multi";
 import type { CodePanelConfig } from "./codePanel";
 
+function levelGroupStem(prompt: string, description?: string) {
+  return description?.trim()
+    ? { question: prompt, description: description.trim() }
+    : { question: prompt };
+}
+
 export interface LevelGroupMultiQuestion {
   id: string;
   prompt: string;
+  description?: string;
   answers: Array<{
     id: string;
     text?: string;
@@ -35,6 +42,7 @@ export interface LevelGroupMultiQuestion {
 export interface LevelGroupFreeResponseQuestion {
   id: string;
   prompt: string;
+  description?: string;
   placeholder: string;
   minCharacters: number;
   revealAnswerEnabled?: boolean;
@@ -45,6 +53,7 @@ export interface LevelGroupFreeResponseQuestion {
 export interface LevelGroupMatchQuestion {
   id: string;
   prompt: string;
+  description?: string;
   terms: Array<{ id: string; text: string }>;
   prompts: Array<{ id: string; text: string; correctTermId: string }>;
 }
@@ -52,6 +61,7 @@ export interface LevelGroupMatchQuestion {
 export interface LevelGroupDragDropQuestion {
   id: string;
   prompt: string;
+  description?: string;
   mode: "parsons" | "categorization";
   blocks?: DragDropItem[];
   correctOrder?: string[];
@@ -64,6 +74,7 @@ export interface LevelGroupDragDropQuestion {
 export interface LevelGroupFillInBlankQuestion {
   id: string;
   prompt: string;
+  description?: string;
   segments: FillInBlankSegment[];
   blanks: FillInBlankDefinition[];
   revealAnswerEnabled?: boolean;
@@ -473,7 +484,7 @@ export function levelGroupMultiToPayload(
       id: flowLevel.id * 100 + stepIndex,
       name: flowLevel.name,
       type: "Multi",
-      stem: { question: q.prompt },
+      stem: levelGroupStem(q.prompt, q.description),
       answers: q.answers.map((a) => ({
         id: a.id,
         ...(a.text != null ? { text: a.text } : {}),
@@ -499,7 +510,7 @@ export function levelGroupFreeToPayload(
       id: flowLevel.id * 100 + stepIndex,
       name: flowLevel.name,
       type: "FreeResponse",
-      stem: { question: q.prompt },
+      stem: levelGroupStem(q.prompt, q.description),
       question: {
         placeholder: q.placeholder,
         minCharacters: q.minCharacters,
@@ -528,7 +539,7 @@ export function levelGroupMatchToPayload(
       id: flowLevel.id * 100 + stepIndex,
       name: flowLevel.name,
       type: "Match",
-      stem: { question: q.prompt },
+      stem: levelGroupStem(q.prompt, q.description),
       question: {
         terms: q.terms.map((t) => ({ id: t.id, text: t.text })),
         prompts: q.prompts.map((p) => ({
@@ -554,7 +565,7 @@ export function levelGroupDragDropToPayload(
       id: flowLevel.id * 100 + stepIndex,
       name: flowLevel.name,
       type: "DragDrop",
-      stem: { question: q.prompt },
+      stem: levelGroupStem(q.prompt, q.description),
       question:
         q.mode === "parsons"
           ? {
@@ -586,7 +597,7 @@ export function levelGroupFillInBlankToPayload(
       id: flowLevel.id * 100 + stepIndex,
       name: flowLevel.name,
       type: "FillInBlank",
-      stem: { question: q.prompt },
+      stem: levelGroupStem(q.prompt, q.description),
       question: {
         segments: q.segments,
         blanks: q.blanks,

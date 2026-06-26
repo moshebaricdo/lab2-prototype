@@ -1,14 +1,28 @@
 import { AppButton } from "../../../ui/AppButton";
 import { AppCheckbox } from "../../../ui/AppCheckbox";
+import {
+  AppMultiSelectDropdown,
+  AppNativeSelect,
+} from "../../../ui/AppDropdown";
 import { AppRadio } from "../../../ui/AppRadio";
 import { AppTag } from "../../../ui/AppTag";
 import { AppTextArea, AppTextField } from "../../../ui/AppTextField";
-import type { QuestionItem } from "../../../../types/assessmentBuilder";
+import {
+  QUESTION_DIFFICULTIES,
+  QUESTION_DIFFICULTY_LABELS,
+} from "../../../../lib/assessmentBuilder";
+import type {
+  DomainTag,
+  QuestionDifficulty,
+  QuestionItem,
+} from "../../../../types/assessmentBuilder";
 import styles from "./QuestionItemEditor.module.scss";
 
 interface QuestionItemEditorProps {
   question: QuestionItem;
   graded: boolean;
+  courseOptions: Array<{ value: string; label: string }>;
+  domainOptions: Array<{ value: string; label: string }>;
   onUpdateQuestion: (question: QuestionItem) => void;
 }
 
@@ -27,36 +41,67 @@ function updateQuestion(
 export function QuestionItemEditor({
   question,
   graded,
+  courseOptions,
+  domainOptions,
   onUpdateQuestion,
 }: QuestionItemEditorProps) {
   const patch = (next: Partial<QuestionItem>) =>
     updateQuestion(question, onUpdateQuestion, next);
 
+  const difficultyOptions = QUESTION_DIFFICULTIES.map((difficulty) => ({
+    value: difficulty,
+    label: QUESTION_DIFFICULTY_LABELS[difficulty],
+  }));
+
+  const selectedDomainIds = question.tags.map((tag) => tag.id);
+
+  const handleCourseChange = (courseId: string) => {
+    patch({ courseId });
+  };
+
+  const handleDifficultyChange = (value: string) => {
+    patch({ difficulty: value as QuestionDifficulty });
+  };
+
+  const handleDomainChange = (domainIds: string[]) => {
+    const tags: DomainTag[] = domainIds
+      .map((id) => domainOptions.find((option) => option.value === id))
+      .filter((option): option is { value: string; label: string } => option != null)
+      .map((option) => ({ id: option.value, label: option.label }));
+    patch({ tags });
+  };
+
   return (
     <div className={styles.root}>
       <div className={styles.section}>
-        <AppTextField
-          label="Title"
-          size="s"
-          tone="gray"
-          value={question.title}
-          onChange={(event) => patch({ title: event.target.value })}
-        />
-        {graded && (
+        <div className={graded ? styles.metaRow : undefined}>
           <AppTextField
-            label="Points"
+            label="Bank label"
+            helperText="Internal name in the question bank — not the student-facing question."
             size="s"
             tone="gray"
-            inputMode="numeric"
-            value={String(question.points ?? 1)}
-            onChange={(event) => {
-              const points = Number.parseInt(event.target.value, 10);
-              patch({
-                points: Number.isFinite(points) ? Math.max(0, points) : undefined,
-              });
-            }}
+            value={question.title}
+            onChange={(event) => patch({ title: event.target.value })}
           />
-        )}
+          {graded && (
+            <AppTextField
+              label="Points"
+              size="s"
+              tone="gray"
+              type="number"
+              min={0}
+              step={1}
+              className={styles.numericField}
+              value={String(question.points ?? 1)}
+              onChange={(event) => {
+                const points = Number.parseInt(event.target.value, 10);
+                patch({
+                  points: Number.isFinite(points) ? Math.max(0, points) : undefined,
+                });
+              }}
+            />
+          )}
+        </div>
       </div>
 
       <QuestionContentEditor
@@ -65,45 +110,97 @@ export function QuestionItemEditor({
       />
 
       <div className={styles.section}>
-        <h4 className={styles.sectionHeading}>Reveal</h4>
-        <label className={styles.checkRow}>
-          <AppCheckbox
-            checkboxSize="s"
-            checked={question.reveal.enabled}
-            onChange={(event) =>
-              patch({
-                reveal: { ...question.reveal, enabled: event.target.checked },
-              })
-            }
-          />
-          <span>Reveal answer after submit</span>
-        </label>
-        {question.reveal.enabled && (
-          <AppTextArea
-            label="Explanation"
-            size="s"
+        <h4 className={styles.sectionHeading}>Question bank metadata</h4>
+        <p className={styles.hint}>
+          Used when saving to the shared question bank. Course and domains help
+          authors find and reuse this question.
+        </p>
+        <div className={styles.bankMetaRow}>
+          <div className={styles.bankMetaField}>
+            <span className={styles.bankMetaLabel}>Course</span>
+            <AppNativeSelect
+              options={courseOptions}
+              value={question.courseId}
+              onValueChange={handleCourseChange}
+              size="xs"
+              tone="gray"
+              fullWidth
+              iconName="book"
+            />
+          </div>
+          <div className={styles.bankMetaField}>
+            <span className={styles.bankMetaLabel}>Difficulty</span>
+            <AppNativeSelect
+              options={difficultyOptions}
+              value={question.difficulty ?? "intermediate"}
+              onValueChange={handleDifficultyChange}
+              size="xs"
+              tone="gray"
+              fullWidth
+              iconName="signal"
+            />
+          </div>
+        </div>
+        <div className={styles.bankMetaField}>
+          <span className={styles.bankMetaLabel}>Domains</span>
+          <AppMultiSelectDropdown
+            options={domainOptions}
+            selectedValues={selectedDomainIds}
+            onSelectedValuesChange={handleDomainChange}
+            placeholder="Select domains"
+            size="xs"
             tone="gray"
-            value={question.reveal.explanation ?? ""}
-            onChange={(event) =>
-              patch({
-                reveal: { ...question.reveal, explanation: event.target.value },
-              })
-            }
+            fullWidth
+            iconName="tag"
+            disabled={domainOptions.length === 0}
           />
-        )}
-      </div>
-
-      {question.tags.length > 0 && (
-        <div className={styles.section}>
-          <h4 className={styles.sectionHeading}>Domains &amp; standards</h4>
+        </div>
+        {question.tags.length > 0 && (
           <div className={styles.tagRow}>
             {question.tags.map((tag) => (
               <AppTag key={tag.id}>{tag.label}</AppTag>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
+  );
+}
+
+interface QuestionStemFieldsProps {
+  prompt: string;
+  description?: string;
+  onPromptChange: (value: string) => void;
+  onDescriptionChange: (value: string | undefined) => void;
+}
+
+function QuestionStemFields({
+  prompt,
+  description,
+  onPromptChange,
+  onDescriptionChange,
+}: QuestionStemFieldsProps) {
+  return (
+    <>
+      <AppTextArea
+        label="Question"
+        helperText="Main heading shown to students."
+        size="s"
+        tone="gray"
+        value={prompt}
+        onChange={(event) => onPromptChange(event.target.value)}
+      />
+      <AppTextArea
+        label="Body (markdown)"
+        helperText="Optional markdown shown below the question heading."
+        size="s"
+        tone="gray"
+        value={description ?? ""}
+        onChange={(event) =>
+          onDescriptionChange(event.target.value.trim() || undefined)
+        }
+      />
+    </>
   );
 }
 
@@ -207,12 +304,11 @@ function MultiChoiceEditor({ question, onUpdateQuestion }: KindEditorProps) {
 
   return (
     <div className={styles.section}>
-      <AppTextArea
-        label="Prompt"
-        size="s"
-        tone="gray"
-        value={content.prompt}
-        onChange={(event) => updateContent({ prompt: event.target.value })}
+      <QuestionStemFields
+        prompt={content.prompt}
+        description={content.description}
+        onPromptChange={(value) => updateContent({ prompt: value })}
+        onDescriptionChange={(value) => updateContent({ description: value })}
       />
       <h4 className={styles.sectionHeading}>
         Answer options{isMultiple ? " (select all correct)" : ""}
@@ -304,35 +400,39 @@ function FreeResponseEditor({ question, onUpdateQuestion }: KindEditorProps) {
 
   return (
     <div className={styles.section}>
-      <AppTextArea
-        label="Prompt"
-        size="s"
-        tone="gray"
-        value={content.prompt}
-        onChange={(event) => updateContent({ prompt: event.target.value })}
+      <QuestionStemFields
+        prompt={content.prompt}
+        description={content.description}
+        onPromptChange={(value) => updateContent({ prompt: value })}
+        onDescriptionChange={(value) => updateContent({ description: value })}
       />
-      <AppTextField
-        label="Placeholder"
-        size="s"
-        tone="gray"
-        value={content.placeholder}
-        onChange={(event) => updateContent({ placeholder: event.target.value })}
-      />
-      <AppTextField
-        label="Minimum characters"
-        size="s"
-        tone="gray"
-        inputMode="numeric"
-        value={String(content.minCharacters)}
-        onChange={(event) => {
-          const minCharacters = Number.parseInt(event.target.value, 10);
-          updateContent({
-            minCharacters: Number.isFinite(minCharacters)
-              ? Math.max(0, minCharacters)
-              : 0,
-          });
-        }}
-      />
+      <div className={styles.compactRow}>
+        <AppTextField
+          label="Placeholder"
+          size="s"
+          tone="gray"
+          value={content.placeholder}
+          onChange={(event) => updateContent({ placeholder: event.target.value })}
+        />
+        <AppTextField
+          label="Min characters"
+          size="s"
+          tone="gray"
+          type="number"
+          min={0}
+          step={1}
+          className={styles.numericField}
+          value={String(content.minCharacters)}
+          onChange={(event) => {
+            const minCharacters = Number.parseInt(event.target.value, 10);
+            updateContent({
+              minCharacters: Number.isFinite(minCharacters)
+                ? Math.max(0, minCharacters)
+                : 0,
+            });
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -408,12 +508,11 @@ function MatchEditor({ question, onUpdateQuestion }: KindEditorProps) {
 
   return (
     <div className={styles.section}>
-      <AppTextArea
-        label="Prompt"
-        size="s"
-        tone="gray"
-        value={content.prompt}
-        onChange={(event) => updateContent({ prompt: event.target.value })}
+      <QuestionStemFields
+        prompt={content.prompt}
+        description={content.description}
+        onPromptChange={(value) => updateContent({ prompt: value })}
+        onDescriptionChange={(value) => updateContent({ description: value })}
       />
 
       <h4 className={styles.sectionHeading}>Terms</h4>
@@ -552,12 +651,11 @@ function DragDropParsonsEditor({ question, onUpdateQuestion }: KindEditorProps) 
 
   return (
     <div className={styles.section}>
-      <AppTextArea
-        label="Prompt"
-        size="s"
-        tone="gray"
-        value={content.prompt}
-        onChange={(event) => updateContent({ prompt: event.target.value })}
+      <QuestionStemFields
+        prompt={content.prompt}
+        description={content.description}
+        onPromptChange={(value) => updateContent({ prompt: value })}
+        onDescriptionChange={(value) => updateContent({ description: value })}
       />
       <h4 className={styles.sectionHeading}>Lines (correct order top to bottom)</h4>
       <div className={styles.optionList}>
@@ -672,12 +770,11 @@ function DragDropCategorizationEditor({ question, onUpdateQuestion }: KindEditor
 
   return (
     <div className={styles.section}>
-      <AppTextArea
-        label="Prompt"
-        size="s"
-        tone="gray"
-        value={content.prompt}
-        onChange={(event) => updateContent({ prompt: event.target.value })}
+      <QuestionStemFields
+        prompt={content.prompt}
+        description={content.description}
+        onPromptChange={(value) => updateContent({ prompt: value })}
+        onDescriptionChange={(value) => updateContent({ description: value })}
       />
 
       <h4 className={styles.sectionHeading}>Categories</h4>
@@ -822,12 +919,11 @@ function FillInBlankEditor({ question, onUpdateQuestion }: KindEditorProps) {
 
   return (
     <div className={styles.section}>
-      <AppTextArea
-        label="Prompt"
-        size="s"
-        tone="gray"
-        value={content.prompt}
-        onChange={(event) => updateContent({ prompt: event.target.value })}
+      <QuestionStemFields
+        prompt={content.prompt}
+        description={content.description}
+        onPromptChange={(value) => updateContent({ prompt: value })}
+        onDescriptionChange={(value) => updateContent({ description: value })}
       />
       <p className={styles.hint}>
         Edit each blank&apos;s accepted answers (comma-separated). New blanks append to

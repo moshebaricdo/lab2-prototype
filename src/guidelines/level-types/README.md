@@ -18,6 +18,7 @@ Use these docs as handoff context for follow-up threads.
 - [Fill in the blank](./fill-in-blank.md)
 - [Levelgroup](./levelgroup.md)
 - [Assessment builder](./assessment-builder.md)
+- Assessment product specs (repo root): [Question types & fields](../../../docs/question-types-and-fields.md), [Assessment config & modes](../../../docs/assessment-config-and-modes.md)
 - [Bubble choice](./bubble-choice.md)
 - [Teacher Answer Key Pattern](./teacher-answer-key.md)
 
