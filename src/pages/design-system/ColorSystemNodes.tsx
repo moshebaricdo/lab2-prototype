@@ -78,6 +78,7 @@ export interface SemanticNodeChip {
   role: string;
   hex: string;
   mapped: boolean;
+  dragId: string;
 }
 
 export interface SemanticNodeData {
@@ -240,6 +241,63 @@ export function PrimitiveFamilyNode({ data, selected }: NodeProps) {
   );
 }
 
+function SemanticChip({
+  chip,
+  surface,
+  familyKey,
+  isSelected,
+  onSelect,
+}: {
+  chip: SemanticNodeChip;
+  surface: string;
+  familyKey: string;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const dragData = {
+    kind: "semanticChip" as const,
+    surface,
+    familyKey,
+    role: chip.role,
+  };
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+    id: chip.dragId,
+    data: dragData,
+  });
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: chip.dragId,
+    data: dragData,
+  });
+  const setNodeRef = (node: HTMLButtonElement | null) => {
+    setDragRef(node);
+    setDropRef(node);
+  };
+
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      className={`nopan ${styles.chip} ${isSelected ? styles.chipSelected : ""} ${
+        chip.mapped ? "" : styles.chipUnmapped
+      } ${isDragging ? styles.chipDragging : ""} ${isOver ? styles.chipDropTarget : ""}`}
+      onClick={() => onSelect(chip.id)}
+      title={`${chip.id} · drag to reorder`}
+      aria-label={`Drag or select ${chip.role} token`}
+      {...attributes}
+      {...listeners}
+    >
+      <ColorSwatch hex={chip.hex} className={styles.chipSwatch} />
+      <span className={styles.chipLabel}>{chip.role}</span>
+      <Handle
+        id={chip.role}
+        type="target"
+        position={Position.Top}
+        className={styles.connectorHandle}
+      />
+    </button>
+  );
+}
+
 export function SemanticFamilyNode({ data, selected }: NodeProps) {
   const nodeData = data as SemanticNodeData;
   const dragData = {
@@ -284,29 +342,16 @@ export function SemanticFamilyNode({ data, selected }: NodeProps) {
 
       <div className={styles.surfaceGroup}>
         <div className={styles.chipRow}>
-          {nodeData.chips.map((chip) => {
-            const isSelected = nodeData.selectedRole === chip.role;
-            return (
-              <button
-                key={chip.id}
-                type="button"
-                className={`${styles.chip} ${isSelected ? styles.chipSelected : ""} ${
-                  chip.mapped ? "" : styles.chipUnmapped
-                }`}
-                onClick={() => nodeData.onSelect(chip.id)}
-                title={chip.id}
-              >
-                <ColorSwatch hex={chip.hex} className={styles.chipSwatch} />
-                <span className={styles.chipLabel}>{chip.role}</span>
-                <Handle
-                  id={chip.role}
-                  type="target"
-                  position={Position.Top}
-                  className={styles.connectorHandle}
-                />
-              </button>
-            );
-          })}
+          {nodeData.chips.map((chip) => (
+            <SemanticChip
+              key={chip.id}
+              chip={chip}
+              surface={nodeData.surface}
+              familyKey={nodeData.familyKey}
+              isSelected={nodeData.selectedRole === chip.role}
+              onSelect={nodeData.onSelect}
+            />
+          ))}
         </div>
       </div>
     </div>

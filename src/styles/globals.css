@@ -46,7 +46,7 @@
   --ring: var(--ds-borders-brand-teal-primary);
   --elevation-sm: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --chart-1: var(--ds-background-brand-teal-primary);
-  --chart-2: var(--ds-background-brand-purple-primary);
+  --chart-2: var(--ds-background-brand-pink-primary);
   --chart-3: var(--ds-background-success-primary);
   --chart-4: var(--ds-background-warning-primary);
   --chart-5: var(--ds-background-error-primary);
@@ -66,6 +66,47 @@
 :root[data-brand-theme="codeAi"] {
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Geist', sans-serif;
+}
+
+/* Active-state chrome experiment: remap legacy teal/aqua chrome to neutral inverse on CodeAI. */
+:root[data-brand-theme="codeAi"],
+:root[data-brand-theme="codeAi"] .dark {
+  --ds-codeai-active-chrome: var(--ds-background-neutral-primary-inverse);
+  --ds-codeai-active-chrome-hover: var(--ds-background-neutral-octonary);
+  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-primary-inverse);
+  --ds-codeai-active-chrome-muted: var(--ds-background-neutral-tertiary);
+  --ds-codeai-active-chrome-muted-border: var(--ds-borders-neutral-secondary);
+  --ds-text-on-active-chrome: var(--ds-codeai-active-chrome-on-fill);
+
+  --accent: var(--ds-codeai-active-chrome);
+  --accent-foreground: var(--ds-codeai-active-chrome-on-fill);
+  --ring: var(--ds-codeai-active-chrome);
+  --chart-1: var(--ds-codeai-active-chrome);
+  --sidebar-accent: var(--ds-codeai-active-chrome);
+  --sidebar-accent-foreground: var(--ds-codeai-active-chrome-on-fill);
+  --sidebar-ring: var(--ds-codeai-active-chrome);
+
+  --ds-background-brand-teal-extra-light: var(--ds-codeai-active-chrome-muted);
+  --ds-background-brand-teal-light: var(--ds-codeai-active-chrome-muted);
+  --ds-background-brand-teal-primary: var(--ds-codeai-active-chrome);
+  --ds-background-brand-teal-strong: var(--ds-codeai-active-chrome-hover);
+  --ds-borders-brand-teal-light: var(--ds-codeai-active-chrome-muted-border);
+  --ds-borders-brand-teal-primary: var(--ds-codeai-active-chrome);
+  --ds-borders-brand-teal-strong: var(--ds-codeai-active-chrome-hover);
+  --ds-text-brand-teal-primary: var(--ds-codeai-active-chrome);
+  --ds-text-brand-teal-primary-fixed: var(--ds-codeai-active-chrome);
+  --ds-text-brand-teal-secondary: var(--ds-codeai-active-chrome-hover);
+
+  --ds-background-brand-aqua-extra-light: var(--ds-codeai-active-chrome-muted);
+  --ds-background-brand-aqua-light: var(--ds-codeai-active-chrome-muted);
+  --ds-background-brand-aqua-primary: var(--ds-codeai-active-chrome);
+  --ds-background-brand-aqua-strong: var(--ds-codeai-active-chrome-hover);
+  --ds-borders-brand-aqua-light: var(--ds-codeai-active-chrome-muted-border);
+  --ds-borders-brand-aqua-primary: var(--ds-codeai-active-chrome);
+  --ds-borders-brand-aqua-strong: var(--ds-codeai-active-chrome-hover);
+  --ds-text-brand-aqua-primary: var(--ds-codeai-active-chrome);
+  --ds-text-brand-aqua-primary-fixed: var(--ds-codeai-active-chrome);
+  --ds-text-brand-aqua-secondary: var(--ds-codeai-active-chrome-hover);
 }
 
 .dark {

@@ -1,7 +1,7 @@
 .node {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: var(--radius-card);
   background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   box-shadow: 0 1px 2px color-mix(in srgb, var(--ds-text-neutral-black-fixed) 8%, transparent);
@@ -11,7 +11,7 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: calc(var(--radius-card) + 6px);
   background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
   box-shadow: 0 2px 8px color-mix(in srgb, var(--ds-text-neutral-black-fixed) 8%, transparent);
@@ -28,8 +28,8 @@
 }
 
 .collectionCardActive {
-  border-color: var(--ds-borders-brand-purple-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-brand-purple-primary) 45%, transparent);
+  border-color: var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-brand-teal-primary) 45%, transparent);
 }
 
 .collectionName {
@@ -49,9 +49,9 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: var(--radius-card);
-  background: color-mix(in srgb, var(--ds-background-neutral-primary) 88%, transparent);
+  background: color-mix(in srgb, var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary)) 88%, transparent);
   box-shadow: 0 1px 3px color-mix(in srgb, var(--ds-text-neutral-black-fixed) 6%, transparent);
   pointer-events: none;
 }
@@ -62,8 +62,8 @@
 }
 
 .dropTargetActive {
-  border-color: var(--ds-borders-brand-purple-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-brand-purple-primary) 40%, transparent);
+  border-color: var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-brand-teal-primary) 40%, transparent);
 }
 
 .nodeDragging {
@@ -120,7 +120,7 @@
   margin: 0;
   padding: 10px 12px;
   border: 0;
-  border-bottom: 1px solid var(--ds-borders-neutral-light);
+  border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: var(--radius-card) var(--radius-card) 0 0;
   background: transparent;
   cursor: grab;
@@ -133,7 +133,7 @@
 }
 
 button.nodeHeader:hover {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
 }
 
 .familyDot {
@@ -161,7 +161,7 @@ button.nodeHeader:hover {
   justify-content: center;
   padding: 0 6px;
   border-radius: 999px;
-  background: var(--ds-background-neutral-secondary);
+  background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
   color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-semibold);
@@ -196,7 +196,7 @@ button.nodeHeader:hover {
   align-items: center;
   justify-content: center;
   padding: 2px;
-  border: 1px solid color-mix(in srgb, var(--ds-text-neutral-black-fixed) 12%, transparent);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: var(--radius-default);
   font-size: 10px;
   font-weight: var(--font-weight-semibold);
@@ -208,12 +208,12 @@ button.nodeHeader:hover {
 }
 
 .colorSwatchAlpha {
-  background-color: var(--ds-background-neutral-primary);
+  background-color: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   background-image:
-    linear-gradient(45deg, var(--ds-background-neutral-secondary) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--ds-background-neutral-secondary) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--ds-background-neutral-secondary) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--ds-background-neutral-secondary) 75%);
+    linear-gradient(45deg, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 75%);
   background-size: 8px 8px;
   background-position:
     0 0,
@@ -234,7 +234,7 @@ button.nodeHeader:hover {
 }
 
 .swatchSelected .swatchChip {
-  box-shadow: 0 0 0 2px var(--ds-background-neutral-primary), 0 0 0 4px var(--family-color, #000);
+  box-shadow: 0 0 0 2px var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary)), 0 0 0 4px var(--family-color, #000);
 }
 
 .swatchHex {
@@ -248,7 +248,7 @@ button.nodeHeader:hover {
 
 .surfaceGroup {
   padding: 10px 12px;
-  border-top: 1px solid var(--ds-borders-neutral-light);
+  border-top: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
 }
 
 .surfaceGroup:first-of-type {
@@ -283,23 +283,37 @@ button.nodeHeader:hover {
   gap: 6px;
   margin: 0;
   padding: 0 8px;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 999px;
-  background: var(--ds-background-neutral-secondary);
-  cursor: pointer;
+  background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
+  cursor: grab;
+  touch-action: none;
   color: var(--ds-text-neutral-secondary);
   font-family: var(--font-body);
   font-size: var(--text-label);
   line-height: 1;
 }
 
+.chip:active {
+  cursor: grabbing;
+}
+
 .chip:hover {
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--sandbox-border-neutral-strong, var(--ds-borders-neutral-primary));
+}
+
+.chipDragging {
+  opacity: 0.45;
+}
+
+.chipDropTarget {
+  border-color: var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ds-background-brand-teal-primary) 40%, transparent);
 }
 
 .chipSelected {
   border-color: var(--family-color, var(--ds-borders-brand-teal-primary));
-  background: var(--ds-background-neutral-primary);
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   color: var(--ds-text-neutral-primary);
   box-shadow: 0 0 0 1px var(--family-color, #000);
 }

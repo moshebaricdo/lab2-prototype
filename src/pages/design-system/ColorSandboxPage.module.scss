@@ -1,7 +1,7 @@
 .page {
   position: fixed;
   inset: 0;
-  background: var(--ds-background-neutral-true-base);
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   color: var(--ds-text-neutral-primary);
   color-scheme: light;
 }
@@ -13,11 +13,11 @@
 .flow {
   width: 100%;
   height: 100%;
-  background: var(--ds-background-neutral-true-base);
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
 }
 
 .flow :global(.react-flow__background) {
-  color: var(--ds-borders-neutral-primary);
+  color: var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
 }
 
 .flow :global(.react-flow__pane) {
@@ -29,14 +29,14 @@
 }
 
 .flow :global(.react-flow__controls-button) {
-  border-color: var(--ds-borders-neutral-primary);
-  background: var(--ds-background-neutral-primary);
+  border-color: var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   color: var(--ds-text-neutral-primary);
   fill: currentcolor;
 }
 
 .flow :global(.react-flow__controls-button:hover) {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
 }
 
 .minimap {
@@ -52,9 +52,9 @@
 
 .dragOverlay {
   padding: 8px 12px;
-  border: 1px solid var(--ds-borders-brand-purple-primary);
+  border: 1px solid var(--ds-borders-brand-teal-primary);
   border-radius: var(--radius-default);
-  background: var(--ds-background-neutral-primary);
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   box-shadow: 0 4px 16px color-mix(in srgb, var(--ds-text-neutral-black-fixed) 14%, transparent);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-heading);
@@ -75,9 +75,9 @@
   flex-direction: column;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 8px;
-  background: var(--ds-background-neutral-primary);
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   box-shadow: 0 2px 3px rgb(0 0 0 / 5%);
 }
 
@@ -89,7 +89,7 @@
 .toolbarDivider {
   height: 1px;
   margin: 0 -12px;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
 }
 
 .toolbarActions {
@@ -100,6 +100,29 @@
 .toolbarActions > * {
   flex: 1;
   min-width: 0;
+}
+
+.runtimePreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.runtimePreviewToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+  cursor: pointer;
+}
+
+.runtimePreviewLabel {
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .control {
@@ -130,9 +153,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 8px;
-  background: var(--ds-background-neutral-primary);
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   box-shadow: 0 2px 3px rgb(0 0 0 / 5%);
 }
 
@@ -142,8 +165,8 @@
   justify-content: space-between;
   height: 32px;
   padding: 0 10px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
 }
 
 .inspectorHeaderLabel {
@@ -179,7 +202,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 10px;
-  border-bottom: 1px solid var(--ds-borders-neutral-light);
+  border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-secondary));
 }
 
 .inspectorSection:last-child {
@@ -255,7 +278,7 @@
   align-items: flex-end;
   justify-content: flex-end;
   padding: 6px 8px;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: var(--text-label);
@@ -263,12 +286,12 @@
 }
 
 .inspectorPreviewAlpha {
-  background-color: var(--ds-background-neutral-primary);
+  background-color: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   background-image:
-    linear-gradient(45deg, var(--ds-background-neutral-secondary) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--ds-background-neutral-secondary) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--ds-background-neutral-secondary) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--ds-background-neutral-secondary) 75%);
+    linear-gradient(45deg, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 75%);
   background-size: 8px 8px;
   background-position:
     0 0,
@@ -284,13 +307,43 @@
   grid-template-columns: 28px 1fr;
 }
 
+.inspectorAlphaRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inspectorAlphaControls {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  grid-template-columns: 1fr auto;
+}
+
+.alphaInput {
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--ds-background-brand-purple-primary);
+  cursor: pointer;
+}
+
+.alphaValue {
+  min-width: 32px;
+  color: var(--ds-text-neutral-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-medium);
+  text-align: right;
+}
+
 .colorInput {
   width: 28px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 4px;
-  background: var(--ds-background-neutral-primary);
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   cursor: pointer;
 }
 
@@ -299,9 +352,9 @@
   height: 22px;
   box-sizing: border-box;
   padding: 0 6px;
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 4px;
-  background: var(--ds-background-neutral-primary);
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-mono);
   font-size: var(--text-label);
@@ -314,9 +367,9 @@
   height: 24px;
   box-sizing: border-box;
   padding: 0 6px;
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 4px;
-  background: var(--ds-background-neutral-primary);
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
   font-size: var(--text-label);
@@ -325,7 +378,8 @@
 
 .colorInput:focus-visible,
 .hexInput:focus-visible,
-.inspectorInput:focus-visible {
+.inspectorInput:focus-visible,
+.alphaInput:focus-visible {
   outline: 0;
   box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
 }
@@ -376,7 +430,7 @@
   min-width: 18px;
   padding: 0 4px;
   border-radius: 3px;
-  background: var(--ds-background-neutral-secondary);
+  background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
   color: var(--ds-text-neutral-quaternary);
   font-family: var(--font-body);
   font-size: var(--text-xs);

@@ -34,9 +34,20 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { AppButton } from "../../components/ui/AppButton";
+import { AppCheckbox } from "../../components/ui/AppCheckbox";
 import { AppNativeSelect } from "../../components/ui/AppDropdown";
+import { Tooltip } from "../../components/ui/Tooltip";
 import { FaIcon } from "../../components/ui/icons/FaIcon";
-import { useTheme, type BrandTheme } from "../../hooks/useTheme";
+import { useTheme, type BrandTheme, type ThemeMode } from "../../hooks/useTheme";
+import {
+  loadColorSandboxSystem,
+  notifyColorSandboxUpdated,
+  persistColorSandboxDoc,
+  readColorSandboxApplyRuntime,
+} from "../../lib/colorSandbox/colorSandboxStorage";
+import {
+  setColorSandboxRuntimePreview,
+} from "../../lib/colorSandbox/colorSandboxRuntime";
 import {
   addFamily,
   addSemanticFamily,
@@ -51,7 +62,10 @@ import {
   deleteSemanticToken,
   deleteStep,
   cssColor,
-  ensureSemanticStructure,
+  colorAlpha,
+  buildCodeAiColorSystem,
+  rgbHex,
+  setHexAlpha,
   familiesByCollection,
   familyMidHex,
   familyOfStep,
@@ -60,9 +74,11 @@ import {
   moveSemanticFamilyToSubGroup,
   moveSemanticFamilyToSurface,
   neutralBackgroundHex,
+  neutralBorderHex,
   normalizeSemanticRole,
   reorderPrimitiveFamilyInCollection,
   reorderSemanticFamilyInSubGroup,
+  reorderSemanticTokenInFamily,
   normalizeHex,
   parseSemanticFamilySlotId,
   parseSemanticSubGroupSlotId,
@@ -80,6 +96,8 @@ import {
   semanticFamilyLabel,
   semanticFamilySlotId,
   semanticHex,
+  semanticTokenRolesForFamily,
+  semanticTokensForFamily,
   semanticTokenVariableName,
   findSemanticToken,
   formatContrastRatio,
@@ -105,7 +123,6 @@ import {
 } from "./ColorSystemNodes";
 import styles from "./ColorSandboxPage.module.scss";
 
-const STORAGE_KEY = "lab2:color-sandbox:doc";
 const COLLECTION_GAP_X = 44;
 const SEMANTIC_BAND_GAP = 96;
 const CARD_PADDING = 16;
@@ -133,7 +150,7 @@ const PRIMITIVE_FAMILY_H = 120;
 const COLLECTION_HEADER_H = 61;
 /** Space between the header block and the first family card. */
 const HEADER_FAMILY_GAP = 16;
-const EDGE_COLOR = "var(--ds-borders-neutral-strong)";
+const EDGE_COLOR = "var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary))";
 const EDGE_WIDTH = 1.5;
 /** React Flow pan filter — pan only on empty pane, not while interacting with nodes. */
 const REACT_FLOW_NO_PAN = { className: "nopan" } as const;
@@ -154,11 +171,23 @@ const CONTAINER_DROP_KINDS = new Set([
 ]);
 
 const FAMILY_DROP_KINDS = new Set(["primitiveFamily", "semanticFamily"]);
+const CHIP_DROP_KINDS = new Set(["semanticChip"]);
 
-/** Family under pointer wins for reorder; container headers win on empty column space. */
+/** Family under pointer wins for reorder; chips win while dragging a chip. */
 const colorSystemCollisionDetection: CollisionDetection = (args) => {
+  const activeKind = args.active?.data.current?.kind;
   const pointerHits = pointerWithin(args);
   if (pointerHits.length > 0) {
+    if (typeof activeKind === "string" && CHIP_DROP_KINDS.has(activeKind)) {
+      const chipHit = pointerHits.find((collision) => {
+        const container = args.droppableContainers.find((item) => item.id === collision.id);
+        const kind = container?.data?.current?.kind;
+        return typeof kind === "string" && CHIP_DROP_KINDS.has(kind);
+      });
+      if (chipHit) return [chipHit];
+      return pointerHits;
+    }
+
     const familyHit = pointerHits.find((collision) => {
       const container = args.droppableContainers.find((item) => item.id === collision.id);
       const kind = container?.data?.current?.kind;
@@ -188,49 +217,6 @@ type Selection =
   | { kind: "semantic"; surface: string; familyKey: string; role: string }
   | null;
 
-type StoredDocs = Partial<Record<BrandTheme, ColorSystem>>;
-
-function readStoredDocs(): StoredDocs {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as StoredDocs) : {};
-  } catch {
-    return {};
-  }
-}
-
-function loadSystem(brand: BrandTheme): ColorSystem {
-  const fresh = buildColorSystem();
-  const stored = readStoredDocs()[brand];
-  if (!stored?.families?.length) return fresh;
-  const structured = ensureSemanticStructure(stored);
-  return restoreAlphaHexFromBuiltIn(structured, fresh);
-}
-
-function restoreAlphaHexFromBuiltIn(stored: ColorSystem, fresh: ColorSystem): ColorSystem {
-  const lookup = new Map<string, string>();
-  for (const family of fresh.families) {
-    for (const step of family.steps) {
-      if (!isTransparentColor(step.hex)) continue;
-      lookup.set(`${family.collectionId}::${family.name}::${step.step}`, step.hex);
-    }
-  }
-
-  let changed = false;
-  const next = structuredCloneSystem(stored);
-  for (const family of next.families) {
-    for (const step of family.steps) {
-      if (isTransparentColor(step.hex)) continue;
-      const sourceHex = lookup.get(`${family.collectionId}::${family.name}::${step.step}`);
-      if (!sourceHex) continue;
-      step.hex = sourceHex;
-      changed = true;
-    }
-  }
-  return changed ? next : stored;
-}
-
 function structuredCloneSystem(system: ColorSystem): ColorSystem {
   return JSON.parse(JSON.stringify(system)) as ColorSystem;
 }
@@ -246,6 +232,9 @@ function layoutSignature(system: ColorSystem): string {
     ),
     ...Object.entries(system.semanticFamilyOrders ?? {}).map(
       ([slotId, order]) => `so:${slotId}:${order.join(",")}`,
+    ),
+    ...Object.entries(system.semanticTokenOrders ?? {}).map(
+      ([slotId, order]) => `to:${slotId}:${order.join(",")}`,
     ),
     ...system.semanticCollections.map((collection) => `sc:${collection.id}`),
     ...system.semanticCollections.flatMap((collection) =>
@@ -358,11 +347,11 @@ function estimatePrimitiveHeight(_stepCount: number) {
 }
 
 export function ColorSandboxPage() {
-  const { brandTheme, setBrandTheme } = useTheme();
-  const [mode, setMode] = useState<ThemeKey>("light");
-  const [system, setSystem] = useState<ColorSystem>(() => loadSystem("codeOrg"));
+  const { brandTheme, setBrandTheme, theme, setTheme } = useTheme();
+  const [system, setSystem] = useState<ColorSystem>(() => loadColorSandboxSystem("codeOrg"));
+  const [applyRuntime, setApplyRuntime] = useState(() => readColorSandboxApplyRuntime());
   const [selection, setSelection] = useState<Selection>(null);
-  const [copied, setCopied] = useState(false);
+  const [exported, setExported] = useState(false);
   const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -384,19 +373,25 @@ export function ColorSandboxPage() {
       );
       const token =
         primaryBg ?? system.semantics.find((item) => item.familyKey === key);
-      map.set(key, token ? semanticHex(system, token, mode, steps) : "#69788A");
+      map.set(key, token ? semanticHex(system, token, theme, steps) : "#69788A");
     }
     return map;
-  }, [system, mode, steps]);
+  }, [system, theme, steps]);
 
   const cardChromeStyle = useMemo((): CSSProperties & Record<string, string> => ({
     "--sandbox-bg-neutral-primary": cssColor(
-      neutralBackgroundHex(system, "primary", mode, steps),
+      neutralBackgroundHex(system, "primary", theme, steps),
     ),
     "--sandbox-bg-neutral-secondary": cssColor(
-      neutralBackgroundHex(system, "secondary", mode, steps),
+      neutralBackgroundHex(system, "secondary", theme, steps),
     ),
-  }), [system, mode, steps]);
+    "--sandbox-border-neutral-primary": cssColor(
+      neutralBorderHex(system, "primary", theme, steps),
+    ),
+    "--sandbox-border-neutral-strong": cssColor(
+      neutralBorderHex(system, "strong", theme, steps),
+    ),
+  }), [system, theme, steps]);
 
   const primitiveOptions = useMemo(
     () =>
@@ -411,9 +406,10 @@ export function ColorSandboxPage() {
 
   const persist = useCallback(
     (next: ColorSystem) => {
-      const docs = readStoredDocs();
-      docs[brandTheme] = next;
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
+      persistColorSandboxDoc(brandTheme, next);
+      if (readColorSandboxApplyRuntime()) {
+        notifyColorSandboxUpdated();
+      }
     },
     [brandTheme],
   );
@@ -425,6 +421,12 @@ export function ColorSandboxPage() {
     },
     [persist],
   );
+
+  const toggleApplyRuntime = useCallback((enabled: boolean) => {
+    setApplyRuntime(enabled);
+    setColorSandboxRuntimePreview(enabled);
+    notifyColorSandboxUpdated();
+  }, []);
 
   const selectStep = useCallback(
     (id: string) => setSelection({ kind: "step", id }),
@@ -530,15 +532,14 @@ export function ColorSandboxPage() {
 
   const buildSemanticData = useCallback(
     (surface: string, familyKey: string): SemanticNodeData => {
-      const chips = system.semantics
-        .filter((token) => token.surface === surface && token.familyKey === familyKey)
-        .map((token) => ({
-          id: token.id,
-          surface: token.surface,
-          role: token.role,
-          hex: semanticHex(system, token, mode, steps),
-          mapped: token.ref[mode] != null,
-        }));
+      const chips = semanticTokensForFamily(system, surface, familyKey).map((token) => ({
+        id: token.id,
+        surface: token.surface,
+        role: token.role,
+        hex: semanticHex(system, token, theme, steps),
+        mapped: token.ref[theme] != null,
+        dragId: `sem-chip:${semanticFamilySlotId(surface, familyKey)}:${token.role}`,
+      }));
       return {
         familyKey,
         surface,
@@ -563,7 +564,7 @@ export function ColorSandboxPage() {
     },
     [
       system,
-      mode,
+      theme,
       steps,
       semanticFamilyColor,
       selection,
@@ -663,12 +664,7 @@ export function ColorSandboxPage() {
 
         let innerY = firstSubFamilyY;
         const familyLayouts = familyKeys.map((familyKey) => {
-          const roles = system.semantics
-            .filter(
-              (token) =>
-                token.surface === collection.id && token.familyKey === familyKey,
-            )
-            .map((token) => token.role);
+          const roles = semanticTokenRolesForFamily(system, collection.id, familyKey);
           return { familyKey, roles, contentW: semanticFamilyWidth(roles) };
         });
         const maxFamilyContentW = familyLayouts.reduce(
@@ -774,7 +770,7 @@ export function ColorSandboxPage() {
     );
   }, [
     system,
-    mode,
+    theme,
     selection,
     setNodes,
     buildAllNodes,
@@ -801,7 +797,7 @@ export function ColorSandboxPage() {
     const result: Edge[] = [];
 
     for (const token of system.semantics) {
-      const refId = token.ref[mode];
+      const refId = token.ref[theme];
       if (!refId) continue;
       const family = stepFamily.get(refId);
       if (!family) continue;
@@ -856,32 +852,47 @@ export function ColorSandboxPage() {
       });
     }
     return result;
-  }, [system, mode, selection, stepFamily]);
+  }, [system, theme, selection, stepFamily]);
 
   // Load the working document whenever the brand changes.
   useLayoutEffect(() => {
-    setSystem(loadSystem(brandTheme));
+    setSystem(loadColorSandboxSystem(brandTheme));
     setSelection(null);
     signatureRef.current = "";
   }, [brandTheme]);
 
   function resetDraft() {
-    const fresh = buildColorSystem();
+    const fresh =
+      brandTheme === "codeAi" ? buildCodeAiColorSystem() : buildColorSystem();
     setSelection(null);
     signatureRef.current = "";
     applyChange(fresh);
   }
 
-  async function copyExport() {
-    await navigator.clipboard.writeText(JSON.stringify({ brand: brandTheme, ...system }, null, 2));
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
+  function clearRuntimePreview() {
+    toggleApplyRuntime(false);
+  }
+
+  function downloadExport() {
+    const payload = { brand: brandTheme, ...system };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json;charset=utf-8",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `color-system-${brandTheme}.json`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    setExported(true);
+    window.setTimeout(() => setExported(false), 1600);
   }
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const data = event.active.data.current as
       | { kind: "primitiveFamily"; familyId: string }
       | { kind: "semanticFamily"; familyKey: string; surface: string }
+      | { kind: "semanticChip"; familyKey: string; surface: string; role: string }
       | undefined;
     if (data?.kind === "primitiveFamily") {
       const family = system.families.find((item) => item.id === data.familyId);
@@ -890,6 +901,10 @@ export function ColorSandboxPage() {
     }
     if (data?.kind === "semanticFamily") {
       setActiveDragLabel(semanticFamilyLabel(system, data.familyKey));
+      return;
+    }
+    if (data?.kind === "semanticChip") {
+      setActiveDragLabel(data.role);
     }
   }, [system]);
 
@@ -902,16 +917,36 @@ export function ColorSandboxPage() {
       const activeData = active.data.current as
         | { kind: "primitiveFamily"; familyId: string; collectionId: string }
         | { kind: "semanticFamily"; familyKey: string; surface: string; subGroupId: string }
+        | { kind: "semanticChip"; familyKey: string; surface: string; role: string }
         | undefined;
       const overData = over.data.current as
         | { kind: "primitiveFamily"; familyId: string; collectionId: string }
         | { kind: "semanticFamily"; familyKey: string; surface: string; subGroupId: string }
+        | { kind: "semanticChip"; familyKey: string; surface: string; role: string }
         | { kind: "primitiveCollection"; collectionId: string }
         | { kind: "semanticCollection"; collectionId: string }
         | { kind: "semanticSubGroup"; surface: string; subGroupId: string }
         | undefined;
 
       if (!activeData || !overData) return;
+
+      if (activeData.kind === "semanticChip") {
+        if (
+          overData.kind === "semanticChip" &&
+          activeData.surface === overData.surface &&
+          activeData.familyKey === overData.familyKey
+        ) {
+          const next = reorderSemanticTokenInFamily(
+            system,
+            activeData.surface,
+            activeData.familyKey,
+            activeData.role,
+            overData.role,
+          );
+          if (next !== system) applyChange(next);
+        }
+        return;
+      }
 
       if (activeData.kind === "primitiveFamily") {
         if (overData.kind === "primitiveFamily") {
@@ -1074,7 +1109,8 @@ export function ColorSandboxPage() {
 
   return (
     <div
-      className={`${styles.page} ${mode === "dark" ? "dark" : ""}`}
+      className={`${styles.page} ${theme === "dark" ? "dark" : ""}`}
+      data-theme={theme}
       style={cardChromeStyle}
     >
       <DndContext
@@ -1112,7 +1148,7 @@ export function ColorSandboxPage() {
           style={{ width: 100, height: 100 }}
           pannable
           zoomable
-          bgColor="var(--ds-background-neutral-primary)"
+          bgColor="var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary))"
           nodeColor={(node) => {
             const data = node.data as
               | PrimitiveNodeData
@@ -1120,7 +1156,7 @@ export function ColorSandboxPage() {
               | CollectionNodeData;
             return "color" in data ? (data.color as string) : "#69788A";
           }}
-          maskColor="color-mix(in srgb, var(--ds-background-neutral-primary) 70%, transparent)"
+          maskColor="color-mix(in srgb, var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary)) 70%, transparent)"
         />
 
         <Panel position="top-right" className={styles.toolbarPanel}>
@@ -1139,13 +1175,36 @@ export function ColorSandboxPage() {
             <div className={styles.control}>
               <span className={styles.controlLabel}>Mode</span>
               <AppNativeSelect
-                value={mode}
-                onValueChange={(value) => setMode(value as ThemeKey)}
+                value={theme}
+                onValueChange={(value) => setTheme(value as ThemeMode)}
                 options={MODE_OPTIONS}
                 size="s"
                 tone="gray"
               />
             </div>
+          </div>
+          <div className={styles.toolbarDivider} role="separator" />
+          <div className={styles.runtimePreview}>
+            <label className={styles.runtimePreviewToggle}>
+              <AppCheckbox
+                checkboxSize="s"
+                checked={applyRuntime}
+                onChange={(event) => toggleApplyRuntime(event.target.checked)}
+              />
+              <span className={styles.runtimePreviewLabel}>Apply to app</span>
+            </label>
+            {applyRuntime ? (
+              <Tooltip content="Clear live preview" position="bottom">
+                <AppButton
+                  variant="secondary"
+                  tone="gray"
+                  size="xs"
+                  iconName="xmark"
+                  onClick={clearRuntimePreview}
+                  aria-label="Clear live preview"
+                />
+              </Tooltip>
+            ) : null}
           </div>
           <div className={styles.toolbarDivider} role="separator" />
           <div className={styles.toolbarActions}>
@@ -1163,11 +1222,11 @@ export function ColorSandboxPage() {
               variant="primary"
               tone="purple"
               size="s"
-              iconName={copied ? "check" : "clipboard"}
+              iconName={exported ? "check" : "download"}
               fullWidth
-              onClick={copyExport}
+              onClick={downloadExport}
             >
-              {copied ? "Copied" : "Export"}
+              {exported ? "Exported" : "Export"}
             </AppButton>
           </div>
           </div>
@@ -1177,7 +1236,7 @@ export function ColorSandboxPage() {
           <Panel position="bottom-right" className={styles.inspectorPanel}>
             <Inspector
               system={system}
-              mode={mode}
+              theme={theme}
               selection={selection}
               steps={steps}
               stepFamily={stepFamily}
@@ -1237,7 +1296,7 @@ function InspectorShell({
 
 function Inspector({
   system,
-  mode,
+  theme,
   selection,
   steps,
   stepFamily,
@@ -1247,7 +1306,7 @@ function Inspector({
   onClose,
 }: {
   system: ColorSystem;
-  mode: ThemeKey;
+  theme: ThemeKey;
   selection: Exclude<Selection, null>;
   steps: ReturnType<typeof stepIndex>;
   stepFamily: ReturnType<typeof familyOfStep>;
@@ -1614,7 +1673,7 @@ function Inspector({
           <input
             type="color"
             className={styles.colorInput}
-            value={rgbHexForPicker(step.hex)}
+            value={rgbHex(step.hex)}
             onChange={(event) =>
               applyChange(
                 updatePrimitiveHex(
@@ -1631,7 +1690,11 @@ function Inspector({
             onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
           />
         </div>
-        <AccessibilityContrastSection checks={surfaceColorContrastChecks(step.hex)} />
+        <AlphaField
+          value={step.hex}
+          onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
+        />
+        <AccessibilityContrastSection checks={surfaceColorContrastChecks(step.hex, system)} />
         <p className={styles.inspectorMeta}>
           Referenced by {usage} semantic token{usage === 1 ? "" : "s"}
         </p>
@@ -1648,12 +1711,12 @@ function Inspector({
     selection.role,
   );
   if (!token) return null;
-  const refId = token.ref[mode];
-  const hex = semanticHex(system, token, mode, steps);
+  const refId = token.ref[theme];
+  const hex = semanticHex(system, token, theme, steps);
   const variableName = semanticTokenVariableName(system, token);
   return (
     <InspectorShell
-      label={`Semantic · ${token.surface} · ${mode}`}
+      label={`Semantic · ${token.surface} · ${theme}`}
       onClose={onClose}
       actions={
         <AppButton
@@ -1712,12 +1775,12 @@ function Inspector({
         {hex}
       </span>
       <div className={styles.inspectorRow}>
-        <span className={styles.inspectorRowLabel}>Mapped primitive ({mode})</span>
+        <span className={styles.inspectorRowLabel}>Mapped primitive ({theme})</span>
         <div className={styles.inspectorRowControl}>
           <AppNativeSelect
             value={refId ?? ""}
             onValueChange={(next) =>
-              applyChange(remapSemantic(system, token.id, mode, next))
+              applyChange(remapSemantic(system, token.id, theme, next))
             }
             options={
               refId
@@ -1734,8 +1797,8 @@ function Inspector({
       <AccessibilityContrastSection
         checks={
           token.surface === "text"
-            ? textTokenContrastChecks(hex)
-            : surfaceColorContrastChecks(hex)
+            ? textTokenContrastChecks(hex, system)
+            : surfaceColorContrastChecks(hex, system)
         }
       />
     </InspectorShell>
@@ -1769,21 +1832,49 @@ function AccessibilityContrastSection({ checks }: { checks: ContrastCheck[] }) {
   );
 }
 
-function rgbHexForPicker(hex: string): string {
-  const channels = hex.replace("#", "");
-  if (channels.length >= 6) {
-    return `#${channels.slice(0, 6).toUpperCase()}`;
-  }
-  return normalizeHex(hex) ?? "#808080";
-}
-
 function mergePickerHex(currentHex: string, pickedHex: string): string {
   const normalized = normalizeHex(pickedHex);
   if (!normalized) return currentHex;
-  if (isTransparentColor(currentHex) && currentHex.length === 9) {
-    return `${normalized}${currentHex.slice(7)}`;
+  const rgb = normalized.length === 9 ? normalized.slice(0, 7) : normalized;
+  if (isTransparentColor(currentHex)) {
+    const alphaSuffix = currentHex.length === 9 ? currentHex.slice(7) : "FF";
+    return `${rgb}${alphaSuffix}`;
   }
-  return normalized;
+  return rgb;
+}
+
+function AlphaField({
+  value,
+  onCommit,
+}: {
+  value: string;
+  onCommit: (hex: string) => void;
+}) {
+  const alphaPercent = Math.round(colorAlpha(value) * 100);
+
+  return (
+    <div className={styles.inspectorAlphaRow}>
+      <label className={styles.inspectorRowLabel} htmlFor="primitive-alpha">
+        Opacity
+      </label>
+      <div className={styles.inspectorAlphaControls}>
+        <input
+          id="primitive-alpha"
+          type="range"
+          className={styles.alphaInput}
+          min={0}
+          max={100}
+          step={1}
+          value={alphaPercent}
+          onChange={(event) =>
+            onCommit(setHexAlpha(value, Number(event.target.value) / 100))
+          }
+          aria-valuetext={`${alphaPercent}%`}
+        />
+        <span className={styles.alphaValue}>{alphaPercent}%</span>
+      </div>
+    </div>
+  );
 }
 
 function StepValueField({

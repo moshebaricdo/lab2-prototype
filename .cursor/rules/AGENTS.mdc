@@ -56,6 +56,10 @@ Read `src/guidelines/level-types/teacher-answer-key.md` — defines the inline r
 
 Read `src/REFACTORING_SUMMARY.md` — documents what changed in the last reorg, the canonical directory-intent map, and follow-up hygiene rules.
 
+### Working on brand themes, tokens, or the color sandbox
+
+Read **`src/guidelines/color-theming.md`** — token cascade layers, Code.org vs CodeAI roles, CodeAI active-chrome experiment in `globals.css`, sandbox **Apply to app** boundaries, and semantic cross-reference resolution. Also see `scripts/tokenMigrationMap.md` for legacy rename tables.
+
 ---
 
 ## Quick Placement Guide

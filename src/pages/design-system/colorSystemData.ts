@@ -15,6 +15,7 @@
 import primitivesCodeOrg from "./tokens/codeOrgPrimitives.json";
 import semanticsLightJson from "./tokens/semanticsLight.json";
 import semanticsDarkJson from "./tokens/semanticsDark.json";
+import codeAiColorSystemJson from "./tokens/codeAiColorSystem.json";
 
 export type ThemeKey = "light" | "dark";
 
@@ -53,6 +54,8 @@ export interface SemanticToken {
   role: string;
   /** Mapped primitive step id, per theme (null when unresolved). */
   ref: Record<ThemeKey, string | null>;
+  /** Another semantic token id when `$value` is a DTCG alias like `{text.neutral.primary}`. */
+  semanticRef?: Record<ThemeKey, string | null>;
   /** Original exported hex, per theme (fallback when a ref is missing). */
   fallbackHex: Record<ThemeKey, string>;
 }
@@ -69,6 +72,8 @@ export interface ColorSystem {
   primitiveFamilyOrders?: Record<string, string[]>;
   /** Per semantic sub-group slot (`surface::subGroupId`), ordered family keys. */
   semanticFamilyOrders?: Record<string, string[]>;
+  /** Per semantic family slot (`surface::familyKey`), ordered token roles. */
+  semanticTokenOrders?: Record<string, string[]>;
   semantics: SemanticToken[];
 }
 
@@ -118,7 +123,7 @@ const SEMANTIC_FAMILY_ORDER = [
 
 interface DtcgLeaf {
   $type?: string;
-  $value?: { hex?: string; alpha?: number };
+  $value?: { hex?: string; alpha?: number } | string;
   $extensions?: {
     "com.figma.aliasData"?: { targetVariableName?: string };
   };
@@ -136,11 +141,20 @@ function isLeaf(value: unknown): value is DtcgLeaf {
 
 function leafHex(leaf: DtcgLeaf): string {
   const value = leaf.$value;
+  if (typeof value === "string") return "#000000";
   if (!value?.hex) return "#000000";
   const base = normalizeHex(value.hex) ?? value.hex.toUpperCase();
   const alpha = value.alpha;
   if (alpha == null || alpha >= 0.999) return base;
   return `${base}${hexChannel(alpha * 255)}`;
+}
+
+function leafSemanticRefPath(leaf: DtcgLeaf): string | null {
+  const value = leaf.$value;
+  if (typeof value !== "string") return null;
+  const match = value.match(/^\{(.+)\}$/);
+  if (!match) return null;
+  return match[1].replace(/\./g, "/");
 }
 
 function parseHexChannels(hex: string): { r: number; g: number; b: number; a: number } {
@@ -168,6 +182,21 @@ function parseHexChannels(hex: string): { r: number; g: number; b: number; a: nu
 
 export function colorAlpha(hex: string): number {
   return parseHexChannels(hex).a;
+}
+
+/** Opaque `#RRGGBB` portion of a hex color (strips alpha when present). */
+export function rgbHex(hex: string): string {
+  const normalized = normalizeHex(hex);
+  if (!normalized) return "#808080";
+  return normalized.length === 9 ? normalized.slice(0, 7) : normalized;
+}
+
+/** Set alpha (0–1). Opaque colors stay 6-digit; partial transparency uses 8-digit hex. */
+export function setHexAlpha(hex: string, alpha: number): string {
+  const rgb = rgbHex(hex);
+  const clamped = Math.max(0, Math.min(1, alpha));
+  if (clamped >= 0.999) return rgb;
+  return `${rgb}${hexChannel(clamped * 255)}`;
 }
 
 export function isTransparentColor(hex: string): boolean {
@@ -202,6 +231,29 @@ export function readableTextOn(hex: string): string {
 export const A11Y_BLACK = "#000000";
 export const A11Y_WHITE = "#FFFFFF";
 export const WCAG_AA_NORMAL_TEXT_RATIO = 4.5;
+
+/** Resolved `neutral/base/black` primitive, or fallback when missing. */
+export function themeBlackHex(system: ColorSystem): string {
+  return primitiveStepHex(system, "neutral", "base", "black", A11Y_BLACK);
+}
+
+/** Resolved `neutral/base/white` primitive, or fallback when missing. */
+export function themeWhiteHex(system: ColorSystem): string {
+  return primitiveStepHex(system, "neutral", "base", "white", A11Y_WHITE);
+}
+
+function primitiveStepHex(
+  system: ColorSystem,
+  collectionId: string,
+  familyName: string,
+  stepName: string,
+  fallback: string,
+): string {
+  const family = system.families.find(
+    (item) => item.collectionId === collectionId && item.name === familyName,
+  );
+  return family?.steps.find((item) => item.step === stepName)?.hex ?? fallback;
+}
 
 export interface ContrastCheck {
   label: string;
@@ -259,19 +311,23 @@ function buildContrastCheck(label: string, foreground: string, background: strin
 }
 
 /** Black and white body text on a surface/background color. */
-export function surfaceColorContrastChecks(hex: string): ContrastCheck[] {
-  const surface = compositeOntoBackground(hex, A11Y_WHITE);
+export function surfaceColorContrastChecks(hex: string, system: ColorSystem): ContrastCheck[] {
+  const white = themeWhiteHex(system);
+  const black = themeBlackHex(system);
+  const surface = compositeOntoBackground(hex, white);
   return [
-    buildContrastCheck("Black text", A11Y_BLACK, surface),
-    buildContrastCheck("White text", A11Y_WHITE, surface),
+    buildContrastCheck("Black text", black, surface),
+    buildContrastCheck("White text", white, surface),
   ];
 }
 
 /** Semantic text token contrast against default light/dark page backgrounds. */
-export function textTokenContrastChecks(hex: string): ContrastCheck[] {
+export function textTokenContrastChecks(hex: string, system: ColorSystem): ContrastCheck[] {
+  const white = themeWhiteHex(system);
+  const black = themeBlackHex(system);
   return [
-    buildContrastCheck("On white", compositeOntoBackground(hex, A11Y_WHITE), A11Y_WHITE),
-    buildContrastCheck("On black", compositeOntoBackground(hex, A11Y_BLACK), A11Y_BLACK),
+    buildContrastCheck("On white", compositeOntoBackground(hex, white), white),
+    buildContrastCheck("On black", compositeOntoBackground(hex, black), black),
   ];
 }
 
@@ -488,6 +544,43 @@ function buildDefaultSemanticFamilyOrders(system: ColorSystem): Record<string, s
   return orders;
 }
 
+function rolesForSemanticFamily(
+  system: ColorSystem,
+  surface: string,
+  familyKey: string,
+): string[] {
+  return system.semantics
+    .filter((token) => token.surface === surface && token.familyKey === familyKey)
+    .map((token) => token.role);
+}
+
+function ensureSemanticTokenOrder(
+  system: ColorSystem,
+  surface: string,
+  familyKey: string,
+): string[] {
+  const slotId = semanticFamilySlotId(surface, familyKey);
+  const roles = rolesForSemanticFamily(system, surface, familyKey);
+  const existing = system.semanticTokenOrders?.[slotId] ?? [];
+  return [
+    ...existing.filter((role) => roles.includes(role)),
+    ...roles.filter((role) => !existing.includes(role)),
+  ];
+}
+
+function buildDefaultSemanticTokenOrders(system: ColorSystem): Record<string, string[]> {
+  const orders: Record<string, string[]> = {};
+  for (const surface of SURFACE_ORDER) {
+    for (const family of system.semanticFamilies) {
+      const roles = rolesForSemanticFamily(system, surface, family.id);
+      if (roles.length > 0) {
+        orders[semanticFamilySlotId(surface, family.id)] = roles;
+      }
+    }
+  }
+  return orders;
+}
+
 function defaultSemanticFamilySubGroups(familyKeys: string[]): Record<string, string> {
   return Object.fromEntries(
     familyKeys.map((familyKey) => [
@@ -609,6 +702,19 @@ export function ensureSemanticStructure(system: ColorSystem): ColorSystem {
     }
   }
 
+  next.semanticTokenOrders = {
+    ...buildDefaultSemanticTokenOrders(next),
+    ...(system.semanticTokenOrders ?? {}),
+  };
+  for (const surface of SURFACE_ORDER) {
+    for (const familyKey of semanticFamilyKeys(next)) {
+      if (rolesForSemanticFamily(next, surface, familyKey).length > 0) {
+        next.semanticTokenOrders[semanticFamilySlotId(surface, familyKey)] =
+          ensureSemanticTokenOrder(next, surface, familyKey);
+      }
+    }
+  }
+
   return next;
 }
 
@@ -619,6 +725,7 @@ interface ParsedSemanticLeaf {
   role: string;
   hex: string;
   refPath: string | null;
+  semanticRefPath: string | null;
 }
 
 function parseSemanticLeaves(root: DtcgNode): ParsedSemanticLeaf[] {
@@ -646,6 +753,7 @@ function parseSemanticLeaves(root: DtcgNode): ParsedSemanticLeaf[] {
           role,
           hex: leafHex(value),
           refPath: alias,
+          semanticRefPath: leafSemanticRefPath(value),
         });
       } else if (value && typeof value === "object") {
         walk(value as DtcgNode, nextSegments);
@@ -655,6 +763,11 @@ function parseSemanticLeaves(root: DtcgNode): ParsedSemanticLeaf[] {
 
   walk(root, []);
   return leaves;
+}
+
+/** Load the committed CodeAI ColorSystem export (primitives + semantics). */
+export function buildCodeAiColorSystem(): ColorSystem {
+  return ensureSemanticStructure(codeAiColorSystemJson as ColorSystem);
 }
 
 export function buildColorSystem(): ColorSystem {
@@ -676,6 +789,10 @@ export function buildColorSystem(): ColorSystem {
       familyKey: light.familyKey,
       role: light.role,
       ref: { light: resolve(light.refPath), dark: resolve(dark.refPath) },
+      semanticRef: {
+        light: light.semanticRefPath,
+        dark: dark.semanticRefPath,
+      },
       fallbackHex: { light: light.hex, dark: dark.hex },
     };
   });
@@ -706,6 +823,7 @@ export function buildColorSystem(): ColorSystem {
   return {
     ...draft,
     semanticFamilyOrders: buildDefaultSemanticFamilyOrders(draft),
+    semanticTokenOrders: buildDefaultSemanticTokenOrders(draft),
   };
 }
 
@@ -817,6 +935,29 @@ export function parseSemanticFamilySlotId(
   };
 }
 
+export function semanticTokenRolesForFamily(
+  system: ColorSystem,
+  surface: string,
+  familyKey: string,
+): string[] {
+  return ensureSemanticTokenOrder(system, surface, familyKey);
+}
+
+export function semanticTokensForFamily(
+  system: ColorSystem,
+  surface: string,
+  familyKey: string,
+): SemanticToken[] {
+  const order = ensureSemanticTokenOrder(system, surface, familyKey);
+  const tokens = system.semantics.filter(
+    (token) => token.surface === surface && token.familyKey === familyKey,
+  );
+  const index = new Map(order.map((role, position) => [role, position]));
+  return [...tokens].sort(
+    (a, b) => (index.get(a.role) ?? 9999) - (index.get(b.role) ?? 9999),
+  );
+}
+
 export function semanticFamilyLabel(
   system: ColorSystem,
   familyKey: string,
@@ -858,13 +999,38 @@ export function semanticHex(
   token: SemanticToken,
   mode: ThemeKey,
   steps: Map<string, PrimitiveStep>,
+  cache: Map<string, string> = new Map(),
+  stack: Set<string> = new Set(),
 ): string {
+  const cacheKey = `${token.id}::${mode}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
+  if (stack.has(token.id)) {
+    return token.fallbackHex[mode];
+  }
+  stack.add(token.id);
+
+  let resolved: string | null = null;
   const refId = token.ref[mode];
   if (refId) {
     const step = steps.get(refId);
-    if (step) return step.hex;
+    if (step) resolved = step.hex;
   }
-  return token.fallbackHex[mode];
+  if (!resolved) {
+    const semanticRef = token.semanticRef?.[mode];
+    if (semanticRef) {
+      const target = system.semantics.find((item) => item.id === semanticRef);
+      if (target) {
+        resolved = semanticHex(system, target, mode, steps, cache, stack);
+      }
+    }
+  }
+  if (!resolved) resolved = token.fallbackHex[mode];
+
+  stack.delete(token.id);
+  cache.set(cacheKey, resolved);
+  return resolved;
 }
 
 /** Slug used in DTCG variable paths for a semantic family. */
@@ -874,6 +1040,65 @@ export function semanticFamilyPathSegment(
 ): string {
   const family = system.semanticFamilies.find((item) => item.id === familyKey);
   return slugify(family?.name ?? familyKey);
+}
+
+/** Flat `--ds-*` name (without prefix) for a semantic token. */
+export function semanticTokenCssName(
+  system: ColorSystem,
+  token: Pick<SemanticToken, "id" | "surface" | "familyKey" | "role">,
+): string {
+  const path = token.id || semanticTokenVariableName(system, token);
+  return path
+    .replace(/\//g, "-")
+    .replace(/[^a-zA-Z0-9-]/g, "-")
+    .toLowerCase();
+}
+
+/** Resolved semantic tokens as flat `--ds-*` name → hex for one theme mode. */
+export function resolveColorSystemToCssVars(
+  system: ColorSystem,
+  mode: ThemeKey,
+): Map<string, string> {
+  const steps = stepIndex(system);
+  const output = new Map<string, string>();
+
+  for (const token of system.semantics) {
+    const hex = semanticHex(system, token, mode, steps);
+    output.set(semanticTokenCssName(system, token), hex);
+  }
+
+  return output;
+}
+
+/** Backfill semantic cross-references from a canonical built-in system (for persisted sandbox drafts). */
+export function mergeSemanticRefs(
+  system: ColorSystem,
+  source: ColorSystem,
+): ColorSystem {
+  const sourceById = new Map(source.semantics.map((token) => [token.id, token]));
+  let changed = false;
+
+  const semantics = system.semantics.map((token) => {
+    const canonical = sourceById.get(token.id);
+    if (!canonical?.semanticRef) return token;
+
+    const semanticRef = {
+      light: token.semanticRef?.light ?? canonical.semanticRef?.light ?? null,
+      dark: token.semanticRef?.dark ?? canonical.semanticRef?.dark ?? null,
+    };
+
+    if (
+      semanticRef.light === token.semanticRef?.light &&
+      semanticRef.dark === token.semanticRef?.dark
+    ) {
+      return token;
+    }
+
+    changed = true;
+    return { ...token, semanticRef };
+  });
+
+  return changed ? { ...system, semantics } : system;
 }
 
 /** DTCG-style variable path for a semantic token from current structure. */
@@ -913,6 +1138,23 @@ export function neutralBackgroundHex(
   const token = findSemanticToken(system, "background", "neutral", role);
   if (!token) {
     return role === "primary" ? "#FFFFFF" : "#F0F2F5";
+  }
+  return semanticHex(system, token, mode, steps);
+}
+
+/** Resolved hex for `borders/neutral/primary` or `borders/neutral/strong`. */
+export function neutralBorderHex(
+  system: ColorSystem,
+  role: "primary" | "strong",
+  mode: ThemeKey,
+  steps: Map<string, PrimitiveStep>,
+): string {
+  const token = findSemanticToken(system, "borders", "neutral", role);
+  if (!token) {
+    if (role === "strong") {
+      return mode === "dark" ? "#A1AEBB" : "#B7C1CB";
+    }
+    return mode === "dark" ? "#69788A" : "#D4DAE1";
   }
   return semanticHex(system, token, mode, steps);
 }
@@ -1230,6 +1472,16 @@ export function addSemanticFamily(
     ];
   }
 
+  next.semanticTokenOrders = { ...(next.semanticTokenOrders ?? {}) };
+  if (seedFamilyKey && seedRoles.length > 0) {
+    for (const surface of SURFACE_ORDER) {
+      next.semanticTokenOrders[semanticFamilySlotId(surface, familyKey)] =
+        ensureSemanticTokenOrder(system, surface, seedFamilyKey).filter((role) =>
+          seedRoles.includes(role),
+        );
+    }
+  }
+
   return { system: rebuildSemanticTokenIds(next), familyKey };
 }
 
@@ -1279,6 +1531,14 @@ export function duplicateSemanticFamily(
     next.semanticFamilyOrders[slotId] = nextOrder;
   }
 
+  next.semanticTokenOrders = { ...(next.semanticTokenOrders ?? {}) };
+  for (const surface of SURFACE_ORDER) {
+    if (rolesForSemanticFamily(next, surface, newFamilyKey).length > 0) {
+      next.semanticTokenOrders[semanticFamilySlotId(surface, newFamilyKey)] =
+        ensureSemanticTokenOrder(system, surface, familyKey);
+    }
+  }
+
   return { system: rebuildSemanticTokenIds(next), familyKey: newFamilyKey };
 }
 
@@ -1311,6 +1571,12 @@ export function addSemanticToken(
     ref: { light: null, dark: null },
     fallbackHex: { light: defaultHex, dark: defaultHex },
   });
+  const slotId = semanticFamilySlotId(surface, familyKey);
+  next.semanticTokenOrders = { ...(next.semanticTokenOrders ?? {}) };
+  next.semanticTokenOrders[slotId] = [
+    ...ensureSemanticTokenOrder(system, surface, familyKey),
+    role,
+  ];
   return { system: rebuildSemanticTokenIds(next), role };
 }
 
@@ -1332,6 +1598,12 @@ export function renameSemanticTokenRole(
   const token = findSemanticToken(next, surface, familyKey, currentRole);
   if (!token) return { system, role: null };
   token.role = nextRole;
+  const slotId = semanticFamilySlotId(surface, familyKey);
+  if (next.semanticTokenOrders?.[slotId]) {
+    next.semanticTokenOrders[slotId] = next.semanticTokenOrders[slotId].map((item) =>
+      item === currentRole ? nextRole : item,
+    );
+  }
   return { system: rebuildSemanticTokenIds(next), role: nextRole };
 }
 
@@ -1350,6 +1622,12 @@ export function deleteSemanticToken(
         token.role === role
       ),
   );
+  const slotId = semanticFamilySlotId(surface, familyKey);
+  if (next.semanticTokenOrders?.[slotId]) {
+    next.semanticTokenOrders[slotId] = next.semanticTokenOrders[slotId].filter(
+      (item) => item !== role,
+    );
+  }
   return next;
 }
 
@@ -1470,6 +1748,15 @@ export function deleteSemanticFamily(
     next.semanticFamilyOrders = orders;
   }
 
+  if (next.semanticTokenOrders) {
+    const orders: Record<string, string[]> = {};
+    for (const [slotId, order] of Object.entries(next.semanticTokenOrders)) {
+      const { familyKey: slotFamilyKey } = parseSemanticFamilySlotId(slotId);
+      if (slotFamilyKey !== familyKey) orders[slotId] = order;
+    }
+    next.semanticTokenOrders = orders;
+  }
+
   return next;
 }
 
@@ -1576,7 +1863,36 @@ export function moveSemanticFamilyToSurface(
     if (token.surface !== fromSurface || token.familyKey !== familyKey) continue;
     token.surface = toSurface;
   }
+
+  const fromSlot = semanticFamilySlotId(fromSurface, familyKey);
+  const toSlot = semanticFamilySlotId(toSurface, familyKey);
+  if (system.semanticTokenOrders?.[fromSlot]) {
+    next.semanticTokenOrders = { ...(next.semanticTokenOrders ?? {}) };
+    next.semanticTokenOrders[toSlot] = system.semanticTokenOrders[fromSlot];
+    delete next.semanticTokenOrders[fromSlot];
+  }
+
   return rebuildSemanticTokenIds(next);
+}
+
+export function reorderSemanticTokenInFamily(
+  system: ColorSystem,
+  surface: string,
+  familyKey: string,
+  role: string,
+  targetRole: string,
+): ColorSystem {
+  if (role === targetRole) return system;
+  const slotId = semanticFamilySlotId(surface, familyKey);
+  const order = ensureSemanticTokenOrder(system, surface, familyKey);
+  if (!order.includes(role) || !order.includes(targetRole)) return system;
+
+  const next = clone(system);
+  next.semanticTokenOrders = {
+    ...(next.semanticTokenOrders ?? {}),
+    [slotId]: reorderIdList(order, role, targetRole),
+  };
+  return next;
 }
 
 export function reorderPrimitiveFamilyInCollection(

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { colorSystemToCssVarBlock } from "./colorSystemToCss.mjs";
 
 const ROOT_DIR = process.cwd();
 const DEFAULT_LIGHT_PATH =
@@ -15,44 +16,16 @@ const DARK_PATH =
   process.env.WL2_DARK_TOKENS_PATH ??
   path.join(ROOT_DIR, "tokens", "semantic", "dark.tokens.json");
 
-const OUTPUT_PATH = path.join(ROOT_DIR, "src", "styles", "tokens.css");
+const CODEAI_COLOR_SYSTEM_PATH = path.join(
+  ROOT_DIR,
+  "src",
+  "pages",
+  "design-system",
+  "tokens",
+  "codeAiColorSystem.json",
+);
 
-const BRAND_THEME_OVERRIDES = {
-  codeAi: {
-    "background-brand-purple-extra-light": "#EFEEFC",
-    "background-brand-purple-hover": "#D8D5F6",
-    "background-brand-purple-light": "#D8D5F6",
-    "background-brand-purple-primary": "#6A62D9",
-    "background-brand-purple-primary-fixed": "#6A62D9",
-    "background-brand-purple-strong": "#4F48B8",
-    "background-brand-teal-extra-light": "#EFEEFC",
-    "background-brand-teal-light": "#D8D5F6",
-    "background-brand-teal-primary": "#6A62D9",
-    "background-brand-teal-strong": "#4F48B8",
-    "background-brand-aqua-extra-light": "#EFEEFC",
-    "background-brand-aqua-light": "#D8D5F6",
-    "background-brand-aqua-primary": "#6A62D9",
-    "background-brand-aqua-strong": "#4F48B8",
-    "borders-brand-purple-light": "#D8D5F6",
-    "borders-brand-purple-primary": "#6A62D9",
-    "borders-brand-purple-strong": "#4F48B8",
-    "borders-brand-teal-light": "#D8D5F6",
-    "borders-brand-teal-primary": "#6A62D9",
-    "borders-brand-teal-strong": "#4F48B8",
-    "borders-brand-aqua-light": "#EFEEFC",
-    "borders-brand-aqua-primary": "#6A62D9",
-    "borders-brand-aqua-strong": "#4F48B8",
-    "text-brand-purple-primary": "#6A62D9",
-    "text-brand-purple-primary-fixed": "#6A62D9",
-    "text-brand-purple-secondary": "#4F48B8",
-    "text-brand-teal-primary": "#6A62D9",
-    "text-brand-teal-primary-fixed": "#6A62D9",
-    "text-brand-teal-secondary": "#4F48B8",
-    "text-brand-aqua-primary": "#6A62D9",
-    "text-brand-aqua-primary-fixed": "#6A62D9",
-    "text-brand-aqua-secondary": "#4F48B8",
-  },
-};
+const OUTPUT_PATH = path.join(ROOT_DIR, "src", "styles", "tokens.css");
 
 function readJson(tokenPath, fallbackPath) {
   if (fs.existsSync(tokenPath)) {
@@ -170,26 +143,91 @@ function getTokenMap(semanticTokens, selector) {
   return readExistingCssTokenMap(selector);
 }
 
-function toBrandThemeCssVars(overrides) {
-  return Object.entries(overrides)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([name, value]) => `  --ds-${name}: ${value};`)
-    .join("\n");
+function loadCodeAiColorSystem() {
+  if (!fs.existsSync(CODEAI_COLOR_SYSTEM_PATH)) {
+    throw new Error(
+      `CodeAI ColorSystem not found at ${CODEAI_COLOR_SYSTEM_PATH}`,
+    );
+  }
+  return JSON.parse(fs.readFileSync(CODEAI_COLOR_SYSTEM_PATH, "utf-8"));
 }
 
-function toBrandThemeCss() {
-  return Object.entries(BRAND_THEME_OVERRIDES)
-    .map(
-      ([themeName, overrides]) => `
-:root[data-brand-theme="${themeName}"],
-:root[data-brand-theme="${themeName}"] .dark {
-${toBrandThemeCssVars(overrides)}
-}`,
-    )
-    .join("\n");
+const CODEAI_LEGACY_BRAND_FAMILIES = ["teal", "aqua"];
+
+function buildCodeAiLegacyBrandAliases(cssVarBlock) {
+  const aliases = [];
+
+  for (const line of cssVarBlock.split("\n")) {
+    const match = line.match(
+      /^  (--ds-(?:background|borders|text)-brand-)purple(-[a-z0-9-]+):/,
+    );
+    if (!match) {
+      continue;
+    }
+
+    const [, prefix, role] = match;
+    const purpleVar = `${prefix}purple${role}`;
+    for (const legacyFamily of CODEAI_LEGACY_BRAND_FAMILIES) {
+      aliases.push(
+        `  ${prefix}${legacyFamily}${role}: var(${purpleVar});`,
+      );
+    }
+  }
+
+  return aliases.join("\n");
 }
 
-function buildCss(lightTokens, darkTokens) {
+function toCodeAiBrandThemeCss(codeAiSystem) {
+  const lightBlock = colorSystemToCssVarBlock(codeAiSystem, "light");
+  const darkBlock = colorSystemToCssVarBlock(codeAiSystem, "dark");
+  const lightAliases = buildCodeAiLegacyBrandAliases(lightBlock);
+  const darkAliases = buildCodeAiLegacyBrandAliases(darkBlock);
+
+  return `
+:root[data-brand-theme="codeAi"] {
+${lightBlock}
+${lightAliases}
+}
+
+:root[data-brand-theme="codeAi"] .dark {
+${darkBlock}
+${darkAliases}
+}`;
+}
+
+function extendCodeOrgCanonicalBrandNames(map) {
+  const accentToBrand = [
+    ["accent-strawberry", "brand-pink"],
+    ["accent-orange", "brand-orange"],
+  ];
+  const surfaces = ["background", "text", "borders"];
+
+  for (const [legacyFamily, canonicalFamily] of accentToBrand) {
+    for (const [name, value] of [...map.entries()]) {
+      for (const surface of surfaces) {
+        const prefix = `${surface}-${legacyFamily}-`;
+        if (name.startsWith(prefix)) {
+          const role = name.slice(prefix.length);
+          map.set(`${surface}-${canonicalFamily}-${role}`, value);
+        }
+      }
+    }
+  }
+
+  if (map.has("text-neutral-inverse")) {
+    map.set("text-neutral-primary-inverse", map.get("text-neutral-inverse"));
+  }
+
+  if (map.has("borders-neutral-strong")) {
+    map.set("borders-neutral-secondary", map.get("borders-neutral-strong"));
+  } else if (map.has("borders-neutral-light")) {
+    map.set("borders-neutral-secondary", map.get("borders-neutral-light"));
+  }
+
+  return map;
+}
+
+function buildCss(lightTokens, darkTokens, codeAiSystem) {
   return `/* Auto-generated by scripts/generate-tokens.mjs. Do not edit manually. */
 :root {
 ${toCssVars(lightTokens)}
@@ -198,22 +236,21 @@ ${toCssVars(lightTokens)}
 .dark {
 ${toCssVars(darkTokens)}
 }
-${toBrandThemeCss()}
+${toCodeAiBrandThemeCss(codeAiSystem)}
 `;
 }
 
-const lightSemantic = readJson(
-  LIGHT_PATH,
-  DEFAULT_LIGHT_PATH,
-);
-const darkSemantic = readJson(
-  DARK_PATH,
-  DEFAULT_DARK_PATH,
-);
+const lightSemantic = readJson(LIGHT_PATH, DEFAULT_LIGHT_PATH);
+const darkSemantic = readJson(DARK_PATH, DEFAULT_DARK_PATH);
+const codeAiSystem = loadCodeAiColorSystem();
 
-const lightMap = getTokenMap(lightSemantic, ":root");
-const darkMap = getTokenMap(darkSemantic, ".dark");
-const css = buildCss(lightMap, darkMap);
+const lightMap = extendCodeOrgCanonicalBrandNames(
+  getTokenMap(lightSemantic, ":root"),
+);
+const darkMap = extendCodeOrgCanonicalBrandNames(
+  getTokenMap(darkSemantic, ".dark"),
+);
+const css = buildCss(lightMap, darkMap, codeAiSystem);
 
 fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
 fs.writeFileSync(OUTPUT_PATH, css, "utf-8");

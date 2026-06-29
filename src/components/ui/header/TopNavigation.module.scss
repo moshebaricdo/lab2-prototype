@@ -8,6 +8,10 @@
   background: var(--ds-background-brand-teal-primary);
 }
 
+:global([data-brand-theme="codeAi"]) .root {
+  background: var(--ds-background-brand-purple-primary);
+}
+
 .leftGroup {
   display: flex;
   align-items: center;
@@ -132,7 +136,7 @@
 }
 
 .userButton {
-  border-color: var(--ds-borders-neutral-light);
+  border-color: var(--ds-borders-neutral-secondary);
   background: transparent;
   color: var(--ds-text-neutral-white-fixed);
 }

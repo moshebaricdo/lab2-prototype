@@ -21,7 +21,7 @@ Use these directories intentionally:
 ```text
 src/
   components/
-    ui/                    # Universal primitives (buttons, text fields, slider, tooltips, etc.)
+    ui/                    # Universal primitives (buttons, text fields, slider, segmented control, tooltips, etc.)
     ui/header/             # Header-specific UI components
     ui/icons/              # Reusable icon components (FaIcon, AiTutorIcon, Logo)
     lab2/                  # Lab2 frame — shared by ALL level types
@@ -65,9 +65,11 @@ src/
 Design tokens and globals are layered:
 
 1. `src/styles/tokens.css` (generated design token variables; do not hand-edit)
-2. `src/styles/globals.css` (semantic aliases, typography, global base styles)
+2. `src/styles/globals.css` (semantic aliases, typography, global base styles, brand theme experiments)
 3. SCSS module files (`*.module.scss`) for component-level styling
 4. SCSS helpers (`src/styles/_tokens.scss`, `src/styles/_mixins.scss`)
+
+For brand themes (Code.org vs CodeAI), sandbox preview, active-state remaps, and token pipeline details, read **`src/guidelines/color-theming.md`**.
 
 ### Required Rules
 
@@ -201,7 +203,7 @@ Do not reintroduce removed legacy paths or compatibility shims unless there is a
 - **Need AI Chat Lab-specific workspace chrome?** -> `src/components/ide/aichatlab/views`
 - **Need to tune Tutor guidance, prompts, model context, validation, repair, tool fallback, or provider config?** -> `src/lib/tutor` and `src/guidelines/tutor-harness.md`
 - **Need behavior used across many surfaces?** -> hook in `src/hooks` + typed contract in `src/types`
-- **Need new styling values?** -> tokens pipeline first, then semantic aliasing
+- **Need new styling values?** -> tokens pipeline first, then semantic aliasing; see `src/guidelines/color-theming.md` for brand themes and sandbox boundaries
 
 ---
 

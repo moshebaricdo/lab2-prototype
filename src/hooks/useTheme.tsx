@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { initColorSandboxRuntime } from "../lib/colorSandbox/colorSandboxRuntime";
 
 export type ThemeMode = "light" | "dark";
 export type BrandTheme = "codeOrg" | "codeAi";
@@ -64,6 +65,15 @@ function applyBrandTheme(brandTheme: BrandTheme) {
   root.dataset.brandTheme = brandTheme;
 }
 
+function applyThemeMode(theme: ThemeMode) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const root = document.documentElement;
+  root.dataset.theme = theme;
+}
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<ThemeMode>(() => getStoredTheme());
   const [brandTheme, setBrandThemeState] = useState<BrandTheme>(() =>
@@ -72,9 +82,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   useLayoutEffect(() => {
     applyBrandTheme(brandTheme);
+    applyThemeMode(theme);
     window.sessionStorage.setItem(THEME_STORAGE_KEY, theme);
     window.sessionStorage.setItem(BRAND_THEME_STORAGE_KEY, brandTheme);
   }, [brandTheme, theme]);
+
+  useLayoutEffect(() => initColorSandboxRuntime(), []);
 
   const value = useMemo(
     () => ({
