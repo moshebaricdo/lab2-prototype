@@ -112,7 +112,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
   background: var(--ds-background-neutral-primary);
   padding: 5px 12px;
@@ -139,7 +139,7 @@
 
 .input {
   width: 100%;
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);

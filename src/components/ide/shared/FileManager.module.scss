@@ -155,7 +155,7 @@
   position: absolute;
   z-index: 20;
   width: 1px;
-  background: var(--ds-borders-neutral-strong);
+  background: var(--ds-borders-neutral-primary);
 }
 
 .rowOuter {
@@ -320,7 +320,7 @@
   z-index: 20;
   width: 1px;
   height: calc(100% - 12px);
-  background: var(--ds-borders-neutral-strong);
+  background: var(--ds-borders-neutral-primary);
 }
 
 .panelIcon {

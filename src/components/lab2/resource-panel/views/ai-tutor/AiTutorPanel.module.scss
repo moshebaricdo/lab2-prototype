@@ -96,7 +96,7 @@
   justify-content: center;
   border-radius: 999px;
   background: var(--ds-background-neutral-septenary);
-  color: var(--ds-text-neutral-inverse);
+  color: var(--ds-text-neutral-primary-inverse);
   font-size: 22px;
   margin-bottom: 12px;
 }
@@ -598,7 +598,7 @@
   position: relative;
   isolation: isolate;
   overflow: visible;
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-secondary);
   border-radius: 4px;
   background: var(--ds-background-neutral-primary);
   padding: 8px;
@@ -614,7 +614,7 @@
 }
 
 .inputCardShimmer {
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--ds-borders-neutral-secondary);
   animation: tutorComposerNativeBorderFade 4s ease-in-out;
 }
 
@@ -670,7 +670,7 @@
   border-radius: 4px;
   box-shadow: inset 0 0 0 1px color-mix(
     in srgb,
-    var(--ds-borders-brand-aqua-primary),
+    var(--ds-borders-brand-teal-primary),
     transparent
   );
   opacity: 0;
@@ -715,7 +715,7 @@
 @keyframes tutorComposerNativeBorderFade {
   0%,
   100% {
-    border-color: var(--ds-borders-neutral-strong);
+    border-color: var(--ds-borders-neutral-secondary);
   }
 
   16%,
@@ -940,7 +940,7 @@
 }
 
 .sendButtonEnabled:hover {
-  background: var(--ds-background-brand-purple-strong);
+  background: var(--ds-background-brand-aqua-strong);
   color: var(--primary-foreground);
 }
 
@@ -1105,7 +1105,7 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--ds-borders-neutral-strong);
+  border: 2px solid var(--ds-borders-neutral-primary);
   border-radius: 999px;
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-success-primary-fixed);
@@ -1213,7 +1213,7 @@
 }
 
 .suggestionChip:hover:not(:disabled) {
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--ds-borders-neutral-primary);
   background: var(--ds-background-neutral-tertiary);
   color: var(--ds-text-neutral-primary);
 }

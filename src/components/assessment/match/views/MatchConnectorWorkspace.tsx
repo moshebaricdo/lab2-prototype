@@ -69,7 +69,7 @@ function buildCurvePath(
   return `M ${start.x} ${start.y} C ${start.x + cpOffset} ${start.y}, ${end.x - cpOffset} ${end.y}, ${end.x} ${end.y}`;
 }
 
-const TEAL_STROKE = "var(--ds-borders-brand-teal-primary)";
+const BRAND_STROKE = "var(--ds-borders-brand-teal-primary)";
 
 function renderMatchContentBlock(
   block: MultiChoiceAnswerContentBlock,
@@ -937,7 +937,7 @@ export function MatchConnectorWorkspace({
                       .join(" ")}
                     style={
                       seg.state === "neutral"
-                        ? { stroke: TEAL_STROKE }
+                        ? { stroke: BRAND_STROKE }
                         : undefined
                     }
                   />

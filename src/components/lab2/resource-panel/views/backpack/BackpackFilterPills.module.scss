@@ -21,10 +21,10 @@
 .pillActive {
   border-color: var(--ds-borders-brand-teal-primary);
   background: var(--ds-background-brand-teal-primary);
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed));
 }
 
 .pillActive:hover:not(:disabled) {
   background: var(--ds-background-brand-teal-primary);
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed));
 }

@@ -261,7 +261,7 @@
 .tabAiChangedActive .tabIcon,
 .tabAiChangedActive .tabName,
 .tabAiChangedActive .tabCloseIcon {
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed));
 }
 
 .tabDragToTutor {
@@ -287,7 +287,7 @@
 }
 
 .tabIconActive {
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed));
 }
 
 .tabIconInactive {
@@ -302,7 +302,7 @@
 }
 
 .tabNameActive {
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed));
 }
 
 .tabNameInactive {
@@ -321,6 +321,13 @@
 .tabClose:hover {
   opacity: 1;
   cursor: pointer;
+}
+
+.tabClose:focus-visible {
+  outline: none;
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
+  opacity: 1;
 }
 
 .tabCloseIcon {
@@ -507,7 +514,7 @@
 .tabEdgeAiChangedActive .tabIcon,
 .tabEdgeAiChangedActive .tabName,
 .tabEdgeAiChangedActive .tabCloseIcon {
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed));
 }
 
 .tabEdgeIconActive {
@@ -544,4 +551,11 @@
 .tabEdgeClose:hover {
   opacity: 1;
   cursor: pointer;
+}
+
+.tabEdgeClose:focus-visible {
+  outline: none;
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
+  opacity: 1;
 }

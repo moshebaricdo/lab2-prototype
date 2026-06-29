@@ -100,7 +100,7 @@
 }
 
 .choiceRow:hover:not(:disabled) {
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--ds-borders-neutral-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -110,7 +110,7 @@
 }
 
 .customRow:focus-within {
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--ds-borders-neutral-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -120,7 +120,7 @@
 }
 
 .customRow:hover:not(:has(.customInput:disabled)) {
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--ds-borders-neutral-primary);
   background: var(--ds-background-neutral-secondary);
 }
 

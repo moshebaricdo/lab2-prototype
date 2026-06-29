@@ -150,7 +150,7 @@
 }
 
 .activityItem:hover {
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--ds-borders-neutral-primary);
 }
 
 .activityItem:focus-visible {
@@ -380,7 +380,7 @@
   right: 4px;
   left: 4px;
   height: 2px;
-  background: var(--ds-borders-neutral-strong);
+  background: var(--ds-borders-neutral-primary);
   content: "";
 }
 
@@ -414,7 +414,7 @@
   background: linear-gradient(
     90deg,
     var(--ds-background-success-primary),
-    var(--ds-borders-neutral-strong)
+    var(--ds-borders-neutral-primary)
   );
 }
 
@@ -445,7 +445,7 @@
   background: linear-gradient(
     90deg,
     var(--ds-background-error-primary),
-    var(--ds-borders-neutral-strong)
+    var(--ds-borders-neutral-primary)
   );
 }
 
@@ -474,7 +474,7 @@
   justify-content: center;
   border-radius: 999px;
   background: var(--ds-background-neutral-septenary);
-  color: var(--ds-text-neutral-inverse);
+  color: var(--ds-text-neutral-primary-inverse);
   margin-bottom: 10px;
 }
 

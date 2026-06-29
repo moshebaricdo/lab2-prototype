@@ -141,13 +141,13 @@
 .toolbarButtonActive {
   border-color: transparent !important;
   background: var(--ds-background-brand-teal-primary) !important;
-  color: var(--ds-text-neutral-white-fixed) !important;
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .toolbarButtonActive:hover {
   border-color: transparent !important;
   background: var(--ds-background-brand-teal-strong) !important;
-  color: var(--ds-text-neutral-white-fixed) !important;
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .popupTitle,
@@ -238,7 +238,7 @@
   height: 24px;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
   background: var(--ds-background-neutral-primary);
   padding: 0 5px;
@@ -336,7 +336,7 @@
   overflow: hidden;
   width: 100%;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
   background: var(--ds-background-neutral-primary);
 }
@@ -372,7 +372,7 @@
 .displayModeButtonActive,
 .displayModeButtonActive:hover {
   background: var(--ds-background-brand-teal-primary) !important;
-  color: var(--ds-text-neutral-white-fixed) !important;
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .fieldInline > .inlineNumber {

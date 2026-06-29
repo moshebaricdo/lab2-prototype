@@ -13,13 +13,13 @@
   border-radius: 8px;
   font-size: var(--text-h4);
 
-  &[data-accent="violet"] { --agent-accent: #6c4ccf; }
-  &[data-accent="blue"] { --agent-accent: #1a7ee6; }
-  &[data-accent="magenta"] { --agent-accent: #d6479d; }
-  &[data-accent="green"] { --agent-accent: #0e9f6e; }
+  &[data-accent="violet"] { --agent-accent: var(--ds-background-brand-purple-primary); }
+  &[data-accent="blue"] { --agent-accent: var(--ds-text-info-primary-fixed); }
+  &[data-accent="magenta"] { --agent-accent: var(--ds-background-brand-pink-primary); }
+  &[data-accent="green"] { --agent-accent: var(--ds-background-success-primary); }
 
-  background: color-mix(in srgb, var(--agent-accent, #6c4ccf) 12%, transparent);
-  color: var(--agent-accent, #6c4ccf);
+  background: color-mix(in srgb, var(--agent-accent, var(--ds-background-brand-purple-primary)) 12%, transparent);
+  color: var(--agent-accent, var(--ds-background-brand-purple-primary));
 }
 
 .viewText {
@@ -114,8 +114,8 @@
   flex-shrink: 0;
   border-radius: 50%;
 
-  &[data-accent="violet"] { background: #6c4ccf; }
-  &[data-accent="blue"] { background: #1a7ee6; }
-  &[data-accent="magenta"] { background: #d6479d; }
-  &[data-accent="green"] { background: #0e9f6e; }
+  &[data-accent="violet"] { background: var(--ds-background-brand-purple-primary); }
+  &[data-accent="blue"] { background: var(--ds-text-info-primary-fixed); }
+  &[data-accent="magenta"] { background: var(--ds-background-brand-pink-primary); }
+  &[data-accent="green"] { background: var(--ds-background-success-primary); }
 }

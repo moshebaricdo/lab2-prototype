@@ -6,7 +6,7 @@
   flex-shrink: 0;
   width: 24px;
   height: 24px;
-  border: 1px dashed var(--ds-borders-neutral-strong);
+  border: 1px dashed var(--ds-borders-neutral-primary);
   border-radius: 4px;
   background: transparent;
   color: var(--ds-text-neutral-tertiary);
@@ -18,7 +18,7 @@
 
   &:hover:not(:disabled) {
     background: var(--ds-background-neutral-secondary);
-    border-color: var(--ds-borders-neutral-strong);
+    border-color: var(--ds-borders-neutral-primary);
     color: var(--ds-text-neutral-primary);
   }
 

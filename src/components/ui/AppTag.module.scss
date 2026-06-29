@@ -100,12 +100,12 @@
 }
 
 .fillLight.colorPurple {
-  --tag-bg: var(--ds-background-brand-purple-light);
-  --tag-icon: var(--ds-text-brand-purple-primary);
+  --tag-bg: var(--ds-background-brand-aqua-light);
+  --tag-icon: var(--ds-text-brand-teal-primary);
 }
 
 .fillLight.colorTeal {
-  --tag-bg: var(--ds-background-brand-teal-light);
+  --tag-bg: var(--ds-background-brand-aqua-light);
   --tag-icon: var(--ds-text-brand-teal-primary);
 }
 
@@ -142,12 +142,12 @@
 }
 
 .fillSolid.colorPurple {
-  --tag-bg: var(--ds-background-brand-purple-primary);
+  --tag-bg: var(--ds-background-brand-aqua-primary);
   --tag-text: var(--ds-text-neutral-white-fixed);
 }
 
 .fillSolid.colorTeal {
-  --tag-bg: var(--ds-background-brand-teal-primary);
+  --tag-bg: var(--ds-background-brand-aqua-primary);
   --tag-text: var(--ds-text-neutral-white-fixed);
 }
 

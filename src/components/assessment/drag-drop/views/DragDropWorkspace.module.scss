@@ -243,7 +243,7 @@
 }
 
 .blockCard:hover:not(.blockCardCorrect):not(.blockCardIncorrect):not(.blockCardRevealed):not(.blockCardDragging) {
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--ds-borders-neutral-primary);
 }
 
 .blockCardInSlot {
@@ -283,7 +283,7 @@
 .dragOverlayCard {
   align-items: center;
   background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: var(--radius);
   box-shadow:
     0 12px 24px -8px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 28%, transparent),

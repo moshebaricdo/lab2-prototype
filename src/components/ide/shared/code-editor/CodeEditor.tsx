@@ -154,13 +154,22 @@ function DraggableTab({
       ? styles.tabNameActive
       : styles.tabNameInactive;
 
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onFileSelect(file);
+    }
+  };
+
   return (
     <div
       ref={ref}
       role="tab"
       aria-selected={isActive}
-      tabIndex={isActive ? 0 : -1}
+      aria-label={file.name}
+      tabIndex={0}
       onClick={() => onFileSelect(file)}
+      onKeyDown={handleTabKeyDown}
       onDragStart={handleTabDragStart}
       className={`${isEdge ? styles.tabEdge : styles.tab} ${
         enableDragToTutor ? styles.tabDragToTutor : ""

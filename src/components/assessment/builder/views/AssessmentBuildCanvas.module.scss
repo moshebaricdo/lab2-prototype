@@ -73,7 +73,7 @@
 .cardPlaceholder {
   opacity: 0.35;
   border-style: dashed;
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--ds-borders-neutral-primary);
 }
 
 .dragOverlayCard {
@@ -172,7 +172,7 @@
   align-items: center;
   gap: 14px;
   padding: 16px 20px 20px;
-  border: 1px dashed var(--ds-borders-neutral-strong);
+  border: 1px dashed var(--ds-borders-neutral-primary);
   border-radius: var(--radius-default);
 }
 
@@ -290,7 +290,7 @@
 }
 
 .typeTile {
-  --type-tile-tone: var(--ds-borders-neutral-strong);
+  --type-tile-tone: var(--ds-borders-neutral-primary);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -349,30 +349,30 @@
 }
 
 .toneorange {
-  --type-tile-tone: var(--ds-background-accent-orange-primary);
+  --type-tile-tone: var(--ds-background-brand-orange-primary);
 
   &.typeBadge {
-    background: var(--ds-background-accent-orange-light);
-    color: var(--ds-background-accent-orange-strong);
+    background: var(--ds-background-brand-orange-light);
+    color: var(--ds-background-brand-orange-strong);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-accent-orange-light);
-    color: var(--ds-background-accent-orange-strong);
+    background: var(--ds-background-brand-orange-light);
+    color: var(--ds-background-brand-orange-strong);
   }
 }
 
 .tonepurple {
-  --type-tile-tone: var(--ds-borders-brand-purple-primary);
+  --type-tile-tone: var(--ds-borders-brand-teal-primary);
 
   &.typeBadge {
-    background: var(--ds-background-brand-purple-extra-light);
-    color: var(--ds-text-brand-purple-primary);
+    background: var(--ds-background-brand-teal-extra-light);
+    color: var(--ds-text-brand-teal-primary);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-brand-purple-extra-light);
-    color: var(--ds-text-brand-purple-primary);
+    background: var(--ds-background-brand-teal-extra-light);
+    color: var(--ds-text-brand-teal-primary);
   }
 }
 

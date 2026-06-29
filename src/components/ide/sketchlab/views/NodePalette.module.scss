@@ -21,15 +21,15 @@
 }
 
 .toolActive {
-  background: var(--ds-background-brand-purple-primary) !important;
-  color: var(--ds-text-neutral-white-fixed) !important;
+  background: var(--ds-background-brand-teal-primary) !important;
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
   border-color: transparent !important;
 }
 
 .toolActive:hover {
-  background: var(--ds-background-brand-purple-strong) !important;
+  background: var(--ds-background-brand-teal-strong) !important;
 }
 
 .toolActive:active {
-  background: var(--ds-background-brand-purple-strong) !important;
+  background: var(--ds-background-brand-teal-strong) !important;
 }

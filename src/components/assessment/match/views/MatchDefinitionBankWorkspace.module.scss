@@ -98,7 +98,7 @@
 }
 
 .promptCard:hover {
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-primary);
 }
 
 .promptCardCompact {
@@ -161,7 +161,7 @@
   align-items: center;
   text-align: center;
   background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: var(--radius);
   color: var(--foreground);
   cursor: grabbing;

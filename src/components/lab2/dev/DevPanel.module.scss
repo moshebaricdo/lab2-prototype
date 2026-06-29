@@ -226,7 +226,7 @@
   display: block;
   width: 100%;
   min-height: 32px;
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
@@ -259,7 +259,7 @@
 
 .textareaWrap {
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-borders-neutral-primary);
   border-radius: 4px;
   background: var(--ds-background-neutral-primary);
   transition: border-color 0.12s ease, box-shadow 0.12s ease;

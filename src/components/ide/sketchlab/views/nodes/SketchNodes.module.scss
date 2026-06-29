@@ -44,13 +44,13 @@
 }
 
 .groupOutlineHover {
-  stroke: var(--ds-borders-neutral-strong);
+  stroke: var(--ds-borders-neutral-primary);
   stroke-width: 1px;
   stroke-dasharray: 6 4;
 }
 
 .groupOutlineSelected {
-  stroke: var(--ds-borders-brand-purple-primary);
+  stroke: var(--ds-borders-brand-teal-primary);
   stroke-width: 2px;
 }
 
@@ -201,7 +201,7 @@ $sketch-focus-outset: $sketch-handle-outset + $sketch-focus-gap;
   width: $sketch-handle-size;
   height: $sketch-handle-size;
   background: var(--ds-background-neutral-primary);
-  border: $sketch-handle-border solid var(--ds-borders-brand-purple-primary);
+  border: $sketch-handle-border solid var(--ds-borders-brand-teal-primary);
   border-radius: 50%;
 }
 
@@ -373,8 +373,8 @@ $resize-zone-corner: 18px;
 
 // Snapped to a shape handle: fill with the brand color to signal a connection.
 .endpointKnobSnapped {
-  background: var(--ds-borders-brand-purple-primary);
-  border-color: var(--ds-borders-brand-purple-primary);
+  background: var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-borders-brand-teal-primary);
 }
 
 .handlesHidden .endpointKnob {

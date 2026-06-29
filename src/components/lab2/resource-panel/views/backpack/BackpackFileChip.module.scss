@@ -29,7 +29,7 @@
 }
 
 .iconGlyph {
-  color: var(--ds-text-neutral-inverse);
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-primary-inverse));
   font-size: 18px;
 }
 

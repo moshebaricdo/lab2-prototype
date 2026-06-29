@@ -163,8 +163,8 @@ $bad: #d64545;
 }
 
 .statusToneBusy {
-  background: color-mix(in srgb, #1a7ee6 12%, transparent);
-  color: #1a7ee6;
+  background: color-mix(in srgb, var(--ds-text-info-primary-fixed) 12%, transparent);
+  color: var(--ds-text-info-primary-fixed);
 }
 
 .statusToneGood {

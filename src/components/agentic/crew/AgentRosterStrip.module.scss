@@ -2,10 +2,10 @@
 
 /* Soft functional color coding — a tint per agent, not a persona. */
 .root {
-  --agent-violet: #6c4ccf;
-  --agent-blue: #1a7ee6;
-  --agent-magenta: #d6479d;
-  --agent-green: #0e9f6e;
+  --agent-violet: var(--ds-background-brand-purple-primary);
+  --agent-blue: var(--ds-text-info-primary-fixed);
+  --agent-magenta: var(--ds-background-brand-pink-primary);
+  --agent-green: var(--ds-background-success-primary);
 
   display: flex;
   align-items: center;
@@ -266,10 +266,10 @@
   padding: 12px;
   font-family: var(--font-body);
 
-  &[data-accent="violet"] { --agent-accent: #6c4ccf; }
-  &[data-accent="blue"] { --agent-accent: #1a7ee6; }
-  &[data-accent="magenta"] { --agent-accent: #d6479d; }
-  &[data-accent="green"] { --agent-accent: #0e9f6e; }
+  &[data-accent="violet"] { --agent-accent: var(--ds-background-brand-purple-primary); }
+  &[data-accent="blue"] { --agent-accent: var(--ds-text-info-primary-fixed); }
+  &[data-accent="magenta"] { --agent-accent: var(--ds-background-brand-pink-primary); }
+  &[data-accent="green"] { --agent-accent: var(--ds-background-success-primary); }
 }
 
 .cardHeader {
