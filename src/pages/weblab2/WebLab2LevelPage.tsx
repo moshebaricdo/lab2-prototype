@@ -112,8 +112,10 @@ import {
   resolveValidationContinueMode,
   resolveVersionHistoryMode,
   resolveViewMode,
+  resolveFileTabVariant,
   STARTER_CODE_UPLOAD_DEV_KEY,
   TUTOR_INSTRUCTIONS_DELIVERY_DEV_KEY,
+  USE_ALTERNATIVE_FILE_TABS_DEV_KEY,
   VALIDATION_REQUIREMENTS_DEV_KEY,
   webLab2BaseDevFields,
   webLab2ResourcesTabDevFields,
@@ -422,6 +424,7 @@ export function WebLab2LevelPage({
     continueButtonPlacement,
     initialViewMode,
     collapseFileManagerByDefault,
+    [USE_ALTERNATIVE_FILE_TABS_DEV_KEY]: fileTabVariant === "edge",
     useFilePreview,
     enableDesignMode,
     [EDITOR_READ_ONLY_STORAGE_KEY]: false,
@@ -469,6 +472,9 @@ export function WebLab2LevelPage({
   );
   const resolvedUseFilePreview = Boolean(resolved.useFilePreview);
   const resolvedEnableDesignMode = Boolean(resolved.enableDesignMode);
+  const resolvedFileTabVariant = resolveFileTabVariant(
+    resolved[USE_ALTERNATIVE_FILE_TABS_DEV_KEY],
+  );
   const resolvedEditorReadOnlyOverride = Boolean(resolved[EDITOR_READ_ONLY_STORAGE_KEY]);
   const parsedInitialOpenFiles = useMemo(
     () => parseInitialOpenFilesConfig(resolved[INITIAL_OPEN_FILES_DEV_KEY]),
@@ -1850,7 +1856,7 @@ export function WebLab2LevelPage({
     showBuildPlan: !isSelectedPlanBuiltOrPending,
     buildPlanDisabled: isTutorRequestRunning || hasPendingAiChanges,
     buildPlanRunning: isSelectedPlanBuilding,
-    fileTabVariant,
+    fileTabVariant: resolvedFileTabVariant,
   };
   const handleSidebarResize = (delta: number) => {
     setSidebarWidth((prev) =>

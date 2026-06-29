@@ -7,7 +7,7 @@ import type {
   RubricData,
   RubricSubmissionStatus,
 } from "../../components/lab2/resource-panel/views/RubricPanel";
-import type { ViewMode } from "../../types/ui";
+import type { FileTabVariant, ViewMode } from "../../types/ui";
 import type { ValidationContinueMode } from "../../types/validationReview";
 import {
   STARTER_CODE_UPLOAD_ACCEPT,
@@ -35,6 +35,7 @@ export const AGENT_LOCKED_IDS_DEV_KEY = "agentLockedIds";
 export const AGENT_ALLOW_CUSTOMIZATION_DEV_KEY = "agentAllowCustomization";
 export const AGENT_ALLOW_LIBRARY_DEV_KEY = "agentAllowLibrary";
 export const AGENT_TUTOR_ROLE_DEV_KEY = "agentTutorRole";
+export const USE_ALTERNATIVE_FILE_TABS_DEV_KEY = "useAlternativeFileTabs";
 
 export type VersionHistoryMode = "mock" | "functional";
 export type RubricDevStatus = RubricSubmissionStatus | "not-graded";
@@ -75,6 +76,10 @@ export const DEFAULT_RUBRIC_DATA: RubricData = {
 
 export function resolveViewMode(value: unknown): ViewMode {
   return value === "preview" || value === "split" ? value : "code";
+}
+
+export function resolveFileTabVariant(value: unknown): FileTabVariant {
+  return value === true || value === "edge" ? "edge" : "chip";
 }
 
 export function resolveVersionHistoryMode(value: unknown): VersionHistoryMode {
@@ -372,6 +377,14 @@ const webLab2WorkspaceDevFields: DevPanelField[] = [
     key: "collapseFileManagerByDefault",
     label: "Collapse file manager on load",
     description: "Start the code view with the file manager collapsed.",
+    type: "boolean",
+    group: "Workspace",
+  },
+  {
+    key: USE_ALTERNATIVE_FILE_TABS_DEV_KEY,
+    label: "Alternative file tabs",
+    description:
+      "Use full-row edge tabs instead of floating chip tabs in the code editor.",
     type: "boolean",
     group: "Workspace",
   },

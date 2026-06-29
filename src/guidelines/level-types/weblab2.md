@@ -19,7 +19,7 @@ Baseline coding-lab environment in this prototype. Serves as the richest existin
 - `/levels/weblab2-drawer-improvements` — instructions drawer slides closed after the student's first Tutor message; the Show Instructions toggle pulses to hint it can reopen
 - `/levels/weblab2-drawer-instructions-tab` — level opens on a dedicated **Instructions** rail tab (full instruction card); AI Tutor tab shows a notification badge until first visit; switching to Tutor seeds a fixed opening message, starts with the drawer collapsed, and pulses the Show Instructions toggle
 - `/levels/weblab2-drawer-notification-halo` — same Instructions-tab-first flow as above, but the AI Tutor badge uses a repeating halo pulse (2.5s) instead of pulsing the drawer toggle on first visit
-- `/levels/weblab2-file-chip-tabs` — code editor open-file tabs use full-row edge tabs (Cursor-style) instead of floating chips; demo opens six files to exercise scroll, icons, close, and drag reorder
+- `/levels/weblab2-file-chip-tabs` — code editor open-file tabs use full-row edge tabs (Cursor-style) instead of floating chips; demo opens six files to exercise scroll, icons, close, and drag reorder. Any Web Lab 2 level can switch between chip and edge tabs via the dev panel **Alternative file tabs** toggle under **Workspace**.
 
 ### Multi-level progressions (Sample Progressions index)
 
