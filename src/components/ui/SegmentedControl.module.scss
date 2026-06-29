@@ -7,7 +7,7 @@
 .segment {
   gap: 8px;
   margin-right: -1px;
-  border-color: var(--ds-borders-neutral-strong);
+  border-color: var(--ds-borders-neutral-secondary);
   border-radius: 0;
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
@@ -38,13 +38,13 @@
 .segment.segmentActive {
   border-color: var(--ds-borders-brand-teal-primary);
   background: var(--ds-background-brand-teal-primary) !important;
-  color: var(--ds-text-neutral-white-fixed) !important;
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .segment.segmentActive:hover {
   border-color: transparent;
   background: var(--ds-background-brand-teal-strong) !important;
-  color: var(--ds-text-neutral-white-fixed) !important;
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .segment.segmentDisabled,

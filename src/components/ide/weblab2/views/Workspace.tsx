@@ -11,7 +11,7 @@ import { PreviewPanel } from "./PreviewPanel";
 import { PreviewDebugPanel } from "./preview-panel/PreviewDebugPanel";
 import { ResizableHandle } from "../../../ui/ResizableHandle";
 import { VersionBanner } from "./VersionBanner";
-import { SegmentedControl, type SegmentedOption } from "./SegmentedControl";
+import { SegmentedControl, type SegmentedOption } from "../../../ui/SegmentedControl";
 import { WorkspaceHeader } from "./WorkspaceHeader";
 import { versionLabels } from "../../../../data/weblab2";
 import type { FileItem } from "../../../../types/file";

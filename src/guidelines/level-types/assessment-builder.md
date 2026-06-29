@@ -86,7 +86,7 @@ The builder splits responsibilities between a **workspace** (center outline + in
 
 ### Workspace chrome — `AssessmentBuilderWorkspace`
 
-- **`PanelHeader`** (`components/ui/PanelHeader`) tops the center surface with eyebrow label **Outline** and a left-aligned **`SegmentedControl`** toggling **Build** / **Preview** (reused from `ide/weblab2/views/SegmentedControl`).
+- **`PanelHeader`** (`components/ui/PanelHeader`) tops the center surface with eyebrow label **Outline** and a left-aligned **`SegmentedControl`** toggling **Build** / **Preview** (from `components/ui/SegmentedControl`).
 - Resource panel width uses the shared `useLayoutState` default (**400px**); drag-resize clamps between 300px and 600px, same as other assessment levels.
 - On mount, the active tab defaults to **`builder-bank`**. Irrelevant default tabs are hidden (`showAiTutorTab: false`, `showBackpackTab: false`, `showHistoryTab: false`). The Tutor is a *setting* (`tutor.enabled`), not a panel here.
 

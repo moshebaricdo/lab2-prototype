@@ -3,7 +3,7 @@ import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
   SegmentedControl,
   type SegmentedOption,
-} from "../../../ide/weblab2/views/SegmentedControl";
+} from "../../../ui/SegmentedControl";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import { initialChatMessages } from "../../../../data/weblab2";

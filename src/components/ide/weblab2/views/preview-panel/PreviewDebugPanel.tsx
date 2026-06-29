@@ -2,7 +2,7 @@ import { AppButton } from "../../../../ui/AppButton";
 import { AlertBanner } from "../../../../ui/AlertBanner";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { Tooltip } from "../../../../ui/Tooltip";
-import { SegmentedControl, type SegmentedOption } from "../SegmentedControl";
+import { SegmentedControl, type SegmentedOption } from "../../../../ui/SegmentedControl";
 import type {
   PreviewConsoleMessage,
   PreviewDebugTab,

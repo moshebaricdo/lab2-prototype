@@ -1,5 +1,5 @@
-import { AppButton } from "../../../ui/AppButton";
-import type { FaIconName } from "../../../ui/AppButton";
+import { AppButton } from "./AppButton";
+import type { FaIconName } from "./AppButton";
 import styles from "./SegmentedControl.module.scss";
 
 export interface SegmentedOption<T extends string> {

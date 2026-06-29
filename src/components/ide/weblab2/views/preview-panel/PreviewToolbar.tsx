@@ -9,7 +9,7 @@ import {
 } from "react";
 import { AppButton } from "../../../../ui/AppButton";
 import { Tooltip } from "../../../../ui/Tooltip";
-import { SegmentedControl, type SegmentedOption } from "../SegmentedControl";
+import { SegmentedControl, type SegmentedOption } from "../../../../ui/SegmentedControl";
 import {
   findPreviewHtmlFile,
   normalizePreviewPath,
