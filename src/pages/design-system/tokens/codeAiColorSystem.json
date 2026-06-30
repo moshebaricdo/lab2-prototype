@@ -169,7 +169,7 @@
         {
           "id": "neutral::gray::5",
           "step": "5",
-          "hex": "#F4F5F6"
+          "hex": "#F1F2F4"
         },
         {
           "id": "neutral::gray::10",
@@ -219,7 +219,7 @@
         {
           "id": "neutral::gray::95",
           "step": "95",
-          "hex": "#23262A"
+          "hex": "#282B2F"
         }
       ]
     },
@@ -967,7 +967,7 @@
       "familyKey": "teal",
       "role": "extra-light",
       "ref": {
-        "light": "brand::teal::5",
+        "light": "brand::teal::10",
         "dark": "brand::teal::95"
       },
       "fallbackHex": {
@@ -981,7 +981,7 @@
       "familyKey": "teal",
       "role": "light",
       "ref": {
-        "light": "brand::teal::10",
+        "light": "brand::teal::20",
         "dark": "brand::teal::90"
       },
       "fallbackHex": {
@@ -995,7 +995,7 @@
       "familyKey": "teal",
       "role": "strong",
       "ref": {
-        "light": "brand::teal::70",
+        "light": "brand::teal::80",
         "dark": "brand::teal::40"
       },
       "fallbackHex": {
@@ -1009,7 +1009,7 @@
       "familyKey": "strawberry",
       "role": "primary",
       "ref": {
-        "light": "brand::strawberry::50",
+        "light": "brand::strawberry::60",
         "dark": "brand::strawberry::50"
       },
       "fallbackHex": {
@@ -1023,7 +1023,7 @@
       "familyKey": "strawberry",
       "role": "light",
       "ref": {
-        "light": "brand::strawberry::10",
+        "light": "brand::strawberry::20",
         "dark": "brand::strawberry::90"
       },
       "fallbackHex": {
@@ -1051,7 +1051,7 @@
       "familyKey": "orange",
       "role": "primary",
       "ref": {
-        "light": "brand::orange::50",
+        "light": "brand::orange::70",
         "dark": "brand::orange::50"
       },
       "fallbackHex": {
@@ -1065,7 +1065,7 @@
       "familyKey": "orange",
       "role": "light",
       "ref": {
-        "light": "brand::orange::10",
+        "light": "brand::orange::20",
         "dark": "brand::orange::90"
       },
       "fallbackHex": {
@@ -1093,7 +1093,7 @@
       "familyKey": "error",
       "role": "primary",
       "ref": {
-        "light": "sentiment::error::50",
+        "light": "sentiment::error::60",
         "dark": "sentiment::error::50"
       },
       "fallbackHex": {
@@ -1107,7 +1107,7 @@
       "familyKey": "error",
       "role": "extra-light",
       "ref": {
-        "light": "sentiment::error::5",
+        "light": "sentiment::error::10",
         "dark": "sentiment::error::95"
       },
       "fallbackHex": {
@@ -1121,7 +1121,7 @@
       "familyKey": "error",
       "role": "light",
       "ref": {
-        "light": "sentiment::error::10",
+        "light": "sentiment::error::20",
         "dark": "sentiment::error::90"
       },
       "fallbackHex": {
@@ -1163,7 +1163,7 @@
       "familyKey": "warning",
       "role": "extra-light",
       "ref": {
-        "light": "sentiment::warning::5",
+        "light": "sentiment::warning::10",
         "dark": "sentiment::warning::95"
       },
       "fallbackHex": {
@@ -1177,7 +1177,7 @@
       "familyKey": "warning",
       "role": "light",
       "ref": {
-        "light": "sentiment::warning::10",
+        "light": "sentiment::warning::20",
         "dark": "sentiment::warning::90"
       },
       "fallbackHex": {
@@ -1205,7 +1205,7 @@
       "familyKey": "success",
       "role": "primary",
       "ref": {
-        "light": "sentiment::success::50",
+        "light": "sentiment::success::70",
         "dark": "sentiment::success::50"
       },
       "fallbackHex": {
@@ -1219,7 +1219,7 @@
       "familyKey": "success",
       "role": "extra-light",
       "ref": {
-        "light": "sentiment::success::5",
+        "light": "sentiment::success::10",
         "dark": "sentiment::success::95"
       },
       "fallbackHex": {
@@ -1233,7 +1233,7 @@
       "familyKey": "success",
       "role": "light",
       "ref": {
-        "light": "sentiment::success::10",
+        "light": "sentiment::success::20",
         "dark": "sentiment::success::90"
       },
       "fallbackHex": {
@@ -1261,7 +1261,7 @@
       "familyKey": "info",
       "role": "primary",
       "ref": {
-        "light": "sentiment::information::50",
+        "light": "sentiment::information::70",
         "dark": "sentiment::information::50"
       },
       "fallbackHex": {
@@ -1275,7 +1275,7 @@
       "familyKey": "info",
       "role": "extra-light",
       "ref": {
-        "light": "sentiment::information::5",
+        "light": "sentiment::information::10",
         "dark": "sentiment::information::95"
       },
       "fallbackHex": {
@@ -1289,7 +1289,7 @@
       "familyKey": "info",
       "role": "light",
       "ref": {
-        "light": "sentiment::information::10",
+        "light": "sentiment::information::20",
         "dark": "sentiment::information::90"
       },
       "fallbackHex": {
@@ -1891,7 +1891,7 @@
       "familyKey": "info",
       "role": "primary",
       "ref": {
-        "light": "sentiment::information::60",
+        "light": "sentiment::information::50",
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
@@ -2087,7 +2087,7 @@
       "familyKey": "strawberry",
       "role": "extra-light",
       "ref": {
-        "light": "brand::strawberry::5",
+        "light": "brand::strawberry::10",
         "dark": "brand::strawberry::95"
       },
       "fallbackHex": {
@@ -2101,7 +2101,7 @@
       "familyKey": "orange",
       "role": "extra-light",
       "ref": {
-        "light": "brand::orange::5",
+        "light": "brand::orange::10",
         "dark": "brand::orange::95"
       },
       "fallbackHex": {
