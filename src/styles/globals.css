@@ -66,16 +66,102 @@
 :root[data-brand-theme="codeAi"] {
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Geist', sans-serif;
+
+  /* brand::teal primitive steps (CodeAI purple ramp) — active-chrome experiments only */
+  --ds-codeai-primitive-purple-5: #EDECFF;
+  --ds-codeai-primitive-purple-10: #DBD9FE;
+  --ds-codeai-primitive-purple-20: #B4B1FA;
+  --ds-codeai-primitive-purple-80: #1F0F93;
+  --ds-codeai-primitive-purple-90: #120372;
+  --ds-codeai-primitive-purple-95: #0D0064;
 }
 
-/* Active-state chrome experiment: remap legacy teal/aqua chrome to neutral inverse on CodeAI. */
-:root[data-brand-theme="codeAi"],
-:root[data-brand-theme="codeAi"] .dark {
+/* Active-state chrome experiment: remap legacy teal/aqua chrome on CodeAI.
+   Variant token sets — switch via data-codeai-active-chrome on :root (useTheme). */
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="neutral"],
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="neutral"] .dark {
   --ds-codeai-active-chrome: var(--ds-background-neutral-primary-inverse);
   --ds-codeai-active-chrome-hover: var(--ds-background-neutral-octonary);
   --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-primary-inverse);
   --ds-codeai-active-chrome-muted: var(--ds-background-neutral-tertiary);
   --ds-codeai-active-chrome-muted-border: var(--ds-borders-neutral-secondary);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="info"],
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="info"] .dark {
+  --ds-codeai-active-chrome: var(--ds-background-info-primary);
+  --ds-codeai-active-chrome-hover: var(--ds-background-info-strong);
+  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
+  --ds-codeai-active-chrome-muted: var(--ds-background-info-extra-light);
+  --ds-codeai-active-chrome-muted-border: var(--ds-borders-info-light);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="pink"],
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="pink"] .dark {
+  --ds-codeai-active-chrome: var(--ds-background-brand-pink-primary);
+  --ds-codeai-active-chrome-hover: var(--ds-background-brand-pink-strong);
+  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
+  --ds-codeai-active-chrome-muted: var(--ds-background-brand-pink-extra-light);
+  --ds-codeai-active-chrome-muted-border: var(--ds-background-brand-pink-light);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="purple"],
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="purple"] .dark {
+  --ds-codeai-active-chrome: var(--ds-background-brand-purple-primary);
+  --ds-codeai-active-chrome-hover: var(--ds-background-brand-purple-strong);
+  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
+  --ds-codeai-active-chrome-muted: var(--ds-background-brand-purple-extra-light);
+  --ds-codeai-active-chrome-muted-border: var(--ds-borders-brand-purple-light);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="success"],
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="success"] .dark {
+  --ds-codeai-active-chrome: var(--ds-background-success-primary);
+  --ds-codeai-active-chrome-hover: var(--ds-background-success-strong);
+  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
+  --ds-codeai-active-chrome-muted: var(--ds-background-success-extra-light);
+  --ds-codeai-active-chrome-muted-border: var(--ds-borders-success-light);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="successLight"] {
+  --ds-codeai-active-chrome: var(--ds-background-success-extra-light);
+  --ds-codeai-active-chrome-hover: var(--ds-background-success-light);
+  --ds-codeai-active-chrome-on-fill: var(--ds-codeai-primitive-purple-90);
+  --ds-codeai-active-chrome-muted: var(--ds-background-neutral-secondary);
+  --ds-codeai-active-chrome-muted-border: var(--ds-borders-neutral-primary);
+  --ds-codeai-active-chrome-active-border: var(--ds-borders-success-primary);
+  --ds-codeai-active-chrome-active-border-hover: var(--ds-borders-success-strong);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="successLight"] .dark {
+  --ds-codeai-active-chrome: var(--ds-background-success-extra-light);
+  --ds-codeai-active-chrome-hover: var(--ds-background-success-light);
+  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
+  --ds-codeai-active-chrome-muted: var(--ds-background-neutral-secondary);
+  --ds-codeai-active-chrome-muted-border: var(--ds-borders-neutral-primary);
+  --ds-codeai-active-chrome-active-border: var(--ds-borders-success-primary);
+  --ds-codeai-active-chrome-active-border-hover: var(--ds-borders-success-strong);
+}
+
+/* Mode-inverted brand purple: step 90 in light, step 10 in dark */
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="darkBlue"] {
+  --ds-codeai-active-chrome: var(--ds-codeai-primitive-purple-90);
+  --ds-codeai-active-chrome-hover: var(--ds-codeai-primitive-purple-80);
+  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
+  --ds-codeai-active-chrome-muted: var(--ds-codeai-primitive-purple-5);
+  --ds-codeai-active-chrome-muted-border: var(--ds-codeai-primitive-purple-20);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="darkBlue"] .dark {
+  --ds-codeai-active-chrome: var(--ds-codeai-primitive-purple-10);
+  --ds-codeai-active-chrome-hover: var(--ds-codeai-primitive-purple-20);
+  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-black-fixed);
+  --ds-codeai-active-chrome-muted: var(--ds-codeai-primitive-purple-95);
+  --ds-codeai-active-chrome-muted-border: var(--ds-codeai-primitive-purple-80);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome],
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome] .dark {
   --ds-text-on-active-chrome: var(--ds-codeai-active-chrome-on-fill);
 
   --accent: var(--ds-codeai-active-chrome);

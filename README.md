@@ -237,7 +237,7 @@ If semantic token source files are unavailable, the generator falls back to the 
 
 **Code.org base:** DTCG semantic JSON (or fallback CSS) plus canonical `brand-pink` / `brand-orange` names derived from legacy accent tokens.
 
-**CodeAI brand:** full light/dark theme blocks generated from `src/pages/design-system/tokens/codeAiColorSystem.json` via `scripts/colorSystemToCss.mjs`. Select **CodeAI** in Settings (or default) to activate `[data-brand-theme="codeAi"]` on `<html>`.
+**CodeAI brand:** full light/dark theme blocks generated from `src/pages/design-system/tokens/codeAiColorSystem.json` via `scripts/colorSystemToCss.mjs`. Select **CodeAI** in the global nav menu (or default) to activate `[data-brand-theme="codeAi"]` on `<html>`.
 
 Brand-specific typography tokens are defined in `src/styles/globals.css`. Token rename guidance lives in `scripts/tokenMigrationMap.md`.
 

@@ -15,6 +15,7 @@ Related docs:
 | Control | Storage | Applied on |
 |---|---|---|
 | Brand theme (`codeOrg` \| `codeAi`) | `sessionStorage` `lab2:brand-theme` | `document.documentElement.dataset.brandTheme` |
+| CodeAI active-state variant (`neutral` \| `info` \| `pink` \| `purple` \| `success` \| `successLight` \| `darkBlue`) | `sessionStorage` `lab2:codeai-active-chrome` | `document.documentElement.dataset.codeaiActiveChrome` (CodeAI only) |
 | Light/dark mode | `sessionStorage` `lab2:theme` | `.dark` class on `Lab2Shell` `themeScope` (below `TopNavigation`) |
 
 Code.org is the default production palette (teal chrome + purple actions). CodeAI uses the committed `codeAiColorSystem.json` palette. Typography overrides for CodeAI live in `globals.css` under `:root[data-brand-theme="codeAi"]`.
@@ -59,13 +60,14 @@ Do **not** bulk-replace `brand-teal` → `brand-purple` in components. That coll
 
 ### CodeAI active-state chrome experiment
 
-Defined in `globals.css` under `:root[data-brand-theme="codeAi"]` (light **and** `.dark`):
+Defined in `globals.css` under `:root[data-brand-theme="codeAi"][data-codeai-active-chrome="…"]` (light **and** `.dark`):
 
-- `--ds-codeai-active-chrome*` variables point at neutral inverse palette tokens.
-- All `brand-teal-*` and `brand-aqua-*` tokens are remapped to those variables on CodeAI only.
+- Switchable variants set `--ds-codeai-active-chrome*` source tokens: **neutral** (black/white inverse), **info** (info blue), **pink** (accent pink), **purple** (action purple), **success** (success green), **successLight** (success extra-light fill, purple-90 text in light / white in dark, solid success border on segmented controls via `--ds-codeai-active-chrome-active-border`), **darkBlue** (brand purple step 90 in light / step 10 in dark — mode-split selectors).
+- A shared remap block wires those variables into all `brand-teal-*` and `brand-aqua-*` tokens on CodeAI only.
 - `--accent`, `--ring`, `--sidebar-accent`, etc. follow the same remap.
+- Variant is chosen in **GlobalNavMenu → Active state** (visible only when Brand = CodeAI) and persisted via `useTheme()` (`lab2:codeai-active-chrome`).
 
-Components keep using `brand-teal-*` for chrome; CodeAI appearance changes in one place (`globals.css`). To revert the experiment, edit that block — not individual components.
+Components keep using `brand-teal-*` for chrome; CodeAI appearance changes in one place (`globals.css`). To add or tweak variants, edit the variant blocks in `globals.css` — not individual components.
 
 **Text on filled active chrome:** use `var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed))` when an active state has a solid `brand-teal` background (segmented control, filter pills, etc.) so contrast tracks the experiment on CodeAI.
 
@@ -115,7 +117,7 @@ Semantics can reference:
 | Draft storage | `localStorage` `lab2:color-sandbox:doc` (per brand) |
 | Apply to app flag | `localStorage` `lab2:color-sandbox:apply-runtime` |
 | Runtime bridge | `lib/colorSandbox/colorSandboxRuntime.ts` (initialized in `ThemeProvider`) |
-| Shared theme state | Sandbox toolbar + Settings panel + `Lab2Shell` via `useTheme()` |
+| Shared theme state | Sandbox toolbar + global nav menu (`GlobalNavMenu`) + `Lab2Shell` via `useTheme()` |
 
 Workflow: edit primitives/semantics in sandbox → optionally preview with **Apply to app** → export JSON → codify through `generate-tokens.mjs` when ready to commit.
 

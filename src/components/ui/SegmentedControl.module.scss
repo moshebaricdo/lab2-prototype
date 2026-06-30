@@ -36,13 +36,16 @@
 }
 
 .segment.segmentActive {
-  border-color: var(--ds-borders-brand-teal-primary);
+  border-color: var(
+    --ds-codeai-active-chrome-active-border,
+    var(--ds-borders-brand-teal-primary)
+  );
   background: var(--ds-background-brand-teal-primary) !important;
   color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .segment.segmentActive:hover {
-  border-color: transparent;
+  border-color: var(--ds-codeai-active-chrome-active-border-hover, transparent);
   background: var(--ds-background-brand-teal-strong) !important;
   color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
 }

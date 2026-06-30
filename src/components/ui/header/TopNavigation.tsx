@@ -1,11 +1,8 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faChevronDown,
-  faBars,
-  faCircleQuestion,
-} from "@fortawesome/free-solid-svg-icons";
+import { faChevronDown, faCircleQuestion } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import { AppButton } from "../AppButton";
+import { GlobalNavMenu } from "./GlobalNavMenu";
 import {
   LevelProgressBubbles,
   type LevelProgressLink,
@@ -138,14 +135,7 @@ export function TopNavigation({
           className={styles.rightIconButton}
           aria-label="Help"
         />
-        <AppButton
-          variant="tertiary"
-          tone="white"
-          size="s"
-          icon={<FontAwesomeIcon icon={faBars} className={styles.iconGlyph} />}
-          className={styles.rightIconButton}
-          aria-label="Menu"
-        />
+        <GlobalNavMenu />
       </div>
     </div>
   );

@@ -1,0 +1,31 @@
+.content {
+  z-index: 110;
+  width: 240px;
+  overflow: hidden;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 6px;
+  background: var(--ds-background-neutral-primary);
+  box-shadow: 1px 2px 2px 0 rgb(0 0 0 / 7%), 0 2px 6px 0 rgb(0 0 0 / 4%);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.64;
+}
