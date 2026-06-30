@@ -34,7 +34,7 @@
 .answerOption {
   align-items: start;
   background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-borders-neutral-strong);
   border-radius: var(--radius);
   color: var(--ds-text-neutral-primary);
   cursor: pointer;
@@ -163,7 +163,7 @@
 }
 
 .answerOptionLetter {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   flex-shrink: 0;
   font-weight: var(--font-weight-semibold);
   line-height: 1.45;
