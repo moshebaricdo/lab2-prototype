@@ -157,7 +157,10 @@
 
 .tabIconActive,
 .tabButton:hover .tabIconActive {
-  color: var(--ds-text-brand-teal-primary);
+  color: var(
+    --ds-codeai-active-chrome-tab-rail-icon,
+    var(--ds-text-brand-teal-primary)
+  );
 }
 
 .aiTutorTabIcon {
@@ -192,7 +195,10 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: var(--ds-borders-brand-teal-primary);
+  background: var(
+    --ds-codeai-active-chrome-tab-rail-accent,
+    var(--ds-borders-brand-teal-primary)
+  );
 }
 
 .tabActiveMask {

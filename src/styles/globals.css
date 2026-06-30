@@ -74,6 +74,7 @@
   --ds-codeai-primitive-purple-80: #1F0F93;
   --ds-codeai-primitive-purple-90: #120372;
   --ds-codeai-primitive-purple-95: #0D0064;
+  --ds-codeai-primitive-success-10: #D3F3D6;
 }
 
 /* Active-state chrome experiment: remap legacy teal/aqua chrome on CodeAI.
@@ -141,12 +142,31 @@
   --ds-codeai-active-chrome-muted-border: var(--ds-borders-neutral-primary);
   --ds-codeai-active-chrome-active-border: var(--ds-borders-success-primary);
   --ds-codeai-active-chrome-active-border-hover: var(--ds-borders-success-strong);
+  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-codeai-primitive-success-10);
+  --ds-codeai-active-chrome-tab-rail-accent: var(--ds-codeai-primitive-success-10);
+}
+
+/* Lab2 tab rail: dark-mode icon/accent overrides per active-chrome variant */
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="info"] .dark {
+  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-text-neutral-white-fixed);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="pink"] .dark {
+  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-text-neutral-white-fixed);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="purple"] .dark {
+  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-text-neutral-white-fixed);
+}
+
+:root[data-brand-theme="codeAi"][data-codeai-active-chrome="success"] .dark {
+  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-text-neutral-white-fixed);
 }
 
 /* Mode-inverted brand purple: step 90 in light, step 10 in dark */
 :root[data-brand-theme="codeAi"][data-codeai-active-chrome="darkBlue"] {
-  --ds-codeai-active-chrome: var(--ds-codeai-primitive-purple-90);
-  --ds-codeai-active-chrome-hover: var(--ds-codeai-primitive-purple-80);
+  --ds-codeai-active-chrome: var(--ds-codeai-primitive-purple-80);
+  --ds-codeai-active-chrome-hover: var(--ds-background-brand-purple-primary);
   --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
   --ds-codeai-active-chrome-muted: var(--ds-codeai-primitive-purple-5);
   --ds-codeai-active-chrome-muted-border: var(--ds-codeai-primitive-purple-20);

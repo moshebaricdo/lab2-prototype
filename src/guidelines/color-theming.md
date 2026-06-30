@@ -63,6 +63,7 @@ Do **not** bulk-replace `brand-teal` → `brand-purple` in components. That coll
 Defined in `globals.css` under `:root[data-brand-theme="codeAi"][data-codeai-active-chrome="…"]` (light **and** `.dark`):
 
 - Switchable variants set `--ds-codeai-active-chrome*` source tokens: **neutral** (black/white inverse), **info** (info blue), **pink** (accent pink), **purple** (action purple), **success** (success green), **successLight** (success extra-light fill, purple-90 text in light / white in dark, solid success border on segmented controls via `--ds-codeai-active-chrome-active-border`), **darkBlue** (brand purple step 90 in light / step 10 in dark — mode-split selectors).
+- Dark-mode Lab2 tab rail overrides (via `--ds-codeai-active-chrome-tab-rail-icon` / `--ds-codeai-active-chrome-tab-rail-accent` in `Sidebar.module.scss`): **info**, **pink**, **purple**, and **success** use white active icons; **successLight** uses success step 10 (`#D3F3D6`) for both icon and accent line.
 - A shared remap block wires those variables into all `brand-teal-*` and `brand-aqua-*` tokens on CodeAI only.
 - `--accent`, `--ring`, `--sidebar-accent`, etc. follow the same remap.
 - Variant is chosen in **GlobalNavMenu → Active state** (visible only when Brand = CodeAI) and persisted via `useTheme()` (`lab2:codeai-active-chrome`).
