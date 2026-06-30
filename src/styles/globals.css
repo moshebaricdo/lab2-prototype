@@ -132,6 +132,8 @@
   --ds-codeai-active-chrome-muted-border: var(--ds-borders-neutral-primary);
   --ds-codeai-active-chrome-active-border: var(--ds-borders-success-primary);
   --ds-codeai-active-chrome-active-border-hover: var(--ds-borders-success-strong);
+  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-codeai-primitive-purple-90);
+  --ds-codeai-active-chrome-tab-rail-accent: var(--ds-borders-success-primary);
 }
 
 :root[data-brand-theme="codeAi"][data-codeai-active-chrome="successLight"] .dark {
