@@ -1038,7 +1038,7 @@
       "role": "strong",
       "ref": {
         "light": "brand::strawberry::70",
-        "dark": "brand::strawberry::40"
+        "dark": "brand::strawberry::60"
       },
       "fallbackHex": {
         "light": "#A93737",
@@ -1080,7 +1080,7 @@
       "role": "strong",
       "ref": {
         "light": "brand::orange::70",
-        "dark": "brand::orange::40"
+        "dark": "brand::orange::70"
       },
       "fallbackHex": {
         "light": "#D68A00",
@@ -1094,7 +1094,7 @@
       "role": "primary",
       "ref": {
         "light": "sentiment::error::60",
-        "dark": "sentiment::error::50"
+        "dark": "sentiment::error::70"
       },
       "fallbackHex": {
         "light": "#E02D16",
@@ -1150,7 +1150,7 @@
       "role": "primary",
       "ref": {
         "light": "sentiment::warning::50",
-        "dark": "sentiment::warning::50"
+        "dark": "sentiment::warning::70"
       },
       "fallbackHex": {
         "light": "#F9CB28",
@@ -1206,7 +1206,7 @@
       "role": "primary",
       "ref": {
         "light": "sentiment::success::70",
-        "dark": "sentiment::success::50"
+        "dark": "sentiment::success::70"
       },
       "fallbackHex": {
         "light": "#3EA33E",
@@ -1262,7 +1262,7 @@
       "role": "primary",
       "ref": {
         "light": "sentiment::information::70",
-        "dark": "sentiment::information::50"
+        "dark": "sentiment::information::70"
       },
       "fallbackHex": {
         "light": "#1892E3",
