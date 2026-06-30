@@ -21,7 +21,7 @@
 
 .control {
   align-items: center;
-  background: var(--card);
+  background: var(--ds-background-neutral-primary);
   border: 2px solid var(--ds-borders-neutral-solid);
   border-radius: 9999px;
   display: inline-flex;
@@ -49,7 +49,7 @@
 
 .root:hover .input:not(:disabled) + .control,
 .hovered .input:not(:disabled) + .control {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-neutral-primary);
 }
 
 .root:hover .input:not(:checked):not(:disabled) + .control,
@@ -68,7 +68,7 @@
 }
 
 .root:active .input:not(:disabled) + .control {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-neutral-primary);
   border-color: var(--ds-borders-brand-teal-primary);
 }
 
@@ -77,7 +77,7 @@
 }
 
 .input:disabled + .control {
-  background: var(--card);
+  background: var(--ds-background-neutral-primary);
   border-color: var(--ds-borders-neutral-disabled);
 }
 

@@ -20,7 +20,7 @@
 
 .control {
   align-items: center;
-  background: var(--card);
+  background: var(--ds-background-neutral-primary);
   border: 2px solid var(--ds-borders-neutral-solid);
   border-radius: 4px;
   display: inline-flex;
@@ -42,18 +42,18 @@
 }
 
 .input:checked + .control {
-  background: var(--ds-background-brand-teal-primary);
+  background: var(--ds-background-neutral-primary);
   border-color: var(--ds-borders-brand-teal-primary);
 }
 
 .input:checked + .control::after {
-  border-color: var(--card);
+  border-color: var(--ds-background-brand-teal-primary);
   opacity: 1;
 }
 
 .root:hover .input:not(:disabled) + .control,
 .hovered .input:not(:disabled) + .control {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-neutral-primary);
 }
 
 .root:hover .input:not(:checked):not(:disabled) + .control,
@@ -63,12 +63,12 @@
 
 .root:hover .input:checked:not(:disabled) + .control,
 .hovered .input:checked:not(:disabled) + .control {
-  background: var(--ds-background-brand-teal-strong);
+  background: var(--ds-background-neutral-primary);
   border-color: var(--ds-borders-brand-teal-strong);
 }
 
 .root:active .input:not(:disabled) + .control {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-neutral-primary);
   border-color: var(--ds-borders-brand-teal-primary);
 }
 
@@ -77,7 +77,7 @@
 }
 
 .input:disabled + .control {
-  background: var(--card);
+  background: var(--ds-background-neutral-primary);
   border-color: var(--ds-borders-neutral-disabled);
 }
 
@@ -87,7 +87,7 @@
 }
 
 .input:disabled:checked + .control::after {
-  border-color: var(--card);
+  border-color: var(--ds-text-neutral-quaternary);
   opacity: 1;
 }
 
