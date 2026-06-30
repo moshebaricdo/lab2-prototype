@@ -1,0 +1,90 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 0 0 220px;
+  width: 220px;
+  box-sizing: border-box;
+  padding: 24px 16px;
+  background: var(--ds-background-neutral-secondary);
+  border-right: 1px solid var(--ds-borders-neutral-primary);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionLabel {
+  margin: 0;
+  padding: 0 8px;
+  color: var(--ds-text-neutral-quaternary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.classSelect {
+  background: var(--ds-background-neutral-primary);
+}
+
+.navList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.48;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navItem:hover {
+  background: var(--ds-background-neutral-tertiary);
+}
+
+.navItemActive {
+  background: var(--ds-background-neutral-tertiary);
+}
+
+.navItemActive::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--ds-background-brand-teal-primary);
+}
+
+.navIcon {
+  flex-shrink: 0;
+  width: 20px;
+  color: var(--ds-text-neutral-secondary);
+  text-align: center;
+}
+
+.navLabel {
+  min-width: 0;
+}

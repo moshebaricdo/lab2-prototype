@@ -1,0 +1,51 @@
+.circle {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.inProgress {
+  border: 2px solid var(--ds-borders-success-primary);
+  background: transparent;
+}
+
+.submitted {
+  background: var(--ds-background-success-primary);
+}
+
+.validated {
+  color: var(--ds-text-success-primary);
+}
+
+.noWork {
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ds-background-neutral-quaternary);
+}
+
+.keepWorking {
+  color: var(--ds-text-neutral-secondary);
+}
+
+/* Corner flags sit in the top-left of their container, mirroring the
+   spreadsheet treatment where the marker hugs the cell corner. */
+.corner {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 16px 16px 0 0;
+  border-color: transparent;
+}
+
+.needsFeedback {
+  border-top-color: var(--ds-background-brand-purple-primary);
+}
+
+.feedbackGiven {
+  border-top-color: var(--ds-text-neutral-black-fixed);
+}

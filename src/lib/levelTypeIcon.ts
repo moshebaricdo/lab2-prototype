@@ -35,6 +35,8 @@ const SKETCH_LAB_PATH_PREFIXES = ["/levels/sketchlab"];
 
 const AI_CHAT_LAB_PATH_PREFIXES = ["/levels/aichatlab"];
 
+const TEACHER_DASHBOARD_PATH_PREFIXES = ["/levels/teacher-dashboard"];
+
 function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}-`) || pathname.startsWith(prefix);
 }
@@ -44,6 +46,10 @@ export function getLevelTypeIconConfig(path: string): LevelTypeIconConfig {
 
   if (AI_CHAT_LAB_PATH_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix))) {
     return { family: "solid", name: "messages" };
+  }
+
+  if (TEACHER_DASHBOARD_PATH_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix))) {
+    return { family: "solid", name: "chalkboard-user" };
   }
 
   if (PYTHON_LAB_PATH_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix))) {

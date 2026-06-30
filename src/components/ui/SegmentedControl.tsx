@@ -1,11 +1,11 @@
-import { AppButton } from "./AppButton";
+import { AppButton, type ButtonSize } from "./AppButton";
 import type { FaIconName } from "./AppButton";
 import styles from "./SegmentedControl.module.scss";
 
 export interface SegmentedOption<T extends string> {
   value: T;
   label: string;
-  iconName: FaIconName;
+  iconName?: FaIconName;
   ariaLabel?: string;
   title?: string;
 }
@@ -15,6 +15,7 @@ interface SegmentedControlProps<T extends string> {
   value: T | null;
   onChange: (value: T) => void;
   disabled?: boolean;
+  size?: ButtonSize;
 }
 
 export function SegmentedControl<T extends string>({
@@ -22,6 +23,7 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   disabled = false,
+  size = "xs",
 }: SegmentedControlProps<T>) {
   return (
     <div className={styles.root}>
@@ -47,7 +49,7 @@ export function SegmentedControl<T extends string>({
             onClick={() => {
               if (!disabled) onChange(option.value);
             }}
-            size="xs"
+            size={size}
             variant="tertiary"
             tone={isActive ? "white" : "black"}
             iconName={option.iconName}

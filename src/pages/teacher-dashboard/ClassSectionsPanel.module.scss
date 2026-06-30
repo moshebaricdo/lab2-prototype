@@ -1,0 +1,66 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.welcome {
+  margin: 0 0 16px;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+
+.sectionHeaderBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.createSectionGroup {
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.overflowButton {
+  min-width: 32px;
+  padding-inline: 8px;
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.emptyState {
+  margin: 24px 0;
+  color: var(--ds-text-neutral-quaternary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.48;
+  text-align: center;
+}

@@ -34,6 +34,7 @@ import {
   webLab2ExperimentLinks,
   webLab2ValidationProgressionLinks,
   webLab2LevelLinks,
+  teacherDashboardExperimentLinks,
 } from "./levelTypeLinks";
 import { buildShareLinkDropdownItems } from "../lib/shareLinkActions";
 import { FaIcon } from "../components/ui/icons/FaIcon";
@@ -161,6 +162,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/progression-upload-mechanisms": "Sample progression",
   "/levels/progression-backpack-filter": "Sample progression",
   "/levels/progression": "Sample progression",
+  "/levels/teacher-dashboard": "Teacher dashboard",
 };
 
 function levelTypeForPath(basePath: string): string {
@@ -680,6 +682,33 @@ export function LevelsIndexPage() {
                 </div>
                 <div className={styles.bubbleRow}>
                   {webLab2ExperimentLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      content={page.name}
+                      position="top"
+                      sideOffset={8}
+                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>Teacher Dashboard</h3>
+                  <p className={styles.cardDescription}>
+                    Code.org teacher home experiment with class sections and sidebar promos.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {teacherDashboardExperimentLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       content={page.name}

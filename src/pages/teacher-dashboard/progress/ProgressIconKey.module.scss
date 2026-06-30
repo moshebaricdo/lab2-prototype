@@ -1,0 +1,109 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.toggleCaret {
+  color: var(--ds-text-neutral-secondary);
+}
+
+.moreDetails {
+  color: var(--ds-text-brand-purple-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.54;
+  text-decoration: none;
+}
+
+.moreDetails:hover {
+  text-decoration: underline;
+}
+
+.groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.group {
+  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--ds-background-neutral-primary);
+}
+
+.groupTitle {
+  margin: 0;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.54;
+}
+
+.itemGrid {
+  display: grid;
+  gap: 12px 32px;
+  margin: 0;
+  padding: 16px;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.glyphSlot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.itemLabel {
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.54;
+  white-space: nowrap;
+}
+
+.assessmentGlyph {
+  color: var(--ds-text-neutral-black-fixed);
+}
+
+.choiceGlyph {
+  color: var(--ds-text-brand-teal-primary);
+}

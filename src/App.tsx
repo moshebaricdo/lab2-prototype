@@ -339,6 +339,14 @@ const WebLab2FeatureRouletteLevelPage = lazyPage(
   () => import("./pages/weblab2/WebLab2FeatureRouletteLevelPage"),
   "WebLab2FeatureRouletteLevelPage",
 );
+const TeacherDashboardPage = lazyPage(
+  () => import("./pages/teacher-dashboard/TeacherDashboardPage"),
+  "default",
+);
+const TeacherProgressPage = lazyPage(
+  () => import("./pages/teacher-dashboard/progress/TeacherProgressPage"),
+  "default",
+);
 
 export default function App() {
   usePageTitle();
@@ -663,6 +671,14 @@ export default function App() {
         <Route
           path="/levels/agentic-mission"
           element={<AgenticMissionLevelPage />}
+        />
+        <Route
+          path="/levels/teacher-dashboard"
+          element={<TeacherDashboardPage />}
+        />
+        <Route
+          path="/levels/teacher-dashboard/progress"
+          element={<TeacherProgressPage />}
         />
         <Route path="*" element={<Navigate to="/levels" replace />} />
       </Routes>

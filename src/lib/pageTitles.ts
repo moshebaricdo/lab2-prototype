@@ -19,6 +19,7 @@ import {
   sketchLabLevelLinks,
   uploadMechanismsProgressionLinks,
   webLab2ExperimentLinks,
+  teacherDashboardExperimentLinks,
   webLab2LevelLinks,
   webLab2ValidationProgressionLinks,
 } from "../pages/levelTypeLinks";
@@ -53,6 +54,7 @@ const LEVEL_PAGE_GROUPS: LevelPageGroup[] = [
   { levelType: "Drawer Improvements", pages: drawerImprovementsExperimentLinks },
   { levelType: "File Chip Tabs", pages: fileChipTabsExperimentLinks },
   { levelType: "Web Lab 2 Experiments", pages: webLab2ExperimentLinks },
+  { levelType: "Teacher Dashboard", pages: teacherDashboardExperimentLinks },
   { levelType: "Assessment Experiments", pages: assessmentExperimentLinks },
 ];
 

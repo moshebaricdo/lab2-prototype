@@ -211,6 +211,13 @@ export const assessmentExperimentLinks: LevelProgressLink[] = [
   ...levelGroupExperimentLinks,
 ];
 
+export const teacherDashboardExperimentLinks: LevelProgressLink[] = [
+  {
+    name: "Teacher dashboard (class sections)",
+    path: "/levels/teacher-dashboard",
+  },
+];
+
 export const pythonLabLevelLinks: LevelProgressLink[] = [
   { name: "Python Lab Level", path: "/levels/pythonlab" },
   { name: "Standalone Project (Blank)", path: "/levels/pythonlab-blank" },

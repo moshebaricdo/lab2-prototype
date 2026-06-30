@@ -1,0 +1,83 @@
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 50px;
+  padding: 0 16px;
+  background: var(--ds-background-brand-teal-primary);
+}
+
+:global([data-brand-theme="codeAi"]) .root {
+  background: var(--ds-background-brand-purple-primary);
+}
+
+.leftGroup {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-width: 0;
+}
+
+.logoBox {
+  display: block;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+}
+
+:global([data-brand-theme="codeAi"]) .logoBox {
+  width: 120px;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  height: 50px;
+  color: var(--ds-text-neutral-white-fixed);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.54;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navLink:hover {
+  box-shadow: inset 0 -4px 0 var(--ds-background-accent-orange-primary);
+}
+
+.rightGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.outlineButton {
+  border-color: var(--ds-borders-neutral-secondary);
+  background: transparent;
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.outlineButton:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
+.iconButton {
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.iconButton:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
+.userChevron {
+  margin-left: 2px;
+}

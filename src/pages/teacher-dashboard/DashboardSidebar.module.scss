@@ -1,0 +1,177 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 0 0 min(360px, 100%);
+  min-width: 0;
+  padding-top: 84px;
+  box-sizing: border-box;
+}
+
+@media (width <= 960px) {
+  .root {
+    flex-basis: auto;
+    width: 100%;
+    padding-top: 0;
+  }
+}
+
+.card {
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.curriculumCard {
+  background: var(--ds-background-brand-purple-extra-light);
+}
+
+.resourcesCard {
+  background: var(--ds-background-neutral-secondary);
+}
+
+.infoCard {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--ds-borders-neutral-primary);
+  background: var(--ds-background-neutral-primary);
+}
+
+.cardTopRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  color: var(--ds-text-neutral-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  line-height: 1.64;
+  text-transform: uppercase;
+}
+
+.eyebrowIcon {
+  color: var(--ds-text-neutral-secondary);
+}
+
+.dismissButton {
+  flex-shrink: 0;
+  margin-top: -4px;
+  margin-right: -4px;
+}
+
+.cardTitle {
+  margin: 0 0 12px;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+}
+
+.curriculumIllustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 28px 16px;
+  border-radius: 8px;
+  background: var(--ds-background-neutral-black-fixed);
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.illustrationRobot {
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.illustrationChatLeft {
+  color: var(--ds-text-brand-purple-primary);
+}
+
+.illustrationChatRight {
+  color: var(--ds-text-brand-aqua-primary);
+}
+
+.illustrationBook {
+  color: var(--ds-text-brand-purple-secondary);
+}
+
+.bodyText {
+  margin: 0 0 12px;
+  color: var(--ds-text-neutral-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.54;
+}
+
+.partnership {
+  margin: 0 0 12px;
+  color: var(--ds-text-neutral-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  line-height: 1.64;
+}
+
+.partnerMark {
+  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.infoContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.infoTitle {
+  margin: 0 0 8px;
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.48;
+}
+
+.infoText {
+  margin: 0 0 8px;
+  color: var(--ds-text-neutral-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.54;
+}
+
+.infoLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ds-text-brand-purple-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.54;
+  text-decoration: none;
+}
+
+.infoLink:hover {
+  text-decoration: underline;
+}
+
+.infoIllustration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 4px;
+  width: 56px;
+  color: var(--ds-text-brand-teal-primary);
+}
