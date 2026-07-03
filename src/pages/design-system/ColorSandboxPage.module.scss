@@ -20,12 +20,44 @@
   color: var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
 }
 
-.flow :global(.react-flow__pane) {
+.flowGrab :global(.react-flow__pane) {
   cursor: grab;
 }
 
-.flow :global(.react-flow__pane:active) {
+.flowGrab :global(.react-flow__pane:active) {
   cursor: grabbing;
+}
+
+.flowSelect :global(.react-flow__pane) {
+  cursor: default;
+}
+
+.flowGrab :global(.react-flow__node) {
+  pointer-events: none;
+}
+
+/* RF collection node shells are hit-test transparent; only marked children receive clicks. */
+.flow :global(.react-flow__node-collectionHeader),
+.flow :global(.react-flow__node-primitiveFamily),
+.flow :global(.react-flow__node-semanticFamily),
+.flow :global(.react-flow__node-semanticSubGroup) {
+  pointer-events: none;
+}
+
+/* Resize lines must not block collection cards beneath scratch nodes. */
+.flow :global(.react-flow__node-scratchSwatch) :global(.react-flow__resize-control.line),
+.flow :global(.react-flow__node-scratchText) :global(.react-flow__resize-control.line) {
+  pointer-events: none;
+}
+
+.flow :global(.react-flow__node-scratchSwatch) :global(.react-flow__resize-control.handle),
+.flow :global(.react-flow__node-scratchText) :global(.react-flow__resize-control.handle) {
+  pointer-events: auto;
+}
+
+.flow :global(.react-flow__nodesselection),
+.flow :global(.react-flow__nodesselection-rect) {
+  display: none;
 }
 
 .flow :global(.react-flow__controls-button) {
@@ -66,7 +98,7 @@
 /* ── Top settings panel (matches Sketch Lab floating chrome) ── */
 
 .toolbarPanel {
-  width: auto;
+  width: 292px;
   margin: 16px;
 }
 
@@ -74,6 +106,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 12px;
   border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 8px;
@@ -102,11 +136,91 @@
   min-width: 0;
 }
 
+.toolbarInteractionSection {
+  display: flex;
+  align-items: stretch;
+  margin: 0 -12px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+}
+
+.toolbarToolGroup {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.toolbarCanvasTools {
+  flex: 0 0 72px;
+  justify-content: flex-start;
+}
+
+.toolbarCreateTools {
+  flex: 1 1 auto;
+  gap: 6px
+}
+
+.toolbarToolGroup > * {
+  flex: 0 0 auto;
+}
+
+.toolbarToolDivider {
+  flex: 0 0 1px;
+  width: 1px;
+  margin: -10px 8px;
+  background: var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+}
+
+.toolbarIconButton {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+}
+
+.toolbarLabeledButton {
+  min-width: 45% !important;
+  height: 32px !important;
+  padding: 0 10px !important;
+}
+
+.toolbarToolActive {
+  border-color: transparent !important;
+  background: var(--ds-background-brand-teal-primary) !important;
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
+}
+
+.toolbarToolActive:hover,
+.toolbarToolActive:active {
+  background: var(--ds-background-brand-teal-strong) !important;
+}
+
 .runtimePreview {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.toolbarPersistentRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.toolbarIconActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.toolbarPersistentRow .runtimePreviewToggle {
+  flex: 1;
+  min-width: 0;
 }
 
 .runtimePreviewToggle {
@@ -116,6 +230,10 @@
   min-width: 0;
   flex: 1;
   cursor: pointer;
+}
+
+.control :global(button) {
+  width: 100%;
 }
 
 .runtimePreviewLabel {
@@ -152,6 +270,7 @@
 .inspector {
   display: flex;
   flex-direction: column;
+  max-height: 400px;
   overflow: hidden;
   border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 8px;
@@ -161,6 +280,7 @@
 
 .inspectorHeader {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
   height: 32px;
@@ -205,12 +325,25 @@
   border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-secondary));
 }
 
+.scratchInspectorBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.scratchInspectorBody .inspectorSection:last-child {
+  border-bottom: 0;
+}
+
 .inspectorSection:last-child {
   border-bottom: 0;
 }
 
 .inspectorSectionActions {
+  flex: 0 0 auto;
   gap: 4px;
+  border-top: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-secondary));
+  border-bottom: 0;
 }
 
 .inspectorRow {
@@ -468,4 +601,32 @@
 .inspectorActionDelete:hover {
   color: var(--ds-text-neutral-white-fixed) !important;
   background: var(--ds-background-error-primary) !important;
+}
+
+/* ── Scratch layer fill palette ── */
+
+.scratchPalette {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 3px;
+  width: 100%;
+  max-height: 104px;
+  margin-top: 6px;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border-radius: 6px;
+  background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
+}
+
+.scratchPaletteSwatch {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid rgb(0 0 0 / 10%);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.scratchPaletteSwatch:hover {
+  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
 }

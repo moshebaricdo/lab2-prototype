@@ -123,6 +123,7 @@
   border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: var(--radius-card) var(--radius-card) 0 0;
   background: transparent;
+  pointer-events: auto;
   cursor: grab;
   touch-action: none;
   text-align: left;
@@ -185,6 +186,7 @@ button.nodeHeader:hover {
   padding: 0;
   border: 0;
   background: transparent;
+  pointer-events: auto;
   cursor: pointer;
   text-align: center;
 }
@@ -286,6 +288,7 @@ button.nodeHeader:hover {
   border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-radius: 999px;
   background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
+  pointer-events: auto;
   cursor: grab;
   touch-action: none;
   color: var(--ds-text-neutral-secondary);

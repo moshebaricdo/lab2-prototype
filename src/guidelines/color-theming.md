@@ -122,6 +122,24 @@ Semantics can reference:
 
 Workflow: edit primitives/semantics in sandbox → optionally preview with **Apply to app** → export JSON → codify through `generate-tokens.mjs` when ready to commit.
 
+### Scratch layer (swatches + text)
+
+The sandbox canvas also hosts a lightweight **scratch layer** for quickly laying colors and text over each other and checking contrast. Add a **Swatch** or **Text** node from the top toolbar; nodes are free-positioned React Flow nodes (`scratchSwatch` / `scratchText`) rendered on the same canvas as the color collections.
+
+| Item | Detail |
+|---|---|
+| Node model + storage | `src/lib/colorSandbox/scratchLayer.ts` |
+| Node components | `src/pages/design-system/ColorScratchNodes.tsx` (`scratchNodeTypes`, `ScratchActionsProvider`) |
+| Selection toolbar | `src/pages/design-system/ColorScratchToolbar.tsx` (fill picker + WCAG a11y only) |
+| Storage | `localStorage` `lab2:color-sandbox:scratch` — **per brand**, **shared across light/dark** |
+
+Behavior notes:
+
+- Scratch nodes persist between light/dark but are scoped per brand (they reload on brand switch and do **not** carry over between Code.org and CodeAI).
+- The toolbar exposes **Select** and **Hand tool** canvas tools. Select allows scratch-node selection and movement; Hand tool only pans the canvas and suppresses scratch/collection hit-testing. Selection is React Flow native; **shift+click** multi-selects elements. Collection nodes are `selectable:false`/`draggable:false` so only scratch nodes participate. Selecting a collection element clears scratch selection and vice-versa (only one inspector/toolbar shows at a time).
+- The toolbar intentionally surfaces **only** fill color (swatch background / text color, with an optional palette drawn from the current primitives) and accessibility info: a single swatch shows black/white text contrast; two selected elements show the contrast ratio between their fills (via `contrastRatio`/`surfaceColorContrastChecks` in `colorSystemData.ts`); larger selections hide the accessibility section. Multi-selection fill controls are grouped by current color, and the inspector body scrolls internally within a fixed height cap for large selections. Connection handles and the rest of the styling controls are deliberately not shown.
+- Reused canvas ops: delete (toolbar or Delete/Backspace when not editing text), duplicate, bring to front, send to back. Z-order is scratch-array order (rendered above collection cards).
+
 ---
 
 ## Authoring checklist
@@ -144,6 +162,9 @@ Workflow: edit primitives/semantics in sandbox → optionally preview with **App
 | `src/pages/design-system/colorSystemData.ts` | ColorSystem model, parsing, `semanticHex`, `mergeSemanticRefs` |
 | `src/lib/colorSandbox/colorSandboxRuntime.ts` | Apply-to-app CSS injection |
 | `src/lib/colorSandbox/colorSandboxStorage.ts` | Draft persistence + built-in merge |
+| `src/lib/colorSandbox/scratchLayer.ts` | Scratch swatch/text model + per-brand persistence |
+| `src/pages/design-system/ColorScratchNodes.tsx` | Scratch node components + actions context |
+| `src/pages/design-system/ColorScratchToolbar.tsx` | Scratch selection toolbar (fill + a11y) |
 | `src/hooks/useTheme.tsx` | Brand + mode state |
 | `src/components/lab2/Lab2Shell.tsx` | Applies `.dark` on `themeScope` |
 | `scripts/generate-tokens.mjs` | Token generator entrypoint |

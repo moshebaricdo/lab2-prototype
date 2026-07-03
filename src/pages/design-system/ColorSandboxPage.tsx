@@ -28,9 +28,12 @@ import {
   Panel,
   PanOnScrollMode,
   ReactFlow,
+  SelectionMode,
   useNodesState,
   type Edge,
   type Node,
+  type NodeChange,
+  type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { AppButton } from "../../components/ui/AppButton";
@@ -51,6 +54,7 @@ import {
 import {
   addFamily,
   addSemanticFamily,
+  addSemanticSubGroup,
   addSemanticToken,
   addStep,
   buildColorSystem,
@@ -59,6 +63,7 @@ import {
   deleteCollection,
   deleteFamily,
   deleteSemanticFamily,
+  deleteSemanticSubGroup,
   deleteSemanticToken,
   deleteStep,
   cssColor,
@@ -91,6 +96,7 @@ import {
   renameSemanticFamily,
   renameSemanticTokenRole,
   renameSemanticSubGroup,
+  SEMANTIC_COLLECTION_LABELS,
   semanticFamilyKeysForSurface,
   semanticFamilyKeysForSubGroup,
   semanticFamilyLabel,
@@ -121,7 +127,29 @@ import {
   type SemanticNodeData,
   type SemanticSubGroupNodeData,
 } from "./ColorSystemNodes";
+import { scratchNodeTypes, ScratchActionsProvider } from "./ColorScratchNodes";
+import { ColorScratchToolbar } from "./ColorScratchToolbar";
+import {
+  createScratchNode,
+  fromScratchFlowNode,
+  isScratchId,
+  loadScratchNodes,
+  measureScratchTextWidth,
+  persistScratchNodes,
+  toScratchFlowNode,
+  type ScratchFlowNode,
+  type ScratchNodeData,
+  type ScratchNodeKind,
+} from "../../lib/colorSandbox/scratchLayer";
 import styles from "./ColorSandboxPage.module.scss";
+
+const allNodeTypes = { ...colorSystemNodeTypes, ...scratchNodeTypes };
+
+/** Default fills for freshly created scratch nodes. */
+const SCRATCH_DEFAULT_SWATCH_FILL = "#4B5563";
+const SCRATCH_DEFAULT_TEXT_FILL = "#111827";
+/** Horizontal gap between the semantic column and newly spawned scratch nodes. */
+const SCRATCH_SPAWN_OFFSET_X = 320;
 
 const COLLECTION_GAP_X = 44;
 const SEMANTIC_BAND_GAP = 96;
@@ -153,7 +181,14 @@ const HEADER_FAMILY_GAP = 16;
 const EDGE_COLOR = "var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary))";
 const EDGE_WIDTH = 1.5;
 /** React Flow pan filter — pan only on empty pane, not while interacting with nodes. */
-const REACT_FLOW_NO_PAN = { className: "nopan" } as const;
+const REACT_FLOW_NO_PAN = {
+  className: "nopan",
+  draggable: false,
+  selectable: false,
+  connectable: false,
+} as const;
+
+type ScratchCanvasTool = "select" | "grab";
 
 const BRAND_OPTIONS: Array<{ value: BrandTheme; label: string }> = [
   { value: "codeOrg", label: "Code.org" },
@@ -274,6 +309,71 @@ function semanticSubGroupInnerMax() {
   return SEMANTIC_SUBGROUP_MAX_W - CARD_PADDING * 2;
 }
 
+function measureSemanticCollectionCard(
+  system: ColorSystem,
+  collectionId: string,
+): { width: number; height: number } {
+  const firstSubFamilyY = SUB_GROUP_HEADER_H + HEADER_FAMILY_GAP;
+  const innerMax = semanticSubGroupInnerMax();
+  let cursorX = CARD_PADDING;
+  let maxSubGroupH = 0;
+
+  for (const subGroupId of semanticSubGroupsForSurface(system, collectionId)) {
+    const familyKeys = semanticFamilyKeysForSubGroup(system, collectionId, subGroupId);
+    let innerY = firstSubFamilyY;
+    const familyLayouts = familyKeys.map((familyKey) => {
+      const roles = semanticTokenRolesForFamily(system, collectionId, familyKey);
+      return { roles, contentW: semanticFamilyWidth(roles) };
+    });
+    const maxFamilyContentW = familyLayouts.reduce(
+      (max, layout) => Math.max(max, layout.contentW),
+      0,
+    );
+    const subGroupInnerW = Math.min(Math.max(maxFamilyContentW, 160), innerMax);
+
+    for (const { roles } of familyLayouts) {
+      innerY += semanticFamilyHeight(roles, subGroupInnerW) + FAMILY_GAP;
+    }
+
+    const subGroupH =
+      (familyKeys.length > 0 ? innerY - FAMILY_GAP : SUB_GROUP_HEADER_H) + CARD_PADDING;
+    maxSubGroupH = Math.max(maxSubGroupH, subGroupH);
+    cursorX += subGroupInnerW + CARD_PADDING * 2 + SUB_GROUP_GAP_X;
+  }
+
+  const cardWidth =
+    (cursorX > CARD_PADDING ? cursorX - SUB_GROUP_GAP_X : 0) + CARD_PADDING;
+  const cardHeight =
+    (maxSubGroupH > 0 ? firstSubFamilyY + maxSubGroupH : COLLECTION_HEADER_H) +
+    CARD_PADDING;
+
+  return {
+    width: Math.max(cardWidth, 220),
+    height: cardHeight,
+  };
+}
+
+function computeScratchSpawnPosition(
+  system: ColorSystem,
+  spawnIndex: number,
+): { x: number; y: number } {
+  const semanticY = computePrimitiveBandHeight(system) + SEMANTIC_BAND_GAP;
+  let maxWidth = 0;
+  let cursorY = semanticY;
+
+  for (const collection of system.semanticCollections) {
+    const { width, height } = measureSemanticCollectionCard(system, collection.id);
+    maxWidth = Math.max(maxWidth, width);
+    cursorY += height + COLLECTION_GAP_X;
+  }
+
+  const offset = spawnIndex * 24;
+  return {
+    x: maxWidth + SCRATCH_SPAWN_OFFSET_X + offset,
+    y: semanticY + offset,
+  };
+}
+
 function semanticChipWidth(role: string): number {
   return (
     SEMANTIC_CHIP_X_PAD * 2 +
@@ -353,6 +453,9 @@ export function ColorSandboxPage() {
   const [selection, setSelection] = useState<Selection>(null);
   const [exported, setExported] = useState(false);
   const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
+  const [canvasTool, setCanvasTool] = useState<ScratchCanvasTool>("select");
+  const isGrabTool = canvasTool === "grab";
+  const clearScratchSelectionRef = useRef<() => void>(() => {});
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -429,21 +532,31 @@ export function ColorSandboxPage() {
   }, []);
 
   const selectStep = useCallback(
-    (id: string) => setSelection({ kind: "step", id }),
+    (id: string) => {
+      clearScratchSelectionRef.current();
+      setSelection({ kind: "step", id });
+    },
     [],
   );
   const selectFamily = useCallback(
-    (id: string) => setSelection({ kind: "family", id }),
+    (id: string) => {
+      clearScratchSelectionRef.current();
+      setSelection({ kind: "family", id });
+    },
     [],
   );
   const selectCollection = useCallback(
-    (id: string) => setSelection({ kind: "collection", id }),
+    (id: string) => {
+      clearScratchSelectionRef.current();
+      setSelection({ kind: "collection", id });
+    },
     [],
   );
   const selectSemantic = useCallback(
     (id: string) => {
       const token = system.semantics.find((item) => item.id === id);
       if (!token) return;
+      clearScratchSelectionRef.current();
       setSelection({
         kind: "semantic",
         surface: token.surface,
@@ -454,17 +567,24 @@ export function ColorSandboxPage() {
     [system],
   );
   const selectSemanticFamily = useCallback(
-    (id: string, surface: string) =>
-      setSelection({ kind: "semanticFamily", id, surface }),
+    (id: string, surface: string) => {
+      clearScratchSelectionRef.current();
+      setSelection({ kind: "semanticFamily", id, surface });
+    },
     [],
   );
   const selectSemanticCollection = useCallback(
-    (id: string) => setSelection({ kind: "semanticCollection", id }),
+    (id: string) => {
+      clearScratchSelectionRef.current();
+      setSelection({ kind: "semanticCollection", id });
+    },
     [],
   );
   const selectSemanticSubGroup = useCallback(
-    (surface: string, id: string) =>
-      setSelection({ kind: "semanticSubGroup", id, surface }),
+    (surface: string, id: string) => {
+      clearScratchSelectionRef.current();
+      setSelection({ kind: "semanticSubGroup", id, surface });
+    },
     [],
   );
 
@@ -596,6 +716,227 @@ export function ColorSandboxPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const signatureRef = useRef<string>("");
 
+  // ── Scratch layer: free-positioned swatch/text nodes (persist per brand,
+  // shared across light/dark). Managed independently from the collection nodes.
+  const [scratchNodes, setScratchNodes, onScratchNodesChange] =
+    useNodesState<ScratchFlowNode>(
+      loadScratchNodes(brandTheme).map(toScratchFlowNode),
+    );
+  const scratchNodesRef = useRef(scratchNodes);
+  scratchNodesRef.current = scratchNodes;
+  const scratchOrderRef = useRef<string[]>([]);
+  const scratchBrandRef = useRef<BrandTheme>(brandTheme);
+  const lastLoadedScratchRef = useRef<ScratchFlowNode[] | null>(null);
+  const flowRef = useRef<ReactFlowInstance<Node, Edge> | null>(null);
+  const spawnCountRef = useRef(0);
+
+  const selectedScratch = useMemo(
+    () => scratchNodes.filter((node) => node.selected),
+    [scratchNodes],
+  );
+  const hasSelectedScratch = selectedScratch.length > 0;
+  const hasSelectedScratchRef = useRef(false);
+  hasSelectedScratchRef.current = hasSelectedScratch;
+
+  const clearScratchSelection = useCallback(() => {
+    scratchOrderRef.current = [];
+    setScratchNodes((current) =>
+      current.some((node) => node.selected)
+        ? current.map((node) =>
+            node.selected ? { ...node, selected: false } : node,
+          )
+        : current,
+    );
+  }, [setScratchNodes]);
+  clearScratchSelectionRef.current = clearScratchSelection;
+
+  const handleCanvasToolChange = useCallback(
+    (tool: ScratchCanvasTool) => {
+      setCanvasTool(tool);
+      if (tool === "grab") {
+        setSelection(null);
+        clearScratchSelection();
+      }
+    },
+    [clearScratchSelection],
+  );
+
+  const flowNodes = useMemo<Node[]>(() => {
+    // Scratch nodes sit visually beside the collections, but must not intercept
+    // clicks meant for collection cards — keep system nodes above scratch in z-order.
+    const scratch = scratchNodes.map((node, index) => ({
+      ...node,
+      zIndex: index,
+      draggable: !isGrabTool,
+      selectable: !isGrabTool,
+      className: isGrabTool ? undefined : "nopan",
+    }));
+    const collections = nodes.map((node) => ({
+      ...node,
+      zIndex: 1000,
+    }));
+    return [...scratch, ...collections];
+  }, [nodes, scratchNodes, isGrabTool]);
+
+  const handleNodesChange = useCallback(
+    (changes: NodeChange<Node>[]) => {
+      const scratchChanges: NodeChange<Node>[] = [];
+      const otherChanges: NodeChange<Node>[] = [];
+      for (const change of changes) {
+        if ("id" in change && isScratchId(change.id)) scratchChanges.push(change);
+        else otherChanges.push(change);
+      }
+
+      if (otherChanges.length > 0) onNodesChange(otherChanges);
+      if (scratchChanges.length === 0) return;
+
+      onScratchNodesChange(scratchChanges as NodeChange<ScratchFlowNode>[]);
+
+      let selectedSomething = false;
+      for (const change of scratchChanges) {
+        if (change.type !== "select") continue;
+        if (change.selected) {
+          selectedSomething = true;
+          scratchOrderRef.current = [
+            ...scratchOrderRef.current.filter((id) => id !== change.id),
+            change.id,
+          ];
+        } else {
+          scratchOrderRef.current = scratchOrderRef.current.filter(
+            (id) => id !== change.id,
+          );
+        }
+      }
+
+      if (selectedSomething) setSelection(null);
+    },
+    [onNodesChange, onScratchNodesChange, setScratchNodes],
+  );
+
+  const updateScratchNodeData = useCallback(
+    (id: string, partial: Partial<ScratchNodeData>) => {
+      setScratchNodes((current) =>
+        current.map((node) => {
+          if (node.id !== id) return node;
+          const nextData = { ...node.data, ...partial };
+          if (nextData.kind !== "text" || partial.text === undefined) {
+            return { ...node, data: nextData };
+          }
+          const width = measureScratchTextWidth(nextData.text);
+          return {
+            ...node,
+            width,
+            style: { ...node.style, width, height: node.height },
+            data: nextData,
+          };
+        }),
+      );
+    },
+    [setScratchNodes],
+  );
+
+  const updateScratchFill = useCallback(
+    (id: string, hex: string) => updateScratchNodeData(id, { fill: rgbHex(hex) }),
+    [updateScratchNodeData],
+  );
+
+  const addScratchNode = useCallback(
+    (kind: ScratchNodeKind) => {
+      const spawnIndex = spawnCountRef.current;
+      spawnCountRef.current = (spawnCountRef.current + 1) % 8;
+      const position = computeScratchSpawnPosition(system, spawnIndex);
+      const fill =
+        kind === "swatch"
+          ? SCRATCH_DEFAULT_SWATCH_FILL
+          : SCRATCH_DEFAULT_TEXT_FILL;
+      const node = toScratchFlowNode(createScratchNode(kind, fill, position));
+      node.selected = true;
+      scratchOrderRef.current = [node.id];
+      setSelection(null);
+      setScratchNodes((current) => [
+        ...current.map((item) =>
+          item.selected ? { ...item, selected: false } : item,
+        ),
+        node,
+      ]);
+    },
+    [setScratchNodes, system],
+  );
+
+  const duplicateScratch = useCallback(() => {
+    setScratchNodes((current) => {
+      const selectedIds = current
+        .filter((node) => node.selected)
+        .map((node) => node.id);
+      if (selectedIds.length === 0) return current;
+      const clones: ScratchFlowNode[] = [];
+      for (const node of current) {
+        if (!node.selected) continue;
+        const clone = toScratchFlowNode({
+          ...fromScratchFlowNode(node),
+          id: `scratch:${Date.now().toString(36)}${Math.random()
+            .toString(36)
+            .slice(2, 7)}${clones.length}`,
+          x: node.position.x + 24,
+          y: node.position.y + 24,
+        });
+        clone.selected = true;
+        clones.push(clone);
+      }
+      scratchOrderRef.current = clones.slice(-2).map((clone) => clone.id);
+      return [
+        ...current.map((node) =>
+          node.selected ? { ...node, selected: false } : node,
+        ),
+        ...clones,
+      ];
+    });
+  }, [setScratchNodes]);
+
+  const bringScratchToFront = useCallback(() => {
+    setScratchNodes((current) => {
+      const selected = current.filter((node) => node.selected);
+      if (selected.length === 0) return current;
+      return [...current.filter((node) => !node.selected), ...selected];
+    });
+  }, [setScratchNodes]);
+
+  const sendScratchToBack = useCallback(() => {
+    setScratchNodes((current) => {
+      const selected = current.filter((node) => node.selected);
+      if (selected.length === 0) return current;
+      return [...selected, ...current.filter((node) => !node.selected)];
+    });
+  }, [setScratchNodes]);
+
+  const deleteScratch = useCallback(() => {
+    scratchOrderRef.current = [];
+    setScratchNodes((current) => current.filter((node) => !node.selected));
+  }, [setScratchNodes]);
+
+  const syncScratchTextWidth = useCallback(
+    (id: string, text: string) => {
+      const width = measureScratchTextWidth(text);
+      setScratchNodes((current) =>
+        current.map((node) => {
+          if (node.id !== id || node.data.kind !== "text") return node;
+          if (node.width === width) return node;
+          return {
+            ...node,
+            width,
+            style: { ...node.style, width, height: node.height },
+          };
+        }),
+      );
+    },
+    [setScratchNodes],
+  );
+
+  const scratchActions = useMemo(
+    () => ({ updateScratchNode: updateScratchNodeData, syncScratchTextWidth }),
+    [updateScratchNodeData, syncScratchTextWidth],
+  );
+
   const buildAllNodes = useCallback((): Node[] => {
     const result: Node[] = [];
     const firstFamilyY = COLLECTION_HEADER_H + HEADER_FAMILY_GAP;
@@ -644,7 +985,8 @@ export function ColorSandboxPage() {
     }
 
     const semanticY = computePrimitiveBandHeight(system) + SEMANTIC_BAND_GAP;
-    let semanticCollectionX = 0;
+    let semanticCollectionY = semanticY;
+    const semanticCollectionX = 0;
 
     for (const collection of system.semanticCollections) {
       const collectionNodeId = `semcol-${collection.id}`;
@@ -702,7 +1044,7 @@ export function ColorSandboxPage() {
           type: "semanticSubGroup",
           parentId: collectionNodeId,
           extent: "parent",
-          position: { x: cursorX, y: firstFamilyY },
+          position: { x: cursorX, y: firstSubFamilyY },
           style: { width: subGroupW, height: subGroupH },
           data: buildSubGroupData(collection.id, subGroupId),
         });
@@ -710,23 +1052,22 @@ export function ColorSandboxPage() {
         cursorX += subGroupW + SUB_GROUP_GAP_X;
       }
 
-      const cardWidth =
-        (cursorX > CARD_PADDING ? cursorX - SUB_GROUP_GAP_X : 0) + CARD_PADDING;
-      const cardHeight =
-        (maxSubGroupH > 0 ? firstFamilyY + maxSubGroupH : COLLECTION_HEADER_H) +
-        CARD_PADDING;
+      const { width: cardWidth, height: cardHeight } = measureSemanticCollectionCard(
+        system,
+        collection.id,
+      );
 
       result.push({
         ...REACT_FLOW_NO_PAN,
         id: collectionNodeId,
         type: "collectionHeader",
-        position: { x: semanticCollectionX, y: semanticY },
+        position: { x: semanticCollectionX, y: semanticCollectionY },
         data: buildCollectionData(collection.id, "semantic"),
-        style: { width: Math.max(cardWidth, 220), height: cardHeight },
+        style: { width: cardWidth, height: cardHeight },
       });
       result.push(...childNodes);
 
-      semanticCollectionX += Math.max(cardWidth, 220) + COLLECTION_GAP_X;
+      semanticCollectionY += cardHeight + COLLECTION_GAP_X;
     }
 
     return result;
@@ -861,16 +1202,65 @@ export function ColorSandboxPage() {
     signatureRef.current = "";
   }, [brandTheme]);
 
+  // Scratch nodes are scoped per brand; reload them on brand switch.
+  useLayoutEffect(() => {
+    const previousBrand = scratchBrandRef.current;
+    if (previousBrand !== brandTheme) {
+      // Flush the outgoing brand before loading the next — the persist effect can
+      // otherwise run with the new brand key and stale in-memory nodes.
+      persistScratchNodes(
+        previousBrand,
+        scratchNodesRef.current.map(fromScratchFlowNode),
+      );
+    }
+    scratchBrandRef.current = brandTheme;
+    scratchOrderRef.current = [];
+    const loaded = loadScratchNodes(brandTheme).map(toScratchFlowNode);
+    lastLoadedScratchRef.current = loaded;
+    setScratchNodes(loaded);
+  }, [brandTheme, setScratchNodes]);
+
+  // Persist scratch nodes for the current brand (shared across light/dark).
+  useEffect(() => {
+    if (scratchNodes === lastLoadedScratchRef.current) return;
+    persistScratchNodes(
+      scratchBrandRef.current,
+      scratchNodes.map(fromScratchFlowNode),
+    );
+  }, [scratchNodes]);
+
+  // Selecting a color collection element clears any scratch selection.
+  useEffect(() => {
+    if (selection) clearScratchSelection();
+  }, [selection, clearScratchSelection]);
+
+  // Delete/Backspace removes the selected scratch nodes (never while editing text).
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Delete" && event.key !== "Backspace") return;
+      if (!hasSelectedScratchRef.current) return;
+      const active = document.activeElement as HTMLElement | null;
+      if (
+        active &&
+        (active.tagName === "INPUT" ||
+          active.tagName === "TEXTAREA" ||
+          active.isContentEditable)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      deleteScratch();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [deleteScratch]);
+
   function resetDraft() {
     const fresh =
       brandTheme === "codeAi" ? buildCodeAiColorSystem() : buildColorSystem();
     setSelection(null);
     signatureRef.current = "";
     applyChange(fresh);
-  }
-
-  function clearRuntimePreview() {
-    toggleApplyRuntime(false);
   }
 
   function downloadExport() {
@@ -1120,19 +1510,31 @@ export function ColorSandboxPage() {
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
+      <ScratchActionsProvider value={scratchActions}>
       <ReactFlow
-        className={styles.flow}
-        nodes={nodes}
+        className={`${styles.flow} ${isGrabTool ? styles.flowGrab : styles.flowSelect}`}
+        nodes={flowNodes}
         edges={edges}
-        nodeTypes={colorSystemNodeTypes}
+        nodeTypes={allNodeTypes}
         edgeTypes={colorSystemEdgeTypes}
-        onNodesChange={onNodesChange}
-        onPaneClick={() => setSelection(null)}
+        onNodesChange={handleNodesChange}
+        onInit={(instance) => {
+          flowRef.current = instance;
+        }}
+        onPaneClick={() => {
+          setSelection(null);
+          clearScratchSelection();
+        }}
         nodesConnectable={false}
-        nodesDraggable={false}
+        nodesDraggable={!isGrabTool}
+        elevateNodesOnSelect={false}
+        multiSelectionKeyCode="Shift"
+        selectionKeyCode={null}
         panOnScroll
         panOnScrollMode={PanOnScrollMode.Free}
-        panOnDrag
+        panOnDrag={isGrabTool}
+        selectionOnDrag={!isGrabTool}
+        selectionMode={SelectionMode.Partial}
         zoomOnScroll={false}
         zoomOnPinch
         proOptions={{ hideAttribution: true }}
@@ -1183,8 +1585,72 @@ export function ColorSandboxPage() {
               />
             </div>
           </div>
-          <div className={styles.toolbarDivider} role="separator" />
-          <div className={styles.runtimePreview}>
+          <div className={styles.toolbarInteractionSection}>
+            <div className={`${styles.toolbarToolGroup} ${styles.toolbarCanvasTools}`}>
+              <Tooltip content="Select" position="bottom">
+                <AppButton
+                  variant="secondary"
+                  tone="gray"
+                  size="s"
+                  iconName="arrow-pointer"
+                  className={
+                    canvasTool === "select"
+                      ? `${styles.toolbarIconButton} ${styles.toolbarToolActive}`
+                      : styles.toolbarIconButton
+                  }
+                  aria-label="Select"
+                  aria-pressed={canvasTool === "select"}
+                  onClick={() => handleCanvasToolChange("select")}
+                />
+              </Tooltip>
+              <Tooltip content="Hand tool" position="bottom">
+                <AppButton
+                  variant="secondary"
+                  tone="gray"
+                  size="s"
+                  iconName="hand"
+                  className={
+                    canvasTool === "grab"
+                      ? `${styles.toolbarIconButton} ${styles.toolbarToolActive}`
+                      : styles.toolbarIconButton
+                  }
+                  aria-label="Hand tool"
+                  aria-pressed={canvasTool === "grab"}
+                  onClick={() => handleCanvasToolChange("grab")}
+                />
+              </Tooltip>
+            </div>
+            <div className={styles.toolbarToolDivider} role="separator" />
+            <div className={`${styles.toolbarToolGroup} ${styles.toolbarCreateTools}`}>
+              <Tooltip content="Swatch" position="bottom">
+                <AppButton
+                  variant="secondary"
+                  tone="gray"
+                  size="s"
+                  iconName="square"
+                  className={styles.toolbarLabeledButton}
+                  aria-label="Add swatch"
+                  onClick={() => addScratchNode("swatch")}
+                >
+                  Swatch
+                </AppButton>
+              </Tooltip>
+              <Tooltip content="Text" position="bottom">
+                <AppButton
+                  variant="secondary"
+                  tone="gray"
+                  size="s"
+                  iconName="font"
+                  className={styles.toolbarLabeledButton}
+                  aria-label="Add text"
+                  onClick={() => addScratchNode("text")}
+                >
+                  Text
+                </AppButton>
+              </Tooltip>
+            </div>
+          </div>
+          <div className={styles.toolbarPersistentRow}>
             <label className={styles.runtimePreviewToggle}>
               <AppCheckbox
                 checkboxSize="s"
@@ -1193,41 +1659,30 @@ export function ColorSandboxPage() {
               />
               <span className={styles.runtimePreviewLabel}>Apply to app</span>
             </label>
-            {applyRuntime ? (
-              <Tooltip content="Clear live preview" position="bottom">
+            <div className={styles.toolbarIconActions}>
+              <Tooltip content="Reset draft" position="bottom">
                 <AppButton
                   variant="secondary"
                   tone="gray"
-                  size="xs"
-                  iconName="xmark"
-                  onClick={clearRuntimePreview}
-                  aria-label="Clear live preview"
+                  size="s"
+                  iconName="rotate-left"
+                  className={styles.toolbarIconButton}
+                  onClick={resetDraft}
+                  aria-label="Reset draft"
                 />
               </Tooltip>
-            ) : null}
-          </div>
-          <div className={styles.toolbarDivider} role="separator" />
-          <div className={styles.toolbarActions}>
-            <AppButton
-              variant="secondary"
-              tone="black"
-              size="s"
-              iconName="rotate-left"
-              fullWidth
-              onClick={resetDraft}
-            >
-              Reset
-            </AppButton>
-            <AppButton
-              variant="primary"
-              tone="purple"
-              size="s"
-              iconName={exported ? "check" : "download"}
-              fullWidth
-              onClick={downloadExport}
-            >
-              {exported ? "Exported" : "Export"}
-            </AppButton>
+              <Tooltip content={exported ? "Exported" : "Export JSON"} position="bottom">
+                <AppButton
+                  variant="primary"
+                  tone="purple"
+                  size="s"
+                  iconName={exported ? "check" : "download"}
+                  className={styles.toolbarIconButton}
+                  onClick={downloadExport}
+                  aria-label="Export JSON"
+                />
+              </Tooltip>
+            </div>
           </div>
           </div>
         </Panel>
@@ -1247,7 +1702,23 @@ export function ColorSandboxPage() {
             />
           </Panel>
         ) : null}
+
+        {!selection && hasSelectedScratch ? (
+          <Panel position="bottom-right" className={styles.inspectorPanel}>
+            <ColorScratchToolbar
+              nodes={selectedScratch}
+              system={system}
+              onUpdateFill={updateScratchFill}
+              onDuplicate={duplicateScratch}
+              onBringForward={bringScratchToFront}
+              onSendToBack={sendScratchToBack}
+              onDelete={deleteScratch}
+              onClose={clearScratchSelection}
+            />
+          </Panel>
+        ) : null}
       </ReactFlow>
+      </ScratchActionsProvider>
 
       <DragOverlay dropAnimation={null}>
         {activeDragLabel ? (
@@ -1384,7 +1855,35 @@ function Inspector({
     const familyCount = semanticFamilyKeysForSurface(system, collection.id).length;
     const subGroupCount = semanticSubGroupsForSurface(system, collection.id).length;
     return (
-      <InspectorShell label="Semantic collection" onClose={onClose}>
+      <InspectorShell
+        label="Semantic collection"
+        onClose={onClose}
+        actions={
+          <AppButton
+            variant="secondary"
+            tone="black"
+            size="xs"
+            iconName="plus"
+            onClick={() => {
+              const name = window.prompt("New semantic group name", "new-group");
+              if (!name) return;
+              const { system: next, subGroupId } = addSemanticSubGroup(
+                system,
+                collection.id,
+                name,
+              );
+              applyChange(next);
+              setSelection({
+                kind: "semanticSubGroup",
+                id: subGroupId,
+                surface: collection.id,
+              });
+            }}
+          >
+            Add group
+          </AppButton>
+        }
+      >
         <RenameField
           label="Collection name"
           value={collection.name}
@@ -1413,30 +1912,52 @@ function Inspector({
         label={`Semantic group · ${selection.surface}`}
         onClose={onClose}
         actions={
-          <AppButton
-            variant="secondary"
-            tone="black"
-            size="xs"
-            iconName="plus"
-            onClick={() => {
-              const name = window.prompt("New semantic family name", "new-family");
-              if (!name) return;
-              const { system: next, familyKey } = addSemanticFamily(
-                system,
-                name,
-                selection.id,
-              );
-              if (!familyKey) return;
-              applyChange(next);
-              setSelection({
-                kind: "semanticFamily",
-                id: familyKey,
-                surface: selection.surface,
-              });
-            }}
-          >
-            Add family
-          </AppButton>
+          <>
+            <AppButton
+              variant="secondary"
+              tone="black"
+              size="xs"
+              iconName="plus"
+              onClick={() => {
+                const name = window.prompt("New semantic family name", "new-family");
+                if (!name) return;
+                const { system: next, familyKey } = addSemanticFamily(
+                  system,
+                  name,
+                  selection.id,
+                );
+                if (!familyKey) return;
+                applyChange(next);
+                setSelection({
+                  kind: "semanticFamily",
+                  id: familyKey,
+                  surface: selection.surface,
+                });
+              }}
+            >
+              Add family
+            </AppButton>
+            <AppButton
+              className={styles.inspectorActionDelete}
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName="trash"
+              onClick={() => {
+                const surfaceLabel =
+                  SEMANTIC_COLLECTION_LABELS[selection.surface] ?? selection.surface;
+                const message =
+                  familyCount > 0
+                    ? `Delete group "${subGroup.name}" from ${surfaceLabel}? ${familyCount} ${familyCount === 1 ? "family" : "families"} on this surface will be removed.`
+                    : `Delete group "${subGroup.name}" from ${surfaceLabel}?`;
+                if (!window.confirm(message)) return;
+                applyChange(deleteSemanticSubGroup(system, selection.surface, selection.id));
+                setSelection({ kind: "semanticCollection", id: selection.surface });
+              }}
+            >
+              Delete group
+            </AppButton>
+          </>
         }
       >
         <RenameField

@@ -597,6 +597,29 @@ function buildSemanticSubGroups(): Collection[] {
   }));
 }
 
+function mergeSemanticSubGroups(system: ColorSystem): Collection[] {
+  const nameById = new Map(
+    (system.semanticSubGroups ?? []).map((group) => [group.id, group.name]),
+  );
+  const builtInIds = new Set(SEMANTIC_SUBGROUP_ORDER);
+  return [
+    ...buildSemanticSubGroups().map((group) => ({
+      id: group.id,
+      name: nameById.get(group.id) ?? group.name,
+    })),
+    ...(system.semanticSubGroups ?? [])
+      .filter((group) => !builtInIds.has(group.id))
+      .map((group) => ({
+        id: group.id,
+        name: nameById.get(group.id) ?? group.name,
+      })),
+  ];
+}
+
+function isKnownSemanticSubGroup(system: ColorSystem, subGroupId: string): boolean {
+  return system.semanticSubGroups.some((group) => group.id === subGroupId);
+}
+
 function buildSemanticStructure(semantics: SemanticToken[]): {
   semanticCollections: Collection[];
   semanticSubGroups: Collection[];
@@ -641,9 +664,6 @@ export function ensureSemanticStructure(system: ColorSystem): ColorSystem {
   const nameByKey = new Map(
     (system.semanticFamilies ?? []).map((family) => [family.id, family.name]),
   );
-  const subGroupNames = new Map(
-    (system.semanticSubGroups ?? []).map((group) => [group.id, group.name]),
-  );
 
   if (!isSurfaceBasedSemanticCollections(next.semanticCollections ?? [])) {
     const built = buildSemanticStructure(next.semantics);
@@ -662,10 +682,7 @@ export function ensureSemanticStructure(system: ColorSystem): ColorSystem {
     next.semanticFamilies = (next.semanticFamilies ?? []).map(({ id, name }) => ({ id, name }));
   }
 
-  next.semanticSubGroups = buildSemanticSubGroups().map((group) => ({
-    id: group.id,
-    name: subGroupNames.get(group.id) ?? group.name,
-  }));
+  next.semanticSubGroups = mergeSemanticSubGroups(system);
 
   const familyKeys = semanticFamilyKeys(next);
   const defaults = defaultSemanticFamilySubGroups(familyKeys);
@@ -690,13 +707,15 @@ export function ensureSemanticStructure(system: ColorSystem): ColorSystem {
     ...(system.semanticFamilyOrders ?? {}),
   };
   for (const surface of SURFACE_ORDER) {
-    for (const subGroupId of SEMANTIC_SUBGROUP_ORDER) {
-      const slotId = semanticSubGroupSlotId(surface, subGroupId);
-      if (semanticFamilyKeysInSubGroup(next, surface, subGroupId).length > 0) {
+    for (const subGroup of next.semanticSubGroups) {
+      const slotId = semanticSubGroupSlotId(surface, subGroup.id);
+      const hasFamilies = semanticFamilyKeysInSubGroup(next, surface, subGroup.id).length > 0;
+      const hasSlot = system.semanticFamilyOrders?.[slotId] !== undefined;
+      if (hasFamilies || hasSlot) {
         next.semanticFamilyOrders[slotId] = ensureSemanticSubGroupOrder(
           next,
           surface,
-          subGroupId,
+          subGroup.id,
         );
       }
     }
@@ -899,10 +918,24 @@ export function semanticSubGroupsForSurface(
   system: ColorSystem,
   surface: string,
 ): string[] {
-  return SEMANTIC_SUBGROUP_ORDER.filter(
-    (subGroupId) =>
-      semanticFamilyKeysForSubGroup(system, surface, subGroupId).length > 0,
-  );
+  const visible = new Set<string>();
+  for (const group of system.semanticSubGroups) {
+    const slotId = semanticSubGroupSlotId(surface, group.id);
+    const hasSlot = system.semanticFamilyOrders?.[slotId] !== undefined;
+    const hasFamilies = semanticFamilyKeysInSubGroup(system, surface, group.id).length > 0;
+    if (hasSlot || hasFamilies) visible.add(group.id);
+  }
+
+  const ordered: string[] = [];
+  for (const subGroupId of SEMANTIC_SUBGROUP_ORDER) {
+    if (visible.has(subGroupId)) ordered.push(subGroupId);
+  }
+  for (const group of system.semanticSubGroups) {
+    if (!SEMANTIC_SUBGROUP_ORDER.includes(group.id) && visible.has(group.id)) {
+      ordered.push(group.id);
+    }
+  }
+  return ordered;
 }
 
 export function semanticSubGroupSlotId(surface: string, subGroupId: string): string {
@@ -1342,6 +1375,20 @@ export function addSemanticCollection(system: ColorSystem, name: string): {
   return { system: next, collectionId: id };
 }
 
+export function addSemanticSubGroup(
+  system: ColorSystem,
+  surface: string,
+  name: string,
+): { system: ColorSystem; subGroupId: string } {
+  const next = clone(system);
+  const taken = new Set(next.semanticSubGroups.map((item) => item.id));
+  const id = uniqueId(name.toLowerCase().replace(/\s+/g, "-") || "group", taken);
+  next.semanticSubGroups.push({ id, name });
+  next.semanticFamilyOrders = { ...(next.semanticFamilyOrders ?? {}) };
+  next.semanticFamilyOrders[semanticSubGroupSlotId(surface, id)] = [];
+  return { system: next, subGroupId: id };
+}
+
 const DEFAULT_RAMP = ["5", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"];
 
 export function addFamily(
@@ -1421,7 +1468,7 @@ export function addSemanticFamily(
   subGroupId: string,
   seedFamilyKey?: string,
 ): { system: ColorSystem; familyKey: string } {
-  if (!SEMANTIC_SUBGROUP_ORDER.includes(subGroupId)) {
+  if (!isKnownSemanticSubGroup(system, subGroupId)) {
     return { system, familyKey: "" };
   }
 
@@ -1760,6 +1807,56 @@ export function deleteSemanticFamily(
   return next;
 }
 
+export function deleteSemanticSubGroup(
+  system: ColorSystem,
+  surface: string,
+  subGroupId: string,
+): ColorSystem {
+  if (!isKnownSemanticSubGroup(system, subGroupId)) return system;
+
+  let next = clone(system);
+  const familyKeys = semanticFamilyKeysInSubGroup(next, surface, subGroupId);
+  const slotId = semanticSubGroupSlotId(surface, subGroupId);
+
+  next.semantics = next.semantics.filter(
+    (token) => !(token.surface === surface && familyKeys.includes(token.familyKey)),
+  );
+
+  if (next.semanticTokenOrders) {
+    const orders = { ...next.semanticTokenOrders };
+    for (const familyKey of familyKeys) {
+      delete orders[semanticFamilySlotId(surface, familyKey)];
+    }
+    next.semanticTokenOrders = orders;
+  }
+
+  if (next.semanticFamilyOrders) {
+    const { [slotId]: _removed, ...rest } = next.semanticFamilyOrders;
+    next.semanticFamilyOrders = rest;
+  }
+
+  for (const familyKey of familyKeys) {
+    if (!next.semantics.some((token) => token.familyKey === familyKey)) {
+      next = deleteSemanticFamily(next, familyKey);
+    }
+  }
+
+  if (!SEMANTIC_SUBGROUP_ORDER.includes(subGroupId)) {
+    const stillUsed = SURFACE_ORDER.some((otherSurface) => {
+      const otherSlot = semanticSubGroupSlotId(otherSurface, subGroupId);
+      if (next.semanticFamilyOrders?.[otherSlot] !== undefined) return true;
+      return semanticFamilyKeysInSubGroup(next, otherSurface, subGroupId).length > 0;
+    });
+    if (!stillUsed) {
+      next.semanticSubGroups = next.semanticSubGroups.filter(
+        (group) => group.id !== subGroupId,
+      );
+    }
+  }
+
+  return next;
+}
+
 export function movePrimitiveFamily(
   system: ColorSystem,
   familyId: string,
@@ -1818,7 +1915,7 @@ export function moveSemanticFamilyToSubGroup(
   familyKey: string,
   targetSubGroupId: string,
 ): ColorSystem {
-  if (!SEMANTIC_SUBGROUP_ORDER.includes(targetSubGroupId)) return system;
+  if (!isKnownSemanticSubGroup(system, targetSubGroupId)) return system;
   const current = semanticSubGroupForFamily(system, familyKey);
   if (current === targetSubGroupId) return system;
 
