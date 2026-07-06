@@ -243,96 +243,65 @@ export function comparePrimitiveExportNames(a: string, b: string): number {
   return stepA - stepB;
 }
 
-/**
- * Inline rationale comments emitted above matching tokens in colors.css.
- * Each rule fires once per CSS block, on the first token (in export order) it
- * matches, so a decision that spans a whole ramp is explained once instead
- * of on every step. Rules with `once: false` annotate every match.
- */
-interface CommentRule {
-  pattern: RegExp;
-  /** Optional additional test against the resolved value (e.g. `var(--sentiment-success-70)`). */
-  valuePattern?: RegExp;
-  comment: string;
-  once: boolean;
-}
-
-const SEMANTIC_COMMENT_RULES: CommentRule[] = [
-  {
-    pattern: /^background-accent-orange-primary$/,
-    comment:
-      "Intentional a11y exception: the Run button orange. Fails 4.5:1 with white labels but is kept for its deep user association with \"run\" (and Blockly's run blocks).",
-    once: false,
-  },
-  {
-    pattern: /^background-[a-z0-9-]+-primary$/,
-    valuePattern: /-70\)$/,
-    comment:
+/** Inline rationale comments keyed by theme and exported token name. */
+const SEMANTIC_INLINE_COMMENTS: Record<
+  ThemeKey,
+  Partial<Record<string, string>>
+> = {
+  light: {
+    "background-success-primary":
       "Bumped to level 70 (brand-guideline primary is 50) so white labels pass 4.5:1; strong sits at 90.",
-    once: false,
-  },
-  {
-    pattern: /^background-state-selected/,
-    comment:
+    "background-info-primary":
+      "Bumped to level 70 (brand-guideline primary is 50) so white labels pass 4.5:1; strong sits at 90.",
+    "background-accent-orange-primary":
+      "The Run button orange is an intentional a11y exception. It fails 4.5:1 contrast with white labels but we are keeping it for its deep user association with \"run\" (and Blockly's run blocks).",
+    "background-state-selected-primary":
       "Selected state is mode-inverted and cross-family by design: brand fill + seafoam text in light, seafoam fill + navy text in dark.",
-    once: true,
-  },
-  {
-    pattern: /^text-state-selected/,
-    comment:
-      "Pairs with background-state-selected — always use the two together.",
-    once: true,
-  },
-  {
-    pattern: /-primary-fixed$/,
-    comment:
-      "primary-fixed keeps the true brand-guideline level-50 value for special cases where the contrast-bumped primary isn't needed.",
-    once: true,
-  },
-  {
-    pattern: /-hover$/,
-    comment:
-      "Hover is a relative shift (darken in light mode, lighten in dark). Hover may fail 4.5:1 as long as the resting state passes.",
-    once: true,
-  },
-  {
-    // Only the families whose background primary was bumped to 70 (success,
-    // info) need the note — the others sit at 50 and match their border.
-    pattern: /^border-(success|info)-primary$/,
-    comment:
+    "border-success-primary":
       "Stays at level 50 (unlike the bumped background primary at 70) since border contrast only needs 3:1.",
-    once: false,
+    "border-info-primary":
+      "Stays at level 50 (unlike the bumped background primary at 70) since border contrast only needs 3:1.",
+    "border-state-selected-primary":
+      "Border state selected hover and primary intentionally match the background state color.",
+    "text-accent-orange-primary":
+      "Orange text intentionally keeps the true brand-guideline level-50 value instead of bumping for contrast",
+    "text-state-selected-primary":
+      "Selected state text pairs with background and border-state-selected — always use the two together.",
   },
-];
+  dark: {
+    "background-brand-strong":
+      "Strong variables are mostly used for hover states, in dark mode they invert and become lighter. They fail 4.5:1 contrast with labels, but we only need the default state to pass.",
+    "background-success-primary":
+      "Level 70 is preserved for success even in dark mode to continue to pass 4.5:1 contrast with white labels, we intentionally don't invert to avoid black labels.",
+    "background-success-strong":
+      "Bc success is at level 70, we maintain the relative hover rule by setting the strong to 60.",
+    "background-info-primary":
+      "Level 70 is preserved for info even in dark mode to continue to pass 4.5:1 contrast with white labels, we intentionally don't invert to avoid black labels.",
+    "background-info-strong":
+      "Bc info is at level 70, we maintain the relative hover rule by setting the strong to 60.",
+    "background-state-selected-primary":
+      "Selected state is mode-inverted and cross-family by design: brand fill + seafoam text in light, seafoam fill + navy text in dark.",
+    "border-brand-primary":
+      "Primary borders of all colors stay at level 50 in dark mode since contrast only needs 3:1.",
+    "text-state-selected-primary":
+      "Pairs with background-state-selected — always use the two together.",
+  },
+};
 
-function commentLinesFor(
-  name: string,
-  value: string,
-  fired: Set<CommentRule>,
-): string[] {
-  const out: string[] = [];
-  for (const rule of SEMANTIC_COMMENT_RULES) {
-    if (!rule.pattern.test(name)) continue;
-    if (rule.valuePattern && !rule.valuePattern.test(value)) continue;
-    if (rule.once) {
-      if (fired.has(rule)) continue;
-      fired.add(rule);
-    }
-    out.push(`  /* ${rule.comment} */`);
-  }
-  return out;
+function commentLinesFor(name: string, mode: ThemeKey): string[] {
+  const comment = SEMANTIC_INLINE_COMMENTS[mode][name];
+  return comment ? [`  /* ${comment} */`] : [];
 }
 
 /** Renders a CSS rule from pre-sorted lines, optionally with rationale comments. */
 function cssBlock(
   selector: string,
   sortedLines: Array<[string, string]>,
-  withComments = false,
+  mode?: ThemeKey,
 ): string {
-  const fired = new Set<CommentRule>();
   const body = sortedLines
     .flatMap(([name, value]) => [
-      ...(withComments ? commentLinesFor(name, value, fired) : []),
+      ...(mode ? commentLinesFor(name, mode) : []),
       `  --${name}: ${value};`,
     ])
     .join("\n");
@@ -423,10 +392,10 @@ export function buildSemanticColorsCss(system: ColorSystem): string {
     "/* Generated by the CADS Color Sandbox — do not hand-edit; check with the design team first and then re-export from the sandbox. */",
     "",
     "/* Light Theme Semantic Colors (light is the default theme, that's why :root rule is included) */",
-    cssBlock(":root,\n[data-theme='Light']", buildLines("light"), true),
+    cssBlock(":root,\n[data-theme='Light']", buildLines("light"), "light"),
     "",
     "/* Dark Theme Semantic Colors */",
-    cssBlock("[data-theme='Dark']", buildLines("dark"), true),
+    cssBlock("[data-theme='Dark']", buildLines("dark"), "dark"),
     "",
   ].join("\n");
 }
