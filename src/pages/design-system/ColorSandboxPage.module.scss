@@ -71,6 +71,12 @@
   background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
 }
 
+.flow :global(.react-flow__controls-button.canvasLockButtonActive),
+.flow :global(.react-flow__controls-button.canvasLockButtonActive:hover) {
+  background: color-mix(in srgb, var(--ds-background-brand-purple-primary) 12%, transparent);
+  color: var(--ds-text-brand-purple-primary);
+}
+
 .minimap {
   overflow: hidden;
   border-radius: var(--radius-default);
@@ -269,12 +275,15 @@
 
 .inspectorPanel {
   margin: 16px;
-  min-width: 240px;
+  width: 360px;
+  min-width: 360px;
+  max-width: 360px;
 }
 
 .inspector {
   display: flex;
   flex-direction: column;
+  width: 100%;
   max-height: 400px;
   overflow: hidden;
   border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
@@ -322,18 +331,31 @@
   color: var(--ds-text-neutral-primary) !important;
 }
 
+.inspectorBody,
+.scratchInspectorBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.inspectorBodySection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+}
+
+.inspectorBodySection:last-child {
+  border-bottom: 0;
+}
+
 .inspectorSection {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 10px;
   border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-secondary));
-}
-
-.scratchInspectorBody {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
 }
 
 .scratchInspectorBody .inspectorSection:last-child {
@@ -347,7 +369,7 @@
 .inspectorSectionActions {
   flex: 0 0 auto;
   gap: 4px;
-  border-top: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-secondary));
+  border-top: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
   border-bottom: 0;
 }
 
@@ -374,10 +396,179 @@
   min-width: 0;
 }
 
+.stepSpectrumRow {
+  display: flex;
+  align-items: center;
+  width: calc(100% + 12px);
+  margin-inline: -6px;
+}
+
+.stepSpectrumRowEditing {
+  gap: 1px;
+}
+
+.stepSpectrumRowReadOnly {
+  width: 100%;
+  margin-inline: 0;
+  gap: 2px;
+}
+
+.stepSpectrumRowReadOnly .stepSpectrumButton:disabled {
+  cursor: default;
+}
+
+.stepSpectrumRowReadOnly .stepSpectrumButton:disabled:not(.stepSpectrumButtonActive):not(
+    .stepSpectrumButtonPresent
+  ) {
+  opacity: 0.72;
+}
+
+.stepSpectrumRowReadOnly .stepSpectrumButton:disabled.stepSpectrumButtonPresent {
+  opacity: 1;
+}
+
+.stepSpectrumInsert {
+  position: relative;
+  display: flex;
+  flex: 0 0 6px;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 24px;
+}
+
+.stepSpectrumInsertEditing {
+  flex: 0 0 30px;
+  width: 30px;
+  margin: 0 6px;
+}
+
+.stepSpectrumInsertHitTarget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.stepSpectrumInsertLine {
+  display: block;
+  align-self: center;
+  width: 2px;
+  height: 18px;
+  border-radius: 1px;
+  background: transparent;
+  transition:
+    background-color 0.12s ease,
+    opacity 0.12s ease;
+  opacity: 0;
+}
+
+.stepSpectrumInsertHitTarget:hover .stepSpectrumInsertLine,
+.stepSpectrumInsertHitTarget:focus-visible .stepSpectrumInsertLine {
+  opacity: 1;
+  background: var(--ds-background-brand-teal-primary);
+}
+
+.stepSpectrumInsertInput {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  padding: 0 4px;
+  border: 1px solid var(--ds-borders-brand-teal-primary);
+  border-radius: 4px;
+  background: var(--ds-background-neutral-primary);
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 24px;
+  text-align: center;
+  appearance: none;
+}
+
+.stepSpectrumInsertInput:focus {
+  outline: none;
+  border-color: var(
+    --ds-codeai-active-chrome-active-border,
+    var(--ds-borders-brand-teal-primary)
+  );
+}
+
+.stepSpectrumInsertInput::placeholder {
+  color: var(--ds-text-neutral-quaternary);
+  line-height: 24px;
+}
+
+.stepSpectrumButton {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #D0D3D7;
+  border-radius: 4px;
+  background: var(--ds-background-neutral-primary);
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepSpectrumButton:hover:not(:disabled) {
+  background: var(--ds-background-neutral-tertiary);
+}
+
+.stepSpectrumButtonActive {
+  border-color: var(
+    --ds-codeai-active-chrome-active-border,
+    var(--ds-borders-brand-teal-primary)
+  );
+  background: var(--ds-background-brand-teal-primary);
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed));
+}
+
+.stepSpectrumButtonActive:hover:not(:disabled) {
+  border-color: var(--ds-codeai-active-chrome-active-border-hover, transparent);
+  background: var(--ds-background-brand-teal-strong);
+  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed));
+}
+
+.stepSpectrumButtonPresent:hover:not(:disabled) {
+  background: var(--ds-background-neutral-tertiary);
+}
+
+.stepSpectrumButton:disabled:not(.stepSpectrumButtonActive):not(.stepSpectrumButtonPresent) {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
 .inspectorStack {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.inspectorRowHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.inspectorRowHeading .inspectorMeta {
+  flex-shrink: 0;
 }
 
 .inspectorInlineField {
@@ -408,6 +599,109 @@
   font-size: var(--text-label);
   line-height: 1.4;
   word-break: break-all;
+}
+
+.inspectorMappedPrimitive {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.inspectorMappedPrimitive :global(button) {
+  width: 100%;
+}
+
+.colorPreviewBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  height: 24px;
+  padding: 0 2px 0 8px;
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.colorPreviewBarAlpha {
+  background-color: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
+  background-image:
+    linear-gradient(45deg, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary)) 75%);
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    0 4px,
+    4px -4px,
+    -4px 0;
+}
+
+.colorPreviewBarFill {
+  position: absolute;
+  inset: 0;
+}
+
+.colorPreviewBarHex {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-semibold);
+}
+
+.variableCopyBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  height: 24px;
+  padding: 0 2px 0 8px;
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border-radius: 4px;
+  background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
+  overflow: hidden;
+}
+
+.variableCopyBarText {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ds-text-neutral-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inlineCopyButton {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ds-text-neutral-secondary);
+  cursor: pointer;
+}
+
+.inlineCopyButton:hover {
+  background: color-mix(in srgb, var(--ds-text-neutral-black-fixed) 8%, transparent);
+}
+
+.colorPreviewBar .inlineCopyButton:hover {
+  background: color-mix(in srgb, currentcolor 12%, transparent);
 }
 
 .inspectorPreview {
@@ -530,6 +824,25 @@
   line-height: 1.4;
 }
 
+.inspectorCheckboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.inspectorCheckboxRowDisabled {
+  cursor: default;
+}
+
+.inspectorCheckboxLabel {
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+}
+
 .inspectorA11y {
   display: flex;
   flex-direction: column;
@@ -606,6 +919,59 @@
 .inspectorActionDelete:hover {
   color: var(--ds-text-neutral-white-fixed) !important;
   background: var(--ds-background-error-primary) !important;
+}
+
+/* ── Token rationale comments ── */
+
+.commentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.commentBadge {
+  padding: 0 5px;
+  border-radius: 3px;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.commentBadgeSession {
+  background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
+  color: var(--ds-text-neutral-secondary);
+}
+
+.commentText {
+  margin: 0;
+  color: var(--ds-text-neutral-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.commentInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border-radius: 4px;
+  background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.commentInput:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
 }
 
 /* ── Scratch layer fill palette ── */

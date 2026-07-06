@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -24,6 +25,7 @@ import {
   Background,
   BackgroundVariant,
   Controls,
+  ControlButton,
   MiniMap,
   Panel,
   PanOnScrollMode,
@@ -47,6 +49,8 @@ import {
   notifyColorSandboxUpdated,
   persistColorSandboxDoc,
   readColorSandboxApplyRuntime,
+  readColorSandboxReadOnly,
+  setColorSandboxReadOnly,
 } from "../../lib/colorSandbox/colorSandboxStorage";
 import {
   setColorSandboxRuntimePreview,
@@ -75,6 +79,8 @@ import {
   familyMidHex,
   familyOfStep,
   isTransparentColor,
+  isSteppedPrimitiveFamily,
+  isUnsetPrimitiveHex,
   movePrimitiveFamily,
   moveSemanticFamilyToSubGroup,
   moveSemanticFamilyToSurface,
@@ -89,9 +95,11 @@ import {
   parseSemanticSubGroupSlotId,
   readableTextOn,
   remapSemantic,
+  setSemanticTokenComment,
   renamePrimitiveStep,
   renameCollection,
   renameFamily,
+  setPrimitiveFamilyStepped,
   renameSemanticCollection,
   renameSemanticFamily,
   renameSemanticTokenRole,
@@ -104,10 +112,10 @@ import {
   semanticHex,
   semanticTokenRolesForFamily,
   semanticTokensForFamily,
-  semanticTokenVariableName,
   findSemanticToken,
   formatContrastRatio,
   sortPrimitiveSteps,
+  STANDARD_PRIMITIVE_STEPS,
   surfaceColorContrastChecks,
   textTokenContrastChecks,
   type ContrastCheck,
@@ -122,6 +130,8 @@ import {
 import {
   buildPrimitiveColorsCss,
   buildSemanticColorsCss,
+  primitiveVarName,
+  semanticExportVarName,
 } from "./colorSystemCssExport";
 import { colorSystemEdgeTypes } from "./ColorSystemEdges";
 import {
@@ -166,6 +176,9 @@ const SEMANTIC_CHIP_GAP = 4;
 const SEMANTIC_CHIP_X_PAD = 8;
 const SEMANTIC_CHIP_SWATCH = 12;
 const SEMANTIC_CHIP_INNER_GAP = 6;
+
+/** Lightness stops shown in the primitive step picker (matches prod scale). */
+const PRIMITIVE_STEP_SPECTRUM = STANDARD_PRIMITIVE_STEPS.map((step) => Number(step));
 const SEMANTIC_CHIP_CHAR_W = 7;
 const SEMANTIC_SUBGROUP_MAX_W = 500;
 const SEMANTIC_FAMILY_HEADER_H = 44;
@@ -456,6 +469,7 @@ export function ColorSandboxPage() {
     loadColorSandboxSystem(brandTheme),
   );
   const [applyRuntime, setApplyRuntime] = useState(() => readColorSandboxApplyRuntime());
+  const [readOnly, setReadOnly] = useState(() => readColorSandboxReadOnly());
   const [selection, setSelection] = useState<Selection>(null);
   const [exported, setExported] = useState(false);
   const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
@@ -525,11 +539,36 @@ export function ColorSandboxPage() {
 
   const applyChange = useCallback(
     (next: ColorSystem) => {
+      if (readOnly) return;
       setSystem(next);
       persist(next);
     },
-    [persist],
+    [persist, readOnly],
   );
+
+  const toggleReadOnly = useCallback(() => {
+    setReadOnly((current) => {
+      const next = !current;
+      setColorSandboxReadOnly(next);
+      if (next) clearScratchSelectionRef.current();
+      return next;
+    });
+  }, []);
+
+  // Codified comments: the ones bundled with the committed baseline. Anything
+  // else on the working draft is a session comment.
+  const codifiedComments = useMemo(() => {
+    const baseline =
+      brandTheme === "codeAi" ? buildCodeAiColorSystem() : buildColorSystem();
+    const map = new Map<string, string>();
+    for (const token of baseline.semantics) {
+      for (const mode of ["light", "dark"] as ThemeKey[]) {
+        const comment = token.comments?.[mode];
+        if (comment) map.set(`${token.id}::${mode}`, comment);
+      }
+    }
+    return map;
+  }, [brandTheme]);
 
   const toggleApplyRuntime = useCallback((enabled: boolean) => {
     setApplyRuntime(enabled);
@@ -664,6 +703,7 @@ export function ColorSandboxPage() {
         role: token.role,
         hex: semanticHex(system, token, theme, steps),
         mapped: token.ref[theme] != null,
+        hasComment: Boolean(token.comments?.[theme]),
         dragId: `sem-chip:${semanticFamilySlotId(surface, familyKey)}:${token.role}`,
       }));
       return {
@@ -773,8 +813,8 @@ export function ColorSandboxPage() {
     const scratch = scratchNodes.map((node, index) => ({
       ...node,
       zIndex: index,
-      draggable: !isGrabTool,
-      selectable: !isGrabTool,
+      draggable: !isGrabTool && !readOnly,
+      selectable: !isGrabTool && !readOnly,
       className: isGrabTool ? undefined : "nopan",
     }));
     const collections = nodes.map((node) => ({
@@ -782,7 +822,7 @@ export function ColorSandboxPage() {
       zIndex: 1000,
     }));
     return [...scratch, ...collections];
-  }, [nodes, scratchNodes, isGrabTool]);
+  }, [nodes, scratchNodes, isGrabTool, readOnly]);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<Node>[]) => {
@@ -1526,7 +1566,7 @@ export function ColorSandboxPage() {
       style={cardChromeStyle}
     >
       <DndContext
-        sensors={sensors}
+        sensors={readOnly ? [] : sensors}
         collisionDetection={colorSystemCollisionDetection}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -1548,14 +1588,14 @@ export function ColorSandboxPage() {
           clearScratchSelection();
         }}
         nodesConnectable={false}
-        nodesDraggable={!isGrabTool}
+        nodesDraggable={!isGrabTool && !readOnly}
         elevateNodesOnSelect={false}
         multiSelectionKeyCode="Shift"
         selectionKeyCode={null}
         panOnScroll
         panOnScrollMode={PanOnScrollMode.Free}
-        panOnDrag={isGrabTool}
-        selectionOnDrag={!isGrabTool}
+        panOnDrag={isGrabTool || readOnly}
+        selectionOnDrag={!isGrabTool && !readOnly}
         selectionMode={SelectionMode.Partial}
         zoomOnScroll={false}
         zoomOnPinch
@@ -1566,7 +1606,19 @@ export function ColorSandboxPage() {
         maxZoom={2.5}
       >
         <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} />
-        <Controls showInteractive={false} />
+        <Controls showInteractive={false}>
+          <ControlButton
+            onClick={toggleReadOnly}
+            className={readOnly ? styles.canvasLockButtonActive : undefined}
+            title={
+              readOnly ? "Read-only — click to unlock editing" : "Editable — click to lock"
+            }
+            aria-label={readOnly ? "Unlock editing" : "Lock editing"}
+            aria-pressed={readOnly}
+          >
+            <FaIcon name={readOnly ? "lock" : "lock-open"} size="s" />
+          </ControlButton>
+        </Controls>
         <MiniMap
           className={styles.minimap}
           style={{ width: 100, height: 100 }}
@@ -1607,6 +1659,8 @@ export function ColorSandboxPage() {
               />
             </div>
           </div>
+          {readOnly ? null : (
+          <>
           <div className={styles.toolbarInteractionSection}>
             <div className={`${styles.toolbarToolGroup} ${styles.toolbarCanvasTools}`}>
               <Tooltip content="Select" position="bottom">
@@ -1695,6 +1749,8 @@ export function ColorSandboxPage() {
               </Tooltip>
             </div>
           </div>
+          </>
+          )}
           <div className={styles.toolbarDivider} role="separator" />
           <div className={styles.toolbarExportRow}>
             <AppButton
@@ -1722,6 +1778,8 @@ export function ColorSandboxPage() {
               steps={steps}
               stepFamily={stepFamily}
               primitiveOptions={primitiveOptions}
+              readOnly={readOnly}
+              codifiedComments={codifiedComments}
               applyChange={applyChange}
               setSelection={setSelection}
               onClose={() => setSelection(null)}
@@ -1782,12 +1840,85 @@ function InspectorShell({
           aria-label="Close panel"
         />
       </div>
-      <div className={styles.inspectorSection}>{children}</div>
+      <div className={styles.inspectorBody}>{children}</div>
       {actions ? (
         <div className={`${styles.inspectorSection} ${styles.inspectorSectionActions}`}>
           <div className={styles.inspectorActions}>{actions}</div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function InspectorBodySection({ children }: { children: ReactNode }) {
+  return <div className={styles.inspectorBodySection}>{children}</div>;
+}
+
+function ColorPreviewBar({ hex }: { hex: string }) {
+  const [copied, setCopied] = useState(false);
+  const unset = isUnsetPrimitiveHex(hex);
+  const transparent = !unset && isTransparentColor(hex);
+  const labelColor = unset
+    ? "var(--ds-text-neutral-quaternary)"
+    : readableTextOn(hex);
+  const displayHex = unset ? "Unset" : hex;
+
+  return (
+    <div
+      className={`${styles.colorPreviewBar} ${
+        unset || transparent ? styles.colorPreviewBarAlpha : ""
+      }`}
+      style={unset || transparent ? undefined : { background: cssColor(hex) }}
+    >
+      {transparent ? (
+        <span className={styles.colorPreviewBarFill} style={{ background: cssColor(hex) }} />
+      ) : null}
+      <span className={styles.colorPreviewBarHex} style={{ color: labelColor }}>
+        {displayHex}
+      </span>
+      {unset ? null : (
+        <Tooltip content={copied ? "Copied" : "Copy hex"} position="top">
+          <button
+            type="button"
+            className={styles.inlineCopyButton}
+            style={{ color: labelColor }}
+            aria-label={copied ? "Copied" : "Copy hex code"}
+            onClick={() => {
+              void navigator.clipboard.writeText(hex).then(() => {
+                setCopied(true);
+                window.setTimeout(() => setCopied(false), 1600);
+              });
+            }}
+          >
+            <FaIcon name={copied ? "check" : "clipboard"} size="xs" />
+          </button>
+        </Tooltip>
+      )}
+    </div>
+  );
+}
+
+function VariableCopyBar({ cssVarReference }: { cssVarReference: string }) {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <div className={styles.variableCopyBar}>
+      <code className={styles.variableCopyBarText}>{cssVarReference}</code>
+      <Tooltip content={copied ? "Copied" : "Copy CSS variable"} position="top">
+        <button
+          type="button"
+          className={styles.inlineCopyButton}
+          aria-label={copied ? "Copied" : "Copy CSS variable"}
+          onClick={() => {
+            void navigator.clipboard.writeText(cssVarReference).then(() => {
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1600);
+            });
+          }}
+        >
+          <FaIcon name={copied ? "check" : "clipboard"} size="xs" />
+        </button>
+      </Tooltip>
     </div>
   );
 }
@@ -1799,6 +1930,8 @@ function Inspector({
   steps,
   stepFamily,
   primitiveOptions,
+  readOnly,
+  codifiedComments,
   applyChange,
   setSelection,
   onClose,
@@ -1809,10 +1942,14 @@ function Inspector({
   steps: ReturnType<typeof stepIndex>;
   stepFamily: ReturnType<typeof familyOfStep>;
   primitiveOptions: Array<{ value: string; label: string }>;
+  readOnly: boolean;
+  codifiedComments: Map<string, string>;
   applyChange: (next: ColorSystem) => void;
   setSelection: (selection: Selection) => void;
   onClose: () => void;
 }) {
+  /** Edit affordances are hidden entirely in read-only mode. */
+  const editActions = (node: ReactNode): ReactNode => (readOnly ? undefined : node);
   if (selection.kind === "collection") {
     const collection = system.collections.find((item) => item.id === selection.id);
     if (!collection) return null;
@@ -1821,55 +1958,63 @@ function Inspector({
       <InspectorShell
         label="Primitive collection"
         onClose={onClose}
-        actions={
-          <>
-            <AppButton
-              variant="secondary"
-              tone="black"
-              size="xs"
-              iconName="plus"
-              onClick={() => {
-                const name = window.prompt("New primitive family name", "new-family");
-                if (!name) return;
-                const seed = families[families.length - 1]?.id;
-                const { system: next, familyId } = addFamily(
-                  system,
-                  collection.id,
-                  name,
-                  seed,
-                );
-                applyChange(next);
-                setSelection({ kind: "family", id: familyId });
-              }}
-            >
-              Add family
-            </AppButton>
-            <AppButton
-              className={styles.inspectorActionDelete}
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              iconName="trash"
-              onClick={() => {
-                if (!window.confirm(`Delete collection "${collection.name}" and its families?`))
-                  return;
-                applyChange(deleteCollection(system, collection.id));
-                setSelection(null);
-              }}
-            >
-              Delete
-            </AppButton>
-          </>
-        }
+        actions={editActions(
+          <AppButton
+            className={styles.inspectorActionDelete}
+            variant="tertiary"
+            tone="gray"
+            size="xs"
+            iconName="trash"
+            onClick={() => {
+              if (!window.confirm(`Delete collection "${collection.name}" and its families?`))
+                return;
+              applyChange(deleteCollection(system, collection.id));
+              setSelection(null);
+            }}
+          >
+            Delete collection
+          </AppButton>,
+        )}
       >
-        <RenameField
-          label="Collection name"
-          value={collection.name}
-          onCommit={(name) =>
-            applyChange(renameCollection(system, collection.id, name))
-          }
-        />
-        <p className={styles.inspectorMeta}>{families.length} families</p>
+        <InspectorBodySection>
+          <RenameField
+            label="Collection name"
+            value={collection.name}
+            readOnly={readOnly}
+            onCommit={(name) =>
+              applyChange(renameCollection(system, collection.id, name))
+            }
+          />
+        </InspectorBodySection>
+        <InspectorBodySection>
+          <div className={styles.inspectorStack}>
+            <div className={styles.inspectorRowHeading}>
+              <span className={styles.inspectorRowLabel}>Add family</span>
+              <span className={styles.inspectorMeta}>
+                {families.length} {families.length === 1 ? "family" : "families"}
+              </span>
+            </div>
+            {readOnly ? null : (
+              <AppButton
+                variant="secondary"
+                tone="black"
+                size="xs"
+                iconName="plus"
+                onClick={() => {
+                  const name = window.prompt("New primitive family name", "new-family");
+                  if (!name) return;
+                  const { system: next, familyId } = addFamily(system, collection.id, name, {
+                    stepped: true,
+                  });
+                  applyChange(next);
+                  setSelection({ kind: "family", id: familyId });
+                }}
+              >
+                Add family
+              </AppButton>
+            )}
+          </div>
+        </InspectorBodySection>
       </InspectorShell>
     );
   }
@@ -1885,43 +2030,53 @@ function Inspector({
       <InspectorShell
         label="Semantic collection"
         onClose={onClose}
-        actions={
-          <AppButton
-            variant="secondary"
-            tone="black"
-            size="xs"
-            iconName="plus"
-            onClick={() => {
-              const name = window.prompt("New semantic group name", "new-group");
-              if (!name) return;
-              const { system: next, subGroupId } = addSemanticSubGroup(
-                system,
-                collection.id,
-                name,
-              );
-              applyChange(next);
-              setSelection({
-                kind: "semanticSubGroup",
-                id: subGroupId,
-                surface: collection.id,
-              });
-            }}
-          >
-            Add group
-          </AppButton>
-        }
       >
-        <RenameField
-          label="Collection name"
-          value={collection.name}
-          onCommit={(name) =>
-            applyChange(renameSemanticCollection(system, collection.id, name))
-          }
-        />
-        <p className={styles.inspectorMeta}>
-          {subGroupCount} {subGroupCount === 1 ? "group" : "groups"} · {familyCount}{" "}
-          {familyCount === 1 ? "family" : "families"}
-        </p>
+        <InspectorBodySection>
+          <RenameField
+            label="Collection name"
+            value={collection.name}
+            readOnly={readOnly}
+            onCommit={(name) =>
+              applyChange(renameSemanticCollection(system, collection.id, name))
+            }
+          />
+        </InspectorBodySection>
+        <InspectorBodySection>
+          <p className={styles.inspectorMeta}>
+            {subGroupCount} {subGroupCount === 1 ? "group" : "groups"} · {familyCount}{" "}
+            {familyCount === 1 ? "family" : "families"}
+          </p>
+        </InspectorBodySection>
+        {readOnly ? null : (
+          <InspectorBodySection>
+            <div className={styles.inspectorStack}>
+              <span className={styles.inspectorRowLabel}>Add group</span>
+              <AppButton
+                variant="secondary"
+                tone="black"
+                size="xs"
+                iconName="plus"
+                onClick={() => {
+                  const name = window.prompt("New semantic group name", "new-group");
+                  if (!name) return;
+                  const { system: next, subGroupId } = addSemanticSubGroup(
+                    system,
+                    collection.id,
+                    name,
+                  );
+                  applyChange(next);
+                  setSelection({
+                    kind: "semanticSubGroup",
+                    id: subGroupId,
+                    surface: collection.id,
+                  });
+                }}
+              >
+                Add group
+              </AppButton>
+            </div>
+          </InspectorBodySection>
+        )}
       </InspectorShell>
     );
   }
@@ -1938,63 +2093,75 @@ function Inspector({
       <InspectorShell
         label={`Semantic group · ${selection.surface}`}
         onClose={onClose}
-        actions={
-          <>
-            <AppButton
-              variant="secondary"
-              tone="black"
-              size="xs"
-              iconName="plus"
-              onClick={() => {
-                const name = window.prompt("New semantic family name", "new-family");
-                if (!name) return;
-                const { system: next, familyKey } = addSemanticFamily(
-                  system,
-                  name,
-                  selection.id,
-                );
-                if (!familyKey) return;
-                applyChange(next);
-                setSelection({
-                  kind: "semanticFamily",
-                  id: familyKey,
-                  surface: selection.surface,
-                });
-              }}
-            >
-              Add family
-            </AppButton>
-            <AppButton
-              className={styles.inspectorActionDelete}
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              iconName="trash"
-              onClick={() => {
-                const surfaceLabel =
-                  SEMANTIC_COLLECTION_LABELS[selection.surface] ?? selection.surface;
-                const message =
-                  familyCount > 0
-                    ? `Delete group "${subGroup.name}" from ${surfaceLabel}? ${familyCount} ${familyCount === 1 ? "family" : "families"} on this surface will be removed.`
-                    : `Delete group "${subGroup.name}" from ${surfaceLabel}?`;
-                if (!window.confirm(message)) return;
-                applyChange(deleteSemanticSubGroup(system, selection.surface, selection.id));
-                setSelection({ kind: "semanticCollection", id: selection.surface });
-              }}
-            >
-              Delete group
-            </AppButton>
-          </>
-        }
+        actions={editActions(
+          <AppButton
+            className={styles.inspectorActionDelete}
+            variant="tertiary"
+            tone="gray"
+            size="xs"
+            iconName="trash"
+            onClick={() => {
+              const surfaceLabel =
+                SEMANTIC_COLLECTION_LABELS[selection.surface] ?? selection.surface;
+              const message =
+                familyCount > 0
+                  ? `Delete group "${subGroup.name}" from ${surfaceLabel}? ${familyCount} ${familyCount === 1 ? "family" : "families"} on this surface will be removed.`
+                  : `Delete group "${subGroup.name}" from ${surfaceLabel}?`;
+              if (!window.confirm(message)) return;
+              applyChange(deleteSemanticSubGroup(system, selection.surface, selection.id));
+              setSelection({ kind: "semanticCollection", id: selection.surface });
+            }}
+          >
+            Delete group
+          </AppButton>,
+        )}
       >
-        <RenameField
-          label="Group name"
-          value={subGroup.name}
-          onCommit={(name) =>
-            applyChange(renameSemanticSubGroup(system, subGroup.id, name))
-          }
-        />
-        <p className={styles.inspectorMeta}>{familyCount} families</p>
+        <InspectorBodySection>
+          <RenameField
+            label="Group name"
+            value={subGroup.name}
+            readOnly={readOnly}
+            onCommit={(name) =>
+              applyChange(renameSemanticSubGroup(system, subGroup.id, name))
+            }
+          />
+        </InspectorBodySection>
+        <InspectorBodySection>
+          <div className={styles.inspectorStack}>
+            <div className={styles.inspectorRowHeading}>
+              <span className={styles.inspectorRowLabel}>Add family</span>
+              <span className={styles.inspectorMeta}>
+                {familyCount} {familyCount === 1 ? "family" : "families"}
+              </span>
+            </div>
+            {readOnly ? null : (
+              <AppButton
+                variant="secondary"
+                tone="black"
+                size="xs"
+                iconName="plus"
+                onClick={() => {
+                  const name = window.prompt("New semantic family name", "new-family");
+                  if (!name) return;
+                  const { system: next, familyKey } = addSemanticFamily(
+                    system,
+                    name,
+                    selection.id,
+                  );
+                  if (!familyKey) return;
+                  applyChange(next);
+                  setSelection({
+                    kind: "semanticFamily",
+                    id: familyKey,
+                    surface: selection.surface,
+                  });
+                }}
+              >
+                Add family
+              </AppButton>
+            )}
+          </div>
+        </InspectorBodySection>
       </InspectorShell>
     );
   }
@@ -2002,11 +2169,13 @@ function Inspector({
   if (selection.kind === "family") {
     const family = system.families.find((item) => item.id === selection.id);
     if (!family) return null;
+    const stepped = isSteppedPrimitiveFamily(family);
+    const tokenCount = family.steps.length;
     return (
       <InspectorShell
         label="Primitive family"
         onClose={onClose}
-        actions={
+        actions={editActions(
           <>
             <AppButton
               variant="secondary"
@@ -2042,23 +2211,73 @@ function Inspector({
             >
               Delete family
             </AppButton>
-          </>
-        }
+          </>,
+        )}
       >
-        <RenameField
-          label="Family name"
-          value={family.name}
-          onCommit={(name) => applyChange(renameFamily(system, family.id, name))}
-        />
-        <p className={styles.inspectorMeta}>{family.steps.length} steps</p>
-        <AddStepField
-          onAdd={(stepLabel) => {
-            const { system: next, stepId } = addStep(system, family.id, stepLabel);
-            if (!stepId) return;
-            applyChange(next);
-            setSelection({ kind: "step", id: stepId });
-          }}
-        />
+        <InspectorBodySection>
+          <RenameField
+            label="Family name"
+            value={family.name}
+            readOnly={readOnly}
+            onCommit={(name) => applyChange(renameFamily(system, family.id, name))}
+          />
+        </InspectorBodySection>
+        {readOnly ? null : (
+          <InspectorBodySection>
+            <SteppedFamilyCheckbox
+              checked={stepped}
+              onChange={(nextStepped) =>
+                applyChange(setPrimitiveFamilyStepped(system, family.id, nextStepped))
+              }
+            />
+          </InspectorBodySection>
+        )}
+        {stepped ? (
+          <InspectorBodySection>
+            <StepSpectrumPicker
+              label="Steps"
+              readOnly={readOnly}
+              presentSteps={new Set(family.steps.map((item) => item.step))}
+              onStepClick={(stepLabel) => {
+                const step = family.steps.find((item) => item.step === stepLabel);
+                if (step) setSelection({ kind: "step", id: step.id });
+              }}
+              onAddStep={(stepLabel) => {
+                const { system: next, stepId } = addStep(system, family.id, stepLabel);
+                if (!stepId) {
+                  window.alert(`Step "${stepLabel}" already exists in ${family.name}.`);
+                  return;
+                }
+                applyChange(next);
+              }}
+            />
+          </InspectorBodySection>
+        ) : null}
+        {!stepped && !readOnly ? (
+          <InspectorBodySection>
+            <AddTokenField
+              placeholder="white"
+              helperText={`${tokenCount} ${tokenCount === 1 ? "token" : "tokens"}`}
+              normalizeValue={(value) => value.trim().toLowerCase().replace(/\s+/g, "-")}
+              onAdd={(stepLabel) => {
+                const { system: next, stepId } = addStep(system, family.id, stepLabel);
+                if (!stepId) {
+                  window.alert(`Token "${stepLabel}" already exists in ${family.name}.`);
+                  return;
+                }
+                applyChange(next);
+                setSelection({ kind: "step", id: stepId });
+              }}
+            />
+          </InspectorBodySection>
+        ) : null}
+        {!stepped && readOnly ? (
+          <InspectorBodySection>
+            <p className={styles.inspectorMeta}>
+              {tokenCount} {tokenCount === 1 ? "token" : "tokens"}
+            </p>
+          </InspectorBodySection>
+        ) : null}
       </InspectorShell>
     );
   }
@@ -2074,7 +2293,7 @@ function Inspector({
       <InspectorShell
         label={`Semantic family · ${selection.surface}`}
         onClose={onClose}
-        actions={
+        actions={editActions(
           <>
             <AppButton
               variant="secondary"
@@ -2114,43 +2333,56 @@ function Inspector({
             >
               Delete family
             </AppButton>
-          </>
-        }
+          </>,
+        )}
       >
-        <RenameField
-          label="Family name"
-          value={family.name}
-          onCommit={(name) => applyChange(renameSemanticFamily(system, family.id, name))}
-        />
-        <p className={styles.inspectorMeta}>{tokenCount} tokens</p>
-        <AddTokenField
-          onAdd={(roleName) => {
-            const trimmed = roleName.trim();
-            if (!trimmed) return;
-            const { system: next, role } = addSemanticToken(
-              system,
-              selection.surface,
-              family.id,
-              trimmed,
-            );
-            if (!role) {
-              const normalized = normalizeSemanticRole(trimmed);
-              window.alert(
-                normalized
-                  ? `Token "${normalized}" already exists in ${family.name}.`
-                  : "Enter a valid token name.",
-              );
-              return;
-            }
-            applyChange(next);
-            setSelection({
-              kind: "semantic",
-              surface: selection.surface,
-              familyKey: family.id,
-              role,
-            });
-          }}
-        />
+        <InspectorBodySection>
+          <RenameField
+            label="Family name"
+            value={family.name}
+            readOnly={readOnly}
+            onCommit={(name) => applyChange(renameSemanticFamily(system, family.id, name))}
+          />
+        </InspectorBodySection>
+        {readOnly ? (
+          <InspectorBodySection>
+            <p className={styles.inspectorMeta}>
+              {tokenCount} {tokenCount === 1 ? "token" : "tokens"}
+            </p>
+          </InspectorBodySection>
+        ) : (
+          <InspectorBodySection>
+            <AddTokenField
+              helperText={`${tokenCount} ${tokenCount === 1 ? "token" : "tokens"}`}
+              onAdd={(roleName) => {
+                const trimmed = roleName.trim();
+                if (!trimmed) return;
+                const { system: next, role } = addSemanticToken(
+                  system,
+                  selection.surface,
+                  family.id,
+                  trimmed,
+                );
+                if (!role) {
+                  const normalized = normalizeSemanticRole(trimmed);
+                  window.alert(
+                    normalized
+                      ? `Token "${normalized}" already exists in ${family.name}.`
+                      : "Enter a valid token name.",
+                  );
+                  return;
+                }
+                applyChange(next);
+                setSelection({
+                  kind: "semantic",
+                  surface: selection.surface,
+                  familyKey: family.id,
+                  role,
+                });
+              }}
+            />
+          </InspectorBodySection>
+        )}
       </InspectorShell>
     );
   }
@@ -2162,11 +2394,13 @@ function Inspector({
     const usage = system.semantics.filter(
       (token) => token.ref.light === step.id || token.ref.dark === step.id,
     ).length;
+    const stepped = isSteppedPrimitiveFamily(family);
+    const primitiveVarReference = `var(--${primitiveVarName(family, step)})`;
     return (
       <InspectorShell
         label="Primitive"
         onClose={onClose}
-        actions={
+        actions={editActions(
           <AppButton
             className={styles.inspectorActionDelete}
             variant="tertiary"
@@ -2184,68 +2418,122 @@ function Inspector({
             }}
           >
             Delete step
-          </AppButton>
-        }
+          </AppButton>,
+        )}
       >
-        <StepValueField
-          label="Step value"
-          value={step.step}
-          onCommit={(nextStep) => {
-            const { system: next, stepId: newStepId } = renamePrimitiveStep(
-              system,
-              step.id,
-              nextStep,
-            );
-            if (!newStepId) {
-              if (nextStep !== step.step) {
-                window.alert(`Step "${nextStep}" already exists in ${family.name}.`);
-              }
-              return;
-            }
-            applyChange(next);
-            setSelection({ kind: "step", id: newStepId });
-          }}
-        />
-        <p className={styles.inspectorTitle}>
-          {family.name}-{step.step}
-        </p>
-        <span
-          className={`${styles.inspectorPreview} ${
-            isTransparentColor(step.hex) ? styles.inspectorPreviewAlpha : ""
-          }`}
-          style={{ background: cssColor(step.hex), color: readableTextOn(step.hex) }}
-        >
-          {step.hex}
-        </span>
-        <div className={styles.inspectorControls}>
-          <input
-            type="color"
-            className={styles.colorInput}
-            value={rgbHex(step.hex)}
-            onChange={(event) =>
-              applyChange(
-                updatePrimitiveHex(
+        <InspectorBodySection>
+          {stepped ? (
+            <StepSpectrumPicker
+              label="Step value"
+              value={step.step}
+              readOnly={readOnly}
+              onCommit={(nextStep) => {
+                const conflicting = family.steps.find(
+                  (item) => item.id !== step.id && item.step === nextStep,
+                );
+                if (
+                  conflicting &&
+                  !window.confirm(
+                    `Step ${nextStep} is already used in ${family.name}. Swap places with step ${step.step}?`,
+                  )
+                ) {
+                  return;
+                }
+                const { system: next, stepId: newStepId } = renamePrimitiveStep(
                   system,
                   step.id,
-                  mergePickerHex(step.hex, event.target.value),
-                ),
-              )
-            }
-            aria-label="Primitive color"
-          />
-          <HexField
-            value={step.hex}
-            onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
-          />
-        </div>
-        <AlphaField
-          value={step.hex}
-          onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
-        />
-        <AccessibilityContrastSection checks={surfaceColorContrastChecks(step.hex, system)} />
-        <p className={styles.inspectorMeta}>
-          Referenced by {usage} semantic token{usage === 1 ? "" : "s"}
-        </p>
+                  nextStep,
+                );
+                if (!newStepId) return;
+                applyChange(next);
+                setSelection({ kind: "step", id: newStepId });
+              }}
+              onAddStep={(stepLabel) => {
+                const { system: next, stepId: newStepId } = addStep(
+                  system,
+                  family.id,
+                  stepLabel,
+                );
+                if (!newStepId) {
+                  window.alert(`Step "${stepLabel}" already exists in ${family.name}.`);
+                  return;
+                }
+                applyChange(next);
+                setSelection({ kind: "step", id: newStepId });
+              }}
+            />
+          ) : (
+            <RenameField
+              label="Step name"
+              value={step.step}
+              readOnly={readOnly}
+              onCommit={(nextStep) => {
+                const { system: next, stepId: newStepId } = renamePrimitiveStep(
+                  system,
+                  step.id,
+                  nextStep,
+                );
+                if (!newStepId) {
+                  if (nextStep !== step.step) {
+                    window.alert(`Step "${nextStep}" already exists in ${family.name}.`);
+                  }
+                  return;
+                }
+                applyChange(next);
+                setSelection({ kind: "step", id: newStepId });
+              }}
+            />
+          )}
+          <VariableCopyBar cssVarReference={primitiveVarReference} />
+        </InspectorBodySection>
+        <InspectorBodySection>
+          <ColorPreviewBar hex={step.hex} />
+          {readOnly ? null : (
+            <>
+              <div className={styles.inspectorControls}>
+                <input
+                  type="color"
+                  className={styles.colorInput}
+                  value={rgbHex(step.hex)}
+                  onChange={(event) =>
+                    applyChange(
+                      updatePrimitiveHex(
+                        system,
+                        step.id,
+                        mergePickerHex(step.hex, event.target.value),
+                      ),
+                    )
+                  }
+                  aria-label="Primitive color"
+                />
+                <HexField
+                  value={step.hex}
+                  onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
+                />
+              </div>
+              {isUnsetPrimitiveHex(step.hex) ? null : (
+                <AlphaField
+                  value={step.hex}
+                  onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
+                />
+              )}
+            </>
+          )}
+        </InspectorBodySection>
+        <InspectorBodySection>
+          {isUnsetPrimitiveHex(step.hex) ? (
+            <p className={styles.inspectorMeta}>Set a hex value to run contrast checks.</p>
+          ) : (
+            <AccessibilityContrastSection
+              checks={surfaceColorContrastChecks(step.hex, system)}
+            />
+          )}
+        </InspectorBodySection>
+        <InspectorBodySection>
+          <p className={styles.inspectorMeta}>
+            Referenced by {usage} semantic token{usage === 1 ? "" : "s"}
+          </p>
+        </InspectorBodySection>
       </InspectorShell>
     );
   }
@@ -2261,12 +2549,13 @@ function Inspector({
   if (!token) return null;
   const refId = token.ref[theme];
   const hex = semanticHex(system, token, theme, steps);
-  const variableName = semanticTokenVariableName(system, token);
+  const cssVarReference = `var(--ds-${semanticExportVarName(system, token)})`;
+  const codifiedComment = codifiedComments.get(`${token.id}::${theme}`) ?? null;
   return (
     <InspectorShell
       label={`Semantic · ${token.surface} · ${theme}`}
       onClose={onClose}
-      actions={
+      actions={editActions(
         <AppButton
           className={styles.inspectorActionDelete}
           variant="tertiary"
@@ -2286,45 +2575,40 @@ function Inspector({
           }}
         >
           Delete token
-        </AppButton>
-      }
-    >
-      <RenameField
-        label="Token name"
-        value={token.role}
-        onCommit={(name) => {
-          const { system: next, role } = renameSemanticTokenRole(
-            system,
-            token.surface,
-            token.familyKey,
-            token.role,
-            name,
-          );
-          if (!role) {
-            window.alert(`Token "${name}" already exists in this family.`);
-            return;
-          }
-          applyChange(next);
-          setSelection({
-            kind: "semantic",
-            surface: token.surface,
-            familyKey: token.familyKey,
-            role,
-          });
-        }}
-      />
-      <code className={styles.inspectorVar}>{variableName}</code>
-      <span
-        className={`${styles.inspectorPreview} ${
-          isTransparentColor(hex) ? styles.inspectorPreviewAlpha : ""
-        }`}
-        style={{ background: cssColor(hex), color: readableTextOn(hex) }}
+        </AppButton>,
+      )}
       >
-        {hex}
-      </span>
-      <div className={styles.inspectorRow}>
-        <span className={styles.inspectorRowLabel}>Mapped primitive ({theme})</span>
-        <div className={styles.inspectorRowControl}>
+      <InspectorBodySection>
+        <RenameField
+          label="Token name"
+          value={token.role}
+          readOnly={readOnly}
+          onCommit={(name) => {
+            const { system: next, role } = renameSemanticTokenRole(
+              system,
+              token.surface,
+              token.familyKey,
+              token.role,
+              name,
+            );
+            if (!role) {
+              window.alert(`Token "${name}" already exists in this family.`);
+              return;
+            }
+            applyChange(next);
+            setSelection({
+              kind: "semantic",
+              surface: token.surface,
+              familyKey: token.familyKey,
+              role,
+            });
+          }}
+        />
+        <VariableCopyBar cssVarReference={cssVarReference} />
+      </InspectorBodySection>
+      <InspectorBodySection>
+        <div className={styles.inspectorMappedPrimitive}>
+          <span className={styles.inspectorRowLabel}>Mapped primitive ({theme})</span>
           <AppNativeSelect
             value={refId ?? ""}
             onValueChange={(next) =>
@@ -2338,18 +2622,94 @@ function Inspector({
             size="xs"
             tone="gray"
             fullWidth
+            disabled={readOnly}
             aria-label="Mapped primitive token"
           />
         </div>
-      </div>
-      <AccessibilityContrastSection
-        checks={
-          token.surface === "text"
-            ? textTokenContrastChecks(hex, system)
-            : surfaceColorContrastChecks(hex, system)
-        }
-      />
+        <ColorPreviewBar hex={hex} />
+      </InspectorBodySection>
+      <InspectorBodySection>
+        <AccessibilityContrastSection
+          checks={
+            token.surface === "text"
+              ? textTokenContrastChecks(hex, system)
+              : surfaceColorContrastChecks(hex, system)
+          }
+        />
+      </InspectorBodySection>
+      {readOnly && !token.comments?.[theme] ? null : (
+        <InspectorBodySection>
+          <TokenCommentSection
+            mode={theme}
+            comment={token.comments?.[theme] ?? null}
+            codifiedComment={codifiedComment}
+            readOnly={readOnly}
+            onCommit={(text) =>
+              applyChange(setSemanticTokenComment(system, token.id, theme, text))
+            }
+          />
+        </InspectorBodySection>
+      )}
     </InspectorShell>
+  );
+}
+
+/**
+ * Rationale comment editor for one theme of a semantic token. Comments that
+ * match the committed baseline are "codified"; anything else is a session
+ * comment living only in the local draft. Both are included in the CSS export.
+ */
+function TokenCommentSection({
+  mode,
+  comment,
+  codifiedComment,
+  readOnly,
+  onCommit,
+}: {
+  mode: ThemeKey;
+  comment: string | null;
+  codifiedComment: string | null;
+  readOnly: boolean;
+  onCommit: (text: string | null) => void;
+}) {
+  const [draft, setDraft] = useState(comment ?? "");
+  useEffect(() => setDraft(comment ?? ""), [comment]);
+
+  const isLocal = comment != null && comment !== codifiedComment;
+  if (readOnly && !comment) return null;
+
+  return (
+    <div className={styles.inspectorStack}>
+      <div className={styles.commentHeader}>
+        <span className={styles.inspectorRowLabel}>Comment ({mode})</span>
+        {isLocal ? (
+          <span
+            className={`${styles.commentBadge} ${styles.commentBadgeSession}`}
+            title="Local — only in your local draft until codified"
+          >
+            Local
+          </span>
+        ) : null}
+      </div>
+      {readOnly ? (
+        <p className={styles.commentText}>{comment}</p>
+      ) : (
+        <textarea
+          className={styles.commentInput}
+          value={draft}
+          rows={3}
+          spellCheck={false}
+          placeholder="Why this value? Included in the CSS export."
+          aria-label={`Token comment (${mode})`}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={() => {
+            const trimmed = draft.trim();
+            if (trimmed === (comment ?? "")) return;
+            onCommit(trimmed || null);
+          }}
+        />
+      )}
+    </div>
   );
 }
 
@@ -2384,6 +2744,7 @@ function mergePickerHex(currentHex: string, pickedHex: string): string {
   const normalized = normalizeHex(pickedHex);
   if (!normalized) return currentHex;
   const rgb = normalized.length === 9 ? normalized.slice(0, 7) : normalized;
+  if (isUnsetPrimitiveHex(currentHex)) return rgb;
   if (isTransparentColor(currentHex)) {
     const alphaSuffix = currentHex.length === 9 ? currentHex.slice(7) : "FF";
     return `${rgb}${alphaSuffix}`;
@@ -2393,9 +2754,11 @@ function mergePickerHex(currentHex: string, pickedHex: string): string {
 
 function AlphaField({
   value,
+  readOnly,
   onCommit,
 }: {
   value: string;
+  readOnly?: boolean;
   onCommit: (hex: string) => void;
 }) {
   const alphaPercent = Math.round(colorAlpha(value) * 100);
@@ -2414,6 +2777,7 @@ function AlphaField({
           max={100}
           step={1}
           value={alphaPercent}
+          disabled={readOnly}
           onChange={(event) =>
             onCommit(setHexAlpha(value, Number(event.target.value) / 100))
           }
@@ -2425,48 +2789,195 @@ function AlphaField({
   );
 }
 
-function StepValueField({
+function stepInsertSlotLabel(slotIndex: number): string {
+  if (slotIndex === 0) return "Add step before 5";
+  if (slotIndex === PRIMITIVE_STEP_SPECTRUM.length) {
+    return "Add step after 95";
+  }
+  const lower = PRIMITIVE_STEP_SPECTRUM[slotIndex - 1];
+  const upper = PRIMITIVE_STEP_SPECTRUM[slotIndex];
+  return `Add step between ${lower} and ${upper}`;
+}
+
+function StepSpectrumPicker({
   label,
   value,
+  presentSteps,
+  readOnly,
   onCommit,
+  onAddStep,
+  onStepClick,
 }: {
   label: string;
-  value: string;
-  onCommit: (value: string) => void;
+  /** Select mode: highlights the current step and commits changes on chip click. */
+  value?: string;
+  /** Overview mode: shows which spectrum steps exist without a selected step. */
+  presentSteps?: ReadonlySet<string>;
+  readOnly?: boolean;
+  onCommit?: (value: string) => void;
+  onAddStep?: (value: string) => void;
+  onStepClick?: (value: string) => void;
 }) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
+  const isOverview = presentSteps != null;
+  const [activeInsertSlot, setActiveInsertSlot] = useState<number | null>(null);
+  const [insertDraft, setInsertDraft] = useState("");
+  const insertInputRef = useRef<HTMLInputElement>(null);
+  const numericValue = value != null ? Number(value) : Number.NaN;
+  const isNumericStep = !isOverview && Number.isFinite(numericValue);
+  const canInsert = !readOnly && onAddStep != null;
+
+  useEffect(() => {
+    if (activeInsertSlot == null) return;
+    insertInputRef.current?.focus();
+    insertInputRef.current?.select();
+  }, [activeInsertSlot]);
+
+  function cancelInsert() {
+    setActiveInsertSlot(null);
+    setInsertDraft("");
+  }
+
+  function commitInsert() {
+    const stepLabel = insertDraft.trim();
+    if (!stepLabel) {
+      cancelInsert();
+      return;
+    }
+    onAddStep?.(stepLabel);
+    cancelInsert();
+  }
+
+  function renderInsertSlot(slotIndex: number) {
+    if (!canInsert) return null;
+    const editing = activeInsertSlot === slotIndex;
+    return (
+      <div
+        key={`insert-${slotIndex}`}
+        className={`${styles.stepSpectrumInsert} ${
+          editing ? styles.stepSpectrumInsertEditing : ""
+        }`}
+      >
+        {editing ? (
+          <input
+            ref={insertInputRef}
+            className={styles.stepSpectrumInsertInput}
+            value={insertDraft}
+            inputMode="numeric"
+            spellCheck={false}
+            placeholder=""
+            aria-label={stepInsertSlotLabel(slotIndex)}
+            onChange={(event) =>
+              setInsertDraft(event.target.value.replace(/[^\d]/g, ""))
+            }
+            onKeyDown={(event) => {
+              event.stopPropagation();
+              if (event.key === "Enter") {
+                event.preventDefault();
+                commitInsert();
+              }
+              if (event.key === "Escape") {
+                event.preventDefault();
+                cancelInsert();
+              }
+            }}
+            onBlur={cancelInsert}
+            onClick={(event) => event.stopPropagation()}
+          />
+        ) : (
+          <button
+            type="button"
+            className={styles.stepSpectrumInsertHitTarget}
+            aria-label={stepInsertSlotLabel(slotIndex)}
+            onClick={() => {
+              setActiveInsertSlot(slotIndex);
+              setInsertDraft("");
+            }}
+          >
+            <span className={styles.stepSpectrumInsertLine} aria-hidden="true" />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (!isOverview && !isNumericStep) {
+    return (
+      <div className={styles.inspectorRow}>
+        <span className={styles.inspectorRowLabel}>{label}</span>
+        <span className={styles.inspectorMeta}>{value}</span>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.inspectorRow}>
-      <label className={styles.inspectorRowLabel}>{label}</label>
-      <input
-        className={`${styles.inspectorInput} ${styles.inspectorRowControl}`}
-        value={draft}
-        inputMode="numeric"
-        spellCheck={false}
+      <span className={styles.inspectorRowLabel}>{label}</span>
+      <div
+        className={`${styles.stepSpectrumRow} ${
+          readOnly ? styles.stepSpectrumRowReadOnly : ""
+        } ${activeInsertSlot != null ? styles.stepSpectrumRowEditing : ""}`}
+        role={isOverview ? "group" : "radiogroup"}
         aria-label={label}
-        onChange={(event) => setDraft(event.target.value.replace(/[^\d]/g, ""))}
-        onBlur={() => {
-          const trimmed = draft.trim();
-          if (trimmed && trimmed !== value) onCommit(trimmed);
-          else setDraft(value);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") event.currentTarget.blur();
-        }}
-      />
+      >
+        {renderInsertSlot(0)}
+        {PRIMITIVE_STEP_SPECTRUM.map((stepValue, index) => {
+          const stepLabel = String(stepValue);
+          const isSelected = !isOverview && stepLabel === value;
+          const isPresent = isOverview && presentSteps.has(stepLabel);
+          return (
+            <Fragment key={stepValue}>
+              <button
+                type="button"
+                role={isOverview ? undefined : "radio"}
+                aria-checked={isOverview ? undefined : isSelected}
+                aria-label={
+                  isOverview
+                    ? isPresent
+                      ? `Step ${stepValue}`
+                      : `Step ${stepValue} (not in family)`
+                    : `Step ${stepValue}`
+                }
+                aria-disabled={isOverview && !isPresent ? true : undefined}
+                disabled={readOnly || (isOverview && !isPresent)}
+                className={`${styles.stepSpectrumButton} ${
+                  isSelected ? styles.stepSpectrumButtonActive : ""
+                } ${isPresent && !isSelected ? styles.stepSpectrumButtonPresent : ""}`}
+                onClick={() => {
+                  if (isOverview) {
+                    if (isPresent) onStepClick?.(stepLabel);
+                    return;
+                  }
+                  if (!isSelected) onCommit?.(stepLabel);
+                }}
+              >
+                {stepValue}
+              </button>
+              {renderInsertSlot(index + 1)}
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function AddTokenField({ onAdd }: { onAdd: (role: string) => void }) {
+function AddTokenField({
+  onAdd,
+  helperText,
+  placeholder = "primary",
+  normalizeValue = (value: string) => value.trim(),
+}: {
+  onAdd: (name: string) => void;
+  helperText?: string;
+  placeholder?: string;
+  normalizeValue?: (value: string) => string;
+}) {
   const [draft, setDraft] = useState("");
 
   function commit() {
-    const roleName = draft.trim();
-    if (!roleName) return;
-    onAdd(roleName);
+    const name = normalizeValue(draft);
+    if (!name) return;
+    onAdd(name);
     setDraft("");
   }
 
@@ -2478,8 +2989,8 @@ function AddTokenField({ onAdd }: { onAdd: (role: string) => void }) {
           className={styles.inspectorInput}
           value={draft}
           spellCheck={false}
-          placeholder="primary"
-          aria-label="New semantic token name"
+          placeholder={placeholder}
+          aria-label="New token name"
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") commit();
@@ -2489,67 +3000,66 @@ function AddTokenField({ onAdd }: { onAdd: (role: string) => void }) {
           Add
         </AppButton>
       </div>
+      {helperText ? <p className={styles.inspectorMeta}>{helperText}</p> : null}
     </div>
   );
 }
 
-function AddStepField({ onAdd }: { onAdd: (step: string) => void }) {
-  const [draft, setDraft] = useState("");
-
-  function commit() {
-    const stepLabel = draft.trim();
-    if (!stepLabel) return;
-    onAdd(stepLabel);
-    setDraft("");
-  }
-
+function SteppedFamilyCheckbox({
+  checked,
+  readOnly,
+  onChange,
+}: {
+  checked: boolean;
+  readOnly?: boolean;
+  onChange: (stepped: boolean) => void;
+}) {
   return (
-    <div className={styles.inspectorStack}>
-      <span className={styles.inspectorRowLabel}>Add step</span>
-      <div className={styles.inspectorInlineField}>
-        <input
-          className={styles.inspectorInput}
-          value={draft}
-          inputMode="numeric"
-          placeholder="Step number, e.g. 50"
-          aria-label="New step number"
-          onChange={(event) => setDraft(event.target.value.replace(/[^\d]/g, ""))}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") commit();
-          }}
-        />
-        <AppButton variant="secondary" tone="black" size="xs" onClick={commit}>
-          Add
-        </AppButton>
-      </div>
-    </div>
+    <label
+      className={`${styles.inspectorCheckboxRow} ${
+        readOnly ? styles.inspectorCheckboxRowDisabled : ""
+      }`}
+    >
+      <AppCheckbox
+        checkboxSize="xs"
+        checked={checked}
+        disabled={readOnly}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span className={styles.inspectorCheckboxLabel}>Stepped ramp (5–95)</span>
+    </label>
   );
 }
 
 function HexField({
   value,
+  readOnly,
   onCommit,
 }: {
   value: string;
+  readOnly?: boolean;
   onCommit: (hex: string) => void;
 }) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
+  const unset = isUnsetPrimitiveHex(value);
+  const [draft, setDraft] = useState(unset ? "" : value);
+  useEffect(() => setDraft(unset ? "" : value), [value, unset]);
 
   return (
     <input
       className={styles.hexInput}
       value={draft}
       spellCheck={false}
+      disabled={readOnly}
+      placeholder={unset ? "#RRGGBB" : undefined}
       onChange={(event) => setDraft(event.target.value.toUpperCase())}
       onBlur={() => {
         const next = normalizeHex(draft);
         if (next) {
           if (next !== value) onCommit(next);
-          setDraft(next);
+          setDraft(isUnsetPrimitiveHex(next) ? "" : next);
           return;
         }
-        setDraft(value);
+        setDraft(unset ? "" : value);
       }}
       onKeyDown={(event) => {
         if (event.key === "Enter") event.currentTarget.blur();
@@ -2562,10 +3072,12 @@ function HexField({
 function RenameField({
   label,
   value,
+  readOnly,
   onCommit,
 }: {
   label: string;
   value: string;
+  readOnly?: boolean;
   onCommit: (value: string) => void;
 }) {
   const [draft, setDraft] = useState(value);
@@ -2577,6 +3089,7 @@ function RenameField({
         className={`${styles.inspectorInput} ${styles.inspectorRowControl}`}
         value={draft}
         spellCheck={false}
+        disabled={readOnly}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={() => {
           const trimmed = draft.trim();
