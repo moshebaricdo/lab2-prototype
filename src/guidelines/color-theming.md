@@ -118,10 +118,21 @@ Semantics can reference:
 | Draft storage | `localStorage` `lab2:color-sandbox:doc` (per brand) |
 | CodeAI baseline version | `localStorage` `lab2:color-sandbox:doc-version` — bump `COLOR_SANDBOX_CODEAI_BASELINE_VERSION` in `colorSandboxStorage.ts` when `codeAiColorSystem.json` changes so stale CodeAI drafts are discarded |
 | Apply to app flag | `localStorage` `lab2:color-sandbox:apply-runtime` |
+| Read-only flag | `sessionStorage` `lab2:color-sandbox:read-only` — defaults **on** for deployed hosts and **off** on localhost (`defaultColorSandboxReadOnly()` in `colorSandboxStorage.ts`); toggled via the lock button in the toolbar |
 | Runtime bridge | `lib/colorSandbox/colorSandboxRuntime.ts` (initialized in `ThemeProvider`) |
 | Shared theme state | Sandbox toolbar + global nav menu (`GlobalNavMenu`) + `Lab2Shell` via `useTheme()` |
 
 Workflow: edit primitives/semantics in sandbox → optionally preview with **Apply to app** → **Export CSS** (one click downloads prod-shaped `primitiveColors.css` + `colors.css`, built by `src/pages/design-system/colorSystemCssExport.ts`). Semantic values reference primitives via `var(--…)`; light block is `:root, [data-theme='Light']`, dark is `[data-theme='Dark']`. Names derive from current sandbox display names (subgroup + family), with `neutral`/`sentiment` flat.
+
+**New stepped primitive families** are pre-seeded with the prod ramp (`5`, `10`, `20`, … `95`) at `UNSET_PRIMITIVE_HEX` (`#00000000`) so authors only pick hex values per step. Unset steps show checkerboard in the canvas and are omitted from `primitiveColors.css` export until filled. Extra in-between steps can be added via the step spectrum insert slots in either the **family inspector** (overview — existing steps shown without a selected chip) or the **step inspector** (select mode — active step highlighted). Use the family inspector **Stepped ramp (5–95)** checkbox to switch a family between stepped and unstepped; toggling preserves existing step labels and hex values (e.g. a stepped family unchecked becomes unstepped with its numeric labels kept as freeform names). **Unstepped families** (`stepped: false`, e.g. `neutral/base` with `white`, `black`, `true-black`) use the family-level **Add token** field instead of the ramp picker.
+
+### Token rationale comments
+
+The sandbox is the source of truth for the inline rationale comments in the exported `colors.css`. Comments live on each `SemanticToken` (`comments: { light?, dark? }` in `colorSystemData.ts`) and are edited per theme in the semantic-token inspector (a small dot marks commented chips). Comments bundled with `codeAiColorSystem.json` are **codified**; comments only present in the localStorage draft are **session** comments (the inspector badge distinguishes the two by comparing against the bundled baseline). Both kinds are emitted by the exporter — there is no hardcoded comment map. To codify session comments, re-export, update `codeAiColorSystem.json`, and bump `COLOR_SANDBOX_CODEAI_BASELINE_VERSION`.
+
+### Read-only mode
+
+On deployed hosts the sandbox loads **read-only** so eng/other teams can explore without accidentally changing values; on localhost it loads editable. The lock control is the first button in the native React Flow canvas controls (bottom-left); click to toggle (persisted per session). Read-only keeps all inspectors and info panels (including comments) visible but hides edit affordances (rename/hex/alpha inputs, add/delete/duplicate, drag-and-drop, scratch tools, Apply to app, Reset); Brand, Mode, and **Export CSS** remain available, and the canvas pans on drag.
 
 ### Scratch layer (swatches + text)
 
