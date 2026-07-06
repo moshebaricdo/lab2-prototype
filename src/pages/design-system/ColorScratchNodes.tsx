@@ -69,11 +69,15 @@ function ScratchResizer({ selected }: { selected: boolean }) {
 }
 
 export function ScratchSwatchNode({ data, selected }: NodeProps) {
-  const { fill } = data as ScratchNodeData;
+  const { fill, border = "" } = data as ScratchNodeData;
+  const borderColor = border.trim().length > 0 ? border : undefined;
   return (
     <div
       className={`${styles.swatch} ${styles.scratchSurface} ${selected ? styles.selected : ""}`}
-      style={{ background: fill }}
+      style={{
+        background: fill,
+        border: borderColor ? `1px solid ${borderColor}` : undefined,
+      }}
     >
       <ScratchResizer selected={Boolean(selected)} />
     </div>

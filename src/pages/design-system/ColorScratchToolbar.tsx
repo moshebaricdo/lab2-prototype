@@ -21,12 +21,16 @@ interface PaletteSwatch {
   label: string;
 }
 
+const SCRATCH_DEFAULT_BORDER = "#D0D5DD";
+
 function ScratchHexField({
   value,
   onCommit,
+  ariaLabel,
 }: {
   value: string;
   onCommit: (hex: string) => void;
+  ariaLabel: string;
 }) {
   const opaque = rgbHex(value);
   const [draft, setDraft] = useState(opaque);
@@ -38,7 +42,7 @@ function ScratchHexField({
       value={draft}
       spellCheck={false}
       maxLength={7}
-      aria-label="Fill hex value"
+      aria-label={ariaLabel}
       onChange={(event) => {
         const next = event.target.value.toUpperCase().replace(/[^#0-9A-F]/g, "");
         setDraft(next.length > 7 ? next.slice(0, 7) : next);
@@ -85,7 +89,76 @@ function FillControl({
           aria-label={label}
           onChange={(event) => commitOpaque(event.target.value)}
         />
-        <ScratchHexField value={opaque} onCommit={commitOpaque} />
+        <ScratchHexField value={opaque} onCommit={commitOpaque} ariaLabel={label} />
+      </div>
+      {palette && palette.length > 0 ? (
+        <div className={styles.scratchPalette}>
+          {palette.map((swatch) => (
+            <button
+              key={`${swatch.label}-${swatch.hex}`}
+              type="button"
+              className={styles.scratchPaletteSwatch}
+              style={{ background: swatch.hex }}
+              title={`${swatch.label} (${swatch.hex})`}
+              aria-label={`${swatch.label} ${swatch.hex}`}
+              onClick={() => commitOpaque(swatch.hex)}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function BorderControl({
+  label,
+  value,
+  palette,
+  onChange,
+  onClear,
+}: {
+  label: string;
+  value: string;
+  palette?: PaletteSwatch[];
+  onChange: (hex: string) => void;
+  onClear: () => void;
+}) {
+  const hasBorder = value.trim().length > 0;
+  const opaque = hasBorder ? rgbHex(value) : SCRATCH_DEFAULT_BORDER;
+  const commitOpaque = (hex: string) => onChange(rgbHex(hex));
+
+  return (
+    <div className={styles.inspectorRow}>
+      <span className={styles.inspectorRowLabel}>{label}</span>
+      <div className={styles.inspectorInlineField}>
+        <input
+          type="color"
+          className={styles.colorInput}
+          value={opaque}
+          aria-label={label}
+          onChange={(event) => commitOpaque(event.target.value)}
+        />
+        {hasBorder ? (
+          <ScratchHexField
+            value={opaque}
+            onCommit={commitOpaque}
+            ariaLabel={`${label} hex value`}
+          />
+        ) : (
+          <span className={styles.inspectorMeta}>None</span>
+        )}
+        {hasBorder ? (
+          <Tooltip content="Remove border" position="top">
+            <AppButton
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName="xmark"
+              aria-label="Remove border"
+              onClick={onClear}
+            />
+          </Tooltip>
+        ) : null}
       </div>
       {palette && palette.length > 0 ? (
         <div className={styles.scratchPalette}>
@@ -147,10 +220,22 @@ function fillGroupLabel(nodes: ScratchFlowNode[], totalSelected: number): string
   return nodes[0].data.kind === "text" ? "Text color" : "Swatch fill";
 }
 
+function borderGroupLabel(nodes: ScratchFlowNode[], totalSwatches: number): string {
+  if (totalSwatches === 1) return "Border";
+  if (nodes.length > 1) {
+    const hasBorder = (nodes[0].data.border ?? "").trim().length > 0;
+    return hasBorder
+      ? `${nodes.length} selected with this border`
+      : `${nodes.length} selected with no border`;
+  }
+  return "Border";
+}
+
 export function ColorScratchToolbar({
   nodes,
   system,
   onUpdateFill,
+  onUpdateBorder,
   onDuplicate,
   onBringForward,
   onSendToBack,
@@ -160,6 +245,7 @@ export function ColorScratchToolbar({
   nodes: ScratchFlowNode[];
   system: ColorSystem;
   onUpdateFill: (id: string, hex: string) => void;
+  onUpdateBorder: (id: string, hex: string) => void;
   onDuplicate: () => void;
   onBringForward: () => void;
   onSendToBack: () => void;
@@ -200,6 +286,34 @@ export function ColorScratchToolbar({
 
     return Array.from(groups.values());
   }, [nodes]);
+
+  const swatchNodes = useMemo(
+    () => nodes.filter((node) => node.data.kind === "swatch"),
+    [nodes],
+  );
+
+  const borderGroups = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        border: string;
+        nodes: ScratchFlowNode[];
+      }
+    >();
+
+    for (const node of swatchNodes) {
+      const rawBorder = node.data.border ?? "";
+      const border = rawBorder.trim().length > 0 ? rgbHex(rawBorder) : "";
+      const group = groups.get(border);
+      if (group) {
+        group.nodes.push(node);
+      } else {
+        groups.set(border, { border, nodes: [node] });
+      }
+    }
+
+    return Array.from(groups.values());
+  }, [swatchNodes]);
 
   if (nodes.length === 0) return null;
 
@@ -277,6 +391,24 @@ export function ColorScratchToolbar({
               palette={!isMulti && index === 0 ? palette : undefined}
               onChange={(hex) => {
                 group.nodes.forEach((node) => onUpdateFill(node.id, hex));
+              }}
+            />
+          ))}
+          {borderGroups.map((group, index) => (
+            <BorderControl
+              key={group.border || "__none__"}
+              label={borderGroupLabel(group.nodes, swatchNodes.length)}
+              value={group.border}
+              palette={
+                swatchNodes.length === 1 && nodes.length === 1 && index === 0
+                  ? palette
+                  : undefined
+              }
+              onChange={(hex) => {
+                group.nodes.forEach((node) => onUpdateBorder(node.id, hex));
+              }}
+              onClear={() => {
+                group.nodes.forEach((node) => onUpdateBorder(node.id, ""));
               }}
             />
           ))}

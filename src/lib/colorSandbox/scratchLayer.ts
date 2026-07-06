@@ -28,6 +28,8 @@ export interface ScratchNode {
   height: number;
   /** For a swatch this is the background fill; for text it is the text color. */
   fill: string;
+  /** Swatch outline color (swatch nodes only). Omitted when no border is shown. */
+  border?: string;
   /** Text content (text nodes only). */
   text?: string;
 }
@@ -36,6 +38,8 @@ export interface ScratchNode {
 export interface ScratchNodeData extends Record<string, unknown> {
   kind: ScratchNodeKind;
   fill: string;
+  /** Swatch outline color; empty string means no border. */
+  border: string;
   text: string;
 }
 
@@ -125,6 +129,7 @@ export function toScratchFlowNode(node: ScratchNode): ScratchFlowNode {
     data: {
       kind: node.kind,
       fill: node.fill,
+      border: node.border ?? "",
       text: node.text ?? "",
     },
   };
@@ -146,6 +151,10 @@ export function fromScratchFlowNode(node: ScratchFlowNode): ScratchNode {
     height:
       node.height ?? (Number.isFinite(styleHeight) ? styleHeight : fallback.height),
     fill: rgbHex(data.fill),
+    border:
+      kind === "swatch" && (data.border ?? "").trim().length > 0
+        ? rgbHex(data.border ?? "")
+        : undefined,
     text: kind === "text" ? data.text : undefined,
   };
 }

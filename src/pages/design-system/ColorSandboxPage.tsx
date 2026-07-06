@@ -119,6 +119,10 @@ import {
   type ColorSystem,
   type ThemeKey,
 } from "./colorSystemData";
+import {
+  buildPrimitiveColorsCss,
+  buildSemanticColorsCss,
+} from "./colorSystemCssExport";
 import { colorSystemEdgeTypes } from "./ColorSystemEdges";
 import {
   colorSystemNodeTypes,
@@ -448,7 +452,9 @@ function estimatePrimitiveHeight(_stepCount: number) {
 
 export function ColorSandboxPage() {
   const { brandTheme, setBrandTheme, theme, setTheme } = useTheme();
-  const [system, setSystem] = useState<ColorSystem>(() => loadColorSandboxSystem("codeOrg"));
+  const [system, setSystem] = useState<ColorSystem>(() =>
+    loadColorSandboxSystem(brandTheme),
+  );
   const [applyRuntime, setApplyRuntime] = useState(() => readColorSandboxApplyRuntime());
   const [selection, setSelection] = useState<Selection>(null);
   const [exported, setExported] = useState(false);
@@ -837,6 +843,12 @@ export function ColorSandboxPage() {
 
   const updateScratchFill = useCallback(
     (id: string, hex: string) => updateScratchNodeData(id, { fill: rgbHex(hex) }),
+    [updateScratchNodeData],
+  );
+
+  const updateScratchBorder = useCallback(
+    (id: string, hex: string) =>
+      updateScratchNodeData(id, { border: hex.trim().length > 0 ? rgbHex(hex) : "" }),
     [updateScratchNodeData],
   );
 
@@ -1263,17 +1275,27 @@ export function ColorSandboxPage() {
     applyChange(fresh);
   }
 
-  function downloadExport() {
-    const payload = { brand: brandTheme, ...system };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json;charset=utf-8",
-    });
+  function downloadFile(filename: string, contents: string, type: string) {
+    const blob = new Blob([contents], { type });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `color-system-${brandTheme}.json`;
+    link.download = filename;
     link.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  function downloadExport() {
+    downloadFile(
+      "primitiveColors.css",
+      buildPrimitiveColorsCss(system),
+      "text/css;charset=utf-8",
+    );
+    downloadFile(
+      "colors.css",
+      buildSemanticColorsCss(system),
+      "text/css;charset=utf-8",
+    );
     setExported(true);
     window.setTimeout(() => setExported(false), 1600);
   }
@@ -1664,25 +1686,29 @@ export function ColorSandboxPage() {
                 <AppButton
                   variant="secondary"
                   tone="gray"
-                  size="s"
+                  size="xs"
                   iconName="rotate-left"
                   className={styles.toolbarIconButton}
                   onClick={resetDraft}
                   aria-label="Reset draft"
                 />
               </Tooltip>
-              <Tooltip content={exported ? "Exported" : "Export JSON"} position="bottom">
-                <AppButton
-                  variant="primary"
-                  tone="purple"
-                  size="s"
-                  iconName={exported ? "check" : "download"}
-                  className={styles.toolbarIconButton}
-                  onClick={downloadExport}
-                  aria-label="Export JSON"
-                />
-              </Tooltip>
             </div>
+          </div>
+          <div className={styles.toolbarDivider} role="separator" />
+          <div className={styles.toolbarExportRow}>
+            <AppButton
+              variant="primary"
+              tone="purple"
+              size="s"
+              fullWidth
+              iconName={exported ? "check" : "download"}
+              className={styles.toolbarExportButton}
+              onClick={downloadExport}
+              aria-label={exported ? "Exported" : "Export CSS"}
+            >
+              Export CSS
+            </AppButton>
           </div>
           </div>
         </Panel>
@@ -1709,6 +1735,7 @@ export function ColorSandboxPage() {
               nodes={selectedScratch}
               system={system}
               onUpdateFill={updateScratchFill}
+              onUpdateBorder={updateScratchBorder}
               onDuplicate={duplicateScratch}
               onBringForward={bringScratchToFront}
               onSendToBack={sendScratchToBack}

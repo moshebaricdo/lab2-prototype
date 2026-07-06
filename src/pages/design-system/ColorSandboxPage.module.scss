@@ -173,10 +173,6 @@
 }
 
 .toolbarIconButton {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
   padding: 0 !important;
 }
 
@@ -216,6 +212,15 @@
   align-items: center;
   gap: 6px;
   margin-left: auto;
+}
+
+.toolbarExportRow {
+  display: flex;
+  width: 100%;
+}
+
+.toolbarExportButton {
+  width: 100%;
 }
 
 .toolbarPersistentRow .runtimePreviewToggle {
