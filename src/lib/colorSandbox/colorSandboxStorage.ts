@@ -9,10 +9,41 @@ import {
 } from "../../pages/design-system/colorSystemData";
 
 export const COLOR_SANDBOX_DOC_STORAGE_KEY = "lab2:color-sandbox:doc";
+export const COLOR_SANDBOX_DOC_VERSION_KEY = "lab2:color-sandbox:doc-version";
 export const COLOR_SANDBOX_APPLY_RUNTIME_KEY = "lab2:color-sandbox:apply-runtime";
 export const COLOR_SANDBOX_RUNTIME_EVENT = "lab2:color-sandbox:updated";
 
+/**
+ * Bump when the committed CodeAI baseline changes so stale localStorage drafts
+ * are discarded and users load the bundled defaults instead.
+ */
+export const COLOR_SANDBOX_CODEAI_BASELINE_VERSION = 2;
+
 export type StoredColorSandboxDocs = Partial<Record<BrandTheme, ColorSystem>>;
+
+function readColorSandboxDocVersion(): number {
+  if (typeof window === "undefined") return COLOR_SANDBOX_CODEAI_BASELINE_VERSION;
+  const raw = window.localStorage.getItem(COLOR_SANDBOX_DOC_VERSION_KEY);
+  const parsed = raw ? Number.parseInt(raw, 10) : 0;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function writeColorSandboxDocVersion(version: number): void {
+  window.localStorage.setItem(COLOR_SANDBOX_DOC_VERSION_KEY, String(version));
+}
+
+/** Drop a stale CodeAI draft when the bundled baseline has been updated. */
+function discardStaleCodeAiDraftIfNeeded(): void {
+  if (typeof window === "undefined") return;
+  if (readColorSandboxDocVersion() >= COLOR_SANDBOX_CODEAI_BASELINE_VERSION) return;
+
+  const docs = readColorSandboxDocs();
+  if (docs.codeAi) {
+    delete docs.codeAi;
+    window.localStorage.setItem(COLOR_SANDBOX_DOC_STORAGE_KEY, JSON.stringify(docs));
+  }
+  writeColorSandboxDocVersion(COLOR_SANDBOX_CODEAI_BASELINE_VERSION);
+}
 
 export function readColorSandboxDocs(): StoredColorSandboxDocs {
   if (typeof window === "undefined") return {};
@@ -28,6 +59,9 @@ export function persistColorSandboxDoc(brand: BrandTheme, system: ColorSystem): 
   const docs = readColorSandboxDocs();
   docs[brand] = system;
   window.localStorage.setItem(COLOR_SANDBOX_DOC_STORAGE_KEY, JSON.stringify(docs));
+  if (brand === "codeAi") {
+    writeColorSandboxDocVersion(COLOR_SANDBOX_CODEAI_BASELINE_VERSION);
+  }
 }
 
 export function readColorSandboxApplyRuntime(): boolean {
@@ -73,6 +107,9 @@ function restoreAlphaHexFromBuiltIn(stored: ColorSystem, fresh: ColorSystem): Co
 export function loadColorSandboxSystem(brand: BrandTheme): ColorSystem {
   const fresh =
     brand === "codeAi" ? buildCodeAiColorSystem() : buildColorSystem();
+  if (brand === "codeAi") {
+    discardStaleCodeAiDraftIfNeeded();
+  }
   const stored = readColorSandboxDocs()[brand];
   if (!stored?.families?.length) return fresh;
   const structured = ensureSemanticStructure(stored);
