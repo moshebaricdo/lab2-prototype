@@ -1,7 +1,7 @@
 import { type CSSProperties, type ReactNode } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { cssColor, isTransparentColor, readableTextOn } from "./colorSystemData";
+import { cssColor, isTransparentColor, isUnsetPrimitiveHex, readableTextOn } from "./colorSystemData";
 import styles from "./ColorSystemNodes.module.scss";
 
 function ColorSwatch({
@@ -13,12 +13,13 @@ function ColorSwatch({
   className: string;
   children?: ReactNode;
 }) {
-  const transparent = isTransparentColor(hex);
+  const unset = isUnsetPrimitiveHex(hex);
+  const transparent = !unset && isTransparentColor(hex);
   return (
     <span
-      className={`${className} ${transparent ? styles.colorSwatchAlpha : ""}`}
+      className={`${className} ${unset || transparent ? styles.colorSwatchAlpha : ""}`}
       style={
-        transparent
+        unset || transparent
           ? undefined
           : { background: cssColor(hex), color: readableTextOn(hex) }
       }
@@ -29,7 +30,7 @@ function ColorSwatch({
       {children ? (
         <span
           className={styles.colorSwatchLabel}
-          style={transparent ? { color: readableTextOn(hex) } : undefined}
+          style={unset || transparent ? { color: readableTextOn(hex) } : undefined}
         >
           {children}
         </span>
@@ -78,6 +79,8 @@ export interface SemanticNodeChip {
   role: string;
   hex: string;
   mapped: boolean;
+  /** True when the token has a rationale comment for the current theme. */
+  hasComment: boolean;
   dragId: string;
 }
 
@@ -215,18 +218,20 @@ export function PrimitiveFamilyNode({ data, selected }: NodeProps) {
       <div className={styles.swatchGrid}>
         {nodeData.swatches.map((swatch) => {
           const isSelected = nodeData.selectedStepId === swatch.id;
+          const unset = isUnsetPrimitiveHex(swatch.hex);
+          const hexLabel = unset ? "Unset" : swatch.hex;
           return (
             <button
               key={swatch.id}
               type="button"
               className={`${styles.swatch} ${isSelected ? styles.swatchSelected : ""}`}
               onClick={() => nodeData.onSelectStep(swatch.id)}
-              title={`${nodeData.name}-${swatch.step} · ${swatch.hex}`}
+              title={`${nodeData.name}-${swatch.step} · ${hexLabel}`}
             >
               <ColorSwatch hex={swatch.hex} className={styles.swatchChip}>
                 {swatch.step}
               </ColorSwatch>
-              <span className={styles.swatchHex}>{swatch.hex}</span>
+              <span className={styles.swatchHex}>{hexLabel}</span>
               <Handle
                 id={swatch.id}
                 type="source"
@@ -288,6 +293,9 @@ function SemanticChip({
     >
       <ColorSwatch hex={chip.hex} className={styles.chipSwatch} />
       <span className={styles.chipLabel}>{chip.role}</span>
+      {chip.hasComment ? (
+        <span className={styles.chipCommentDot} title="Has a rationale comment" />
+      ) : null}
       <Handle
         id={chip.role}
         type="target"

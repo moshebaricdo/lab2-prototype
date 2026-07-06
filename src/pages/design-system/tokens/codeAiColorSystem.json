@@ -19,6 +19,7 @@
       "id": "neutral::base",
       "collectionId": "neutral",
       "name": "base",
+      "stepped": false,
       "steps": [
         {
           "id": "neutral::base::white",
@@ -1049,6 +1050,9 @@
       "fallbackHex": {
         "light": "#007785",
         "dark": "#50B2BD"
+      },
+      "comments": {
+        "dark": "Strong variables are mostly used for hover states, in dark mode they invert and become lighter. They fail 4.5:1 contrast with labels, but we only need the default state to pass."
       }
     },
     {
@@ -1105,6 +1109,9 @@
       "fallbackHex": {
         "light": "#FFB42E",
         "dark": "#FFB42E"
+      },
+      "comments": {
+        "light": "The Run button orange is an intentional a11y exception. It fails 4.5:1 contrast with white labels but we are keeping it for its deep user association with \"run\" (and Blockly's run blocks)."
       }
     },
     {
@@ -1259,6 +1266,10 @@
       "fallbackHex": {
         "light": "#3EA33E",
         "dark": "#3EA33E"
+      },
+      "comments": {
+        "light": "Bumped to level 70 (brand-guideline primary is 50) so white labels pass 4.5:1; strong sits at 90.",
+        "dark": "Level 70 is preserved for success even in dark mode to continue to pass 4.5:1 contrast with white labels, we intentionally don't invert to avoid black labels."
       }
     },
     {
@@ -1301,6 +1312,9 @@
       "fallbackHex": {
         "light": "#286D29",
         "dark": "#66C365"
+      },
+      "comments": {
+        "dark": "Bc success is at level 70, we maintain the relative hover rule by setting the strong to 60."
       }
     },
     {
@@ -1315,6 +1329,10 @@
       "fallbackHex": {
         "light": "#1892E3",
         "dark": "#1892E3"
+      },
+      "comments": {
+        "light": "Bumped to level 70 (brand-guideline primary is 50) so white labels pass 4.5:1; strong sits at 90.",
+        "dark": "Level 70 is preserved for info even in dark mode to continue to pass 4.5:1 contrast with white labels, we intentionally don't invert to avoid black labels."
       }
     },
     {
@@ -1357,6 +1375,9 @@
       "fallbackHex": {
         "light": "#0A5A9A",
         "dark": "#40AAF0"
+      },
+      "comments": {
+        "dark": "Bc info is at level 70, we maintain the relative hover rule by setting the strong to 60."
       }
     },
     {
@@ -1427,6 +1448,9 @@
       "fallbackHex": {
         "light": "#0093A4",
         "dark": "#50B2BD"
+      },
+      "comments": {
+        "dark": "Primary borders of all colors stay at level 50 in dark mode since contrast only needs 3:1."
       }
     },
     {
@@ -1553,6 +1577,9 @@
       "fallbackHex": {
         "light": "#3EA33E",
         "dark": "#66C365"
+      },
+      "comments": {
+        "light": "Stays at level 50 (unlike the bumped background primary at 70) since border contrast only needs 3:1."
       }
     },
     {
@@ -1595,6 +1622,9 @@
       "fallbackHex": {
         "light": "#1892E3",
         "dark": "#40AAF0"
+      },
+      "comments": {
+        "light": "Stays at level 50 (unlike the bumped background primary at 70) since border contrast only needs 3:1."
       }
     },
     {
@@ -2183,6 +2213,9 @@
       "fallbackHex": {
         "light": "#69788A",
         "dark": "#69788A"
+      },
+      "comments": {
+        "light": "Orange text intentionally keeps the true brand-guideline level-50 value instead of bumping for contrast"
       }
     },
     {
@@ -2225,6 +2258,10 @@
       "fallbackHex": {
         "light": "#69788A",
         "dark": "#69788A"
+      },
+      "comments": {
+        "light": "Selected state is mode-inverted and cross-family by design: brand fill + seafoam text in light, seafoam fill + navy text in dark.",
+        "dark": "Selected state is mode-inverted and cross-family by design: brand fill + seafoam text in light, seafoam fill + navy text in dark."
       }
     },
     {
@@ -2309,6 +2346,10 @@
       "fallbackHex": {
         "light": "#69788A",
         "dark": "#69788A"
+      },
+      "comments": {
+        "light": "Selected state text pairs with background and border-state-selected — always use the two together.",
+        "dark": "Pairs with background-state-selected — always use the two together."
       }
     },
     {
@@ -2477,6 +2518,9 @@
       "fallbackHex": {
         "light": "#69788A",
         "dark": "#69788A"
+      },
+      "comments": {
+        "light": "Border state selected hover and primary intentionally match the background state color."
       }
     },
     {

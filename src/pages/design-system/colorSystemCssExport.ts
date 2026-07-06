@@ -21,6 +21,7 @@ import type {
   ThemeKey,
 } from "./colorSystemData";
 import {
+  isUnsetPrimitiveHex,
   semanticFamilyPathSegment,
   semanticSubGroupForFamily,
 } from "./colorSystemData";
@@ -243,65 +244,18 @@ export function comparePrimitiveExportNames(a: string, b: string): number {
   return stepA - stepB;
 }
 
-/** Inline rationale comments keyed by theme and exported token name. */
-const SEMANTIC_INLINE_COMMENTS: Record<
-  ThemeKey,
-  Partial<Record<string, string>>
-> = {
-  light: {
-    "background-success-primary":
-      "Bumped to level 70 (brand-guideline primary is 50) so white labels pass 4.5:1; strong sits at 90.",
-    "background-info-primary":
-      "Bumped to level 70 (brand-guideline primary is 50) so white labels pass 4.5:1; strong sits at 90.",
-    "background-accent-orange-primary":
-      "The Run button orange is an intentional a11y exception. It fails 4.5:1 contrast with white labels but we are keeping it for its deep user association with \"run\" (and Blockly's run blocks).",
-    "background-state-selected-primary":
-      "Selected state is mode-inverted and cross-family by design: brand fill + seafoam text in light, seafoam fill + navy text in dark.",
-    "border-success-primary":
-      "Stays at level 50 (unlike the bumped background primary at 70) since border contrast only needs 3:1.",
-    "border-info-primary":
-      "Stays at level 50 (unlike the bumped background primary at 70) since border contrast only needs 3:1.",
-    "border-state-selected-primary":
-      "Border state selected hover and primary intentionally match the background state color.",
-    "text-accent-orange-primary":
-      "Orange text intentionally keeps the true brand-guideline level-50 value instead of bumping for contrast",
-    "text-state-selected-primary":
-      "Selected state text pairs with background and border-state-selected — always use the two together.",
-  },
-  dark: {
-    "background-brand-strong":
-      "Strong variables are mostly used for hover states, in dark mode they invert and become lighter. They fail 4.5:1 contrast with labels, but we only need the default state to pass.",
-    "background-success-primary":
-      "Level 70 is preserved for success even in dark mode to continue to pass 4.5:1 contrast with white labels, we intentionally don't invert to avoid black labels.",
-    "background-success-strong":
-      "Bc success is at level 70, we maintain the relative hover rule by setting the strong to 60.",
-    "background-info-primary":
-      "Level 70 is preserved for info even in dark mode to continue to pass 4.5:1 contrast with white labels, we intentionally don't invert to avoid black labels.",
-    "background-info-strong":
-      "Bc info is at level 70, we maintain the relative hover rule by setting the strong to 60.",
-    "background-state-selected-primary":
-      "Selected state is mode-inverted and cross-family by design: brand fill + seafoam text in light, seafoam fill + navy text in dark.",
-    "border-brand-primary":
-      "Primary borders of all colors stay at level 50 in dark mode since contrast only needs 3:1.",
-    "text-state-selected-primary":
-      "Pairs with background-state-selected — always use the two together.",
-  },
-};
-
-function commentLinesFor(name: string, mode: ThemeKey): string[] {
-  const comment = SEMANTIC_INLINE_COMMENTS[mode][name];
-  return comment ? [`  /* ${comment} */`] : [];
-}
-
-/** Renders a CSS rule from pre-sorted lines, optionally with rationale comments. */
+/**
+ * Renders a CSS rule from pre-sorted lines. Rationale comments come from the
+ * sandbox document itself (token `comments`, per theme) — the sandbox is the
+ * source of truth for both values and the "why" behind them.
+ */
 function cssBlock(
   selector: string,
-  sortedLines: Array<[string, string]>,
-  mode?: ThemeKey,
+  sortedLines: Array<[string, string, string?]>,
 ): string {
   const body = sortedLines
-    .flatMap(([name, value]) => [
-      ...(mode ? commentLinesFor(name, mode) : []),
+    .flatMap(([name, value, comment]) => [
+      ...(comment ? [`  /* ${comment} */`] : []),
       `  --${name}: ${value};`,
     ])
     .join("\n");
@@ -313,6 +267,7 @@ export function buildPrimitiveColorsCss(system: ColorSystem): string {
   const seen = new Set<string>();
   for (const family of system.families ?? []) {
     for (const step of family.steps ?? []) {
+      if (isUnsetPrimitiveHex(step.hex)) continue;
       let name = primitiveVarName(family, step);
       while (seen.has(name)) name = `${name}-dup`;
       seen.add(name);
@@ -370,14 +325,18 @@ export function buildSemanticColorsCss(system: ColorSystem): string {
     }
   }
 
-  const buildLines = (mode: ThemeKey): Array<[string, string]> => {
-    const lines: Array<[string, string]> = [];
+  const buildLines = (mode: ThemeKey): Array<[string, string, string?]> => {
+    const lines: Array<[string, string, string?]> = [];
     const seen = new Set<string>();
     for (const token of system.semantics ?? []) {
       let name = semanticExportVarName(system, token);
       while (seen.has(name)) name = `${name}-dup`;
       seen.add(name);
-      lines.push([name, tokenValue(system, token, mode, stepById, familyByStepId)]);
+      lines.push([
+        name,
+        tokenValue(system, token, mode, stepById, familyByStepId),
+        token.comments?.[mode],
+      ]);
     }
     return lines.sort(([a], [b]) => compareSemanticExportNames(a, b));
   };
@@ -392,10 +351,10 @@ export function buildSemanticColorsCss(system: ColorSystem): string {
     "/* Generated by the CADS Color Sandbox — do not hand-edit; check with the design team first and then re-export from the sandbox. */",
     "",
     "/* Light Theme Semantic Colors (light is the default theme, that's why :root rule is included) */",
-    cssBlock(":root,\n[data-theme='Light']", buildLines("light"), "light"),
+    cssBlock(":root,\n[data-theme='Light']", buildLines("light")),
     "",
     "/* Dark Theme Semantic Colors */",
-    cssBlock("[data-theme='Dark']", buildLines("dark"), "dark"),
+    cssBlock("[data-theme='Dark']", buildLines("dark")),
     "",
   ].join("\n");
 }

@@ -19,6 +19,33 @@ import codeAiColorSystemJson from "./tokens/codeAiColorSystem.json";
 
 export type ThemeKey = "light" | "dark";
 
+/** Prod-style primitive ramp labels for new stepped families. */
+export const STANDARD_PRIMITIVE_STEPS = [
+  "5",
+  "10",
+  "20",
+  "30",
+  "40",
+  "50",
+  "60",
+  "70",
+  "80",
+  "90",
+  "95",
+] as const;
+
+/** Fully transparent sentinel — unset steps show checkerboard until a hex is chosen. */
+export const UNSET_PRIMITIVE_HEX = "#00000000";
+
+export function isUnsetPrimitiveHex(hex: string): boolean {
+  return hex.toUpperCase() === UNSET_PRIMITIVE_HEX;
+}
+
+/** Stepped ramp families default true; only explicit `stepped: false` is unstepped. */
+export function isSteppedPrimitiveFamily(family: PrimitiveFamily): boolean {
+  return family.stepped !== false;
+}
+
 export interface PrimitiveStep {
   /** Stable id `${familyId}::${step}`. */
   id: string;
@@ -31,6 +58,11 @@ export interface PrimitiveFamily {
   id: string;
   collectionId: string;
   name: string;
+  /**
+   * When true (default), the family uses the prod step ramp (5–95) and stepped
+   * inspector UI. When false, steps are freeform named values (e.g. base/white).
+   */
+  stepped?: boolean;
   steps: PrimitiveStep[];
 }
 
@@ -58,6 +90,12 @@ export interface SemanticToken {
   semanticRef?: Record<ThemeKey, string | null>;
   /** Original exported hex, per theme (fallback when a ref is missing). */
   fallbackHex: Record<ThemeKey, string>;
+  /**
+   * Rationale comments per theme. Rendered as inline `/* … *\/` comments above
+   * the token in the CSS export. Comments bundled with the committed baseline
+   * are "codified"; comments only in a localStorage draft are session comments.
+   */
+  comments?: Partial<Record<ThemeKey, string>>;
 }
 
 export interface ColorSystem {
@@ -1012,8 +1050,9 @@ export function semanticFamilyKeys(system: ColorSystem): string[] {
 }
 
 export function familyMidHex(family: PrimitiveFamily): string {
-  if (family.steps.length === 0) return "#69788A";
-  const sorted = [...family.steps].sort(
+  const setSteps = family.steps.filter((step) => !isUnsetPrimitiveHex(step.hex));
+  if (setSteps.length === 0) return "#69788A";
+  const sorted = [...setSteps].sort(
     (a, b) => relativeLuminance(b.hex) - relativeLuminance(a.hex),
   );
   return sorted[Math.floor(sorted.length / 2)].hex;
@@ -1232,6 +1271,7 @@ export function updatePrimitiveHex(
   return next;
 }
 
+/** Renames a step; if the target label is taken, swaps labels with that step. */
 export function renamePrimitiveStep(
   system: ColorSystem,
   stepId: string,
@@ -1256,12 +1296,29 @@ export function renamePrimitiveStep(
   if (!targetFamily || !targetStep) return { system, stepId: null };
   if (targetStep.step === stepLabel) return { system, stepId: targetStep.id };
 
-  if (
-    targetFamily.steps.some(
-      (item) => item.id !== stepId && item.step === stepLabel,
-    )
-  ) {
-    return { system, stepId: null };
+  const conflicting = targetFamily.steps.find(
+    (item) => item.id !== stepId && item.step === stepLabel,
+  );
+
+  if (conflicting) {
+    const oldLabel = targetStep.step;
+    const oldTargetId = targetStep.id;
+    const oldConflictId = conflicting.id;
+
+    targetStep.step = stepLabel;
+    targetStep.id = `${targetFamily.id}::${stepLabel}`;
+    conflicting.step = oldLabel;
+    conflicting.id = `${targetFamily.id}::${oldLabel}`;
+
+    for (const token of next.semantics) {
+      if (token.ref.light === oldTargetId) token.ref.light = targetStep.id;
+      else if (token.ref.light === oldConflictId) token.ref.light = conflicting.id;
+      if (token.ref.dark === oldTargetId) token.ref.dark = targetStep.id;
+      else if (token.ref.dark === oldConflictId) token.ref.dark = conflicting.id;
+    }
+
+    targetFamily.steps = sortPrimitiveSteps(targetFamily.steps);
+    return { system: next, stepId: targetStep.id };
   }
 
   const oldStepId = targetStep.id;
@@ -1276,6 +1333,26 @@ export function renamePrimitiveStep(
 
   targetFamily.steps = sortPrimitiveSteps(targetFamily.steps);
   return { system: next, stepId: newStepId };
+}
+
+/** Set or clear (empty/undefined) the rationale comment for one theme of a token. */
+export function setSemanticTokenComment(
+  system: ColorSystem,
+  semanticId: string,
+  mode: ThemeKey,
+  comment: string | null,
+): ColorSystem {
+  const next = clone(system);
+  const token = next.semantics.find((item) => item.id === semanticId);
+  if (!token) return system;
+  const trimmed = comment?.trim() ?? "";
+  if (trimmed) {
+    token.comments = { ...(token.comments ?? {}), [mode]: trimmed };
+  } else if (token.comments) {
+    const { [mode]: _removed, ...rest } = token.comments;
+    token.comments = Object.keys(rest).length > 0 ? rest : undefined;
+  }
+  return next;
 }
 
 export function remapSemantic(
@@ -1309,6 +1386,19 @@ export function renameFamily(
   const next = clone(system);
   const family = next.families.find((item) => item.id === familyId);
   if (family) family.name = name;
+  return next;
+}
+
+/** Toggle stepped vs unstepped; existing step labels and hex values are preserved. */
+export function setPrimitiveFamilyStepped(
+  system: ColorSystem,
+  familyId: string,
+  stepped: boolean,
+): ColorSystem {
+  const next = clone(system);
+  const family = next.families.find((item) => item.id === familyId);
+  if (!family) return system;
+  family.stepped = stepped;
   return next;
 }
 
@@ -1389,29 +1479,28 @@ export function addSemanticSubGroup(
   return { system: next, subGroupId: id };
 }
 
-const DEFAULT_RAMP = ["5", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"];
+const DEFAULT_RAMP = [...STANDARD_PRIMITIVE_STEPS];
 
 export function addFamily(
   system: ColorSystem,
   collectionId: string,
   name: string,
-  seedFromFamilyId?: string,
+  options: { stepped?: boolean; seedFromFamilyId?: string } = {},
 ): { system: ColorSystem; familyId: string } {
   const next = clone(system);
   const taken = new Set(next.families.map((item) => item.id));
   const baseId = `${collectionId}::${name.toLowerCase().replace(/\s+/g, "-") || "family"}`;
   const familyId = uniqueId(baseId, taken);
+  const stepped = options.stepped !== false;
 
-  const seed = seedFromFamilyId
-    ? next.families.find((item) => item.id === seedFromFamilyId)
+  const seed = options.seedFromFamilyId
+    ? next.families.find((item) => item.id === options.seedFromFamilyId)
     : undefined;
   const stepSpecs = seed
     ? seed.steps.map((step) => ({ step: step.step, hex: step.hex }))
-    : DEFAULT_RAMP.map((step, index) => {
-        const lightness = Math.round(245 - (index * 230) / (DEFAULT_RAMP.length - 1));
-        const channel = lightness.toString(16).padStart(2, "0").toUpperCase();
-        return { step, hex: `#${channel}${channel}${channel}` };
-      });
+    : stepped
+      ? DEFAULT_RAMP.map((step) => ({ step, hex: UNSET_PRIMITIVE_HEX }))
+      : [];
 
   const steps: PrimitiveStep[] = stepSpecs.map((spec) => ({
     id: `${familyId}::${spec.step}`,
@@ -1419,7 +1508,13 @@ export function addFamily(
     hex: spec.hex,
   }));
 
-  next.families.push({ id: familyId, collectionId, name, steps });
+  next.families.push({
+    id: familyId,
+    collectionId,
+    name,
+    stepped,
+    steps,
+  });
   return { system: next, familyId };
 }
 
@@ -1441,6 +1536,7 @@ export function duplicatePrimitiveFamily(
     id: newFamilyId,
     collectionId: source.collectionId,
     name: copyName,
+    stepped: source.stepped,
     steps: source.steps.map((step) => ({
       id: `${newFamilyId}::${step.step}`,
       step: step.step,

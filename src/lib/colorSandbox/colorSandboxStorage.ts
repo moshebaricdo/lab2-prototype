@@ -17,7 +17,7 @@ export const COLOR_SANDBOX_RUNTIME_EVENT = "lab2:color-sandbox:updated";
  * Bump when the committed CodeAI baseline changes so stale localStorage drafts
  * are discarded and users load the bundled defaults instead.
  */
-export const COLOR_SANDBOX_CODEAI_BASELINE_VERSION = 2;
+export const COLOR_SANDBOX_CODEAI_BASELINE_VERSION = 4;
 
 export type StoredColorSandboxDocs = Partial<Record<BrandTheme, ColorSystem>>;
 
@@ -62,6 +62,29 @@ export function persistColorSandboxDoc(brand: BrandTheme, system: ColorSystem): 
   if (brand === "codeAi") {
     writeColorSandboxDocVersion(COLOR_SANDBOX_CODEAI_BASELINE_VERSION);
   }
+}
+
+export const COLOR_SANDBOX_READ_ONLY_KEY = "lab2:color-sandbox:read-only";
+
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]", "0.0.0.0"]);
+
+/** Read-only is the default on deployed ("prod") hosts; localhost defaults to editable. */
+export function defaultColorSandboxReadOnly(): boolean {
+  if (typeof window === "undefined") return true;
+  return !LOCAL_HOSTNAMES.has(window.location.hostname);
+}
+
+/** Session-scoped read-only preference; falls back to the host-based default. */
+export function readColorSandboxReadOnly(): boolean {
+  if (typeof window === "undefined") return true;
+  const raw = window.sessionStorage.getItem(COLOR_SANDBOX_READ_ONLY_KEY);
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  return defaultColorSandboxReadOnly();
+}
+
+export function setColorSandboxReadOnly(enabled: boolean): void {
+  window.sessionStorage.setItem(COLOR_SANDBOX_READ_ONLY_KEY, enabled ? "true" : "false");
 }
 
 export function readColorSandboxApplyRuntime(): boolean {
