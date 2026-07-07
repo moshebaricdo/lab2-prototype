@@ -41,6 +41,7 @@ import "@xyflow/react/dist/style.css";
 import { AppButton } from "../../components/ui/AppButton";
 import { AppCheckbox } from "../../components/ui/AppCheckbox";
 import { AppNativeSelect } from "../../components/ui/AppDropdown";
+import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Tooltip } from "../../components/ui/Tooltip";
 import { FaIcon } from "../../components/ui/icons/FaIcon";
 import { useTheme, type BrandTheme, type ThemeMode } from "../../hooks/useTheme";
@@ -515,17 +516,6 @@ export function ColorSandboxPage() {
       neutralBorderHex(system, "strong", theme, steps),
     ),
   }), [system, theme, steps]);
-
-  const primitiveOptions = useMemo(
-    () =>
-      system.families.flatMap((family) =>
-        family.steps.map((step) => ({
-          value: step.id,
-          label: `${family.name}-${step.step} (${step.hex})`,
-        })),
-      ),
-    [system],
-  );
 
   const persist = useCallback(
     (next: ColorSystem) => {
@@ -1777,7 +1767,6 @@ export function ColorSandboxPage() {
               selection={selection}
               steps={steps}
               stepFamily={stepFamily}
-              primitiveOptions={primitiveOptions}
               readOnly={readOnly}
               codifiedComments={codifiedComments}
               applyChange={applyChange}
@@ -1898,6 +1887,183 @@ function ColorPreviewBar({ hex }: { hex: string }) {
   );
 }
 
+function InspectorColorSwatch({
+  hex,
+  className,
+  children,
+}: {
+  hex: string;
+  className?: string;
+  children?: ReactNode;
+}) {
+  const unset = isUnsetPrimitiveHex(hex);
+  const transparent = !unset && isTransparentColor(hex);
+  return (
+    <span
+      className={`${styles.inspectorSwatchChip} ${
+        unset || transparent ? styles.inspectorSwatchChipAlpha : ""
+      } ${className ?? ""}`}
+      style={
+        unset || transparent
+          ? undefined
+          : { background: cssColor(hex), color: readableTextOn(hex) }
+      }
+    >
+      {transparent ? (
+        <span
+          className={styles.inspectorSwatchFill}
+          style={{ background: cssColor(hex) }}
+        />
+      ) : null}
+      {children ? (
+        <span
+          className={styles.inspectorSwatchLabel}
+          style={unset || transparent ? { color: readableTextOn(hex) } : undefined}
+        >
+          {children}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function PrimitiveSwatchPicker({
+  system,
+  value,
+  onChange,
+  readOnly,
+}: {
+  system: ColorSystem;
+  value: string | null;
+  onChange: (stepId: string) => void;
+  readOnly: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedRef = useRef<HTMLButtonElement | null>(null);
+
+  const primitiveFamilies = useMemo(
+    () =>
+      system.collections.flatMap((collection) =>
+        familiesByCollection(system, collection.id),
+      ),
+    [system],
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    selectedRef.current?.scrollIntoView({ block: "nearest" });
+  }, [open, value]);
+
+  const selectedStep = value
+    ? system.families.flatMap((family) => family.steps).find((step) => step.id === value)
+    : null;
+  const selectedFamily = selectedStep
+    ? system.families.find((family) => family.steps.some((step) => step.id === value))
+    : null;
+  const triggerLabel =
+    value && selectedFamily && selectedStep
+      ? `${selectedFamily.name}-${selectedStep.step}`
+      : "Choose primitive";
+
+  return (
+    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+      <PopoverPrimitive.Trigger asChild>
+        <button
+          type="button"
+          className={styles.primitiveSwatchPickerTrigger}
+          disabled={readOnly}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label="Mapped primitive token"
+        >
+          {selectedStep ? (
+            <InspectorColorSwatch
+              hex={selectedStep.hex}
+              className={styles.primitiveSwatchPickerTriggerSwatch}
+            >
+              {selectedStep.step}
+            </InspectorColorSwatch>
+          ) : (
+            <span className={styles.primitiveSwatchPickerTriggerSwatchEmpty} aria-hidden="true" />
+          )}
+          <span
+            className={`${styles.primitiveSwatchPickerTriggerLabel} ${
+              value ? "" : styles.primitiveSwatchPickerTriggerPlaceholder
+            }`}
+          >
+            {triggerLabel}
+          </span>
+          <FaIcon
+            name={open ? "chevron-up" : "chevron-down"}
+            size="xs"
+            className={styles.primitiveSwatchPickerTriggerChevron}
+          />
+        </button>
+      </PopoverPrimitive.Trigger>
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Content
+          className={styles.primitiveSwatchPickerPopover}
+          align="start"
+          side="bottom"
+          sideOffset={4}
+          onOpenAutoFocus={(event) => event.preventDefault()}
+        >
+          <div className={styles.primitiveSwatchPickerScroll}>
+            {primitiveFamilies.map((family, familyIndex) => (
+              <div
+                key={family.id}
+                className={styles.primitiveSwatchPickerFamily}
+                style={{ "--family-color": familyMidHex(family) } as CSSProperties}
+              >
+                {familyIndex > 0 ? (
+                  <div
+                    className={styles.primitiveSwatchPickerDivider}
+                    role="presentation"
+                  />
+                ) : null}
+                <div
+                  className={styles.primitiveSwatchPickerRow}
+                  style={
+                    {
+                      "--swatch-count": sortPrimitiveSteps(family.steps).length,
+                    } as CSSProperties
+                  }
+                >
+                  {sortPrimitiveSteps(family.steps).map((step) => {
+                    const isSelected = value === step.id;
+                    return (
+                      <button
+                        key={step.id}
+                        ref={isSelected ? selectedRef : undefined}
+                        type="button"
+                        className={`${styles.primitiveSwatchPickerStep} ${
+                          isSelected ? styles.primitiveSwatchPickerStepSelected : ""
+                        }`}
+                        onClick={() => {
+                          onChange(step.id);
+                          setOpen(false);
+                        }}
+                        disabled={readOnly}
+                        title={`${family.name}-${step.step} · ${
+                          isUnsetPrimitiveHex(step.hex) ? "Unset" : step.hex
+                        }`}
+                        aria-label={`Map to ${family.name} step ${step.step}`}
+                        aria-pressed={isSelected}
+                      >
+                        <InspectorColorSwatch hex={step.hex}>{step.step}</InspectorColorSwatch>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
+  );
+}
+
 function VariableCopyBar({ cssVarReference }: { cssVarReference: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -1929,7 +2095,6 @@ function Inspector({
   selection,
   steps,
   stepFamily,
-  primitiveOptions,
   readOnly,
   codifiedComments,
   applyChange,
@@ -1941,7 +2106,6 @@ function Inspector({
   selection: Exclude<Selection, null>;
   steps: ReturnType<typeof stepIndex>;
   stepFamily: ReturnType<typeof familyOfStep>;
-  primitiveOptions: Array<{ value: string; label: string }>;
   readOnly: boolean;
   codifiedComments: Map<string, string>;
   applyChange: (next: ColorSystem) => void;
@@ -2608,22 +2772,11 @@ function Inspector({
       </InspectorBodySection>
       <InspectorBodySection>
         <div className={styles.inspectorMappedPrimitive}>
-          <span className={styles.inspectorRowLabel}>Mapped primitive ({theme})</span>
-          <AppNativeSelect
-            value={refId ?? ""}
-            onValueChange={(next) =>
-              applyChange(remapSemantic(system, token.id, theme, next))
-            }
-            options={
-              refId
-                ? primitiveOptions
-                : [{ value: "", label: "Unmapped — choose primitive" }, ...primitiveOptions]
-            }
-            size="xs"
-            tone="gray"
-            fullWidth
-            disabled={readOnly}
-            aria-label="Mapped primitive token"
+          <PrimitiveSwatchPicker
+            system={system}
+            value={refId}
+            readOnly={readOnly}
+            onChange={(next) => applyChange(remapSemantic(system, token.id, theme, next))}
           />
         </div>
         <ColorPreviewBar hex={hex} />
