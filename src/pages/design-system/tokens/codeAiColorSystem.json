@@ -2639,7 +2639,7 @@
         "dark": "#292F36"
       },
       "comments": {
-        "light": "Inverse roles are label colors for solid-fill disabled elements; pair each with the matching background/disabled/<color>. Outline disabled elements use text/disabled/<color> instead. (Applies to all -inverse roles in this family.)"
+        "light": "Single inverse for the whole disabled family: label color for solid-fill disabled elements of any color; pair with the matching background/disabled/<color>. Outline disabled elements use text/disabled/<color> instead."
       }
     },
     {
@@ -2657,20 +2657,6 @@
       }
     },
     {
-      "id": "text/disabled/brand-inverse",
-      "surface": "text",
-      "familyKey": "disabled-2",
-      "role": "brand-inverse",
-      "ref": {
-        "light": "neutral::base::white",
-        "dark": "neutral::base::black"
-      },
-      "fallbackHex": {
-        "light": "#FFFFFF",
-        "dark": "#292F36"
-      }
-    },
-    {
       "id": "text/disabled/error",
       "surface": "text",
       "familyKey": "disabled-2",
@@ -2682,20 +2668,6 @@
       "fallbackHex": {
         "light": "#D4DAE1",
         "dark": "#69788A"
-      }
-    },
-    {
-      "id": "text/disabled/error-inverse",
-      "surface": "text",
-      "familyKey": "disabled-2",
-      "role": "error-inverse",
-      "ref": {
-        "light": "neutral::base::white",
-        "dark": "neutral::base::black"
-      },
-      "fallbackHex": {
-        "light": "#FFFFFF",
-        "dark": "#292F36"
       }
     },
     {
@@ -2713,20 +2685,6 @@
       }
     },
     {
-      "id": "text/disabled/warning-inverse",
-      "surface": "text",
-      "familyKey": "disabled-2",
-      "role": "warning-inverse",
-      "ref": {
-        "light": "neutral::base::white",
-        "dark": "neutral::base::black"
-      },
-      "fallbackHex": {
-        "light": "#FFFFFF",
-        "dark": "#292F36"
-      }
-    },
-    {
       "id": "text/disabled/success",
       "surface": "text",
       "familyKey": "disabled-2",
@@ -2738,20 +2696,6 @@
       "fallbackHex": {
         "light": "#D4DAE1",
         "dark": "#69788A"
-      }
-    },
-    {
-      "id": "text/disabled/success-inverse",
-      "surface": "text",
-      "familyKey": "disabled-2",
-      "role": "success-inverse",
-      "ref": {
-        "light": "neutral::base::white",
-        "dark": "neutral::base::black"
-      },
-      "fallbackHex": {
-        "light": "#FFFFFF",
-        "dark": "#292F36"
       }
     },
     {
@@ -2769,20 +2713,6 @@
       }
     },
     {
-      "id": "text/disabled/info-inverse",
-      "surface": "text",
-      "familyKey": "disabled-2",
-      "role": "info-inverse",
-      "ref": {
-        "light": "neutral::base::white",
-        "dark": "neutral::base::black"
-      },
-      "fallbackHex": {
-        "light": "#FFFFFF",
-        "dark": "#292F36"
-      }
-    },
-    {
       "id": "text/disabled/pink",
       "surface": "text",
       "familyKey": "disabled-2",
@@ -2797,20 +2727,6 @@
       }
     },
     {
-      "id": "text/disabled/pink-inverse",
-      "surface": "text",
-      "familyKey": "disabled-2",
-      "role": "pink-inverse",
-      "ref": {
-        "light": "neutral::base::white",
-        "dark": "neutral::base::black"
-      },
-      "fallbackHex": {
-        "light": "#FFFFFF",
-        "dark": "#292F36"
-      }
-    },
-    {
       "id": "text/disabled/orange",
       "surface": "text",
       "familyKey": "disabled-2",
@@ -2822,20 +2738,6 @@
       "fallbackHex": {
         "light": "#D4DAE1",
         "dark": "#69788A"
-      }
-    },
-    {
-      "id": "text/disabled/orange-inverse",
-      "surface": "text",
-      "familyKey": "disabled-2",
-      "role": "orange-inverse",
-      "ref": {
-        "light": "neutral::base::white",
-        "dark": "neutral::base::black"
-      },
-      "fallbackHex": {
-        "light": "#FFFFFF",
-        "dark": "#292F36"
       }
     },
     {
@@ -3211,19 +3113,12 @@
       "neutral",
       "neutral-inverse",
       "brand",
-      "brand-inverse",
       "error",
-      "error-inverse",
       "warning",
-      "warning-inverse",
       "success",
-      "success-inverse",
       "info",
-      "info-inverse",
       "pink",
-      "pink-inverse",
-      "orange",
-      "orange-inverse"
+      "orange"
     ]
   }
 }

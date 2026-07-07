@@ -100,7 +100,7 @@ CodeAI blocks in `tokens.css` include generator-only aliases (`brand-teal-*` →
 CodeAI models disabled as a **state** (like `selected`), not a role inside each base family. Per-color tokens live under the `state` subgroup as `disabled` families (`disabled` / `disabled-2` / `disabled-3` for background/text/borders, all displaying "disabled"):
 
 - `--ds-background-disabled-<color>`, `--ds-borders-disabled-<color>`, `--ds-text-disabled-<color>` for `neutral`, `brand`, `error`, `warning`, `success`, `info`, `pink`, `orange` (step 20 light / step 80 dark).
-- `--ds-text-disabled-<color>-inverse` — label color for **solid-fill** disabled elements (pairs with `background-disabled-<color>`); outline disabled elements use the non-inverse text token.
+- `--ds-text-disabled-neutral-inverse` — the single inverse for the whole family: label color for **solid-fill** disabled elements of any color (pairs with `background-disabled-<color>`); outline disabled elements use `text-disabled-<color>`. There are no per-color inverse tokens — they would all resolve to the same white (light) / black (dark) value.
 
 The legacy `*-neutral-disabled` roles were removed from the CodeAI system. Code.org still ships the legacy names; `globals.css` bridges them by aliasing `--ds-*-disabled-neutral` → the legacy `--ds-*-neutral-disabled` at `:root`, so components always use the state-group form. Code.org has no per-color disabled tokens yet — non-neutral disabled tokens resolve only under CodeAI.
 
