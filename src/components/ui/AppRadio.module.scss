@@ -78,11 +78,11 @@
 
 .input:disabled + .control {
   background: var(--ds-background-neutral-primary);
-  border-color: var(--ds-borders-neutral-disabled);
+  border-color: var(--ds-borders-disabled-neutral);
 }
 
 .input:disabled:checked + .control::after {
-  background: var(--ds-background-neutral-disabled);
+  background: var(--ds-background-disabled-neutral);
 }
 
 .sizeL {

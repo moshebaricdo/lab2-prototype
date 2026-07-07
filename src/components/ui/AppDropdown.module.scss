@@ -42,8 +42,8 @@ button.field {
 
 .disabled {
   cursor: not-allowed;
-  border-color: var(--ds-borders-neutral-disabled);
-  color: var(--ds-text-neutral-disabled);
+  border-color: var(--ds-borders-disabled-neutral);
+  color: var(--ds-text-disabled-neutral);
 }
 
 .fullWidth {
@@ -268,7 +268,7 @@ button.field {
 .actionItem:disabled,
 .itemDisabled {
   cursor: not-allowed;
-  color: var(--ds-text-neutral-disabled);
+  color: var(--ds-text-disabled-neutral);
 }
 
 .actionItem:disabled:hover {

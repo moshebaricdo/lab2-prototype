@@ -178,9 +178,9 @@
 
 /* Disabled — uniform across fill types and colors */
 .disabled {
-  --tag-bg: var(--ds-background-neutral-disabled);
-  --tag-text: var(--ds-text-neutral-disabled);
-  --tag-icon: var(--ds-text-neutral-disabled);
+  --tag-bg: var(--ds-background-disabled-neutral);
+  --tag-text: var(--ds-text-disabled-neutral);
+  --tag-icon: var(--ds-text-disabled-neutral);
 
   cursor: not-allowed;
 }

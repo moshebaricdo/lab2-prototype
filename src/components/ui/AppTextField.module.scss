@@ -130,7 +130,7 @@
 }
 
 .toneWhite .control::placeholder {
-  color: var(--ds-text-neutral-disabled);
+  color: var(--ds-text-disabled-neutral);
 }
 
 .invalid .control,
@@ -146,17 +146,17 @@
 .disabled .label,
 .disabled .helper,
 .disabled .helperIcon {
-  color: var(--ds-text-neutral-disabled);
+  color: var(--ds-text-disabled-neutral);
 }
 
 .disabled .control {
-  border-color: var(--ds-borders-neutral-disabled);
-  color: var(--ds-text-neutral-disabled);
+  border-color: var(--ds-borders-disabled-neutral);
+  color: var(--ds-text-disabled-neutral);
   cursor: not-allowed;
 }
 
 .disabled .control::placeholder {
-  color: var(--ds-text-neutral-disabled);
+  color: var(--ds-text-disabled-neutral);
 }
 
 .readOnly .control {

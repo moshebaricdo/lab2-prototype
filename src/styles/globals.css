@@ -61,6 +61,16 @@
   --sidebar-accent-foreground: var(--ds-text-neutral-white-fixed);
   --sidebar-border: var(--ds-borders-neutral-primary);
   --sidebar-ring: var(--ds-borders-brand-teal-primary);
+
+  /* Disabled-state bridge: CodeAI defines per-color `--ds-*-disabled-<color>`
+     state tokens in tokens.css; the Code.org blocks still ship the legacy
+     `--ds-*-neutral-disabled` names. Alias the canonical names here so
+     components can use the state-group form under both brands. The CodeAI
+     theme blocks (higher specificity) override these with real values. */
+  --ds-background-disabled-neutral: var(--ds-background-neutral-disabled);
+  --ds-borders-disabled-neutral: var(--ds-borders-neutral-disabled);
+  --ds-text-disabled-neutral: var(--ds-text-neutral-disabled);
+  --ds-text-disabled-neutral-inverse: var(--ds-text-neutral-disabled-inverse);
 }
 
 :root[data-brand-theme="codeAi"] {

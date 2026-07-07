@@ -50,8 +50,13 @@ function exportSurface(surface: string): string {
   return s === "borders" ? "border" : s;
 }
 
-/** Subgroups whose name is omitted from semantic variable names (prod convention). */
-const FLAT_SUBGROUPS = new Set(["sentiment"]);
+/**
+ * Subgroups whose name is omitted from semantic variable names (prod
+ * convention). `state` is flat so exported names match the generated
+ * `--ds-*` names (which derive from token ids like `background/disabled/…`):
+ * `background-selected-primary`, `background-disabled-neutral`.
+ */
+const FLAT_SUBGROUPS = new Set(["sentiment", "state"]);
 
 /**
  * Subgroups with a single, by-design family whose name is omitted so the
@@ -64,9 +69,9 @@ const SINGLE_FAMILY_SUBGROUPS = new Set(["brand"]);
  * Prod-style semantic variable name derived from current display names:
  * `{surface}-{subgroup?}-{family?}-{role}`.
  *
- * - `sentiment` subgroup is flat (e.g. `background-error-primary`).
- * - Other subgroups keep their name (e.g. `background-neutral-primary`,
- *   `background-state-selected-primary`).
+ * - `sentiment` and `state` subgroups are flat (e.g. `background-error-primary`,
+ *   `background-selected-primary`, `background-disabled-neutral`).
+ * - Other subgroups keep their name (e.g. `background-neutral-primary`).
  * - `brand` collapses its (single) family name so the token stays
  *   color-agnostic: `background-brand-primary`. Also collapses whenever the
  *   family name equals the subgroup name (e.g. the neutral gray family).

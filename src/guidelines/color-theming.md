@@ -93,6 +93,19 @@ node scripts/generate-tokens.mjs
 
 CodeAI blocks in `tokens.css` include generator-only aliases (`brand-teal-*` → `brand-purple-*`). Code.org blocks use `:root` + `.dark` without `data-brand-theme`.
 
+**Caution:** `generate-tokens.mjs` regenerates the Code.org `:root`/`.dark` blocks from `tokens/semantic/*.tokens.json` (or a Desktop fallback path) when those files exist. If they resolve to a different token export than what produced the committed blocks, the Code.org section will be rewritten wholesale — diff `tokens.css` after regenerating and revert unintended Code.org changes.
+
+### Disabled state tokens
+
+CodeAI models disabled as a **state** (like `selected`), not a role inside each base family. Per-color tokens live under the `state` subgroup as `disabled` families (`disabled` / `disabled-2` / `disabled-3` for background/text/borders, all displaying "disabled"):
+
+- `--ds-background-disabled-<color>`, `--ds-borders-disabled-<color>`, `--ds-text-disabled-<color>` for `neutral`, `brand`, `error`, `warning`, `success`, `info`, `pink`, `orange` (step 20 light / step 80 dark).
+- `--ds-text-disabled-<color>-inverse` — label color for **solid-fill** disabled elements (pairs with `background-disabled-<color>`); outline disabled elements use the non-inverse text token.
+
+The legacy `*-neutral-disabled` roles were removed from the CodeAI system. Code.org still ships the legacy names; `globals.css` bridges them by aliasing `--ds-*-disabled-neutral` → the legacy `--ds-*-neutral-disabled` at `:root`, so components always use the state-group form. Code.org has no per-color disabled tokens yet — non-neutral disabled tokens resolve only under CodeAI.
+
+The CSS exporter treats `state` as a **flat** subgroup, so exported names match generated names (`background-disabled-neutral`, `background-selected-primary` — no `state-` segment). Note this also changed the exported `selected` names, which previously exported as `background-state-selected-*`.
+
 ---
 
 ## Semantic resolution (sandbox + generator)

@@ -771,6 +771,18 @@
     {
       "id": "selected-3",
       "name": "selected"
+    },
+    {
+      "id": "disabled",
+      "name": "disabled"
+    },
+    {
+      "id": "disabled-2",
+      "name": "disabled"
+    },
+    {
+      "id": "disabled-3",
+      "name": "disabled"
     }
   ],
   "semanticFamilySubGroups": {
@@ -791,7 +803,10 @@
     "orange-3": "accent-2",
     "selected": "state",
     "selected-2": "state",
-    "selected-3": "state"
+    "selected-3": "state",
+    "disabled": "state",
+    "disabled-2": "state",
+    "disabled-3": "state"
   },
   "primitiveFamilyOrders": {
     "neutral": [
@@ -938,20 +953,6 @@
       "fallbackHex": {
         "light": "#69788A",
         "dark": "#D4DAE1"
-      }
-    },
-    {
-      "id": "background/neutral/disabled",
-      "surface": "background",
-      "familyKey": "neutral",
-      "role": "disabled",
-      "ref": {
-        "light": "neutral::gray::20",
-        "dark": "neutral::gray::80"
-      },
-      "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
       }
     },
     {
@@ -1423,20 +1424,6 @@
       }
     },
     {
-      "id": "borders/neutral/disabled",
-      "surface": "borders",
-      "familyKey": "neutral",
-      "role": "disabled",
-      "ref": {
-        "light": "neutral::gray::20",
-        "dark": "neutral::gray::80"
-      },
-      "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
-      }
-    },
-    {
       "id": "borders/brand/purple/primary",
       "surface": "borders",
       "familyKey": "teal",
@@ -1709,34 +1696,6 @@
       "fallbackHex": {
         "light": "#69788A",
         "dark": "#D4DAE1"
-      }
-    },
-    {
-      "id": "text/neutral/disabled",
-      "surface": "text",
-      "familyKey": "neutral",
-      "role": "disabled",
-      "ref": {
-        "light": "neutral::gray::20",
-        "dark": "neutral::gray::80"
-      },
-      "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
-      }
-    },
-    {
-      "id": "text/neutral/disabled-inverse",
-      "surface": "text",
-      "familyKey": "neutral",
-      "role": "disabled-inverse",
-      "ref": {
-        "light": "neutral::base::white",
-        "dark": "neutral::base::black"
-      },
-      "fallbackHex": {
-        "light": "#FFFFFF",
-        "dark": "#292F36"
       }
     },
     {
@@ -2536,6 +2495,460 @@
         "light": "#69788A",
         "dark": "#69788A"
       }
+    },
+    {
+      "id": "background/disabled/neutral",
+      "surface": "background",
+      "familyKey": "disabled",
+      "role": "neutral",
+      "ref": {
+        "light": "neutral::gray::20",
+        "dark": "neutral::gray::80"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      },
+      "comments": {
+        "light": "Matches background-neutral-quaternary by value today, but disabled intent is decoupled so the state can be restyled independently."
+      }
+    },
+    {
+      "id": "background/disabled/brand",
+      "surface": "background",
+      "familyKey": "disabled",
+      "role": "brand",
+      "ref": {
+        "light": "brand::teal::5",
+        "dark": "brand::teal::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "background/disabled/error",
+      "surface": "background",
+      "familyKey": "disabled",
+      "role": "error",
+      "ref": {
+        "light": "sentiment::error::5",
+        "dark": "sentiment::error::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "background/disabled/warning",
+      "surface": "background",
+      "familyKey": "disabled",
+      "role": "warning",
+      "ref": {
+        "light": "sentiment::warning::5",
+        "dark": "sentiment::warning::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "background/disabled/success",
+      "surface": "background",
+      "familyKey": "disabled",
+      "role": "success",
+      "ref": {
+        "light": "sentiment::success::5",
+        "dark": "sentiment::success::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "background/disabled/info",
+      "surface": "background",
+      "familyKey": "disabled",
+      "role": "info",
+      "ref": {
+        "light": "sentiment::information::5",
+        "dark": "sentiment::information::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "background/disabled/pink",
+      "surface": "background",
+      "familyKey": "disabled",
+      "role": "pink",
+      "ref": {
+        "light": "brand::strawberry::5",
+        "dark": "brand::strawberry::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "background/disabled/orange",
+      "surface": "background",
+      "familyKey": "disabled",
+      "role": "orange",
+      "ref": {
+        "light": "brand::orange::5",
+        "dark": "brand::orange::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "text/disabled/neutral",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "neutral",
+      "ref": {
+        "light": "neutral::gray::20",
+        "dark": "neutral::gray::80"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "text/disabled/neutral-inverse",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "neutral-inverse",
+      "ref": {
+        "light": "neutral::base::white",
+        "dark": "neutral::base::black"
+      },
+      "fallbackHex": {
+        "light": "#FFFFFF",
+        "dark": "#292F36"
+      },
+      "comments": {
+        "light": "Inverse roles are label colors for solid-fill disabled elements; pair each with the matching background/disabled/<color>. Outline disabled elements use text/disabled/<color> instead. (Applies to all -inverse roles in this family.)"
+      }
+    },
+    {
+      "id": "text/disabled/brand",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "brand",
+      "ref": {
+        "light": "brand::teal::5",
+        "dark": "brand::teal::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "text/disabled/brand-inverse",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "brand-inverse",
+      "ref": {
+        "light": "neutral::base::white",
+        "dark": "neutral::base::black"
+      },
+      "fallbackHex": {
+        "light": "#FFFFFF",
+        "dark": "#292F36"
+      }
+    },
+    {
+      "id": "text/disabled/error",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "error",
+      "ref": {
+        "light": "sentiment::error::5",
+        "dark": "sentiment::error::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "text/disabled/error-inverse",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "error-inverse",
+      "ref": {
+        "light": "neutral::base::white",
+        "dark": "neutral::base::black"
+      },
+      "fallbackHex": {
+        "light": "#FFFFFF",
+        "dark": "#292F36"
+      }
+    },
+    {
+      "id": "text/disabled/warning",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "warning",
+      "ref": {
+        "light": "sentiment::warning::5",
+        "dark": "sentiment::warning::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "text/disabled/warning-inverse",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "warning-inverse",
+      "ref": {
+        "light": "neutral::base::white",
+        "dark": "neutral::base::black"
+      },
+      "fallbackHex": {
+        "light": "#FFFFFF",
+        "dark": "#292F36"
+      }
+    },
+    {
+      "id": "text/disabled/success",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "success",
+      "ref": {
+        "light": "sentiment::success::5",
+        "dark": "sentiment::success::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "text/disabled/success-inverse",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "success-inverse",
+      "ref": {
+        "light": "neutral::base::white",
+        "dark": "neutral::base::black"
+      },
+      "fallbackHex": {
+        "light": "#FFFFFF",
+        "dark": "#292F36"
+      }
+    },
+    {
+      "id": "text/disabled/info",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "info",
+      "ref": {
+        "light": "sentiment::information::5",
+        "dark": "sentiment::information::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "text/disabled/info-inverse",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "info-inverse",
+      "ref": {
+        "light": "neutral::base::white",
+        "dark": "neutral::base::black"
+      },
+      "fallbackHex": {
+        "light": "#FFFFFF",
+        "dark": "#292F36"
+      }
+    },
+    {
+      "id": "text/disabled/pink",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "pink",
+      "ref": {
+        "light": "brand::strawberry::5",
+        "dark": "brand::strawberry::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "text/disabled/pink-inverse",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "pink-inverse",
+      "ref": {
+        "light": "neutral::base::white",
+        "dark": "neutral::base::black"
+      },
+      "fallbackHex": {
+        "light": "#FFFFFF",
+        "dark": "#292F36"
+      }
+    },
+    {
+      "id": "text/disabled/orange",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "orange",
+      "ref": {
+        "light": "brand::orange::5",
+        "dark": "brand::orange::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "text/disabled/orange-inverse",
+      "surface": "text",
+      "familyKey": "disabled-2",
+      "role": "orange-inverse",
+      "ref": {
+        "light": "neutral::base::white",
+        "dark": "neutral::base::black"
+      },
+      "fallbackHex": {
+        "light": "#FFFFFF",
+        "dark": "#292F36"
+      }
+    },
+    {
+      "id": "borders/disabled/neutral",
+      "surface": "borders",
+      "familyKey": "disabled-3",
+      "role": "neutral",
+      "ref": {
+        "light": "neutral::gray::20",
+        "dark": "neutral::gray::80"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "borders/disabled/brand",
+      "surface": "borders",
+      "familyKey": "disabled-3",
+      "role": "brand",
+      "ref": {
+        "light": "brand::teal::5",
+        "dark": "brand::teal::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "borders/disabled/error",
+      "surface": "borders",
+      "familyKey": "disabled-3",
+      "role": "error",
+      "ref": {
+        "light": "sentiment::error::5",
+        "dark": "sentiment::error::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "borders/disabled/warning",
+      "surface": "borders",
+      "familyKey": "disabled-3",
+      "role": "warning",
+      "ref": {
+        "light": "sentiment::warning::5",
+        "dark": "sentiment::warning::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "borders/disabled/success",
+      "surface": "borders",
+      "familyKey": "disabled-3",
+      "role": "success",
+      "ref": {
+        "light": "sentiment::success::5",
+        "dark": "sentiment::success::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "borders/disabled/info",
+      "surface": "borders",
+      "familyKey": "disabled-3",
+      "role": "info",
+      "ref": {
+        "light": "sentiment::information::5",
+        "dark": "sentiment::information::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "borders/disabled/pink",
+      "surface": "borders",
+      "familyKey": "disabled-3",
+      "role": "pink",
+      "ref": {
+        "light": "brand::strawberry::5",
+        "dark": "brand::strawberry::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
+    },
+    {
+      "id": "borders/disabled/orange",
+      "surface": "borders",
+      "familyKey": "disabled-3",
+      "role": "orange",
+      "ref": {
+        "light": "brand::orange::5",
+        "dark": "brand::orange::90"
+      },
+      "fallbackHex": {
+        "light": "#D4DAE1",
+        "dark": "#69788A"
+      }
     }
   ],
   "semanticFamilyOrders": {
@@ -2589,13 +3002,16 @@
       "orange-3"
     ],
     "background::state": [
-      "selected"
+      "selected",
+      "disabled"
     ],
     "text::state": [
-      "selected-2"
+      "selected-2",
+      "disabled-2"
     ],
     "borders::state": [
-      "selected-3"
+      "selected-3",
+      "disabled-3"
     ]
   },
   "semanticTokenOrders": {
@@ -2608,7 +3024,6 @@
       "senary",
       "septenary",
       "octonary",
-      "disabled",
       "primary-inverse",
       "white-fixed",
       "black-fixed",
@@ -2678,8 +3093,6 @@
       "secondary",
       "tertiary",
       "quaternary",
-      "disabled",
-      "disabled-inverse",
       "placeholder",
       "primary-inverse",
       "white-fixed",
@@ -2726,8 +3139,7 @@
     "borders::neutral": [
       "primary",
       "secondary",
-      "solid",
-      "disabled"
+      "solid"
     ],
     "borders::teal": [
       "primary",
@@ -2774,6 +3186,44 @@
     "borders::selected-3": [
       "primary",
       "hover"
+    ],
+    "background::disabled": [
+      "neutral",
+      "brand",
+      "error",
+      "warning",
+      "success",
+      "info",
+      "pink",
+      "orange"
+    ],
+    "borders::disabled-3": [
+      "neutral",
+      "brand",
+      "error",
+      "warning",
+      "success",
+      "info",
+      "pink",
+      "orange"
+    ],
+    "text::disabled-2": [
+      "neutral",
+      "neutral-inverse",
+      "brand",
+      "brand-inverse",
+      "error",
+      "error-inverse",
+      "warning",
+      "warning-inverse",
+      "success",
+      "success-inverse",
+      "info",
+      "info-inverse",
+      "pink",
+      "pink-inverse",
+      "orange",
+      "orange-inverse"
     ]
   }
 }

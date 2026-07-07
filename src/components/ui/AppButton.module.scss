@@ -126,8 +126,8 @@
 }
 
 .primary.disabled {
-  background: var(--ds-background-neutral-disabled);
-  color: var(--ds-text-neutral-disabled-inverse);
+  background: var(--ds-background-disabled-neutral);
+  color: var(--ds-text-disabled-neutral-inverse);
 }
 
 .secondary {
@@ -162,8 +162,8 @@
 }
 
 .secondary.disabled {
-  border-color: var(--ds-borders-neutral-disabled);
-  color: var(--ds-text-neutral-disabled);
+  border-color: var(--ds-borders-disabled-neutral);
+  color: var(--ds-text-disabled-neutral);
 }
 
 .tertiary {
@@ -229,7 +229,7 @@
 }
 
 .tertiary.disabled {
-  color: var(--ds-text-neutral-disabled);
+  color: var(--ds-text-disabled-neutral);
 }
 
 .iconWrap {
