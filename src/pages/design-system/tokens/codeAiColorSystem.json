@@ -81,7 +81,7 @@
         {
           "id": "neutral::black-alpha::70",
           "step": "70",
-          "hex": "#121212B3"
+          "hex": "#121212B2"
         },
         {
           "id": "neutral::black-alpha::80",
@@ -91,7 +91,7 @@
         {
           "id": "neutral::black-alpha::90",
           "step": "90",
-          "hex": "#121212E6"
+          "hex": "#121212E5"
         },
         {
           "id": "neutral::black-alpha::95",
@@ -840,7 +840,7 @@
       },
       "fallbackHex": {
         "light": "#FFFFFF",
-        "dark": "#292F36"
+        "dark": "#121212"
       }
     },
     {
@@ -853,7 +853,7 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#292F36",
+        "light": "#121212",
         "dark": "#FFFFFF"
       }
     },
@@ -867,8 +867,8 @@
         "dark": "neutral::gray::95"
       },
       "fallbackHex": {
-        "light": "#F0F2F5",
-        "dark": "#424D59"
+        "light": "#F1F2F4",
+        "dark": "#282B2F"
       }
     },
     {
@@ -881,8 +881,8 @@
         "dark": "neutral::gray::90"
       },
       "fallbackHex": {
-        "light": "#DFE3E9",
-        "dark": "#576575"
+        "light": "#E6E8EA",
+        "dark": "#2C3035"
       }
     },
     {
@@ -895,8 +895,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#D0D3D7",
+        "dark": "#444A50"
       }
     },
     {
@@ -909,8 +909,8 @@
         "dark": "neutral::gray::70"
       },
       "fallbackHex": {
-        "light": "#C6CED6",
-        "dark": "#768699"
+        "light": "#B7BCC2",
+        "dark": "#596069"
       }
     },
     {
@@ -923,8 +923,8 @@
         "dark": "neutral::gray::50"
       },
       "fallbackHex": {
-        "light": "#A1AEBB",
-        "dark": "#A1AEBB"
+        "light": "#87909A",
+        "dark": "#87909A"
       }
     },
     {
@@ -937,8 +937,8 @@
         "dark": "neutral::gray::30"
       },
       "fallbackHex": {
-        "light": "#768699",
-        "dark": "#C6CED6"
+        "light": "#596069",
+        "dark": "#B7BCC2"
       }
     },
     {
@@ -951,8 +951,8 @@
         "dark": "neutral::gray::20"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#D4DAE1"
+        "light": "#444A50",
+        "dark": "#D0D3D7"
       }
     },
     {
@@ -979,8 +979,8 @@
         "dark": "neutral::base::black"
       },
       "fallbackHex": {
-        "light": "#292F36",
-        "dark": "#292F36"
+        "light": "#121212",
+        "dark": "#121212"
       }
     },
     {
@@ -993,7 +993,7 @@
         "dark": "neutral::base::true-black"
       },
       "fallbackHex": {
-        "light": "#FFFFFF",
+        "light": "#121212",
         "dark": "#000000"
       }
     },
@@ -1007,8 +1007,8 @@
         "dark": "brand::teal::50"
       },
       "fallbackHex": {
-        "light": "#00818F",
-        "dark": "#00818F"
+        "light": "#4C42CF",
+        "dark": "#4C42CF"
       }
     },
     {
@@ -1021,8 +1021,8 @@
         "dark": "brand::teal::95"
       },
       "fallbackHex": {
-        "light": "#E0F8F9",
-        "dark": "#004B54"
+        "light": "#E4E2F8",
+        "dark": "#1F1976"
       }
     },
     {
@@ -1035,8 +1035,8 @@
         "dark": "brand::teal::80"
       },
       "fallbackHex": {
-        "light": "#BFE4E8",
-        "dark": "#00636E"
+        "light": "#ACA8EA",
+        "dark": "#2B1E9F"
       }
     },
     {
@@ -1049,8 +1049,8 @@
         "dark": "brand::teal::40"
       },
       "fallbackHex": {
-        "light": "#007785",
-        "dark": "#50B2BD"
+        "light": "#2B1E9F",
+        "dark": "#6F67D9"
       },
       "comments": {
         "dark": "Strong variables are mostly used for hover states, in dark mode they invert and become lighter. They fail 4.5:1 contrast with labels, but we only need the default state to pass."
@@ -1066,8 +1066,8 @@
         "dark": "brand::strawberry::50"
       },
       "fallbackHex": {
-        "light": "#ED6060",
-        "dark": "#ED6060"
+        "light": "#E11970",
+        "dark": "#E11970"
       }
     },
     {
@@ -1080,8 +1080,8 @@
         "dark": "brand::strawberry::80"
       },
       "fallbackHex": {
-        "light": "#FFE3E3",
-        "dark": "#651818"
+        "light": "#F07FB0",
+        "dark": "#A10448"
       }
     },
     {
@@ -1094,8 +1094,8 @@
         "dark": "brand::strawberry::40"
       },
       "fallbackHex": {
-        "light": "#A93737",
-        "dark": "#F88585"
+        "light": "#B5004F",
+        "dark": "#EB5895"
       }
     },
     {
@@ -1108,8 +1108,8 @@
         "dark": "brand::orange::50"
       },
       "fallbackHex": {
-        "light": "#FFB42E",
-        "dark": "#FFB42E"
+        "light": "#F46800",
+        "dark": "#F46800"
       },
       "comments": {
         "light": "The Run button orange is an intentional a11y exception. It fails 4.5:1 contrast with white labels but we are keeping it for its deep user association with \"run\" (and Blockly's run blocks)."
@@ -1125,8 +1125,8 @@
         "dark": "brand::orange::80"
       },
       "fallbackHex": {
-        "light": "#FFF6E5",
-        "dark": "#855500"
+        "light": "#FFA868",
+        "dark": "#942F00"
       }
     },
     {
@@ -1139,8 +1139,8 @@
         "dark": "brand::orange::40"
       },
       "fallbackHex": {
-        "light": "#D68A00",
-        "dark": "#FFC55C"
+        "light": "#B34800",
+        "dark": "#FF8B38"
       }
     },
     {
@@ -1153,8 +1153,8 @@
         "dark": "sentiment::error::50"
       },
       "fallbackHex": {
-        "light": "#E02D16",
-        "dark": "#E02D16"
+        "light": "#EB1414",
+        "dark": "#EB1414"
       }
     },
     {
@@ -1167,8 +1167,8 @@
         "dark": "sentiment::error::95"
       },
       "fallbackHex": {
-        "light": "#FFE1DD",
-        "dark": "#6A1B11"
+        "light": "#FBD5D5",
+        "dark": "#620202"
       }
     },
     {
@@ -1181,8 +1181,8 @@
         "dark": "sentiment::error::80"
       },
       "fallbackHex": {
-        "light": "#FFBFB6",
-        "dark": "#842418"
+        "light": "#F37272",
+        "dark": "#8D0C0C"
       }
     },
     {
@@ -1195,8 +1195,8 @@
         "dark": "sentiment::error::40"
       },
       "fallbackHex": {
-        "light": "#AA2513",
-        "dark": "#F95D4A"
+        "light": "#B30F0F",
+        "dark": "#EF4848"
       }
     },
     {
@@ -1209,8 +1209,8 @@
         "dark": "sentiment::warning::50"
       },
       "fallbackHex": {
-        "light": "#F9CB28",
-        "dark": "#F9CB28"
+        "light": "#F5C000",
+        "dark": "#F5C000"
       }
     },
     {
@@ -1223,8 +1223,8 @@
         "dark": "sentiment::warning::95"
       },
       "fallbackHex": {
-        "light": "#FEFCE8",
-        "dark": "#7D4B07"
+        "light": "#FFF3D1",
+        "dark": "#654500"
       }
     },
     {
@@ -1237,8 +1237,8 @@
         "dark": "sentiment::warning::80"
       },
       "fallbackHex": {
-        "light": "#FEF8C3",
-        "dark": "#A05F08"
+        "light": "#FFD35C",
+        "dark": "#B27A01"
       }
     },
     {
@@ -1251,8 +1251,8 @@
         "dark": "sentiment::warning::40"
       },
       "fallbackHex": {
-        "light": "#C88504",
-        "dark": "#FCDC48"
+        "light": "#CF8E02",
+        "dark": "#FDC835"
       }
     },
     {
@@ -1265,8 +1265,8 @@
         "dark": "sentiment::success::70"
       },
       "fallbackHex": {
-        "light": "#3EA33E",
-        "dark": "#3EA33E"
+        "light": "#258830",
+        "dark": "#258830"
       },
       "comments": {
         "light": "Bumped to level 70 (brand-guideline primary is 50) so white labels pass 4.5:1; strong sits at 90.",
@@ -1283,8 +1283,8 @@
         "dark": "sentiment::success::95"
       },
       "fallbackHex": {
-        "light": "#E2F6E2",
-        "dark": "#1F4820"
+        "light": "#CCF1D0",
+        "dark": "#003F25"
       }
     },
     {
@@ -1297,8 +1297,8 @@
         "dark": "sentiment::success::80"
       },
       "fallbackHex": {
-        "light": "#C7ECC6",
-        "dark": "#245724"
+        "light": "#7CDB87",
+        "dark": "#1F7028"
       }
     },
     {
@@ -1311,8 +1311,8 @@
         "dark": "sentiment::success::60"
       },
       "fallbackHex": {
-        "light": "#286D29",
-        "dark": "#66C365"
+        "light": "#17541E",
+        "dark": "#2DA43A"
       },
       "comments": {
         "dark": "Bc success is at level 70, we maintain the relative hover rule by setting the strong to 60."
@@ -1328,8 +1328,8 @@
         "dark": "sentiment::information::70"
       },
       "fallbackHex": {
-        "light": "#1892E3",
-        "dark": "#1892E3"
+        "light": "#1570D1",
+        "dark": "#1570D1"
       },
       "comments": {
         "light": "Bumped to level 70 (brand-guideline primary is 50) so white labels pass 4.5:1; strong sits at 90.",
@@ -1346,8 +1346,8 @@
         "dark": "sentiment::information::95"
       },
       "fallbackHex": {
-        "light": "#DCEFFB",
-        "dark": "#10416A"
+        "light": "#D5EFFF",
+        "dark": "#06338D"
       }
     },
     {
@@ -1360,8 +1360,8 @@
         "dark": "sentiment::information::80"
       },
       "fallbackHex": {
-        "light": "#BDE0FA",
-        "dark": "#0D4D7F"
+        "light": "#6FCAFF",
+        "dark": "#0855B2"
       }
     },
     {
@@ -1374,8 +1374,8 @@
         "dark": "sentiment::information::60"
       },
       "fallbackHex": {
-        "light": "#0A5A9A",
-        "dark": "#40AAF0"
+        "light": "#0B43A3",
+        "dark": "#0082E5"
       },
       "comments": {
         "dark": "Bc info is at level 70, we maintain the relative hover rule by setting the strong to 60."
@@ -1391,8 +1391,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#D0D3D7",
+        "dark": "#444A50"
       }
     },
     {
@@ -1405,8 +1405,8 @@
         "dark": "neutral::gray::60"
       },
       "fallbackHex": {
-        "light": "#B7C1CB",
-        "dark": "#A1AEBB"
+        "light": "#9EA5AD",
+        "dark": "#6E7782"
       }
     },
     {
@@ -1419,7 +1419,7 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#292F36",
+        "light": "#121212",
         "dark": "#FFFFFF"
       }
     },
@@ -1433,8 +1433,8 @@
         "dark": "brand::teal::50"
       },
       "fallbackHex": {
-        "light": "#0093A4",
-        "dark": "#50B2BD"
+        "light": "#4C42CF",
+        "dark": "#4C42CF"
       },
       "comments": {
         "dark": "Primary borders of all colors stay at level 50 in dark mode since contrast only needs 3:1."
@@ -1450,8 +1450,8 @@
         "dark": "brand::teal::90"
       },
       "fallbackHex": {
-        "light": "#BFE4E8",
-        "dark": "#004B54"
+        "light": "#E4E2F8",
+        "dark": "#1D1590"
       }
     },
     {
@@ -1464,8 +1464,8 @@
         "dark": "brand::teal::30"
       },
       "fallbackHex": {
-        "light": "#007785",
-        "dark": "#007785"
+        "light": "#3228B7",
+        "dark": "#928CEF"
       }
     },
     {
@@ -1478,8 +1478,8 @@
         "dark": "sentiment::error::50"
       },
       "fallbackHex": {
-        "light": "#E02D16",
-        "dark": "#F95D4A"
+        "light": "#EB1414",
+        "dark": "#EB1414"
       }
     },
     {
@@ -1492,8 +1492,8 @@
         "dark": "sentiment::error::90"
       },
       "fallbackHex": {
-        "light": "#FFE1DD",
-        "dark": "#6A1B11"
+        "light": "#FAC2C2",
+        "dark": "#6C0909"
       }
     },
     {
@@ -1506,8 +1506,8 @@
         "dark": "sentiment::error::30"
       },
       "fallbackHex": {
-        "light": "#AA2513",
-        "dark": "#AA2513"
+        "light": "#B30F0F",
+        "dark": "#F37272"
       }
     },
     {
@@ -1520,8 +1520,8 @@
         "dark": "sentiment::warning::50"
       },
       "fallbackHex": {
-        "light": "#F9CB28",
-        "dark": "#FCDC48"
+        "light": "#F5C000",
+        "dark": "#F5C000"
       }
     },
     {
@@ -1534,8 +1534,8 @@
         "dark": "sentiment::warning::90"
       },
       "fallbackHex": {
-        "light": "#FEFCE8",
-        "dark": "#7D4B07"
+        "light": "#FFECB8",
+        "dark": "#885D02"
       }
     },
     {
@@ -1548,8 +1548,8 @@
         "dark": "sentiment::warning::30"
       },
       "fallbackHex": {
-        "light": "#C88504",
-        "dark": "#C88504"
+        "light": "#CF8E02",
+        "dark": "#FFD35C"
       }
     },
     {
@@ -1562,8 +1562,8 @@
         "dark": "sentiment::success::50"
       },
       "fallbackHex": {
-        "light": "#3EA33E",
-        "dark": "#66C365"
+        "light": "#34BD43",
+        "dark": "#34BD43"
       },
       "comments": {
         "light": "Stays at level 50 (unlike the bumped background primary at 70) since border contrast only needs 3:1."
@@ -1579,8 +1579,8 @@
         "dark": "sentiment::success::90"
       },
       "fallbackHex": {
-        "light": "#E2F6E2",
-        "dark": "#1F4820"
+        "light": "#B7E6BD",
+        "dark": "#17541E"
       }
     },
     {
@@ -1593,8 +1593,8 @@
         "dark": "sentiment::success::30"
       },
       "fallbackHex": {
-        "light": "#286D29",
-        "dark": "#286D29"
+        "light": "#258830",
+        "dark": "#7CDB87"
       }
     },
     {
@@ -1607,8 +1607,8 @@
         "dark": "sentiment::information::50"
       },
       "fallbackHex": {
-        "light": "#1892E3",
-        "dark": "#40AAF0"
+        "light": "#0099F3",
+        "dark": "#0099F3"
       },
       "comments": {
         "light": "Stays at level 50 (unlike the bumped background primary at 70) since border contrast only needs 3:1."
@@ -1624,8 +1624,8 @@
         "dark": "sentiment::information::90"
       },
       "fallbackHex": {
-        "light": "#DCEFFB",
-        "dark": "#10416A"
+        "light": "#B8E5FF",
+        "dark": "#0B43A3"
       }
     },
     {
@@ -1638,8 +1638,8 @@
         "dark": "sentiment::information::30"
       },
       "fallbackHex": {
-        "light": "#0A5A9A",
-        "dark": "#0A5A9A"
+        "light": "#1570D1",
+        "dark": "#6FCAFF"
       }
     },
     {
@@ -1652,7 +1652,7 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#292F36",
+        "light": "#121212",
         "dark": "#FFFFFF"
       }
     },
@@ -1666,8 +1666,8 @@
         "dark": "neutral::gray::5"
       },
       "fallbackHex": {
-        "light": "#424D59",
-        "dark": "#F0F2F5"
+        "light": "#2C3035",
+        "dark": "#F1F2F4"
       }
     },
     {
@@ -1680,8 +1680,8 @@
         "dark": "neutral::gray::10"
       },
       "fallbackHex": {
-        "light": "#576575",
-        "dark": "#DFE3E9"
+        "light": "#444A50",
+        "dark": "#E6E8EA"
       }
     },
     {
@@ -1694,8 +1694,8 @@
         "dark": "neutral::gray::20"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#D4DAE1"
+        "light": "#596069",
+        "dark": "#D0D3D7"
       }
     },
     {
@@ -1708,8 +1708,8 @@
         "dark": "neutral::gray::60"
       },
       "fallbackHex": {
-        "light": "#B7C1CB",
-        "dark": "#8896A7"
+        "light": "#9EA5AD",
+        "dark": "#6E7782"
       }
     },
     {
@@ -1723,7 +1723,7 @@
       },
       "fallbackHex": {
         "light": "#FFFFFF",
-        "dark": "#292F36"
+        "dark": "#121212"
       }
     },
     {
@@ -1750,8 +1750,8 @@
         "dark": "neutral::base::black"
       },
       "fallbackHex": {
-        "light": "#292F36",
-        "dark": "#292F36"
+        "light": "#121212",
+        "dark": "#121212"
       }
     },
     {
@@ -1764,8 +1764,8 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#0093A4",
-        "dark": "#000000"
+        "light": "#4C42CF",
+        "dark": "#FFFFFF"
       }
     },
     {
@@ -1778,8 +1778,8 @@
         "dark": "brand::teal::10"
       },
       "fallbackHex": {
-        "light": "#007785",
-        "dark": "#000000"
+        "light": "#3228B7",
+        "dark": "#CAC6F5"
       }
     },
     {
@@ -1792,8 +1792,8 @@
         "dark": "brand::teal::30"
       },
       "fallbackHex": {
-        "light": "#0093A4",
-        "dark": "#50B2BD"
+        "light": "#4C42CF",
+        "dark": "#928CEF"
       }
     },
     {
@@ -1806,8 +1806,8 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#E02D16",
-        "dark": "#000000"
+        "light": "#EB1414",
+        "dark": "#FFFFFF"
       }
     },
     {
@@ -1820,8 +1820,8 @@
         "dark": "sentiment::error::20"
       },
       "fallbackHex": {
-        "light": "#C12814",
-        "dark": "#000000"
+        "light": "#B30F0F",
+        "dark": "#F69898"
       }
     },
     {
@@ -1834,8 +1834,8 @@
         "dark": "sentiment::error::40"
       },
       "fallbackHex": {
-        "light": "#E02D16",
-        "dark": "#F95D4A"
+        "light": "#EB1414",
+        "dark": "#EF4848"
       }
     },
     {
@@ -1848,8 +1848,8 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#F9CB28",
-        "dark": "#000000"
+        "light": "#F5C000",
+        "dark": "#FFFFFF"
       }
     },
     {
@@ -1862,8 +1862,8 @@
         "dark": "sentiment::warning::20"
       },
       "fallbackHex": {
-        "light": "#C88504",
-        "dark": "#000000"
+        "light": "#CF8E02",
+        "dark": "#FFE08A"
       }
     },
     {
@@ -1876,8 +1876,8 @@
         "dark": "sentiment::warning::50"
       },
       "fallbackHex": {
-        "light": "#F9CB28",
-        "dark": "#FCDC48"
+        "light": "#F5C000",
+        "dark": "#F5C000"
       }
     },
     {
@@ -1890,8 +1890,8 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#3EA33E",
-        "dark": "#000000"
+        "light": "#258830",
+        "dark": "#FFFFFF"
       }
     },
     {
@@ -1904,8 +1904,8 @@
         "dark": "sentiment::success::20"
       },
       "fallbackHex": {
-        "light": "#286D29",
-        "dark": "#000000"
+        "light": "#17541E",
+        "dark": "#9BE3A3"
       }
     },
     {
@@ -1918,8 +1918,8 @@
         "dark": "sentiment::success::50"
       },
       "fallbackHex": {
-        "light": "#3EA33E",
-        "dark": "#66C365"
+        "light": "#258830",
+        "dark": "#34BD43"
       }
     },
     {
@@ -1932,8 +1932,8 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#1892E3",
-        "dark": "#000000"
+        "light": "#1570D1",
+        "dark": "#FFFFFF"
       }
     },
     {
@@ -1946,8 +1946,8 @@
         "dark": "sentiment::information::20"
       },
       "fallbackHex": {
-        "light": "#0A5A9A",
-        "dark": "#000000"
+        "light": "#0B43A3",
+        "dark": "#94D7FF"
       }
     },
     {
@@ -1960,8 +1960,8 @@
         "dark": "sentiment::information::50"
       },
       "fallbackHex": {
-        "light": "#1892E3",
-        "dark": "#40AAF0"
+        "light": "#1570D1",
+        "dark": "#0099F3"
       }
     },
     {
@@ -1974,8 +1974,8 @@
         "dark": "neutral::white-alpha::5"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#1212120D",
+        "dark": "#FFFFFF0D"
       }
     },
     {
@@ -1988,8 +1988,8 @@
         "dark": "neutral::white-alpha::10"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#1212121A",
+        "dark": "#FFFFFF1A"
       }
     },
     {
@@ -2002,8 +2002,8 @@
         "dark": "neutral::white-alpha::20"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#12121233",
+        "dark": "#FFFFFF33"
       }
     },
     {
@@ -2016,8 +2016,8 @@
         "dark": "neutral::white-alpha::30"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#1212124D",
+        "dark": "#FFFFFF4D"
       }
     },
     {
@@ -2030,8 +2030,8 @@
         "dark": "neutral::white-alpha::40"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#12121266",
+        "dark": "#FFFFFF66"
       }
     },
     {
@@ -2044,8 +2044,8 @@
         "dark": "neutral::white-alpha::50"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#12121280",
+        "dark": "#FFFFFF80"
       }
     },
     {
@@ -2058,8 +2058,8 @@
         "dark": "neutral::white-alpha::60"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#12121299",
+        "dark": "#FFFFFF99"
       }
     },
     {
@@ -2072,8 +2072,8 @@
         "dark": "neutral::white-alpha::70"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#121212B2",
+        "dark": "#FFFFFFB2"
       }
     },
     {
@@ -2086,8 +2086,8 @@
         "dark": "neutral::white-alpha::80"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#121212CC",
+        "dark": "#FFFFFFCC"
       }
     },
     {
@@ -2100,8 +2100,8 @@
         "dark": "neutral::white-alpha::90"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#121212E5",
+        "dark": "#FFFFFFE5"
       }
     },
     {
@@ -2114,8 +2114,8 @@
         "dark": "neutral::white-alpha::95"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#121212F2",
+        "dark": "#FFFFFFF2"
       }
     },
     {
@@ -2128,8 +2128,8 @@
         "dark": "brand::strawberry::95"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#F3C3D8",
+        "dark": "#7D0C3D"
       }
     },
     {
@@ -2142,8 +2142,8 @@
         "dark": "brand::orange::95"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#FFD2B3",
+        "dark": "#611D00"
       }
     },
     {
@@ -2156,8 +2156,8 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#E11970",
+        "dark": "#FFFFFF"
       }
     },
     {
@@ -2170,8 +2170,8 @@
         "dark": "neutral::base::white"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#F46800",
+        "dark": "#FFFFFF"
       },
       "comments": {
         "light": "Orange text intentionally keeps the true brand-guideline level-50 value instead of bumping for contrast"
@@ -2187,8 +2187,8 @@
         "dark": "brand::strawberry::50"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#E11970",
+        "dark": "#E11970"
       }
     },
     {
@@ -2201,8 +2201,8 @@
         "dark": "brand::orange::50"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#F46800",
+        "dark": "#F46800"
       }
     },
     {
@@ -2215,8 +2215,8 @@
         "dark": "sentiment::success::5"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#2B1E9F",
+        "dark": "#CCF1D0"
       },
       "comments": {
         "light": "Selected state is mode-inverted and cross-family by design: brand fill + seafoam text in light, seafoam fill + navy text in dark.",
@@ -2233,8 +2233,8 @@
         "dark": "sentiment::success::20"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#1F1976",
+        "dark": "#9BE3A3"
       }
     },
     {
@@ -2247,8 +2247,8 @@
         "dark": "brand::strawberry::20"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#B5004F",
+        "dark": "#EEA1C3"
       }
     },
     {
@@ -2261,8 +2261,8 @@
         "dark": "brand::strawberry::40"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#E11970",
+        "dark": "#EB5895"
       }
     },
     {
@@ -2275,8 +2275,8 @@
         "dark": "brand::orange::20"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#B34800",
+        "dark": "#FFBD8A"
       }
     },
     {
@@ -2289,8 +2289,8 @@
         "dark": "brand::orange::50"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#F46800",
+        "dark": "#F46800"
       }
     },
     {
@@ -2303,8 +2303,8 @@
         "dark": "brand::teal::95"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#CCF1D0",
+        "dark": "#1F1976"
       },
       "comments": {
         "light": "Selected state text pairs with background and border-state-selected — always use the two together.",
@@ -2317,12 +2317,12 @@
       "familyKey": "pink-2",
       "role": "light",
       "ref": {
-        "light": "brand::strawberry::30",
+        "light": "brand::strawberry::10",
         "dark": "brand::strawberry::90"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#F3C3D8",
+        "dark": "#8D003D"
       }
     },
     {
@@ -2331,12 +2331,12 @@
       "familyKey": "orange-3",
       "role": "light",
       "ref": {
-        "light": "brand::orange::30",
+        "light": "brand::orange::10",
         "dark": "brand::orange::80"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#FFD2B3",
+        "dark": "#942F00"
       }
     },
     {
@@ -2349,8 +2349,8 @@
         "dark": "brand::orange::30"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#B34800",
+        "dark": "#FFA868"
       }
     },
     {
@@ -2363,8 +2363,8 @@
         "dark": "brand::strawberry::30"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#B5004F",
+        "dark": "#F07FB0"
       }
     },
     {
@@ -2377,8 +2377,8 @@
         "dark": "brand::teal::70"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#ACA8EA",
+        "dark": "#3228B7"
       }
     },
     {
@@ -2391,8 +2391,8 @@
         "dark": "sentiment::error::70"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#F37272",
+        "dark": "#B30F0F"
       }
     },
     {
@@ -2405,8 +2405,8 @@
         "dark": "sentiment::warning::70"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#FFD35C",
+        "dark": "#CF8E02"
       }
     },
     {
@@ -2419,8 +2419,8 @@
         "dark": "sentiment::success::70"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#7CDB87",
+        "dark": "#258830"
       }
     },
     {
@@ -2433,8 +2433,8 @@
         "dark": "sentiment::information::70"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#6FCAFF",
+        "dark": "#1570D1"
       }
     },
     {
@@ -2447,8 +2447,8 @@
         "dark": "brand::strawberry::70"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#F07FB0",
+        "dark": "#B5004F"
       }
     },
     {
@@ -2461,8 +2461,8 @@
         "dark": "brand::orange::70"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#FFA868",
+        "dark": "#B34800"
       }
     },
     {
@@ -2475,8 +2475,8 @@
         "dark": "sentiment::success::5"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#2B1E9F",
+        "dark": "#CCF1D0"
       },
       "comments": {
         "light": "Border state selected hover and primary intentionally match the background state color."
@@ -2492,8 +2492,8 @@
         "dark": "sentiment::success::20"
       },
       "fallbackHex": {
-        "light": "#69788A",
-        "dark": "#69788A"
+        "light": "#1F1976",
+        "dark": "#9BE3A3"
       }
     },
     {
@@ -2506,8 +2506,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#D0D3D7",
+        "dark": "#444A50"
       },
       "comments": {
         "light": "Matches background-neutral-quaternary by value today, but disabled intent is decoupled so the state can be restyled independently."
@@ -2523,8 +2523,8 @@
         "dark": "brand::teal::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#E4E2F8",
+        "dark": "#1D1590"
       }
     },
     {
@@ -2537,8 +2537,8 @@
         "dark": "sentiment::error::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FBD5D5",
+        "dark": "#6C0909"
       }
     },
     {
@@ -2551,8 +2551,8 @@
         "dark": "sentiment::warning::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FFF3D1",
+        "dark": "#885D02"
       }
     },
     {
@@ -2565,8 +2565,8 @@
         "dark": "sentiment::success::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#CCF1D0",
+        "dark": "#17541E"
       }
     },
     {
@@ -2579,8 +2579,8 @@
         "dark": "sentiment::information::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#D5EFFF",
+        "dark": "#0B43A3"
       }
     },
     {
@@ -2593,8 +2593,8 @@
         "dark": "brand::strawberry::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FBDAE8",
+        "dark": "#8D003D"
       }
     },
     {
@@ -2607,8 +2607,8 @@
         "dark": "brand::orange::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FFE3CE",
+        "dark": "#701C00"
       }
     },
     {
@@ -2621,8 +2621,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#D0D3D7",
+        "dark": "#444A50"
       }
     },
     {
@@ -2636,7 +2636,7 @@
       },
       "fallbackHex": {
         "light": "#FFFFFF",
-        "dark": "#292F36"
+        "dark": "#121212"
       },
       "comments": {
         "light": "Single inverse for the whole disabled family: label color for solid-fill disabled elements of any color; pair with the matching background/disabled/<color>. Outline disabled elements use text/disabled/<color> instead."
@@ -2652,8 +2652,8 @@
         "dark": "brand::teal::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#E4E2F8",
+        "dark": "#1D1590"
       }
     },
     {
@@ -2666,8 +2666,8 @@
         "dark": "sentiment::error::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FBD5D5",
+        "dark": "#6C0909"
       }
     },
     {
@@ -2680,8 +2680,8 @@
         "dark": "sentiment::warning::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FFF3D1",
+        "dark": "#885D02"
       }
     },
     {
@@ -2694,8 +2694,8 @@
         "dark": "sentiment::success::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#CCF1D0",
+        "dark": "#17541E"
       }
     },
     {
@@ -2708,8 +2708,8 @@
         "dark": "sentiment::information::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#D5EFFF",
+        "dark": "#0B43A3"
       }
     },
     {
@@ -2722,8 +2722,8 @@
         "dark": "brand::strawberry::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FBDAE8",
+        "dark": "#8D003D"
       }
     },
     {
@@ -2736,8 +2736,8 @@
         "dark": "brand::orange::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FFE3CE",
+        "dark": "#701C00"
       }
     },
     {
@@ -2750,8 +2750,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#D0D3D7",
+        "dark": "#444A50"
       }
     },
     {
@@ -2764,8 +2764,8 @@
         "dark": "brand::teal::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#E4E2F8",
+        "dark": "#1D1590"
       }
     },
     {
@@ -2778,8 +2778,8 @@
         "dark": "sentiment::error::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FBD5D5",
+        "dark": "#6C0909"
       }
     },
     {
@@ -2792,8 +2792,8 @@
         "dark": "sentiment::warning::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FFF3D1",
+        "dark": "#885D02"
       }
     },
     {
@@ -2806,8 +2806,8 @@
         "dark": "sentiment::success::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#CCF1D0",
+        "dark": "#17541E"
       }
     },
     {
@@ -2820,8 +2820,8 @@
         "dark": "sentiment::information::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#D5EFFF",
+        "dark": "#0B43A3"
       }
     },
     {
@@ -2834,8 +2834,8 @@
         "dark": "brand::strawberry::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FBDAE8",
+        "dark": "#8D003D"
       }
     },
     {
@@ -2848,8 +2848,8 @@
         "dark": "brand::orange::90"
       },
       "fallbackHex": {
-        "light": "#D4DAE1",
-        "dark": "#69788A"
+        "light": "#FFE3CE",
+        "dark": "#701C00"
       }
     }
   ],
