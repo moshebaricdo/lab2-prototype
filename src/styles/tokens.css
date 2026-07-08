@@ -307,8 +307,8 @@
   --ds-background-pink-mid: #F07FB0;
   --ds-background-pink-primary: #E11970;
   --ds-background-pink-strong: #B5004F;
-  --ds-background-selected-hover: #1F1976;
   --ds-background-selected-primary: #2B1E9F;
+  --ds-background-selected-strong: #1F1976;
   --ds-background-success-light: #CCF1D0;
   --ds-background-success-mid: #7CDB87;
   --ds-background-success-primary: #258830;
@@ -348,8 +348,8 @@
   --ds-borders-pink-mid: #F07FB0;
   --ds-borders-pink-primary: #E11970;
   --ds-borders-pink-strong: #B5004F;
-  --ds-borders-selected-hover: #1F1976;
   --ds-borders-selected-primary: #2B1E9F;
+  --ds-borders-selected-strong: #1F1976;
   --ds-borders-success-light: #B7E6BD;
   --ds-borders-success-mid: #7CDB87;
   --ds-borders-success-primary: #34BD43;
@@ -473,8 +473,8 @@
   --ds-background-pink-mid: #A10448;
   --ds-background-pink-primary: #E11970;
   --ds-background-pink-strong: #EB5895;
-  --ds-background-selected-hover: #9BE3A3;
   --ds-background-selected-primary: #CCF1D0;
+  --ds-background-selected-strong: #9BE3A3;
   --ds-background-success-light: #003F25;
   --ds-background-success-mid: #1F7028;
   --ds-background-success-primary: #258830;
@@ -506,7 +506,7 @@
   --ds-borders-neutral-primary: #444A50;
   --ds-borders-neutral-secondary: #6E7782;
   --ds-borders-neutral-solid: #FFFFFF;
-  --ds-borders-orange-light: #942F00;
+  --ds-borders-orange-light: #701C00;
   --ds-borders-orange-mid: #B34800;
   --ds-borders-orange-primary: #F46800;
   --ds-borders-orange-strong: #FFA868;
@@ -514,8 +514,8 @@
   --ds-borders-pink-mid: #B5004F;
   --ds-borders-pink-primary: #E11970;
   --ds-borders-pink-strong: #F07FB0;
-  --ds-borders-selected-hover: #9BE3A3;
   --ds-borders-selected-primary: #CCF1D0;
+  --ds-borders-selected-strong: #9BE3A3;
   --ds-borders-success-light: #17541E;
   --ds-borders-success-mid: #258830;
   --ds-borders-success-primary: #34BD43;

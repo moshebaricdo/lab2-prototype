@@ -2224,10 +2224,10 @@
       }
     },
     {
-      "id": "background/selected/hover",
+      "id": "background/selected/strong",
       "surface": "background",
       "familyKey": "selected",
-      "role": "hover",
+      "role": "strong",
       "ref": {
         "light": "brand::teal::95",
         "dark": "sentiment::success::20"
@@ -2332,11 +2332,11 @@
       "role": "light",
       "ref": {
         "light": "brand::orange::10",
-        "dark": "brand::orange::80"
+        "dark": "brand::orange::90"
       },
       "fallbackHex": {
         "light": "#FFD2B3",
-        "dark": "#942F00"
+        "dark": "#701C00"
       }
     },
     {
@@ -2479,14 +2479,14 @@
         "dark": "#CCF1D0"
       },
       "comments": {
-        "light": "Border state selected hover and primary intentionally match the background state color."
+        "light": "Border state selected strong and primary intentionally match the background state color."
       }
     },
     {
-      "id": "borders/selected/hover",
+      "id": "borders/selected/strong",
       "surface": "borders",
       "familyKey": "selected-3",
-      "role": "hover",
+      "role": "strong",
       "ref": {
         "light": "brand::teal::95",
         "dark": "sentiment::success::20"
@@ -2988,7 +2988,7 @@
     ],
     "background::selected": [
       "primary",
-      "hover"
+      "strong"
     ],
     "text::neutral": [
       "primary",
@@ -3087,7 +3087,7 @@
     ],
     "borders::selected-3": [
       "primary",
-      "hover"
+      "strong"
     ],
     "background::disabled": [
       "neutral",

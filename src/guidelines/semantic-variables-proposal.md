@@ -89,7 +89,7 @@ Any filled `background/{family}/primary` or `strong` is paired with `text-neutra
 | `background/state/selected/primary` | brand step 80 (dark navy-purple) | seafoam (success step 5) |
 | `text/state/selected/primary` | seafoam | brand step 95 (navy) |
 | `border/state/selected/*` | matches background | matches background |
-| `…/selected/hover` | brand step 95 | success step 20 |
+| `…/selected/strong` | brand step 95 | success step 20 |
 
 These three surfaces are a **set** — always used together, never mixed with other text/border tokens. Contrast is ~9.5:1 light / ~11.7:1 dark. This is the one place semantics deliberately cross hue families and invert per mode; it lives under `state`, not `brand`, for exactly that reason.
 
@@ -101,7 +101,7 @@ Where `primary` moved to 70 (success, info), the guideline-canonical 50 remains 
 
 ## All tokens (99)
 
-> Note: this list predates the `extra-light`/`light` → `light`/`mid` role rename and the `selected/hover` additions from the sandbox export; treat the export as the source of truth for roles and values, this list for structure and naming.
+> Note: this list predates the `extra-light`/`light` → `light`/`mid` role rename and the selected-state additions from the sandbox export; treat the export as the source of truth for roles and values, this list for structure and naming.
 
 ### Background (53)
 

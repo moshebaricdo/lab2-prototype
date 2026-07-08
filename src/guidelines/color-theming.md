@@ -104,7 +104,7 @@ CodeAI models disabled as a **state** (like `selected`), not a role inside each 
 
 The legacy `*-neutral-disabled` roles were removed from the CodeAI system. Code.org still ships the legacy names; `globals.css` bridges them by aliasing `--ds-*-disabled-neutral` → the legacy `--ds-*-neutral-disabled` at `:root`, so components always use the state-group form. Code.org has no per-color disabled tokens yet — non-neutral disabled tokens resolve only under CodeAI.
 
-The CSS exporter treats `state` as a **flat** subgroup, so exported names match generated names (`background-disabled-neutral`, `background-selected-primary` — no `state-` segment). Note this also changed the exported `selected` names, which previously exported as `background-state-selected-*`.
+The CSS exporter treats `state` as a **flat** subgroup, so exported names match generated names (`background-disabled-neutral`, `background-selected-primary`, `background-selected-strong` — no `state-` segment). Note this also changed the exported `selected` names, which previously exported as `background-state-selected-*`; the selected emphasized state follows Figma's `strong` naming (renamed from `hover` in the sandbox baseline v7 sync).
 
 ---
 

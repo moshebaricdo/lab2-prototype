@@ -26,6 +26,8 @@ Code.org base tokens in `tokens.css` are unchanged; component styles reference p
 | `--ds-borders-neutral-light` | `--ds-borders-neutral-secondary` | CodeAI uses secondary, not light |
 | `--ds-borders-neutral-strong` | `--ds-borders-neutral-secondary` | Gray control borders (buttons, dropdowns, fields); Code.org base also emits `secondary` as an alias of `strong` |
 | `--ds-background-neutral-lab` | `--ds-background-neutral-primary` | Lab surface → primary |
+| `--ds-background-selected-hover` | `--ds-background-selected-strong` | CodeAI selected state follows Figma `strong` naming |
+| `--ds-borders-selected-hover` | `--ds-borders-selected-strong` | CodeAI selected state follows Figma `strong` naming |
 
 Do **not** bulk-replace `brand-teal` → `brand-purple` in component styles; that collapses Code.org's two-color brand model. Use `brand-teal` for interactive chrome and `brand-purple` for actions.
 
