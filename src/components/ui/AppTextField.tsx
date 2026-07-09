@@ -10,7 +10,7 @@ import type { FaIconName } from "../../icons/faProRegularCodepoints";
 import { useKeyboardFocusWithin } from "../../hooks/useKeyboardFocusWithin";
 import styles from "./AppTextField.module.scss";
 
-type AppTextFieldSize = "l" | "m" | "s";
+type AppTextFieldSize = "l" | "m" | "s" | "xs";
 type AppTextFieldTone = "black" | "gray" | "white";
 type AppTextFieldAppearance = "field" | "bare";
 
@@ -18,6 +18,7 @@ const SIZE_CLASS: Record<AppTextFieldSize, string> = {
   l: styles.sizeL,
   m: "",
   s: styles.sizeS,
+  xs: styles.sizeXs,
 };
 
 const TONE_CLASS: Record<AppTextFieldTone, string> = {
@@ -30,6 +31,7 @@ const HELPER_ICON_SIZE: Record<AppTextFieldSize, FaIconSize> = {
   l: "m",
   m: "s",
   s: "xs",
+  xs: "xs",
 };
 
 interface AppTextControlBaseProps {

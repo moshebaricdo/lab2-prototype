@@ -32,7 +32,7 @@
 
 .iconGlyph {
   color: var(--ds-text-neutral-primary-inverse);
-  font-size: 13px;
+  font-size: var(--text-body-sm);
 }
 
 .textBlock {
@@ -47,7 +47,7 @@
 
 .fileName {
   color: var(--ds-text-neutral-primary);
-  font-size: 12px;
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
   margin: 0;
@@ -59,7 +59,7 @@
 .extension {
   color: var(--ds-text-neutral-quaternary);
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-normal);
   line-height: 1;
   margin: 0;
@@ -182,7 +182,7 @@
 
 .actionIcon {
   color: var(--ds-text-neutral-primary-inverse);
-  font-size: 7px;
+  font-size: var(--text-body-xxs);
 }
 
 /* Inline "+ Add" button (inside chip, uses AppButton xs) */
@@ -208,5 +208,5 @@
 
 .addedBadgeIcon {
   color: var(--ds-text-success-primary);
-  font-size: 12px;
+  font-size: var(--text-body-xs);
 }

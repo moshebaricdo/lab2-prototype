@@ -1,3 +1,5 @@
+@use "../../styles/_typography.scss" as *;
+
 .tag {
   --tag-bg: var(--ds-background-neutral-secondary);
   --tag-text: var(--ds-text-neutral-primary);
@@ -8,11 +10,6 @@
   border-radius: var(--radius-round);
   background: var(--tag-bg);
   color: var(--tag-text);
-  font-family: var(--font-body);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.06em;
-  line-height: 1;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -46,11 +43,13 @@
 
 /* Sizes — default padding is text-only; icon modifiers tighten the icon edge. */
 .sizeS {
+  @include type-overline-3;
+
+  line-height: 1;
   gap: 4px;
   height: 20px;
   padding-block: 2px;
   padding-inline: 10px;
-  font-size: var(--text-xs);
 }
 
 .sizeS.hasLeadIcon {
@@ -58,15 +57,17 @@
 }
 
 .sizeS.hasTrailIcon {
-  padding-inline-end: 6x;
+  padding-inline-end: 6px;
 }
 
 .sizeM {
+  @include type-overline-2;
+
+  line-height: 1;
   gap: 4px;
   height: 22px;
   padding-block: 2px;
   padding-inline: 12px;
-  font-size: var(--text-label);
 }
 
 .sizeM.hasLeadIcon {
@@ -78,11 +79,13 @@
 }
 
 .sizeL {
+  @include type-overline-1;
+
+  line-height: 1;
   gap: 6px;
   height: 24px;
   padding-block: 4px;
   padding-inline: 12px;
-  font-size: var(--text-sm);
 }
 
 .sizeL.hasLeadIcon {
@@ -101,17 +104,17 @@
 
 .fillLight.colorPurple {
   --tag-bg: var(--ds-background-brand-light);
-  --tag-icon: var(--ds-text-selected-primary);
+  --tag-icon: var(--ds-text-brand-primary);
 }
 
 .fillLight.colorTeal {
   --tag-bg: var(--ds-background-brand-light);
-  --tag-icon: var(--ds-text-selected-primary);
+  --tag-icon: var(--ds-text-brand-primary);
 }
 
 .fillLight.colorAqua {
   --tag-bg: var(--ds-background-brand-light);
-  --tag-icon: var(--ds-text-selected-primary);
+  --tag-icon: var(--ds-text-brand-primary);
 }
 
 .fillLight.colorError {

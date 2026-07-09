@@ -1,3 +1,5 @@
+@use "../../../styles/_typography.scss" as *;
+
 .content {
   z-index: 110;
   width: 240px;
@@ -22,10 +24,8 @@
 }
 
 .label {
+  @include type-label-3;
+
   margin: 0;
   color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.64;
 }

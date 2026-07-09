@@ -1,3 +1,5 @@
+@use "../../styles/_typography.scss" as *;
+
 .content {
   z-index: 50;
   pointer-events: none;
@@ -18,12 +20,11 @@
 }
 
 .text {
+  @include type-body-3-regular;
+
   margin: 0;
   width: 100%;
   color: var(--ds-text-neutral-white-fixed);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-normal);
-  line-height: 1.54;
   text-align: center;
   text-wrap: pretty;
 }
@@ -43,10 +44,9 @@
 }
 
 .textInline {
+  @include type-body-3-regular;
+
   color: var(--ds-text-neutral-white-fixed);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-normal);
-  line-height: 1.54;
   text-wrap: pretty;
 }
 

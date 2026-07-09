@@ -1,3 +1,5 @@
+@use "../../styles/_typography.scss" as *;
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -47,9 +49,8 @@
 }
 
 .title {
-  font-family: var(--font-heading);
-  font-size: var(--text-h3);
-  font-weight: var(--font-weight-semibold);
+  @include type-heading-h3-semibold;
+
   color: var(--ds-text-neutral-primary);
   margin: 0;
 }
@@ -86,8 +87,9 @@
   flex-direction: column;
   gap: 6px;
   font-family: var(--font-body);
-  font-size: var(--text-code);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-body-sm);
   color: var(--ds-text-neutral-primary);
 }
 
@@ -100,8 +102,9 @@
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  line-height: 1.4;
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
+  font-weight: var(--font-weight-normal);
   box-sizing: border-box;
   outline: none;
   transition: border-color 120ms, box-shadow 120ms;
@@ -118,7 +121,9 @@
 
 .fieldHint {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
+  font-weight: var(--font-weight-normal);
   color: var(--ds-text-neutral-quaternary);
   margin: 0;
 }

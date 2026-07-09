@@ -14,75 +14,20 @@
 
 .fieldLabel {
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
-}
-
-.textInput {
-  width: 100%;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-neutral-primary);
-  padding: 8px 12px;
-  line-height: 1.48;
-}
-
-.textInput::placeholder {
-  color: var(--ds-text-neutral-placeholder);
-}
-
-.textInput:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
 }
 
 .errorText {
   margin: 0;
   color: var(--ds-text-error-primary-fixed);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   line-height: 1.54;
 }
 
+/* Layout only — height/border/padding come from AppDropdown .field + .sizeM */
 .dropdownTrigger {
-  display: flex;
   width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-neutral-primary);
-  padding: 8px 12px;
-  transition: background-color 0.2s ease;
-}
-
-.dropdownTrigger:hover {
-  background: var(--ds-background-neutral-secondary);
-}
-
-.dropdownTrigger:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
-}
-
-.dropdownValueText {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ds-text-neutral-primary);
-  font-size: var(--text-base);
-  line-height: 1.48;
-}
-
-.dropdownIcon {
-  width: 16px;
-  font-size: var(--text-sm);
-}
-
-.chevronIcon {
-  width: 16px;
-  color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
+  min-width: 0;
 }

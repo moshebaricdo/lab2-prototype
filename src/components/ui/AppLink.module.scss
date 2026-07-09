@@ -1,3 +1,5 @@
+@use "../../styles/_typography.scss" as *;
+
 .root {
   display: inline-flex;
   align-items: center;
@@ -53,26 +55,21 @@
 }
 
 .sizeL {
-  font-size: var(--text-body-lg);
-  line-height: var(--leading-body-lg);
+  @include type-body-1-semibold;
 }
 
 .sizeM {
-  font-size: var(--text-body-md);
-  line-height: var(--leading-body-md);
+  @include type-body-2-semibold;
 }
 
 .sizeS {
-  font-size: var(--text-body-sm);
-  line-height: var(--leading-body-sm);
+  @include type-body-3-semibold;
 }
 
 .sizeXs {
-  font-size: var(--text-body-xs);
-  line-height: var(--leading-body-xs);
+  @include type-body-4-semibold;
 }
 
 .sizeXxs {
-  font-size: var(--text-body-xxs);
-  line-height: var(--leading-body-xxs);
+  @include type-body-5-semibold;
 }

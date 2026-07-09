@@ -1,3 +1,5 @@
+@use "../../styles/_typography.scss" as *;
+
 .root {
   display: flex;
   width: 100%;
@@ -21,13 +23,13 @@
 }
 
 .sizeS .label {
-  font-size: var(--text-label);
-  line-height: 1.64;
+  @include type-label-3;
 }
 
 .sizeS .inputValue {
-  font-size: var(--text-label);
-  line-height: 1.64;
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
+  font-weight: var(--font-weight-normal);
 }
 
 .toneBlack {
@@ -66,22 +68,18 @@
 }
 
 .label {
+  @include type-label-2;
+
   min-width: 0;
   flex: 1;
   color: var(--slider-text-color);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.54;
 }
 
 .inputValue {
+  @include type-body-3-regular;
+
   flex-shrink: 0;
   color: var(--slider-text-color);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-normal);
-  line-height: 1.54;
   text-align: right;
 }
 
@@ -252,9 +250,9 @@
   overflow: hidden;
   color: var(--ds-text-neutral-tertiary);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-normal);
-  line-height: 1.64;
+  line-height: var(--leading-body-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -275,9 +273,9 @@
   align-items: center;
   color: var(--ds-text-neutral-quaternary);
   font-family: var(--font-body);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.4;
+  font-size: var(--text-body-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-body-xs);
 }
 
 .edgeLabel:last-child {

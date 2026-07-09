@@ -1,14 +1,15 @@
 .root {
-  --app-text-field-label-size: var(--text-sm);
-  --app-text-field-label-line-height: 1.54;
-  --app-text-field-control-size: var(--text-base);
-  --app-text-field-control-line-height: 1.48;
-  --app-text-field-helper-size: var(--text-sm);
-  --app-text-field-helper-line-height: 1.54;
+  /* Control heights match AppButton / AppDropdown: L48 M40 S32 XS24 */
+  --app-text-field-control-height: 40px;
+  --app-text-field-label-size: var(--text-body-sm);
+  --app-text-field-label-line-height: var(--leading-body-sm);
+  --app-text-field-control-size: var(--text-body-md);
+  --app-text-field-control-line-height: var(--leading-body-md);
+  --app-text-field-helper-size: var(--text-body-sm);
+  --app-text-field-helper-line-height: var(--leading-body-sm);
   --app-text-field-icon-size: 16px;
   --app-text-field-helper-gap: 6px;
-  --app-text-field-padding-block: 8px;
-  --app-text-field-padding-inline: 12px;
+  --app-text-field-padding-inline: 16px;
   --app-textarea-min-height: 84px;
 
   display: flex;
@@ -29,30 +30,44 @@
 }
 
 .sizeL {
-  --app-text-field-label-size: var(--text-base);
-  --app-text-field-label-line-height: 1.48;
-  --app-text-field-control-size: var(--text-lg);
-  --app-text-field-control-line-height: 1.4;
-  --app-text-field-helper-size: var(--text-base);
-  --app-text-field-helper-line-height: 1.48;
+  --app-text-field-control-height: 48px;
+  --app-text-field-label-size: var(--text-body-md);
+  --app-text-field-label-line-height: var(--leading-body-md);
+  --app-text-field-control-size: var(--text-heading-xs);
+  --app-text-field-control-line-height: var(--leading-heading-xs);
+  --app-text-field-helper-size: var(--text-body-md);
+  --app-text-field-helper-line-height: var(--leading-body-md);
   --app-text-field-icon-size: 18px;
-  --app-text-field-padding-block: 10px;
-  --app-text-field-padding-inline: 14px;
+  --app-text-field-padding-inline: 16px;
   --app-textarea-min-height: 104px;
 }
 
 .sizeS {
-  --app-text-field-label-size: var(--text-label);
-  --app-text-field-label-line-height: 1.64;
-  --app-text-field-control-size: var(--text-sm);
-  --app-text-field-control-line-height: 1.54;
-  --app-text-field-helper-size: var(--text-label);
-  --app-text-field-helper-line-height: 1.64;
+  --app-text-field-control-height: 32px;
+  --app-text-field-label-size: var(--text-body-xs);
+  --app-text-field-label-line-height: var(--leading-body-xs-semibold);
+  --app-text-field-control-size: var(--text-body-sm);
+  --app-text-field-control-line-height: var(--leading-body-sm);
+  --app-text-field-helper-size: var(--text-body-xs);
+  --app-text-field-helper-line-height: var(--leading-body-xs);
   --app-text-field-icon-size: 14px;
   --app-text-field-helper-gap: 4px;
-  --app-text-field-padding-block: 5px;
-  --app-text-field-padding-inline: 10px;
+  --app-text-field-padding-inline: 12px;
   --app-textarea-min-height: 72px;
+}
+
+.sizeXs {
+  --app-text-field-control-height: 24px;
+  --app-text-field-label-size: var(--text-body-xs);
+  --app-text-field-label-line-height: var(--leading-body-xs-semibold);
+  --app-text-field-control-size: var(--text-body-xs);
+  --app-text-field-control-line-height: var(--leading-body-xs);
+  --app-text-field-helper-size: var(--text-body-xs);
+  --app-text-field-helper-line-height: var(--leading-body-xs);
+  --app-text-field-icon-size: 12px;
+  --app-text-field-helper-gap: 4px;
+  --app-text-field-padding-inline: 8px;
+  --app-textarea-min-height: 64px;
 }
 
 .label {
@@ -66,6 +81,7 @@
 .control {
   box-sizing: border-box;
   width: 100%;
+  height: var(--app-text-field-control-height);
   border: 1px solid var(--ds-border-neutral-solid);
   border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
@@ -74,7 +90,7 @@
   font-size: var(--app-text-field-control-size);
   font-weight: var(--font-weight-normal);
   line-height: var(--app-text-field-control-line-height);
-  padding: var(--app-text-field-padding-block) var(--app-text-field-padding-inline);
+  padding: 0 var(--app-text-field-padding-inline);
   transition:
     background-color 0.08s ease-in,
     border-color 0.08s ease-in,
@@ -91,7 +107,9 @@
 }
 
 .textarea {
+  height: auto;
   min-height: var(--app-textarea-min-height);
+  padding-block: 8px;
   resize: vertical;
 }
 
@@ -183,7 +201,7 @@
   width: var(--app-text-field-icon-size);
   flex-shrink: 0;
   justify-content: center;
-  color: var(--ds-text-selected-primary);
+  color: var(--ds-text-brand-primary);
 }
 
 .helperText {
@@ -192,6 +210,7 @@
 }
 
 .bareControl {
+  height: auto;
   min-height: 0;
   border: 0;
   border-radius: 0;

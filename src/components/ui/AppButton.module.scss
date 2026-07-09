@@ -1,3 +1,5 @@
+@use "../../styles/_typography.scss" as *;
+
 .root {
   position: relative;
   box-sizing: border-box;
@@ -12,7 +14,6 @@
   border-radius: var(--radius-sm);
   background: transparent;
   font-family: var(--font-body);
-  font-weight: var(--font-weight-semibold);
   transition:
     background-color 0.05s ease-in,
     border-color 0.05s ease-in,
@@ -43,38 +44,38 @@
 
 /* Sizes (matching design-system button sizes) */
 .sizeL {
+  @include type-heading-h6-semibold;
+
   height: 48px;
   min-width: 48px;
   padding: 8px 16px;
-  font-size: var(--text-lg);
-  line-height: 1.4;
   gap: 8px;
 }
 
 .sizeM {
+  @include type-body-2-semibold;
+
   height: 40px;
   min-width: 40px;
   padding: 8px 16px;
-  font-size: var(--text-base);
-  line-height: 1.48;
   gap: 8px;
 }
 
 .sizeS {
+  @include type-body-3-semibold;
+
   height: 32px;
   padding: 4px 12px;
-  font-size: var(--text-sm);
-  line-height: 1.54;
   gap: 6px;
 }
 
 .sizeXs {
+  @include type-label-3;
+
   height: 24px;
   min-height: 24px;
   min-width: 24px;
   padding: 2px 8px;
-  font-size: var(--text-label);
-  line-height: 1.64;
   gap: 6px;
 }
 

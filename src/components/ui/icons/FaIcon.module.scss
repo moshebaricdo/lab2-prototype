@@ -22,17 +22,17 @@
 }
 
 .sizeXs {
-  font-size: 12px;
+  font-size: var(--text-body-xs);
 }
 
 .sizeS {
-  font-size: 14px;
+  font-size: var(--text-body-sm);
 }
 
 .sizeM {
-  font-size: 16px;
+  font-size: var(--text-body-md);
 }
 
 .sizeL {
-  font-size: 20px;
+  font-size: var(--text-heading-xs);
 }

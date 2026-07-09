@@ -1,3 +1,5 @@
+@use "../../styles/_mixins.scss" as *;
+
 .root {
   position: relative;
   display: flex;
@@ -18,13 +20,10 @@
 }
 
 .label {
+  @include panel-header-label;
+
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   pointer-events: none;
 }

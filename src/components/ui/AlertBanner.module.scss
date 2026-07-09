@@ -1,3 +1,5 @@
+@use "../../styles/_typography.scss" as *;
+
 .root {
   display: flex;
   box-sizing: border-box;
@@ -95,7 +97,7 @@
 }
 
 .sentimentBrand .icon {
-  color: var(--ds-text-selected-primary);
+  color: var(--ds-text-brand-primary);
 }
 
 .sentimentSuccess .icon {
@@ -115,7 +117,7 @@
 }
 
 .sentimentAqua .icon {
-  color: var(--ds-text-selected-primary);
+  color: var(--ds-text-brand-primary);
 }
 
 .closeButton {
@@ -124,10 +126,9 @@
 }
 
 .sizeL {
+  @include type-body-1-regular;
+
   padding: 14px 18px;
-  font-size: var(--text-lg);
-  font-weight: var(--font-weight-normal);
-  line-height: 1.4;
 }
 
 .sizeL.hasIcon .content {
@@ -139,10 +140,9 @@
 }
 
 .sizeM {
+  @include type-body-2-regular;
+
   padding: 12px 16px;
-  font-size: var(--text-base);
-  font-weight: var(--font-weight-normal);
-  line-height: 1.48;
 }
 
 .sizeM.hasIcon .content {
@@ -154,10 +154,9 @@
 }
 
 .sizeS {
+  @include type-body-3-regular;
+
   padding: 10px 12px;
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-normal);
-  line-height: 1.54;
 }
 
 .sizeS.hasIcon .content {
@@ -169,10 +168,9 @@
 }
 
 .sizeXs {
+  @include type-body-4-regular;
+
   padding: 8px 12px;
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-normal);
-  line-height: 1.64;
 }
 
 .sizeXs.hasIcon .content {

@@ -1,3 +1,5 @@
+@use "../../styles/_typography.scss" as *;
+
 .field {
   appearance: none;
   -webkit-appearance: none;
@@ -12,7 +14,6 @@
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-weight: var(--font-weight-semibold);
   text-align: left;
   transition:
     background-color 0.05s ease-in,
@@ -59,39 +60,39 @@ button.field {
 }
 
 .sizeL {
+  @include type-heading-h6-semibold;
+
   height: 48px;
   min-width: 48px;
   padding: 8px 16px;
   gap: 8px;
-  font-size: var(--text-lg);
-  line-height: 1.4;
 }
 
 .sizeM {
+  @include type-body-2-semibold;
+
   height: 40px;
   min-width: 40px;
   padding: 8px 16px;
   gap: 8px;
-  font-size: var(--text-base);
-  line-height: 1.48;
 }
 
 .sizeS {
+  @include type-body-3-semibold;
+
   height: 32px;
   padding: 4px 12px;
   gap: 6px;
-  font-size: var(--text-sm);
-  line-height: 1.54;
 }
 
 .sizeXs {
+  @include type-label-3;
+
   height: 24px;
   min-height: 24px;
   min-width: 24px;
   padding: 2px 8px;
   gap: 6px;
-  font-size: var(--text-label);
-  line-height: 1.64;
 }
 
 .fieldLabel {
@@ -157,7 +158,8 @@ button.field {
   --menu-item-min-height: 36px;
   --menu-item-padding: 8px 10px;
   --menu-item-gap: 8px;
-  --menu-item-font: var(--text-base);
+  --menu-item-font: var(--text-body-md);
+  --menu-item-lh: var(--leading-body-md);
   --menu-checkbox-min-height: 40px;
   --menu-checkbox-padding: 10px 10px;
   --menu-footer-padding: 6px 10px;
@@ -168,7 +170,8 @@ button.field {
   --menu-item-min-height: 44px;
   --menu-item-padding: 10px 12px;
   --menu-item-gap: 10px;
-  --menu-item-font: var(--text-lg);
+  --menu-item-font: var(--text-heading-xs);
+  --menu-item-lh: var(--leading-heading-xs);
   --menu-checkbox-min-height: 48px;
   --menu-checkbox-padding: 12px 12px;
   --menu-footer-padding: 8px 12px;
@@ -181,7 +184,8 @@ button.field {
   --menu-item-min-height: 28px;
   --menu-item-padding: 5px 8px;
   --menu-item-gap: 6px;
-  --menu-item-font: var(--text-sm);
+  --menu-item-font: var(--text-body-sm);
+  --menu-item-lh: var(--leading-body-sm);
   --menu-checkbox-min-height: 32px;
   --menu-checkbox-padding: 7px 8px;
   --menu-footer-padding: 5px 8px;
@@ -192,7 +196,8 @@ button.field {
   --menu-item-min-height: 22px;
   --menu-item-padding: 3px 6px;
   --menu-item-gap: 4px;
-  --menu-item-font: var(--text-label);
+  --menu-item-font: var(--text-body-xs);
+  --menu-item-lh: var(--leading-body-xs-semibold);
   --menu-checkbox-min-height: 26px;
   --menu-checkbox-padding: 4px 8px;
   --menu-footer-padding: 4px 6px;
@@ -241,8 +246,8 @@ button.field {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
   font-size: var(--menu-item-font);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.54;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--menu-item-lh);
   text-align: left;
 }
 

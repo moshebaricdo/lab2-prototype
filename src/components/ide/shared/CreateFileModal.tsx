@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppActionDropdown } from "../../ui/AppDropdown";
+import dropdownStyles from "../../ui/AppDropdown.module.scss";
 import { AppButton } from "../../ui/AppButton";
 import { AppTextField } from "../../ui/AppTextField";
 import { Modal } from "../../ui/Modal";
@@ -50,21 +51,26 @@ function FileTypeDropdown({
       trigger={
         <button
           type="button"
-          className={styles.dropdownTrigger}
+          className={[
+            dropdownStyles.field,
+            dropdownStyles.sizeM,
+            dropdownStyles.toneGray,
+            styles.dropdownTrigger,
+          ].join(" ")}
         >
-          <span className={styles.dropdownValueText}>
+          <span className={dropdownStyles.fieldLabel}>
             <FaIcon
               family={selectedIcon.family}
               name={selectedIcon.name}
               size="s"
-              className={styles.dropdownIcon}
+              className={dropdownStyles.fieldIcon}
             />
-            {selectedType}
+            <span>{selectedType}</span>
           </span>
           <FaIcon
             name={isOpen ? "chevron-up" : "chevron-down"}
             size="s"
-            className={styles.chevronIcon}
+            className={dropdownStyles.chevron}
           />
         </button>
       }
