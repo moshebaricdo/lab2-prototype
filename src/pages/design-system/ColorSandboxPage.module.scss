@@ -24,10 +24,50 @@
   background: var(--ds-background-brand-primary);
 }
 
+.headerStart {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  min-width: 0;
+}
+
 .headerLogo {
+  display: block;
   width: 120px;
   height: 36px;
   margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.headerNav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.headerNavLink {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--ds-text-neutral-white-fixed);
+  font-family: var(--font-body);
+  font-size: var(--text-body-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-body-xs);
+  text-decoration: none;
+  opacity: 0.72;
+  transition:
+    opacity 120ms ease-out,
+    background 120ms ease-out;
+}
+
+.headerNavLink:hover {
+  opacity: 1;
+  background: rgb(255 255 255 / 10%);
+}
+
+.headerNavLinkActive {
+  opacity: 1;
+  background: rgb(255 255 255 / 14%);
 }
 
 .headerExportButton {

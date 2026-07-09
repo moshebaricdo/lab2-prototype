@@ -111,6 +111,10 @@ const ColorSandboxPage = lazyPage(
   () => import("./pages/design-system/ColorSandboxPage"),
   "ColorSandboxPage",
 );
+const TypographySandboxPage = lazyPage(
+  () => import("./pages/design-system/TypographySandboxPage"),
+  "TypographySandboxPage",
+);
 const AssessmentBuilderNewPage = lazyPage(
   () => import("./pages/assessment-builder/AssessmentBuilderNewPage"),
   "AssessmentBuilderNewPage",
@@ -357,6 +361,10 @@ export default function App() {
         <Route path="/" element={<Navigate to="/levels" replace />} />
         <Route path="/levels" element={<LevelsIndexPage />} />
         <Route path="/design-system/colors" element={<ColorSandboxPage />} />
+        <Route
+          path="/design-system/typography"
+          element={<TypographySandboxPage />}
+        />
         <Route path="/levels/aichatlab" element={<AiChatLabLevelPage />} />
         <Route
           path="/levels/aichatlab-setup"

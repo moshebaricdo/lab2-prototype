@@ -10,6 +10,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   DndContext,
   DragOverlay,
@@ -463,6 +464,7 @@ function estimatePrimitiveHeight(_stepCount: number) {
 }
 
 export function ColorSandboxPage() {
+  const location = useLocation();
   const { theme, setTheme } = useTheme();
   const [system, setSystem] = useState<ColorSystem>(() =>
     loadColorSandboxSystem(),
@@ -1679,8 +1681,36 @@ export function ColorSandboxPage() {
       style={cardChromeStyle}
     >
       <header className={styles.header}>
-        <div className={styles.headerLogo} aria-label="Color sandbox">
-          <Logo />
+        <div className={styles.headerStart}>
+          <Link
+            to="/levels"
+            className={styles.headerLogo}
+            aria-label="Go to levels page"
+          >
+            <Logo />
+          </Link>
+          <nav className={styles.headerNav} aria-label="Design system">
+            <Link
+              to="/design-system/colors"
+              className={`${styles.headerNavLink} ${
+                location.pathname.startsWith("/design-system/colors")
+                  ? styles.headerNavLinkActive
+                  : ""
+              }`}
+            >
+              Color
+            </Link>
+            <Link
+              to="/design-system/typography"
+              className={`${styles.headerNavLink} ${
+                location.pathname.startsWith("/design-system/typography")
+                  ? styles.headerNavLinkActive
+                  : ""
+              }`}
+            >
+              Typography
+            </Link>
+          </nav>
         </div>
         <AppButton
           variant="secondary"

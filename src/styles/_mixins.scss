@@ -1,43 +1,37 @@
+@forward "./_typography.scss";
+
+@use "./_typography.scss" as *;
+
 @mixin focus-ring {
   outline: 2px solid var(--ds-border-focused-primary);
   outline-offset: 2px;
 }
 
 @mixin panel-header-label {
+  @include type-overline-2;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 @mixin assessment-stem-eyebrow {
+  @include type-overline-2;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.06em;
   margin: 0;
-  text-transform: uppercase;
 }
 
 @mixin assessment-stem-question {
+  @include type-heading-h4-semibold;
   color: var(--ds-text-neutral-primary);
-  font-family: var(--font-heading);
-  font-size: var(--text-h4);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.3;
   text-wrap: pretty;
 }
 
 @mixin assessment-stem-description-heading {
+  @include type-body-2-semibold;
   color: var(--ds-text-neutral-primary);
-  font-family: var(--font-heading);
-  font-size: var(--text-base);
-  font-weight: var(--font-weight-semibold);
   text-wrap: pretty;
 }
 
 @mixin assessment-stem-description-body {
+  @include type-body-2-regular;
   color: var(--ds-text-neutral-primary);
   text-wrap: pretty;
 }

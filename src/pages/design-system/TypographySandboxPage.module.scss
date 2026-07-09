@@ -1,0 +1,428 @@
+@use "../../styles/_typography.scss" as *;
+
+.page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--ds-background-neutral-primary);
+  color: var(--ds-text-neutral-primary);
+}
+
+/* ── App header (matches color sandbox / TopNavigation chrome) ── */
+
+.header {
+  display: flex;
+  flex: 0 0 50px;
+  align-items: center;
+  justify-content: space-between;
+  height: 50px;
+  padding: 0 8px;
+  background: var(--ds-background-brand-primary);
+}
+
+.headerStart {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  min-width: 0;
+}
+
+.headerLogo {
+  display: block;
+  width: 120px;
+  height: 36px;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.headerNav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.headerNavLink {
+  @include type-label-3;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--ds-text-neutral-white-fixed);
+  text-decoration: none;
+  opacity: 0.72;
+  transition:
+    opacity 120ms ease-out,
+    background 120ms ease-out;
+}
+
+.headerNavLink:hover {
+  opacity: 1;
+  background: rgb(255 255 255 / 10%);
+}
+
+.headerNavLinkActive {
+  opacity: 1;
+  background: rgb(255 255 255 / 14%);
+}
+
+.headerExportButton {
+  border-color: var(--ds-border-neutral-secondary);
+  background: transparent;
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.headerExportButton:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
+/* ── Main row: catalog + resizable inspector ── */
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.catalog {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--space-s) var(--space-m) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-l);
+}
+
+.pageTitle {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.groupList {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-xs);
+}
+
+@media (max-width: 1100px) {
+  .groupList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .groupList {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Style cards ── */
+
+.styleCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
+  background: var(--ds-background-neutral-primary);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+  transition:
+    border-color 120ms ease-out,
+    box-shadow 120ms ease-out;
+}
+
+.styleCardSelected {
+  border-color: var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 1px var(--ds-border-selected-primary);
+}
+
+.styleCardEditing {
+  overflow: visible;
+}
+
+.styleCardBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.styleCardBody:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 2px var(--ds-border-focused-primary);
+}
+
+.styleCardEditing .styleCardBody:focus,
+.styleCardEditing .styleCardBody:focus-visible {
+  box-shadow: none;
+}
+
+.styleCardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xxs);
+  min-width: 0;
+}
+
+.styleCardName {
+  @include type-label-3;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ds-text-neutral-secondary);
+}
+
+.styleCardSpecs {
+  @include type-body-5-regular;
+  flex: 0 0 auto;
+  color: var(--ds-text-neutral-quaternary);
+  font-variant-numeric: tabular-nums;
+}
+
+.styleCardSpecimen {
+  min-width: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.specimenText {
+  color: var(--ds-text-neutral-primary);
+  word-break: break-word;
+}
+
+.specimenTextEditing {
+  cursor: text;
+  outline: none;
+  box-shadow: none;
+}
+
+.specimenTextEditing:focus,
+.specimenTextEditing:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.weightRow {
+  display: flex;
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding: 10px;
+  border-top: 1px solid var(--ds-border-neutral-primary);
+  background: var(--ds-background-neutral-secondary);
+}
+
+.weightRow > * {
+  width: 100%;
+}
+
+.weightRow :global(button) {
+  flex: 1;
+}
+
+/* ── Right resource panel ── */
+
+.sidePanel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  min-width: 280px;
+  max-width: 600px;
+  height: 100%;
+  border-left: 1px solid var(--ds-border-neutral-primary);
+  background: var(--ds-background-neutral-secondary);
+  overflow: hidden;
+}
+
+.sidePanelBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+.sidePanelEmptyWrap {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  min-height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.sidePanelEmptyState {
+  display: flex;
+  max-width: 225px;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.sidePanelEmptyIcon {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-round);
+  background: var(--ds-background-neutral-septenary);
+  color: var(--ds-text-neutral-white-fixed);
+}
+
+.sidePanelEmptyTitle {
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  @include type-body-2-semibold;
+}
+
+.sidePanelEmptyText {
+  margin: 0;
+  color: var(--ds-text-neutral-secondary);
+  @include type-body-4-regular;
+}
+
+/* ── Inspector card (matches color sandbox editing cards) ── */
+
+.inspector {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
+  background: var(--ds-background-neutral-primary);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+}
+
+.inspectorHeader {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  background: var(--ds-background-neutral-secondary);
+}
+
+.inspectorHeaderLabel {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ds-text-neutral-tertiary);
+  @include type-overline-3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspectorCloseButton {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  cursor: pointer;
+}
+
+.inspectorCloseButton:hover,
+.inspectorCloseButton:active {
+  background: transparent !important;
+  color: var(--ds-text-neutral-primary) !important;
+}
+
+.inspectorBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.inspectorBodySection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
+}
+
+.inspectorBodySection:last-child {
+  border-bottom: 0;
+}
+
+.inspectorPreview {
+  min-width: 0;
+  overflow: hidden;
+  padding: 4px 0;
+}
+
+.inspectorRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.inspectorRowLabel {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--ds-text-neutral-secondary);
+  @include type-label-3;
+  white-space: nowrap;
+}
+
+.inspectorRowControl {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.inspectorInput {
+  width: 100%;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
+  background: var(--ds-background-neutral-primary);
+  color: var(--ds-text-neutral-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-body-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-body-xs);
+}
+
+.inspectorInputMono {
+  font-family: var(--font-mono);
+}
+
+.inspectorInput:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
+}

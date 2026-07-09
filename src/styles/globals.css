@@ -7,7 +7,9 @@
   --font-fa-brands: "Font Awesome 7 Brands";
   --font-size: 16px;
 
-  /* Typography — CADS Figma typography collection + text styles */
+  /* Typography — CADS Figma typography collection + text styles.
+     Prefer AppText / _typography.scss mixins over composing these tokens by hand.
+     H1/H2 “Semi Bold” in Figma maps to Medium (500); elsewhere Semi Bold = 600. */
   --font-heading: "Space Grotesk", sans-serif;
   --font-body: "Geist", sans-serif;
   --font-mono: "Google Sans Code", "Courier New", monospace;
@@ -30,7 +32,7 @@
   --leading-heading-sm: 30px;
   --leading-heading-xs: 28px;
 
-  /* Body sizes */
+  /* Body sizes (Body 1–5 / Label / Link / Mono share this ramp) */
   --text-body-lg: 18px;
   --text-body-md: 16px;
   --text-body-sm: 14px;
@@ -40,9 +42,16 @@
   --leading-body-md: 24px;
   --leading-body-sm: 22px;
   --leading-body-xs: 18px;
+  /* Kept as an alias of --leading-body-xs (was briefly 19px; unified to 18px). */
+  --leading-body-xs-semibold: var(--leading-body-xs);
   --leading-body-xxs: 16px;
 
-  /* Legacy aliases — prefer the heading/body tokens above in new code */
+  /* Letter-spacing — CADS text styles (percent → em) */
+  --tracking-heading-display: -0.01em; /* H1/H2 −1% */
+  --tracking-overline: 0.08em; /* Overline +8% */
+  --tracking-none: 0;
+
+  /* Legacy aliases — prefer --text-heading-* / --text-body-* in new code */
   --text-h1: var(--text-heading-xxl);
   --text-h2: var(--text-heading-xl);
   --text-h3: var(--text-heading-lg);
@@ -177,15 +186,17 @@
     h1 {
       font-family: var(--font-heading);
       font-size: var(--text-heading-xxl);
-      font-weight: var(--font-weight-semibold);
+      font-weight: var(--font-weight-medium);
       line-height: var(--leading-heading-xxl);
+      letter-spacing: var(--tracking-heading-display);
     }
 
     h2 {
       font-family: var(--font-heading);
       font-size: var(--text-heading-xl);
-      font-weight: var(--font-weight-semibold);
+      font-weight: var(--font-weight-medium);
       line-height: var(--leading-heading-xl);
+      letter-spacing: var(--tracking-heading-display);
     }
 
     h3 {
@@ -193,6 +204,7 @@
       font-size: var(--text-heading-lg);
       font-weight: var(--font-weight-semibold);
       line-height: var(--leading-heading-lg);
+      letter-spacing: var(--tracking-none);
     }
 
     h4 {
@@ -200,6 +212,23 @@
       font-size: var(--text-heading-md);
       font-weight: var(--font-weight-semibold);
       line-height: var(--leading-heading-md);
+      letter-spacing: var(--tracking-none);
+    }
+
+    h5 {
+      font-family: var(--font-body);
+      font-size: var(--text-heading-sm);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--leading-heading-sm);
+      letter-spacing: var(--tracking-none);
+    }
+
+    h6 {
+      font-family: var(--font-body);
+      font-size: var(--text-heading-xs);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--leading-heading-xs);
+      letter-spacing: var(--tracking-none);
     }
 
     p {
@@ -207,20 +236,23 @@
       font-size: var(--text-body-md);
       font-weight: var(--font-weight-normal);
       line-height: var(--leading-body-md);
+      letter-spacing: var(--tracking-none);
     }
 
     label {
       font-family: var(--font-body);
-      font-size: var(--text-body-xs);
+      font-size: var(--text-body-sm);
       font-weight: var(--font-weight-semibold);
-      line-height: var(--leading-body-xs);
+      line-height: var(--leading-body-sm);
+      letter-spacing: var(--tracking-none);
     }
 
     button {
       font-family: var(--font-body);
       font-size: var(--text-body-md);
-      font-weight: var(--font-weight-medium);
+      font-weight: var(--font-weight-semibold);
       line-height: var(--leading-body-md);
+      letter-spacing: var(--tracking-none);
     }
 
     input {
@@ -228,6 +260,7 @@
       font-size: var(--text-body-md);
       font-weight: var(--font-weight-normal);
       line-height: var(--leading-body-md);
+      letter-spacing: var(--tracking-none);
     }
   }
 }

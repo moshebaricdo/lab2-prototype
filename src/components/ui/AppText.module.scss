@@ -1,0 +1,195 @@
+@use "../../styles/_typography.scss" as *;
+
+.root {
+  margin: 0;
+}
+
+/* Heading H1–H2 */
+.headingH1Bold {
+  @include type-heading-h1-bold;
+}
+.headingH1Semibold {
+  @include type-heading-h1-semibold;
+}
+.headingH1Regular {
+  @include type-heading-h1-regular;
+}
+.headingH2Bold {
+  @include type-heading-h2-bold;
+}
+.headingH2Semibold {
+  @include type-heading-h2-semibold;
+}
+.headingH2Regular {
+  @include type-heading-h2-regular;
+}
+
+/* Heading H3–H6 */
+.headingH3Bold {
+  @include type-heading-h3-bold;
+}
+.headingH3Semibold {
+  @include type-heading-h3-semibold;
+}
+.headingH3Regular {
+  @include type-heading-h3-regular;
+}
+.headingH4Bold {
+  @include type-heading-h4-bold;
+}
+.headingH4Semibold {
+  @include type-heading-h4-semibold;
+}
+.headingH4Regular {
+  @include type-heading-h4-regular;
+}
+.headingH5Bold {
+  @include type-heading-h5-bold;
+}
+.headingH5Semibold {
+  @include type-heading-h5-semibold;
+}
+.headingH5Regular {
+  @include type-heading-h5-regular;
+}
+.headingH6Bold {
+  @include type-heading-h6-bold;
+}
+.headingH6Semibold {
+  @include type-heading-h6-semibold;
+}
+.headingH6Regular {
+  @include type-heading-h6-regular;
+}
+
+/* Body 1–5 */
+.body1Bold {
+  @include type-body-1-bold;
+}
+.body1Semibold {
+  @include type-body-1-semibold;
+}
+.body1Regular {
+  @include type-body-1-regular;
+}
+.body2Bold {
+  @include type-body-2-bold;
+}
+.body2Semibold {
+  @include type-body-2-semibold;
+}
+.body2Regular {
+  @include type-body-2-regular;
+}
+.body3Bold {
+  @include type-body-3-bold;
+}
+.body3Semibold {
+  @include type-body-3-semibold;
+}
+.body3Regular {
+  @include type-body-3-regular;
+}
+.body4Bold {
+  @include type-body-4-bold;
+}
+.body4Semibold {
+  @include type-body-4-semibold;
+}
+.body4Regular {
+  @include type-body-4-regular;
+}
+.body5Bold {
+  @include type-body-5-bold;
+}
+.body5Semibold {
+  @include type-body-5-semibold;
+}
+.body5Regular {
+  @include type-body-5-regular;
+}
+
+/* Overline / Label / Link (fixed weight) */
+.overline1 {
+  @include type-overline-1;
+}
+.overline2 {
+  @include type-overline-2;
+}
+.overline3 {
+  @include type-overline-3;
+}
+.label1 {
+  @include type-label-1;
+}
+.label2 {
+  @include type-label-2;
+}
+.label3 {
+  @include type-label-3;
+}
+.label4 {
+  @include type-label-4;
+}
+.link1 {
+  @include type-link-1;
+}
+.link2 {
+  @include type-link-2;
+}
+.link3 {
+  @include type-link-3;
+}
+.link4 {
+  @include type-link-4;
+}
+.link5 {
+  @include type-link-5;
+}
+
+/* Mono 1–5 */
+.mono1Bold {
+  @include type-mono-1-bold;
+}
+.mono1Semibold {
+  @include type-mono-1-semibold;
+}
+.mono1Regular {
+  @include type-mono-1-regular;
+}
+.mono2Bold {
+  @include type-mono-2-bold;
+}
+.mono2Semibold {
+  @include type-mono-2-semibold;
+}
+.mono2Regular {
+  @include type-mono-2-regular;
+}
+.mono3Bold {
+  @include type-mono-3-bold;
+}
+.mono3Semibold {
+  @include type-mono-3-semibold;
+}
+.mono3Regular {
+  @include type-mono-3-regular;
+}
+.mono4Bold {
+  @include type-mono-4-bold;
+}
+.mono4Semibold {
+  @include type-mono-4-semibold;
+}
+.mono4Regular {
+  @include type-mono-4-regular;
+}
+.mono5Bold {
+  @include type-mono-5-bold;
+}
+.mono5Semibold {
+  @include type-mono-5-semibold;
+}
+.mono5Regular {
+  @include type-mono-5-regular;
+}
