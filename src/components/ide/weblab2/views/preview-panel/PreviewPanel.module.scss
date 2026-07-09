@@ -10,7 +10,7 @@
   display: flex;
   min-height: 40px;
   align-items: center;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   padding: 0 8px;
 }
@@ -36,8 +36,8 @@
   min-height: 24px;
   align-items: center;
   gap: 0;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
 }
 
@@ -48,7 +48,7 @@
 }
 
 .urlBoxDisabled {
-  border-color: var(--ds-borders-neutral-primary);
+  border-color: var(--ds-border-neutral-primary);
 }
 
 .urlForm {
@@ -87,7 +87,7 @@
 .urlInputEditing {
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
-  border-radius: 0px;
+  border-radius: 0;
   outline: none;
 }
 
@@ -111,8 +111,8 @@
   right: 0;
   left: -6px;
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 0px 0px 6px 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   background: var(--ds-background-neutral-primary);
 }
 
@@ -130,7 +130,7 @@
   flex-direction: row;
   align-items: flex-start;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: transparent;
   cursor: pointer;
   font-family: var(--font-body);
@@ -194,7 +194,7 @@
   width: 7px;
   height: 7px;
   border: 1px solid var(--ds-background-neutral-primary);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-error-primary);
   pointer-events: none;
 }
@@ -205,14 +205,14 @@
 
 .designModeButtonActive {
   border-color: transparent !important;
-  background: var(--ds-background-brand-teal-primary) !important;
-  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
+  background: var(--ds-background-selected-primary) !important;
+  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .designModeButtonActive:hover {
   border-color: transparent !important;
-  background: var(--ds-background-brand-teal-strong) !important;
-  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
+  background: var(--ds-background-selected-strong) !important;
+  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .previewBody {
@@ -272,9 +272,9 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    color-mix(in srgb, var(--ds-background-brand-teal-primary) 10%, transparent) 25%,
-    color-mix(in srgb, var(--ds-background-brand-teal-primary) 28%, transparent) 50%,
-    color-mix(in srgb, var(--ds-background-brand-teal-primary) 10%, transparent) 75%,
+    color-mix(in srgb, var(--ds-background-selected-primary) 10%, transparent) 25%,
+    color-mix(in srgb, var(--ds-background-selected-primary) 28%, transparent) 50%,
+    color-mix(in srgb, var(--ds-background-selected-primary) 10%, transparent) 75%,
     transparent 100%
   );
   content: "";
@@ -368,7 +368,7 @@
   max-height: calc(100vh - 32px);
   flex-direction: column;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
 }
 

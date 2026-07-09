@@ -565,19 +565,19 @@ function MatchEditor({ question, onUpdateQuestion }: KindEditorProps) {
               />
               <div className={styles.selectField}>
                 <span className={styles.selectLabel}>Matches term</span>
-                <select
-                  className={styles.select}
+                <AppNativeSelect
+                  size="s"
+                  tone="gray"
+                  fullWidth
                   value={prompt.correctTermId}
-                  onChange={(event) =>
-                    updatePrompt(prompt.id, { correctTermId: event.target.value })
+                  onValueChange={(value) =>
+                    updatePrompt(prompt.id, { correctTermId: value })
                   }
-                >
-                  {content.terms.map((term) => (
-                    <option key={term.id} value={term.id}>
-                      {term.text || term.id}
-                    </option>
-                  ))}
-                </select>
+                  options={content.terms.map((term) => ({
+                    value: term.id,
+                    label: term.text || term.id,
+                  }))}
+                />
               </div>
             </div>
             <div className={styles.rowActions}>
@@ -827,19 +827,19 @@ function DragDropCategorizationEditor({ question, onUpdateQuestion }: KindEditor
               />
               <div className={styles.selectField}>
                 <span className={styles.selectLabel}>Correct category</span>
-                <select
-                  className={styles.select}
+                <AppNativeSelect
+                  size="s"
+                  tone="gray"
+                  fullWidth
                   value={item.correctBucketIds?.[0] ?? ""}
-                  onChange={(event) =>
-                    updateItem(item.id, { correctBucketIds: [event.target.value] })
+                  onValueChange={(value) =>
+                    updateItem(item.id, { correctBucketIds: [value] })
                   }
-                >
-                  {buckets.map((bucket) => (
-                    <option key={bucket.id} value={bucket.id}>
-                      {bucket.label || bucket.id}
-                    </option>
-                  ))}
-                </select>
+                  options={buckets.map((bucket) => ({
+                    value: bucket.id,
+                    label: bucket.label || bucket.id,
+                  }))}
+                />
               </div>
             </div>
             <div className={styles.rowActions}>

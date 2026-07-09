@@ -19,9 +19,9 @@
   position: relative;
   overflow: visible;
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 8px;
-  box-shadow: var(--elevation-sm);
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   animation: slideUp 200ms ease-out;
 }
 
@@ -43,7 +43,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px 16px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }
 
 .title {
@@ -70,7 +70,7 @@
   justify-content: flex-end;
   gap: 8px;
   padding: 16px 24px 20px;
-  border-top: 1px solid var(--ds-borders-neutral-primary);
+  border-top: 1px solid var(--ds-border-neutral-primary);
 }
 
 /* Reusable form primitives for dialog bodies */
@@ -95,8 +95,8 @@
   display: block;
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
@@ -111,8 +111,8 @@
   }
 
   &:focus {
-    border-color: var(--ds-borders-brand-teal-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-borders-brand-teal-primary) 15%, transparent);
+    border-color: var(--ds-border-selected-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-border-selected-primary) 15%, transparent);
   }
 }
 

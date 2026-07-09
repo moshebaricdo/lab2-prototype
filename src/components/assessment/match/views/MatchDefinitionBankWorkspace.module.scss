@@ -26,7 +26,7 @@
 
 .termCard {
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   color: var(--ds-text-brand-neutral-primary);
   font-family: var(--font-body);
   font-size: var(--text-base);
@@ -36,9 +36,9 @@
 }
 
 .slotCard {
-  background: var(--card);
-  border: 1px dashed var(--border);
-  color: var(--muted-foreground);
+  background: var(--ds-background-neutral-primary);
+  border: 1px dashed var(--ds-border-neutral-primary);
+  color: var(--ds-text-neutral-quaternary);
   cursor: pointer;
   justify-content: center;
   text-align: center;
@@ -57,18 +57,18 @@
 }
 
 .slotCardMatched {
-  background: var(--ds-background-brand-teal-extra-light);
-  border-color: var(--ds-borders-brand-teal-primary);
+  background: var(--ds-background-brand-light);
+  border-color: var(--ds-border-selected-primary);
 }
 
 .slotCardOver {
-  border-color: var(--ds-borders-brand-teal-primary);
-  background: var(--ds-background-brand-teal-extra-light);
+  border-color: var(--ds-border-selected-primary);
+  background: var(--ds-background-brand-light);
 }
 
 .slotCardSelected {
-  border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: 0 0 0 1px var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 1px var(--ds-border-selected-primary);
 }
 
 .slotPlaceholder {
@@ -76,21 +76,21 @@
 }
 
 .slotCardCorrect {
-  background: var(--ds-background-success-extra-light);
-  border-color: var(--ds-borders-success-primary);
+  background: var(--ds-background-success-light);
+  border-color: var(--ds-border-success-primary);
   color: var(--ds-text-success-primary);
 }
 
 .slotCardIncorrect {
-  background: var(--ds-background-error-extra-light);
-  border-color: var(--ds-borders-error-primary);
+  background: var(--ds-background-error-light);
+  border-color: var(--ds-border-error-primary);
   color: var(--ds-text-error-primary-fixed);
 }
 
 .promptCard {
   background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--border);
-  color: var(--foreground);
+  border: 1px solid var(--ds-border-neutral-primary);
+  color: var(--ds-text-neutral-primary);
   cursor: grab;
   gap: 12px;
   text-align: center;
@@ -98,7 +98,7 @@
 }
 
 .promptCard:hover {
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
 }
 
 .promptCardCompact {
@@ -109,16 +109,16 @@
 }
 
 .promptCardCompact:not(.promptCardCorrect):not(.promptCardIncorrect):hover {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
   border: none;
 }
 
 .promptCardCompact.promptCardCorrect {
-  border: 0px solid var(--ds-borders-success-primary);
+  border: 0px solid var(--ds-border-success-primary);
 }
 
 .promptCardCompact.promptCardIncorrect {
-  border: 0px solid var(--ds-borders-error-primary);
+  border: 0px solid var(--ds-border-error-primary);
 }
 
 .promptCard:focus-visible {
@@ -130,19 +130,19 @@
 }
 
 .promptCardSelected {
-  border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: 0 0 0 1px var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 1px var(--ds-border-selected-primary);
 }
 
 .promptCardCorrect {
-  background: var(--ds-background-success-extra-light);
-  border-color: var(--ds-borders-success-primary);
+  background: var(--ds-background-success-light);
+  border-color: var(--ds-border-success-primary);
   color: var(--ds-text-success-primary);
 }
 
 .promptCardIncorrect {
-  background: var(--ds-background-error-extra-light);
-  border-color: var(--ds-borders-error-primary);
+  background: var(--ds-background-error-light);
+  border-color: var(--ds-border-error-primary);
   color: var(--ds-text-error-primary-fixed);
 }
 
@@ -161,9 +161,9 @@
   align-items: center;
   text-align: center;
   background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   cursor: grabbing;
   display: flex;
   gap: 12px;
@@ -173,24 +173,24 @@
 }
 
 .termCardMatched {
-  background: var(--ds-background-brand-teal-extra-light);
-  border-color: var(--ds-borders-brand-teal-primary);
+  background: var(--ds-background-brand-light);
+  border-color: var(--ds-border-selected-primary);
 }
 
 .termCardCorrect {
-  background: var(--ds-background-success-extra-light);
-  border-color: var(--ds-borders-success-primary);
+  background: var(--ds-background-success-light);
+  border-color: var(--ds-border-success-primary);
   color: var(--ds-text-success-primary);
 }
 
 .termCardIncorrect {
-  background: var(--ds-background-error-extra-light);
-  border-color: var(--ds-borders-error-primary);
+  background: var(--ds-background-error-light);
+  border-color: var(--ds-border-error-primary);
   color: var(--ds-text-error-primary-fixed);
 }
 
 .partialFeedback {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-base);
   font-weight: var(--font-weight-medium);
   margin: 0;

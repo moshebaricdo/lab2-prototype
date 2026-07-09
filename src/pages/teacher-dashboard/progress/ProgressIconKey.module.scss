@@ -29,18 +29,6 @@
   color: var(--ds-text-neutral-secondary);
 }
 
-.moreDetails {
-  color: var(--ds-text-brand-purple-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.54;
-  text-decoration: none;
-}
-
-.moreDetails:hover {
-  text-decoration: underline;
-}
 
 .groups {
   display: flex;
@@ -50,8 +38,8 @@
 }
 
 .group {
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--ds-background-neutral-primary);
 }
@@ -59,7 +47,7 @@
 .groupTitle {
   margin: 0;
   padding: 8px 16px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
@@ -105,5 +93,5 @@
 }
 
 .choiceGlyph {
-  color: var(--ds-text-brand-teal-primary);
+  color: var(--ds-text-selected-primary);
 }

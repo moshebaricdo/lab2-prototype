@@ -5,8 +5,8 @@
   height: 52px;
   align-items: stretch;
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -18,18 +18,18 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-right: 1px solid var(--ds-borders-brand-teal-primary);
-  border-radius: 4px 0 0 4px;
-  background: var(--ds-background-brand-teal-primary);
+  border-right: 1px solid var(--ds-border-selected-primary);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  background: var(--ds-background-selected-primary);
 }
 
 .iconRailImage {
-  border-right-color: var(--ds-borders-neutral-primary);
+  border-right-color: var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-primary);
 }
 
 .iconGlyph {
-  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-primary-inverse));
+  color: var(--ds-text-selected-primary, var(--ds-text-neutral-primary-inverse));
   font-size: 18px;
 }
 
@@ -85,7 +85,7 @@
   width: 4px;
   height: 4px;
   flex-shrink: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-text-neutral-tertiary);
 }
 
@@ -106,7 +106,7 @@
   align-items: center;
   gap: 2px;
   padding: 2px 12px 2px 8px;
-  border-radius: 100px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-success-light);
 }
 

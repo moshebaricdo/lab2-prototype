@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "../../hooks/useTheme";
-import { AppButton } from "./AppButton";
+import { AppIconButton } from "./AppIconButton";
 import styles from "./Dialog.module.scss";
 
 interface DialogProps {
@@ -99,7 +99,7 @@ export function Dialog({
           <h2 id={titleId} className={[styles.title, titleClassName].filter(Boolean).join(" ")}>
             {title}
           </h2>
-          <AppButton
+          <AppIconButton
             variant="tertiary"
             tone="gray"
             size="xs"

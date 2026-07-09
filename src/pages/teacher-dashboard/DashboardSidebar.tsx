@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { AppButton } from "../../components/ui/AppButton";
+import { AppIconButton } from "../../components/ui/AppIconButton";
+import { AppLink } from "../../components/ui/AppLink";
 import { FaIcon } from "../../components/ui/icons/FaIcon";
 import styles from "./DashboardSidebar.module.scss";
 
@@ -22,7 +24,7 @@ export function DashboardSidebar({ className = "" }: DashboardSidebarProps) {
               <FaIcon name="book" size="xs" className={styles.eyebrowIcon} />
               New curriculum
             </p>
-            <AppButton
+            <AppIconButton
               variant="tertiary"
               tone="black"
               size="xs"
@@ -108,10 +110,10 @@ export function DashboardSidebar({ className = "" }: DashboardSidebarProps) {
           <p className={styles.infoText}>
             Find workshops and self-paced learning to help empower your teaching.
           </p>
-          <a href="#" className={styles.infoLink}>
+          <AppLink href="#" size="s" className={styles.infoLink}>
             Explore professional learning
             <FaIcon name="arrow-up-right-from-square" size="xs" />
-          </a>
+          </AppLink>
         </div>
         <div className={styles.infoIllustration} aria-hidden="true">
           <FaIcon name="book-open" size="l" />
@@ -125,10 +127,10 @@ export function DashboardSidebar({ className = "" }: DashboardSidebarProps) {
           <p className={styles.infoText}>
             Participate in user research to help us improve our platform for everyone.
           </p>
-          <a href="#" className={styles.infoLink}>
+          <AppLink href="#" size="s" className={styles.infoLink}>
             Join the user research program
             <FaIcon name="arrow-up-right-from-square" size="xs" />
-          </a>
+          </AppLink>
         </div>
         <div className={styles.infoIllustration} aria-hidden="true">
           <FaIcon name="magnifying-glass" size="l" />

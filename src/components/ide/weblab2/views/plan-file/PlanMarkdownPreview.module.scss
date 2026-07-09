@@ -86,7 +86,7 @@
 }
 
 .content code {
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-tertiary);
   font-family: var(--font-mono);
   font-size: var(--text-label);

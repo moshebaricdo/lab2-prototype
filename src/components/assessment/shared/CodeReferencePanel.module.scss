@@ -43,7 +43,7 @@
 .tab {
   align-items: center;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   gap: 8px;
@@ -52,12 +52,12 @@
 }
 
 .tab:focus-visible {
-  box-shadow: 0 0 0 2px var(--ring);
+  box-shadow: 0 0 0 2px var(--ds-border-focused-primary);
   outline: none;
 }
 
 .tabActive {
-  background: var(--accent);
+  background: var(--ds-background-brand-primary);
 }
 
 .tabIdle {
@@ -84,11 +84,11 @@
 }
 
 .tabIconActive {
-  color: var(--accent-foreground);
+  color: var(--ds-text-neutral-white-fixed);
 }
 
 .tabIconInactive {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 .tabName {
@@ -99,7 +99,7 @@
 }
 
 .tabNameActive {
-  color: var(--accent-foreground);
+  color: var(--ds-text-neutral-white-fixed);
 }
 
 .tabNameInactive {
@@ -110,7 +110,7 @@
 
 .codeArea {
   background-color: var(--ds-background-neutral-secondary);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   display: flex;
   flex: 1;
   min-height: 0;
@@ -160,7 +160,7 @@
 }
 
 .lineNumberText {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-family: var(--font-mono);
   font-size: 14px;
   line-height: 24px;
@@ -172,7 +172,7 @@
 .codeTextarea {
   background: transparent;
   border: 0;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   flex: 1;
   font-family: var(--font-mono);
   font-size: 14px;
@@ -205,7 +205,7 @@
 }
 
 .codeLineText {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-family: var(--font-mono);
   font-size: 14px;
   line-height: 24px;

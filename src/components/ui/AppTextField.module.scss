@@ -66,8 +66,8 @@
 .control {
   box-sizing: border-box;
   width: 100%;
-  border: 1px solid var(--ds-borders-neutral-solid);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-solid);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
@@ -105,12 +105,12 @@
 }
 
 .keyboardFocused .control {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 2px;
 }
 
 .toneGray .control {
-  border-color: var(--ds-borders-neutral-secondary);
+  border-color: var(--ds-border-neutral-secondary);
 }
 
 .toneWhite {
@@ -124,7 +124,7 @@
 }
 
 .toneWhite .control {
-  border-color: var(--ds-borders-neutral-white-fixed);
+  border-color: var(--ds-border-neutral-white-fixed);
   background: var(--ds-background-neutral-primary-inverse);
   color: var(--ds-text-neutral-white-fixed);
 }
@@ -135,7 +135,7 @@
 
 .invalid .control,
 .control[aria-invalid="true"] {
-  border-color: var(--ds-borders-error-primary);
+  border-color: var(--ds-border-error-primary);
 }
 
 .invalid .helper,
@@ -150,7 +150,7 @@
 }
 
 .disabled .control {
-  border-color: var(--ds-borders-disabled-neutral);
+  border-color: var(--ds-border-disabled-neutral);
   color: var(--ds-text-disabled-neutral);
   cursor: not-allowed;
 }
@@ -160,7 +160,7 @@
 }
 
 .readOnly .control {
-  border-color: var(--ds-borders-neutral-primary);
+  border-color: var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-primary);
   cursor: default;
@@ -183,7 +183,7 @@
   width: var(--app-text-field-icon-size);
   flex-shrink: 0;
   justify-content: center;
-  color: var(--ds-text-brand-teal-primary);
+  color: var(--ds-text-selected-primary);
 }
 
 .helperText {

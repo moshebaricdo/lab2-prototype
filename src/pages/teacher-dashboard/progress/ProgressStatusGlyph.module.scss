@@ -7,7 +7,7 @@
 }
 
 .inProgress {
-  border: 2px solid var(--ds-borders-success-primary);
+  border: 2px solid var(--ds-border-success-primary);
   background: transparent;
 }
 
@@ -43,7 +43,7 @@
 }
 
 .needsFeedback {
-  border-top-color: var(--ds-background-brand-purple-primary);
+  border-top-color: var(--ds-background-brand-primary);
 }
 
 .feedbackGiven {

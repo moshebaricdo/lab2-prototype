@@ -55,8 +55,8 @@
 
 .gridScroll {
   overflow-x: auto;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
 }
 
 .grid {
@@ -76,14 +76,14 @@
   align-items: center;
   height: var(--header-h);
   box-sizing: border-box;
-  border-right: 1px solid var(--ds-borders-neutral-primary);
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-right: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }
 
 .bodyCell {
   box-sizing: border-box;
-  border-right: 1px solid var(--ds-borders-neutral-primary);
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-right: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }
 
 .studentRowCell {
@@ -206,9 +206,9 @@
   height: calc(var(--header-h) / 2);
   gap: 8px;
   padding: 0 14px;
-  border-right: 1px solid var(--ds-borders-neutral-primary);
-  border-bottom: 1px solid var(--ds-borders-brand-teal-strong);
-  background: var(--ds-background-brand-teal-strong);
+  border-right: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-selected-strong);
+  background: var(--ds-background-selected-strong);
   color: var(--ds-text-neutral-white-fixed);
 }
 
@@ -237,10 +237,10 @@
   width: var(--sublevel-col-w);
   height: calc(var(--header-h) / 2);
   box-sizing: border-box;
-  border-right: 1px solid var(--ds-borders-neutral-primary);
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
-  background: var(--ds-background-brand-teal-extra-light);
-  color: var(--ds-text-brand-teal-secondary);
+  border-right: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  background: var(--ds-background-brand-light);
+  color: var(--ds-text-selected-primary);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
@@ -252,12 +252,12 @@
 }
 
 .sublevelChoice {
-  color: var(--ds-text-brand-teal-primary);
+  color: var(--ds-text-selected-primary);
 }
 
 .sublevelCell {
   width: var(--sublevel-col-w);
   box-sizing: border-box;
-  border-right: 1px solid var(--ds-borders-neutral-primary);
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-right: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }

@@ -78,7 +78,7 @@ body {
 
 .planet-item.active {
   background: rgba(77,143,255,0.12);
-  border-left-color: var(--accent);
+  border-left-color: var(--ds-background-brand-primary);
 }
 
 .planet-dot {

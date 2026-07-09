@@ -77,7 +77,7 @@ export function ResizableHandle({
       />
 
       <div
-        className={`absolute bg-[var(--ds-borders-neutral-primary)] transition-all ${
+        className={`absolute bg-[var(--ds-border-neutral-primary)] transition-all ${
           orientation === "vertical"
             ? `top-0 bottom-0 left-1/2 -translate-x-1/2 ${isHovering || isDragging ? "w-[3px]" : "w-px"}`
             : `left-0 right-0 top-1/2 -translate-y-1/2 ${isHovering || isDragging ? "h-[3px]" : "h-px"}`

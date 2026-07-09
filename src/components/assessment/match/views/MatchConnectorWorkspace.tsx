@@ -69,7 +69,7 @@ function buildCurvePath(
   return `M ${start.x} ${start.y} C ${start.x + cpOffset} ${start.y}, ${end.x - cpOffset} ${end.y}, ${end.x} ${end.y}`;
 }
 
-const BRAND_STROKE = "var(--ds-borders-brand-teal-primary)";
+const BRAND_STROKE = "var(--ds-border-selected-primary)";
 
 function renderMatchContentBlock(
   block: MultiChoiceAnswerContentBlock,

@@ -8,8 +8,8 @@
 /* Card sections — same vocabulary as other Lab2 panels. */
 .card {
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
 }
 
@@ -24,7 +24,7 @@
   height: 36px;
   margin: 0;
   padding: 0 12px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-quaternary);
 }
@@ -246,7 +246,7 @@
   flex-direction: column;
   gap: 6px;
   padding-top: 10px;
-  border-top: 1px solid var(--ds-borders-neutral-primary);
+  border-top: 1px solid var(--ds-border-neutral-primary);
 }
 
 .filePackerHint {
@@ -295,7 +295,7 @@
   flex-shrink: 0;
   width: 32px;
   height: 18px;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: var(--ds-background-neutral-quaternary);
   transition: background 0.15s ease;
 
@@ -308,13 +308,13 @@
   }
 
   input:focus-visible + .switchThumb {
-    outline: 2px solid var(--ds-borders-brand-teal-primary);
+    outline: 2px solid var(--ds-border-selected-primary);
     outline-offset: 2px;
   }
 }
 
 .switchOn {
-  background: var(--ds-background-brand-purple-primary);
+  background: var(--ds-background-brand-primary);
 }
 
 .switchDisabled {

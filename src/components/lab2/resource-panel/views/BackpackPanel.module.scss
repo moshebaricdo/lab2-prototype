@@ -71,7 +71,7 @@
   height: 48px;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-neutral-septenary);
   color: var(--ds-text-neutral-white-fixed);
   font-size: 24px;
@@ -103,7 +103,7 @@
   height: 1px;
   min-width: 0;
   flex: 1;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
 }
 
 .sectionDividerLabel {

@@ -2,10 +2,10 @@
 
 .page {
   min-height: 100vh;
-  background: var(--secondary);
+  background: var(--ds-background-neutral-secondary);
   background-image: radial-gradient(
     circle,
-    color-mix(in srgb, var(--foreground) 8%, transparent) 1px,
+    color-mix(in srgb, var(--ds-text-neutral-primary) 8%, transparent) 1px,
     transparent 1px
   );
   background-size: 18px 18px;
@@ -27,7 +27,7 @@
 .pageSubtitle {
   font-family: var(--font-body);
   font-size: var(--text-base);
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   margin: 4px 0 0;
 }
 
@@ -61,7 +61,7 @@
 }
 
 .sectionBody {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ds-border-neutral-primary);
   padding: 16px;
   background: var(--ds-background-neutral-primary);
 }
@@ -76,7 +76,7 @@
 
 .card {
   border-radius: var(--radius);
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   padding: 16px;
   padding-right: 20px;
@@ -127,8 +127,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  background: var(--card);
+  border: 1px solid var(--ds-border-neutral-primary);
+  background: var(--ds-background-neutral-primary);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: 600;
@@ -137,14 +137,14 @@
   transition: border-color 120ms, background 120ms, color 120ms;
 
   &:hover {
-    border-color: var(--ds-borders-success-primary);
+    border-color: var(--ds-border-success-primary);
     background: var(--ds-background-success-primary);
     color: var(--ds-text-neutral-white-fixed);
   }
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--ring);
+    box-shadow: 0 0 0 2px var(--ds-border-focused-primary);
   }
 }
 
@@ -156,7 +156,7 @@
 
 /* Match swipe “Full match list” expandable header */
 .variantsCard {
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   overflow: hidden;
 }
@@ -165,7 +165,7 @@
   align-items: center;
   background: var(--ds-background-neutral-primary);
   border: 0;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   display: grid;
   gap: 12px;
   grid-template-columns: 1fr auto;
@@ -187,7 +187,7 @@
 }
 
 .variantsToggleMetaButton {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -198,7 +198,7 @@
   text-align: right;
 
   &:hover {
-    color: var(--foreground);
+    color: var(--ds-text-neutral-primary);
   }
 }
 
@@ -206,11 +206,11 @@
   background: var(--ds-background-neutral-secondary);
   overflow: hidden;
   border-radius: var(--radius-card);
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
 }
 
 .emptySectionText {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-sm);
   margin: 0;
 }
@@ -223,7 +223,7 @@
   transition: background 120ms;
 
   & + & {
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--ds-border-neutral-primary);
   }
 }
 
@@ -254,7 +254,7 @@
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--ring);
+    box-shadow: 0 0 0 2px var(--ds-border-focused-primary);
     border-radius: 0.25rem;
   }
 }
@@ -269,7 +269,7 @@
 .typePill {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-neutral-septenary);
   padding: 1px 8px;
   font-family: var(--font-body);
@@ -313,7 +313,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   margin: 0;
 
   code {
@@ -322,12 +322,12 @@
 }
 
 .codeBlock {
-  background: var(--foreground);
-  color: var(--card);
+  background: var(--ds-text-neutral-primary);
+  color: var(--ds-background-neutral-primary);
   font-family: var(--font-mono, monospace);
   font-size: 12px;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow-x: auto;
   white-space: pre;
   margin: 0;

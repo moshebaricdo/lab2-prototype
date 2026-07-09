@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { AppButton } from "../../ui/AppButton";
+import { AppIconButton } from "../../ui/AppIconButton";
 import { Tooltip } from "../../ui/Tooltip";
 import { AiTutorIcon } from "../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../ui/icons/FaIcon";
@@ -304,7 +304,7 @@ export function SidebarTabRail({
               content={annotations.isActive ? "Exit annotation mode" : "Annotate"}
               position="right"
             >
-              <AppButton
+              <AppIconButton
                 variant={annotations.isActive ? "primary" : "tertiary"}
                 tone={annotations.isActive ? "purple" : "gray"}
                 size="xs"
@@ -321,31 +321,34 @@ export function SidebarTabRail({
           </>
         )}
         <Tooltip content="Settings" position="right">
-          <AppButton
+          <AppIconButton
             variant="tertiary"
             tone="gray"
             size="xs"
             onClick={onToggleSettings}
             iconName="gear"
+            aria-label="Settings"
             aria-pressed={isSettingsOpen}
           />
         </Tooltip>
         <div className={styles.bottomActionDivider} aria-hidden="true" />
         <div className={styles.bottomActionGroup}>
           <Tooltip content="AI Usage Disclaimer" position="right">
-            <AppButton
+            <AppIconButton
               variant="tertiary"
               tone="gray"
               size="xs"
               iconName="triangle-exclamation"
+              aria-label="AI Usage Disclaimer"
             />
           </Tooltip>
           <Tooltip content="Copyright" position="right">
-            <AppButton
+            <AppIconButton
               variant="tertiary"
               tone="gray"
               size="xs"
               iconName="copyright"
+              aria-label="Copyright"
             />
           </Tooltip>
         </div>

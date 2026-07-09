@@ -108,10 +108,10 @@
   background: var(--agent-thinking-accent);
   animation: agentDotPulse 1.5s ease-in-out infinite;
 
-  &[data-accent="violet"] { --agent-thinking-accent: #6c4ccf; }
-  &[data-accent="blue"] { --agent-thinking-accent: #1a7ee6; }
-  &[data-accent="magenta"] { --agent-thinking-accent: #d6479d; }
-  &[data-accent="green"] { --agent-thinking-accent: #0e9f6e; }
+  &[data-accent="violet"] { --agent-thinking-accent: var(--ds-background-brand-primary); }
+  &[data-accent="blue"] { --agent-thinking-accent: var(--ds-border-selected-primary); }
+  &[data-accent="magenta"] { --agent-thinking-accent: var(--ds-background-accent-pink-primary); }
+  &[data-accent="green"] { --agent-thinking-accent: var(--ds-background-success-primary); }
 }
 
 @keyframes agentDotPulse {

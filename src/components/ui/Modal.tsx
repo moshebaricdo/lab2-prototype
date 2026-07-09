@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "../../hooks/useTheme";
-import { FaIcon } from "./icons/FaIcon";
+import { AppIconButton } from "./AppIconButton";
 import styles from "./Modal.module.scss";
 
 interface ModalProps {
@@ -49,14 +49,15 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <button
-          type="button"
+        <AppIconButton
+          variant="tertiary"
+          tone="gray"
+          size="xs"
+          iconName="xmark"
           onClick={onClose}
           className={styles.closeButton}
           aria-label="Close dialog"
-        >
-          <FaIcon name="xmark" size="s" />
-        </button>
+        />
 
         <h3 id={titleId} className={styles.title}>{title}</h3>
         <div className={styles.separator} aria-hidden="true" />

@@ -1,8 +1,8 @@
 .card {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   overflow: hidden;
 }
@@ -12,7 +12,7 @@
   height: 32px;
   align-items: center;
   padding: 0 12px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-tertiary);
   font-family: var(--font-body);
@@ -43,7 +43,7 @@
   gap: 8px;
   min-width: 0;
   width: 100%;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   background: var(--ds-background-neutral-primary);
   padding: 6px 6px;
@@ -78,7 +78,7 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-secondary);
   font-family: var(--font-body);
@@ -100,7 +100,7 @@
 }
 
 .choiceRow:hover:not(:disabled) {
-  border-color: var(--ds-borders-neutral-primary);
+  border-color: var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -110,7 +110,7 @@
 }
 
 .customRow:focus-within {
-  border-color: var(--ds-borders-neutral-primary);
+  border-color: var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -120,7 +120,7 @@
 }
 
 .customRow:hover:not(:has(.customInput:disabled)) {
-  border-color: var(--ds-borders-neutral-primary);
+  border-color: var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -130,12 +130,12 @@
 }
 
 .choiceRow:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 2px;
 }
 
 .customRow:focus-within {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 2px;
 }
 

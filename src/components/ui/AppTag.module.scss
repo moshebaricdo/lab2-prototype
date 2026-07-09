@@ -5,7 +5,7 @@
 
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--tag-bg);
   color: var(--tag-text);
   font-family: var(--font-body);
@@ -100,18 +100,18 @@
 }
 
 .fillLight.colorPurple {
-  --tag-bg: var(--ds-background-brand-aqua-light);
-  --tag-icon: var(--ds-text-brand-teal-primary);
+  --tag-bg: var(--ds-background-brand-light);
+  --tag-icon: var(--ds-text-selected-primary);
 }
 
 .fillLight.colorTeal {
-  --tag-bg: var(--ds-background-brand-aqua-light);
-  --tag-icon: var(--ds-text-brand-teal-primary);
+  --tag-bg: var(--ds-background-brand-light);
+  --tag-icon: var(--ds-text-selected-primary);
 }
 
 .fillLight.colorAqua {
-  --tag-bg: var(--ds-background-brand-aqua-light);
-  --tag-icon: var(--ds-text-brand-aqua-primary-fixed);
+  --tag-bg: var(--ds-background-brand-light);
+  --tag-icon: var(--ds-text-selected-primary);
 }
 
 .fillLight.colorError {
@@ -142,17 +142,17 @@
 }
 
 .fillSolid.colorPurple {
-  --tag-bg: var(--ds-background-brand-aqua-primary);
+  --tag-bg: var(--ds-background-selected-primary);
   --tag-text: var(--ds-text-neutral-white-fixed);
 }
 
 .fillSolid.colorTeal {
-  --tag-bg: var(--ds-background-brand-aqua-primary);
+  --tag-bg: var(--ds-background-selected-primary);
   --tag-text: var(--ds-text-neutral-white-fixed);
 }
 
 .fillSolid.colorAqua {
-  --tag-bg: var(--ds-background-brand-aqua-primary);
+  --tag-bg: var(--ds-background-selected-primary);
   --tag-text: var(--ds-text-neutral-white-fixed);
 }
 
@@ -200,7 +200,7 @@
 }
 
 .dismissButton:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 1px;
 }
 

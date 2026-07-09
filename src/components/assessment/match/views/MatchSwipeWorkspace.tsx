@@ -571,7 +571,7 @@ export function MatchSwipeWorkspace({
                 <path
                   d="M 253 0 L 253 36 Q 253 50, 267 50 L 380 50"
                   fill="none"
-                  stroke="var(--border)"
+                  stroke="var(--ds-border-neutral-primary)"
                   strokeWidth="1"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -579,7 +579,7 @@ export function MatchSwipeWorkspace({
                 <path
                   d="M 759 0 L 759 36 Q 759 50, 745 50 L 600 50"
                   fill="none"
-                  stroke="var(--border)"
+                  stroke="var(--ds-border-neutral-primary)"
                   strokeWidth="1"
                   strokeLinecap="round"
                   strokeLinejoin="round"

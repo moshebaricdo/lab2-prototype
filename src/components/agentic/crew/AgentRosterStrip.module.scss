@@ -2,16 +2,16 @@
 
 /* Soft functional color coding — a tint per agent, not a persona. */
 .root {
-  --agent-violet: var(--ds-background-brand-purple-primary);
+  --agent-violet: var(--ds-background-brand-primary);
   --agent-blue: var(--ds-text-info-primary-fixed);
-  --agent-magenta: var(--ds-background-brand-pink-primary);
+  --agent-magenta: var(--ds-background-accent-pink-primary);
   --agent-green: var(--ds-background-success-primary);
 
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 8px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-primary);
 }
 
@@ -99,7 +99,7 @@
   height: 26px;
   padding: 0 7px;
   border: 0;
-  border-radius: 13px;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--ds-text-neutral-tertiary);
   font-family: var(--font-body);
@@ -136,7 +136,7 @@
   height: 24px;
   padding: 0;
   gap: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   justify-content: center;
 }
 
@@ -159,7 +159,7 @@
   padding: 0;
   gap: 0;
   border: 1px solid color-mix(in srgb, var(--agent-accent) 40%, transparent);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: color-mix(
     in srgb,
     var(--agent-accent) 10%,
@@ -254,7 +254,7 @@
   width: 1px;
   height: 16px;
   margin: 0 3px;
-  background: var(--border);
+  background: var(--ds-border-neutral-primary);
 }
 
 /* ─── Simplified context card ────────────────────────── */
@@ -266,9 +266,9 @@
   padding: 12px;
   font-family: var(--font-body);
 
-  &[data-accent="violet"] { --agent-accent: var(--ds-background-brand-purple-primary); }
+  &[data-accent="violet"] { --agent-accent: var(--ds-background-brand-primary); }
   &[data-accent="blue"] { --agent-accent: var(--ds-text-info-primary-fixed); }
-  &[data-accent="magenta"] { --agent-accent: var(--ds-background-brand-pink-primary); }
+  &[data-accent="magenta"] { --agent-accent: var(--ds-background-accent-pink-primary); }
   &[data-accent="green"] { --agent-accent: var(--ds-background-success-primary); }
 }
 
@@ -284,7 +284,7 @@
   flex-shrink: 0;
   width: 26px;
   height: 26px;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--agent-accent) 12%, transparent);
   color: var(--agent-accent);
 }
@@ -299,7 +299,7 @@
 .cardTagline {
   margin: 0;
   font-size: 11px;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   line-height: 1.4;
 }
 
@@ -314,7 +314,7 @@
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-primary);
   font-size: 11px;
@@ -326,7 +326,7 @@
   gap: 6px;
   margin: 0;
   font-size: 11px;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   line-height: 1.45;
 }
 

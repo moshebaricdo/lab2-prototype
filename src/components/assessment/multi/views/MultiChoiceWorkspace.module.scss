@@ -34,7 +34,7 @@
 .answerOption {
   align-items: start;
   background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-borders-neutral-strong);
+  border: 1px solid var(--ds-border-neutral-secondary);
   border-radius: var(--radius);
   color: var(--ds-text-neutral-primary);
   cursor: pointer;
@@ -46,7 +46,7 @@
 }
 
 .answerOption:hover {
-  border-color: var(--ds-borders-neutral-primary);
+  border-color: var(--ds-border-neutral-primary);
 }
 
 .answerOption:first-of-type {
@@ -54,21 +54,21 @@
 }
 
 .answerOptionChecked {
-  border-color: var(--ring);
-  background: var(--ds-background-brand-teal-extra-light);
+  border-color: var(--ds-border-focused-primary);
+  background: var(--ds-background-brand-light);
 }
 
 .answerOptionChecked:hover {
-  border-color: var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-border-selected-primary);
 }
 
 .answerOptionRevealedCorrect {
-  background: var(--ds-background-success-extra-light);
-  border-color: var(--ds-borders-success-primary);
+  background: var(--ds-background-success-light);
+  border-color: var(--ds-border-success-primary);
 }
 
 .answerOptionRevealedCorrect:hover {
-  border-color: var(--ds-borders-success-primary);
+  border-color: var(--ds-border-success-primary);
 }
 
 @keyframes answerCorrectShimmerSweep {
@@ -109,8 +109,8 @@
       100deg,
       transparent 0%,
       transparent 28%,
-      color-mix(in srgb, #fff 88%, transparent) 48%,
-      color-mix(in srgb, #fff 45%, var(--ds-background-success-extra-light)) 52%,
+      color-mix(in srgb, var(--ds-background-neutral-white-fixed) 88%, transparent) 48%,
+      color-mix(in srgb, var(--ds-background-neutral-white-fixed) 45%, var(--ds-background-success-light)) 52%,
       transparent 72%,
       transparent 100%
     );
@@ -136,16 +136,16 @@
 }
 
 .answerOptionSelectionCapped:hover {
-  border-color: var(--border);
+  border-color: var(--ds-border-neutral-primary);
 }
 
 .answerOptionIncorrect {
-  background: var(--ds-background-error-extra-light);
-  border-color: var(--ds-borders-error-primary);
+  background: var(--ds-background-error-light);
+  border-color: var(--ds-border-error-primary);
 }
 
 .answerOptionIncorrect:hover {
-  border-color: var(--ds-borders-error-primary);
+  border-color: var(--ds-border-error-primary);
 }
 
 .answerText {
@@ -185,7 +185,7 @@
 
 .answerCodeBlock {
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: var(--text-label);
@@ -210,14 +210,14 @@
 }
 
 .answerImageBlock img {
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   display: block;
   max-width: min(360px, 100%);
 }
 
 .answerImageCaption {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
   margin-top: 6px;
 }
@@ -246,7 +246,7 @@
 
 .persistedWrongMark {
   align-items: center;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   display: inline-flex;
   flex-shrink: 0;
   font-size: 14px;

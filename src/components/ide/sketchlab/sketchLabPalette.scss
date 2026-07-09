@@ -1,7 +1,9 @@
-/* Sketch Lab preset palette — spec values from design mocks (light + dark). */
-
-:root,
-[data-theme="light"] {
+/**
+ * Sketch Lab canvas paint palette — intentional hex values for student artwork
+ * colors (not app chrome). Theme flips light/dark paint sets; do not remap to
+ * `--ds-*` product tokens.
+ */
+:root {
   --sketch-palette-bg-gray: #dfe3e9;
   --sketch-palette-bg-red: #ffe2e2;
   --sketch-palette-bg-yellow: #fef3c6;
@@ -21,7 +23,7 @@
   --sketch-palette-text-pink: #e60076;
 }
 
-[data-theme="dark"] {
+.dark {
   --sketch-palette-bg-gray: #576575;
   --sketch-palette-bg-red: #82181a;
   --sketch-palette-bg-yellow: #733e0a;
@@ -41,8 +43,8 @@
   --sketch-palette-text-pink: #fccee8;
 }
 
-/* Chromatic stroke colors are shared across themes. */
-:root {
+:root,
+.dark {
   --sketch-palette-stroke-red: #fb2c36;
   --sketch-palette-stroke-yellow: #f0b100;
   --sketch-palette-stroke-green: #00bc7d;

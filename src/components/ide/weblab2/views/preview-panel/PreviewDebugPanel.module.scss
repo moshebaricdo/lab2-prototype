@@ -14,7 +14,7 @@
   flex: 0 0 40px;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-primary);
   padding: 0 8px;
 }
@@ -63,7 +63,7 @@
   align-items: center;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-secondary);
   padding: 8px 12px;
 }
@@ -95,7 +95,7 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  border-right: 1px solid var(--ds-borders-neutral-primary);
+  border-right: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-primary);
 }
 
@@ -109,7 +109,7 @@
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
   padding: 8px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }
 
 .networkBlockButtonActive {
@@ -139,8 +139,8 @@
   width: 100%;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-primary);
   cursor: pointer;
@@ -150,11 +150,11 @@
 }
 
 .activityItem:hover {
-  border-color: var(--ds-borders-neutral-primary);
+  border-color: var(--ds-border-neutral-primary);
 }
 
 .activityItem:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 2px;
 }
 
@@ -166,24 +166,24 @@
   align-items: center;
   justify-content: center;
   border: 2px solid var(--ds-text-neutral-primary);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-neutral-primary);
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .activityItem:hover .radio {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .radioSelected {
-  border-color: var(--ds-background-brand-teal-primary);
+  border-color: var(--ds-background-selected-primary);
 }
 
 .radioDot {
   width: 8px;
   height: 8px;
-  border-radius: 999px;
-  background: var(--ds-background-brand-teal-primary);
+  border-radius: var(--radius-round);
+  background: var(--ds-background-selected-primary);
 }
 
 .activityName {
@@ -234,8 +234,8 @@
   height: 244px;
   z-index: 2;
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
 }
 
@@ -253,7 +253,7 @@
   height: 40px;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   color: var(--ds-text-neutral-quaternary);
   padding: 8px 10px;
 }
@@ -348,7 +348,7 @@
 .metadataValue {
   min-height: 30px;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-primary);
   font-size: var(--text-sm);
@@ -380,7 +380,7 @@
   right: 4px;
   left: 4px;
   height: 2px;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
   content: "";
 }
 
@@ -389,7 +389,7 @@
   top: 1px;
   width: 10px;
   height: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-neutral-septenary);
 }
 
@@ -414,7 +414,7 @@
   background: linear-gradient(
     90deg,
     var(--ds-background-success-primary),
-    var(--ds-borders-neutral-primary)
+    var(--ds-border-neutral-primary)
   );
 }
 
@@ -445,7 +445,7 @@
   background: linear-gradient(
     90deg,
     var(--ds-background-error-primary),
-    var(--ds-borders-neutral-primary)
+    var(--ds-border-neutral-primary)
   );
 }
 
@@ -472,7 +472,7 @@
   height: 48px;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-neutral-septenary);
   color: var(--ds-text-neutral-primary-inverse);
   margin-bottom: 10px;

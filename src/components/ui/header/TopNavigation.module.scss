@@ -5,11 +5,7 @@
   justify-content: space-between;
   height: 50px;
   padding: 0 8px;
-  background: var(--ds-background-brand-teal-primary);
-}
-
-:global([data-brand-theme="codeAi"]) .root {
-  background: var(--ds-background-brand-purple-primary);
+  background: var(--ds-background-brand-primary);
 }
 
 .leftGroup {
@@ -21,20 +17,13 @@
 .logoWrap {
   display: flex;
   align-items: center;
+  padding-left: 6px;
   padding-right: 12px;
 }
 
 .logoBox {
-  width: 36px;
-  height: 36px;
-}
-
-:global([data-brand-theme="codeAi"]) .logoWrap {
-  padding-left: 6px;
-}
-
-:global([data-brand-theme="codeAi"]) .logoBox {
   width: 120px;
+  height: 36px;
 }
 
 .centerSpacer {
@@ -55,7 +44,7 @@
   align-items: center;
   gap: 4px;
   background: var(--ds-background-neutral-white-fixed);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 4px 4px 4px 12px;
 }
 
@@ -136,7 +125,7 @@
 }
 
 .userButton {
-  border-color: var(--ds-borders-neutral-secondary);
+  border-color: var(--ds-border-neutral-secondary);
   background: transparent;
   color: var(--ds-text-neutral-white-fixed);
 }

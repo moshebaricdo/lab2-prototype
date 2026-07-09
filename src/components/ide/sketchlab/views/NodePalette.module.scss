@@ -9,27 +9,27 @@
   gap: 4px;
   padding: 6px;
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 10px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-lg);
   box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
 .divider {
   height: 1px;
   margin: 2px -6px;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
 }
 
 .toolActive {
-  background: var(--ds-background-brand-teal-primary) !important;
-  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
+  background: var(--ds-background-selected-primary) !important;
+  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed)) !important;
   border-color: transparent !important;
 }
 
 .toolActive:hover {
-  background: var(--ds-background-brand-teal-strong) !important;
+  background: var(--ds-background-selected-strong) !important;
 }
 
 .toolActive:active {
-  background: var(--ds-background-brand-teal-strong) !important;
+  background: var(--ds-background-selected-strong) !important;
 }

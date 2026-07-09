@@ -58,15 +58,15 @@ function Group4() {
         <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 144 108">
           <g id="Group">
             <g filter="url(#filter0_d_41_119)" id="Vector">
-              <path d={svgPaths.p12d08a00} fill="var(--fill-0, #A1AEBB)" />
+              <path d={svgPaths.p12d08a00} fill="var(--fill-0, var(--ds-background-neutral-quinary))" />
             </g>
             <g id="Icon">
               <path d={svgPaths.pcba1a70} fill="url(#paint0_linear_41_119)" id="Rectangle 1" />
               <g filter="url(#filter1_di_41_119)" id="icon">
-                <path d={svgPaths.p113bf800} fill="var(--fill-0, #0AB0C4)" />
+                <path d={svgPaths.p113bf800} fill="var(--fill-0, var(--ds-background-selected-primary))" />
               </g>
             </g>
-            <path d={svgPaths.pd187c00} fill="var(--fill-0, #C6CED6)" id="Vector_2" />
+            <path d={svgPaths.pd187c00} fill="var(--fill-0, var(--ds-background-neutral-quaternary))" id="Vector_2" />
           </g>
           <defs>
             <filter colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse" height="101.317" id="filter0_d_41_119" width="117.015" x="26.8787" y="6.478">
@@ -97,7 +97,7 @@ function Group4() {
             </filter>
             <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear_41_119" x1="81.6077" x2="81.6077" y1="5.5114e-06" y2="92.9866">
               <stop stopColor="white" />
-              <stop offset="1" stopColor="#ECECEC" />
+              <stop offset="1" stopColor="var(--ds-background-neutral-tertiary)" />
             </linearGradient>
           </defs>
         </svg>
@@ -143,7 +143,7 @@ function Group6() {
         <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 89 52">
           <g id="Group">
             <g filter="url(#filter0_di_41_99)" id="Vector">
-              <path d={svgPaths.p3b7a6280} fill="var(--fill-0, #E0F8F9)" />
+              <path d={svgPaths.p3b7a6280} fill="var(--fill-0, var(--ds-background-selected-primary-inverse))" />
             </g>
           </g>
           <defs>
@@ -178,8 +178,8 @@ function NoLessonMaterialsIllustration() {
           <path d={svgPaths.p3d9cb680} fill="url(#paint0_linear_41_129)" id="Vector" />
           <defs>
             <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear_41_129" x1="108.934" x2="108.934" y1="0" y2="187.249">
-              <stop stopColor="#BFE4E8" />
-              <stop offset="1" stopColor="#BDE1E5" />
+              <stop stopColor="var(--ds-background-success-light)" />
+              <stop offset="1" stopColor="var(--ds-background-success-light)" />
             </linearGradient>
           </defs>
         </svg>
@@ -187,7 +187,7 @@ function NoLessonMaterialsIllustration() {
       <div className="absolute inset-[29.19%_0.15%_44.89%_61.2%]" data-name="Vector">
         <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 96 50">
           <g filter="url(#filter0_i_41_113)" id="Vector">
-            <path d={svgPaths.p2702b460} fill="var(--fill-0, #E0F8F9)" />
+            <path d={svgPaths.p2702b460} fill="var(--fill-0, var(--ds-background-selected-primary-inverse))" />
           </g>
           <defs>
             <filter colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse" height="50.1952" id="filter0_i_41_113" width="97.5975" x="6.06071e-10" y="-0.9446">
@@ -276,8 +276,8 @@ function PreviewGroup4() {
             <g filter="url(#filter0_d_47_15118)" id="Vector">
               <path d={previewSvgPaths.p20f93000} fill="url(#paint0_linear_47_15118)" />
             </g>
-            <path d={previewSvgPaths.pfb7e200} fill="var(--fill-0, #85CAD1)" id="Vector_2" />
-            <path d={previewSvgPaths.p1a4ee6c0} fill="var(--fill-0, #0093A4)" id="Vector_3" />
+            <path d={previewSvgPaths.pfb7e200} fill="var(--fill-0, var(--ds-border-success-mid))" id="Vector_2" />
+            <path d={previewSvgPaths.p1a4ee6c0} fill="var(--fill-0, var(--ds-background-selected-primary))" id="Vector_3" />
           </g>
           <defs>
             <filter colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse" height="127.401" id="filter0_d_47_15118" width="171.556" x="0.747903" y="0.830305">
@@ -292,7 +292,7 @@ function PreviewGroup4() {
             </filter>
             <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear_47_15118" x1="84.9025" x2="84.9025" y1="7" y2="116.649">
               <stop offset="0.848133" stopColor="white" />
-              <stop offset="1" stopColor="#F6F6F6" />
+              <stop offset="1" stopColor="var(--ds-background-neutral-secondary)" />
             </linearGradient>
           </defs>
         </svg>
@@ -316,43 +316,43 @@ function PreviewGroup9() {
 }
 
 function PreviewImageElement() {
-  return <div className="absolute bg-[#c6ced6] inset-[36.37%_67.15%_59.38%_22.33%] rounded-[2.165px]" data-name="Image Element" />;
+  return <div className="absolute bg-[var(--ds-background-neutral-quaternary)] inset-[36.37%_67.15%_59.38%_22.33%] rounded-[2.165px]" data-name="Image Element" />;
 }
 
 function PreviewImageElement1() {
-  return <div className="absolute bg-[#c6ced6] inset-[45.11%_35.38%_49.22%_37.67%] rounded-[2.165px]" data-name="Image Element" />;
+  return <div className="absolute bg-[var(--ds-background-neutral-quaternary)] inset-[45.11%_35.38%_49.22%_37.67%] rounded-[2.165px]" data-name="Image Element" />;
 }
 
 function PreviewImageElement2() {
-  return <div className="absolute bg-gradient-to-b from-[#c6ced6] inset-[64.15%_50.5%_21.97%_22.77%] rounded-tl-[2.165px] rounded-tr-[2.165px] to-[#bec6cd]" data-name="Image Element" />;
+  return <div className="absolute bg-gradient-to-b from-[var(--ds-background-neutral-quaternary)] inset-[64.15%_50.5%_21.97%_22.77%] rounded-tl-[2.165px] rounded-tr-[2.165px] to-[var(--ds-background-neutral-quinary)]" data-name="Image Element" />;
 }
 
 function PreviewImageElement3() {
-  return <div className="absolute bg-gradient-to-b from-[#c6ced6] inset-[64.15%_20.48%_21.97%_52.78%] rounded-tl-[2.165px] rounded-tr-[2.165px] to-[#bec6cd]" data-name="Image Element" />;
+  return <div className="absolute bg-gradient-to-b from-[var(--ds-background-neutral-quaternary)] inset-[64.15%_20.48%_21.97%_52.78%] rounded-tl-[2.165px] rounded-tr-[2.165px] to-[var(--ds-background-neutral-quinary)]" data-name="Image Element" />;
 }
 
 function PreviewImageElement4() {
-  return <div className="absolute bg-[#c6ced6] inset-[53.33%_30.56%_44.97%_32.85%] rounded-[2.165px]" data-name="Image Element" />;
+  return <div className="absolute bg-[var(--ds-background-neutral-quaternary)] inset-[53.33%_30.56%_44.97%_32.85%] rounded-[2.165px]" data-name="Image Element" />;
 }
 
 function PreviewImageElement5() {
-  return <div className="absolute bg-[#c6ced6] inset-[56.73%_38.45%_41.57%_40.73%] rounded-[2.165px]" data-name="Image Element" />;
+  return <div className="absolute bg-[var(--ds-background-neutral-quaternary)] inset-[56.73%_38.45%_41.57%_40.73%] rounded-[2.165px]" data-name="Image Element" />;
 }
 
 function PreviewImageElement6() {
-  return <div className="absolute bg-[#c6ced6] inset-[37.6%_26.4%_60.7%_66.81%] rounded-[2.165px]" data-name="Image Element" />;
+  return <div className="absolute bg-[var(--ds-background-neutral-quaternary)] inset-[37.6%_26.4%_60.7%_66.81%] rounded-[2.165px]" data-name="Image Element" />;
 }
 
 function PreviewImageElement7() {
-  return <div className="absolute bg-[#c6ced6] inset-[37.69%_20.48%_60.61%_74.48%] rounded-[2.165px]" data-name="Image Element" />;
+  return <div className="absolute bg-[var(--ds-background-neutral-quaternary)] inset-[37.69%_20.48%_60.61%_74.48%] rounded-[2.165px]" data-name="Image Element" />;
 }
 
 function PreviewImageElement8() {
-  return <div className="absolute bg-[#c6ced6] inset-[37.69%_34.07%_60.61%_60.89%] rounded-[2.165px]" data-name="Image Element" />;
+  return <div className="absolute bg-[var(--ds-background-neutral-quaternary)] inset-[37.69%_34.07%_60.61%_60.89%] rounded-[2.165px]" data-name="Image Element" />;
 }
 
 function PreviewImageElement9() {
-  return <div className="absolute bg-[#c6ced6] inset-[37.6%_39.98%_60.7%_53%] rounded-[2.165px]" data-name="Image Element" />;
+  return <div className="absolute bg-[var(--ds-background-neutral-quaternary)] inset-[37.6%_39.98%_60.7%_53%] rounded-[2.165px]" data-name="Image Element" />;
 }
 
 function NoUnitAssignedEmptyState() {
@@ -360,7 +360,7 @@ function NoUnitAssignedEmptyState() {
     <div className="h-[190.97px] overflow-clip relative shrink-0 w-[247px]" data-name="no-unit-assigned-empty-state">
       <div className="absolute inset-[1.24%_9.86%_1.06%_2.25%]" data-name="Vector">
         <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 218 187">
-          <path d={previewSvgPaths.p3b02e180} fill="var(--fill-0, #BFE4E8)" id="Vector" />
+          <path d={previewSvgPaths.p3b02e180} fill="var(--fill-0, var(--ds-background-success-light))" id="Vector" />
         </svg>
       </div>
       <div className="absolute inset-[6.95%_23.55%_86.08%_56.9%]" data-name="Vector">
@@ -375,7 +375,7 @@ function NoUnitAssignedEmptyState() {
       <div className="absolute inset-[26.22%_0.14%_48.29%_61.55%]" data-name="Vector">
         <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 95 49">
           <g filter="url(#filter0_i_47_15108)" id="Vector">
-            <path d={previewSvgPaths.p21a00f70} fill="var(--fill-0, #E0F8F9)" />
+            <path d={previewSvgPaths.p21a00f70} fill="var(--fill-0, var(--ds-background-selected-primary-inverse))" />
           </g>
           <defs>
             <filter colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse" height="49.6233" id="filter0_i_47_15108" width="96.4855" x="5.99166e-10" y="-0.933837">
@@ -413,7 +413,7 @@ function NoUnitAssignedEmptyState() {
         <div className="absolute inset-[-23.07%_-12.26%_-15.38%_-7.1%]" style={{ "--fill-0": "rgba(224, 248, 249, 1)" } as React.CSSProperties}>
           <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 88 52">
             <g filter="url(#filter0_di_47_15129)" id="Vector">
-              <path d={previewSvgPaths.p24b99d00} fill="var(--fill-0, #E0F8F9)" />
+              <path d={previewSvgPaths.p24b99d00} fill="var(--fill-0, var(--ds-background-selected-primary-inverse))" />
             </g>
             <defs>
               <filter colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse" height="50.4451" id="filter0_di_47_15129" width="86.361" x="0.863894" y="0.595463">

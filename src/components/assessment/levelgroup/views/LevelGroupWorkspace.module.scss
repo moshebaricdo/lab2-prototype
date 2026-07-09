@@ -39,8 +39,8 @@
 
 .steppedCodeCard {
   align-self: stretch;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   display: flex;
   flex: 1 1 0%;
@@ -85,8 +85,8 @@
 }
 
 .scrollGroupCard {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   overflow: hidden;
   width: 100%;
@@ -99,7 +99,7 @@
 }
 
 .scrollGroupSection:not(:first-child) {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ds-border-neutral-primary);
 }
 
 /* AssessmentStemSection root uses margin-top: 8px; inside scroll sections that stacks with dividers / padding. */
@@ -108,7 +108,7 @@
 }
 
 .steppedCardHeader {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   padding: 16px 24px 14px;
 }
 
@@ -134,7 +134,7 @@
 
 .steppedFooterThreeCol {
   align-items: center;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ds-border-neutral-primary);
   display: grid;
   gap: 12px 16px;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -168,7 +168,7 @@
 
 .steppedSubmittedFooterRow {
   align-items: center;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ds-border-neutral-primary);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -183,7 +183,7 @@
 /* Single footer row: Back | timer + track + step | Next */
 .steppedTimedFooterRow {
   align-items: center;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ds-border-neutral-primary);
   display: grid;
   gap: 12px 16px;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -222,7 +222,7 @@
 }
 
 .steppedTimedStepLabel {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
@@ -230,7 +230,7 @@
 
 .steppedTimedTimer {
   align-items: center;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   display: inline-flex;
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
@@ -239,7 +239,7 @@
 }
 
 .steppedTimedTimerIcon {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 .introScreen {
@@ -251,7 +251,7 @@
 }
 
 .introEyebrow {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.06em;
@@ -260,7 +260,7 @@
 }
 
 .introTitle {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-family: var(--font-heading);
   font-size: var(--text-h4);
   font-weight: var(--font-weight-semibold);
@@ -273,7 +273,7 @@
 }
 
 .introBodyParagraph {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-size: var(--text-base);
   line-height: 1.55;
   margin: 0;
@@ -310,7 +310,7 @@
 }
 
 .groupFooterSummary {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-base);
   font-weight: var(--font-weight-medium);
   margin: 0;
@@ -318,8 +318,8 @@
 }
 
 .section {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   margin-top: 16px;
   padding: 24px;
@@ -330,7 +330,7 @@
 }
 
 .eyebrow {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.06em;
@@ -339,7 +339,7 @@
 }
 
 .sectionTitle {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-family: var(--font-heading);
   font-size: var(--text-h4);
   font-weight: var(--font-weight-semibold);
@@ -363,7 +363,7 @@
 
 .optionLabel {
   align-items: flex-start;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   cursor: pointer;
   display: flex;
@@ -377,7 +377,7 @@
 }
 
 .optionLabelSelected {
-  border-color: var(--ring);
+  border-color: var(--ds-border-focused-primary);
 }
 
 .optionLabelLocked {
@@ -385,13 +385,13 @@
 }
 
 .radio {
-  accent-color: var(--accent);
+  accent-color: var(--ds-background-brand-primary);
   margin-top: 2px;
 }
 
 .textarea {
   background: var(--input-background);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   margin-top: 14px;
   min-height: 150px;
@@ -405,7 +405,7 @@
 }
 
 .hint {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
   margin: 8px 0 0;
 }
@@ -418,7 +418,7 @@
 
 .matchRow {
   align-items: center;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   display: grid;
   gap: 10px;
@@ -432,10 +432,10 @@
 
 .dropZone {
   align-items: center;
-  background: var(--card);
-  border: 1px dashed var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px dashed var(--ds-border-neutral-primary);
   border-radius: var(--radius);
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   cursor: pointer;
   display: inline-flex;
   min-height: 38px;
@@ -444,11 +444,11 @@
 
 .dropZoneFilled {
   border-style: solid;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
 }
 
 .dropZoneSelected {
-  border-color: var(--ring);
+  border-color: var(--ds-border-focused-primary);
 }
 
 .dropZone:focus-visible,
@@ -464,15 +464,15 @@
 }
 
 .termButton {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   cursor: pointer;
   padding: 8px 10px;
 }
 
 .termButtonActive {
-  border-color: var(--ring);
+  border-color: var(--ds-border-focused-primary);
 }
 
 .status {

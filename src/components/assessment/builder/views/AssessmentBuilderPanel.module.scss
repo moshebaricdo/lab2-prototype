@@ -18,7 +18,7 @@
 
 .groupCard {
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-default);
   background: var(--ds-background-neutral-primary);
 }
@@ -30,7 +30,7 @@
   gap: 10px;
   min-height: 40px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -145,7 +145,7 @@
 
 .divider {
   height: 1px;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
 }
 
 .fieldGroup {
@@ -166,7 +166,7 @@
   gap: 10px;
   width: 100%;
   padding: 8px 8px 8px 10px;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-md);
   background: var(--ds-background-neutral-primary);
   text-align: left;
@@ -178,7 +178,7 @@
 }
 
 .rowActive {
-  border-color: var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-border-selected-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -232,7 +232,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px 8px 8px 10px;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-default);
   background: var(--ds-background-neutral-primary);
 }

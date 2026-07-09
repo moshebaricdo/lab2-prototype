@@ -22,8 +22,8 @@
 .control {
   align-items: center;
   background: var(--ds-background-neutral-primary);
-  border: 2px solid var(--ds-borders-neutral-solid);
-  border-radius: 9999px;
+  border: 2px solid var(--ds-border-neutral-solid);
+  border-radius: var(--radius-round);
   display: inline-flex;
   height: var(--radio-control-size);
   justify-content: center;
@@ -32,7 +32,7 @@
 
 .control::after {
   background: transparent;
-  border-radius: 9999px;
+  border-radius: var(--radius-round);
   content: "";
   height: var(--radio-dot-size);
   transition: background-color 0.12s ease;
@@ -40,11 +40,11 @@
 }
 
 .input:checked + .control {
-  border-color: var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-border-selected-primary);
 }
 
 .input:checked + .control::after {
-  background: var(--ds-background-brand-teal-primary);
+  background: var(--ds-background-selected-primary);
 }
 
 .root:hover .input:not(:disabled) + .control,
@@ -54,22 +54,22 @@
 
 .root:hover .input:not(:checked):not(:disabled) + .control,
 .hovered .input:not(:checked):not(:disabled) + .control {
-  border-color: var(--ds-borders-neutral-solid);
+  border-color: var(--ds-border-neutral-solid);
 }
 
 .root:hover .input:checked:not(:disabled) + .control,
 .hovered .input:checked:not(:disabled) + .control {
-  border-color: var(--ds-borders-brand-teal-strong);
+  border-color: var(--ds-border-selected-strong);
 }
 
 .root:hover .input:checked:not(:disabled) + .control::after,
 .hovered .input:checked:not(:disabled) + .control::after {
-  background: var(--ds-background-brand-teal-strong);
+  background: var(--ds-background-selected-strong);
 }
 
 .root:active .input:not(:disabled) + .control {
   background: var(--ds-background-neutral-primary);
-  border-color: var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-border-selected-primary);
 }
 
 .input:focus-visible + .control {
@@ -78,7 +78,7 @@
 
 .input:disabled + .control {
   background: var(--ds-background-neutral-primary);
-  border-color: var(--ds-borders-disabled-neutral);
+  border-color: var(--ds-border-disabled-neutral);
 }
 
 .input:disabled:checked + .control::after {

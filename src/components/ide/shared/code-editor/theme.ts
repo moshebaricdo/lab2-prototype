@@ -4,15 +4,15 @@ const surface = "var(--ds-background-neutral-primary)";
 const activeLineBg =
   "color-mix(in srgb, var(--ds-background-neutral-secondary) 55%, transparent)";
 const selectionBg =
-  "color-mix(in srgb, var(--ds-background-brand-teal-extra-light) 80%, transparent)";
+  "color-mix(in srgb, var(--ds-background-brand-light) 80%, transparent)";
 
-const addedLineBg = "var(--ds-background-success-extra-light)";
-const removedLineBg = "var(--ds-background-error-extra-light)";
-const modifiedLineBg = "var(--ds-background-brand-aqua-extra-light)";
+const addedLineBg = "var(--ds-background-success-light)";
+const removedLineBg = "var(--ds-background-error-light)";
+const modifiedLineBg = "var(--ds-background-brand-light)";
 
 const addedAccent = "var(--ds-background-success-primary)";
 const removedAccent = "var(--ds-background-error-primary)";
-const modifiedAccent = "var(--ds-background-brand-aqua-strong)";
+const modifiedAccent = "var(--ds-background-selected-strong)";
 
 /**
  * CodeMirror theme that pins all surfaces, gutters, selections and diff

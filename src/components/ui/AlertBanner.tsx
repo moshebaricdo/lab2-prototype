@@ -7,7 +7,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { AppButton } from "./AppButton";
+import { AppIconButton } from "./AppIconButton";
+import { AppLink } from "./AppLink";
 import { FaIcon } from "./icons/FaIcon";
 import type { FaIconName } from "../../icons/faProRegularCodepoints";
 import styles from "./AlertBanner.module.scss";
@@ -170,7 +171,7 @@ export function AlertBanner({
       </div>
 
       {dismissible && onDismiss ? (
-        <AppButton
+        <AppIconButton
           aria-label="Dismiss alert"
           className={styles.closeButton}
           iconName="xmark"
@@ -190,9 +191,15 @@ export function AlertBannerLink({
   ...props
 }: AlertBannerLinkProps) {
   return (
-    <a className={[styles.link, className].filter(Boolean).join(" ")} {...props}>
+    <AppLink
+      tone="inherit"
+      underline
+      size="s"
+      className={[styles.link, className].filter(Boolean).join(" ")}
+      {...props}
+    >
       {children}
-    </a>
+    </AppLink>
   );
 }
 

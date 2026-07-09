@@ -1,35 +1,8 @@
 @use "../../../styles/_mixins.scss" as *;
 
 .trigger {
-  display: grid;
-  place-items: center;
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  border: 1px dashed var(--ds-borders-neutral-primary);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--ds-text-neutral-tertiary);
-  cursor: pointer;
-  transition:
-    background 0.12s ease,
-    color 0.12s ease,
-    border-color 0.12s ease;
-
-  &:hover:not(:disabled) {
-    background: var(--ds-background-neutral-secondary);
-    border-color: var(--ds-borders-neutral-primary);
-    color: var(--ds-text-neutral-primary);
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.4;
-  }
+  border-style: dashed;
 }
 
 /* Flush outer padding so dividers span edge to edge; pad sections instead. */
@@ -45,7 +18,7 @@
   flex-shrink: 0;
   height: 1px;
   margin: 0;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
 }
 
 .menuFooter {

@@ -32,8 +32,8 @@
 
 /* Code panel card — its own bordered surface with a resize edge on the right. */
 .codeCard {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   display: flex;
   flex-direction: column;
@@ -82,8 +82,8 @@
 
 /* Assessment panel card — its own bordered surface. Flex set via inline style for ratio. */
 .assessmentCard {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   display: flex;
   flex-direction: column;

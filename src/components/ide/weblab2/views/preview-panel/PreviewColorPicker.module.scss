@@ -15,8 +15,8 @@
   height: 24px;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   padding: 0;
 }
@@ -43,7 +43,7 @@
 }
 
 .swatch:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 1px;
 }
 
@@ -52,8 +52,8 @@
   z-index: 20;
   box-sizing: border-box;
   width: 184px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   box-shadow: 0 16px 40px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 18%, transparent);
   padding: 8px;
@@ -66,12 +66,12 @@
 
 .popover :global(.react-colorful__saturation) {
   border-bottom: 0;
-  border-radius: 4px 4px 0 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
 .popover :global(.react-colorful__hue) {
   height: 12px;
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
 
 .popover :global(.react-colorful__pointer) {
@@ -106,8 +106,8 @@
   box-sizing: border-box;
   width: 100%;
   aspect-ratio: 1;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   padding: 0;
 }
@@ -117,13 +117,13 @@
 }
 
 .presetSwatch:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 1px;
 }
 
 .presetSwatchSelected {
-  border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: 0 0 0 1px var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 1px var(--ds-border-selected-primary);
 }
 
 .presetSwatchNone {
@@ -145,8 +145,8 @@
   height: 24px;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-quaternary);
   padding: 0 5px;
@@ -190,8 +190,8 @@
   box-sizing: border-box;
   width: 100%;
   height: 24px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-mono);
@@ -201,6 +201,6 @@
 }
 
 .hexField input:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 1px;
 }

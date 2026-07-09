@@ -20,5 +20,4 @@ export {
   CodeEditor,
   FileManager,
   EmptyState,
-  FileContextMenu,
 } from "../../shared";

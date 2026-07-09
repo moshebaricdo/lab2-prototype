@@ -21,8 +21,8 @@
 .control {
   align-items: center;
   background: var(--ds-background-neutral-primary);
-  border: 2px solid var(--ds-borders-neutral-solid);
-  border-radius: 4px;
+  border: 2px solid var(--ds-border-neutral-solid);
+  border-radius: var(--radius-sm);
   display: inline-flex;
   height: var(--checkbox-size);
   justify-content: center;
@@ -42,34 +42,35 @@
 }
 
 .input:checked + .control {
-  background: var(--ds-background-neutral-primary);
-  border-color: var(--ds-borders-brand-teal-primary);
+  background: var(--ds-background-selected-primary);
+  border-color: var(--ds-border-selected-primary);
 }
 
 .input:checked + .control::after {
-  border-color: var(--ds-background-brand-teal-primary);
+  border-color: var(--ds-text-selected-primary);
   opacity: 1;
-}
-
-.root:hover .input:not(:disabled) + .control,
-.hovered .input:not(:disabled) + .control {
-  background: var(--ds-background-neutral-primary);
 }
 
 .root:hover .input:not(:checked):not(:disabled) + .control,
 .hovered .input:not(:checked):not(:disabled) + .control {
-  border-color: var(--ds-borders-neutral-solid);
+  background: var(--ds-background-brand-light);
+  border-color: var(--ds-border-neutral-solid);
 }
 
 .root:hover .input:checked:not(:disabled) + .control,
 .hovered .input:checked:not(:disabled) + .control {
-  background: var(--ds-background-neutral-primary);
-  border-color: var(--ds-borders-brand-teal-strong);
+  background: var(--ds-background-selected-strong);
+  border-color: var(--ds-border-selected-strong);
 }
 
-.root:active .input:not(:disabled) + .control {
-  background: var(--ds-background-neutral-primary);
-  border-color: var(--ds-borders-brand-teal-primary);
+.root:active .input:not(:checked):not(:disabled) + .control {
+  background: var(--ds-background-brand-light);
+  border-color: var(--ds-border-brand-primary);
+}
+
+.root:active .input:checked:not(:disabled) + .control {
+  background: var(--ds-background-selected-strong);
+  border-color: var(--ds-border-selected-strong);
 }
 
 .input:focus-visible + .control {
@@ -78,16 +79,16 @@
 
 .input:disabled + .control {
   background: var(--ds-background-neutral-primary);
-  border-color: var(--ds-borders-disabled-neutral);
+  border-color: var(--ds-border-disabled-neutral);
 }
 
 .input:disabled:checked + .control {
   background: var(--ds-background-disabled-neutral);
-  border-color: var(--ds-borders-disabled-neutral);
+  border-color: var(--ds-border-disabled-neutral);
 }
 
 .input:disabled:checked + .control::after {
-  border-color: var(--ds-text-neutral-quaternary);
+  border-color: var(--ds-text-disabled-neutral-inverse);
   opacity: 1;
 }
 

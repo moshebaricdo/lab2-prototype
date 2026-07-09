@@ -1,8 +1,8 @@
 @use "../../../../styles/_mixins.scss" as *;
 
 .resultsCard {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   padding: 20px 24px;
   width: 100%;
@@ -82,7 +82,7 @@
 }
 
 .scoreHeadline {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-family: var(--font-heading);
   font-size: var(--text-h4);
   font-weight: var(--font-weight-semibold);
@@ -92,7 +92,7 @@
 
 .metaRow {
   align-items: center;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   display: flex;
   flex-wrap: wrap;
   gap: 6px 16px;

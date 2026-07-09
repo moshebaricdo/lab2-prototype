@@ -10,6 +10,7 @@ import type {
 } from "../../../types/agentLab";
 import type { MissionTaskScript } from "../../../data/agentic";
 import { AppButton } from "../../ui/AppButton";
+import { AppNativeSelect } from "../../ui/AppDropdown";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import styles from "./MissionControlBoard.module.scss";
@@ -349,22 +350,21 @@ export function MissionControlBoard({
 
                 <label className={styles.fieldLabel}>
                   Assigned specialist
-                  <select
+                  <AppNativeSelect
                     className={styles.specialistSelect}
+                    size="s"
+                    tone="gray"
+                    fullWidth
                     value={runtime.specialistId}
                     disabled={!isEditable}
-                    onChange={(event) =>
-                      updateRuntime(task.id, {
-                        specialistId: event.target.value,
-                      })
+                    onValueChange={(value) =>
+                      updateRuntime(task.id, { specialistId: value })
                     }
-                  >
-                    {mission.specialists.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.role}
-                      </option>
-                    ))}
-                  </select>
+                    options={mission.specialists.map((s) => ({
+                      value: s.id,
+                      label: s.role,
+                    }))}
+                  />
                 </label>
                 {specialist && (
                   <span className={styles.specialistNote}>

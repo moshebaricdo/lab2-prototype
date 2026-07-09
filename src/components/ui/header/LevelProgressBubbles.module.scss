@@ -3,7 +3,7 @@
   height: 32px;
   flex-shrink: 0;
   background: var(--ds-background-neutral-secondary);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .inner {
@@ -145,7 +145,7 @@
 
 .circleNotStarted {
   fill: var(--ds-background-neutral-white-fixed);
-  stroke: var(--ds-borders-neutral-primary);
+  stroke: var(--ds-border-neutral-primary);
   transition: fill 150ms, stroke 150ms;
 
   .bubble:hover & {
@@ -170,7 +170,7 @@
 .borderOverlay {
   position: absolute;
   inset: 0;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   pointer-events: none;
 }

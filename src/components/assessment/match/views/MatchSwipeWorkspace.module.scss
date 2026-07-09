@@ -9,7 +9,7 @@
 
 .deck {
   background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   display: flex;
   flex-direction: column;
@@ -36,14 +36,14 @@
 }
 
 .deckCounter {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
   text-align: center;
 }
 
 .deckCardStack {
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   display: grid;
   flex: 1;
@@ -52,8 +52,8 @@
 }
 
 .deckCardStack.deckCardMatched {
-  background: var(--ds-background-brand-teal-extra-light);
-  border-color: var(--ds-borders-brand-teal-primary);
+  background: var(--ds-background-brand-light);
+  border-color: var(--ds-border-selected-primary);
 }
 
 .deckCard {
@@ -102,7 +102,7 @@
 }
 
 .lineNumbers {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   display: flex;
   flex-direction: column;
   font-family: var(--font-mono);
@@ -135,7 +135,7 @@
 }
 
 .cardImage {
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   display: block;
   max-height: 140px;
@@ -144,18 +144,18 @@
 }
 
 .cardCaption {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
   margin-top: 6px;
 }
 
 .deckStatus {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   margin-left: 4px;
 }
 
 .deckStatusMuted {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   margin-left: 4px;
 }
 
@@ -180,7 +180,7 @@
 
 .connectorBtnWrap {
   background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   left: 50%;
   min-width: 280px;
@@ -197,7 +197,7 @@
   display: flex;
   gap: 8px;
   width: 100%;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }
 
 .connectorBtnContent > button {
@@ -214,7 +214,7 @@
 
 
 .summarySection {
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   margin-top: 40px;
   overflow: hidden;
@@ -224,7 +224,7 @@
   align-items: center;
   background: var(--ds-background-neutral-secondary);
   border: 0;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   display: grid;
   gap: 12px;
   grid-template-columns: 1fr auto;
@@ -247,7 +247,7 @@
 }
 
 .summaryToggleMetaButton {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -257,7 +257,7 @@
 }
 
 .summaryGridWrapOpen {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ds-border-neutral-primary);
 }
 
 .summaryGrid {
@@ -292,7 +292,7 @@
 .summaryCard {
   align-items: start;
   background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   display: grid;
   gap: 4px 0px;
@@ -301,22 +301,22 @@
 }
 
 .summaryCardMatched {
-  background: var(--ds-background-brand-teal-extra-light);
-  border-color: var(--ds-borders-brand-teal-primary);
+  background: var(--ds-background-brand-light);
+  border-color: var(--ds-border-selected-primary);
 }
 
 .summaryCardCorrect {
-  background: var(--ds-background-success-extra-light, #f0fdf4);
-  border-color: var(--ds-borders-success-primary, #22c55e);
+  background: var(--ds-background-success-light);
+  border-color: var(--ds-border-success-primary);
 }
 
 .summaryCardIncorrect {
-  background: var(--ds-background-error-extra-light, #fef2f2);
-  border-color: var(--ds-borders-error-primary, #ef4444);
+  background: var(--ds-background-error-light);
+  border-color: var(--ds-border-error-primary);
 }
 
 .summaryPrimary {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-size: var(--text-label);
   font-weight: var(--font-weight-medium);
   grid-column: 1 / 3;
@@ -324,7 +324,7 @@
 }
 
 .summarySecondary {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
   grid-column: 1 / 3;
   line-height: 1.35;
@@ -340,7 +340,7 @@
 }
 
 .summaryLabel {
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-size: var(--text-label);
   font-weight: var(--font-weight-semibold);
   line-height: 1.35;
@@ -350,7 +350,7 @@
 
 .summaryCodeBlock {
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -384,7 +384,7 @@
 }
 
 .partialFeedback {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-base);
   font-weight: var(--font-weight-medium);
   margin: 0;

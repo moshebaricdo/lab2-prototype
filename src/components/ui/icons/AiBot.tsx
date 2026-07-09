@@ -13,27 +13,27 @@ export function AiBot() {
           <g id="AI Bot">
             <path
               d={svgPaths.pd0dda70}
-              fill="#292F36"
+              fill="var(--ds-text-neutral-black-fixed)"
               id="Container"
             />
             <g id="AI Bot_2">
               <g id="Subtract">
-                <path d={svgPaths.p1bd98700} fill="white" />
+                <path d={svgPaths.p1bd98700} fill="var(--ds-text-neutral-white-fixed)" />
                 <path
                   clipRule="evenodd"
                   d={svgPaths.pc7939c0}
-                  fill="white"
+                  fill="var(--ds-text-neutral-white-fixed)"
                   fillRule="evenodd"
                 />
               </g>
               <g id="Union">
-                <path d={svgPaths.p84ecaf0} fill="#3CFFF8" />
-                <path d={svgPaths.p11d94800} fill="#3CFFF8" />
-                <path d={svgPaths.p2f821830} fill="#3CFFF8" />
-                <path d={svgPaths.p297e7d80} fill="#3CFFF8" />
-                <path d={svgPaths.p13e41100} fill="#3CFFF8" />
-                <path d={svgPaths.p38970900} fill="#3CFFF8" />
-                <path d={svgPaths.p38b2a230} fill="#3CFFF8" />
+                <path d={svgPaths.p84ecaf0} fill="var(--ds-background-selected-primary)" />
+                <path d={svgPaths.p11d94800} fill="var(--ds-background-selected-primary)" />
+                <path d={svgPaths.p2f821830} fill="var(--ds-background-selected-primary)" />
+                <path d={svgPaths.p297e7d80} fill="var(--ds-background-selected-primary)" />
+                <path d={svgPaths.p13e41100} fill="var(--ds-background-selected-primary)" />
+                <path d={svgPaths.p38970900} fill="var(--ds-background-selected-primary)" />
+                <path d={svgPaths.p38b2a230} fill="var(--ds-background-selected-primary)" />
               </g>
             </g>
           </g>

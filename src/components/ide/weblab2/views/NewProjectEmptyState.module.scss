@@ -82,7 +82,7 @@
   min-width: 0;
   flex-direction: column;
   gap: 18px;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   background: var(--ds-background-neutral-primary);
   padding: 20px;
@@ -96,7 +96,7 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--ds-background-brand-aqua-extra-light), transparent),
+      color-mix(in srgb, var(--ds-background-brand-light), transparent),
       var(--ds-background-neutral-primary) 44%
     );
 }
@@ -109,26 +109,26 @@
   padding: 1.5px;
   background: conic-gradient(
     from var(--new-project-ai-glow-angle),
-    var(--ds-borders-brand-aqua-strong) 0deg,
-    var(--ds-borders-brand-aqua-strong) 246deg,
+    var(--ds-border-selected-strong) 0deg,
+    var(--ds-border-selected-strong) 246deg,
     color-mix(
       in srgb,
-      var(--ds-background-brand-aqua-primary),
-      var(--ds-borders-brand-aqua-strong)
+      var(--ds-background-selected-primary),
+      var(--ds-border-selected-strong)
     ) 286deg,
-    var(--ds-background-brand-aqua-primary) 312deg,
+    var(--ds-background-selected-primary) 312deg,
     color-mix(
       in srgb,
-      var(--ds-background-brand-aqua-primary),
-      var(--ds-borders-brand-aqua-strong)
+      var(--ds-background-selected-primary),
+      var(--ds-border-selected-strong)
     ) 338deg,
-    var(--ds-borders-brand-aqua-strong) 360deg
+    var(--ds-border-selected-strong) 360deg
   );
   content: "";
   filter: drop-shadow(0 0 5px color-mix(
     in srgb,
-    var(--ds-borders-brand-aqua-strong),
-    var(--ds-background-brand-aqua-primary)
+    var(--ds-border-selected-strong),
+    var(--ds-background-selected-primary)
   ));
   mask:
     linear-gradient(var(--ds-text-neutral-white-fixed) 0 0) content-box,
@@ -174,8 +174,8 @@
   justify-content: center;
   gap: 12px;
   margin-top: auto;
-  border: 1px dashed var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px dashed var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   padding: 16px;
   text-align: center;
@@ -193,7 +193,7 @@
 }
 
 .manualDropZoneActive {
-  border-color: var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-border-selected-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -237,8 +237,8 @@
   min-height: var(--new-project-option-card-height);
   align-items: center;
   gap: 10px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   color: inherit;
   cursor: pointer;
@@ -251,8 +251,8 @@
 }
 
 .aiPromptButton:hover:not(:disabled) {
-  border-color: var(--ds-borders-brand-aqua-strong);
-  background: var(--ds-background-brand-aqua-extra-light);
+  border-color: var(--ds-border-selected-strong);
+  background: var(--ds-background-brand-light);
 }
 
 .aiPromptButton:active:not(:disabled) {
@@ -260,7 +260,7 @@
 }
 
 .aiPromptButton:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 2px;
 }
 
@@ -276,7 +276,7 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  color: var(--ds-text-brand-aqua-secondary);
+  color: var(--ds-text-selected-primary);
 }
 
 .aiPromptTitle {

@@ -22,8 +22,8 @@
   gap: 8px;
   background: var(--ds-background-neutral-secondary);
   padding: 8px 10px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
 }
 
 .navLabel {
@@ -38,8 +38,8 @@
 /* ── Header card ── */
 
 .headerCard {
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -49,14 +49,14 @@
   gap: 12px;
   background: var(--ds-background-neutral-secondary);
   padding: 12px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }
 
 .rubricName {
   margin: 0;
   flex: 1;
   min-width: 0;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-size: var(--text-base);
   font-weight: var(--font-weight-semibold);
   line-height: 1.35;
@@ -68,7 +68,7 @@
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   padding: 2px 10px;
   font-size: 10px;
   font-weight: var(--font-weight-semibold);
@@ -90,7 +90,7 @@
 
 .pillDefault {
   background: var(--ds-background-neutral-septenary);
-  color: #fff;
+  color: var(--ds-text-neutral-white-fixed);
 }
 
 /* ── Feedback section ── */
@@ -128,9 +128,9 @@
 
 .tableCard {
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
-  background: var(--background);
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
+  background: var(--ds-background-neutral-primary);
 }
 
 .tableHeader {
@@ -140,7 +140,7 @@
   min-height: 40px;
   padding: 8px 12px;
   background: var(--ds-background-neutral-secondary);
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }
 
 .tableHeaderLabel {
@@ -155,7 +155,7 @@
 /* ── Category rows ── */
 
 .categoryRow {
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }
 
 .categoryRow:last-child {
@@ -175,21 +175,21 @@
   margin-top: 3px;
   width: 18px;
   height: 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .markerSelected {
-  background: var(--ds-text-brand-teal-primary);
-  color: #fff;
+  background: var(--ds-text-selected-primary);
+  color: var(--ds-text-neutral-white-fixed);
   font-size: 10px;
 }
 
 .markerUnselected {
-  border: 2px solid var(--ds-borders-neutral-primary);
-  background: var(--background);
+  border: 2px solid var(--ds-border-neutral-primary);
+  background: var(--ds-background-neutral-primary);
 }
 
 .categoryInfo {
@@ -211,14 +211,14 @@
 
 .categoryLabel {
   margin: 0;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-size: 14px;
   font-weight: var(--font-weight-semibold);
   line-height: 1.4;
 }
 
 .categoryLabelSelected {
-  color: var(--ds-text-brand-teal-primary);
+  color: var(--ds-text-selected-primary);
 }
 
 .categoryDescription {
@@ -231,29 +231,29 @@
 /* ── Empty state ── */
 
 .emptyCard {
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
-  background: var(--background);
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
+  background: var(--ds-background-neutral-primary);
   padding: 24px 14px;
   text-align: center;
 }
 
 .emptyIcon {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: 24px;
   margin-bottom: 8px;
 }
 
 .emptyTitle {
   margin: 0 0 4px;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-size: 14px;
   font-weight: var(--font-weight-semibold);
 }
 
 .emptyBody {
   margin: 0;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: 13px;
   line-height: 1.5;
 }

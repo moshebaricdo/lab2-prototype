@@ -12,6 +12,7 @@ const POPOVER_ESTIMATED_WIDTH = 184;
 const POPOVER_ESTIMATED_HEIGHT = 216;
 const PRESET_SWATCHES = [
   { id: "none", label: "No fill", value: "transparent" },
+  // Intentional hex: these values are written into student CSS / HexColorPicker, not app chrome.
   { id: "black", label: "Black", value: "#111111" },
   { id: "white", label: "White", value: "#ffffff" },
   { id: "red", label: "Red", value: "#e5484d" },

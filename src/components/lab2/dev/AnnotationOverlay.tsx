@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AppButton, type FaIconName } from "../../ui/AppButton";
+import { AppIconButton } from "../../ui/AppIconButton";
 import { AppTextArea } from "../../ui/AppTextField";
 import type {
   Annotation,
@@ -59,7 +60,7 @@ function PinPopover({
     >
       <div className={styles.popoverHeader}>
         <p className={styles.popoverTitle}>Pin {annotation.number}</p>
-        <AppButton
+        <AppIconButton
           variant="tertiary"
           tone="gray"
           size="xs"
@@ -177,7 +178,7 @@ function AnnotationToolbar({ state }: { state: UseAnnotationsResult }) {
         disabled={totalItems === 0}
         aria-label="Copy as AI prompt"
       />
-      <AppButton
+      <AppIconButton
         variant="tertiary"
         tone="gray"
         size="xs"
@@ -186,7 +187,7 @@ function AnnotationToolbar({ state }: { state: UseAnnotationsResult }) {
         disabled={capturing}
         aria-label="Screenshot with drawings"
       />
-      <AppButton
+      <AppIconButton
         variant="tertiary"
         tone="gray"
         size="xs"
@@ -198,7 +199,7 @@ function AnnotationToolbar({ state }: { state: UseAnnotationsResult }) {
 
       <div className={styles.toolbarDivider} />
 
-      <AppButton
+      <AppIconButton
         variant="tertiary"
         tone="gray"
         size="xs"
@@ -255,7 +256,7 @@ function DrawingLayer({ state }: { state: UseAnnotationsResult }) {
     addShape({
       type: activeTool as "rectangle" | "arrow" | "freeform",
       points: activeTool === "freeform" ? [...pts] : [pts[0], pts[pts.length - 1]],
-      color: "var(--accent)",
+      color: "var(--ds-background-brand-primary)",
     });
     pointsRef.current = [];
     setLivePoints([]);

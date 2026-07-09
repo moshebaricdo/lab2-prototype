@@ -87,7 +87,7 @@
 .description :global(pre),
 .descriptionOnly :global(pre) {
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: var(--text-label);
@@ -106,7 +106,7 @@
 
 .description :global(img),
 .descriptionOnly :global(img) {
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   display: block;
   margin-top: 8px;

@@ -8,7 +8,7 @@
   --slider-active-color: var(--ds-background-neutral-black-fixed);
   --slider-inactive-color: var(--ds-background-neutral-quinary);
   --slider-thumb-background: var(--ds-background-neutral-primary);
-  --slider-thumb-border: var(--ds-borders-neutral-solid);
+  --slider-thumb-border: var(--ds-border-neutral-solid);
   --slider-text-color: var(--ds-text-neutral-primary);
 }
 
@@ -32,24 +32,24 @@
 
 .toneBlack {
   --slider-active-color: var(--ds-background-neutral-black-fixed);
-  --slider-thumb-border: var(--ds-borders-neutral-solid);
+  --slider-thumb-border: var(--ds-border-neutral-solid);
 }
 
 .toneBrand {
-  --slider-active-color: var(--ds-background-brand-teal-primary);
-  --slider-thumb-border: var(--ds-borders-brand-teal-primary);
+  --slider-active-color: var(--ds-background-selected-primary);
+  --slider-thumb-border: var(--ds-border-selected-primary);
 }
 
 .toneAqua {
-  --slider-active-color: var(--ds-background-brand-aqua-strong);
-  --slider-thumb-border: var(--ds-borders-brand-aqua-strong);
+  --slider-active-color: var(--ds-background-selected-strong);
+  --slider-thumb-border: var(--ds-border-selected-strong);
 }
 
 .toneWhite {
   --slider-active-color: var(--ds-background-neutral-white-fixed);
   --slider-inactive-color: var(--ds-background-neutral-septenary);
   --slider-thumb-background: var(--ds-background-neutral-black-fixed);
-  --slider-thumb-border: var(--ds-borders-neutral-secondary);
+  --slider-thumb-border: var(--ds-border-neutral-secondary);
   --slider-text-color: var(--ds-text-neutral-white-fixed);
 }
 
@@ -113,16 +113,16 @@
 }
 
 .input:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 3px var(--ds-border-selected-primary);
 }
 
 .input:focus-visible::-moz-range-thumb {
-  box-shadow: 0 0 0 3px var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 3px var(--ds-border-selected-primary);
 }
 
 .input::-webkit-slider-runnable-track {
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background:
     linear-gradient(
       to right,
@@ -137,7 +137,7 @@
 
 .input::-moz-range-track {
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background:
     linear-gradient(
       to right,
@@ -161,11 +161,11 @@
 }
 
 .input::-webkit-slider-thumb:hover {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .input::-webkit-slider-thumb:active {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .input::-moz-range-thumb {
@@ -177,11 +177,11 @@
 }
 
 .input::-moz-range-thumb:hover {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .input::-moz-range-thumb:active {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .input:disabled {
@@ -238,7 +238,7 @@
 .stepMark {
   width: 1px;
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-neutral-septenary);
   opacity: 0.8;
 }

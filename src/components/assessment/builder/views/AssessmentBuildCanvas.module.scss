@@ -49,7 +49,7 @@
 
 .card {
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-default);
   background: var(--ds-background-neutral-primary);
   box-shadow: 0 1px 2px color-mix(
@@ -64,21 +64,21 @@
 }
 
 .cardExpanded {
-  border-color: var(--ds-borders-brand-teal-primary);
+  border-color: var(--ds-border-selected-primary);
   box-shadow:
     0 1px 2px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 5%, transparent),
-    0 0 0 1px var(--ds-borders-brand-teal-primary);
+    0 0 0 1px var(--ds-border-selected-primary);
 }
 
 .cardPlaceholder {
   opacity: 0.35;
   border-style: dashed;
-  border-color: var(--ds-borders-neutral-primary);
+  border-color: var(--ds-border-neutral-primary);
 }
 
 .dragOverlayCard {
   overflow: hidden;
-  border: 1px solid var(--ds-borders-brand-teal-primary);
+  border: 1px solid var(--ds-border-selected-primary);
   border-radius: var(--radius-default);
   background: var(--ds-background-neutral-primary);
   box-shadow:
@@ -87,7 +87,7 @@
       var(--ds-background-neutral-black-fixed) 16%,
       transparent
     ),
-    0 0 0 1px var(--ds-borders-brand-teal-primary);
+    0 0 0 1px var(--ds-border-selected-primary);
   cursor: grabbing;
 }
 
@@ -114,7 +114,7 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-neutral-tertiary);
   font-family: var(--font-body);
   font-size: var(--text-label);
@@ -140,14 +140,14 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
 }
 
 .cardActionsDivider {
   flex-shrink: 0;
   width: 1px;
   height: 8px;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
 }
 
 .cardActions {
@@ -162,7 +162,7 @@
 
 .cardEditor {
   padding: 16px;
-  border-top: 1px solid var(--ds-borders-neutral-primary);
+  border-top: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -172,7 +172,7 @@
   align-items: center;
   gap: 14px;
   padding: 16px 20px 20px;
-  border: 1px dashed var(--ds-borders-neutral-primary);
+  border: 1px dashed var(--ds-border-neutral-primary);
   border-radius: var(--radius-default);
 }
 
@@ -187,9 +187,9 @@
   align-items: center;
   gap: 16px;
   padding: 16px 18px;
-  border: 1px solid var(--ds-borders-brand-teal-primary);
+  border: 1px solid var(--ds-border-selected-primary);
   border-radius: var(--radius-default);
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .bankCalloutIcon {
@@ -201,7 +201,7 @@
   height: 44px;
   border-radius: var(--radius-default);
   background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-brand-teal-primary);
+  color: var(--ds-text-selected-primary);
 }
 
 .bankCalloutBody {
@@ -246,7 +246,7 @@
   height: 1px;
   min-width: 0;
   flex: 1;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
 }
 
 .sectionDividerLabel {
@@ -290,7 +290,7 @@
 }
 
 .typeTile {
-  --type-tile-tone: var(--ds-borders-neutral-primary);
+  --type-tile-tone: var(--ds-border-neutral-primary);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -303,7 +303,7 @@
   min-width: 0;
   height: fit-content;
   padding: 12px 14px;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-default);
   background: var(--ds-background-neutral-primary);
   cursor: pointer;
@@ -335,71 +335,71 @@
 }
 
 .tonegreen {
-  --type-tile-tone: var(--ds-borders-success-primary);
+  --type-tile-tone: var(--ds-border-success-primary);
 
   &.typeBadge {
-    background: var(--ds-background-success-extra-light);
+    background: var(--ds-background-success-light);
     color: var(--ds-text-success-primary);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-success-extra-light);
+    background: var(--ds-background-success-light);
     color: var(--ds-text-success-primary);
   }
 }
 
 .toneorange {
-  --type-tile-tone: var(--ds-background-brand-orange-primary);
+  --type-tile-tone: var(--ds-background-accent-orange-primary);
 
   &.typeBadge {
-    background: var(--ds-background-brand-orange-light);
-    color: var(--ds-background-brand-orange-strong);
+    background: var(--ds-background-accent-orange-light);
+    color: var(--ds-background-accent-orange-strong);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-brand-orange-light);
-    color: var(--ds-background-brand-orange-strong);
+    background: var(--ds-background-accent-orange-light);
+    color: var(--ds-background-accent-orange-strong);
   }
 }
 
 .tonepurple {
-  --type-tile-tone: var(--ds-borders-brand-teal-primary);
+  --type-tile-tone: var(--ds-border-selected-primary);
 
   &.typeBadge {
-    background: var(--ds-background-brand-teal-extra-light);
-    color: var(--ds-text-brand-teal-primary);
+    background: var(--ds-background-brand-light);
+    color: var(--ds-text-selected-primary);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-brand-teal-extra-light);
-    color: var(--ds-text-brand-teal-primary);
+    background: var(--ds-background-brand-light);
+    color: var(--ds-text-selected-primary);
   }
 }
 
 .tonered {
-  --type-tile-tone: var(--ds-borders-error-primary);
+  --type-tile-tone: var(--ds-border-error-primary);
 
   &.typeBadge {
-    background: var(--ds-background-error-extra-light);
+    background: var(--ds-background-error-light);
     color: var(--ds-text-error-primary);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-error-extra-light);
+    background: var(--ds-background-error-light);
     color: var(--ds-text-error-primary);
   }
 }
 
 .toneblue {
-  --type-tile-tone: var(--ds-borders-info-primary);
+  --type-tile-tone: var(--ds-border-info-primary);
 
   &.typeBadge {
-    background: var(--ds-background-info-extra-light);
+    background: var(--ds-background-info-light);
     color: var(--ds-text-info-primary);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-info-extra-light);
+    background: var(--ds-background-info-light);
     color: var(--ds-text-info-primary);
   }
 }

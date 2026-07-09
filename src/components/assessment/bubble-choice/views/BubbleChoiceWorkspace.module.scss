@@ -82,7 +82,7 @@
 
 .optionCard {
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius-card);
   cursor: pointer;
   display: flex;
@@ -127,15 +127,15 @@
 }
 
 .optionCard:hover {
-  border-color: var(--ds-borders-neutral-primary);
+  border-color: var(--ds-border-neutral-primary);
   transform: translateY(-4px);
 }
 
 .optionLabel {
   align-items: center;
   background: var(--ds-background-neutral-primary);
-  border: 2px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 2px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
   box-sizing: border-box;
   color: var(--ds-text-neutral-quaternary);
@@ -157,7 +157,7 @@
 
 .optionLabelComplete {
   background: var(--ds-background-success-primary);
-  border-color: var(--ds-borders-success-primary);
+  border-color: var(--ds-border-success-primary);
   color: var(--ds-text-neutral-white-fixed);
 }
 

@@ -1,8 +1,8 @@
 .card {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   overflow: hidden;
 }
@@ -13,7 +13,7 @@
   align-items: center;
   gap: 6px;
   padding: 0 12px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-tertiary);
   font-family: var(--font-body);

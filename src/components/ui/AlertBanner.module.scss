@@ -25,23 +25,23 @@
 }
 
 .sentimentBrand {
-  background: var(--ds-background-brand-aqua-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .sentimentSuccess {
-  background: var(--ds-background-success-extra-light);
+  background: var(--ds-background-success-light);
 }
 
 .sentimentDanger {
-  background: var(--ds-background-error-extra-light);
+  background: var(--ds-background-error-light);
 }
 
 .sentimentWarning {
-  background: var(--ds-background-warning-extra-light);
+  background: var(--ds-background-warning-light);
 }
 
 .sentimentInfo {
-  background: var(--ds-background-info-extra-light);
+  background: var(--ds-background-info-light);
 }
 
 .sentimentNeutral {
@@ -49,7 +49,7 @@
 }
 
 .sentimentAqua {
-  background: var(--ds-background-brand-aqua-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .content {
@@ -82,16 +82,7 @@
 }
 
 .link {
-  color: inherit;
   font-weight: var(--font-weight-semibold);
-  text-decoration: underline;
-  text-decoration-skip-ink: none;
-}
-
-.link:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
-  outline-offset: 2px;
-  border-radius: var(--radius);
 }
 
 .icon {
@@ -104,7 +95,7 @@
 }
 
 .sentimentBrand .icon {
-  color: var(--ds-text-brand-aqua-primary-fixed);
+  color: var(--ds-text-selected-primary);
 }
 
 .sentimentSuccess .icon {
@@ -124,7 +115,7 @@
 }
 
 .sentimentAqua .icon {
-  color: var(--ds-text-brand-aqua-primary-fixed);
+  color: var(--ds-text-selected-primary);
 }
 
 .closeButton {

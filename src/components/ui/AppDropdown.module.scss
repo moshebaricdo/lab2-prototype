@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: space-between;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
@@ -27,7 +27,7 @@ button.field {
 
 .field:focus-visible,
 .keyboardFocused {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 2px;
 }
 
@@ -42,7 +42,7 @@ button.field {
 
 .disabled {
   cursor: not-allowed;
-  border-color: var(--ds-borders-disabled-neutral);
+  border-color: var(--ds-border-disabled-neutral);
   color: var(--ds-text-disabled-neutral);
 }
 
@@ -51,11 +51,11 @@ button.field {
 }
 
 .toneBlack {
-  border-color: var(--ds-borders-neutral-solid);
+  border-color: var(--ds-border-neutral-solid);
 }
 
 .toneGray {
-  border-color: var(--ds-borders-neutral-secondary);
+  border-color: var(--ds-border-neutral-secondary);
 }
 
 .sizeL {
@@ -142,8 +142,8 @@ button.field {
   width: var(--app-dropdown-menu-width, max-content);
   min-width: var(--radix-popover-trigger-width);
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   box-shadow: 1px 2px 2px 0px rgb(0 0 0 / 7%), 0px 2px 6px 0px rgb(0 0 0 / 4%);
 }
@@ -212,7 +212,7 @@ button.field {
   flex-shrink: 0;
   height: 1px;
   margin: var(--menu-outer-padding) 0;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
 }
 
 .multiMenu {
@@ -236,7 +236,7 @@ button.field {
   align-items: center;
   gap: var(--menu-item-gap);
   border: 0;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
@@ -262,7 +262,7 @@ button.field {
 }
 
 .actionItem:focus-visible {
-  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
 }
 
 .actionItem:disabled,
@@ -281,7 +281,7 @@ button.field {
 
 .destructiveItem:hover,
 .destructiveItem:focus-visible {
-  background: var(--ds-background-error-extra-light);
+  background: var(--ds-background-error-light);
 }
 
 .itemIcon {
@@ -311,12 +311,12 @@ button.field {
 }
 
 .checkedItem {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
   color: var(--ds-text-neutral-primary);
 }
 
 .checkedItem:hover {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .itemDisabled:hover {
@@ -330,7 +330,7 @@ button.field {
   flex-shrink: 0;
   justify-content: space-between;
   gap: 8px;
-  border-top: 1px solid var(--ds-borders-neutral-primary);
+  border-top: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-primary);
   padding: var(--menu-footer-padding);
 }

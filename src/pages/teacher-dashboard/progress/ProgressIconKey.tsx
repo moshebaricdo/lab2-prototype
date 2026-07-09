@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { AppLink } from "../../../components/ui/AppLink";
 import { FaIcon } from "../../../components/ui/icons/FaIcon";
 import { ProgressStatusGlyph } from "./ProgressStatusGlyph";
 import type { ProgressStatus } from "./progressData";
@@ -81,9 +82,9 @@ export function ProgressIconKey() {
           />
           Icon Key
         </button>
-        <a href="#" className={styles.moreDetails}>
+        <AppLink href="#" size="s">
           More Details
-        </a>
+        </AppLink>
       </div>
 
       {expanded ? (

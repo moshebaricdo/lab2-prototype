@@ -16,8 +16,8 @@
 }
 
 .feedbackCorrect {
-  background: var(--ds-background-success-extra-light);
-  border-radius: 100px;
+  background: var(--ds-background-success-light);
+  border-radius: var(--radius-round);
   color: var(--ds-text-success-primary);
   padding: 4px 12px;
 }
@@ -34,7 +34,7 @@
 
 .bottomRow {
   align-items: center;
-  border-top: 1px solid var(--ds-borders-neutral-primary);
+  border-top: 1px solid var(--ds-border-neutral-primary);
   display: flex;
   gap: 12px;
   justify-content: space-between;

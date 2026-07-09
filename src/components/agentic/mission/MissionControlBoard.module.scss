@@ -1,15 +1,14 @@
 @use "../../../styles/_mixins.scss" as *;
 
-$good: #0e9f6e;
-$warn: #d97706;
-$bad: #d64545;
+$good: var(--ds-text-success-primary);
+$warn: var(--ds-text-warning-secondary);
 
 .root {
   display: flex;
   flex: 1;
   min-width: 0;
   min-height: 0;
-  background: var(--muted);
+  background: var(--ds-background-neutral-quaternary);
 }
 
 .scroller {
@@ -30,9 +29,9 @@ $bad: #d64545;
   align-items: flex-start;
   justify-content: space-between;
   padding: 20px 24px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--background);
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-lg);
+  background: var(--ds-background-neutral-primary);
 }
 
 .missionIntro {
@@ -45,13 +44,13 @@ $bad: #d64545;
   gap: 10px;
   margin: 0 0 8px;
   font-size: 1.25rem;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
 }
 
 .missionBrief {
   font-size: 13.5px;
   line-height: 1.55;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 
   p {
     margin: 0 0 8px;
@@ -62,7 +61,7 @@ $bad: #d64545;
   }
 
   strong {
-    color: var(--foreground);
+    color: var(--ds-text-neutral-primary);
   }
 }
 
@@ -78,7 +77,7 @@ $bad: #d64545;
   max-width: 260px;
   font-size: 11.5px;
   text-align: right;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 /* Debrief */
@@ -86,14 +85,14 @@ $bad: #d64545;
 .debrief {
   padding: 16px 20px;
   border: 1px solid color-mix(in srgb, #{$good} 45%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, #{$good} 8%, var(--background));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, #{$good} 8%, var(--ds-background-neutral-primary));
 
   p {
     margin: 6px 0 0;
     font-size: 13px;
     line-height: 1.5;
-    color: var(--foreground);
+    color: var(--ds-text-neutral-primary);
   }
 }
 
@@ -120,9 +119,9 @@ $bad: #d64545;
   flex-direction: column;
   gap: 10px;
   padding: 16px 18px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--background);
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-lg);
+  background: var(--ds-background-neutral-primary);
 }
 
 .taskHeader {
@@ -135,14 +134,14 @@ $bad: #d64545;
 .taskTitle {
   margin: 0;
   font-size: 15px;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
 }
 
 .taskBrief {
   margin: 0;
   font-size: 12.5px;
   line-height: 1.45;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 .statusBadge {
@@ -151,15 +150,15 @@ $bad: #d64545;
   gap: 6px;
   flex-shrink: 0;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .statusToneIdle {
-  background: var(--muted);
-  color: var(--muted-foreground);
+  background: var(--ds-background-neutral-quaternary);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 .statusToneBusy {
@@ -199,32 +198,18 @@ $bad: #d64545;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 .specialistSelect {
   flex-basis: 100%;
   margin-top: 4px;
-  padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--background);
-  color: var(--foreground);
-  font-size: 13px;
-  font-family: inherit;
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-  }
+  min-width: 0;
 }
 
 .specialistNote {
   font-size: 11.5px;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 /* Briefcase */
@@ -234,9 +219,9 @@ $bad: #d64545;
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  border: 1px dashed var(--border);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--muted) 50%, var(--background));
+  border: 1px dashed var(--ds-border-neutral-primary);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--ds-background-neutral-quaternary) 50%, var(--ds-background-neutral-primary));
 }
 
 .briefcaseItems {
@@ -250,23 +235,23 @@ $bad: #d64545;
   align-items: center;
   gap: 8px;
   padding: 5px 8px;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   font-size: 12.5px;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   cursor: pointer;
   transition: background 0.1s ease;
 
   &:hover {
-    background: var(--muted);
+    background: var(--ds-background-neutral-quaternary);
   }
 
   input {
-    accent-color: var(--primary);
+    accent-color: var(--ds-background-brand-primary);
   }
 }
 
 .briefcaseItemPacked {
-  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  background: color-mix(in srgb, var(--ds-background-brand-primary) 7%, transparent);
 }
 
 .briefcaseItemLocked {
@@ -286,7 +271,7 @@ $bad: #d64545;
 
 .briefcaseItemTokens {
   font-size: 11px;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 .meterRow {
@@ -299,19 +284,19 @@ $bad: #d64545;
   position: relative;
   flex: 1;
   height: 8px;
-  border-radius: 999px;
-  background: var(--muted);
+  border-radius: var(--radius-round);
+  background: var(--ds-background-neutral-quaternary);
   overflow: hidden;
 }
 
 .meterFill {
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   transition: width 0.25s ease, background 0.25s ease;
 }
 
 .meterFillStarved {
-  background: #b9b3d6;
+  background: var(--ds-background-brand-mid);
 }
 
 .meterFillFocused {
@@ -327,7 +312,7 @@ $bad: #d64545;
   top: -1px;
   bottom: -1px;
   width: 2px;
-  background: var(--muted-foreground);
+  background: var(--ds-text-neutral-quaternary);
   opacity: 0.55;
 }
 
@@ -338,7 +323,7 @@ $bad: #d64545;
 }
 
 .meterLabelStarved {
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 }
 
 .meterLabelFocused {
@@ -356,8 +341,8 @@ $bad: #d64545;
   flex-direction: column;
   gap: 6px;
   padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--ds-border-neutral-primary);
 }
 
 .outcomeGood {
@@ -373,14 +358,14 @@ $bad: #d64545;
 .outcomeHeadline {
   font-size: 13px;
   font-weight: 700;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
 }
 
 .outcomeSummary {
   margin: 0;
   font-size: 12.5px;
   line-height: 1.5;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
 
   p {
     margin: 0;
@@ -391,7 +376,7 @@ $bad: #d64545;
   margin: 0;
   padding-left: 18px;
   font-size: 12px;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
 
   li + li {
     margin-top: 2px;
@@ -418,6 +403,6 @@ $bad: #d64545;
 
 .boardFootnote {
   font-size: 11px;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   text-align: center;
 }

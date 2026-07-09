@@ -7,8 +7,8 @@
   display: flex;
   flex-direction: column;
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 8px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-md);
   box-shadow: 0 2px 3px rgb(0 0 0 / 5%);
   overflow: hidden;
 }
@@ -20,7 +20,7 @@
   height: 32px;
   padding: 0 10px;
   background: var(--ds-background-neutral-secondary);
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -68,7 +68,7 @@
   flex-direction: column;
   gap: 4px;
   padding: 10px 10px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
 }
 
 .section:last-child {
@@ -111,8 +111,8 @@
 .swatchDot {
   width: 16px;
   height: 16px;
-  border-radius: 3px;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--ds-border-neutral-primary);
   box-sizing: border-box;
 }
 
@@ -147,8 +147,8 @@
   width: 24px;
   height: 24px;
   padding: 0;
-  border-radius: 4px;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--ds-border-neutral-primary);
   cursor: pointer;
   box-sizing: border-box;
   display: inline-flex;
@@ -157,7 +157,7 @@
 }
 
 .swatchButtonSelected {
-  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
 }
 
 .swatchCustom {
@@ -177,7 +177,7 @@
   height: 1px;
   margin-block: 2px;
   margin-inline: calc(-1 * var(--menu-outer-padding, 2px));
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
   flex-shrink: 0;
 }
 
@@ -210,13 +210,13 @@
   line-height: 1.54;
   color: var(--ds-text-neutral-primary);
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
 }
 
 .customInput:focus-visible {
   outline: 0;
-  box-shadow: 0 0 0 2px var(--ring);
+  box-shadow: 0 0 0 2px var(--ds-border-focused-primary);
 }
 
 /* Rotation menu */
@@ -257,13 +257,13 @@
   text-align: center;
   color: var(--ds-text-neutral-primary);
   background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
 }
 
 .rotationValueInput:focus-visible {
   outline: 0;
-  box-shadow: 0 0 0 2px var(--ring);
+  box-shadow: 0 0 0 2px var(--ds-border-focused-primary);
 }
 
 /* Actions row */
@@ -276,7 +276,7 @@
 .actionDelete {
   margin-left: auto;
   color: var(--ds-text-error-primary) !important;
-  border-color: var(--ds-borders-error-primary) !important;
+  border-color: var(--ds-border-error-primary) !important;
 }
 
 .actionDelete:hover {

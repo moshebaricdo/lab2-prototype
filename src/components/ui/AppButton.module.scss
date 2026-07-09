@@ -9,7 +9,7 @@
   justify-content: center;
   gap: 8px;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: transparent;
   font-family: var(--font-body);
   font-weight: var(--font-weight-semibold);
@@ -21,7 +21,7 @@
 }
 
 .root:focus-visible {
-  outline: 2px solid var(--ring);
+  outline: 2px solid var(--ds-border-focused-primary);
   outline-offset: 2px;
 }
 
@@ -113,20 +113,20 @@
 }
 
 .primary.tonePurple {
-  background: var(--ds-background-brand-purple-primary);
+  background: var(--ds-background-brand-primary);
   color: var(--ds-text-neutral-white-fixed);
 }
 
 .primary.tonePurple.enabled:hover {
-  background: var(--ds-background-brand-purple-strong);
+  background: var(--ds-background-brand-strong);
 }
 
 .primary.tonePurple.enabled:active {
-  background: var(--ds-background-brand-purple-primary);
+  background: var(--ds-background-brand-primary);
 }
 
 .primary.disabled {
-  background: var(--ds-background-disabled-neutral);
+  background: var(--ds-background-disabled-brand);
   color: var(--ds-text-disabled-neutral-inverse);
 }
 
@@ -135,17 +135,17 @@
 }
 
 .secondary.toneBlack {
-  border-color: var(--ds-borders-neutral-solid);
+  border-color: var(--ds-border-neutral-solid);
   color: var(--ds-text-neutral-primary);
 }
 
 .secondary.toneGray {
-  border-color: var(--ds-borders-neutral-secondary);
+  border-color: var(--ds-border-neutral-secondary);
   color: var(--ds-text-neutral-primary);
 }
 
 .secondary.toneWhite {
-  border-color: var(--ds-borders-neutral-white-fixed);
+  border-color: var(--ds-border-neutral-white-fixed);
   color: var(--ds-text-neutral-white-fixed);
 }
 
@@ -162,7 +162,7 @@
 }
 
 .secondary.disabled {
-  border-color: var(--ds-borders-disabled-neutral);
+  border-color: var(--ds-border-disabled-neutral);
   color: var(--ds-text-disabled-neutral);
 }
 
@@ -172,7 +172,11 @@
 }
 
 .tertiary.tonePurple {
-  color: var(--ds-text-brand-purple-primary);
+  color: var(--ds-text-brand-primary);
+}
+
+.tertiary.tonePurple.enabled:hover {
+  background: var(--ds-background-brand-light);
 }
 
 .tertiary.toneBlack {
@@ -208,24 +212,24 @@
 }
 
 .primary.toneTeal {
-  background: var(--accent);
-  color: #fff;
+  background: var(--ds-background-brand-primary);
+  color: var(--ds-text-neutral-white-fixed);
 }
 
 .primary.toneTeal.enabled:hover {
-  filter: brightness(1.1);
+  background: var(--ds-background-brand-strong);
 }
 
 .primary.toneTeal.enabled:active {
-  filter: brightness(0.95);
+  background: var(--ds-background-brand-primary);
 }
 
 .tertiary.toneTeal {
-  color: var(--accent);
+  color: var(--ds-text-brand-primary);
 }
 
 .tertiary.toneTeal.enabled:hover {
-  background: var(--ds-background-neutral-quaternary);
+  background: var(--ds-background-brand-light);
 }
 
 .tertiary.disabled {

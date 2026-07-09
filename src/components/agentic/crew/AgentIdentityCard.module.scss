@@ -10,16 +10,16 @@
   width: 48px;
   height: 48px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: var(--text-h4);
 
-  &[data-accent="violet"] { --agent-accent: var(--ds-background-brand-purple-primary); }
+  &[data-accent="violet"] { --agent-accent: var(--ds-background-brand-primary); }
   &[data-accent="blue"] { --agent-accent: var(--ds-text-info-primary-fixed); }
-  &[data-accent="magenta"] { --agent-accent: var(--ds-background-brand-pink-primary); }
+  &[data-accent="magenta"] { --agent-accent: var(--ds-background-accent-pink-primary); }
   &[data-accent="green"] { --agent-accent: var(--ds-background-success-primary); }
 
-  background: color-mix(in srgb, var(--agent-accent, var(--ds-background-brand-purple-primary)) 12%, transparent);
-  color: var(--agent-accent, var(--ds-background-brand-purple-primary));
+  background: color-mix(in srgb, var(--agent-accent, var(--ds-background-brand-primary)) 12%, transparent);
+  color: var(--agent-accent, var(--ds-background-brand-primary));
 }
 
 .viewText {
@@ -104,7 +104,7 @@
 
 .menuItemCheck {
   margin-left: auto;
-  color: var(--ds-text-brand-purple-primary);
+  color: var(--ds-text-brand-primary);
 }
 
 .accentDot {
@@ -114,8 +114,8 @@
   flex-shrink: 0;
   border-radius: 50%;
 
-  &[data-accent="violet"] { background: var(--ds-background-brand-purple-primary); }
+  &[data-accent="violet"] { background: var(--ds-background-brand-primary); }
   &[data-accent="blue"] { background: var(--ds-text-info-primary-fixed); }
-  &[data-accent="magenta"] { background: var(--ds-background-brand-pink-primary); }
+  &[data-accent="magenta"] { background: var(--ds-background-accent-pink-primary); }
   &[data-accent="green"] { background: var(--ds-background-success-primary); }
 }

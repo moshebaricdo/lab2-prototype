@@ -146,7 +146,7 @@
 }
 
 .consoleLineInput {
-  color: var(--ds-text-brand-teal-primary-fixed);
+  color: var(--ds-text-selected-primary);
 }
 
 .consoleInputRow {
@@ -177,7 +177,7 @@
 }
 
 .consoleInput::selection {
-  background: var(--ds-background-brand-teal-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 .spinner {

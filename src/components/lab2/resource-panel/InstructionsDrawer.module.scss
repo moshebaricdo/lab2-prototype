@@ -32,7 +32,7 @@
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
 }
 
@@ -74,9 +74,9 @@
 }
 
 .inlineExpandButton {
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-primary);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   padding: 4px 10px;
   color: var(--ds-text-neutral-primary);
   font-size: var(--text-label);
@@ -93,7 +93,7 @@
 
 .inlineExpandButton:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
+  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
 }
 
 .resizeHandle {
@@ -110,7 +110,7 @@
 
 .resizeBar {
   width: 100%;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
   transition: height 0.15s ease;
 }
 
@@ -128,7 +128,7 @@
   bottom: 0;
   left: 0;
   height: 1px;
-  background: var(--ds-borders-neutral-primary);
+  background: var(--ds-border-neutral-primary);
   pointer-events: none;
 }
 
@@ -195,7 +195,7 @@
   padding: 10px 12px 11px;
   text-align: left;
   background: var(--ds-background-neutral-primary);
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   pointer-events: auto;
 }
 
@@ -233,8 +233,8 @@
   40%,
   60% {
     box-shadow:
-      0 0 0 1px var(--ds-borders-brand-teal-primary),
-      0 0 10px 4px var(--ds-background-brand-teal-light);
+      0 0 0 1px var(--ds-border-selected-primary),
+      0 0 10px 4px var(--ds-background-brand-light);
   }
 }
 
@@ -246,7 +246,7 @@
 .toggleBorder {
   position: absolute;
   inset: 0;
-  border: 1px solid var(--ds-borders-neutral-primary);
+  border: 1px solid var(--ds-border-neutral-primary);
   border-bottom-right-radius: 8px;
   border-bottom-left-radius: 8px;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);

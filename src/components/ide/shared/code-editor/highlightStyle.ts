@@ -15,12 +15,12 @@ export const dsHighlightStyle = HighlightStyle.define([
   },
   {
     tag: [tags.tagName, tags.standard(tags.tagName)],
-    color: "var(--ds-text-brand-purple-primary-fixed)",
+    color: "var(--ds-text-brand-primary-fixed)",
     fontWeight: "var(--font-weight-medium)",
   },
   {
     tag: tags.attributeName,
-    color: "var(--ds-text-brand-teal-primary-fixed)",
+    color: "var(--ds-text-selected-primary)",
   },
   {
     tag: [tags.string, tags.special(tags.string), tags.attributeValue],
@@ -28,7 +28,7 @@ export const dsHighlightStyle = HighlightStyle.define([
   },
   {
     tag: tags.keyword,
-    color: "var(--ds-text-brand-purple-primary-fixed)",
+    color: "var(--ds-text-brand-primary-fixed)",
     fontWeight: "var(--font-weight-medium)",
   },
   { tag: tags.number, color: "var(--ds-text-info-primary-fixed)" },
@@ -44,12 +44,12 @@ export const dsHighlightStyle = HighlightStyle.define([
   },
   {
     tag: [tags.className, tags.definition(tags.className), tags.labelName],
-    color: "var(--ds-text-brand-teal-primary-fixed)",
+    color: "var(--ds-text-selected-primary)",
     fontWeight: "var(--font-weight-medium)",
   },
   {
     tag: [tags.propertyName, tags.definition(tags.propertyName)],
-    color: "var(--ds-text-brand-purple-secondary)",
+    color: "var(--ds-text-brand-secondary)",
   },
   {
     tag: [tags.atom, tags.bool, tags.special(tags.variableName), tags.variableName],

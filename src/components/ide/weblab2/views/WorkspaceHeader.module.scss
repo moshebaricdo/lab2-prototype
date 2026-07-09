@@ -9,7 +9,7 @@
   min-height: 40px;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-primary);
   padding: 0 8px;
   overflow: hidden;
@@ -20,7 +20,7 @@
 }
 
 .rootAi {
-  background: var(--ds-background-brand-aqua-extra-light);
+  background: var(--ds-background-brand-light);
 }
 
 /* Slots */
@@ -78,15 +78,15 @@
   padding-block: 2px;
   background: linear-gradient(
     90deg,
-    color-mix(in oklch, var(--ds-text-brand-aqua-secondary), black 24%) 0%,
-    color-mix(in oklch, var(--ds-text-brand-aqua-secondary), black 18%) 44%,
+    color-mix(in oklch, var(--ds-text-selected-primary), black 24%) 0%,
+    color-mix(in oklch, var(--ds-text-selected-primary), black 18%) 44%,
     color-mix(
       in oklch,
-      var(--ds-text-brand-aqua-primary),
-      var(--ds-text-brand-aqua-secondary) 72%
+      var(--ds-text-selected-primary),
+      var(--ds-text-selected-primary) 72%
     ) 50%,
-    color-mix(in oklch, var(--ds-text-brand-aqua-secondary), black 18%) 56%,
-    color-mix(in oklch, var(--ds-text-brand-aqua-secondary), black 18%) 100%
+    color-mix(in oklch, var(--ds-text-selected-primary), black 18%) 56%,
+    color-mix(in oklch, var(--ds-text-selected-primary), black 18%) 100%
   );
   background-size: 320% 100%;
   background-clip: text;
@@ -143,9 +143,9 @@
   background: linear-gradient(
     100deg,
     transparent 0%,
-    color-mix(in srgb, var(--ds-background-brand-aqua-strong) 0%, transparent) 30%,
-    color-mix(in srgb, var(--ds-background-brand-aqua-strong) 65%, transparent) 50%,
-    color-mix(in srgb, var(--ds-background-brand-aqua-strong) 0%, transparent) 70%,
+    color-mix(in srgb, var(--ds-background-selected-strong) 0%, transparent) 30%,
+    color-mix(in srgb, var(--ds-background-selected-strong) 65%, transparent) 50%,
+    color-mix(in srgb, var(--ds-background-selected-strong) 0%, transparent) 70%,
     transparent 100%
   );
   mix-blend-mode: screen;
@@ -159,9 +159,9 @@
   background: linear-gradient(
     100deg,
     transparent 0%,
-    color-mix(in srgb, var(--ds-background-brand-aqua-light) 0%, transparent) 25%,
-    color-mix(in srgb, var(--ds-background-brand-aqua-light) 60%, transparent) 50%,
-    color-mix(in srgb, var(--ds-background-brand-aqua-light) 0%, transparent) 75%,
+    color-mix(in srgb, var(--ds-background-brand-light) 0%, transparent) 25%,
+    color-mix(in srgb, var(--ds-background-brand-light) 60%, transparent) 50%,
+    color-mix(in srgb, var(--ds-background-brand-light) 0%, transparent) 75%,
     transparent 100%
   );
   animation: ai-header-shimmer-trail 1080ms 80ms cubic-bezier(0.22, 1, 0.36, 1) both;

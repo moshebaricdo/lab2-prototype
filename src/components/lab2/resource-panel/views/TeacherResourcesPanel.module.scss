@@ -5,15 +5,15 @@
 }
 
 .card {
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
-  background: var(--background);
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
+  background: var(--ds-background-neutral-primary);
   padding: 12px;
 }
 
 .title {
   margin: 0 0 6px;
-  color: var(--foreground);
+  color: var(--ds-text-neutral-primary);
   font-size: 13px;
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
@@ -22,7 +22,7 @@
 
 .body {
   margin: 0;
-  color: var(--muted-foreground);
+  color: var(--ds-text-neutral-quaternary);
   font-size: 13px;
   line-height: 1.5;
 }

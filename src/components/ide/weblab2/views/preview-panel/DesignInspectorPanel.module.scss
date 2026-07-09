@@ -8,8 +8,8 @@
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   box-shadow: 0 16px 40px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 18%, transparent);
   color: var(--ds-text-neutral-primary);
@@ -32,8 +32,8 @@
   z-index: 20;
   box-sizing: border-box;
   max-width: calc(100vw - 16px);
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   box-shadow: 0 16px 40px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 18%, transparent);
   color: var(--ds-text-neutral-primary);
@@ -41,7 +41,7 @@
 }
 
 .toolbarDropdownContent {
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   box-shadow: 0 16px 40px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 18%, transparent);
 }
 
@@ -90,7 +90,7 @@
   max-width: 120px;
   min-width: 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-secondary);
   cursor: pointer;
@@ -109,7 +109,7 @@
 }
 
 .label:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 1px;
 }
 
@@ -120,8 +120,8 @@
   width: max-content;
   max-width: 260px;
   transform: translateX(-50%);
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 8px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-md);
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-label);
@@ -135,19 +135,19 @@
   height: 8px;
   margin: 0 4px;
   background-color: var(--ds-background-neutral-quaternary);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
 }
 
 .toolbarButtonActive {
   border-color: transparent !important;
-  background: var(--ds-background-brand-teal-primary) !important;
-  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
+  background: var(--ds-background-selected-primary) !important;
+  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .toolbarButtonActive:hover {
   border-color: transparent !important;
-  background: var(--ds-background-brand-teal-strong) !important;
-  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
+  background: var(--ds-background-selected-strong) !important;
+  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .popupTitle,
@@ -200,7 +200,7 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ds-text-neutral-quaternary);
   cursor: grab;
@@ -218,7 +218,7 @@
 }
 
 .dragHandle:focus-visible {
-  outline: 2px solid var(--ds-borders-brand-teal-primary);
+  outline: 2px solid var(--ds-border-selected-primary);
   outline-offset: 1px;
 }
 
@@ -238,8 +238,8 @@
   height: 24px;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   padding: 0 5px;
 }
@@ -336,8 +336,8 @@
   overflow: hidden;
   width: 100%;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
 }
 
@@ -361,7 +361,7 @@
 }
 
 .displayModeButton:not(:last-child) {
-  border-right: 1px solid var(--ds-borders-neutral-primary) !important;
+  border-right: 1px solid var(--ds-border-neutral-primary) !important;
 }
 
 .displayModeButton:hover {
@@ -371,8 +371,8 @@
 
 .displayModeButtonActive,
 .displayModeButtonActive:hover {
-  background: var(--ds-background-brand-teal-primary) !important;
-  color: var(--ds-text-on-active-chrome, var(--ds-text-neutral-white-fixed)) !important;
+  background: var(--ds-background-selected-primary) !important;
+  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed)) !important;
 }
 
 .fieldInline > .inlineNumber {

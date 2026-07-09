@@ -27,8 +27,8 @@
 
 .groupCard {
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
 }
 
@@ -37,7 +37,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
   padding: 8px 8px 8px 12px;
   height: 40px;
@@ -67,7 +67,7 @@
 
 .fieldRow {
   padding: 10px 8px 10px 10px;
-  border-top: 1px solid var(--ds-borders-neutral-primary);
+  border-top: 1px solid var(--ds-border-neutral-primary);
 
   &:first-child {
     border-top: 0;
@@ -135,9 +135,9 @@
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  border-radius: 999px;
-  background: var(--ds-background-brand-purple-extra-light);
-  color: var(--ds-text-brand-purple-secondary);
+  border-radius: var(--radius-round);
+  background: var(--ds-background-brand-light);
+  color: var(--ds-text-brand-secondary);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-semibold);
   line-height: 1.5;
@@ -194,7 +194,7 @@
   width: 16px;
   height: 16px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: transparent;
   color: var(--ds-text-neutral-quaternary);
   cursor: help;
@@ -208,7 +208,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-borders-brand-teal-primary);
+    outline: 2px solid var(--ds-border-selected-primary);
     outline-offset: 2px;
   }
 }
@@ -226,8 +226,8 @@
   display: block;
   width: 100%;
   min-height: 32px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
@@ -242,10 +242,10 @@
 
   &:focus {
     outline: none;
-    border-color: var(--ds-borders-brand-teal-primary);
+    border-color: var(--ds-border-selected-primary);
     box-shadow: 0 0 0 2px color-mix(
       in srgb,
-      var(--ds-borders-brand-teal-primary) 18%,
+      var(--ds-border-selected-primary) 18%,
       transparent
     );
   }
@@ -259,16 +259,16 @@
 
 .textareaWrap {
   overflow: hidden;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 4px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 
   &:focus-within {
-    border-color: var(--ds-borders-brand-teal-primary);
+    border-color: var(--ds-border-selected-primary);
     box-shadow: 0 0 0 2px color-mix(
       in srgb,
-      var(--ds-borders-brand-teal-primary) 18%,
+      var(--ds-border-selected-primary) 18%,
       transparent
     );
   }
@@ -285,7 +285,7 @@
 
 .textareaTabBar {
   display: flex;
-  border-bottom: 1px solid var(--ds-borders-neutral-primary);
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-secondary);
 }
 
@@ -306,14 +306,14 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-borders-brand-teal-primary);
+    outline: 2px solid var(--ds-border-selected-primary);
     outline-offset: -2px;
   }
 }
 
 .textareaTabActive {
   background: var(--ds-background-neutral-primary);
-  box-shadow: inset 0 -2px 0 var(--ds-background-brand-teal-primary);
+  box-shadow: inset 0 -2px 0 var(--ds-background-selected-primary);
   color: var(--ds-text-neutral-primary);
 }
 
@@ -372,7 +372,7 @@
   }
 
   code {
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     background: var(--ds-background-neutral-secondary);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -382,7 +382,7 @@
   pre {
     overflow-x: auto;
     margin: 8px 0;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background: var(--ds-background-neutral-secondary);
     padding: 6px 8px;
 
@@ -416,7 +416,7 @@
 
   blockquote {
     margin: 8px 0;
-    border-left: 3px solid var(--ds-borders-neutral-primary);
+    border-left: 3px solid var(--ds-border-neutral-primary);
     color: var(--ds-text-neutral-tertiary);
     padding-left: 10px;
   }
@@ -438,7 +438,7 @@
 
   th,
   td {
-    border: 1px solid var(--ds-borders-neutral-primary);
+    border: 1px solid var(--ds-border-neutral-primary);
     padding: 4px 6px;
     text-align: left;
   }
@@ -449,7 +449,7 @@
   }
 
   a {
-    color: var(--ds-text-brand-teal-primary);
+    color: var(--ds-text-selected-primary);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
@@ -472,12 +472,12 @@
   flex: 1;
   height: 6px;
   appearance: none;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-neutral-tertiary);
   outline: none;
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
+    box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
   }
 
   &::-webkit-slider-thumb {
@@ -486,7 +486,7 @@
     appearance: none;
     border: 2px solid var(--ds-background-neutral-primary);
     border-radius: 50%;
-    background: var(--ds-background-brand-teal-primary);
+    background: var(--ds-background-selected-primary);
     cursor: pointer;
   }
 
@@ -495,7 +495,7 @@
     height: 16px;
     border: 2px solid var(--ds-background-neutral-primary);
     border-radius: 50%;
-    background: var(--ds-background-brand-teal-primary);
+    background: var(--ds-background-selected-primary);
     cursor: pointer;
   }
 }
@@ -561,14 +561,14 @@
   width: 36px;
   height: 20px;
   appearance: none;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--ds-background-neutral-quaternary);
   cursor: pointer;
   transition: background 0.15s ease, box-shadow 0.15s ease;
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--ds-borders-brand-teal-primary);
+    box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
   }
 
   &::after {
@@ -584,7 +584,7 @@
   }
 
   &:checked {
-    background: var(--ds-background-brand-teal-primary);
+    background: var(--ds-background-selected-primary);
 
     &::after {
       transform: translateX(16px);
@@ -596,8 +596,8 @@
 
 .emptyStateCard {
   margin: 8px;
-  border: 1px solid var(--ds-borders-neutral-primary);
-  border-radius: 6px;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-secondary);
   padding: 28px 16px;
   text-align: center;
