@@ -783,6 +783,10 @@
     {
       "id": "disabled-3",
       "name": "disabled"
+    },
+    {
+      "id": "focused",
+      "name": "focused"
     }
   ],
   "semanticFamilySubGroups": {
@@ -806,7 +810,8 @@
     "selected-3": "state",
     "disabled": "state",
     "disabled-2": "state",
-    "disabled-3": "state"
+    "disabled-3": "state",
+    "focused": "state"
   },
   "primitiveFamilyOrders": {
     "neutral": [
@@ -2851,6 +2856,76 @@
         "light": "#FFE3CE",
         "dark": "#701C00"
       }
+    },
+    {
+      "id": "background/selected/primary-inverse",
+      "surface": "background",
+      "familyKey": "selected",
+      "role": "primary-inverse",
+      "ref": {
+        "light": "sentiment::success::5",
+        "dark": "brand::teal::80"
+      },
+      "fallbackHex": {
+        "light": "#CCF1D0",
+        "dark": "#2B1E9F"
+      }
+    },
+    {
+      "id": "borders/focused/inverse",
+      "surface": "borders",
+      "familyKey": "focused",
+      "role": "inverse",
+      "ref": {
+        "light": "sentiment::success::5",
+        "dark": "brand::teal::50"
+      },
+      "fallbackHex": {
+        "light": "#CCF1D0",
+        "dark": "#4C42CF"
+      }
+    },
+    {
+      "id": "borders/focused/primary",
+      "surface": "borders",
+      "familyKey": "focused",
+      "role": "primary",
+      "ref": {
+        "light": "brand::teal::50",
+        "dark": "brand::teal::30"
+      },
+      "fallbackHex": {
+        "light": "#4C42CF",
+        "dark": "#928CEF"
+      }
+    },
+    {
+      "id": "borders/selected/primary-inverse",
+      "surface": "borders",
+      "familyKey": "selected-3",
+      "role": "primary-inverse",
+      "ref": {
+        "light": "sentiment::success::5",
+        "dark": "brand::teal::80"
+      },
+      "fallbackHex": {
+        "light": "#CCF1D0",
+        "dark": "#2B1E9F"
+      }
+    },
+    {
+      "id": "text/selected/primary-inverse",
+      "surface": "text",
+      "familyKey": "selected-2",
+      "role": "primary-inverse",
+      "ref": {
+        "light": "brand::teal::95",
+        "dark": "sentiment::success::5"
+      },
+      "fallbackHex": {
+        "light": "#1F1976",
+        "dark": "#CCF1D0"
+      }
     }
   ],
   "semanticFamilyOrders": {
@@ -2913,6 +2988,7 @@
     ],
     "borders::state": [
       "selected-3",
+      "focused",
       "disabled-3"
     ]
   },
@@ -2988,6 +3064,7 @@
     ],
     "background::selected": [
       "primary",
+      "primary-inverse",
       "strong"
     ],
     "text::neutral": [
@@ -3036,7 +3113,8 @@
       "primary-fixed"
     ],
     "text::selected-2": [
-      "primary"
+      "primary",
+      "primary-inverse"
     ],
     "borders::neutral": [
       "primary",
@@ -3087,6 +3165,7 @@
     ],
     "borders::selected-3": [
       "primary",
+      "primary-inverse",
       "strong"
     ],
     "background::disabled": [
@@ -3119,6 +3198,10 @@
       "info",
       "pink",
       "orange"
+    ],
+    "borders::focused": [
+      "primary",
+      "inverse"
     ]
   }
 }

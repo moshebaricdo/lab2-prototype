@@ -308,6 +308,7 @@
   --ds-background-pink-primary: #E11970;
   --ds-background-pink-strong: #B5004F;
   --ds-background-selected-primary: #2B1E9F;
+  --ds-background-selected-primary-inverse: #CCF1D0;
   --ds-background-selected-strong: #1F1976;
   --ds-background-success-light: #CCF1D0;
   --ds-background-success-mid: #7CDB87;
@@ -333,6 +334,8 @@
   --ds-borders-error-mid: #F37272;
   --ds-borders-error-primary: #EB1414;
   --ds-borders-error-strong: #B30F0F;
+  --ds-borders-focused-inverse: #CCF1D0;
+  --ds-borders-focused-primary: #4C42CF;
   --ds-borders-info-light: #B8E5FF;
   --ds-borders-info-mid: #6FCAFF;
   --ds-borders-info-primary: #0099F3;
@@ -349,6 +352,7 @@
   --ds-borders-pink-primary: #E11970;
   --ds-borders-pink-strong: #B5004F;
   --ds-borders-selected-primary: #2B1E9F;
+  --ds-borders-selected-primary-inverse: #CCF1D0;
   --ds-borders-selected-strong: #1F1976;
   --ds-borders-success-light: #B7E6BD;
   --ds-borders-success-mid: #7CDB87;
@@ -391,6 +395,7 @@
   --ds-text-pink-primary-fixed: #E11970;
   --ds-text-pink-strong: #B5004F;
   --ds-text-selected-primary: #CCF1D0;
+  --ds-text-selected-primary-inverse: #1F1976;
   --ds-text-success-primary: #258830;
   --ds-text-success-primary-fixed: #258830;
   --ds-text-success-secondary: #17541E;
@@ -474,6 +479,7 @@
   --ds-background-pink-primary: #E11970;
   --ds-background-pink-strong: #EB5895;
   --ds-background-selected-primary: #CCF1D0;
+  --ds-background-selected-primary-inverse: #2B1E9F;
   --ds-background-selected-strong: #9BE3A3;
   --ds-background-success-light: #003F25;
   --ds-background-success-mid: #1F7028;
@@ -499,6 +505,8 @@
   --ds-borders-error-mid: #B30F0F;
   --ds-borders-error-primary: #EB1414;
   --ds-borders-error-strong: #F37272;
+  --ds-borders-focused-inverse: #4C42CF;
+  --ds-borders-focused-primary: #928CEF;
   --ds-borders-info-light: #0B43A3;
   --ds-borders-info-mid: #1570D1;
   --ds-borders-info-primary: #0099F3;
@@ -515,6 +523,7 @@
   --ds-borders-pink-primary: #E11970;
   --ds-borders-pink-strong: #F07FB0;
   --ds-borders-selected-primary: #CCF1D0;
+  --ds-borders-selected-primary-inverse: #2B1E9F;
   --ds-borders-selected-strong: #9BE3A3;
   --ds-borders-success-light: #17541E;
   --ds-borders-success-mid: #258830;
@@ -557,6 +566,7 @@
   --ds-text-pink-primary-fixed: #EB5895;
   --ds-text-pink-strong: #EEA1C3;
   --ds-text-selected-primary: #1F1976;
+  --ds-text-selected-primary-inverse: #CCF1D0;
   --ds-text-success-primary: #FFFFFF;
   --ds-text-success-primary-fixed: #34BD43;
   --ds-text-success-secondary: #9BE3A3;
