@@ -1,7 +1,7 @@
 .node {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-border-neutral-primary));
   border-radius: var(--radius-card);
   background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   box-shadow: 0 1px 2px color-mix(in srgb, var(--ds-text-neutral-black-fixed) 8%, transparent);
@@ -11,7 +11,7 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-border-neutral-primary));
   border-radius: calc(var(--radius-card) + 6px);
   background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
   box-shadow: 0 2px 8px color-mix(in srgb, var(--ds-text-neutral-black-fixed) 8%, transparent);
@@ -28,8 +28,8 @@
 }
 
 .collectionCardActive {
-  border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-brand-teal-primary) 45%, transparent);
+  border-color: var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-selected-primary) 45%, transparent);
 }
 
 .collectionName {
@@ -49,7 +49,7 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-border-neutral-primary));
   border-radius: var(--radius-card);
   background: color-mix(in srgb, var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary)) 88%, transparent);
   box-shadow: 0 1px 3px color-mix(in srgb, var(--ds-text-neutral-black-fixed) 6%, transparent);
@@ -57,13 +57,13 @@
 }
 
 .subGroupCardActive {
-  border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-brand-teal-primary) 35%, transparent);
+  border-color: var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-selected-primary) 35%, transparent);
 }
 
 .dropTargetActive {
-  border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-brand-teal-primary) 40%, transparent);
+  border-color: var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-background-selected-primary) 40%, transparent);
 }
 
 .nodeDragging {
@@ -107,7 +107,7 @@
 }
 
 .nodeActive {
-  border-color: var(--family-color, var(--ds-borders-brand-teal-primary));
+  border-color: var(--family-color, var(--ds-border-selected-primary));
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--family-color, #000) 45%, transparent);
 }
 
@@ -120,7 +120,7 @@
   margin: 0;
   padding: 10px 12px;
   border: 0;
-  border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border-bottom: 1px solid var(--sandbox-border-neutral-primary, var(--ds-border-neutral-primary));
   border-radius: var(--radius-card) var(--radius-card) 0 0;
   background: transparent;
   pointer-events: auto;
@@ -161,7 +161,7 @@ button.nodeHeader:hover {
   align-items: center;
   justify-content: center;
   padding: 0 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
   color: var(--ds-text-neutral-quaternary);
   font-size: var(--text-xs);
@@ -198,7 +198,7 @@ button.nodeHeader:hover {
   align-items: center;
   justify-content: center;
   padding: 2px;
-  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-border-neutral-primary));
   border-radius: var(--radius-default);
   font-size: 10px;
   font-weight: var(--font-weight-semibold);
@@ -250,7 +250,7 @@ button.nodeHeader:hover {
 
 .surfaceGroup {
   padding: 10px 12px;
-  border-top: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
+  border-top: 1px solid var(--sandbox-border-neutral-primary, var(--ds-border-neutral-primary));
 }
 
 .surfaceGroup:first-of-type {
@@ -285,8 +285,8 @@ button.nodeHeader:hover {
   gap: 6px;
   margin: 0;
   padding: 0 8px;
-  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary));
-  border-radius: 4px;
+  border: 1px solid var(--sandbox-border-neutral-primary, var(--ds-border-neutral-primary));
+  border-radius: var(--radius-sm);
   background: var(--sandbox-bg-neutral-secondary, var(--ds-background-neutral-secondary));
   pointer-events: auto;
   cursor: grab;
@@ -302,7 +302,7 @@ button.nodeHeader:hover {
 }
 
 .chip:hover {
-  border-color: var(--sandbox-border-neutral-strong, var(--ds-borders-neutral-primary));
+  border-color: var(--sandbox-border-neutral-strong, var(--ds-border-neutral-primary));
 }
 
 .chipDragging {
@@ -310,12 +310,12 @@ button.nodeHeader:hover {
 }
 
 .chipDropTarget {
-  border-color: var(--ds-borders-brand-teal-primary);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ds-background-brand-teal-primary) 40%, transparent);
+  border-color: var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ds-background-selected-primary) 40%, transparent);
 }
 
 .chipSelected {
-  border-color: var(--family-color, var(--ds-borders-brand-teal-primary));
+  border-color: var(--family-color, var(--ds-border-selected-primary));
   background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   color: var(--ds-text-neutral-primary);
   box-shadow: 0 0 0 1px var(--family-color, #000);
@@ -323,7 +323,7 @@ button.nodeHeader:hover {
 
 .chipUnmapped {
   border-style: dashed;
-  border-color: var(--ds-borders-error-primary);
+  border-color: var(--ds-border-error-primary);
 }
 
 .chipSwatch {
@@ -332,7 +332,7 @@ button.nodeHeader:hover {
   width: 12px;
   height: 12px;
   flex-shrink: 0;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   border: 1px solid color-mix(in srgb, var(--ds-text-neutral-black-fixed) 14%, transparent);
   overflow: hidden;
 }

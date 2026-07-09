@@ -6,229 +6,119 @@
   /* FA7 Brands webfont (@font-face weight 400 in fonts-fa-brands.css) */
   --font-fa-brands: "Font Awesome 7 Brands";
   --font-size: 16px;
-  --text-h1: 48px;
-  --text-h2: 34px;
-  --text-h3: 28px;
-  --text-h4: 24px;
-  --text-lg: 20px;
-  --text-icon: 18px;
-  --text-md: 18px;
-  --text-base: 16px;
-  --text-sm: 14px;
-  --text-code: 13px;
-  --text-label: 12px;
-  --text-xs: 10px;
-  --font-heading: 'Barlow Semi Condensed', sans-serif;
-  --font-body: 'Figtree', sans-serif;
-  --font-mono: 'Google Sans Code', 'Courier New', monospace;
+
+  /* Typography — CADS Figma typography collection + text styles */
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-body: "Geist", sans-serif;
+  --font-mono: "Google Sans Code", "Courier New", monospace;
+  --font-weight-bold: 700;
   --font-weight-semibold: 600;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
+
+  /* Heading sizes (H1–H6). H1/H2 use --font-heading; H3–H6 use --font-body in Figma. */
+  --text-heading-xxl: 48px;
+  --text-heading-xl: 38px;
+  --text-heading-lg: 28px;
+  --text-heading-md: 24px;
+  --text-heading-sm: 22px;
+  --text-heading-xs: 20px;
+  --leading-heading-xxl: 52px;
+  --leading-heading-xl: 40px;
+  --leading-heading-lg: 36px;
+  --leading-heading-md: 32px;
+  --leading-heading-sm: 30px;
+  --leading-heading-xs: 28px;
+
+  /* Body sizes */
+  --text-body-lg: 18px;
+  --text-body-md: 16px;
+  --text-body-sm: 14px;
+  --text-body-xs: 12px;
+  --text-body-xxs: 10px;
+  --leading-body-lg: 28px;
+  --leading-body-md: 24px;
+  --leading-body-sm: 22px;
+  --leading-body-xs: 18px;
+  --leading-body-xxs: 16px;
+
+  /* Legacy aliases — prefer the heading/body tokens above in new code */
+  --text-h1: var(--text-heading-xxl);
+  --text-h2: var(--text-heading-xl);
+  --text-h3: var(--text-heading-lg);
+  --text-h4: var(--text-heading-md);
+  --text-lg: var(--text-heading-xs);
+  --text-icon: var(--text-body-lg);
+  --text-md: var(--text-body-lg);
+  --text-base: var(--text-body-md);
+  --text-sm: var(--text-body-sm);
+  --text-code: var(--text-body-sm);
+  --text-label: var(--text-body-xs);
+  --text-xs: var(--text-body-xxs);
+
+  /* Shape — CADS spacing-shape/shape */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-round: 999px;
+  --radius: var(--radius-sm);
+  --radius-default: var(--radius-sm);
+  --radius-card: var(--radius-md);
+
+  /* Spacing — CADS spacing-shape/spacing (forward-use; no retrofit) */
+  --space-xxs: 8px;
+  --space-xs: 16px;
+  --space-s: 24px;
+  --space-m: 32px;
+  --space-l: 40px;
+  --space-xl: 48px;
+  --space-xxl: 56px;
+  --space-xxxl: 64px;
+
+  /* Elevation — CADS Shadows/Small|Medium|Large (Focus Ring stays outline mixin) */
+  --shadow-sm: 0 4px 7px rgb(0 0 0 / 7%), 0 2px 2px rgb(0 0 0 / 7%);
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -4px rgb(0 0 0 / 10%);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 8px 10px -6px rgb(0 0 0 / 10%);
+  --elevation-sm: var(--shadow-lg);
+
+  /* Tailwind / shadcn bridge aliases — components should use --ds-* directly */
   --background: var(--ds-background-neutral-primary);
   --foreground: var(--ds-text-neutral-primary);
   --card: var(--ds-background-neutral-primary);
   --card-foreground: var(--ds-text-neutral-primary);
   --popover: var(--ds-background-neutral-primary);
   --popover-foreground: var(--ds-text-neutral-primary);
-  --primary: var(--ds-background-brand-purple-primary);
+  --primary: var(--ds-background-brand-primary);
   --primary-foreground: var(--ds-text-neutral-white-fixed);
   --secondary: var(--ds-background-neutral-secondary);
   --secondary-foreground: var(--ds-text-neutral-primary);
   --muted: var(--ds-background-neutral-quaternary);
   --muted-foreground: var(--ds-text-neutral-quaternary);
-  --accent: var(--ds-background-brand-teal-primary);
+  --accent: var(--ds-background-brand-primary);
   --accent-foreground: var(--ds-text-neutral-white-fixed);
   --destructive: var(--ds-background-error-primary);
   --destructive-foreground: var(--ds-text-neutral-white-fixed);
-  --border: var(--ds-borders-neutral-primary);
+  --border: var(--ds-border-neutral-primary);
   --input: var(--ds-background-neutral-primary);
   --input-background: var(--ds-background-neutral-primary);
-  --ring: var(--ds-borders-brand-teal-primary);
-  --elevation-sm: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --chart-1: var(--ds-background-brand-teal-primary);
-  --chart-2: var(--ds-background-brand-pink-primary);
+  --ring: var(--ds-border-focused-primary);
+  --chart-1: var(--ds-background-brand-primary);
+  --chart-2: var(--ds-background-accent-pink-primary);
   --chart-3: var(--ds-background-success-primary);
   --chart-4: var(--ds-background-warning-primary);
   --chart-5: var(--ds-background-error-primary);
-  --radius: 4px;
-  --radius-default: 6px;
-  --radius-card: 8px;
   --sidebar: var(--ds-background-neutral-primary);
   --sidebar-foreground: var(--ds-text-neutral-primary);
-  --sidebar-primary: var(--ds-background-brand-purple-primary);
+  --sidebar-primary: var(--ds-background-brand-primary);
   --sidebar-primary-foreground: var(--ds-text-neutral-white-fixed);
-  --sidebar-accent: var(--ds-background-brand-teal-primary);
-  --sidebar-accent-foreground: var(--ds-text-neutral-white-fixed);
-  --sidebar-border: var(--ds-borders-neutral-primary);
-  --sidebar-ring: var(--ds-borders-brand-teal-primary);
-
-  /* Disabled-state bridge: CodeAI defines per-color `--ds-*-disabled-<color>`
-     state tokens in tokens.css; the Code.org blocks still ship the legacy
-     `--ds-*-neutral-disabled` names. Alias the canonical names here so
-     components can use the state-group form under both brands. The CodeAI
-     theme blocks (higher specificity) override these with real values. */
-  --ds-background-disabled-neutral: var(--ds-background-neutral-disabled);
-  --ds-borders-disabled-neutral: var(--ds-borders-neutral-disabled);
-  --ds-text-disabled-neutral: var(--ds-text-neutral-disabled);
-  --ds-text-disabled-neutral-inverse: var(--ds-text-neutral-disabled-inverse);
-}
-
-:root[data-brand-theme="codeAi"] {
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body: 'Geist', sans-serif;
-
-  /* brand::teal primitive steps (CodeAI purple ramp) — active-chrome experiments only */
-  --ds-codeai-primitive-purple-5: #EDECFF;
-  --ds-codeai-primitive-purple-10: #DBD9FE;
-  --ds-codeai-primitive-purple-20: #B4B1FA;
-  --ds-codeai-primitive-purple-80: #1F0F93;
-  --ds-codeai-primitive-purple-90: #120372;
-  --ds-codeai-primitive-purple-95: #0D0064;
-  --ds-codeai-primitive-success-10: #D3F3D6;
-}
-
-/* Active-state chrome experiment: remap legacy teal/aqua chrome on CodeAI.
-   Variant token sets — switch via data-codeai-active-chrome on :root (useTheme). */
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="neutral"],
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="neutral"] .dark {
-  --ds-codeai-active-chrome: var(--ds-background-neutral-primary-inverse);
-  --ds-codeai-active-chrome-hover: var(--ds-background-neutral-octonary);
-  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-primary-inverse);
-  --ds-codeai-active-chrome-muted: var(--ds-background-neutral-tertiary);
-  --ds-codeai-active-chrome-muted-border: var(--ds-borders-neutral-secondary);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="info"],
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="info"] .dark {
-  --ds-codeai-active-chrome: var(--ds-background-info-primary);
-  --ds-codeai-active-chrome-hover: var(--ds-background-info-strong);
-  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
-  --ds-codeai-active-chrome-muted: var(--ds-background-info-extra-light);
-  --ds-codeai-active-chrome-muted-border: var(--ds-borders-info-light);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="pink"],
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="pink"] .dark {
-  --ds-codeai-active-chrome: var(--ds-background-brand-pink-primary);
-  --ds-codeai-active-chrome-hover: var(--ds-background-brand-pink-strong);
-  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
-  --ds-codeai-active-chrome-muted: var(--ds-background-brand-pink-extra-light);
-  --ds-codeai-active-chrome-muted-border: var(--ds-background-brand-pink-light);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="purple"],
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="purple"] .dark {
-  --ds-codeai-active-chrome: var(--ds-background-brand-purple-primary);
-  --ds-codeai-active-chrome-hover: var(--ds-background-brand-purple-strong);
-  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
-  --ds-codeai-active-chrome-muted: var(--ds-background-brand-purple-extra-light);
-  --ds-codeai-active-chrome-muted-border: var(--ds-borders-brand-purple-light);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="success"],
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="success"] .dark {
-  --ds-codeai-active-chrome: var(--ds-background-success-primary);
-  --ds-codeai-active-chrome-hover: var(--ds-background-success-strong);
-  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
-  --ds-codeai-active-chrome-muted: var(--ds-background-success-extra-light);
-  --ds-codeai-active-chrome-muted-border: var(--ds-borders-success-light);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="successLight"] {
-  --ds-codeai-active-chrome: var(--ds-background-success-extra-light);
-  --ds-codeai-active-chrome-hover: var(--ds-background-success-light);
-  --ds-codeai-active-chrome-on-fill: var(--ds-codeai-primitive-purple-90);
-  --ds-codeai-active-chrome-muted: var(--ds-background-neutral-secondary);
-  --ds-codeai-active-chrome-muted-border: var(--ds-borders-neutral-primary);
-  --ds-codeai-active-chrome-active-border: var(--ds-borders-success-primary);
-  --ds-codeai-active-chrome-active-border-hover: var(--ds-borders-success-strong);
-  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-codeai-primitive-purple-90);
-  --ds-codeai-active-chrome-tab-rail-accent: var(--ds-borders-success-primary);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="successLight"] .dark {
-  --ds-codeai-active-chrome: var(--ds-background-success-extra-light);
-  --ds-codeai-active-chrome-hover: var(--ds-background-success-light);
-  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
-  --ds-codeai-active-chrome-muted: var(--ds-background-neutral-secondary);
-  --ds-codeai-active-chrome-muted-border: var(--ds-borders-neutral-primary);
-  --ds-codeai-active-chrome-active-border: var(--ds-borders-success-primary);
-  --ds-codeai-active-chrome-active-border-hover: var(--ds-borders-success-strong);
-  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-codeai-primitive-success-10);
-  --ds-codeai-active-chrome-tab-rail-accent: var(--ds-codeai-primitive-success-10);
-}
-
-/* Lab2 tab rail: dark-mode icon/accent overrides per active-chrome variant */
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="info"] .dark {
-  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-text-neutral-white-fixed);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="pink"] .dark {
-  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-text-neutral-white-fixed);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="purple"] .dark {
-  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-text-neutral-white-fixed);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="success"] .dark {
-  --ds-codeai-active-chrome-tab-rail-icon: var(--ds-text-neutral-white-fixed);
-}
-
-/* Mode-inverted brand purple: step 90 in light, step 10 in dark */
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="darkBlue"] {
-  --ds-codeai-active-chrome: var(--ds-codeai-primitive-purple-80);
-  --ds-codeai-active-chrome-hover: var(--ds-background-brand-purple-primary);
-  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-white-fixed);
-  --ds-codeai-active-chrome-muted: var(--ds-codeai-primitive-purple-5);
-  --ds-codeai-active-chrome-muted-border: var(--ds-codeai-primitive-purple-20);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome="darkBlue"] .dark {
-  --ds-codeai-active-chrome: var(--ds-codeai-primitive-purple-10);
-  --ds-codeai-active-chrome-hover: var(--ds-codeai-primitive-purple-20);
-  --ds-codeai-active-chrome-on-fill: var(--ds-text-neutral-black-fixed);
-  --ds-codeai-active-chrome-muted: var(--ds-codeai-primitive-purple-95);
-  --ds-codeai-active-chrome-muted-border: var(--ds-codeai-primitive-purple-80);
-}
-
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome],
-:root[data-brand-theme="codeAi"][data-codeai-active-chrome] .dark {
-  --ds-text-on-active-chrome: var(--ds-codeai-active-chrome-on-fill);
-
-  --accent: var(--ds-codeai-active-chrome);
-  --accent-foreground: var(--ds-codeai-active-chrome-on-fill);
-  --ring: var(--ds-codeai-active-chrome);
-  --chart-1: var(--ds-codeai-active-chrome);
-  --sidebar-accent: var(--ds-codeai-active-chrome);
-  --sidebar-accent-foreground: var(--ds-codeai-active-chrome-on-fill);
-  --sidebar-ring: var(--ds-codeai-active-chrome);
-
-  --ds-background-brand-teal-extra-light: var(--ds-codeai-active-chrome-muted);
-  --ds-background-brand-teal-light: var(--ds-codeai-active-chrome-muted);
-  --ds-background-brand-teal-primary: var(--ds-codeai-active-chrome);
-  --ds-background-brand-teal-strong: var(--ds-codeai-active-chrome-hover);
-  --ds-borders-brand-teal-light: var(--ds-codeai-active-chrome-muted-border);
-  --ds-borders-brand-teal-primary: var(--ds-codeai-active-chrome);
-  --ds-borders-brand-teal-strong: var(--ds-codeai-active-chrome-hover);
-  --ds-text-brand-teal-primary: var(--ds-codeai-active-chrome);
-  --ds-text-brand-teal-primary-fixed: var(--ds-codeai-active-chrome);
-  --ds-text-brand-teal-secondary: var(--ds-codeai-active-chrome-hover);
-
-  --ds-background-brand-aqua-extra-light: var(--ds-codeai-active-chrome-muted);
-  --ds-background-brand-aqua-light: var(--ds-codeai-active-chrome-muted);
-  --ds-background-brand-aqua-primary: var(--ds-codeai-active-chrome);
-  --ds-background-brand-aqua-strong: var(--ds-codeai-active-chrome-hover);
-  --ds-borders-brand-aqua-light: var(--ds-codeai-active-chrome-muted-border);
-  --ds-borders-brand-aqua-primary: var(--ds-codeai-active-chrome);
-  --ds-borders-brand-aqua-strong: var(--ds-codeai-active-chrome-hover);
-  --ds-text-brand-aqua-primary: var(--ds-codeai-active-chrome);
-  --ds-text-brand-aqua-primary-fixed: var(--ds-codeai-active-chrome);
-  --ds-text-brand-aqua-secondary: var(--ds-codeai-active-chrome-hover);
+  --sidebar-accent: var(--ds-background-selected-primary);
+  --sidebar-accent-foreground: var(--ds-text-selected-primary);
+  --sidebar-border: var(--ds-border-neutral-primary);
+  --sidebar-ring: var(--ds-border-focused-primary);
 }
 
 .dark {
-  --elevation-sm: 6px 6px 4px 0px rgb(0 0 0 / 60%);
+  --elevation-sm: var(--shadow-lg);
 }
 
 @theme inline {
@@ -257,10 +147,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: var(--radius-card);
-  --radius-xl: calc(var(--radius-card) + 4px);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: calc(var(--radius-lg) + 2px);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -286,58 +176,58 @@
   :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
     h1 {
       font-family: var(--font-heading);
-      font-size: var(--text-h1);
+      font-size: var(--text-heading-xxl);
       font-weight: var(--font-weight-semibold);
-      line-height: 1.2;
+      line-height: var(--leading-heading-xxl);
     }
 
     h2 {
       font-family: var(--font-heading);
-      font-size: var(--text-h2);
+      font-size: var(--text-heading-xl);
       font-weight: var(--font-weight-semibold);
-      line-height: 1.2;
+      line-height: var(--leading-heading-xl);
     }
 
     h3 {
-      font-family: var(--font-heading);
-      font-size: var(--text-h3);
+      font-family: var(--font-body);
+      font-size: var(--text-heading-lg);
       font-weight: var(--font-weight-semibold);
-      line-height: 1.2;
+      line-height: var(--leading-heading-lg);
     }
 
     h4 {
-      font-family: var(--font-heading);
-      font-size: var(--text-h4);
+      font-family: var(--font-body);
+      font-size: var(--text-heading-md);
       font-weight: var(--font-weight-semibold);
-      line-height: 1.2;
+      line-height: var(--leading-heading-md);
     }
 
     p {
       font-family: var(--font-body);
-      font-size: var(--text-base);
+      font-size: var(--text-body-md);
       font-weight: var(--font-weight-normal);
-      line-height: 1.5;
+      line-height: var(--leading-body-md);
     }
 
     label {
       font-family: var(--font-body);
-      font-size: var(--text-label);
+      font-size: var(--text-body-xs);
       font-weight: var(--font-weight-semibold);
-      line-height: 1.4;
+      line-height: var(--leading-body-xs);
     }
 
     button {
       font-family: var(--font-body);
-      font-size: var(--text-base);
+      font-size: var(--text-body-md);
       font-weight: var(--font-weight-medium);
-      line-height: 1.5;
+      line-height: var(--leading-body-md);
     }
 
     input {
       font-family: var(--font-body);
-      font-size: var(--text-base);
+      font-size: var(--text-body-md);
       font-weight: var(--font-weight-normal);
-      line-height: 1.5;
+      line-height: var(--leading-body-md);
     }
   }
 }

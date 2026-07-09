@@ -48,7 +48,7 @@ Every level type renders inside the same chrome:
 - `TopNavigation` + level progress bubbles
 - Resource panel (instructions, Tutor, validation, version history, Backpack, resources, settings)
 - Dev panel and annotation overlay for rapid iteration
-- Brand theme + light/dark token switching
+- Light/dark token switching (CodeAI-only brand)
 
 **Paths:** `src/components/lab2/`, `src/components/ui/`
 
@@ -221,25 +221,15 @@ The `/levels` index supports saving **variants** (local snapshots of a level's d
 
 ## Design Tokens
 
-Design tokens are generated into `src/styles/tokens.css`.
+Design tokens are generated into `src/styles/tokens.css` from the CodeAI color system:
 
 ```bash
 npm run token:generate
 ```
 
-The generator resolves token files in this order:
+Source: `src/pages/design-system/tokens/codeAiColorSystem.json` via `scripts/colorSystemToCss.mjs`. Output is plain `:root` (light) and `.dark` blocks. Naming is shared with Figma and the sandbox exporter (`semanticExportVarName`).
 
-1. `WL2_LIGHT_TOKENS_PATH` / `WL2_DARK_TOKENS_PATH` environment variables
-2. `tokens/semantic/light.tokens.json` and `tokens/semantic/dark.tokens.json`
-3. Legacy desktop export paths used during migration
-
-If semantic token source files are unavailable, the generator falls back to the existing generated `src/styles/tokens.css` for the base Code.org light/dark maps.
-
-**Code.org base:** DTCG semantic JSON (or fallback CSS) plus canonical `brand-pink` / `brand-orange` names derived from legacy accent tokens.
-
-**CodeAI brand:** full light/dark theme blocks generated from `src/pages/design-system/tokens/codeAiColorSystem.json` via `scripts/colorSystemToCss.mjs`. Select **CodeAI** in the global nav menu (or default) to activate `[data-brand-theme="codeAi"]` on `<html>`.
-
-Brand-specific typography tokens are defined in `src/styles/globals.css`. Token rename guidance lives in `scripts/tokenMigrationMap.md`.
+Typography, radii, spacing, and shadows live in `src/styles/globals.css`. Rename guidance: `scripts/tokenMigrationMap.md`. Full guide: `src/guidelines/color-theming.md`.
 
 **Rule of thumb:** use `--ds-*` tokens directly in component styles; never hard-code hex values. See [`.cursor/rules/design-system.mdc`](.cursor/rules/design-system.mdc).
 

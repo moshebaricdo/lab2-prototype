@@ -96,7 +96,6 @@ src/
 │   │   │   ├── CreateFileModal.tsx
 │   │   │   ├── VersionBanner.tsx
 │   │   │   ├── EmptyState.tsx
-│   │   │   ├── FileContextMenu.tsx
 │   │   │   └── FileManagerDropdown.tsx
 │   │   ├── weblab2/views/
 │   │   │   ├── Workspace.tsx
@@ -145,7 +144,7 @@ src/
 │   ├── aichatlab/
 │   ├── bubble-choice/
 │   ├── design-system/              # Standalone DS tooling routes (not level index entries)
-│   │   └── tokens/                 # Bundled prod token exports (DTCG/Figma JSON) that drive the color sandbox
+│   │   └── tokens/                 # CodeAI color system JSON + Figma snapshot for the color sandbox
 │   ├── free-response/
 │   ├── levelgroup/
 │   ├── assessment-builder/
@@ -198,7 +197,7 @@ Route pages get state and handlers from dedicated hooks:
 - `useVersionHistoryState` for version selection/save/restore feedback
 - `useSketchLabState` for ReactFlow canvas nodes/edges, selection, and route-scoped `sessionStorage` persistence (Sketch Lab only)
 - `useBackpackState` / `BackpackProvider` for cross-level Backpack persistence (`localStorage` key `lab2:backpack`). `Lab2Shell` wraps the resource panel and workspace in `BackpackProvider` so file-manager save actions and the Backpack tab share one store. `BackpackProvider` is idempotent — if an ancestor already provides the store it passes through rather than creating a second one, so a page (e.g. `WebLab2LevelPage`, for its agent-library dialogs) can hoist the provider above `Lab2Shell` and keep a single store. `BackpackItem.fileKind` is `FileKind | "agent"`: the `"agent"` kind is a saved custom agent (JSON payload, `lib/backpack/agentBackpack.ts`) that lives only in the backpack + the agent recall sheet, never the project file tree. IDE routes pass `backpackImportLab` and `onImportBackpackItem` into `Sidebar`; per-lab extension allow-lists in `backpackImportAllowlist.ts` gate the **+** import action (unsupported types stay visible with a disabled button and tooltip). Production Backpack panel layout defaults to **type-availability** (file-type filter row + name sort + unsupported-at-bottom). Optional `backpackFilterExperiment` on experiment routes overrides this (`default` legacy source-lab sections, filter pills, supported toggle, dropdown — see Backpack Filtering sample progression). A session **Added** badge appears on that chip after a successful import.
-- `ThemeProvider` / `useTheme` for brand theme selection and Lab2-scoped light/dark token switching, with current choices persisted in session storage. Brand themes can swap shared chrome assets such as `Logo`, add generated brand-only color token layers in `tokens.css`, and override typography tokens in `globals.css`; light/dark markers are applied by `Lab2Shell` below `TopNavigation` so the header stays brand-stable. The color sandbox (`ColorSandboxPage`) and global nav menu (`GlobalNavMenu.tsx`) read/write the same `useTheme()` state.
+- `ThemeProvider` / `useTheme` for Lab2-scoped light/dark token switching, persisted in session storage (`lab2:theme`). Light/dark markers are applied by `Lab2Shell` below `TopNavigation` so the header stays brand-stable. The color sandbox and global nav menu share the same `useTheme()` state.
 
 `useFileWorkspaceState` accepts both single-folder project wrappers and rootless file trees. Rootless trees are used by blank Web Lab projects; new files, folders, and AI proposal additions are inserted at the top level until the user creates their own folders.
 
@@ -242,15 +241,15 @@ Sketch Lab lives under `components/ide/sketchlab/views` on a customized `@xyflow
 
 ## Color Sandbox (design-system tooling)
 
-`pages/design-system/ColorSandboxPage.tsx` is a standalone `@xyflow/react` canvas (route `/design-system/colors`, not in the level index) for workshopping the token system. It is driven by bundled token sources under `pages/design-system/tokens/`: Code.org uses DTCG/Figma JSON (`codeOrgPrimitives.json`, `semanticsLight.json`, `semanticsDark.json`); CodeAI uses the committed `codeAiColorSystem.json` export. `colorSystemData.ts` parses those into an editable `ColorSystem` document (`collection → family → step` primitive ramps + light/dark semantic tokens). The page treats the system as a per-brand document persisted to `localStorage` (`lab2:color-sandbox:doc`), and supports editing primitive hexes, remapping semantics per mode, adding/renaming/deleting collections and families, and per-theme rationale comments on semantic tokens (emitted as inline comments in the CSS export; codified vs session status is derived by comparing against the bundled baseline). A read-only mode (default on deployed hosts, off on localhost, toggled via the toolbar lock) hides all edit affordances while keeping inspectors and Export CSS available.
+`pages/design-system/ColorSandboxPage.tsx` is a standalone `@xyflow/react` canvas (route `/design-system/colors`, not in the level index) for workshopping the CodeAI token system. It loads the committed `codeAiColorSystem.json` export via `colorSystemData.ts` into an editable `ColorSystem` document (`collection → family → step` primitive ramps + light/dark semantic tokens). The page persists a single draft to `localStorage` (`lab2:color-sandbox:doc`), and supports editing primitive hexes, remapping semantics per mode, adding/renaming/deleting collections and families, and per-theme rationale comments on semantic tokens (emitted as inline comments in the CSS export; codified vs session status is derived by comparing against the bundled baseline). A read-only mode (default on deployed hosts, off on localhost, toggled via the toolbar lock) hides all edit affordances while keeping inspectors and Export CSS available.
 
-**Live app preview:** When **Apply to app** is enabled in the sandbox toolbar, `lib/colorSandbox/colorSandboxRuntime.ts` resolves the persisted draft(s) into `--ds-*` CSS variable overrides and injects them via a managed `<style>` tag. `ThemeProvider` initializes this bridge at app boot and listens for cross-tab `storage` events plus same-tab updates. Preview is opt-in (`lab2:color-sandbox:apply-runtime`) and does not modify committed token files; the sandbox **Export CSS** button downloads prod-shaped `primitiveColors.css` + `colors.css` (via `src/pages/design-system/colorSystemCssExport.ts`) for handoff to the product repo. The runtime injects **resolved semantic values only** (primitive → semantic mappings from the draft ColorSystem). It does **not** re-emit compatibility alias layers such as CodeAI `brand-teal`/`brand-aqua` → `brand-purple`; those stay in committed `tokens.css` (generator) and theme-specific remaps in `globals.css` (for example CodeAI active-state chrome).
+**Live app preview:** When **Apply to app** is enabled in the sandbox toolbar, `lib/colorSandbox/colorSandboxRuntime.ts` resolves the persisted draft into `--ds-*` CSS variable overrides and injects them via a managed `<style>` tag (`:root` / `.dark`). `ThemeProvider` initializes this bridge at app boot and listens for cross-tab `storage` events plus same-tab updates. Preview is opt-in (`lab2:color-sandbox:apply-runtime`) and does not modify committed token files; the sandbox **Export CSS** button downloads prod-shaped `primitiveColors.css` + `colors.css` (via `src/pages/design-system/colorSystemCssExport.ts`) for handoff to the product repo. The runtime injects **resolved semantic values only**.
 
-Brand theme and light/dark mode in the sandbox toolbar share `useTheme()` with the global nav hamburger menu (`GlobalNavMenu.tsx`) and `Lab2Shell` — changing either control updates the same session-scoped theme state. Edits in the sandbox apply to the active brand/mode pair the app is using, so live preview stays aligned with the lab shell (including its scoped `.dark` wrapper below `TopNavigation`).
+Light/dark mode in the sandbox toolbar shares `useTheme()` with the global nav hamburger menu (`GlobalNavMenu.tsx`) and `Lab2Shell`.
 
-Runtime app tokens are generated into `src/styles/tokens.css` by `scripts/generate-tokens.mjs`, which resolves the CodeAI ColorSystem through `scripts/colorSystemToCss.mjs` into `:root[data-brand-theme="codeAi"]` light/dark blocks. Component styles use canonical `--ds-*` names (for example `brand-purple`, `brand-pink`, `brand-orange`); see `scripts/tokenMigrationMap.md`.
+Runtime app tokens are generated into `src/styles/tokens.css` by `scripts/generate-tokens.mjs`, which resolves the CodeAI ColorSystem through `scripts/colorSystemToCss.mjs` into plain `:root` / `.dark` blocks. Naming matches Figma and the exporter (`semanticTokenCssName` / `semanticExportVarName` — e.g. collapsed `brand-*`, singular `border-*`, flat `selected` / sentiment). See `scripts/tokenMigrationMap.md`.
 
-**Full theming guide:** `src/guidelines/color-theming.md` documents the token cascade (`tokens.css` → `globals.css` → components → sandbox preview), Code.org vs CodeAI roles, the CodeAI active-chrome experiment, semantic cross-reference resolution (`{text.neutral.primary}`), and sandbox authoring boundaries.
+**Full theming guide:** `src/guidelines/color-theming.md` documents the token cascade, selected-vs-brand roles, naming contract, and sandbox authoring boundaries.
 
 ## Migration Notes
 

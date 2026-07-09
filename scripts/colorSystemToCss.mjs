@@ -1,6 +1,7 @@
 /**
  * Resolve a ColorSystem export JSON into flat --ds-* CSS variable maps.
- * Shared by scripts/generate-tokens.mjs.
+ * Naming must stay in sync with src/pages/design-system/colorSystemCssExport.ts
+ * (`semanticExportVarName` / FLAT_SUBGROUPS / SINGLE_FAMILY_SUBGROUPS).
  */
 
 const DEFAULT_SEMANTIC_FAMILY_SUBGROUP = {
@@ -18,14 +19,26 @@ const DEFAULT_SEMANTIC_FAMILY_SUBGROUP = {
   "alpha-2": "neutral",
 };
 
+/** Matches colorSystemCssExport.ts — sentiment/state omit subgroup from the name. */
+const FLAT_SUBGROUPS = new Set(["sentiment", "state"]);
+
+/** Matches colorSystemCssExport.ts — brand collapses its single family name. */
+const SINGLE_FAMILY_SUBGROUPS = new Set(["brand"]);
+
 function slugify(value) {
   return (
     value
       .toLowerCase()
       .trim()
       .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "") || "family"
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-") || "family"
   );
+}
+
+function exportSurface(surface) {
+  const s = slugify(surface);
+  return s === "borders" ? "border" : s;
 }
 
 function semanticSubGroupForFamily(system, familyKey) {
@@ -41,18 +54,27 @@ function semanticFamilyPathSegment(system, familyKey) {
   return slugify(family?.name ?? familyKey);
 }
 
-function semanticTokenVariableName(system, token) {
+/**
+ * Prod-style semantic variable name — mirror of semanticExportVarName().
+ * `{surface}-{subgroup?}-{family?}-{role}` with brand collapse + flat state/sentiment.
+ */
+export function semanticExportVarName(system, token) {
   const subGroupId = semanticSubGroupForFamily(system, token.familyKey);
-  const familySegment = semanticFamilyPathSegment(system, token.familyKey);
-  if (subGroupId === "brand" || subGroupId === "accent") {
-    return `${token.surface}/${subGroupId}/${familySegment}/${token.role}`;
-  }
-  return `${token.surface}/${familySegment}/${token.role}`;
-}
+  const subGroup = system.semanticSubGroups?.find((item) => item.id === subGroupId);
+  const subName = slugify(subGroup?.name ?? subGroupId);
+  const familySegment = slugify(semanticFamilyPathSegment(system, token.familyKey));
 
-function semanticTokenCssName(system, token) {
-  const path = token.id || semanticTokenVariableName(system, token);
-  return path.replace(/\//g, "-").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
+  const parts = [exportSurface(token.surface)];
+  if (!FLAT_SUBGROUPS.has(subName)) parts.push(subName);
+  if (
+    !SINGLE_FAMILY_SUBGROUPS.has(subName) &&
+    familySegment !== subName &&
+    familySegment !== parts[parts.length - 1]
+  ) {
+    parts.push(familySegment);
+  }
+  parts.push(slugify(token.role));
+  return parts.join("-");
 }
 
 function buildStepIndex(system) {
@@ -101,7 +123,7 @@ function semanticHex(system, token, mode, steps, cache = new Map(), stack = new 
 }
 
 /**
- * @param {import('../src/pages/design-system/colorSystemData').ColorSystem} system
+ * @param {object} system ColorSystem JSON
  * @param {"light"|"dark"} mode
  * @returns {Map<string, string>}
  */
@@ -112,7 +134,7 @@ export function resolveColorSystemToCssVars(system, mode) {
   for (const token of system.semantics ?? []) {
     const hex = semanticHex(system, token, mode, steps);
     if (!hex) continue;
-    output.set(semanticTokenCssName(system, token), hex);
+    output.set(semanticExportVarName(system, token), hex);
   }
 
   return output;

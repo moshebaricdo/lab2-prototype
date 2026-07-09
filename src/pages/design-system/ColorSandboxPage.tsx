@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
   type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
   DndContext,
@@ -27,7 +28,6 @@ import {
   Controls,
   ControlButton,
   MiniMap,
-  Panel,
   PanOnScrollMode,
   ReactFlow,
   SelectionMode,
@@ -41,10 +41,14 @@ import "@xyflow/react/dist/style.css";
 import { AppButton } from "../../components/ui/AppButton";
 import { AppCheckbox } from "../../components/ui/AppCheckbox";
 import { AppNativeSelect } from "../../components/ui/AppDropdown";
+import { AppSlider } from "../../components/ui/AppSlider";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Tooltip } from "../../components/ui/Tooltip";
 import { FaIcon } from "../../components/ui/icons/FaIcon";
-import { useTheme, type BrandTheme, type ThemeMode } from "../../hooks/useTheme";
+import type { FaIconName } from "../../icons/faProRegularCodepoints";
+import { Logo } from "../../components/ui/icons/Logo";
+import { ResizableHandle } from "../../components/ui/ResizableHandle";
+import { useTheme, type ThemeMode } from "../../hooks/useTheme";
 import {
   loadColorSandboxSystem,
   notifyColorSandboxUpdated,
@@ -62,7 +66,7 @@ import {
   addSemanticSubGroup,
   addSemanticToken,
   addStep,
-  buildColorSystem,
+  buildCodeAiColorSystem,
   duplicatePrimitiveFamily,
   duplicateSemanticFamily,
   deleteCollection,
@@ -73,7 +77,6 @@ import {
   deleteStep,
   cssColor,
   colorAlpha,
-  buildCodeAiColorSystem,
   rgbHex,
   setHexAlpha,
   familiesByCollection,
@@ -149,11 +152,13 @@ import {
   fromScratchFlowNode,
   isScratchId,
   loadScratchNodes,
-  measureScratchTextWidth,
+  measureScratchTextSize,
   persistScratchNodes,
   toScratchFlowNode,
   type ScratchFlowNode,
   type ScratchNodeData,
+  type ScratchTextAlign,
+  type ScratchTextSizing,
   type ScratchNodeKind,
 } from "../../lib/colorSandbox/scratchLayer";
 import styles from "./ColorSandboxPage.module.scss";
@@ -163,8 +168,10 @@ const allNodeTypes = { ...colorSystemNodeTypes, ...scratchNodeTypes };
 /** Default fills for freshly created scratch nodes. */
 const SCRATCH_DEFAULT_SWATCH_FILL = "#4B5563";
 const SCRATCH_DEFAULT_TEXT_FILL = "#111827";
-/** Horizontal gap between the semantic column and newly spawned scratch nodes. */
-const SCRATCH_SPAWN_OFFSET_X = 320;
+/** Drag threshold before the scratch create tool uses the drawn size. */
+const SCRATCH_DRAW_CLICK_DISTANCE = 8;
+const SCRATCH_DRAW_MIN_SIZE = 24;
+const SCRATCH_TEXT_MIN_HEIGHT = 44;
 
 const COLLECTION_GAP_X = 44;
 const SEMANTIC_BAND_GAP = 96;
@@ -196,7 +203,7 @@ const PRIMITIVE_FAMILY_H = 120;
 const COLLECTION_HEADER_H = 61;
 /** Space between the header block and the first family card. */
 const HEADER_FAMILY_GAP = 16;
-const EDGE_COLOR = "var(--sandbox-border-neutral-primary, var(--ds-borders-neutral-primary))";
+const EDGE_COLOR = "var(--sandbox-border-neutral-primary, var(--ds-border-neutral-primary))";
 const EDGE_WIDTH = 1.5;
 /** React Flow pan filter — pan only on empty pane, not while interacting with nodes. */
 const REACT_FLOW_NO_PAN = {
@@ -207,11 +214,20 @@ const REACT_FLOW_NO_PAN = {
 } as const;
 
 type ScratchCanvasTool = "select" | "grab";
+interface ScratchDrawState {
+  kind: ScratchNodeKind;
+  pointerId: number;
+  startFlow: { x: number; y: number };
+  currentFlow: { x: number; y: number };
+  startClient: { x: number; y: number };
+  currentClient: { x: number; y: number };
+}
 
-const BRAND_OPTIONS: Array<{ value: BrandTheme; label: string }> = [
-  { value: "codeOrg", label: "Code.org" },
-  { value: "codeAi", label: "CodeAI" },
-];
+/** Right resource panel sizing (matches lab resource panel behavior). */
+const SIDE_PANEL_DEFAULT_W = 350;
+const SIDE_PANEL_MIN_W = 280;
+const SIDE_PANEL_MAX_W = 600;
+
 const MODE_OPTIONS: Array<{ value: ThemeKey; label: string }> = [
   { value: "light", label: "Light" },
   { value: "dark", label: "Dark" },
@@ -371,27 +387,6 @@ function measureSemanticCollectionCard(
   };
 }
 
-function computeScratchSpawnPosition(
-  system: ColorSystem,
-  spawnIndex: number,
-): { x: number; y: number } {
-  const semanticY = computePrimitiveBandHeight(system) + SEMANTIC_BAND_GAP;
-  let maxWidth = 0;
-  let cursorY = semanticY;
-
-  for (const collection of system.semanticCollections) {
-    const { width, height } = measureSemanticCollectionCard(system, collection.id);
-    maxWidth = Math.max(maxWidth, width);
-    cursorY += height + COLLECTION_GAP_X;
-  }
-
-  const offset = spawnIndex * 24;
-  return {
-    x: maxWidth + SCRATCH_SPAWN_OFFSET_X + offset,
-    y: semanticY + offset,
-  };
-}
-
 function semanticChipWidth(role: string): number {
   return (
     SEMANTIC_CHIP_X_PAD * 2 +
@@ -465,9 +460,9 @@ function estimatePrimitiveHeight(_stepCount: number) {
 }
 
 export function ColorSandboxPage() {
-  const { brandTheme, setBrandTheme, theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [system, setSystem] = useState<ColorSystem>(() =>
-    loadColorSandboxSystem(brandTheme),
+    loadColorSandboxSystem(),
   );
   const [applyRuntime, setApplyRuntime] = useState(() => readColorSandboxApplyRuntime());
   const [readOnly, setReadOnly] = useState(() => readColorSandboxReadOnly());
@@ -475,7 +470,11 @@ export function ColorSandboxPage() {
   const [exported, setExported] = useState(false);
   const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
   const [canvasTool, setCanvasTool] = useState<ScratchCanvasTool>("select");
+  const [armedScratchKind, setArmedScratchKind] = useState<ScratchNodeKind | null>(null);
+  const [scratchDraw, setScratchDraw] = useState<ScratchDrawState | null>(null);
+  const [panelWidth, setPanelWidth] = useState(SIDE_PANEL_DEFAULT_W);
   const isGrabTool = canvasTool === "grab";
+  const isCreateTool = armedScratchKind !== null || scratchDraw !== null;
   const clearScratchSelectionRef = useRef<() => void>(() => {});
 
   const sensors = useSensors(
@@ -519,12 +518,12 @@ export function ColorSandboxPage() {
 
   const persist = useCallback(
     (next: ColorSystem) => {
-      persistColorSandboxDoc(brandTheme, next);
+      persistColorSandboxDoc(next);
       if (readColorSandboxApplyRuntime()) {
         notifyColorSandboxUpdated();
       }
     },
-    [brandTheme],
+    [],
   );
 
   const applyChange = useCallback(
@@ -549,7 +548,7 @@ export function ColorSandboxPage() {
   // else on the working draft is a session comment.
   const codifiedComments = useMemo(() => {
     const baseline =
-      brandTheme === "codeAi" ? buildCodeAiColorSystem() : buildColorSystem();
+      buildCodeAiColorSystem();
     const map = new Map<string, string>();
     for (const token of baseline.semantics) {
       for (const mode of ["light", "dark"] as ThemeKey[]) {
@@ -558,7 +557,7 @@ export function ColorSandboxPage() {
       }
     }
     return map;
-  }, [brandTheme]);
+  }, []);
 
   const toggleApplyRuntime = useCallback((enabled: boolean) => {
     setApplyRuntime(enabled);
@@ -752,19 +751,18 @@ export function ColorSandboxPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const signatureRef = useRef<string>("");
 
-  // ── Scratch layer: free-positioned swatch/text nodes (persist per brand,
-  // shared across light/dark). Managed independently from the collection nodes.
+  // ── Scratch layer: free-positioned swatch/text nodes (persist across light/dark).
+  // Managed independently from the collection nodes.
   const [scratchNodes, setScratchNodes, onScratchNodesChange] =
     useNodesState<ScratchFlowNode>(
-      loadScratchNodes(brandTheme).map(toScratchFlowNode),
+      loadScratchNodes().map(toScratchFlowNode),
     );
   const scratchNodesRef = useRef(scratchNodes);
   scratchNodesRef.current = scratchNodes;
   const scratchOrderRef = useRef<string[]>([]);
-  const scratchBrandRef = useRef<BrandTheme>(brandTheme);
   const lastLoadedScratchRef = useRef<ScratchFlowNode[] | null>(null);
   const flowRef = useRef<ReactFlowInstance<Node, Edge> | null>(null);
-  const spawnCountRef = useRef(0);
+  const canvasWrapRef = useRef<HTMLDivElement | null>(null);
 
   const selectedScratch = useMemo(
     () => scratchNodes.filter((node) => node.selected),
@@ -789,10 +787,23 @@ export function ColorSandboxPage() {
   const handleCanvasToolChange = useCallback(
     (tool: ScratchCanvasTool) => {
       setCanvasTool(tool);
+      setArmedScratchKind(null);
+      setScratchDraw(null);
       if (tool === "grab") {
         setSelection(null);
         clearScratchSelection();
       }
+    },
+    [clearScratchSelection],
+  );
+
+  const handleCreateToolChange = useCallback(
+    (kind: ScratchNodeKind) => {
+      setCanvasTool("select");
+      setArmedScratchKind(kind);
+      setScratchDraw(null);
+      setSelection(null);
+      clearScratchSelection();
     },
     [clearScratchSelection],
   );
@@ -803,16 +814,16 @@ export function ColorSandboxPage() {
     const scratch = scratchNodes.map((node, index) => ({
       ...node,
       zIndex: index,
-      draggable: !isGrabTool && !readOnly,
-      selectable: !isGrabTool && !readOnly,
-      className: isGrabTool ? undefined : "nopan",
+      draggable: !isGrabTool && !isCreateTool && !readOnly,
+      selectable: !isGrabTool && !isCreateTool && !readOnly,
+      className: isGrabTool || isCreateTool ? undefined : "nopan",
     }));
     const collections = nodes.map((node) => ({
       ...node,
       zIndex: 1000,
     }));
     return [...scratch, ...collections];
-  }, [nodes, scratchNodes, isGrabTool, readOnly]);
+  }, [nodes, scratchNodes, isGrabTool, isCreateTool, readOnly]);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<Node>[]) => {
@@ -855,14 +866,23 @@ export function ColorSandboxPage() {
         current.map((node) => {
           if (node.id !== id) return node;
           const nextData = { ...node.data, ...partial };
-          if (nextData.kind !== "text" || partial.text === undefined) {
+          if (nextData.kind !== "text") {
             return { ...node, data: nextData };
           }
-          const width = measureScratchTextWidth(nextData.text);
+
+          if (partial.textSizing === "hug" || nextData.textSizing === "hug") {
+            const size = measureScratchTextSize(nextData.text || "Text");
+            return {
+              ...node,
+              width: size.width,
+              height: size.height,
+              style: { ...node.style, width: size.width, height: size.height },
+              data: nextData,
+            };
+          }
+
           return {
             ...node,
-            width,
-            style: { ...node.style, width, height: node.height },
             data: nextData,
           };
         }),
@@ -882,16 +902,29 @@ export function ColorSandboxPage() {
     [updateScratchNodeData],
   );
 
+  const updateScratchTextSizing = useCallback(
+    (id: string, textSizing: ScratchTextSizing) =>
+      updateScratchNodeData(id, { textSizing }),
+    [updateScratchNodeData],
+  );
+
+  const updateScratchTextAlign = useCallback(
+    (id: string, textAlign: ScratchTextAlign) =>
+      updateScratchNodeData(id, { textAlign }),
+    [updateScratchNodeData],
+  );
+
   const addScratchNode = useCallback(
-    (kind: ScratchNodeKind) => {
-      const spawnIndex = spawnCountRef.current;
-      spawnCountRef.current = (spawnCountRef.current + 1) % 8;
-      const position = computeScratchSpawnPosition(system, spawnIndex);
+    (
+      kind: ScratchNodeKind,
+      position: { x: number; y: number },
+      size?: { width: number; height: number },
+    ) => {
       const fill =
         kind === "swatch"
           ? SCRATCH_DEFAULT_SWATCH_FILL
           : SCRATCH_DEFAULT_TEXT_FILL;
-      const node = toScratchFlowNode(createScratchNode(kind, fill, position));
+      const node = toScratchFlowNode(createScratchNode(kind, fill, position, size));
       node.selected = true;
       scratchOrderRef.current = [node.id];
       setSelection(null);
@@ -902,8 +935,131 @@ export function ColorSandboxPage() {
         node,
       ]);
     },
-    [setScratchNodes, system],
+    [setScratchNodes],
   );
+
+  const handleScratchDrawPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!armedScratchKind || readOnly || event.button !== 0 || !event.isPrimary) return;
+      const target = event.target as Element | null;
+      if (!target?.closest(".react-flow__pane")) return;
+
+      const startFlow = flowRef.current?.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      if (!startFlow) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const startClient = { x: event.clientX, y: event.clientY };
+      setSelection(null);
+      clearScratchSelection();
+      setScratchDraw({
+        kind: armedScratchKind,
+        pointerId: event.pointerId,
+        startFlow,
+        currentFlow: startFlow,
+        startClient,
+        currentClient: startClient,
+      });
+    },
+    [armedScratchKind, clearScratchSelection, readOnly],
+  );
+
+  const handleScratchDrawPointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!scratchDraw || event.pointerId !== scratchDraw.pointerId) return;
+      const currentFlow = flowRef.current?.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      if (!currentFlow) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      setScratchDraw({
+        ...scratchDraw,
+        currentFlow,
+        currentClient: { x: event.clientX, y: event.clientY },
+      });
+    },
+    [scratchDraw],
+  );
+
+  const finishScratchDraw = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!scratchDraw || event.pointerId !== scratchDraw.pointerId) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+
+      const dx = scratchDraw.currentFlow.x - scratchDraw.startFlow.x;
+      const dy = scratchDraw.currentFlow.y - scratchDraw.startFlow.y;
+      const distance = Math.hypot(
+        scratchDraw.currentClient.x - scratchDraw.startClient.x,
+        scratchDraw.currentClient.y - scratchDraw.startClient.y,
+      );
+
+      if (distance < SCRATCH_DRAW_CLICK_DISTANCE) {
+        addScratchNode(scratchDraw.kind, scratchDraw.startFlow);
+      } else {
+        const minHeight =
+          scratchDraw.kind === "text" ? SCRATCH_TEXT_MIN_HEIGHT : SCRATCH_DRAW_MIN_SIZE;
+        const position = {
+          x: Math.min(scratchDraw.startFlow.x, scratchDraw.currentFlow.x),
+          y: Math.min(scratchDraw.startFlow.y, scratchDraw.currentFlow.y),
+        };
+        const size = {
+          width: Math.max(Math.abs(dx), SCRATCH_DRAW_MIN_SIZE),
+          height: Math.max(Math.abs(dy), minHeight),
+        };
+        addScratchNode(scratchDraw.kind, position, size);
+      }
+
+      setScratchDraw(null);
+      setArmedScratchKind(null);
+      setCanvasTool("select");
+    },
+    [addScratchNode, scratchDraw],
+  );
+
+  const cancelScratchDraw = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!scratchDraw || event.pointerId !== scratchDraw.pointerId) return;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      setScratchDraw(null);
+    },
+    [scratchDraw],
+  );
+
+  const scratchDrawPreviewStyle = useMemo<CSSProperties | null>(() => {
+    if (!scratchDraw) return null;
+    const bounds = canvasWrapRef.current?.getBoundingClientRect();
+    if (!bounds) return null;
+    const left = Math.min(scratchDraw.startClient.x, scratchDraw.currentClient.x);
+    const top = Math.min(scratchDraw.startClient.y, scratchDraw.currentClient.y);
+    const width = Math.abs(scratchDraw.currentClient.x - scratchDraw.startClient.x);
+    const height = Math.abs(scratchDraw.currentClient.y - scratchDraw.startClient.y);
+    return {
+      left: left - bounds.left,
+      top: top - bounds.top,
+      width,
+      height,
+    };
+  }, [scratchDraw]);
+
+  useEffect(() => {
+    if (!readOnly) return;
+    setArmedScratchKind(null);
+    setScratchDraw(null);
+  }, [readOnly]);
 
   const duplicateScratch = useCallback(() => {
     setScratchNodes((current) => {
@@ -956,27 +1112,9 @@ export function ColorSandboxPage() {
     setScratchNodes((current) => current.filter((node) => !node.selected));
   }, [setScratchNodes]);
 
-  const syncScratchTextWidth = useCallback(
-    (id: string, text: string) => {
-      const width = measureScratchTextWidth(text);
-      setScratchNodes((current) =>
-        current.map((node) => {
-          if (node.id !== id || node.data.kind !== "text") return node;
-          if (node.width === width) return node;
-          return {
-            ...node,
-            width,
-            style: { ...node.style, width, height: node.height },
-          };
-        }),
-      );
-    },
-    [setScratchNodes],
-  );
-
   const scratchActions = useMemo(
-    () => ({ updateScratchNode: updateScratchNodeData, syncScratchTextWidth }),
-    [updateScratchNodeData, syncScratchTextWidth],
+    () => ({ updateScratchNode: updateScratchNodeData }),
+    [updateScratchNodeData],
   );
 
   const buildAllNodes = useCallback((): Node[] => {
@@ -1237,38 +1375,17 @@ export function ColorSandboxPage() {
     return result;
   }, [system, theme, selection, stepFamily]);
 
-  // Load the working document whenever the brand changes.
+  // Load the working document once on mount.
   useLayoutEffect(() => {
-    setSystem(loadColorSandboxSystem(brandTheme));
+    setSystem(loadColorSandboxSystem());
     setSelection(null);
     signatureRef.current = "";
-  }, [brandTheme]);
+  }, []);
 
-  // Scratch nodes are scoped per brand; reload them on brand switch.
-  useLayoutEffect(() => {
-    const previousBrand = scratchBrandRef.current;
-    if (previousBrand !== brandTheme) {
-      // Flush the outgoing brand before loading the next — the persist effect can
-      // otherwise run with the new brand key and stale in-memory nodes.
-      persistScratchNodes(
-        previousBrand,
-        scratchNodesRef.current.map(fromScratchFlowNode),
-      );
-    }
-    scratchBrandRef.current = brandTheme;
-    scratchOrderRef.current = [];
-    const loaded = loadScratchNodes(brandTheme).map(toScratchFlowNode);
-    lastLoadedScratchRef.current = loaded;
-    setScratchNodes(loaded);
-  }, [brandTheme, setScratchNodes]);
-
-  // Persist scratch nodes for the current brand (shared across light/dark).
+  // Persist scratch nodes (shared across light/dark).
   useEffect(() => {
     if (scratchNodes === lastLoadedScratchRef.current) return;
-    persistScratchNodes(
-      scratchBrandRef.current,
-      scratchNodes.map(fromScratchFlowNode),
-    );
+    persistScratchNodes(scratchNodes.map(fromScratchFlowNode));
   }, [scratchNodes]);
 
   // Selecting a color collection element clears any scratch selection.
@@ -1299,7 +1416,7 @@ export function ColorSandboxPage() {
 
   function resetDraft() {
     const fresh =
-      brandTheme === "codeAi" ? buildCodeAiColorSystem() : buildColorSystem();
+      buildCodeAiColorSystem();
     setSelection(null);
     signatureRef.current = "";
     applyChange(fresh);
@@ -1555,6 +1672,24 @@ export function ColorSandboxPage() {
       data-theme={theme}
       style={cardChromeStyle}
     >
+      <header className={styles.header}>
+        <div className={styles.headerLogo} aria-label="Color sandbox">
+          <Logo />
+        </div>
+        <AppButton
+          variant="secondary"
+          tone="white"
+          size="s"
+          iconName={exported ? "check" : "download"}
+          className={styles.headerExportButton}
+          onClick={downloadExport}
+          aria-label={exported ? "Exported" : "Export CSS"}
+        >
+          Export CSS
+        </AppButton>
+      </header>
+
+      <div className={styles.body}>
       <DndContext
         sensors={readOnly ? [] : sensors}
         collisionDetection={colorSystemCollisionDetection}
@@ -1563,8 +1698,18 @@ export function ColorSandboxPage() {
         onDragCancel={handleDragCancel}
       >
       <ScratchActionsProvider value={scratchActions}>
+      <div
+        ref={canvasWrapRef}
+        className={styles.canvasWrap}
+        onPointerDownCapture={handleScratchDrawPointerDown}
+        onPointerMove={handleScratchDrawPointerMove}
+        onPointerUp={finishScratchDraw}
+        onPointerCancel={cancelScratchDraw}
+      >
       <ReactFlow
-        className={`${styles.flow} ${isGrabTool ? styles.flowGrab : styles.flowSelect}`}
+        className={`${styles.flow} ${
+          isGrabTool ? styles.flowGrab : isCreateTool ? styles.flowDraw : styles.flowSelect
+        }`}
         nodes={flowNodes}
         edges={edges}
         nodeTypes={allNodeTypes}
@@ -1574,6 +1719,7 @@ export function ColorSandboxPage() {
           flowRef.current = instance;
         }}
         onPaneClick={() => {
+          if (isCreateTool) return;
           setSelection(null);
           clearScratchSelection();
         }}
@@ -1585,7 +1731,7 @@ export function ColorSandboxPage() {
         panOnScroll
         panOnScrollMode={PanOnScrollMode.Free}
         panOnDrag={isGrabTool || readOnly}
-        selectionOnDrag={!isGrabTool && !readOnly}
+        selectionOnDrag={!isGrabTool && !isCreateTool && !readOnly}
         selectionMode={SelectionMode.Partial}
         zoomOnScroll={false}
         zoomOnPinch
@@ -1624,20 +1770,47 @@ export function ColorSandboxPage() {
           }}
           maskColor="color-mix(in srgb, var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary)) 70%, transparent)"
         />
+      </ReactFlow>
+      {scratchDrawPreviewStyle ? (
+        <div
+          className={styles.scratchDrawPreview}
+          style={scratchDrawPreviewStyle}
+          aria-hidden="true"
+        />
+      ) : null}
+      {readOnly ? null : (
+        <CanvasToolbar
+          canvasTool={canvasTool}
+          createTool={armedScratchKind}
+          onCanvasToolChange={handleCanvasToolChange}
+          onCreateToolChange={handleCreateToolChange}
+        />
+      )}
+      </div>
+      </ScratchActionsProvider>
 
-        <Panel position="top-right" className={styles.toolbarPanel}>
-          <div className={styles.toolbar}>
+      <DragOverlay dropAnimation={null}>
+        {activeDragLabel ? (
+          <div className={styles.dragOverlay}>{activeDragLabel}</div>
+        ) : null}
+      </DragOverlay>
+      </DndContext>
+
+      <ResizableHandle
+        onResize={(delta) =>
+          setPanelWidth((prev) =>
+            Math.max(SIDE_PANEL_MIN_W, Math.min(SIDE_PANEL_MAX_W, prev - delta)),
+          )
+        }
+      />
+
+      <aside
+        className={styles.sidePanel}
+        style={{ width: panelWidth }}
+        aria-label="Canvas options"
+      >
+        <div className={styles.sidePanelSettings}>
           <div className={styles.toolbarControls}>
-            <div className={styles.control}>
-              <span className={styles.controlLabel}>Brand</span>
-              <AppNativeSelect
-                value={brandTheme}
-                onValueChange={(value) => setBrandTheme(value as BrandTheme)}
-                options={BRAND_OPTIONS}
-                size="s"
-                tone="gray"
-              />
-            </div>
             <div className={styles.control}>
               <span className={styles.controlLabel}>Mode</span>
               <AppNativeSelect
@@ -1650,117 +1823,37 @@ export function ColorSandboxPage() {
             </div>
           </div>
           {readOnly ? null : (
-          <>
-          <div className={styles.toolbarInteractionSection}>
-            <div className={`${styles.toolbarToolGroup} ${styles.toolbarCanvasTools}`}>
-              <Tooltip content="Select" position="bottom">
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  size="s"
-                  iconName="arrow-pointer"
-                  className={
-                    canvasTool === "select"
-                      ? `${styles.toolbarIconButton} ${styles.toolbarToolActive}`
-                      : styles.toolbarIconButton
-                  }
-                  aria-label="Select"
-                  aria-pressed={canvasTool === "select"}
-                  onClick={() => handleCanvasToolChange("select")}
+            <>
+            <div className={styles.sidePanelSettingsDivider} role="separator" />
+            <div className={styles.toolbarPersistentRow}>
+              <label className={styles.runtimePreviewToggle}>
+                <AppCheckbox
+                  checkboxSize="s"
+                  checked={applyRuntime}
+                  onChange={(event) => toggleApplyRuntime(event.target.checked)}
                 />
-              </Tooltip>
-              <Tooltip content="Hand tool" position="bottom">
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  size="s"
-                  iconName="hand"
-                  className={
-                    canvasTool === "grab"
-                      ? `${styles.toolbarIconButton} ${styles.toolbarToolActive}`
-                      : styles.toolbarIconButton
-                  }
-                  aria-label="Hand tool"
-                  aria-pressed={canvasTool === "grab"}
-                  onClick={() => handleCanvasToolChange("grab")}
-                />
-              </Tooltip>
+                <span className={styles.runtimePreviewLabel}>Apply to app</span>
+              </label>
+              <div className={styles.toolbarIconActions}>
+                <Tooltip content="Reset draft" position="bottom">
+                  <AppButton
+                    variant="secondary"
+                    tone="gray"
+                    size="xs"
+                    iconName="rotate-left"
+                    className={styles.toolbarIconButton}
+                    onClick={resetDraft}
+                    aria-label="Reset draft"
+                  />
+                </Tooltip>
+              </div>
             </div>
-            <div className={styles.toolbarToolDivider} role="separator" />
-            <div className={`${styles.toolbarToolGroup} ${styles.toolbarCreateTools}`}>
-              <Tooltip content="Swatch" position="bottom">
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  size="s"
-                  iconName="square"
-                  className={styles.toolbarLabeledButton}
-                  aria-label="Add swatch"
-                  onClick={() => addScratchNode("swatch")}
-                >
-                  Swatch
-                </AppButton>
-              </Tooltip>
-              <Tooltip content="Text" position="bottom">
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  size="s"
-                  iconName="font"
-                  className={styles.toolbarLabeledButton}
-                  aria-label="Add text"
-                  onClick={() => addScratchNode("text")}
-                >
-                  Text
-                </AppButton>
-              </Tooltip>
-            </div>
-          </div>
-          <div className={styles.toolbarPersistentRow}>
-            <label className={styles.runtimePreviewToggle}>
-              <AppCheckbox
-                checkboxSize="s"
-                checked={applyRuntime}
-                onChange={(event) => toggleApplyRuntime(event.target.checked)}
-              />
-              <span className={styles.runtimePreviewLabel}>Apply to app</span>
-            </label>
-            <div className={styles.toolbarIconActions}>
-              <Tooltip content="Reset draft" position="bottom">
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  size="xs"
-                  iconName="rotate-left"
-                  className={styles.toolbarIconButton}
-                  onClick={resetDraft}
-                  aria-label="Reset draft"
-                />
-              </Tooltip>
-            </div>
-          </div>
-          </>
+            </>
           )}
-          <div className={styles.toolbarDivider} role="separator" />
-          <div className={styles.toolbarExportRow}>
-            <AppButton
-              variant="primary"
-              tone="purple"
-              size="s"
-              fullWidth
-              iconName={exported ? "check" : "download"}
-              className={styles.toolbarExportButton}
-              onClick={downloadExport}
-              aria-label={exported ? "Exported" : "Export CSS"}
-            >
-              Export CSS
-            </AppButton>
-          </div>
-          </div>
-        </Panel>
+        </div>
 
-        {selection ? (
-          <Panel position="bottom-right" className={styles.inspectorPanel}>
+        <div className={styles.sidePanelBody}>
+          {selection ? (
             <Inspector
               system={system}
               theme={theme}
@@ -1773,33 +1866,104 @@ export function ColorSandboxPage() {
               setSelection={setSelection}
               onClose={() => setSelection(null)}
             />
-          </Panel>
-        ) : null}
-
-        {!selection && hasSelectedScratch ? (
-          <Panel position="bottom-right" className={styles.inspectorPanel}>
+          ) : hasSelectedScratch ? (
             <ColorScratchToolbar
               nodes={selectedScratch}
               system={system}
+              theme={theme}
+              steps={steps}
               onUpdateFill={updateScratchFill}
               onUpdateBorder={updateScratchBorder}
+              onUpdateTextSizing={updateScratchTextSizing}
+              onUpdateTextAlign={updateScratchTextAlign}
               onDuplicate={duplicateScratch}
               onBringForward={bringScratchToFront}
               onSendToBack={sendScratchToBack}
               onDelete={deleteScratch}
               onClose={clearScratchSelection}
             />
-          </Panel>
-        ) : null}
-      </ReactFlow>
-      </ScratchActionsProvider>
+          ) : (
+            <div className={styles.sidePanelEmptyWrap}>
+              <div className={styles.sidePanelEmptyState}>
+                <div className={styles.sidePanelEmptyIcon}>
+                  <FaIcon name="arrow-pointer" size="l" />
+                </div>
+                <h2 className={styles.sidePanelEmptyTitle}>Nothing selected</h2>
+                <p className={styles.sidePanelEmptyText}>
+                  Select a collection, family, token, or scratch element on the
+                  canvas to see its options here.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
+      </div>
+    </div>
+  );
+}
 
-      <DragOverlay dropAnimation={null}>
-        {activeDragLabel ? (
-          <div className={styles.dragOverlay}>{activeDragLabel}</div>
-        ) : null}
-      </DragOverlay>
-      </DndContext>
+const CANVAS_TOOLS: { tool: ScratchCanvasTool; icon: FaIconName; label: string }[] = [
+  { tool: "select", icon: "arrow-pointer", label: "Select" },
+  { tool: "grab", icon: "hand", label: "Hand tool" },
+];
+
+const CREATE_TOOLS: { kind: ScratchNodeKind; icon: FaIconName; label: string }[] = [
+  { kind: "swatch", icon: "square", label: "Add swatch" },
+  { kind: "text", icon: "font", label: "Add text" },
+];
+
+function CanvasToolbar({
+  canvasTool,
+  createTool,
+  onCanvasToolChange,
+  onCreateToolChange,
+}: {
+  canvasTool: ScratchCanvasTool;
+  createTool: ScratchNodeKind | null;
+  onCanvasToolChange: (tool: ScratchCanvasTool) => void;
+  onCreateToolChange: (kind: ScratchNodeKind) => void;
+}) {
+  return (
+    <div
+      className={styles.canvasToolbar}
+      role="toolbar"
+      aria-label="Canvas tools"
+      aria-orientation="vertical"
+    >
+      {CANVAS_TOOLS.map((item) => (
+        <Tooltip key={item.tool} content={item.label} position="right">
+          <AppButton
+            variant="tertiary"
+            tone="black"
+            size="s"
+            iconName={item.icon}
+            className={
+              canvasTool === item.tool && createTool === null
+                ? styles.canvasToolActive
+                : undefined
+            }
+            aria-label={item.label}
+            aria-pressed={canvasTool === item.tool && createTool === null}
+            onClick={() => onCanvasToolChange(item.tool)}
+          />
+        </Tooltip>
+      ))}
+      <div className={styles.canvasToolbarDivider} role="separator" />
+      {CREATE_TOOLS.map((item) => (
+        <Tooltip key={item.kind} content={item.label} position="right">
+          <AppButton
+            variant="tertiary"
+            tone="black"
+            size="s"
+            iconName={item.icon}
+            className={createTool === item.kind ? styles.canvasToolActive : undefined}
+            aria-label={item.label}
+            aria-pressed={createTool === item.kind}
+            onClick={() => onCreateToolChange(item.kind)}
+          />
+        </Tooltip>
+      ))}
     </div>
   );
 }
@@ -1811,7 +1975,7 @@ function InspectorShell({
   actions,
 }: {
   label: string;
-  onClose: () => void;
+  onClose?: () => void;
   children: ReactNode;
   actions?: ReactNode;
 }) {
@@ -1819,15 +1983,17 @@ function InspectorShell({
     <div className={styles.inspector}>
       <div className={styles.inspectorHeader}>
         <span className={styles.inspectorHeaderLabel}>{label}</span>
-        <AppButton
-          className={styles.inspectorCloseButton}
-          variant="tertiary"
-          tone="gray"
-          size="xs"
-          iconName="xmark"
-          onClick={onClose}
-          aria-label="Close panel"
-        />
+        {onClose ? (
+          <AppButton
+            className={styles.inspectorCloseButton}
+            variant="tertiary"
+            tone="gray"
+            size="xs"
+            iconName="xmark"
+            onClick={onClose}
+            aria-label="Close panel"
+          />
+        ) : null}
       </div>
       <div className={styles.inspectorBody}>{children}</div>
       {actions ? (
@@ -1841,50 +2007,6 @@ function InspectorShell({
 
 function InspectorBodySection({ children }: { children: ReactNode }) {
   return <div className={styles.inspectorBodySection}>{children}</div>;
-}
-
-function ColorPreviewBar({ hex }: { hex: string }) {
-  const [copied, setCopied] = useState(false);
-  const unset = isUnsetPrimitiveHex(hex);
-  const transparent = !unset && isTransparentColor(hex);
-  const labelColor = unset
-    ? "var(--ds-text-neutral-quaternary)"
-    : readableTextOn(hex);
-  const displayHex = unset ? "Unset" : hex;
-
-  return (
-    <div
-      className={`${styles.colorPreviewBar} ${
-        unset || transparent ? styles.colorPreviewBarAlpha : ""
-      }`}
-      style={unset || transparent ? undefined : { background: cssColor(hex) }}
-    >
-      {transparent ? (
-        <span className={styles.colorPreviewBarFill} style={{ background: cssColor(hex) }} />
-      ) : null}
-      <span className={styles.colorPreviewBarHex} style={{ color: labelColor }}>
-        {displayHex}
-      </span>
-      {unset ? null : (
-        <Tooltip content={copied ? "Copied" : "Copy hex"} position="top">
-          <button
-            type="button"
-            className={styles.inlineCopyButton}
-            style={{ color: labelColor }}
-            aria-label={copied ? "Copied" : "Copy hex code"}
-            onClick={() => {
-              void navigator.clipboard.writeText(hex).then(() => {
-                setCopied(true);
-                window.setTimeout(() => setCopied(false), 1600);
-              });
-            }}
-          >
-            <FaIcon name={copied ? "check" : "clipboard"} size="xs" />
-          </button>
-        </Tooltip>
-      )}
-    </div>
-  );
 }
 
 function InspectorColorSwatch({
@@ -2651,39 +2773,35 @@ function Inspector({
           <VariableCopyBar cssVarReference={primitiveVarReference} />
         </InspectorBodySection>
         <InspectorBodySection>
-          <ColorPreviewBar hex={step.hex} />
           {readOnly ? null : (
-            <>
-              <div className={styles.inspectorControls}>
-                <input
-                  type="color"
-                  className={styles.colorInput}
-                  value={rgbHex(step.hex)}
-                  onChange={(event) =>
-                    applyChange(
-                      updatePrimitiveHex(
-                        system,
-                        step.id,
-                        mergePickerHex(step.hex, event.target.value),
-                      ),
-                    )
-                  }
-                  aria-label="Primitive color"
-                />
-                <HexField
-                  value={step.hex}
-                  onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
-                />
-              </div>
-              {isUnsetPrimitiveHex(step.hex) ? null : (
-                <AlphaField
-                  value={step.hex}
-                  onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
-                />
-              )}
-            </>
+            <div className={styles.inspectorFieldStack}>
+              <span className={styles.inspectorRowLabel}>HEX Value</span>
+              <HexColorField
+                value={step.hex}
+                onColorChange={(pickedHex) =>
+                  applyChange(
+                    updatePrimitiveHex(
+                      system,
+                      step.id,
+                      mergePickerHex(step.hex, pickedHex),
+                    ),
+                  )
+                }
+                onHexCommit={(hex) =>
+                  applyChange(updatePrimitiveHex(system, step.id, hex))
+                }
+              />
+            </div>
           )}
         </InspectorBodySection>
+        {isUnsetPrimitiveHex(step.hex) || readOnly ? null : (
+          <InspectorBodySection>
+            <AlphaField
+              value={step.hex}
+              onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
+            />
+          </InspectorBodySection>
+        )}
         <InspectorBodySection>
           {isUnsetPrimitiveHex(step.hex) ? (
             <p className={styles.inspectorMeta}>Set a hex value to run contrast checks.</p>
@@ -2771,7 +2889,8 @@ function Inspector({
         <VariableCopyBar cssVarReference={cssVarReference} />
       </InspectorBodySection>
       <InspectorBodySection>
-        <div className={styles.inspectorMappedPrimitive}>
+        <div className={`${styles.inspectorMappedPrimitive} ${styles.inspectorFieldStack}`}>
+          <span className={styles.inspectorRowLabel}>Mapped Primitive</span>
           <PrimitiveSwatchPicker
             system={system}
             value={refId}
@@ -2779,7 +2898,6 @@ function Inspector({
             onChange={(next) => applyChange(remapSemantic(system, token.id, theme, next))}
           />
         </div>
-        <ColorPreviewBar hex={hex} />
       </InspectorBodySection>
       <InspectorBodySection>
         <AccessibilityContrastSection
@@ -2918,26 +3036,50 @@ function AlphaField({
 
   return (
     <div className={styles.inspectorAlphaRow}>
-      <label className={styles.inspectorRowLabel} htmlFor="primitive-alpha">
-        Opacity
-      </label>
+      <div className={styles.inspectorAlphaHeader}>
+        <label className={styles.inspectorRowLabel} htmlFor="primitive-alpha">
+          Opacity
+        </label>
+        <span className={styles.alphaValue}>{alphaPercent}%</span>
+      </div>
       <div className={styles.inspectorAlphaControls}>
-        <input
+        <AppSlider
           id="primitive-alpha"
-          type="range"
-          className={styles.alphaInput}
           min={0}
           max={100}
           step={1}
+          size="s"
+          tone="brand"
           value={alphaPercent}
           disabled={readOnly}
-          onChange={(event) =>
-            onCommit(setHexAlpha(value, Number(event.target.value) / 100))
-          }
+          onValueChange={(nextValue) => onCommit(setHexAlpha(value, nextValue / 100))}
+          aria-label="Primitive opacity"
           aria-valuetext={`${alphaPercent}%`}
         />
-        <span className={styles.alphaValue}>{alphaPercent}%</span>
       </div>
+    </div>
+  );
+}
+
+function HexColorField({
+  value,
+  onColorChange,
+  onHexCommit,
+}: {
+  value: string;
+  onColorChange: (hex: string) => void;
+  onHexCommit: (hex: string) => void;
+}) {
+  return (
+    <div className={styles.hexColorField}>
+      <input
+        type="color"
+        className={styles.hexColorSwatch}
+        value={rgbHex(value)}
+        onChange={(event) => onColorChange(event.target.value)}
+        aria-label="Primitive color"
+      />
+      <HexField value={value} onCommit={onHexCommit} />
     </div>
   );
 }

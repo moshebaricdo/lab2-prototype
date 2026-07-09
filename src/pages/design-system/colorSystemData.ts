@@ -1,20 +1,17 @@
 /**
- * Color-system model for the design-system sandbox.
+ * Color-system model for the design-system sandbox (CodeAI-only).
  *
- * The sandbox is driven by the real exported design tokens (DTCG / Figma
- * format) rather than the repo's CSS, because the repo is not 1:1 with prod.
- * Primitives are grouped `collection → family → step` (full ramps), and the
- * light/dark semantic themes carry the real primitive references
- * (`com.figma.aliasData.targetVariableName`).
+ * The sandbox loads a committed CodeAI `ColorSystem` document
+ * (`codeAiColorSystem.json`) — primitives grouped
+ * `collection → family → step`, plus light/dark semantic themes with
+ * primitive / semantic refs. There is no per-brand or Code.org DTCG parse
+ * path here.
  *
- * The parsed `ColorSystem` is a plain, serialisable *document*: the sandbox
- * edits it in place (tweak hexes, remap semantics, rename / add / remove
- * families and collections) and persists the whole thing per brand.
+ * The `ColorSystem` is a plain, serialisable *document*: the sandbox edits
+ * it in place (tweak hexes, remap semantics, rename / add / remove families
+ * and collections) and persists the whole thing.
  */
 
-import primitivesCodeOrg from "./tokens/codeOrgPrimitives.json";
-import semanticsLightJson from "./tokens/semanticsLight.json";
-import semanticsDarkJson from "./tokens/semanticsDark.json";
 import codeAiColorSystemJson from "./tokens/codeAiColorSystem.json";
 
 export type ThemeKey = "light" | "dark";
@@ -145,7 +142,6 @@ const SEMANTIC_FAMILY_SUBGROUP: Record<string, string> = {
   info: "sentiment",
 };
 
-const COLLECTION_ORDER = ["neutral", "brand", "sentiment", "accent"];
 const SEMANTIC_FAMILY_ORDER = [
   "neutral",
   "teal",
@@ -158,42 +154,6 @@ const SEMANTIC_FAMILY_ORDER = [
   "success",
   "info",
 ];
-
-interface DtcgLeaf {
-  $type?: string;
-  $value?: { hex?: string; alpha?: number } | string;
-  $extensions?: {
-    "com.figma.aliasData"?: { targetVariableName?: string };
-  };
-}
-
-type DtcgNode = Record<string, unknown>;
-
-function isLeaf(value: unknown): value is DtcgLeaf {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    (value as DtcgLeaf).$type === "color"
-  );
-}
-
-function leafHex(leaf: DtcgLeaf): string {
-  const value = leaf.$value;
-  if (typeof value === "string") return "#000000";
-  if (!value?.hex) return "#000000";
-  const base = normalizeHex(value.hex) ?? value.hex.toUpperCase();
-  const alpha = value.alpha;
-  if (alpha == null || alpha >= 0.999) return base;
-  return `${base}${hexChannel(alpha * 255)}`;
-}
-
-function leafSemanticRefPath(leaf: DtcgLeaf): string | null {
-  const value = leaf.$value;
-  if (typeof value !== "string") return null;
-  const match = value.match(/^\{(.+)\}$/);
-  if (!match) return null;
-  return match[1].replace(/\./g, "/");
-}
 
 function parseHexChannels(hex: string): { r: number; g: number; b: number; a: number } {
   const normalized = hex.replace("#", "").toUpperCase();
@@ -449,54 +409,6 @@ function defaultHexForNewStep(family: PrimitiveFamily, stepLabel: string): strin
   }
 
   return sorted[sorted.length - 1].hex;
-}
-
-// ── parsing ─────────────────────────────────────────────────────────────
-
-interface ParsedPrimitives {
-  collections: Collection[];
-  families: PrimitiveFamily[];
-  /** `collection/family/step` → step id, for resolving semantic aliases. */
-  pathToStepId: Map<string, string>;
-}
-
-function parsePrimitives(root: DtcgNode): ParsedPrimitives {
-  const collections: Collection[] = [];
-  const families: PrimitiveFamily[] = [];
-  const pathToStepId = new Map<string, string>();
-
-  const collectionNames = Object.keys(root).filter((key) => !key.startsWith("$"));
-  collectionNames.sort((a, b) => {
-    const ai = COLLECTION_ORDER.indexOf(a);
-    const bi = COLLECTION_ORDER.indexOf(b);
-    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-  });
-
-  for (const collectionName of collectionNames) {
-    const collectionId = collectionName;
-    collections.push({ id: collectionId, name: collectionName });
-
-    const collectionNode = root[collectionName] as DtcgNode;
-    for (const familyName of Object.keys(collectionNode)) {
-      if (familyName.startsWith("$")) continue;
-      const familyNode = collectionNode[familyName] as DtcgNode;
-      const familyId = `${collectionId}::${familyName}`;
-      const steps: PrimitiveStep[] = [];
-
-      for (const stepName of Object.keys(familyNode)) {
-        if (stepName.startsWith("$")) continue;
-        const leaf = familyNode[stepName];
-        if (!isLeaf(leaf)) continue;
-        const stepId = `${familyId}::${stepName}`;
-        steps.push({ id: stepId, step: stepName, hex: leafHex(leaf) });
-        pathToStepId.set(`${collectionName}/${familyName}/${stepName}`, stepId);
-      }
-
-      families.push({ id: familyId, collectionId, name: familyName, steps });
-    }
-  }
-
-  return { collections, families, pathToStepId };
 }
 
 function reorderIdList(list: string[], activeId: string, overId: string): string[] {
@@ -775,113 +687,9 @@ export function ensureSemanticStructure(system: ColorSystem): ColorSystem {
   return next;
 }
 
-interface ParsedSemanticLeaf {
-  path: string;
-  surface: string;
-  familyKey: string;
-  role: string;
-  hex: string;
-  refPath: string | null;
-  semanticRefPath: string | null;
-}
-
-function parseSemanticLeaves(root: DtcgNode): ParsedSemanticLeaf[] {
-  const leaves: ParsedSemanticLeaf[] = [];
-
-  function walk(node: DtcgNode, segments: string[]) {
-    for (const key of Object.keys(node)) {
-      if (key.startsWith("$")) continue;
-      const value = node[key];
-      const nextSegments = [...segments, key];
-      if (isLeaf(value)) {
-        const surface = nextSegments[0];
-        const rest = nextSegments.slice(1);
-        const familyKey =
-          rest[0] === "brand" || rest[0] === "accent" ? rest[1] : rest[0];
-        const roleStart =
-          rest[0] === "brand" || rest[0] === "accent" ? 2 : 1;
-        const role = rest.slice(roleStart).join("-") || "default";
-        const alias =
-          value.$extensions?.["com.figma.aliasData"]?.targetVariableName ?? null;
-        leaves.push({
-          path: nextSegments.join("/"),
-          surface,
-          familyKey,
-          role,
-          hex: leafHex(value),
-          refPath: alias,
-          semanticRefPath: leafSemanticRefPath(value),
-        });
-      } else if (value && typeof value === "object") {
-        walk(value as DtcgNode, nextSegments);
-      }
-    }
-  }
-
-  walk(root, []);
-  return leaves;
-}
-
 /** Load the committed CodeAI ColorSystem export (primitives + semantics). */
 export function buildCodeAiColorSystem(): ColorSystem {
   return ensureSemanticStructure(codeAiColorSystemJson as ColorSystem);
-}
-
-export function buildColorSystem(): ColorSystem {
-  const { collections, families, pathToStepId } = parsePrimitives(
-    primitivesCodeOrg as DtcgNode,
-  );
-
-  const lightLeaves = parseSemanticLeaves(semanticsLightJson as DtcgNode);
-  const darkLeaves = parseSemanticLeaves(semanticsDarkJson as DtcgNode);
-  const darkByPath = new Map(darkLeaves.map((leaf) => [leaf.path, leaf]));
-
-  const semantics: SemanticToken[] = lightLeaves.map((light) => {
-    const dark = darkByPath.get(light.path) ?? light;
-    const resolve = (refPath: string | null) =>
-      refPath ? pathToStepId.get(refPath) ?? null : null;
-    return {
-      id: light.path,
-      surface: light.surface,
-      familyKey: light.familyKey,
-      role: light.role,
-      ref: { light: resolve(light.refPath), dark: resolve(dark.refPath) },
-      semanticRef: {
-        light: light.semanticRefPath,
-        dark: dark.semanticRefPath,
-      },
-      fallbackHex: { light: light.hex, dark: dark.hex },
-    };
-  });
-
-  const { semanticCollections, semanticSubGroups, semanticFamilies } =
-    buildSemanticStructure(semantics);
-
-  const draft: ColorSystem = {
-    collections,
-    families,
-    semanticCollections,
-    semanticSubGroups,
-    semanticFamilies,
-    semanticFamilySubGroups: defaultSemanticFamilySubGroups(
-      semanticFamilies.map((family) => family.id),
-    ),
-    primitiveFamilyOrders: Object.fromEntries(
-      collections.map((collection) => [
-        collection.id,
-        families
-          .filter((family) => family.collectionId === collection.id)
-          .map((family) => family.id),
-      ]),
-    ),
-    semantics,
-  };
-
-  return {
-    ...draft,
-    semanticFamilyOrders: buildDefaultSemanticFamilyOrders(draft),
-    semanticTokenOrders: buildDefaultSemanticTokenOrders(draft),
-  };
 }
 
 // ── derived lookups & display helpers ────────────────────────────────────
@@ -1114,16 +922,52 @@ export function semanticFamilyPathSegment(
   return slugify(family?.name ?? familyKey);
 }
 
-/** Flat `--ds-*` name (without prefix) for a semantic token. */
+/**
+ * Subgroups whose name is omitted from semantic CSS variable names (prod /
+ * Figma / exporter convention). `state` and `sentiment` are flat so names
+ * match Figma paths like `background/state/selected/primary` →
+ * `background-selected-primary`.
+ */
+export const FLAT_SEMANTIC_SUBGROUPS = new Set(["sentiment", "state"]);
+
+/**
+ * Subgroups with a single, by-design family whose name is omitted so the
+ * token stays color-agnostic (`background-brand-primary`, not
+ * `background-brand-purple-primary`).
+ */
+export const SINGLE_FAMILY_SEMANTIC_SUBGROUPS = new Set(["brand"]);
+
+/** Prod ships `border-*` (singular); the sandbox surface id is `borders`. */
+function exportSurfaceSlug(surface: string): string {
+  const s = slugify(surface);
+  return s === "borders" ? "border" : s;
+}
+
+/**
+ * Prod-style semantic CSS variable name (without `--ds-` prefix).
+ * Must stay in sync with colorSystemCssExport / scripts/colorSystemToCss.mjs
+ * and Figma variable paths.
+ */
 export function semanticTokenCssName(
   system: ColorSystem,
   token: Pick<SemanticToken, "id" | "surface" | "familyKey" | "role">,
 ): string {
-  const path = token.id || semanticTokenVariableName(system, token);
-  return path
-    .replace(/\//g, "-")
-    .replace(/[^a-zA-Z0-9-]/g, "-")
-    .toLowerCase();
+  const subGroupId = semanticSubGroupForFamily(system, token.familyKey);
+  const subGroup = system.semanticSubGroups?.find((item) => item.id === subGroupId);
+  const subName = slugify(subGroup?.name ?? subGroupId);
+  const familySegment = slugify(semanticFamilyPathSegment(system, token.familyKey));
+
+  const parts: string[] = [exportSurfaceSlug(token.surface)];
+  if (!FLAT_SEMANTIC_SUBGROUPS.has(subName)) parts.push(subName);
+  if (
+    !SINGLE_FAMILY_SEMANTIC_SUBGROUPS.has(subName) &&
+    familySegment !== subName &&
+    familySegment !== parts[parts.length - 1]
+  ) {
+    parts.push(familySegment);
+  }
+  parts.push(slugify(token.role));
+  return parts.join("-");
 }
 
 /** Resolved semantic tokens as flat `--ds-*` name → hex for one theme mode. */

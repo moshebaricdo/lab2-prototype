@@ -114,7 +114,7 @@ For brand themes (Code.org vs CodeAI), sandbox preview, active-state remaps, and
 ### Shared vs Lab-Specific
 
 - Universal primitives:
-  - `src/components/ui` (buttons, text fields, slider, tooltips, panel headers, ResizableHandle)
+  - `src/components/ui` (buttons, icon buttons, links, text fields, slider, tooltips, panel headers, ResizableHandle)
   - `src/components/ui/header` (top navigation, level progress)
   - `src/components/ui/icons` (FaIcon, AiTutorIcon, Logo)
 - Lab2 frame (shared by ALL level types):
@@ -182,7 +182,7 @@ Recent organization cleanup established:
 
 - `TopNavigation` + `LevelProgressBubbles` in `src/components/ui/header`
 - resource panel views in `src/components/lab2/resource-panel/views`
-- shared atoms (`AppButton`, `AppTextField`/`AppTextArea`, `AppSlider`, `AppTag`, `Tooltip`, `AlertBanner`) in `src/components/ui`
+- shared atoms (`AppButton`, `AppIconButton`, `AppLink`, `AppTextField`/`AppTextArea`, `AppSlider`, `AppTag`, `Tooltip`, `AlertBanner`) in `src/components/ui`
 - AI Chat Lab workspace chrome in `src/components/ide/aichatlab/views`
 - icon components in `src/components/ui/icons`
 - dev tools in `src/components/lab2/dev`

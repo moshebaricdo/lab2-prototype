@@ -1,111 +1,287 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
+import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { AppButton } from "../../components/ui/AppButton";
 import { Tooltip } from "../../components/ui/Tooltip";
 import { FaIcon } from "../../components/ui/icons/FaIcon";
-import type { ScratchFlowNode } from "../../lib/colorSandbox/scratchLayer";
+import type { FaIconName } from "../../icons/faProRegularCodepoints";
+import type {
+  ScratchFlowNode,
+  ScratchTextAlign,
+  ScratchTextSizing,
+} from "../../lib/colorSandbox/scratchLayer";
 import {
   contrastRatio,
+  familiesByCollection,
   formatContrastRatio,
   isTransparentColor,
-  normalizeHex,
   passesWcagAaNormalText,
   rgbHex,
+  semanticFamilyLabel,
+  semanticHex,
   surfaceColorContrastChecks,
+  sortPrimitiveSteps,
+  stepIndex,
   type ColorSystem,
   type ContrastCheck,
+  type PrimitiveStep,
+  type ThemeKey,
 } from "./colorSystemData";
 import styles from "./ColorSandboxPage.module.scss";
 
-interface PaletteSwatch {
-  hex: string;
+type ScratchPickerTab = "primitive" | "semantic";
+
+interface ScratchPickerPrimitiveGroup {
+  id: string;
   label: string;
+  steps: Array<PrimitiveStep & { familyName: string }>;
 }
 
-const SCRATCH_DEFAULT_BORDER = "#D0D5DD";
+interface ScratchPickerSemanticOption {
+  id: string;
+  label: string;
+  hex: string;
+}
 
-function ScratchHexField({
+function ScratchPickerSwatch({ hex }: { hex: string }) {
+  return (
+    <span
+      className={styles.scratchColorPickerSwatch}
+      style={{ background: rgbHex(hex) }}
+      aria-hidden="true"
+    />
+  );
+}
+
+function ScratchColorPicker({
   value,
-  onCommit,
+  system,
+  theme,
+  steps,
+  placeholder,
   ariaLabel,
+  onChange,
 }: {
   value: string;
-  onCommit: (hex: string) => void;
+  system: ColorSystem;
+  theme: ThemeKey;
+  steps: ReturnType<typeof stepIndex>;
+  placeholder: string;
   ariaLabel: string;
+  onChange: (hex: string) => void;
 }) {
-  const opaque = rgbHex(value);
-  const [draft, setDraft] = useState(opaque);
-  useEffect(() => setDraft(opaque), [opaque]);
+  const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<ScratchPickerTab>("primitive");
+  const opaque = value.trim().length > 0 ? rgbHex(value) : "";
+
+  const primitiveGroups = useMemo<ScratchPickerPrimitiveGroup[]>(
+    () =>
+      system.collections.flatMap((collection) =>
+        familiesByCollection(system, collection.id)
+          .map((family) => ({
+            id: family.id,
+            label: `${collection.name} / ${family.name}`,
+            steps: sortPrimitiveSteps(family.steps)
+              .filter((step) => !isTransparentColor(step.hex))
+              .map((step) => ({ ...step, familyName: family.name })),
+          }))
+          .filter((group) => group.steps.length > 0),
+      ),
+    [system],
+  );
+
+  const semanticOptions = useMemo<ScratchPickerSemanticOption[]>(
+    () =>
+      [...system.semantics]
+        .map((token) => {
+          const hex = semanticHex(system, token, theme, steps);
+          return {
+            id: token.id,
+            hex,
+            label: `${token.surface} / ${semanticFamilyLabel(system, token.familyKey)} / ${token.role}`,
+          };
+        })
+        .filter((option) => !isTransparentColor(option.hex))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [system, steps, theme],
+  );
+
+  const selectedLabel = useMemo(() => {
+    if (!opaque) return placeholder;
+    for (const group of primitiveGroups) {
+      const match = group.steps.find((step) => rgbHex(step.hex) === opaque);
+      if (match) return `${match.familyName}-${match.step}`;
+    }
+    const semanticMatch = semanticOptions.find((option) => rgbHex(option.hex) === opaque);
+    return semanticMatch?.label ?? opaque;
+  }, [opaque, placeholder, primitiveGroups, semanticOptions]);
+
+  const commit = (hex: string) => {
+    onChange(rgbHex(hex));
+    setOpen(false);
+  };
 
   return (
-    <input
-      className={styles.hexInput}
-      value={draft}
-      spellCheck={false}
-      maxLength={7}
-      aria-label={ariaLabel}
-      onChange={(event) => {
-        const next = event.target.value.toUpperCase().replace(/[^#0-9A-F]/g, "");
-        setDraft(next.length > 7 ? next.slice(0, 7) : next);
-      }}
-      onBlur={() => {
-        const next = normalizeHex(draft);
-        if (next) {
-          const rgb = rgbHex(next);
-          if (rgb !== opaque) onCommit(rgb);
-          setDraft(rgb);
-          return;
-        }
-        setDraft(opaque);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") event.currentTarget.blur();
-      }}
-    />
+    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+      <PopoverPrimitive.Trigger asChild>
+        <button
+          type="button"
+          className={styles.primitiveSwatchPickerTrigger}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label={ariaLabel}
+        >
+          {opaque ? (
+            <span
+              className={styles.primitiveSwatchPickerTriggerSwatch}
+              style={{ background: opaque }}
+              aria-hidden="true"
+            />
+          ) : (
+            <span className={styles.primitiveSwatchPickerTriggerSwatchEmpty} aria-hidden="true" />
+          )}
+          <span
+            className={`${styles.primitiveSwatchPickerTriggerLabel} ${
+              opaque ? "" : styles.primitiveSwatchPickerTriggerPlaceholder
+            }`}
+          >
+            {selectedLabel}
+          </span>
+          <FaIcon
+            name={open ? "chevron-up" : "chevron-down"}
+            size="xs"
+            className={styles.primitiveSwatchPickerTriggerChevron}
+          />
+        </button>
+      </PopoverPrimitive.Trigger>
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Content
+          className={styles.primitiveSwatchPickerPopover}
+          align="start"
+          side="bottom"
+          sideOffset={4}
+          onOpenAutoFocus={(event) => event.preventDefault()}
+        >
+          <div className={styles.scratchColorPickerTabs} role="tablist" aria-label="Color source">
+            <button
+              type="button"
+              className={`${styles.scratchColorPickerTab} ${
+                tab === "primitive" ? styles.scratchColorPickerTabActive : ""
+              }`}
+              role="tab"
+              aria-selected={tab === "primitive"}
+              onClick={() => setTab("primitive")}
+            >
+              Primitive
+            </button>
+            <button
+              type="button"
+              className={`${styles.scratchColorPickerTab} ${
+                tab === "semantic" ? styles.scratchColorPickerTabActive : ""
+              }`}
+              role="tab"
+              aria-selected={tab === "semantic"}
+              onClick={() => setTab("semantic")}
+            >
+              Semantic
+            </button>
+          </div>
+
+          {tab === "primitive" ? (
+            <div className={styles.primitiveSwatchPickerScroll}>
+              {primitiveGroups.map((group, groupIndex) => (
+                <div key={group.id} className={styles.primitiveSwatchPickerFamily}>
+                  {groupIndex > 0 ? (
+                    <div className={styles.primitiveSwatchPickerDivider} role="presentation" />
+                  ) : null}
+                  <div
+                    className={styles.primitiveSwatchPickerRow}
+                    style={
+                      {
+                        "--swatch-count": group.steps.length,
+                      } as CSSProperties
+                    }
+                  >
+                    {group.steps.map((step) => {
+                      const hex = rgbHex(step.hex);
+                      const isSelected = opaque === hex;
+                      return (
+                        <button
+                          key={step.id}
+                          type="button"
+                          className={`${styles.primitiveSwatchPickerStep} ${
+                            isSelected ? styles.primitiveSwatchPickerStepSelected : ""
+                          }`}
+                          onClick={() => commit(hex)}
+                          title={`${group.label} / ${step.step} · ${hex}`}
+                          aria-label={`Use ${group.label} ${step.step}`}
+                          aria-pressed={isSelected}
+                        >
+                          <ScratchPickerSwatch hex={hex} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.scratchColorPickerSemanticList}>
+              {semanticOptions.map((option) => {
+                const hex = rgbHex(option.hex);
+                const isSelected = opaque === hex;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`${styles.scratchColorPickerSemanticOption} ${
+                      isSelected ? styles.scratchColorPickerSemanticOptionSelected : ""
+                    }`}
+                    onClick={() => commit(hex)}
+                    aria-label={`Use ${option.label}`}
+                    aria-pressed={isSelected}
+                  >
+                    <ScratchPickerSwatch hex={hex} />
+                    <span className={styles.scratchColorPickerSemanticLabel}>
+                      {option.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
   );
 }
 
 function FillControl({
   label,
   value,
-  palette,
+  system,
+  theme,
+  steps,
   onChange,
 }: {
   label: string;
   value: string;
-  palette?: PaletteSwatch[];
+  system: ColorSystem;
+  theme: ThemeKey;
+  steps: ReturnType<typeof stepIndex>;
   onChange: (hex: string) => void;
 }) {
-  const opaque = rgbHex(value);
-  const commitOpaque = (hex: string) => onChange(rgbHex(hex));
-
   return (
-    <div className={styles.inspectorRow}>
+    <div className={styles.inspectorFieldStack}>
       <span className={styles.inspectorRowLabel}>{label}</span>
-      <div className={styles.inspectorInlineField}>
-        <input
-          type="color"
-          className={styles.colorInput}
-          value={opaque}
-          aria-label={label}
-          onChange={(event) => commitOpaque(event.target.value)}
-        />
-        <ScratchHexField value={opaque} onCommit={commitOpaque} ariaLabel={label} />
-      </div>
-      {palette && palette.length > 0 ? (
-        <div className={styles.scratchPalette}>
-          {palette.map((swatch) => (
-            <button
-              key={`${swatch.label}-${swatch.hex}`}
-              type="button"
-              className={styles.scratchPaletteSwatch}
-              style={{ background: swatch.hex }}
-              title={`${swatch.label} (${swatch.hex})`}
-              aria-label={`${swatch.label} ${swatch.hex}`}
-              onClick={() => commitOpaque(swatch.hex)}
-            />
-          ))}
-        </div>
-      ) : null}
+      <ScratchColorPicker
+        value={value}
+        system={system}
+        theme={theme}
+        steps={steps}
+        placeholder="Choose color"
+        ariaLabel={label}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -113,40 +289,35 @@ function FillControl({
 function BorderControl({
   label,
   value,
-  palette,
+  system,
+  theme,
+  steps,
   onChange,
   onClear,
 }: {
   label: string;
   value: string;
-  palette?: PaletteSwatch[];
+  system: ColorSystem;
+  theme: ThemeKey;
+  steps: ReturnType<typeof stepIndex>;
   onChange: (hex: string) => void;
   onClear: () => void;
 }) {
   const hasBorder = value.trim().length > 0;
-  const opaque = hasBorder ? rgbHex(value) : SCRATCH_DEFAULT_BORDER;
-  const commitOpaque = (hex: string) => onChange(rgbHex(hex));
 
   return (
-    <div className={styles.inspectorRow}>
+    <div className={styles.inspectorFieldStack}>
       <span className={styles.inspectorRowLabel}>{label}</span>
-      <div className={styles.inspectorInlineField}>
-        <input
-          type="color"
-          className={styles.colorInput}
-          value={opaque}
-          aria-label={label}
-          onChange={(event) => commitOpaque(event.target.value)}
+      <div className={styles.scratchColorFieldRow}>
+        <ScratchColorPicker
+          value={hasBorder ? value : ""}
+          system={system}
+          theme={theme}
+          steps={steps}
+          placeholder="None"
+          ariaLabel={label}
+          onChange={onChange}
         />
-        {hasBorder ? (
-          <ScratchHexField
-            value={opaque}
-            onCommit={commitOpaque}
-            ariaLabel={`${label} hex value`}
-          />
-        ) : (
-          <span className={styles.inspectorMeta}>None</span>
-        )}
         {hasBorder ? (
           <Tooltip content="Remove border" position="top">
             <AppButton
@@ -160,21 +331,6 @@ function BorderControl({
           </Tooltip>
         ) : null}
       </div>
-      {palette && palette.length > 0 ? (
-        <div className={styles.scratchPalette}>
-          {palette.map((swatch) => (
-            <button
-              key={`${swatch.label}-${swatch.hex}`}
-              type="button"
-              className={styles.scratchPaletteSwatch}
-              style={{ background: swatch.hex }}
-              title={`${swatch.label} (${swatch.hex})`}
-              aria-label={`${swatch.label} ${swatch.hex}`}
-              onClick={() => commitOpaque(swatch.hex)}
-            />
-          ))}
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -210,6 +366,16 @@ const KIND_LABEL: Record<string, string> = {
   text: "Text",
 };
 
+const TEXT_ALIGN_OPTIONS: Array<{
+  value: ScratchTextAlign;
+  icon: FaIconName;
+  label: string;
+}> = [
+  { value: "left", icon: "align-left", label: "Align left" },
+  { value: "center", icon: "align-center", label: "Align center" },
+  { value: "right", icon: "align-right", label: "Align right" },
+];
+
 function fillLabel(kind: string): string {
   return kind === "text" ? "Text color" : "Fill";
 }
@@ -234,8 +400,12 @@ function borderGroupLabel(nodes: ScratchFlowNode[], totalSwatches: number): stri
 export function ColorScratchToolbar({
   nodes,
   system,
+  theme,
+  steps,
   onUpdateFill,
   onUpdateBorder,
+  onUpdateTextSizing,
+  onUpdateTextAlign,
   onDuplicate,
   onBringForward,
   onSendToBack,
@@ -244,27 +414,18 @@ export function ColorScratchToolbar({
 }: {
   nodes: ScratchFlowNode[];
   system: ColorSystem;
+  theme: ThemeKey;
+  steps: ReturnType<typeof stepIndex>;
   onUpdateFill: (id: string, hex: string) => void;
   onUpdateBorder: (id: string, hex: string) => void;
+  onUpdateTextSizing: (id: string, textSizing: ScratchTextSizing) => void;
+  onUpdateTextAlign: (id: string, textAlign: ScratchTextAlign) => void;
   onDuplicate: () => void;
   onBringForward: () => void;
   onSendToBack: () => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
-  const palette = useMemo<PaletteSwatch[]>(
-    () =>
-      system.families.flatMap((family) =>
-        family.steps
-          .filter((step) => !isTransparentColor(step.hex))
-          .map((step) => ({
-            hex: rgbHex(step.hex),
-            label: `${family.name}-${step.step}`,
-          })),
-      ),
-    [system],
-  );
-
   const fillGroups = useMemo(() => {
     const groups = new Map<
       string,
@@ -289,6 +450,10 @@ export function ColorScratchToolbar({
 
   const swatchNodes = useMemo(
     () => nodes.filter((node) => node.data.kind === "swatch"),
+    [nodes],
+  );
+  const textNodes = useMemo(
+    () => nodes.filter((node) => node.data.kind === "text"),
     [nodes],
   );
 
@@ -322,6 +487,20 @@ export function ColorScratchToolbar({
   const label = isMulti
     ? `${nodes.length} selected`
     : KIND_LABEL[nodes[0].data.kind] ?? "Element";
+  const textSizingValues = new Set(
+    textNodes.map((node) => node.data.textSizing ?? "hug"),
+  );
+  const textAlignValues = new Set(
+    textNodes.map((node) => node.data.textAlign ?? "left"),
+  );
+  const textSizing =
+    textSizingValues.size === 1
+      ? (Array.from(textSizingValues)[0] as ScratchTextSizing)
+      : null;
+  const textAlign =
+    textAlignValues.size === 1
+      ? (Array.from(textAlignValues)[0] as ScratchTextAlign)
+      : null;
 
   const a11y = (() => {
     if (isMulti) {
@@ -382,28 +561,28 @@ export function ColorScratchToolbar({
       </div>
 
       <div className={styles.scratchInspectorBody}>
-        <div className={styles.inspectorSection}>
-          {fillGroups.map((group, index) => (
+        {fillGroups.map((group) => (
+          <div className={styles.inspectorSection} key={`fill-${group.hex}`}>
             <FillControl
-              key={group.hex}
               label={fillGroupLabel(group.nodes, nodes.length)}
               value={group.hex}
-              palette={!isMulti && index === 0 ? palette : undefined}
+              system={system}
+              theme={theme}
+              steps={steps}
               onChange={(hex) => {
                 group.nodes.forEach((node) => onUpdateFill(node.id, hex));
               }}
             />
-          ))}
-          {borderGroups.map((group, index) => (
+          </div>
+        ))}
+        {borderGroups.map((group) => (
+          <div className={styles.inspectorSection} key={`border-${group.border || "__none__"}`}>
             <BorderControl
-              key={group.border || "__none__"}
               label={borderGroupLabel(group.nodes, swatchNodes.length)}
               value={group.border}
-              palette={
-                swatchNodes.length === 1 && nodes.length === 1 && index === 0
-                  ? palette
-                  : undefined
-              }
+              system={system}
+              theme={theme}
+              steps={steps}
               onChange={(hex) => {
                 group.nodes.forEach((node) => onUpdateBorder(node.id, hex));
               }}
@@ -411,8 +590,74 @@ export function ColorScratchToolbar({
                 group.nodes.forEach((node) => onUpdateBorder(node.id, ""));
               }}
             />
-          ))}
-        </div>
+          </div>
+        ))}
+
+        {textNodes.length > 0 ? (
+          <div className={styles.inspectorSection}>
+            <div className={styles.inspectorFieldStack}>
+              <span className={styles.inspectorRowLabel}>
+                {textNodes.length === nodes.length ? "Text box" : "Text boxes"}
+              </span>
+              <div className={styles.scratchTextControls}>
+                <Tooltip
+                  content={
+                    textSizing === "fixed"
+                      ? "Switch to hug text"
+                      : "Switch to fixed size"
+                  }
+                  position="top"
+                >
+                  <AppButton
+                    variant="secondary"
+                    tone="gray"
+                    size="xs"
+                    iconName={textSizing === "fixed" ? "text-width" : "arrows-left-right"}
+                    className={
+                      textSizing === "fixed" ? styles.scratchTextControlActive : undefined
+                    }
+                    aria-label={
+                      textSizing === "fixed"
+                        ? "Switch text box to hug text"
+                        : "Switch text box to fixed size"
+                    }
+                    aria-pressed={textSizing === "fixed"}
+                    onClick={() => {
+                      const nextSizing: ScratchTextSizing =
+                        textSizing === "fixed" ? "hug" : "fixed";
+                      textNodes.forEach((node) => onUpdateTextSizing(node.id, nextSizing));
+                    }}
+                  />
+                </Tooltip>
+
+                <div className={styles.scratchTextControlDivider} role="separator" />
+
+                {TEXT_ALIGN_OPTIONS.map((option) => (
+                  <Tooltip key={option.value} content={option.label} position="top">
+                    <AppButton
+                      variant="secondary"
+                      tone="gray"
+                      size="xs"
+                      iconName={option.icon}
+                      className={
+                        textAlign === option.value
+                          ? styles.scratchTextControlActive
+                          : undefined
+                      }
+                      aria-label={option.label}
+                      aria-pressed={textAlign === option.value}
+                      onClick={() => {
+                        textNodes.forEach((node) =>
+                          onUpdateTextAlign(node.id, option.value),
+                        );
+                      }}
+                    />
+                  </Tooltip>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {canShowA11y ? (
           <div className={styles.inspectorSection}>

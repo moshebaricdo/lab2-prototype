@@ -3,7 +3,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -16,7 +15,6 @@ import styles from "./ColorScratchNodes.module.scss";
 
 interface ScratchActions {
   updateScratchNode: (id: string, partial: Partial<ScratchNodeData>) => void;
-  syncScratchTextWidth: (id: string, text: string) => void;
 }
 
 const ScratchActionsContext = createContext<ScratchActions | null>(null);
@@ -44,7 +42,7 @@ function useScratchActions(): ScratchActions {
 }
 
 const RESIZER_LINE_STYLE = {
-  borderColor: "var(--ds-borders-brand-teal-primary)",
+  borderColor: "var(--ds-border-selected-primary)",
   borderWidth: 1,
 } as const;
 
@@ -53,15 +51,22 @@ const RESIZER_HANDLE_STYLE = {
   height: 8,
   borderRadius: 2,
   background: "var(--ds-background-neutral-primary)",
-  borderColor: "var(--ds-borders-brand-teal-primary)",
+  borderColor: "var(--ds-border-selected-primary)",
 } as const;
 
-function ScratchResizer({ selected }: { selected: boolean }) {
+function ScratchResizer({
+  selected,
+  onResizeStart,
+}: {
+  selected: boolean;
+  onResizeStart?: () => void;
+}) {
   return (
     <NodeResizer
       isVisible={selected}
       minWidth={24}
       minHeight={24}
+      onResizeStart={onResizeStart}
       lineStyle={RESIZER_LINE_STYLE}
       handleStyle={RESIZER_HANDLE_STYLE}
     />
@@ -85,8 +90,8 @@ export function ScratchSwatchNode({ data, selected }: NodeProps) {
 }
 
 export function ScratchTextNode({ id, data, selected }: NodeProps) {
-  const { fill, text } = data as ScratchNodeData;
-  const { updateScratchNode, syncScratchTextWidth } = useScratchActions();
+  const { fill, text, textAlign = "left" } = data as ScratchNodeData;
+  const { updateScratchNode } = useScratchActions();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(text);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -94,11 +99,6 @@ export function ScratchTextNode({ id, data, selected }: NodeProps) {
   useEffect(() => {
     if (!editing) setDraft(text);
   }, [text, editing]);
-
-  useLayoutEffect(() => {
-    if (editing) return;
-    syncScratchTextWidth(id, text || "Text");
-  }, [id, text, editing, syncScratchTextWidth]);
 
   useEffect(() => {
     if (editing) {
@@ -117,14 +117,19 @@ export function ScratchTextNode({ id, data, selected }: NodeProps) {
   return (
     <div
       className={`${styles.text} ${styles.scratchSurface} ${selected ? styles.selected : ""}`}
+      style={{ textAlign }}
       onDoubleClick={() => setEditing(true)}
     >
+      <ScratchResizer
+        selected={Boolean(selected)}
+        onResizeStart={() => updateScratchNode(id, { textSizing: "fixed" })}
+      />
       {editing ? (
         <textarea
           ref={textareaRef}
           className={`${styles.textInput} nodrag nopan`}
           value={draft}
-          style={{ color: fill }}
+          style={{ color: fill, textAlign }}
           spellCheck={false}
           onChange={(event) => setDraft(event.target.value)}
           onPointerDown={(event) => event.stopPropagation()}

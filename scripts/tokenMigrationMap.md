@@ -1,34 +1,33 @@
-# Token migration map (Code.org legacy → canonical names)
+# Token migration map (CodeAI)
 
-Applied during CodeAI theme migration. For **how the full theming stack works** (cascade layers, sandbox boundaries, CodeAI active-chrome experiment, semantic resolution), read **`src/guidelines/color-theming.md`** first.
+Historical rename table for the Code.org → CodeAI rebrand. Generator, Figma, and exporter now share one naming contract via `semanticTokenCssName` / `semanticExportVarName`.
 
-Code.org base tokens in `tokens.css` are unchanged; component styles reference palette-family tokens (`brand-teal`, `brand-purple`, `brand-aqua`, etc.) that resolve to brand-specific values via `data-brand-theme` + `globals.css` remaps.
+## Structural renames
 
-## Code.org vs CodeAI brand roles
+| Old (Code.org / dual-brand) | New (CodeAI) |
+|---|---|
+| `--ds-borders-*` | `--ds-border-*` |
+| `--ds-*-brand-purple-*` | `--ds-*-brand-*` (family collapsed) |
+| `--ds-*-brand-teal-*` / `--ds-*-brand-aqua-*` | `--ds-*-selected-*` (active chrome) or `--ds-*-brand-*` (actions) |
+| `--ds-background-pink-*` / `--ds-background-orange-*` | `--ds-background-accent-pink-*` / `--ds-background-accent-orange-*` |
+| `--ds-background-alpha-*` | `--ds-background-neutral-alpha-*` |
+| `--ds-*-extra-light` | `--ds-*-light` (or `mid` where appropriate) |
+| `--ds-background-neutral-lab` | `--ds-background-neutral-primary` |
+| `--ds-text-neutral-inverse` | `--ds-text-neutral-primary-inverse` |
+| `--elevation-sm` | `--shadow-lg` |
 
-| UI role | Code.org token family | CodeAI effective appearance |
-|---|---|---|
-| Chrome / nav / active / focus / selection | `brand-teal` | Neutral inverse (via `globals.css` active-chrome remap of `brand-teal-*`) |
-| Primary actions / CTAs | `brand-purple` | `brand-purple` |
-| AI / diff highlights (legacy) | `brand-aqua` | Neutral inverse (same remap as teal on CodeAI) |
+## Role guidance
 
-`tokens.css` CodeAI blocks alias `brand-teal-*` and `brand-aqua-*` to `brand-purple-*` at generation time. **`globals.css` then remaps those families again on CodeAI** for the active-state experiment — components should still author against `brand-teal` for chrome.
+| UI role | Token family |
+|---|---|
+| Primary buttons, links, global header | `brand` |
+| Segmented / chip / checkbox / tab / menu selected | `selected` |
+| Focus rings | `focused` (+ outline mixin) |
 
-`globals.css` keeps the historical Code.org split: `--primary` → purple (actions), `--accent` / `--ring` / `--sidebar-accent` → teal (interactive chrome). On CodeAI, `--accent` / `--ring` follow the active-chrome experiment variables.
+## Regenerating
 
-## Renames from legacy Code.org names
+```bash
+node scripts/generate-tokens.mjs
+```
 
-| Legacy token family | Canonical replacement | Notes |
-|---|---|---|
-| `--ds-*-accent-strawberry-*` | `--ds-*-brand-pink-*` | Pink is a brand family in CodeAI |
-| `--ds-*-accent-orange-*` | `--ds-*-brand-orange-*` | Orange is a brand family in CodeAI |
-| `--ds-text-neutral-inverse` | `--ds-text-neutral-primary-inverse` | Renamed neutral role; Code.org base also emits `primary-inverse` as an alias of `inverse` |
-| `--ds-borders-neutral-light` | `--ds-borders-neutral-secondary` | CodeAI uses secondary, not light |
-| `--ds-borders-neutral-strong` | `--ds-borders-neutral-secondary` | Gray control borders (buttons, dropdowns, fields); Code.org base also emits `secondary` as an alias of `strong` |
-| `--ds-background-neutral-lab` | `--ds-background-neutral-primary` | Lab surface → primary |
-| `--ds-background-selected-hover` | `--ds-background-selected-strong` | CodeAI selected state follows Figma `strong` naming |
-| `--ds-borders-selected-hover` | `--ds-borders-selected-strong` | CodeAI selected state follows Figma `strong` naming |
-
-Do **not** bulk-replace `brand-teal` → `brand-purple` in component styles; that collapses Code.org's two-color brand model. Use `brand-teal` for interactive chrome and `brand-purple` for actions.
-
-Syntax tokens (`--ds-syntax-*`) remain Code.org-only until a CodeAI syntax palette is defined.
+Source: `src/pages/design-system/tokens/codeAiColorSystem.json` → `src/styles/tokens.css` (`:root` / `.dark` only).

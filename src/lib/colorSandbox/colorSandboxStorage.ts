@@ -1,7 +1,5 @@
-import type { BrandTheme } from "../../hooks/useTheme";
 import {
   buildCodeAiColorSystem,
-  buildColorSystem,
   ensureSemanticStructure,
   isTransparentColor,
   mergeSemanticRefs,
@@ -17,9 +15,9 @@ export const COLOR_SANDBOX_RUNTIME_EVENT = "lab2:color-sandbox:updated";
  * Bump when the committed CodeAI baseline changes so stale localStorage drafts
  * are discarded and users load the bundled defaults instead.
  */
-export const COLOR_SANDBOX_CODEAI_BASELINE_VERSION = 8;
+export const COLOR_SANDBOX_CODEAI_BASELINE_VERSION = 9;
 
-export type StoredColorSandboxDocs = Partial<Record<BrandTheme, ColorSystem>>;
+type LegacyStoredDocs = { codeAi?: ColorSystem; codeOrg?: ColorSystem };
 
 function readColorSandboxDocVersion(): number {
   if (typeof window === "undefined") return COLOR_SANDBOX_CODEAI_BASELINE_VERSION;
@@ -32,36 +30,39 @@ function writeColorSandboxDocVersion(version: number): void {
   window.localStorage.setItem(COLOR_SANDBOX_DOC_VERSION_KEY, String(version));
 }
 
-/** Drop a stale CodeAI draft when the bundled baseline has been updated. */
-function discardStaleCodeAiDraftIfNeeded(): void {
+function readRawStoredDoc(): ColorSystem | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(COLOR_SANDBOX_DOC_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ColorSystem | LegacyStoredDocs;
+    // Flatten legacy per-brand map → single CodeAI doc
+    if (parsed && typeof parsed === "object" && "families" in parsed) {
+      return parsed as ColorSystem;
+    }
+    const legacy = parsed as LegacyStoredDocs;
+    return legacy.codeAi ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Drop a stale draft when the bundled baseline has been updated. */
+function discardStaleDraftIfNeeded(): void {
   if (typeof window === "undefined") return;
   if (readColorSandboxDocVersion() >= COLOR_SANDBOX_CODEAI_BASELINE_VERSION) return;
-
-  const docs = readColorSandboxDocs();
-  if (docs.codeAi) {
-    delete docs.codeAi;
-    window.localStorage.setItem(COLOR_SANDBOX_DOC_STORAGE_KEY, JSON.stringify(docs));
-  }
+  window.localStorage.removeItem(COLOR_SANDBOX_DOC_STORAGE_KEY);
   writeColorSandboxDocVersion(COLOR_SANDBOX_CODEAI_BASELINE_VERSION);
 }
 
-export function readColorSandboxDocs(): StoredColorSandboxDocs {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(COLOR_SANDBOX_DOC_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as StoredColorSandboxDocs) : {};
-  } catch {
-    return {};
-  }
+export function persistColorSandboxDoc(system: ColorSystem): void {
+  window.localStorage.setItem(COLOR_SANDBOX_DOC_STORAGE_KEY, JSON.stringify(system));
+  writeColorSandboxDocVersion(COLOR_SANDBOX_CODEAI_BASELINE_VERSION);
 }
 
-export function persistColorSandboxDoc(brand: BrandTheme, system: ColorSystem): void {
-  const docs = readColorSandboxDocs();
-  docs[brand] = system;
-  window.localStorage.setItem(COLOR_SANDBOX_DOC_STORAGE_KEY, JSON.stringify(docs));
-  if (brand === "codeAi") {
-    writeColorSandboxDocVersion(COLOR_SANDBOX_CODEAI_BASELINE_VERSION);
-  }
+export function readColorSandboxDoc(): ColorSystem | null {
+  discardStaleDraftIfNeeded();
+  return readRawStoredDoc();
 }
 
 export const COLOR_SANDBOX_READ_ONLY_KEY = "lab2:color-sandbox:read-only";
@@ -126,14 +127,11 @@ function restoreAlphaHexFromBuiltIn(stored: ColorSystem, fresh: ColorSystem): Co
   return changed ? next : stored;
 }
 
-/** Load the sandbox working document for a brand, merging persisted draft with bundled defaults. */
-export function loadColorSandboxSystem(brand: BrandTheme): ColorSystem {
-  const fresh =
-    brand === "codeAi" ? buildCodeAiColorSystem() : buildColorSystem();
-  if (brand === "codeAi") {
-    discardStaleCodeAiDraftIfNeeded();
-  }
-  const stored = readColorSandboxDocs()[brand];
+/** Load the sandbox working document, merging persisted draft with bundled defaults. */
+export function loadColorSandboxSystem(): ColorSystem {
+  const fresh = buildCodeAiColorSystem();
+  discardStaleDraftIfNeeded();
+  const stored = readRawStoredDoc();
   if (!stored?.families?.length) return fresh;
   const structured = ensureSemanticStructure(stored);
   const withSemanticRefs = mergeSemanticRefs(structured, fresh);

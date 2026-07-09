@@ -22,8 +22,7 @@ import type {
 } from "./colorSystemData";
 import {
   isUnsetPrimitiveHex,
-  semanticFamilyPathSegment,
-  semanticSubGroupForFamily,
+  semanticTokenCssName,
 } from "./colorSystemData";
 
 function slug(value: string): string {
@@ -44,58 +43,15 @@ export function primitiveVarName(
   return `${slug(family.collectionId)}-${slug(family.name)}-${slug(step.step)}`;
 }
 
-/** Prod ships `border-*` (singular); the sandbox surface id is `borders`. */
-function exportSurface(surface: string): string {
-  const s = slug(surface);
-  return s === "borders" ? "border" : s;
-}
-
 /**
- * Subgroups whose name is omitted from semantic variable names (prod
- * convention). `state` is flat so exported names match the generated
- * `--ds-*` names (which derive from token ids like `background/disabled/…`):
- * `background-selected-primary`, `background-disabled-neutral`.
- */
-const FLAT_SUBGROUPS = new Set(["sentiment", "state"]);
-
-/**
- * Subgroups with a single, by-design family whose name is omitted so the
- * token stays color-agnostic (e.g. `background-brand-primary`, not
- * `background-brand-purple-primary`). Future brand colors go into accents.
- */
-const SINGLE_FAMILY_SUBGROUPS = new Set(["brand"]);
-
-/**
- * Prod-style semantic variable name derived from current display names:
- * `{surface}-{subgroup?}-{family?}-{role}`.
- *
- * - `sentiment` and `state` subgroups are flat (e.g. `background-error-primary`,
- *   `background-selected-primary`, `background-disabled-neutral`).
- * - Other subgroups keep their name (e.g. `background-neutral-primary`).
- * - `brand` collapses its (single) family name so the token stays
- *   color-agnostic: `background-brand-primary`. Also collapses whenever the
- *   family name equals the subgroup name (e.g. the neutral gray family).
+ * Prod-style semantic variable name — delegated to colorSystemData so the
+ * generator, Figma sync, and exporter stay structurally identical.
  */
 export function semanticExportVarName(
   system: ColorSystem,
   token: SemanticToken,
 ): string {
-  const subGroupId = semanticSubGroupForFamily(system, token.familyKey);
-  const subGroup = system.semanticSubGroups?.find((item) => item.id === subGroupId);
-  const subName = slug(subGroup?.name ?? subGroupId);
-  const familySegment = slug(semanticFamilyPathSegment(system, token.familyKey));
-
-  const parts: string[] = [exportSurface(token.surface)];
-  if (!FLAT_SUBGROUPS.has(subName)) parts.push(subName);
-  if (
-    !SINGLE_FAMILY_SUBGROUPS.has(subName) &&
-    familySegment !== subName &&
-    familySegment !== parts[parts.length - 1]
-  ) {
-    parts.push(familySegment);
-  }
-  parts.push(slug(token.role));
-  return parts.join("-");
+  return semanticTokenCssName(system, token);
 }
 
 /* ---------------------------------------------------------------------------
