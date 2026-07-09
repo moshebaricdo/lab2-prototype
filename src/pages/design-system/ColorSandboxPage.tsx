@@ -2758,31 +2758,31 @@ function Inspector({
           <VariableCopyBar cssVarReference={primitiveVarReference} />
         </InspectorBodySection>
         <InspectorBodySection>
-          {readOnly ? null : (
-            <div className={styles.inspectorFieldStack}>
-              <span className={styles.inspectorRowLabel}>HEX Value</span>
-              <HexColorField
-                value={step.hex}
-                onColorChange={(pickedHex) =>
-                  applyChange(
-                    updatePrimitiveHex(
-                      system,
-                      step.id,
-                      mergePickerHex(step.hex, pickedHex),
-                    ),
-                  )
-                }
-                onHexCommit={(hex) =>
-                  applyChange(updatePrimitiveHex(system, step.id, hex))
-                }
-              />
-            </div>
-          )}
+          <div className={styles.inspectorFieldStack}>
+            <span className={styles.inspectorRowLabel}>HEX Value</span>
+            <HexColorField
+              value={step.hex}
+              readOnly={readOnly}
+              onColorChange={(pickedHex) =>
+                applyChange(
+                  updatePrimitiveHex(
+                    system,
+                    step.id,
+                    mergePickerHex(step.hex, pickedHex),
+                  ),
+                )
+              }
+              onHexCommit={(hex) =>
+                applyChange(updatePrimitiveHex(system, step.id, hex))
+              }
+            />
+          </div>
         </InspectorBodySection>
-        {isUnsetPrimitiveHex(step.hex) || readOnly ? null : (
+        {isUnsetPrimitiveHex(step.hex) ? null : (
           <InspectorBodySection>
             <AlphaField
               value={step.hex}
+              readOnly={readOnly}
               onCommit={(hex) => applyChange(updatePrimitiveHex(system, step.id, hex))}
             />
           </InspectorBodySection>
@@ -3048,23 +3048,30 @@ function AlphaField({
 
 function HexColorField({
   value,
+  readOnly,
   onColorChange,
   onHexCommit,
 }: {
   value: string;
+  readOnly?: boolean;
   onColorChange: (hex: string) => void;
   onHexCommit: (hex: string) => void;
 }) {
   return (
-    <div className={styles.hexColorField}>
+    <div
+      className={`${styles.hexColorField} ${
+        readOnly ? styles.hexColorFieldReadOnly : ""
+      }`}
+    >
       <input
         type="color"
         className={styles.hexColorSwatch}
         value={rgbHex(value)}
+        disabled={readOnly}
         onChange={(event) => onColorChange(event.target.value)}
         aria-label="Primitive color"
       />
-      <HexField value={value} onCommit={onHexCommit} />
+      <HexField value={value} readOnly={readOnly} onCommit={onHexCommit} />
     </div>
   );
 }

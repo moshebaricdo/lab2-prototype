@@ -1102,6 +1102,10 @@
   box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
 }
 
+.hexColorFieldReadOnly:focus-within {
+  box-shadow: none;
+}
+
 .hexColorSwatch {
   width: 26px;
   min-width: 26px;
@@ -1113,6 +1117,17 @@
   border-radius: 0;
   background: var(--sandbox-bg-neutral-primary, var(--ds-background-neutral-primary));
   cursor: pointer;
+}
+
+.hexColorSwatch:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.hexColorFieldReadOnly .hexInput:disabled {
+  color: var(--ds-text-neutral-primary);
+  opacity: 1;
+  cursor: default;
 }
 
 .hexColorSwatch::-webkit-color-swatch-wrapper {
