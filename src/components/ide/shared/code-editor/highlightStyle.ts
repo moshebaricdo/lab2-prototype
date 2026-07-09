@@ -2,36 +2,41 @@ import { HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 
 /**
- * Syntax highlight style mapping Lezer tags to design-system color tokens.
- *
- * Uses `*-fixed` brand color tokens so the editor reads consistently in both
- * light and dark themes (the editor surface uses fixed colors, not theme-mapped).
+ * CodeMirror highlight style → dedicated `--ds-syntax-*` tokens.
+ * Syntax colors are their own palette (not semantic UI roles); see
+ * `scripts/generate-tokens.mjs` SYNTAX_LIGHT / SYNTAX_DARK.
  */
 export const dsHighlightStyle = HighlightStyle.define([
   {
     tag: tags.comment,
-    color: "color-mix(in srgb, var(--ds-text-neutral-quaternary) 82%, transparent)",
+    color: "var(--ds-syntax-comment)",
     fontStyle: "italic",
   },
   {
     tag: [tags.tagName, tags.standard(tags.tagName)],
-    color: "var(--ds-text-brand-primary-fixed)",
+    color: "var(--ds-syntax-tag)",
     fontWeight: "var(--font-weight-medium)",
   },
   {
     tag: tags.attributeName,
-    color: "var(--ds-text-selected-primary)",
+    color: "var(--ds-syntax-attribute)",
   },
   {
     tag: [tags.string, tags.special(tags.string), tags.attributeValue],
-    color: "var(--ds-text-success-primary-fixed)",
+    color: "var(--ds-syntax-string)",
   },
   {
-    tag: tags.keyword,
-    color: "var(--ds-text-brand-primary-fixed)",
+    tag: [
+      tags.keyword,
+      tags.controlKeyword,
+      tags.definitionKeyword,
+      tags.moduleKeyword,
+      tags.operatorKeyword,
+    ],
+    color: "var(--ds-syntax-keyword)",
     fontWeight: "var(--font-weight-medium)",
   },
-  { tag: tags.number, color: "var(--ds-text-info-primary-fixed)" },
+  { tag: tags.number, color: "var(--ds-syntax-number)" },
   {
     tag: [
       tags.punctuation,
@@ -40,19 +45,46 @@ export const dsHighlightStyle = HighlightStyle.define([
       tags.operator,
       tags.angleBracket,
     ],
-    color: "color-mix(in srgb, var(--ds-text-neutral-secondary) 72%, transparent)",
+    color: "var(--ds-syntax-punctuation)",
   },
   {
-    tag: [tags.className, tags.definition(tags.className), tags.labelName],
-    color: "var(--ds-text-selected-primary)",
+    tag: [
+      tags.className,
+      tags.definition(tags.className),
+      tags.labelName,
+      tags.typeName,
+    ],
+    color: "var(--ds-syntax-selector)",
     fontWeight: "var(--font-weight-medium)",
   },
   {
     tag: [tags.propertyName, tags.definition(tags.propertyName)],
-    color: "var(--ds-text-brand-secondary)",
+    color: "var(--ds-syntax-property)",
+  },
+  {
+    tag: tags.literal,
+    color: "var(--ds-syntax-value)",
   },
   {
     tag: [tags.atom, tags.bool, tags.special(tags.variableName), tags.variableName],
-    color: "var(--ds-text-info-primary-fixed)",
+    color: "var(--ds-syntax-value)",
+  },
+  {
+    tag: tags.meta,
+    color: "var(--ds-syntax-comment)",
+  },
+  {
+    tag: tags.link,
+    color: "var(--ds-syntax-value)",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading,
+    color: "var(--ds-syntax-keyword)",
+    fontWeight: "var(--font-weight-semibold)",
+  },
+  {
+    tag: tags.invalid,
+    color: "var(--ds-syntax-property)",
   },
 ]);

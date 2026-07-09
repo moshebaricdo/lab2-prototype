@@ -17,29 +17,30 @@ const CODEAI_COLOR_SYSTEM_PATH = path.join(
 const OUTPUT_PATH = path.join(ROOT_DIR, "src", "styles", "tokens.css");
 
 /**
- * Hand-maintained syntax highlighting palette until CodeAI defines one.
- * Carried forward from the previous Code.org token blocks.
+ * Hand-maintained syntax highlighting palette (not semantic UI roles).
+ * Tones sit near CodeAI brand/accent hues for familiarity, but prioritize
+ * contrast and role separation over strict token reuse.
  */
-const SYNTAX_LIGHT = `  --ds-syntax-attribute: #945F10;
-  --ds-syntax-comment: #6A737D;
-  --ds-syntax-keyword: #7C3AED;
-  --ds-syntax-number: #0550AE;
-  --ds-syntax-property: #BE3030;
-  --ds-syntax-punctuation: #5C6370;
+const SYNTAX_LIGHT = `  --ds-syntax-attribute: #B34800;
+  --ds-syntax-comment: #69788A;
+  --ds-syntax-keyword: #4C42CF;
+  --ds-syntax-number: #0B43A3;
+  --ds-syntax-property: #B5004F;
+  --ds-syntax-punctuation: #596069;
   --ds-syntax-selector: #1A7F85;
-  --ds-syntax-string: #22753F;
-  --ds-syntax-tag: #BE3030;
-  --ds-syntax-value: #0550AE;`;
+  --ds-syntax-string: #1F7028;
+  --ds-syntax-tag: #3228B7;
+  --ds-syntax-value: #1570D1;`;
 
-const SYNTAX_DARK = `  --ds-syntax-attribute: #D19A66;
-  --ds-syntax-comment: #7F848E;
-  --ds-syntax-keyword: #C678DD;
-  --ds-syntax-number: #61AFEF;
-  --ds-syntax-property: #E06C75;
-  --ds-syntax-punctuation: #ABB2BF;
+const SYNTAX_DARK = `  --ds-syntax-attribute: #FFA868;
+  --ds-syntax-comment: #87909A;
+  --ds-syntax-keyword: #ACA8EA;
+  --ds-syntax-number: #94D7FF;
+  --ds-syntax-property: #F07FB0;
+  --ds-syntax-punctuation: #B7BCC2;
   --ds-syntax-selector: #56B6C2;
-  --ds-syntax-string: #98C379;
-  --ds-syntax-tag: #E06C75;
+  --ds-syntax-string: #7CDB87;
+  --ds-syntax-tag: #6F67D9;
   --ds-syntax-value: #61AFEF;`;
 
 function loadCodeAiColorSystem() {
