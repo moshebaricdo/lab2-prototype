@@ -347,14 +347,17 @@ function measureSemanticCollectionCard(
   system: ColorSystem,
   collectionId: string,
 ): { width: number; height: number } {
-  const firstSubFamilyY = SUB_GROUP_HEADER_H + HEADER_FAMILY_GAP;
+  /** Gap below the surface collection header — same as primitive collections. */
+  const firstSubGroupY = COLLECTION_HEADER_H + HEADER_FAMILY_GAP;
+  /** Gap below a sub-group header before its family cards. */
+  const firstFamilyY = SUB_GROUP_HEADER_H + HEADER_FAMILY_GAP;
   const innerMax = semanticSubGroupInnerMax();
   let cursorX = CARD_PADDING;
   let maxSubGroupH = 0;
 
   for (const subGroupId of semanticSubGroupsForSurface(system, collectionId)) {
     const familyKeys = semanticFamilyKeysForSubGroup(system, collectionId, subGroupId);
-    let innerY = firstSubFamilyY;
+    let innerY = firstFamilyY;
     const familyLayouts = familyKeys.map((familyKey) => {
       const roles = semanticTokenRolesForFamily(system, collectionId, familyKey);
       return { roles, contentW: semanticFamilyWidth(roles) };
@@ -378,7 +381,7 @@ function measureSemanticCollectionCard(
   const cardWidth =
     (cursorX > CARD_PADDING ? cursorX - SUB_GROUP_GAP_X : 0) + CARD_PADDING;
   const cardHeight =
-    (maxSubGroupH > 0 ? firstSubFamilyY + maxSubGroupH : COLLECTION_HEADER_H) +
+    (maxSubGroupH > 0 ? firstSubGroupY + maxSubGroupH : COLLECTION_HEADER_H) +
     CARD_PADDING;
 
   return {
@@ -1171,7 +1174,10 @@ export function ColorSandboxPage() {
     for (const collection of system.semanticCollections) {
       const collectionNodeId = `semcol-${collection.id}`;
       const childNodes: Node[] = [];
-      const firstSubFamilyY = SUB_GROUP_HEADER_H + HEADER_FAMILY_GAP;
+      /** Same header→child gap as primitive collections. */
+      const firstSubGroupY = COLLECTION_HEADER_H + HEADER_FAMILY_GAP;
+      /** Gap below a sub-group header before its family cards. */
+      const firstFamilyY = SUB_GROUP_HEADER_H + HEADER_FAMILY_GAP;
       const innerMax = semanticSubGroupInnerMax();
       let cursorX = CARD_PADDING;
       let maxSubGroupH = 0;
@@ -1184,7 +1190,7 @@ export function ColorSandboxPage() {
           subGroupId,
         );
 
-        let innerY = firstSubFamilyY;
+        let innerY = firstFamilyY;
         const familyLayouts = familyKeys.map((familyKey) => {
           const roles = semanticTokenRolesForFamily(system, collection.id, familyKey);
           return { familyKey, roles, contentW: semanticFamilyWidth(roles) };
@@ -1224,7 +1230,7 @@ export function ColorSandboxPage() {
           type: "semanticSubGroup",
           parentId: collectionNodeId,
           extent: "parent",
-          position: { x: cursorX, y: firstSubFamilyY },
+          position: { x: cursorX, y: firstSubGroupY },
           style: { width: subGroupW, height: subGroupH },
           data: buildSubGroupData(collection.id, subGroupId),
         });
@@ -2239,27 +2245,45 @@ function Inspector({
   if (selection.kind === "collection") {
     const collection = system.collections.find((item) => item.id === selection.id);
     if (!collection) return null;
-    const families = familiesByCollection(system, collection.id);
     return (
       <InspectorShell
         label="Primitive collection"
         onClose={onClose}
         actions={editActions(
-          <AppButton
-            className={styles.inspectorActionDelete}
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            iconName="trash"
-            onClick={() => {
-              if (!window.confirm(`Delete collection "${collection.name}" and its families?`))
-                return;
-              applyChange(deleteCollection(system, collection.id));
-              setSelection(null);
-            }}
-          >
-            Delete collection
-          </AppButton>,
+          <>
+            <AppButton
+              variant="secondary"
+              tone="black"
+              size="xs"
+              iconName="plus"
+              onClick={() => {
+                const name = window.prompt("New primitive family name", "new-family");
+                if (!name) return;
+                const { system: next, familyId } = addFamily(system, collection.id, name, {
+                  stepped: true,
+                });
+                applyChange(next);
+                setSelection({ kind: "family", id: familyId });
+              }}
+            >
+              Add family
+            </AppButton>
+            <AppButton
+              className={styles.inspectorActionDelete}
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName="trash"
+              onClick={() => {
+                if (!window.confirm(`Delete collection "${collection.name}" and its families?`))
+                  return;
+                applyChange(deleteCollection(system, collection.id));
+                setSelection(null);
+              }}
+            >
+              Delete collection
+            </AppButton>
+          </>,
         )}
       >
         <InspectorBodySection>
@@ -2271,35 +2295,6 @@ function Inspector({
               applyChange(renameCollection(system, collection.id, name))
             }
           />
-        </InspectorBodySection>
-        <InspectorBodySection>
-          <div className={styles.inspectorStack}>
-            <div className={styles.inspectorRowHeading}>
-              <span className={styles.inspectorRowLabel}>Add family</span>
-              <span className={styles.inspectorMeta}>
-                {families.length} {families.length === 1 ? "family" : "families"}
-              </span>
-            </div>
-            {readOnly ? null : (
-              <AppButton
-                variant="secondary"
-                tone="black"
-                size="xs"
-                iconName="plus"
-                onClick={() => {
-                  const name = window.prompt("New primitive family name", "new-family");
-                  if (!name) return;
-                  const { system: next, familyId } = addFamily(system, collection.id, name, {
-                    stepped: true,
-                  });
-                  applyChange(next);
-                  setSelection({ kind: "family", id: familyId });
-                }}
-              >
-                Add family
-              </AppButton>
-            )}
-          </div>
         </InspectorBodySection>
       </InspectorShell>
     );
@@ -2380,26 +2375,52 @@ function Inspector({
         label={`Semantic group · ${selection.surface}`}
         onClose={onClose}
         actions={editActions(
-          <AppButton
-            className={styles.inspectorActionDelete}
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            iconName="trash"
-            onClick={() => {
-              const surfaceLabel =
-                SEMANTIC_COLLECTION_LABELS[selection.surface] ?? selection.surface;
-              const message =
-                familyCount > 0
-                  ? `Delete group "${subGroup.name}" from ${surfaceLabel}? ${familyCount} ${familyCount === 1 ? "family" : "families"} on this surface will be removed.`
-                  : `Delete group "${subGroup.name}" from ${surfaceLabel}?`;
-              if (!window.confirm(message)) return;
-              applyChange(deleteSemanticSubGroup(system, selection.surface, selection.id));
-              setSelection({ kind: "semanticCollection", id: selection.surface });
-            }}
-          >
-            Delete group
-          </AppButton>,
+          <>
+            <AppButton
+              variant="secondary"
+              tone="black"
+              size="xs"
+              iconName="plus"
+              onClick={() => {
+                const name = window.prompt("New semantic family name", "new-family");
+                if (!name) return;
+                const { system: next, familyKey } = addSemanticFamily(
+                  system,
+                  name,
+                  selection.id,
+                );
+                if (!familyKey) return;
+                applyChange(next);
+                setSelection({
+                  kind: "semanticFamily",
+                  id: familyKey,
+                  surface: selection.surface,
+                });
+              }}
+            >
+              Add family
+            </AppButton>
+            <AppButton
+              className={styles.inspectorActionDelete}
+              variant="tertiary"
+              tone="gray"
+              size="xs"
+              iconName="trash"
+              onClick={() => {
+                const surfaceLabel =
+                  SEMANTIC_COLLECTION_LABELS[selection.surface] ?? selection.surface;
+                const message =
+                  familyCount > 0
+                    ? `Delete group "${subGroup.name}" from ${surfaceLabel}? ${familyCount} ${familyCount === 1 ? "family" : "families"} on this surface will be removed.`
+                    : `Delete group "${subGroup.name}" from ${surfaceLabel}?`;
+                if (!window.confirm(message)) return;
+                applyChange(deleteSemanticSubGroup(system, selection.surface, selection.id));
+                setSelection({ kind: "semanticCollection", id: selection.surface });
+              }}
+            >
+              Delete group
+            </AppButton>
+          </>,
         )}
       >
         <InspectorBodySection>
@@ -2411,42 +2432,6 @@ function Inspector({
               applyChange(renameSemanticSubGroup(system, subGroup.id, name))
             }
           />
-        </InspectorBodySection>
-        <InspectorBodySection>
-          <div className={styles.inspectorStack}>
-            <div className={styles.inspectorRowHeading}>
-              <span className={styles.inspectorRowLabel}>Add family</span>
-              <span className={styles.inspectorMeta}>
-                {familyCount} {familyCount === 1 ? "family" : "families"}
-              </span>
-            </div>
-            {readOnly ? null : (
-              <AppButton
-                variant="secondary"
-                tone="black"
-                size="xs"
-                iconName="plus"
-                onClick={() => {
-                  const name = window.prompt("New semantic family name", "new-family");
-                  if (!name) return;
-                  const { system: next, familyKey } = addSemanticFamily(
-                    system,
-                    name,
-                    selection.id,
-                  );
-                  if (!familyKey) return;
-                  applyChange(next);
-                  setSelection({
-                    kind: "semanticFamily",
-                    id: familyKey,
-                    surface: selection.surface,
-                  });
-                }}
-              >
-                Add family
-              </AppButton>
-            )}
-          </div>
         </InspectorBodySection>
       </InspectorShell>
     );
