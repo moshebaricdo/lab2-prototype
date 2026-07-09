@@ -7,6 +7,14 @@
         "@layoutdesign/context",
         "serve"
       ]
+    },
+    "figma-console": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "figma-console-mcp@latest"
+      ],
+      "envFile": "${workspaceFolder}/.cursor/mcp.local.env"
     }
   }
 }
