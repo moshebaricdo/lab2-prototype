@@ -59,7 +59,7 @@
   align-items: center;
   gap: 6px;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.06em;
   line-height: 1;
@@ -71,7 +71,7 @@
 
 .labelAi {
   text-transform: none;
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0;
   line-height: 1.25;

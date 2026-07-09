@@ -14,7 +14,7 @@
 }
 
 .cardTitle {
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -44,7 +44,7 @@
 
 .fieldLabel {
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
 }
@@ -60,14 +60,14 @@
   align-items: center;
   gap: 8px;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   cursor: pointer;
 }
 
 .contractText {
   margin: 0;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   line-height: 1.5;
 }
 
@@ -96,7 +96,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
 }
 
 .toolRowLabel {
@@ -125,7 +125,7 @@
 .toolSubLabel {
   flex-shrink: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.4;
 }
 
@@ -133,7 +133,7 @@
   flex: 1;
   min-width: 0;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.4;
   text-align: right;
 }
@@ -180,7 +180,7 @@
   flex-shrink: 0;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-normal);
   line-height: 1.64;
 }
@@ -188,14 +188,14 @@
 .effortHelper {
   margin: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.4;
 }
 
 .effortSummary {
   margin: 0;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   line-height: 1.5;
 }
 
@@ -217,7 +217,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
 }
 
 .permissionRowLabel {
@@ -229,7 +229,7 @@
   margin: 0;
   padding-left: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.4;
   list-style: none;
 }
@@ -237,7 +237,7 @@
 .cardIntro {
   margin: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.45;
 }
 
@@ -252,7 +252,7 @@
 .filePackerHint {
   margin: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.4;
 }
 
@@ -279,13 +279,13 @@
 }
 
 .toggleLabel {
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
   color: var(--ds-text-neutral-primary);
 }
 
 .toggleDescription {
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-quaternary);
   line-height: 1.35;
 }
@@ -352,7 +352,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
 }
 
 .contextRowIcon {
@@ -367,11 +367,11 @@
 
 .contextRowOn {
   color: var(--ds-text-success-primary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-medium);
 }
 
 .contextRowOff {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
 }

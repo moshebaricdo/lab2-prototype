@@ -43,13 +43,13 @@ $warn: var(--ds-text-warning-secondary);
   align-items: center;
   gap: 10px;
   margin: 0 0 8px;
-  font-size: 1.25rem;
+  font-size: var(--text-heading-xs);
   color: var(--ds-text-neutral-primary);
 }
 
 .missionBrief {
-  font-size: 13.5px;
-  line-height: 1.55;
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
   color: var(--ds-text-neutral-quaternary);
 
   p {
@@ -75,7 +75,7 @@ $warn: var(--ds-text-warning-secondary);
 
 .missionHint {
   max-width: 260px;
-  font-size: 11.5px;
+  font-size: var(--text-body-xs);
   text-align: right;
   color: var(--ds-text-neutral-quaternary);
 }
@@ -90,8 +90,8 @@ $warn: var(--ds-text-warning-secondary);
 
   p {
     margin: 6px 0 0;
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: var(--text-body-sm);
+    line-height: var(--leading-body-sm);
     color: var(--ds-text-neutral-primary);
   }
 }
@@ -100,8 +100,8 @@ $warn: var(--ds-text-warning-secondary);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-bold);
   color: $good;
 }
 
@@ -133,14 +133,14 @@ $warn: var(--ds-text-warning-secondary);
 
 .taskTitle {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--text-body-sm);
   color: var(--ds-text-neutral-primary);
 }
 
 .taskBrief {
   margin: 0;
-  font-size: 12.5px;
-  line-height: 1.45;
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
   color: var(--ds-text-neutral-quaternary);
 }
 
@@ -151,8 +151,8 @@ $warn: var(--ds-text-warning-secondary);
   flex-shrink: 0;
   padding: 3px 10px;
   border-radius: var(--radius-round);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--text-body-xxs);
+  font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
 
@@ -194,9 +194,9 @@ $warn: var(--ds-text-warning-secondary);
   gap: 6px;
   flex-direction: row;
   flex-wrap: wrap;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: var(--text-body-xxs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
   color: var(--ds-text-neutral-quaternary);
 }
@@ -208,7 +208,7 @@ $warn: var(--ds-text-warning-secondary);
 }
 
 .specialistNote {
-  font-size: 11.5px;
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-quaternary);
 }
 
@@ -236,7 +236,7 @@ $warn: var(--ds-text-warning-secondary);
   gap: 8px;
   padding: 5px 8px;
   border-radius: var(--radius-md);
-  font-size: 12.5px;
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-primary);
   cursor: pointer;
   transition: background 0.1s ease;
@@ -265,12 +265,12 @@ $warn: var(--ds-text-warning-secondary);
 
 .briefcaseItemLabel {
   flex: 1;
-  font-family: ui-monospace, "SF Mono", monospace;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-body-xs);
 }
 
 .briefcaseItemTokens {
-  font-size: 11px;
+  font-size: var(--text-body-xxs);
   color: var(--ds-text-neutral-quaternary);
 }
 
@@ -317,8 +317,8 @@ $warn: var(--ds-text-warning-secondary);
 }
 
 .meterLabel {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--text-body-xxs);
+  font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
 
@@ -356,15 +356,15 @@ $warn: var(--ds-text-warning-secondary);
 }
 
 .outcomeHeadline {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-bold);
   color: var(--ds-text-neutral-primary);
 }
 
 .outcomeSummary {
   margin: 0;
-  font-size: 12.5px;
-  line-height: 1.5;
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
   color: var(--ds-text-neutral-primary);
 
   p {
@@ -375,7 +375,7 @@ $warn: var(--ds-text-warning-secondary);
 .outcomeBullets {
   margin: 0;
   padding-left: 18px;
-  font-size: 12px;
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-quaternary);
 
   li + li {
@@ -396,13 +396,13 @@ $warn: var(--ds-text-warning-secondary);
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--text-body-xs);
+  font-weight: var(--font-weight-semibold);
   color: $good;
 }
 
 .boardFootnote {
-  font-size: 11px;
+  font-size: var(--text-body-xxs);
   color: var(--ds-text-neutral-quaternary);
   text-align: center;
 }

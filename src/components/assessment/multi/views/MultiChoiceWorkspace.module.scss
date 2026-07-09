@@ -150,7 +150,7 @@
 
 .answerText {
   flex: 1;
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   line-height: 1.45;
 }
 
@@ -178,7 +178,7 @@
 }
 
 .answerTextBlock {
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   line-height: 1.45;
   margin: 0;
 }
@@ -188,7 +188,7 @@
   border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   margin: 0;
   overflow-x: auto;
   padding: 4px 4px;
@@ -218,7 +218,7 @@
 
 .answerImageCaption {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   margin-top: 6px;
 }
 
@@ -231,7 +231,7 @@
   color: var(--ds-text-success-primary);
   display: inline-flex;
   flex-shrink: 0;
-  font-size: 14px;
+  font-size: var(--text-body-sm);
   height: 22px;
 }
 
@@ -240,7 +240,7 @@
   color: var(--ds-text-error-primary-fixed);
   display: inline-flex;
   flex-shrink: 0;
-  font-size: 14px;
+  font-size: var(--text-body-sm);
   height: 22px;
 }
 
@@ -249,7 +249,7 @@
   color: var(--ds-text-neutral-quaternary);
   display: inline-flex;
   flex-shrink: 0;
-  font-size: 14px;
+  font-size: var(--text-body-sm);
   height: 22px;
   opacity: 0.85;
 }

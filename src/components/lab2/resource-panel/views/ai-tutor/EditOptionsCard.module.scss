@@ -59,8 +59,8 @@
   color: var(--ds-text-neutral-secondary);
   cursor: pointer;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  line-height: 1.35;
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
 }
 
 .choiceRow:active:not(:disabled) {
@@ -82,7 +82,7 @@
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-secondary);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
   transition:
@@ -92,7 +92,7 @@
 
 .optionBadgeIcon {
   color: currentColor;
-  font-size: 11px;
+  font-size: var(--text-body-xxs);
 }
 
 .choiceLabel {
@@ -152,8 +152,8 @@
   background: transparent;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  line-height: 1.35;
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
   padding: 0;
 }
 

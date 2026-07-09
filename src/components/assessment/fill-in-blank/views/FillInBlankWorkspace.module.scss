@@ -3,7 +3,7 @@
 .passage {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   line-height: 1.85;
   margin-top: 24px;
   text-wrap: pretty;
@@ -92,7 +92,7 @@
 
 .feedbackIcon {
   display: inline-flex;
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   margin-left: 0.15em;
   vertical-align: 0.05em;
 }

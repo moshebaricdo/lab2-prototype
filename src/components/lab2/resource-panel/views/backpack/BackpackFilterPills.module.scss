@@ -14,8 +14,8 @@
   border-radius: var(--radius-round);
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-secondary);
-  font-size: var(--text-label);
-  line-height: 1.4;
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
 }
 
 .pillActive {

@@ -22,9 +22,9 @@
 .prompt {
   margin: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: 12px;
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-normal);
-  line-height: 1.64;
+  line-height: var(--leading-body-xs);
   white-space: nowrap;
 }
 
@@ -36,5 +36,5 @@
 
 .feedbackActive {
   background: var(--ds-background-brand-light);
-  color: var(--ds-text-selected-primary);
+  color: var(--ds-text-brand-primary);
 }

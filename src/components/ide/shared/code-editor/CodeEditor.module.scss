@@ -110,7 +110,7 @@
 .imagePreviewTitle {
   margin: 0;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   font-weight: var(--font-weight-semibold);
   line-height: 1.35;
 }
@@ -118,7 +118,7 @@
 .imagePreviewText {
   margin: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.5;
 }
 
@@ -247,7 +247,7 @@
 }
 
 .tabAiChanged .tabIcon {
-  color: var(--ds-text-selected-primary);
+  color: var(--ds-text-brand-primary);
 }
 
 .tabAiChanged .tabName {
@@ -282,7 +282,7 @@
 }
 
 .tabIcon {
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1;
 }
 
@@ -296,7 +296,7 @@
 
 .tabName {
   margin: 0;
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.64;
   white-space: nowrap;
 }
@@ -332,7 +332,7 @@
 
 .tabCloseIcon {
   width: 13px;
-  font-size: 10px;
+  font-size: var(--text-body-xxs);
   line-height: 1.25;
   text-align: center;
   transform: translateY(0.5px);
@@ -444,7 +444,7 @@
 }
 
 .tabEdgeFileManagerIcon {
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1;
 }
 
@@ -499,7 +499,7 @@
 }
 
 .tabEdgeAiChanged .tabIcon {
-  color: var(--ds-text-selected-primary);
+  color: var(--ds-text-brand-primary);
 }
 
 .tabEdgeAiChanged .tabName {
@@ -534,7 +534,7 @@
 }
 
 .tabEdge .tabName {
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.54;
 }
 

@@ -9,7 +9,7 @@
   margin: 0 0 16px;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-heading);
-  font-size: var(--text-h3);
+  font-size: var(--text-heading-lg);
   font-weight: var(--font-weight-semibold);
   line-height: 1.2;
 }
@@ -25,7 +25,7 @@
   margin: 0;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-lg);
+  font-size: var(--text-heading-xs);
   font-weight: var(--font-weight-semibold);
   line-height: 1.4;
 }
@@ -60,7 +60,7 @@
   margin: 24px 0;
   color: var(--ds-text-neutral-quaternary);
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   line-height: 1.48;
   text-align: center;
 }

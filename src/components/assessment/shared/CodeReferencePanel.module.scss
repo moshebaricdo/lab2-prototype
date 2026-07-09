@@ -79,7 +79,7 @@
 }
 
 .tabIcon {
-  font-size: 13px;
+  font-size: var(--text-body-sm);
   line-height: 1;
 }
 
@@ -92,8 +92,8 @@
 }
 
 .tabName {
-  font-size: 14px;
-  line-height: 1.64;
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
   margin: 0;
   white-space: nowrap;
 }
@@ -162,7 +162,7 @@
 .lineNumberText {
   color: var(--ds-text-neutral-quaternary);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-body-sm);
   line-height: 24px;
   margin: 0;
   text-align: right;
@@ -175,7 +175,7 @@
   color: var(--ds-text-neutral-primary);
   flex: 1;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-body-sm);
   line-height: 24px;
   min-width: 0;
   outline: none;
@@ -207,7 +207,7 @@
 .codeLineText {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-body-sm);
   line-height: 24px;
   margin: 0;
   white-space: pre;

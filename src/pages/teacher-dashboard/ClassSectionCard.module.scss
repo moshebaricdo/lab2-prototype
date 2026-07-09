@@ -64,7 +64,7 @@
   margin: 0;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-md);
+  font-size: var(--text-body-lg);
   font-weight: var(--font-weight-semibold);
   line-height: 1.4;
 }
@@ -73,7 +73,7 @@
   margin: 2px 0 0;
   color: var(--ds-text-neutral-secondary);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
   line-height: 1.64;
@@ -81,7 +81,7 @@
 }
 
 .classCodeValue {
-  color: var(--ds-text-selected-primary);
+  color: var(--ds-text-brand-primary);
 }
 
 .menuButton {
@@ -111,7 +111,7 @@
 .courseLabel {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-normal);
   line-height: 1.54;
 }
@@ -138,7 +138,7 @@
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
   text-align: left;

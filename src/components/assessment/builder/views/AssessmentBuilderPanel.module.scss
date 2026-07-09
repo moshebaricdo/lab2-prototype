@@ -41,7 +41,7 @@
 .groupHeading {
   margin: 0;
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -57,7 +57,7 @@
 
 .groupMeta {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-secondary);
 }
@@ -86,7 +86,7 @@
 
 .filterLabel {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
 }
@@ -100,7 +100,7 @@
 .emptyListHint {
   margin: 0;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   color: var(--ds-text-neutral-quaternary);
   text-align: center;
 }
@@ -116,20 +116,20 @@
 
 .summaryMode {
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
 }
 
 .summaryMeta {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-quaternary);
 }
 
 .subTitle {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -139,7 +139,7 @@
 .hint {
   margin: 0;
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-quaternary);
 }
 
@@ -192,7 +192,7 @@
   border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-quaternary);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-secondary);
 }
@@ -207,7 +207,7 @@
 
 .rowLabel {
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
   color: var(--ds-text-neutral-primary);
   overflow: hidden;
@@ -217,7 +217,7 @@
 
 .rowMeta {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-quaternary);
 }
 
@@ -253,7 +253,7 @@
   border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-secondary);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-secondary);
 }
@@ -263,7 +263,7 @@
   align-items: center;
   gap: 8px;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   color: var(--ds-text-neutral-primary);
   cursor: pointer;
 }
@@ -299,7 +299,7 @@
 .emptyTitle {
   margin: 0;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
 }

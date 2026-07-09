@@ -76,7 +76,7 @@
   transform: translateX(-50%);
   margin: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -103,9 +103,9 @@
 .label {
   margin: 0;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.64;
+  line-height: var(--leading-body-xs);
 }
 
 .select {
@@ -126,9 +126,9 @@
 .value {
   margin: 0;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-normal);
-  line-height: 1.54;
+  line-height: var(--leading-body-sm);
 }
 
 .icon {
@@ -143,8 +143,8 @@
   border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
-  line-height: 1.54;
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
   padding: 5px 12px;
   outline: none;
 }
@@ -157,6 +157,6 @@
 .helpText {
   margin: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
-  line-height: 1.45;
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
 }

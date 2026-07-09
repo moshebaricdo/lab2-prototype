@@ -31,7 +31,7 @@
   left: 50%;
   transform: translateX(-50%);
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.06em;
 }
@@ -74,7 +74,7 @@
   margin: 0;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.64;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
@@ -82,7 +82,7 @@
 
 .consoleTime {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.64;
 }
 
@@ -105,7 +105,7 @@
   align-items: center;
   justify-content: space-between;
   color: var(--ds-text-neutral-tertiary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
   padding: 8px;
@@ -191,7 +191,7 @@
   flex: 1;
   overflow: hidden;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
   text-overflow: ellipsis;
@@ -200,7 +200,7 @@
 
 .activityEmpty {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-normal);
   line-height: 1.4;
 }
@@ -265,7 +265,7 @@
 .detailHeader h3 {
   margin: 0;
   color: var(--ds-text-neutral-secondary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
 }
@@ -335,9 +335,9 @@
 
 .metadataLabel {
   color: var(--ds-text-neutral-quaternary);
-  font-size: 10px;
+  font-size: var(--text-body-xxs);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.4;
+  line-height: var(--leading-body-xxs);
   text-transform: uppercase;
 }
 
@@ -351,7 +351,7 @@
   border-radius: var(--radius-sm);
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   line-height: 1.54;
   overflow-wrap: anywhere;
   padding: 4px 6px;
@@ -363,7 +363,7 @@
   max-height: 100px;
   overflow: auto;
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.45;
   white-space: pre-wrap;
 }
@@ -481,7 +481,7 @@
 .emptyStateTitle {
   margin: 0 0 2px;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   font-weight: var(--font-weight-semibold);
   line-height: 1.48;
 }
@@ -490,6 +490,6 @@
   max-width: 250px;
   margin: 0;
   color: var(--ds-text-neutral-secondary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.64;
 }

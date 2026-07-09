@@ -17,7 +17,7 @@
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-tertiary);
   font-family: var(--font-body);
-  font-size: var(--text-xs);
+  font-size: var(--text-body-xxs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
   line-height: 1;
@@ -27,7 +27,7 @@
 .headerIcon {
   flex-shrink: 0;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-icon);
+  font-size: var(--text-body-lg);
 }
 
 .body {
@@ -41,15 +41,15 @@
   margin: 0;
   color: var(--ds-text-neutral-quaternary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  line-height: 1.4;
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
 }
 
 .brief {
   margin: 0;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  line-height: 1.45;
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
   white-space: pre-wrap;
 }

@@ -2,7 +2,7 @@
 
 .sectionLabel {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
   margin: 0 0 8px;
@@ -93,9 +93,9 @@
 }
 
 .parsonsDepthBadge {
-  color: var(--ds-text-selected-primary);
+  color: var(--ds-text-brand-primary);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -229,7 +229,7 @@
   cursor: grab;
   display: flex;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   gap: 12px;
   min-height: 72px;
   min-width: 0;
@@ -292,7 +292,7 @@
   cursor: grabbing;
   display: flex;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   gap: 12px;
   min-height: 72px;
   padding: 12px;
@@ -349,7 +349,7 @@
   border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--radius);
   font-family: var(--font-mono);
-  font-size: var(--text-code);
+  font-size: var(--text-body-sm);
   margin: 0;
   max-width: 100%;
   min-width: 0;
@@ -376,7 +376,7 @@
 
 .imageCaption {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   margin-top: 4px;
 }
 
@@ -412,14 +412,14 @@
 .bucketTitle {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   font-weight: var(--font-weight-semibold);
   margin: 0;
 }
 
 .bucketDescription {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   margin: 4px 0 0;
 }
 

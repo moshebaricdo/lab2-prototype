@@ -131,19 +131,19 @@
 }
 
 .tabButton .tabIcon {
-  font-size: var(--text-icon);
+  font-size: var(--text-body-lg);
 }
 
 .tabRailCompact .tabButton .tabIcon {
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
 }
 
 .railCollapseButton .railCollapseIcon {
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
 }
 
 .tabRailCompact .railCollapseButton .railCollapseIcon {
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
 }
 
 .tabIcon {
@@ -157,8 +157,8 @@
 
 .tabIconActive,
 .tabButton:hover .tabIconActive {
-  color: var(--ds-text-selected-primary
-  );
+  /* Unfilled active chrome — brand text, not selected (selected is for dark fills). */
+  color: var(--ds-text-brand-primary);
 }
 
 .aiTutorTabIcon {
@@ -193,8 +193,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: var(--ds-border-selected-primary
-  );
+  background: var(--ds-background-brand-primary);
 }
 
 .tabActiveMask {

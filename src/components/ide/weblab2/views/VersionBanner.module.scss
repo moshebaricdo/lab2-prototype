@@ -21,14 +21,14 @@
 .icon {
   width: 16px;
   color: var(--ds-text-warning-primary-fixed);
-  font-size: 14px;
+  font-size: var(--text-body-sm);
   text-align: center;
 }
 
 .message {
   margin: 0;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   line-height: 1.64;
   white-space: nowrap;
 }
@@ -59,6 +59,6 @@
 
 .closeIcon {
   width: 18px;
-  font-size: 12px;
+  font-size: var(--text-body-xs);
   text-align: center;
 }

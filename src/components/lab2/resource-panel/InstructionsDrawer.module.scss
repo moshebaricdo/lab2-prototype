@@ -79,9 +79,9 @@
   border-radius: var(--radius-round);
   padding: 4px 10px;
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.4;
+  line-height: var(--leading-body-xs-semibold);
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 10%);
   pointer-events: auto;
   cursor: pointer;
@@ -201,18 +201,18 @@
 
 .pinnedStepLabel {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
-  line-height: 1.3;
+  line-height: var(--leading-body-xs-semibold);
 }
 
 .pinnedStepSummary {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-normal);
   color: var(--ds-text-neutral-quaternary);
-  line-height: 1.35;
+  line-height: var(--leading-body-xs);
 }
 
 .toggleWrapPanelAttached {

@@ -29,7 +29,7 @@
   border: 1px solid var(--ds-border-neutral-primary);
   color: var(--ds-text-brand-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   font-weight: var(--font-weight-semibold);
   justify-content: center;
   padding: 12px;
@@ -153,7 +153,7 @@
 
 .promptText {
   flex: 1;
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   line-height: 1.35;
 }
 
@@ -191,7 +191,7 @@
 
 .partialFeedback {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   font-weight: var(--font-weight-medium);
   margin: 0;
 }

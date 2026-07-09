@@ -37,7 +37,7 @@
   margin: 0;
   padding: var(--menu-outer-padding);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-quaternary);
   line-height: 1.45;
 }
@@ -46,7 +46,7 @@
   margin: 0;
   padding: 6px 6px 0px 8px;
   font-family: var(--font-body);
-  font-size: var(--text-xs);
+  font-size: var(--text-body-xxs);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-quaternary);
   text-transform: uppercase;
@@ -69,12 +69,12 @@
   gap: 3px;
   margin-left: auto;
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-xs);
+  font-size: var(--text-body-xxs);
   font-weight: var(--font-weight-medium);
 }
 
 .addedIcon {
-  font-size: var(--text-xs);
+  font-size: var(--text-body-xxs);
 }
 
 .rowAdded {

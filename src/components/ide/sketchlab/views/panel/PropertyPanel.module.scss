@@ -50,9 +50,9 @@
 
 .headerLabel {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: var(--text-body-xxs);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
   color: var(--ds-text-neutral-tertiary);
 }
@@ -78,7 +78,7 @@
 .sectionTitle {
   margin: 0;
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
 }
@@ -93,7 +93,7 @@
 
 .rowLabel {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-secondary);
   white-space: nowrap;
 }
@@ -189,7 +189,7 @@
   min-height: var(--menu-item-min-height, 22px);
   padding: var(--menu-item-padding, 3px 6px);
   font-family: var(--font-body);
-  font-size: var(--menu-item-font, var(--text-label));
+  font-size: var(--menu-item-font, var(--text-body-xs));
   font-weight: var(--font-weight-medium);
   line-height: 1.54;
   color: var(--ds-text-neutral-primary);
@@ -205,7 +205,7 @@
   height: 20px;
   padding: 0 6px;
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-medium);
   line-height: 1.54;
   color: var(--ds-text-neutral-primary);
@@ -251,7 +251,7 @@
   flex: 0 0 auto;
   padding: 0 4px;
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-medium);
   line-height: 1.54;
   text-align: center;

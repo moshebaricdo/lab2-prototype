@@ -17,7 +17,7 @@
 
 .title {
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   line-height: 1.64;
   white-space: nowrap;
@@ -30,7 +30,7 @@
   gap: 4px;
   border-radius: var(--radius-round);
   color: var(--ds-text-success-primary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-medium);
   line-height: 1.4;
   padding: 1px 6px;
@@ -38,7 +38,7 @@
 }
 
 .completedTagIcon {
-  font-size: 11px;
+  font-size: var(--text-body-xxs);
   transform: translateY(-1px);
 }
 
@@ -46,7 +46,7 @@
   min-width: 0;
   overflow: hidden;
   color: var(--ds-text-neutral-tertiary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   line-height: 1.64;
   text-overflow: ellipsis;
   white-space: nowrap;

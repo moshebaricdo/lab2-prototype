@@ -7,6 +7,6 @@
 
 .label {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-label);
-  line-height: 1.4;
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
 }

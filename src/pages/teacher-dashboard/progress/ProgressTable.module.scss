@@ -28,7 +28,7 @@
   margin: 0;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-h4);
+  font-size: var(--text-heading-md);
   font-weight: var(--font-weight-semibold);
   line-height: 1.2;
 }
@@ -42,7 +42,7 @@
 .lessonsLabel {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-md);
+  font-size: var(--text-body-lg);
   font-weight: var(--font-weight-semibold);
   line-height: 1.4;
 }
@@ -100,7 +100,7 @@
   height: var(--stat-row-h);
   color: var(--ds-text-neutral-secondary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   line-height: 1.54;
 }
 
@@ -125,7 +125,7 @@
 .sortLabel {
   color: var(--ds-text-neutral-secondary);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
   line-height: 1.4;
@@ -145,7 +145,7 @@
 .studentName {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
 }
@@ -187,7 +187,7 @@
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
 }
@@ -218,7 +218,7 @@
 
 .lessonTitleText {
   font-family: var(--font-body);
-  font-size: var(--text-md);
+  font-size: var(--text-body-lg);
   font-weight: var(--font-weight-semibold);
   line-height: 1.4;
   white-space: nowrap;
@@ -242,7 +242,7 @@
   background: var(--ds-background-brand-light);
   color: var(--ds-text-selected-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
 }

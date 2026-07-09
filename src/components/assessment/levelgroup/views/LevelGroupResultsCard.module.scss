@@ -64,7 +64,7 @@
 }
 
 .scoreRingLabel {
-  font-size: 16px;
+  font-size: var(--text-body-md);
   font-variant-numeric: tabular-nums;
   font-weight: var(--font-weight-semibold);
   position: relative;
@@ -84,7 +84,7 @@
 .scoreHeadline {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-heading);
-  font-size: var(--text-h4);
+  font-size: var(--text-heading-md);
   font-weight: var(--font-weight-semibold);
   line-height: 1.2;
   margin: 0;
@@ -101,7 +101,7 @@
 .metaItem {
   align-items: center;
   display: inline-flex;
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   gap: 5px;
   white-space: nowrap;
 }

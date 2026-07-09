@@ -19,14 +19,14 @@
 
 .pageTitle {
   font-family: var(--font-heading);
-  font-size: var(--text-h2);
+  font-size: var(--text-heading-xl);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
 }
 
 .pageSubtitle {
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   color: var(--ds-text-neutral-quaternary);
   margin: 4px 0 0;
 }
@@ -42,7 +42,7 @@
 
 .sectionHeading {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -97,7 +97,7 @@
 
 .cardTitle {
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
   margin: 0;
@@ -109,7 +109,7 @@
 
 .cardDescription {
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   color: var(--ds-text-neutral-tertiary);
 }
 
@@ -130,8 +130,8 @@
   border: 1px solid var(--ds-border-neutral-primary);
   background: var(--ds-background-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: 600;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
   text-decoration: none;
   transition: border-color 120ms, background 120ms, color 120ms;
@@ -176,7 +176,7 @@
 
 .variantsToggleTitle {
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-h5);
+  font-size: var(--text-heading-sm);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -191,7 +191,7 @@
   background: transparent;
   border: 0;
   cursor: pointer;
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   margin: 0;
   padding: 0;
   font-family: var(--font-body);
@@ -211,7 +211,7 @@
 
 .emptySectionText {
   color: var(--ds-text-neutral-quaternary);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   margin: 0;
 }
 
@@ -237,7 +237,7 @@
 .variantNameLink {
   min-width: 0;
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   font-weight: var(--font-weight-semibold);
   color: var(--ds-text-neutral-primary);
   overflow: hidden;
@@ -273,14 +273,14 @@
   background: var(--ds-background-neutral-septenary);
   padding: 1px 8px;
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-normal);
   color: var(--ds-text-neutral-white-fixed);
 }
 
 .variantDate {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   color: var(--ds-text-neutral-quaternary);
 }
 
@@ -309,10 +309,10 @@
 
 .promoteStepLabel {
   font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--text-body-xxs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-overline);
   color: var(--ds-text-neutral-quaternary);
   margin: 0;
 
@@ -325,7 +325,7 @@
   background: var(--ds-text-neutral-primary);
   color: var(--ds-background-neutral-primary);
   font-family: var(--font-mono, monospace);
-  font-size: 12px;
+  font-size: var(--text-body-xs);
   padding: 16px;
   border-radius: var(--radius-md);
   overflow-x: auto;

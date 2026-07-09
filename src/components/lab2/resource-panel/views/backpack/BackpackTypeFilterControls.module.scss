@@ -49,9 +49,9 @@
 
 .label {
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-label);
+  font-size: var(--text-body-xs);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.3;
+  line-height: var(--leading-body-xs);
 }
 
 .chevron {

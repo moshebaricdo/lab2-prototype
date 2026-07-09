@@ -46,7 +46,7 @@
 .title {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-heading);
-  font-size: var(--text-h2);
+  font-size: var(--text-heading-xl);
   font-weight: var(--font-weight-semibold);
   margin: 0;
 }
@@ -140,7 +140,7 @@
   box-sizing: border-box;
   color: var(--ds-text-neutral-quaternary);
   display: inline-flex;
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   font-weight: var(--font-weight-semibold);
   height: 28px;
   justify-content: center;
@@ -163,13 +163,13 @@
 
 .optionTitle {
   color: var(--ds-text-neutral-primary);
-  font-size: var(--text-icon);
+  font-size: var(--text-body-lg);
   font-weight: var(--font-weight-semibold);
   margin: 0;
 }
 
 .optionDescription {
   color: var(--ds-text-neutral-secondary);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   line-height: 1.5;
 }

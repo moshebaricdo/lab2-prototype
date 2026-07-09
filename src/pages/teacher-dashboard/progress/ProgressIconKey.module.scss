@@ -19,7 +19,7 @@
   background: transparent;
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body-md);
   font-weight: var(--font-weight-semibold);
   line-height: 1.4;
   cursor: pointer;
@@ -51,7 +51,7 @@
   background: var(--ds-background-neutral-secondary);
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.54;
 }
@@ -82,7 +82,7 @@
 .itemLabel {
   color: var(--ds-text-neutral-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-normal);
   line-height: 1.54;
   white-space: nowrap;
