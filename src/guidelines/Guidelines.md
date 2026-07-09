@@ -90,17 +90,33 @@ For brand themes (Code.org vs CodeAI), sandbox preview, active-state remaps, and
 
 ### Typography
 
-- Heading font: `var(--font-heading)`
-- Body font: `var(--font-body)`
-- Mono/code font: `var(--font-mono)`
-- Weights: `var(--font-weight-normal|medium|semibold)`
-- Sizes: semantic tokens in `globals.css` (for example `--text-h1`, `--text-base`, `--text-label`)
+Prefer **CADS text styles** via `AppText` (JSX) or `_typography.scss` mixins (SCSS). Full catalog: [`src/guidelines/typography.md`](typography.md). Sandbox: `/design-system/typography`.
+
+- Heading font: `var(--font-heading)` (Space Grotesk; H1–H2)
+- Body font: `var(--font-body)` (Geist; H3–H6, body, label, overline, link)
+- Mono/code font: `var(--font-mono)` (Google Sans Code)
+- Weights: `var(--font-weight-normal|medium|semibold|bold)` — H1/H2 “Semi Bold” maps to **medium (500)**
+- Sizes / leadings / tracking: tokens in `globals.css`; do not hard-code px or unitless line-heights when a CADS style exists
+- Interactive links: `AppLink`; underlined specimen style: `AppText variant="link-*"`
 
 ### Focus and Accessibility
 
 - Every interactive element must expose a visible focus style.
 - Preferred ring color is tokenized via `var(--ring)`.
 - Ensure keyboard behavior is preserved for buttons, menus, dialogs, and list interactions.
+
+### Control height scale (L–XS)
+
+`AppButton`, `AppDropdown` field triggers, and `AppTextField` single-line controls share the same heights so they align in rows:
+
+| Size | Height |
+|---|---|
+| L | 48px |
+| M | 40px |
+| S | 32px |
+| XS | 24px |
+
+Do not size these with padding + line-height alone — use the fixed height tokens so borders and content box match across components.
 
 ### Icons
 

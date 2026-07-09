@@ -60,6 +60,10 @@ Read `src/REFACTORING_SUMMARY.md` — documents what changed in the last reorg, 
 
 Read **`src/guidelines/color-theming.md`** — token cascade layers, selected-vs-brand roles, generator/Figma/exporter naming contract, sandbox **Apply to app** boundaries, and semantic cross-reference resolution. Also see `scripts/tokenMigrationMap.md` for legacy rename tables.
 
+### Working on typography
+
+Read **`src/guidelines/typography.md`** — CADS text style catalog, `AppText` / `_typography.scss` usage, tracking/leading rules. Sandbox: `/design-system/typography`.
+
 ---
 
 ## Quick Placement Guide

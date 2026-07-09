@@ -31,9 +31,12 @@ Default mode is **light**. Brand switchers and `data-brand-theme` / active-chrom
 
 | UI role | Token family | Example |
 |---|---|---|
-| Primary actions / CTAs / header | `brand` (collapsed; purple under the hood) | `--ds-background-brand-primary` |
-| Selected / active chrome (segmented, chips, checkbox, tabs, menu items) | `state/selected` | `--ds-background-selected-primary` |
+| Primary actions / CTAs / header / links | `brand` | `--ds-background-brand-primary`, `--ds-text-brand-primary` |
+| Selected **filled** chrome (segmented, chips, checkbox, menu items on selected fill) | `state/selected` | `--ds-background-selected-primary` + `--ds-text-selected-primary` |
+| Active chrome **without** a selected fill (tab rail icons, light-tint callouts) | `brand` text | `--ds-text-brand-primary` |
 | Focus rings | `state/focused` via outline mixin | `--ds-border-focused-primary` |
+
+**`--ds-text-selected-primary` is for foreground on a selected fill** (dark selected background in light mode). Do not use it on white / unfilled / light-tint surfaces — use `--ds-text-brand-primary` instead.
 
 Do **not** paint selected surfaces with brand fills. Reuse the Segmented Button selected recipe everywhere.
 
@@ -69,11 +72,15 @@ Syntax highlighting (`--ds-syntax-*`) is hand-maintained in the generator until 
 
 From CADS Figma (`typography`, `spacing-shape`, effect styles):
 
-- **Typography:** Space Grotesk (H1–H2) / Geist (body + H3–H6) / Google Sans Code; heading + body size/leading ramps; legacy `--text-h1` etc. alias the new tokens
+- **Typography:** Space Grotesk (H1–H2) / Geist (body + H3–H6) / Google Sans Code; full CADS text styles via `AppText` + `_typography.scss` — see [`typography.md`](typography.md); sandbox `/design-system/typography`
 - **Radii:** `--radius-sm` 6 / `--radius-md` 8 / `--radius-lg` 10 / `--radius-round` 999
 - **Spacing:** `--space-xxs`…`--space-xxxl` (forward-use; no layout retrofit)
 - **Shadows:** `--shadow-sm` / `--shadow-md` / `--shadow-lg`
 - **Focus:** `focus-ring` mixin = 2px outline + 2px offset (Figma focus shadow is design-only)
+
+## Syntax highlighting
+
+`--ds-syntax-*` is a **separate** palette (hand-maintained in `scripts/generate-tokens.mjs`), not semantic UI roles. CodeMirror (`highlightStyle.ts`) and `.syntax-*` classes in `globals.css` consume these tokens. Colors sit near brand/accent hues for familiarity but prioritize contrast and role separation — do not remap syntax to `--ds-text-brand-*` / `--ds-text-selected-*`.
 
 ## Color sandbox
 
@@ -83,5 +90,5 @@ Route `/design-system/colors`. Single CodeAI document in `localStorage` (`lab2:c
 
 1. Use `--ds-*` in component SCSS — never `--foreground` / `--accent` / etc.
 2. Use `brand` for actions; `selected` for active chrome; `focused` for focus rings.
-3. Prefer typography / radius / shadow tokens from `globals.css` over raw px.
+3. Prefer CADS typography via `AppText` / `_typography.scss` mixins (see `typography.md`) over raw px or unitless line-heights.
 4. After editing `codeAiColorSystem.json`, regenerate tokens and bump the sandbox baseline version.

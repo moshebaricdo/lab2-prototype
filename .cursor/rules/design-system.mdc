@@ -74,37 +74,44 @@ color: var(--ds-text-neutral-white-fixed);
 color: var(--ds-text-neutral-black-fixed);
 ```
 
-## Typography: use size tokens
+## Typography: prefer CADS styles (AppText / mixins)
 
-Prefer the CADS ramp in `globals.css`:
+Do not hard-code `font-size` / unitless `line-height` when a CADS text style exists. Prefer:
+
+1. **`AppText`** for JSX content (`variant` + optional `weight`)
+2. **`@include type-*`** from `src/styles/_typography.scss` for SCSS chrome
+
+See `src/guidelines/typography.md` and `/design-system/typography`.
+
+Size / leading ramp (tokens in `globals.css`):
 
 | Token | Value |
 |---|---|
-| `--text-heading-xxl` / `--text-h1` | 48px |
-| `--text-heading-xl` / `--text-h2` | 38px |
-| `--text-heading-lg` / `--text-h3` | 28px |
-| `--text-heading-md` / `--text-h4` | 24px |
-| `--text-heading-sm` | 22px |
-| `--text-heading-xs` / `--text-lg` | 20px |
-| `--text-body-lg` / `--text-md` | 18px |
-| `--text-body-md` / `--text-base` | 16px |
-| `--text-body-sm` / `--text-sm` | 14px |
-| `--text-body-xs` / `--text-label` | 12px |
-| `--text-body-xxs` / `--text-xs` | 10px |
+| `--text-heading-xxl` / `--text-h1` | 48px / leading 52 |
+| `--text-heading-xl` / `--text-h2` | 38px / leading 40 |
+| `--text-heading-lg` / `--text-h3` | 28px / leading 36 |
+| `--text-heading-md` / `--text-h4` | 24px / leading 32 |
+| `--text-heading-sm` | 22px / leading 30 |
+| `--text-heading-xs` / `--text-lg` | 20px / leading 28 |
+| `--text-body-lg` / `--text-md` | 18px / leading 28 |
+| `--text-body-md` / `--text-base` | 16px / leading 24 |
+| `--text-body-sm` / `--text-sm` | 14px / leading 22 |
+| `--text-body-xs` / `--text-label` | 12px / leading 18 (19 for Semi Bold) |
+| `--text-body-xxs` / `--text-xs` | 10px / leading 16 |
 
 ```css
 /* ❌ BAD */
 font-size: 12px;
-font-size: 16px;
-font-size: 24px;
+line-height: 1.54;
 
-/* ✅ GOOD */
-font-size: var(--text-label);
-font-size: var(--text-base);
-font-size: var(--text-h4);
+/* ✅ GOOD — mixin or AppText */
+@include type-body-4-regular;
+/* or */
+font-size: var(--text-body-xs);
+line-height: var(--leading-body-xs);
 ```
 
-If a design truly requires a size not in this table, add a new token to `globals.css` rather than hard-coding the value.
+Tracking: `--tracking-heading-display` (−1% H1/H2), `--tracking-overline` (+8%), `--tracking-none`.
 
 ## Typography: use weight and family tokens
 
@@ -119,6 +126,7 @@ font-family: var(--font-body);
 ```
 
 Available weight tokens: `--font-weight-bold` (700), `--font-weight-semibold` (600), `--font-weight-medium` (500), `--font-weight-normal` (400).
+H1/H2 Figma “Semi Bold” → `--font-weight-medium`.
 Available family tokens: `--font-heading` (Space Grotesk), `--font-body` (Geist), `--font-mono` (Google Sans Code).
 
 ## Shape, spacing, shadows
