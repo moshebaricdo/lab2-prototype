@@ -175,12 +175,12 @@
         {
           "id": "neutral::gray::10",
           "step": "10",
-          "hex": "#E6E8EA"
+          "hex": "#DBDDE2"
         },
         {
           "id": "neutral::gray::20",
           "step": "20",
-          "hex": "#D0D3D7"
+          "hex": "#CCD1D7"
         },
         {
           "id": "neutral::gray::30",
@@ -210,12 +210,12 @@
         {
           "id": "neutral::gray::80",
           "step": "80",
-          "hex": "#444A50"
+          "hex": "#4B5258"
         },
         {
           "id": "neutral::gray::90",
           "step": "90",
-          "hex": "#2C3035"
+          "hex": "#363B40"
         },
         {
           "id": "neutral::gray::95",
@@ -886,8 +886,8 @@
         "dark": "neutral::gray::90"
       },
       "fallbackHex": {
-        "light": "#E6E8EA",
-        "dark": "#2C3035"
+        "light": "#DBDDE2",
+        "dark": "#363B40"
       }
     },
     {
@@ -900,8 +900,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D0D3D7",
-        "dark": "#444A50"
+        "light": "#CCD1D7",
+        "dark": "#4B5258"
       }
     },
     {
@@ -956,8 +956,8 @@
         "dark": "neutral::gray::20"
       },
       "fallbackHex": {
-        "light": "#444A50",
-        "dark": "#D0D3D7"
+        "light": "#4B5258",
+        "dark": "#CCD1D7"
       }
     },
     {
@@ -1396,8 +1396,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D0D3D7",
-        "dark": "#444A50"
+        "light": "#CCD1D7",
+        "dark": "#4B5258"
       }
     },
     {
@@ -1671,7 +1671,7 @@
         "dark": "neutral::gray::5"
       },
       "fallbackHex": {
-        "light": "#2C3035",
+        "light": "#363B40",
         "dark": "#F1F2F4"
       }
     },
@@ -1685,8 +1685,8 @@
         "dark": "neutral::gray::10"
       },
       "fallbackHex": {
-        "light": "#444A50",
-        "dark": "#E6E8EA"
+        "light": "#4B5258",
+        "dark": "#DBDDE2"
       }
     },
     {
@@ -1700,7 +1700,7 @@
       },
       "fallbackHex": {
         "light": "#596069",
-        "dark": "#D0D3D7"
+        "dark": "#CCD1D7"
       }
     },
     {
@@ -1780,11 +1780,11 @@
       "role": "secondary",
       "ref": {
         "light": "brand::teal::70",
-        "dark": "brand::teal::10"
+        "dark": "brand::teal::5"
       },
       "fallbackHex": {
         "light": "#3228B7",
-        "dark": "#CAC6F5"
+        "dark": "#E4E2F8"
       }
     },
     {
@@ -1822,11 +1822,11 @@
       "role": "secondary",
       "ref": {
         "light": "sentiment::error::70",
-        "dark": "sentiment::error::20"
+        "dark": "sentiment::error::5"
       },
       "fallbackHex": {
         "light": "#B30F0F",
-        "dark": "#F69898"
+        "dark": "#FBD5D5"
       }
     },
     {
@@ -1836,11 +1836,11 @@
       "role": "primary-fixed",
       "ref": {
         "light": "sentiment::error::50",
-        "dark": "sentiment::error::40"
+        "dark": "sentiment::error::30"
       },
       "fallbackHex": {
         "light": "#EB1414",
-        "dark": "#EF4848"
+        "dark": "#F37272"
       }
     },
     {
@@ -1863,12 +1863,12 @@
       "familyKey": "warning",
       "role": "secondary",
       "ref": {
-        "light": "sentiment::warning::70",
-        "dark": "sentiment::warning::20"
+        "light": "sentiment::warning::90",
+        "dark": "sentiment::warning::5"
       },
       "fallbackHex": {
-        "light": "#CF8E02",
-        "dark": "#FFE08A"
+        "light": "#885D02",
+        "dark": "#FFF3D1"
       }
     },
     {
@@ -1878,11 +1878,11 @@
       "role": "primary-fixed",
       "ref": {
         "light": "sentiment::warning::50",
-        "dark": "sentiment::warning::50"
+        "dark": "sentiment::warning::30"
       },
       "fallbackHex": {
         "light": "#F5C000",
-        "dark": "#F5C000"
+        "dark": "#FFD35C"
       }
     },
     {
@@ -1906,11 +1906,11 @@
       "role": "secondary",
       "ref": {
         "light": "sentiment::success::90",
-        "dark": "sentiment::success::20"
+        "dark": "sentiment::success::5"
       },
       "fallbackHex": {
         "light": "#17541E",
-        "dark": "#9BE3A3"
+        "dark": "#CCF1D0"
       }
     },
     {
@@ -1920,11 +1920,11 @@
       "role": "primary-fixed",
       "ref": {
         "light": "sentiment::success::70",
-        "dark": "sentiment::success::50"
+        "dark": "sentiment::success::30"
       },
       "fallbackHex": {
         "light": "#258830",
-        "dark": "#34BD43"
+        "dark": "#7CDB87"
       }
     },
     {
@@ -1948,11 +1948,11 @@
       "role": "secondary",
       "ref": {
         "light": "sentiment::information::90",
-        "dark": "sentiment::information::20"
+        "dark": "sentiment::information::5"
       },
       "fallbackHex": {
         "light": "#0B43A3",
-        "dark": "#94D7FF"
+        "dark": "#D5EFFF"
       }
     },
     {
@@ -1962,11 +1962,11 @@
       "role": "primary-fixed",
       "ref": {
         "light": "sentiment::information::70",
-        "dark": "sentiment::information::50"
+        "dark": "sentiment::information::30"
       },
       "fallbackHex": {
         "light": "#1570D1",
-        "dark": "#0099F3"
+        "dark": "#6FCAFF"
       }
     },
     {
@@ -2129,11 +2129,11 @@
       "familyKey": "strawberry",
       "role": "light",
       "ref": {
-        "light": "brand::strawberry::10",
+        "light": "brand::strawberry::5",
         "dark": "brand::strawberry::95"
       },
       "fallbackHex": {
-        "light": "#F3C3D8",
+        "light": "#FBDAE8",
         "dark": "#7D0C3D"
       }
     },
@@ -2143,11 +2143,11 @@
       "familyKey": "orange",
       "role": "light",
       "ref": {
-        "light": "brand::orange::10",
+        "light": "brand::orange::5",
         "dark": "brand::orange::95"
       },
       "fallbackHex": {
-        "light": "#FFD2B3",
+        "light": "#FFE3CE",
         "dark": "#611D00"
       }
     },
@@ -2249,11 +2249,11 @@
       "role": "strong",
       "ref": {
         "light": "brand::strawberry::70",
-        "dark": "brand::strawberry::20"
+        "dark": "brand::strawberry::5"
       },
       "fallbackHex": {
         "light": "#B5004F",
-        "dark": "#EEA1C3"
+        "dark": "#FBDAE8"
       }
     },
     {
@@ -2263,11 +2263,11 @@
       "role": "primary-fixed",
       "ref": {
         "light": "brand::strawberry::50",
-        "dark": "brand::strawberry::40"
+        "dark": "brand::strawberry::30"
       },
       "fallbackHex": {
         "light": "#E11970",
-        "dark": "#EB5895"
+        "dark": "#F07FB0"
       }
     },
     {
@@ -2277,11 +2277,11 @@
       "role": "strong",
       "ref": {
         "light": "brand::orange::70",
-        "dark": "brand::orange::20"
+        "dark": "brand::orange::5"
       },
       "fallbackHex": {
         "light": "#B34800",
-        "dark": "#FFBD8A"
+        "dark": "#FFE3CE"
       }
     },
     {
@@ -2291,11 +2291,11 @@
       "role": "primary-fixed",
       "ref": {
         "light": "brand::orange::50",
-        "dark": "brand::orange::50"
+        "dark": "brand::orange::30"
       },
       "fallbackHex": {
         "light": "#F46800",
-        "dark": "#F46800"
+        "dark": "#FFA868"
       }
     },
     {
@@ -2392,11 +2392,11 @@
       "familyKey": "error",
       "role": "mid",
       "ref": {
-        "light": "sentiment::error::30",
+        "light": "sentiment::error::20",
         "dark": "sentiment::error::70"
       },
       "fallbackHex": {
-        "light": "#F37272",
+        "light": "#F69898",
         "dark": "#B30F0F"
       }
     },
@@ -2511,8 +2511,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D0D3D7",
-        "dark": "#444A50"
+        "light": "#CCD1D7",
+        "dark": "#4B5258"
       },
       "comments": {
         "light": "Matches background-neutral-quaternary by value today, but disabled intent is decoupled so the state can be restyled independently."
@@ -2525,11 +2525,11 @@
       "role": "brand",
       "ref": {
         "light": "brand::teal::5",
-        "dark": "brand::teal::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#E4E2F8",
-        "dark": "#1D1590"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2539,11 +2539,11 @@
       "role": "error",
       "ref": {
         "light": "sentiment::error::5",
-        "dark": "sentiment::error::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FBD5D5",
-        "dark": "#6C0909"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2553,11 +2553,11 @@
       "role": "warning",
       "ref": {
         "light": "sentiment::warning::5",
-        "dark": "sentiment::warning::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FFF3D1",
-        "dark": "#885D02"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2567,11 +2567,11 @@
       "role": "success",
       "ref": {
         "light": "sentiment::success::5",
-        "dark": "sentiment::success::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#CCF1D0",
-        "dark": "#17541E"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2581,11 +2581,11 @@
       "role": "info",
       "ref": {
         "light": "sentiment::information::5",
-        "dark": "sentiment::information::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#D5EFFF",
-        "dark": "#0B43A3"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2595,11 +2595,11 @@
       "role": "pink",
       "ref": {
         "light": "brand::strawberry::5",
-        "dark": "brand::strawberry::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FBDAE8",
-        "dark": "#8D003D"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2609,11 +2609,11 @@
       "role": "orange",
       "ref": {
         "light": "brand::orange::5",
-        "dark": "brand::orange::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FFE3CE",
-        "dark": "#701C00"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2626,8 +2626,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D0D3D7",
-        "dark": "#444A50"
+        "light": "#CCD1D7",
+        "dark": "#4B5258"
       }
     },
     {
@@ -2654,11 +2654,11 @@
       "role": "brand",
       "ref": {
         "light": "brand::teal::5",
-        "dark": "brand::teal::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#E4E2F8",
-        "dark": "#1D1590"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2668,11 +2668,11 @@
       "role": "error",
       "ref": {
         "light": "sentiment::error::5",
-        "dark": "sentiment::error::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FBD5D5",
-        "dark": "#6C0909"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2682,11 +2682,11 @@
       "role": "warning",
       "ref": {
         "light": "sentiment::warning::5",
-        "dark": "sentiment::warning::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FFF3D1",
-        "dark": "#885D02"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2696,11 +2696,11 @@
       "role": "success",
       "ref": {
         "light": "sentiment::success::5",
-        "dark": "sentiment::success::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#CCF1D0",
-        "dark": "#17541E"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2710,11 +2710,11 @@
       "role": "info",
       "ref": {
         "light": "sentiment::information::5",
-        "dark": "sentiment::information::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#D5EFFF",
-        "dark": "#0B43A3"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2724,11 +2724,11 @@
       "role": "pink",
       "ref": {
         "light": "brand::strawberry::5",
-        "dark": "brand::strawberry::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FBDAE8",
-        "dark": "#8D003D"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2738,11 +2738,11 @@
       "role": "orange",
       "ref": {
         "light": "brand::orange::5",
-        "dark": "brand::orange::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FFE3CE",
-        "dark": "#701C00"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2755,8 +2755,8 @@
         "dark": "neutral::gray::80"
       },
       "fallbackHex": {
-        "light": "#D0D3D7",
-        "dark": "#444A50"
+        "light": "#CCD1D7",
+        "dark": "#4B5258"
       }
     },
     {
@@ -2766,11 +2766,11 @@
       "role": "brand",
       "ref": {
         "light": "brand::teal::5",
-        "dark": "brand::teal::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#E4E2F8",
-        "dark": "#1D1590"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2780,11 +2780,11 @@
       "role": "error",
       "ref": {
         "light": "sentiment::error::5",
-        "dark": "sentiment::error::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FBD5D5",
-        "dark": "#6C0909"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2794,11 +2794,11 @@
       "role": "warning",
       "ref": {
         "light": "sentiment::warning::5",
-        "dark": "sentiment::warning::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FFF3D1",
-        "dark": "#885D02"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2808,11 +2808,11 @@
       "role": "success",
       "ref": {
         "light": "sentiment::success::5",
-        "dark": "sentiment::success::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#CCF1D0",
-        "dark": "#17541E"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2822,11 +2822,11 @@
       "role": "info",
       "ref": {
         "light": "sentiment::information::5",
-        "dark": "sentiment::information::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#D5EFFF",
-        "dark": "#0B43A3"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2836,11 +2836,11 @@
       "role": "pink",
       "ref": {
         "light": "brand::strawberry::5",
-        "dark": "brand::strawberry::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FBDAE8",
-        "dark": "#8D003D"
+        "dark": "#4B5258"
       }
     },
     {
@@ -2850,11 +2850,11 @@
       "role": "orange",
       "ref": {
         "light": "brand::orange::5",
-        "dark": "brand::orange::90"
+        "dark": "neutral::gray::80"
       },
       "fallbackHex": {
         "light": "#FFE3CE",
-        "dark": "#701C00"
+        "dark": "#4B5258"
       }
     },
     {
