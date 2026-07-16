@@ -49,7 +49,8 @@
 }
 
 .title {
-  @include type-heading-h3-semibold;
+  /* Semantic <h2> — CADS Heading/H2/Semi Bold (Space Grotesk Medium) */
+  @include type-heading-h2-semibold;
 
   color: var(--ds-text-neutral-primary);
   margin: 0;
