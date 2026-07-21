@@ -15,7 +15,7 @@ export const COLOR_SANDBOX_RUNTIME_EVENT = "lab2:color-sandbox:updated";
  * Bump when the committed CodeAI baseline changes so stale localStorage drafts
  * are discarded and users load the bundled defaults instead.
  */
-export const COLOR_SANDBOX_CODEAI_BASELINE_VERSION = 10;
+export const COLOR_SANDBOX_CODEAI_BASELINE_VERSION = 11;
 
 type LegacyStoredDocs = { codeAi?: ColorSystem; codeOrg?: ColorSystem };
 

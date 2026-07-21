@@ -14,6 +14,8 @@ Historical rename table for the Code.org → CodeAI rebrand. Generator, Figma, a
 | `--ds-*-extra-light` | `--ds-*-light` (or `mid` where appropriate) |
 | `--ds-background-neutral-lab` | `--ds-background-neutral-primary` |
 | `--ds-text-neutral-inverse` | `--ds-text-neutral-primary-inverse` |
+| `--ds-text-accent-orange-strong` | `--ds-text-accent-orange-secondary` |
+| `--ds-text-accent-pink-strong` | `--ds-text-accent-pink-secondary` |
 | `--elevation-sm` | `--shadow-lg` |
 
 ## Role guidance

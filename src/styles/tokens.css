@@ -111,10 +111,10 @@
   --ds-border-warning-strong: #CF8E02;
   --ds-text-accent-orange-primary: #F46800;
   --ds-text-accent-orange-primary-fixed: #F46800;
-  --ds-text-accent-orange-strong: #B34800;
+  --ds-text-accent-orange-secondary: #B34800;
   --ds-text-accent-pink-primary: #E11970;
   --ds-text-accent-pink-primary-fixed: #E11970;
-  --ds-text-accent-pink-strong: #B5004F;
+  --ds-text-accent-pink-secondary: #B5004F;
   --ds-text-brand-primary: #4C42CF;
   --ds-text-brand-primary-fixed: #4C42CF;
   --ds-text-brand-secondary: #3228B7;
@@ -270,10 +270,10 @@
   --ds-border-warning-strong: #FFD35C;
   --ds-text-accent-orange-primary: #FFFFFF;
   --ds-text-accent-orange-primary-fixed: #FFA868;
-  --ds-text-accent-orange-strong: #FFE3CE;
+  --ds-text-accent-orange-secondary: #FFE3CE;
   --ds-text-accent-pink-primary: #FFFFFF;
   --ds-text-accent-pink-primary-fixed: #F07FB0;
-  --ds-text-accent-pink-strong: #FBDAE8;
+  --ds-text-accent-pink-secondary: #FBDAE8;
   --ds-text-brand-primary: #FFFFFF;
   --ds-text-brand-primary-fixed: #928CEF;
   --ds-text-brand-secondary: #E4E2F8;

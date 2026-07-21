@@ -2243,10 +2243,10 @@
       }
     },
     {
-      "id": "text/pink/strong",
+      "id": "text/pink/secondary",
       "surface": "text",
       "familyKey": "pink",
-      "role": "strong",
+      "role": "secondary",
       "ref": {
         "light": "brand::strawberry::70",
         "dark": "brand::strawberry::5"
@@ -2271,10 +2271,10 @@
       }
     },
     {
-      "id": "text/orange/strong",
+      "id": "text/orange/secondary",
       "surface": "text",
       "familyKey": "orange-2",
-      "role": "strong",
+      "role": "secondary",
       "ref": {
         "light": "brand::orange::70",
         "dark": "brand::orange::5"
@@ -3104,12 +3104,12 @@
     ],
     "text::pink": [
       "primary",
-      "strong",
+      "secondary",
       "primary-fixed"
     ],
     "text::orange-2": [
       "primary",
-      "strong",
+      "secondary",
       "primary-fixed"
     ],
     "text::selected-2": [
