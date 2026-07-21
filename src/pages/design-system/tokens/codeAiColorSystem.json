@@ -1429,6 +1429,34 @@
       }
     },
     {
+      "id": "borders/neutral/black-fixed",
+      "surface": "borders",
+      "familyKey": "neutral",
+      "role": "black-fixed",
+      "ref": {
+        "light": "neutral::base::black",
+        "dark": "neutral::base::black"
+      },
+      "fallbackHex": {
+        "light": "#121212",
+        "dark": "#121212"
+      }
+    },
+    {
+      "id": "borders/neutral/white-fixed",
+      "surface": "borders",
+      "familyKey": "neutral",
+      "role": "white-fixed",
+      "ref": {
+        "light": "neutral::base::white",
+        "dark": "neutral::base::white"
+      },
+      "fallbackHex": {
+        "light": "#FFFFFF",
+        "dark": "#FFFFFF"
+      }
+    },
+    {
       "id": "borders/brand/purple/primary",
       "surface": "borders",
       "familyKey": "teal",
@@ -3119,7 +3147,9 @@
     "borders::neutral": [
       "primary",
       "secondary",
-      "solid"
+      "solid",
+      "black-fixed",
+      "white-fixed"
     ],
     "borders::teal": [
       "primary",

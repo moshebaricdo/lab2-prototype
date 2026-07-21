@@ -1,8 +1,9 @@
 {
   "$extensions": {
     "figma-console-mcp": {
-      "exportedAt": "2026-07-21T16:17:32.907Z",
-      "mcpVersion": "1.36.0"
+      "exportedAt": "2026-07-21T16:20:29.441Z",
+      "mcpVersion": "1.36.0",
+      "note": "Patched border/neutral/{black,white}-fixed from figma_get_variables; figma_export_tokens still omits them (146 vs 148)."
     }
   },
   "primitive-colors": {
@@ -4572,6 +4573,62 @@
           },
           "$type": "color",
           "$value": "{primitive-colors.neutral.base.black}"
+        },
+        "black-fixed": {
+          "$extensions": {
+            "figma-console-mcp": {
+              "collectionId": "VariableCollectionId:15721:11313",
+              "figmaResolvedType": "COLOR",
+              "lastSyncedAt": "2026-07-21T16:20:29.441Z",
+              "lastSyncedValue": {
+                "Dark": {
+                  "reference": "{primitive-colors.neutral.base.black}"
+                },
+                "Light": {
+                  "reference": "{primitive-colors.neutral.base.black}"
+                }
+              },
+              "modes": {
+                "Dark": "{primitive-colors.neutral.base.black}"
+              },
+              "primaryMode": "Light",
+              "scopes": [
+                "STROKE_COLOR",
+                "EFFECT_COLOR"
+              ],
+              "variableId": "VariableID:16857:78979"
+            }
+          },
+          "$type": "color",
+          "$value": "{primitive-colors.neutral.base.black}"
+        },
+        "white-fixed": {
+          "$extensions": {
+            "figma-console-mcp": {
+              "collectionId": "VariableCollectionId:15721:11313",
+              "figmaResolvedType": "COLOR",
+              "lastSyncedAt": "2026-07-21T16:20:29.441Z",
+              "lastSyncedValue": {
+                "Dark": {
+                  "reference": "{primitive-colors.neutral.base.white}"
+                },
+                "Light": {
+                  "reference": "{primitive-colors.neutral.base.white}"
+                }
+              },
+              "modes": {
+                "Dark": "{primitive-colors.neutral.base.white}"
+              },
+              "primaryMode": "Light",
+              "scopes": [
+                "STROKE_COLOR",
+                "EFFECT_COLOR"
+              ],
+              "variableId": "VariableID:16857:78980"
+            }
+          },
+          "$type": "color",
+          "$value": "{primitive-colors.neutral.base.white}"
         }
       },
       "state": {

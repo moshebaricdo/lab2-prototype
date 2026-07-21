@@ -95,9 +95,11 @@
   --ds-border-info-mid: #6FCAFF;
   --ds-border-info-primary: #0099F3;
   --ds-border-info-strong: #1570D1;
+  --ds-border-neutral-black-fixed: #121212;
   --ds-border-neutral-primary: #CCD1D7;
   --ds-border-neutral-secondary: #9EA5AD;
   --ds-border-neutral-solid: #121212;
+  --ds-border-neutral-white-fixed: #FFFFFF;
   --ds-border-selected-primary: #2B1E9F;
   --ds-border-selected-primary-inverse: #CCF1D0;
   --ds-border-selected-strong: #1F1976;
@@ -254,9 +256,11 @@
   --ds-border-info-mid: #1570D1;
   --ds-border-info-primary: #0099F3;
   --ds-border-info-strong: #6FCAFF;
+  --ds-border-neutral-black-fixed: #121212;
   --ds-border-neutral-primary: #4B5258;
   --ds-border-neutral-secondary: #6E7782;
   --ds-border-neutral-solid: #FFFFFF;
+  --ds-border-neutral-white-fixed: #FFFFFF;
   --ds-border-selected-primary: #CCF1D0;
   --ds-border-selected-primary-inverse: #2B1E9F;
   --ds-border-selected-strong: #9BE3A3;
