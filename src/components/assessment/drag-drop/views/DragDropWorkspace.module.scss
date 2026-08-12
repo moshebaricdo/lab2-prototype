@@ -1,9 +1,9 @@
 @use "../../../../styles/_mixins.scss" as *;
 
 .sectionLabel {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   margin: 0 0 8px;
   text-transform: uppercase;
@@ -58,14 +58,14 @@
 
 .slot,
 .bucketDropzone {
-  border-radius: var(--radius);
+  border-radius: var(--shape-sm);
   min-width: 0;
 }
 
 .slot {
   align-items: stretch;
-  background: var(--ds-background-neutral-primary);
-  border: 1px dashed var(--ds-border-neutral-primary);
+  background: var(--background-neutral-primary);
+  border: 1px dashed var(--border-neutral-primary);
   cursor: pointer;
   display: flex;
   justify-content: flex-start;
@@ -87,16 +87,16 @@
 }
 
 .parsonsSlotDepthPreview {
-  background: var(--ds-background-brand-light);
-  border: 1px dashed var(--ds-border-selected-primary);
-  border-radius: var(--radius);
+  background: var(--background-brand-light);
+  border: 1px dashed var(--border-selected-primary);
+  border-radius: var(--shape-sm);
 }
 
 .parsonsDepthBadge {
-  color: var(--ds-text-brand-primary);
-  font-family: var(--font-body);
+  color: var(--text-brand-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -120,41 +120,41 @@
 }
 
 .slotOver {
-  background: var(--ds-background-brand-light);
-  border-color: var(--ds-border-selected-primary);
+  background: var(--background-brand-light);
+  border-color: var(--border-selected-primary);
 }
 
 .slotFilled.slotOver {
-  box-shadow: inset 0 0 0 2px var(--ds-border-selected-primary);
+  box-shadow: inset 0 0 0 2px var(--border-selected-primary);
 }
 
 .slotSelected {
-  border-color: var(--ds-border-selected-primary);
-  box-shadow: 0 0 0 1px var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
+  box-shadow: 0 0 0 1px var(--border-selected-primary);
 }
 
 .slotFilled.slotSelected {
-  box-shadow: inset 0 0 0 2px var(--ds-border-selected-primary);
+  box-shadow: inset 0 0 0 2px var(--border-selected-primary);
 }
 
 .slotCorrect {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
 }
 
 .slotIncorrect {
-  background: var(--ds-background-error-light);
-  border-color: var(--ds-border-error-primary);
+  background: var(--background-error-light);
+  border-color: var(--border-error-primary);
 }
 
 .slotRevealed {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
   border-style: solid;
 }
 
 .slotEmptyLabel {
-  color: var(--ds-text-neutral-placeholder);
+  color: var(--text-neutral-placeholder);
   display: inline-flex;
 }
 
@@ -179,9 +179,9 @@
 }
 
 .bankListEmpty {
-  background: var(--ds-background-neutral-primary);
-  border: 1px dashed var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
+  background: var(--background-neutral-primary);
+  border: 1px dashed var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
   min-height: 72px;
 }
 
@@ -191,9 +191,9 @@
 }
 
 .bankReturnSlot {
-  background: var(--ds-background-brand-light);
-  border: 1px dashed var(--ds-border-selected-primary);
-  border-radius: var(--radius);
+  background: var(--background-brand-light);
+  border: 1px dashed var(--border-selected-primary);
+  border-radius: var(--shape-sm);
   flex-shrink: 0;
   min-height: 72px;
   width: 100%;
@@ -208,8 +208,8 @@
 }
 
 .bankReturnSlotMirror.blockCard {
-  background: var(--ds-background-brand-light);
-  border: 1px dashed var(--ds-border-selected-primary);
+  background: var(--background-brand-light);
+  border: 1px dashed var(--border-selected-primary);
   box-shadow: none;
   cursor: default;
   pointer-events: none;
@@ -222,13 +222,13 @@
 
 .blockCard {
   align-items: center;
-  background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
-  color: var(--ds-text-neutral-primary);
+  background: var(--background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  color: var(--text-neutral-primary);
   cursor: grab;
   display: flex;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   gap: 12px;
   min-height: 72px;
@@ -243,7 +243,7 @@
 }
 
 .blockCard:hover:not(.blockCardCorrect):not(.blockCardIncorrect):not(.blockCardRevealed):not(.blockCardDragging) {
-  border-color: var(--ds-border-neutral-primary);
+  border-color: var(--border-neutral-primary);
 }
 
 .blockCardInSlot {
@@ -267,8 +267,8 @@
 }
 
 .blockCardSelected {
-  border-color: var(--ds-border-selected-primary);
-  box-shadow: 0 0 0 1px var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
+  box-shadow: 0 0 0 1px var(--border-selected-primary);
 }
 
 .blockCardDragging {
@@ -282,16 +282,16 @@
 
 .dragOverlayCard {
   align-items: center;
-  background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
+  background: var(--background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
   box-shadow:
-    0 12px 24px -8px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 28%, transparent),
-    0 2px 6px -2px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 20%, transparent);
-  color: var(--ds-text-neutral-primary);
+    0 12px 24px -8px color-mix(in srgb, var(--background-neutral-black-fixed) 28%, transparent),
+    0 2px 6px -2px color-mix(in srgb, var(--background-neutral-black-fixed) 20%, transparent);
+  color: var(--text-neutral-primary);
   cursor: grabbing;
   display: flex;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   gap: 12px;
   min-height: 72px;
@@ -306,24 +306,24 @@
 }
 
 .blockCardCorrect {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
 }
 
 .blockCardIncorrect {
-  background: var(--ds-background-error-light);
-  border-color: var(--ds-border-error-primary);
+  background: var(--background-error-light);
+  border-color: var(--border-error-primary);
 }
 
 .blockCardRevealed {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
   cursor: default;
 }
 
 .blockHandle {
   align-self: center;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   display: inline-flex;
   flex-shrink: 0;
   line-height: 0;
@@ -345,10 +345,10 @@
 }
 
 .codeBlock {
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-sm);
   margin: 0;
   max-width: 100%;
@@ -369,13 +369,13 @@
 }
 
 .imageBlock img {
-  border-radius: var(--radius);
+  border-radius: var(--shape-sm);
   display: block;
   max-width: 100%;
 }
 
 .imageCaption {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   margin-top: 4px;
 }
@@ -410,23 +410,23 @@
 }
 
 .bucketTitle {
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   margin: 0;
 }
 
 .bucketDescription {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   margin: 4px 0 0;
 }
 
 .bucketDropzone {
   align-items: flex-start;
-  background: var(--ds-background-neutral-primary);
-  border: 1px dashed var(--ds-border-neutral-primary);
+  background: var(--background-neutral-primary);
+  border: 1px dashed var(--border-neutral-primary);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -444,13 +444,13 @@
 }
 
 .bucketDropzoneOver {
-  background: var(--ds-background-brand-light);
-  border-color: var(--ds-border-selected-primary);
+  background: var(--background-brand-light);
+  border-color: var(--border-selected-primary);
 }
 
 .bucketDropzoneSelected {
-  border-color: var(--ds-border-selected-primary);
-  box-shadow: 0 0 0 1px var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
+  box-shadow: 0 0 0 1px var(--border-selected-primary);
 }
 
 .bucketDropzoneEmpty {
@@ -459,7 +459,7 @@
 }
 
 .bucketEmptyIcon {
-  color: var(--ds-text-neutral-placeholder);
+  color: var(--text-neutral-placeholder);
   display: inline-flex;
 }
 

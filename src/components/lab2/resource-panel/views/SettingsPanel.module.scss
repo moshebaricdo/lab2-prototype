@@ -1,6 +1,6 @@
 .root {
   position: relative;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .rootOpen {
@@ -22,8 +22,8 @@
   left: 0;
   z-index: 5;
   width: 100%;
-  border-top: 1px solid var(--ds-border-neutral-primary);
-  box-shadow: 0 -4px 8px color-mix(in srgb, var(--ds-text-neutral-primary) 8%, transparent);
+  border-top: 1px solid var(--border-neutral-primary);
+  box-shadow: 0 -4px 8px color-mix(in srgb, var(--text-neutral-primary) 8%, transparent);
   transform: translateY(calc(100% + 1px));
   transition:
     transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -43,9 +43,9 @@
   max-height: min(480px, calc(100vh - 32px));
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
-  box-shadow: 0 4px 20px color-mix(in srgb, var(--ds-text-neutral-primary) 10%, transparent);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--text-neutral-primary) 10%, transparent);
 
   .content {
     flex: 1;
@@ -60,8 +60,8 @@
   min-height: 40px;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
   padding: 0 8px;
 }
 
@@ -75,9 +75,9 @@
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -91,7 +91,7 @@
   flex-direction: column;
   gap: 12px;
   padding: 8px 12px 12px 12px;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .field {
@@ -102,9 +102,9 @@
 
 .label {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-xs);
 }
 
@@ -112,37 +112,37 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   padding: 5px 12px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .select:hover {
-  border-color: var(--ds-border-neutral-primary);
+  border-color: var(--border-neutral-primary);
 }
 
 .value {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-regular);
   line-height: var(--leading-body-sm);
 }
 
 .icon {
   width: 18px;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   text-align: center;
 }
 
 .input {
   width: 100%;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
   padding: 5px 12px;
@@ -150,13 +150,13 @@
 }
 
 .input:focus {
-  border-color: var(--ds-border-selected-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-border-selected-primary) 18%, transparent);
+  border-color: var(--border-selected-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--border-selected-primary) 18%, transparent);
 }
 
 .helpText {
   margin: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
 }

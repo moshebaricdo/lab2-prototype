@@ -8,7 +8,7 @@
   height: 100%;
   flex: 1;
   flex-direction: column;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .contentWrap {
@@ -47,7 +47,7 @@
   top: var(--editor-content-pad-top);
   background: linear-gradient(
     to bottom,
-    var(--ds-background-neutral-primary),
+    var(--background-neutral-primary),
     transparent
   );
 }
@@ -56,7 +56,7 @@
   bottom: 0;
   background: linear-gradient(
     to top,
-    var(--ds-background-neutral-primary),
+    var(--background-neutral-primary),
     transparent
   );
 }
@@ -83,14 +83,14 @@
   justify-content: center;
   overflow: auto;
   padding: 24px;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .imagePreview {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border-radius: var(--radius-md);
+  border-radius: var(--shape-md);
   box-shadow: 0 8px 32px rgb(0 0 0 / 16%);
 }
 
@@ -101,23 +101,23 @@
   align-items: center;
   gap: 8px;
   padding: 24px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-md);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
   text-align: center;
 }
 
 .imagePreviewTitle {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1.35;
 }
 
 .imagePreviewText {
   margin: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   line-height: 1.5;
 }
@@ -151,7 +151,7 @@
   background: linear-gradient(
     to left,
     rgb(0 0 0 / 0%),
-    var(--ds-background-neutral-primary)
+    var(--background-neutral-primary)
   );
 }
 
@@ -160,7 +160,7 @@
   background: linear-gradient(
     to right,
     rgb(0 0 0 / 0%),
-    var(--ds-background-neutral-primary)
+    var(--background-neutral-primary)
   );
 }
 
@@ -216,52 +216,52 @@
   cursor: pointer;
   align-items: center;
   gap: 8px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   padding: 2px 8px;
   transition: background-color 0.05s ease-in, opacity 0.05s ease-in;
 }
 
 .tab:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 2px var(--border-selected-primary);
 }
 
 .tabActive {
-  background: var(--ds-background-selected-primary);
+  background: var(--background-selected-primary);
 }
 
 .tabIdle {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .tabIdle:hover {
-  background: var(--ds-background-neutral-tertiary);
+  background: var(--background-neutral-tertiary);
 }
 
 .tabAiChanged {
-  background: var(--ds-background-brand-light);
+  background: var(--background-brand-light);
 }
 
 .tabAiChanged:hover {
-  background: var(--ds-background-brand-light);
+  background: var(--background-brand-light);
 }
 
 .tabAiChanged .tabIcon {
-  color: var(--ds-text-brand-primary);
+  color: var(--text-brand-primary);
 }
 
 .tabAiChanged .tabName {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .tabAiChangedActive {
-  background: var(--ds-background-selected-strong);
+  background: var(--background-selected-strong);
 }
 
 .tabAiChangedActive .tabIcon,
 .tabAiChangedActive .tabName,
 .tabAiChangedActive .tabCloseIcon {
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed));
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed));
 }
 
 .tabDragToTutor {
@@ -287,11 +287,11 @@
 }
 
 .tabIconActive {
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed));
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed));
 }
 
 .tabIconInactive {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .tabName {
@@ -302,11 +302,11 @@
 }
 
 .tabNameActive {
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed));
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed));
 }
 
 .tabNameInactive {
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
 }
 
 .tabClose {
@@ -325,8 +325,8 @@
 
 .tabClose:focus-visible {
   outline: none;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
+  border-radius: var(--shape-sm);
+  box-shadow: 0 0 0 2px var(--border-selected-primary);
   opacity: 1;
 }
 
@@ -348,9 +348,9 @@
   z-index: 99;
   padding: 2px;
   padding-top: 1px;
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
   box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
 }
 
@@ -363,7 +363,7 @@
   height: 100%;
   align-items: center;
   justify-content: center;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 /* ---------- Edge tabs (Cursor-style full row) ---------- */
@@ -373,14 +373,14 @@
   flex-direction: row;
   align-items: flex-start;
   overflow: visible;
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .tabsViewportEdge::before {
   background: linear-gradient(
     to left,
     rgb(0 0 0 / 0%),
-    var(--ds-background-neutral-secondary)
+    var(--background-neutral-secondary)
   );
 }
 
@@ -388,7 +388,7 @@
   background: linear-gradient(
     to right,
     rgb(0 0 0 / 0%),
-    var(--ds-background-neutral-secondary)
+    var(--background-neutral-secondary)
   );
 }
 
@@ -406,8 +406,8 @@
   padding-bottom: 0;
   overflow-x: auto;
   overflow-y: visible;
-  background: var(--ds-background-neutral-secondary);
-  box-shadow: inset 0 -1px 0 var(--ds-border-neutral-primary);
+  background: var(--background-neutral-secondary);
+  box-shadow: inset 0 -1px 0 var(--border-neutral-primary);
 }
 
 .tabsRowEdgeCollapsed,
@@ -425,22 +425,22 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-right: 1px solid var(--ds-border-neutral-primary);
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  border-right: 1px solid var(--border-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
   border-radius: 0;
-  background: var(--ds-background-neutral-secondary);
-  color: var(--ds-text-neutral-quaternary);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-quaternary);
   cursor: pointer;
   transition: background-color 0.05s ease-in;
 }
 
 .tabEdgeFileManager:hover {
-  background: var(--ds-background-neutral-tertiary);
+  background: var(--background-neutral-tertiary);
 }
 
 .tabEdgeFileManager:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px var(--ds-border-selected-primary);
+  box-shadow: inset 0 0 0 2px var(--border-selected-primary);
 }
 
 .tabEdgeFileManagerIcon {
@@ -456,81 +456,81 @@
   align-items: center;
   gap: 6px;
   border: 0;
-  border-right: 1px solid var(--ds-border-neutral-primary);
+  border-right: 1px solid var(--border-neutral-primary);
   border-bottom: 1px solid transparent;
   border-radius: 0;
   padding: 0 12px;
   cursor: pointer;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   transition: background-color 0.05s ease-in, color 0.05s ease-in,
     border-color 0.05s ease-in;
 }
 
 .tabEdge:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px var(--ds-border-selected-primary);
+  box-shadow: inset 0 0 0 2px var(--border-selected-primary);
 }
 
 .tabEdgeIdle {
-  border-bottom-color: var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-bottom-color: var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
 }
 
 .tabEdgeIdle:hover {
-  background: var(--ds-background-neutral-tertiary);
+  background: var(--background-neutral-tertiary);
 }
 
 .tabEdgeActive {
-  border-bottom-color: var(--ds-background-neutral-primary);
-  background: var(--ds-background-neutral-primary);
+  border-bottom-color: var(--background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .tabEdgeActive:hover {
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .tabEdgeAiChanged {
-  border-bottom-color: var(--ds-border-neutral-primary);
-  background: var(--ds-background-brand-light);
+  border-bottom-color: var(--border-neutral-primary);
+  background: var(--background-brand-light);
 }
 
 .tabEdgeAiChanged:hover {
-  background: var(--ds-background-brand-light);
+  background: var(--background-brand-light);
 }
 
 .tabEdgeAiChanged .tabIcon {
-  color: var(--ds-text-brand-primary);
+  color: var(--text-brand-primary);
 }
 
 .tabEdgeAiChanged .tabName {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .tabEdgeAiChangedActive {
-  border-bottom-color: var(--ds-background-neutral-primary);
-  background: var(--ds-background-selected-strong);
+  border-bottom-color: var(--background-neutral-primary);
+  background: var(--background-selected-strong);
 }
 
 .tabEdgeAiChangedActive .tabIcon,
 .tabEdgeAiChangedActive .tabName,
 .tabEdgeAiChangedActive .tabCloseIcon {
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed));
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed));
 }
 
 .tabEdgeIconActive {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .tabEdgeIconInactive {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .tabEdgeNameActive {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .tabEdgeNameInactive {
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
 }
 
 .tabEdge .tabName {
@@ -555,7 +555,7 @@
 
 .tabEdgeClose:focus-visible {
   outline: none;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
+  border-radius: var(--shape-sm);
+  box-shadow: 0 0 0 2px var(--border-selected-primary);
   opacity: 1;
 }

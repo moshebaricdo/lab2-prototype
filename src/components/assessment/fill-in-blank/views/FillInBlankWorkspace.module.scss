@@ -1,8 +1,8 @@
 @use "../../../../styles/_mixins.scss" as *;
 
 .passage {
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-md);
   line-height: 1.85;
   margin-top: 24px;
@@ -26,7 +26,7 @@
 }
 
 .blankWrap:focus-within .blankInput:not(:disabled) {
-  border-bottom-color: var(--ds-border-selected-primary);
+  border-bottom-color: var(--border-selected-primary);
   border-bottom-style: solid;
 }
 
@@ -34,13 +34,13 @@
   appearance: none;
   background: transparent;
   border: 0;
-  border-bottom: 1px dashed var(--ds-border-neutral-primary);
+  border-bottom: 1px dashed var(--border-neutral-primary);
   border-radius: 0;
   box-sizing: content-box;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   display: inline-block;
   font: inherit;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   height: auto;
   text-align: center;
   line-height: 1;
@@ -53,7 +53,7 @@
 }
 
 .blankInput::placeholder {
-  color: var(--ds-text-neutral-placeholder);
+  color: var(--text-neutral-placeholder);
 }
 
 .blankInput:focus {
@@ -62,26 +62,26 @@
 
 .blankInput:focus-visible {
   @include focus-ring;
-  border-bottom: 1px solid var(--ds-border-neutral-solid);
+  border-bottom: 1px solid var(--border-neutral-solid);
 }
 
 .blankInputCorrect {
-  border-bottom-color: var(--ds-border-success-primary);
+  border-bottom-color: var(--border-success-primary);
   border-bottom-style: solid;
-  color: var(--ds-text-success-primary);
+  color: var(--text-success-primary);
   font-weight: var(--font-weight-medium);
 }
 
 .blankInputIncorrect {
-  border-bottom-color: var(--ds-border-error-primary);
+  border-bottom-color: var(--border-error-primary);
   border-bottom-style: solid;
-  color: var(--ds-text-error-primary);
+  color: var(--text-error-primary);
 }
 
 .blankInputRevealed {
-  border-bottom-color: var(--ds-border-success-primary);
+  border-bottom-color: var(--border-success-primary);
   border-bottom-style: solid;
-  color: var(--ds-text-success-primary);
+  color: var(--text-success-primary);
   font-weight: var(--font-weight-medium);
 }
 
@@ -98,10 +98,10 @@
 }
 
 .feedbackCorrect {
-  color: var(--ds-text-success-primary);
+  color: var(--text-success-primary);
 }
 
 .feedbackIncorrect {
-  color: var(--ds-text-error-primary);
+  color: var(--text-error-primary);
 }
 

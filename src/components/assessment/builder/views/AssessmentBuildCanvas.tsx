@@ -14,11 +14,9 @@ import {
   type DraggableAttributes,
 } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
-import { AppButton } from "../../../ui/AppButton";
-import { AppActionDropdown } from "../../../ui/AppDropdown";
+import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
 import { AppTag } from "../../../ui/AppTag";
 import { FaIcon } from "../../../ui/icons/FaIcon";
-import { Tooltip } from "../../../ui/Tooltip";
 import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { BlankQuestionKind } from "../../../../lib/assessmentBuilder";
@@ -164,11 +162,12 @@ function QuestionCardHeader({
 }: QuestionCardHeaderProps) {
   return (
     <div className={styles.cardHeader}>
-      <AppButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="grip-vertical"
+      <Button
+        variant="text"
+        color="tertiary"
+        size="extraSmall"
+        iconOnly
+        startIconName="grip-vertical"
         aria-label="Reorder question"
         className={styles.dragHandle}
         {...dragHandleListeners}
@@ -176,7 +175,7 @@ function QuestionCardHeader({
       />
       <span className={styles.cardIndex}>{sequenceNumber}</span>
       <p className={styles.cardPrompt}>{questionPrompt(question)}</p>
-      <Tooltip content={badge.label} position="top">
+      <Tooltip title={badge.label} placement="top">
         <span
           className={[styles.typeBadge, styles[`tone${badge.tone}`]]
             .filter(Boolean)
@@ -191,50 +190,49 @@ function QuestionCardHeader({
           <span className={styles.cardActionsDivider} aria-hidden />
           <div className={styles.cardActions}>
             {expanded ? (
-              <AppActionDropdown
-                align="end"
-                side="bottom"
-                size="xs"
-                listLabel="Save question"
-                trigger={
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    size="xs"
-                    iconName="floppy-disk"
-                    aria-label="Save question"
-                  />
-                }
-                items={[
+              <Dropdown
+                role="action"
+                size="extraSmall"
+                menuPlacement="bottomRight"
+                buttonVariant="outlined"
+                buttonColor="secondary"
+                iconOnly
+                startIconName="floppy-disk"
+                aria-label="Save question"
+                options={[
                   {
-                    id: "save-assessment",
+                    value: "save-assessment",
                     label: "Save for this assessment",
                     iconName: "floppy-disk",
-                    onSelect: onSaveForAssessment,
                   },
                   {
-                    id: "save-bank",
+                    value: "save-bank",
                     label: "Save to question bank",
                     iconName: "clipboard-question",
-                    onSelect: onSaveToQuestionBank,
                   },
                 ]}
+                onAction={(actionValue) => {
+                  if (actionValue === "save-assessment") onSaveForAssessment?.();
+                  if (actionValue === "save-bank") onSaveToQuestionBank?.();
+                }}
               />
             ) : (
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="pen-to-square"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="pen-to-square"
                 aria-label="Edit question"
                 onClick={() => onEditQuestion?.(question.bankId)}
               />
             )}
-            <AppButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              iconName="minus"
+            <Button
+              variant="text"
+              color="tertiary"
+              size="extraSmall"
+              iconOnly
+              startIconName="minus"
               aria-label="Remove question"
               className={styles.deleteButton}
               onClick={onRemoveQuestion}
@@ -553,15 +551,15 @@ export function AssessmentBuildCanvas({
                     assessments.
                   </p>
                 </div>
-                <AppButton
-                  variant="primary"
-                  tone="teal"
-                  size="s"
-                  iconName="clipboard-question"
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  startIconName="clipboard-question"
                   onClick={onOpenBank}
                 >
                   Browse question bank
-                </AppButton>
+                </Button>
               </div>
 
               <div className={styles.sectionDivider}>

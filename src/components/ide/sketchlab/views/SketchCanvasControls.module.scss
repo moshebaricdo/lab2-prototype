@@ -4,9 +4,9 @@
   gap: 0;
   margin: 0 8px 8px 0;
   padding: 4px;
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-md);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
   box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
@@ -18,5 +18,5 @@
 .divider {
   height: 1px;
   margin: 4px -4px;
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
 }

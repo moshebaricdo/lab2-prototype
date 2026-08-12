@@ -2,20 +2,20 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
 }
 
 /* Card sections — same vocabulary as other Lab2 panels. */
 .card {
   overflow: hidden;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
 }
 
 .cardTitle {
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   display: flex;
@@ -24,9 +24,9 @@
   height: 36px;
   margin: 0;
   padding: 0 12px;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
-  color: var(--ds-text-neutral-quaternary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-quaternary);
 }
 
 .cardBody {
@@ -45,8 +45,8 @@
 .fieldLabel {
   margin: 0;
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }
 
 .fileChecklist {
@@ -59,14 +59,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
   cursor: pointer;
 }
 
 .contractText {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
   line-height: 1.5;
 }
@@ -101,7 +101,7 @@
 
 .toolRowLabel {
   flex: 1;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .toolGroup {
@@ -119,12 +119,12 @@
 
 .toolSubIcon {
   flex-shrink: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .toolSubLabel {
   flex-shrink: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   line-height: 1.4;
 }
@@ -132,7 +132,7 @@
 .toolSubDetail {
   flex: 1;
   min-width: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-xs);
   line-height: 1.4;
   text-align: right;
@@ -178,29 +178,29 @@
 
 .effortInputValue {
   flex-shrink: 0;
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-regular);
   line-height: 1.64;
 }
 
 .effortHelper {
   margin: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   line-height: 1.4;
 }
 
 .effortSummary {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
   line-height: 1.5;
 }
 
 .effortValue {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
 }
 
 /* @deprecated — replaced by .toolList */
@@ -222,13 +222,13 @@
 
 .permissionRowLabel {
   flex: 1;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .permissionNote {
   margin: 0;
   padding-left: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   line-height: 1.4;
   list-style: none;
@@ -236,7 +236,7 @@
 
 .cardIntro {
   margin: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   line-height: 1.45;
 }
@@ -246,12 +246,12 @@
   flex-direction: column;
   gap: 6px;
   padding-top: 10px;
-  border-top: 1px solid var(--ds-border-neutral-primary);
+  border-top: 1px solid var(--border-neutral-primary);
 }
 
 .filePackerHint {
   margin: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   line-height: 1.4;
 }
@@ -281,12 +281,12 @@
 .toggleLabel {
   font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .toggleDescription {
   font-size: var(--text-body-xs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   line-height: 1.35;
 }
 
@@ -295,8 +295,8 @@
   flex-shrink: 0;
   width: 32px;
   height: 18px;
-  border-radius: var(--radius-md);
-  background: var(--ds-background-neutral-quaternary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-quaternary);
   transition: background 0.15s ease;
 
   input {
@@ -308,13 +308,13 @@
   }
 
   input:focus-visible + .switchThumb {
-    outline: 2px solid var(--ds-border-selected-primary);
+    outline: 2px solid var(--border-selected-primary);
     outline-offset: 2px;
   }
 }
 
 .switchOn {
-  background: var(--ds-background-brand-primary);
+  background: var(--background-brand-primary);
 }
 
 .switchDisabled {
@@ -328,8 +328,8 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--ds-background-neutral-primary);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 20%, transparent);
+  background: var(--background-neutral-primary);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--background-neutral-black-fixed) 20%, transparent);
   transition: transform 0.15s ease;
   pointer-events: none;
 }
@@ -357,21 +357,21 @@
 
 .contextRowIcon {
   flex-shrink: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .contextRowLabel {
   flex: 1;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .contextRowOn {
-  color: var(--ds-text-success-primary);
+  color: var(--text-success-primary);
   font-size: var(--text-body-xs);
   font-weight: var(--font-weight-medium);
 }
 
 .contextRowOff {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
 }

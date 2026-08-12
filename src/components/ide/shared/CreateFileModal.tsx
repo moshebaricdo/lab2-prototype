@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
-import { AppActionDropdown } from "../../ui/AppDropdown";
-import dropdownStyles from "../../ui/AppDropdown.module.scss";
-import { AppButton } from "../../ui/AppButton";
-import { AppTextField } from "../../ui/AppTextField";
+import { Button, Dropdown, TextInput } from "@moshebaricdo/cads-react";
 import { Modal } from "../../ui/Modal";
-import { FaIcon } from "../../ui/icons/FaIcon";
+import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import {
   getFileTypeIconConfigForCreateFileType,
   type CreateFileModalType,
@@ -23,68 +20,39 @@ type FileType = CreateFileModalType;
 
 const DEFAULT_FILE_TYPES: FileType[] = ["HTML", "CSS", "JS", "MD", "TXT", "CSV"];
 
+function cadsFileTypeIcon(type: FileType): FaIconName {
+  const icon = getFileTypeIconConfigForCreateFileType(type);
+  if (icon.family === "solid") return icon.name;
+  if (type === "MD") return "file-lines";
+  return "file-code";
+}
+
 interface FileTypeDropdownProps {
   selectedType: FileType;
   fileTypes: FileType[];
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
   onSelect: (type: FileType) => void;
 }
 
 function FileTypeDropdown({
   selectedType,
   fileTypes,
-  isOpen,
-  onOpenChange,
   onSelect,
 }: FileTypeDropdownProps) {
-  const selectedIcon = getFileTypeIconConfigForCreateFileType(selectedType);
-
   return (
-    <AppActionDropdown
-      open={isOpen}
-      onOpenChange={onOpenChange}
-      align="start"
-      size="m"
-      menuWidth="var(--radix-popover-trigger-width)"
-      listLabel="File types"
-      trigger={
-        <button
-          type="button"
-          className={[
-            dropdownStyles.field,
-            dropdownStyles.sizeM,
-            dropdownStyles.toneGray,
-            styles.dropdownTrigger,
-          ].join(" ")}
-        >
-          <span className={dropdownStyles.fieldLabel}>
-            <FaIcon
-              family={selectedIcon.family}
-              name={selectedIcon.name}
-              size="s"
-              className={dropdownStyles.fieldIcon}
-            />
-            <span>{selectedType}</span>
-          </span>
-          <FaIcon
-            name={isOpen ? "chevron-up" : "chevron-down"}
-            size="s"
-            className={dropdownStyles.chevron}
-          />
-        </button>
-      }
-      items={fileTypes.map((type) => {
-        const icon = getFileTypeIconConfigForCreateFileType(type);
-        return {
-          id: type,
-          label: type,
-          icon: (
-            <FaIcon family={icon.family} name={icon.name} size="s" />
-          ),
-          onSelect: () => onSelect(type),
-        };
-      })}
+    <Dropdown
+      role="input"
+      label="File type"
+      size="medium"
+      color="secondary"
+      width="full"
+      startIconName={cadsFileTypeIcon(selectedType)}
+      value={selectedType}
+      options={fileTypes.map((type) => ({
+        value: type,
+        label: type,
+        iconName: cadsFileTypeIcon(type),
+      }))}
+      onChange={(nextValue) => onSelect(String(nextValue) as FileType)}
     />
   );
 }
@@ -98,7 +66,6 @@ export function CreateFileModal({
 }: CreateFileModalProps) {
   const [fileName, setFileName] = useState("");
   const [fileType, setFileType] = useState<FileType>(defaultFileType);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -106,7 +73,6 @@ export function CreateFileModal({
       setFileName("");
       setFileType(defaultFileType);
       setError("");
-      setIsDropdownOpen(false);
     }
   }, [defaultFileType, isOpen]);
 
@@ -172,12 +138,22 @@ export function CreateFileModal({
       description="Give your new file a name and type."
       footer={
         <>
-          <AppButton variant="secondary" tone="gray" size="m" onClick={onClose}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="medium"
+            onClick={onClose}
+          >
             Cancel
-          </AppButton>
-          <AppButton variant="primary" tone="purple" size="m" onClick={handleCreate}>
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            size="medium"
+            onClick={handleCreate}
+          >
             {createButtonLabel}
-          </AppButton>
+          </Button>
         </>
       }
     >
@@ -186,7 +162,7 @@ export function CreateFileModal({
           className={styles.fieldGroup}
           style={{ flex: "0 1 76%" }}
         >
-          <AppTextField
+          <TextInput
             label="File name"
             type="text"
             value={fileName}
@@ -197,9 +173,10 @@ export function CreateFileModal({
             onKeyDown={handleKeyDown}
             placeholder="Enter file name"
             autoFocus
-            errorText={error || undefined}
-            size="m"
-            tone="gray"
+            error={Boolean(error)}
+            helperText={error || undefined}
+            size="medium"
+            color="secondary"
           />
         </div>
 
@@ -207,12 +184,9 @@ export function CreateFileModal({
           className={styles.fieldGroup}
           style={{ flex: "0 1 30%" }}
         >
-          <label className={styles.fieldLabel}>File type</label>
           <FileTypeDropdown
             selectedType={fileType}
             fileTypes={fileTypes}
-            isOpen={isDropdownOpen}
-            onOpenChange={setIsDropdownOpen}
             onSelect={setFileType}
           />
         </div>

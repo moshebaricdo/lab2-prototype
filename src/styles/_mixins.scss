@@ -3,35 +3,35 @@
 @use "./_typography.scss" as *;
 
 @mixin focus-ring {
-  outline: 2px solid var(--ds-border-focused-primary);
+  outline: 2px solid var(--border-focused-primary, var(--ds-border-focused-primary));
   outline-offset: 2px;
 }
 
 @mixin panel-header-label {
   @include type-overline-2;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 @mixin assessment-stem-eyebrow {
   @include type-overline-2;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   margin: 0;
 }
 
 @mixin assessment-stem-question {
   @include type-heading-h4-semibold;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   text-wrap: pretty;
 }
 
 @mixin assessment-stem-description-heading {
   @include type-body-2-semibold;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   text-wrap: pretty;
 }
 
 @mixin assessment-stem-description-body {
   @include type-body-2-regular;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   text-wrap: pretty;
 }

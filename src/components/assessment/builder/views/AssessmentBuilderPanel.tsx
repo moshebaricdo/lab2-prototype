@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { AppMultiSelectDropdown } from "../../../ui/AppDropdown";
-import { AppButton } from "../../../ui/AppButton";
-import { AppTextField } from "../../../ui/AppTextField";
-import { AppCheckbox } from "../../../ui/AppCheckbox";
+import { Button, Checkbox, Dropdown, TextInput, Tooltip } from "@moshebaricdo/cads-react";
 import { AppTag } from "../../../ui/AppTag";
-import { Tooltip } from "../../../ui/Tooltip";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { SidebarTab } from "../../../lab2/resource-panel/Sidebar.types";
 import {
@@ -25,6 +21,10 @@ function subscribeToBankStorage(callback: () => void) {
   };
   window.addEventListener("storage", handler);
   return () => window.removeEventListener("storage", handler);
+}
+
+function asStringArray(value: string | string[]): string[] {
+  return Array.isArray(value) ? value : [value];
 }
 
 interface AssessmentBuilderPanelProps {
@@ -163,60 +163,71 @@ export function AssessmentBuilderPanel({
             <div className={styles.groupCard}>
               <div className={`${styles.groupHeader} ${styles.groupHeaderWithAction}`}>
                 <h3 className={styles.groupHeading}>Filters</h3>
-                <Tooltip content="Clear all filters" position="bottom">
-                  <AppButton
-                    variant="tertiary"
-                    tone="gray"
-                    size="xs"
-                    iconName="arrow-rotate-left"
-                    aria-label="Clear all filters"
-                    onClick={handleClearFilters}
-                  />
+                <Tooltip title="Clear all filters" placement="bottom">
+                  <span>
+                    <Button
+                      variant="text"
+                      color="tertiary"
+                      size="extraSmall"
+                      iconOnly
+                      startIconName="arrow-rotate-left"
+                      aria-label="Clear all filters"
+                      onClick={handleClearFilters}
+                    />
+                  </span>
                 </Tooltip>
               </div>
               <div className={styles.groupBody}>
                 <div className={styles.filterFields}>
                   <div className={styles.filterField}>
                     <span className={styles.filterLabel}>Course</span>
-                    <AppMultiSelectDropdown
+                    <Dropdown
+                      role="input"
+                      menuType="checklist"
                       options={courseOptions}
-                      selectedValues={selectedCourseIds}
-                      onSelectedValuesChange={setSelectedCourseIds}
+                      value={selectedCourseIds}
+                      onChange={(value) => setSelectedCourseIds(asStringArray(value))}
                       placeholder="All courses"
-                      size="xs"
-                      tone="gray"
-                      fullWidth
-                      iconName="book"
+                      size="extraSmall"
+                      color="secondary"
+                      width="full"
+                      startIconName="book"
                     />
                   </div>
                   <div className={styles.filterRow}>
                     <div className={styles.filterField}>
                       <span className={styles.filterLabel}>Domains</span>
-                      <AppMultiSelectDropdown
+                      <Dropdown
+                        role="input"
+                        menuType="checklist"
                         options={domainOptions}
-                        selectedValues={selectedDomainIds}
-                        onSelectedValuesChange={setSelectedDomainIds}
+                        value={selectedDomainIds}
+                        onChange={(value) => setSelectedDomainIds(asStringArray(value))}
                         placeholder="All domains"
-                        size="xs"
-                        tone="gray"
-                        fullWidth
-                        iconName="tag"
+                        size="extraSmall"
+                        color="secondary"
+                        width="full"
+                        startIconName="tag"
                         disabled={domainOptions.length === 0}
                       />
                     </div>
                     <div className={styles.filterField}>
                       <span className={styles.filterLabel}>Difficulty</span>
-                      <AppMultiSelectDropdown
+                      <Dropdown
+                        role="input"
+                        menuType="checklist"
                         options={difficultyOptions}
-                        selectedValues={selectedDifficulties}
-                        onSelectedValuesChange={(values) =>
-                          setSelectedDifficulties(values as QuestionDifficulty[])
+                        value={selectedDifficulties}
+                        onChange={(value) =>
+                          setSelectedDifficulties(
+                            asStringArray(value) as QuestionDifficulty[],
+                          )
                         }
                         placeholder="All levels"
-                        size="xs"
-                        tone="gray"
-                        fullWidth
-                        iconName="signal"
+                        size="extraSmall"
+                        color="secondary"
+                        width="full"
+                        startIconName="signal"
                       />
                     </div>
                   </div>
@@ -268,16 +279,16 @@ export function AssessmentBuilderPanel({
                               </span>
                             )}
                           </button>
-                          <AppButton
-                            variant={inAssessment ? "tertiary" : "secondary"}
-                            tone="gray"
-                            size="xs"
-                            iconName={inAssessment ? "check" : "plus"}
+                          <Button
+                            variant={inAssessment ? "text" : "outlined"}
+                            color="secondary"
+                            size="extraSmall"
+                            startIconName={inAssessment ? "check" : "plus"}
                             disabled={inAssessment}
                             onClick={() => onAddBankQuestion(question.bankId)}
                           >
                             {inAssessment ? "Added" : "Add"}
-                          </AppButton>
+                          </Button>
                         </div>
                       );
                     })}
@@ -295,10 +306,10 @@ export function AssessmentBuilderPanel({
                 <h3 className={styles.groupHeading}>Assessment</h3>
               </div>
               <div className={styles.groupBody}>
-              <AppTextField
+              <TextInput
                 label="Title"
-                size="s"
-                tone="gray"
+                size="small"
+                color="secondary"
                 value={artifact.title}
                 onChange={(event) =>
                   onUpdateArtifact((current) => ({
@@ -315,38 +326,34 @@ export function AssessmentBuilderPanel({
                 <h3 className={styles.groupHeading}>Shuffling</h3>
               </div>
               <div className={styles.groupBody}>
-              <label className={styles.checkRow}>
-                <AppCheckbox
-                  checkboxSize="s"
-                  checked={artifact.shuffle.shuffleQuestions}
-                  onChange={(event) =>
-                    onUpdateArtifact((current) => ({
-                      ...current,
-                      shuffle: {
-                        ...current.shuffle,
-                        shuffleQuestions: event.target.checked,
-                      },
-                    }))
-                  }
-                />
-                <span>Shuffle question order</span>
-              </label>
-              <label className={styles.checkRow}>
-                <AppCheckbox
-                  checkboxSize="s"
-                  checked={artifact.shuffle.shuffleOptions}
-                  onChange={(event) =>
-                    onUpdateArtifact((current) => ({
-                      ...current,
-                      shuffle: {
-                        ...current.shuffle,
-                        shuffleOptions: event.target.checked,
-                      },
-                    }))
-                  }
-                />
-                <span>Shuffle answer options</span>
-              </label>
+              <Checkbox
+                size="small"
+                checked={artifact.shuffle.shuffleQuestions}
+                onChange={(event) =>
+                  onUpdateArtifact((current) => ({
+                    ...current,
+                    shuffle: {
+                      ...current.shuffle,
+                      shuffleQuestions: event.target.checked,
+                    },
+                  }))
+                }
+                label="Shuffle question order"
+              />
+              <Checkbox
+                size="small"
+                checked={artifact.shuffle.shuffleOptions}
+                onChange={(event) =>
+                  onUpdateArtifact((current) => ({
+                    ...current,
+                    shuffle: {
+                      ...current.shuffle,
+                      shuffleOptions: event.target.checked,
+                    },
+                  }))
+                }
+                label="Shuffle answer options"
+              />
               </div>
             </div>
 
@@ -355,19 +362,17 @@ export function AssessmentBuilderPanel({
                 <h3 className={styles.groupHeading}>AI Tutor</h3>
               </div>
               <div className={styles.groupBody}>
-              <label className={styles.checkRow}>
-                <AppCheckbox
-                  checkboxSize="s"
-                  checked={artifact.tutor.enabled}
-                  onChange={(event) =>
-                    onUpdateArtifact((current) => ({
-                      ...current,
-                      tutor: { ...current.tutor, enabled: event.target.checked },
-                    }))
-                  }
-                />
-                <span>Enable AI Tutor</span>
-              </label>
+              <Checkbox
+                size="small"
+                checked={artifact.tutor.enabled}
+                onChange={(event) =>
+                  onUpdateArtifact((current) => ({
+                    ...current,
+                    tutor: { ...current.tutor, enabled: event.target.checked },
+                  }))
+                }
+                label="Enable AI Tutor"
+              />
               {artifact.mode === "exam" && !artifact.tutor.enabled && (
                 <p className={styles.hint}>Practice exams default the Tutor off.</p>
               )}
@@ -380,10 +385,10 @@ export function AssessmentBuilderPanel({
                   <h3 className={styles.groupHeading}>Timed exam</h3>
                 </div>
                 <div className={styles.groupBody}>
-                  <AppTextField
+                  <TextInput
                     label="Time limit (minutes)"
-                    size="s"
-                    tone="gray"
+                    size="small"
+                    color="secondary"
                     inputMode="numeric"
                     value={String(artifact.timing?.timeLimitMinutes ?? "")}
                     onChange={(event) => {
@@ -396,10 +401,10 @@ export function AssessmentBuilderPanel({
                       }));
                     }}
                   />
-                  <AppTextField
+                  <TextInput
                     label="Max attempts"
-                    size="s"
-                    tone="gray"
+                    size="small"
+                    color="secondary"
                     inputMode="numeric"
                     value={String(artifact.attempts?.maxAttempts ?? "")}
                     onChange={(event) => {

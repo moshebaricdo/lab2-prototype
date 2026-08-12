@@ -8,8 +8,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppButton } from "../../../ui/AppButton";
-import { AppTextArea } from "../../../ui/AppTextField";
+import { Button, TextInput } from "@moshebaricdo/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
   mockFreeResponseLevel,
@@ -255,14 +254,15 @@ export function FreeResponseWorkspace({
             description={level.stem.description}
           >
             <div className={styles.inputWrap}>
-              <AppTextArea
+              <TextInput
+                multiline
+                color="secondary"
                 value={responseText}
                 readOnly={inputReadOnly}
                 disabled={inputDisabled}
                 placeholder={level.question.placeholder}
                 onChange={(event) => setResponseText(event.target.value)}
                 rows={6}
-                tone="gray"
               />
               <div className={styles.hintRow}>
                 <p className={styles.hintText}>
@@ -294,18 +294,16 @@ export function FreeResponseWorkspace({
                       onChange={handleFileChange}
                     />
                     <div className={styles.fileDropZoneInner}>
-                      <AppButton
+                      <Button
                         type="button"
-                        variant="secondary"
-                        tone="gray"
-                        size="s"
-                        iconPosition="start"
-                        iconName="upload"
+                        variant="outlined" color="secondary"
+                        size="small"
+                        startIconName="upload"
                         disabled={fieldLocked}
                         onClick={() => fileInputRef.current?.click()}
                       >
                         Attach a file
-                      </AppButton>
+                      </Button>
                     </div>
                   </div>
                   {attachedFile ? (
@@ -357,20 +355,18 @@ export function FreeResponseWorkspace({
               showLeft={!embedded && revealAnswerEnabled}
               left={
                 !embedded && revealAnswerEnabled ? (
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    iconPosition="start"
-                    iconName={
+                  <Button
+                    variant="outlined" color="secondary"
+                    startIconName={
                       isTeacherAnswerRevealed ? "eye-slash" : "eye"
                     }
-                    size="m"
+                    size="medium"
                     onClick={() =>
                       setIsTeacherAnswerRevealed((current) => !current)
                     }
                   >
                     {isTeacherAnswerRevealed ? "Hide answer" : "Reveal answer"}
-                  </AppButton>
+                  </Button>
                 ) : null
               }
               right={
@@ -397,21 +393,19 @@ export function FreeResponseWorkspace({
                           />
                           Submitted
                         </span>
-                        <AppButton
-                          variant="primary"
-                          size="m"
-                          tone="purple"
+                        <Button
+                          variant="contained" color="primary"
+                          size="medium"
                           onClick={() => navigate(continuePath)}
                         >
                           Continue
-                        </AppButton>
+                        </Button>
                       </>
                     )}
                     {!isSubmitted && (
-                      <AppButton
-                        variant="primary"
-                        size="m"
-                        tone="purple"
+                      <Button
+                        variant="contained" color="primary"
+                        size="medium"
                         onClick={() => setIsSubmitted(true)}
                         disabled={
                           !canSubmit ||
@@ -419,7 +413,7 @@ export function FreeResponseWorkspace({
                         }
                       >
                         Submit response
-                      </AppButton>
+                      </Button>
                     )}
                   </>
                 )

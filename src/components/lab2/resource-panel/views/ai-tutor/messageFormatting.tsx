@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AppButton } from "../../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FileChange } from "../../../../../types/chat";
 import styles from "./AiTutorPanel.module.scss";
@@ -190,11 +190,12 @@ function CodeSnippetCard({ lang, code }: { lang: string | null; code: string }) 
     <div className={styles.codeCard}>
       <div className={styles.codeCardHeader}>
         {label && <span className={styles.codeCardLang}>{label}</span>}
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          iconName="copy"
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="extraSmall"
+          iconOnly
+          startIconName="copy"
           aria-label="Copy code"
           onClick={() => void copyTextToClipboard(code)}
         />
@@ -268,22 +269,24 @@ export function FileChangesCard({
               {showActions && (
                 <span className={styles.fileChangesActions}>
                   {onOpenFileInEditor && (
-                    <AppButton
-                      variant="tertiary"
-                      tone="gray"
-                      size="xs"
-                      iconName="code"
+                    <Button
+                      variant="text"
+                      color="tertiary"
+                      size="extraSmall"
+                      iconOnly
+                      startIconName="code"
                       aria-label={`Open ${displayFileName} in code editor`}
                       title={`Open ${displayFileName} in code editor`}
                       onClick={() => onOpenFileInEditor(fc)}
                     />
                   )}
                   {onOpenFileInPreview && canOpenInPreview && (
-                    <AppButton
-                      variant="tertiary"
-                      tone="gray"
-                      size="xs"
-                      iconName="eye"
+                    <Button
+                      variant="text"
+                      color="tertiary"
+                      size="extraSmall"
+                      iconOnly
+                      startIconName="eye"
                       aria-label={`Open ${displayFileName} in preview`}
                       title={`Open ${displayFileName} in preview`}
                       onClick={() => onOpenFileInPreview(fc)}

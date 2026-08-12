@@ -1,9 +1,9 @@
 .card {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   overflow: hidden;
 }
 
@@ -13,12 +13,12 @@
   align-items: center;
   gap: 6px;
   padding: 0 12px;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
-  color: var(--ds-text-neutral-tertiary);
-  font-family: var(--font-body);
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-tertiary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   line-height: 1;
   text-transform: uppercase;
@@ -26,7 +26,7 @@
 
 .headerIcon {
   flex-shrink: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-lg);
 }
 
@@ -39,16 +39,16 @@
 
 .reason {
   margin: 0;
-  color: var(--ds-text-neutral-quaternary);
-  font-family: var(--font-body);
+  color: var(--text-neutral-quaternary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
 }
 
 .brief {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
   white-space: pre-wrap;

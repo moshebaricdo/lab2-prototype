@@ -8,7 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
   isBlankAnswerCorrect,
@@ -347,16 +347,14 @@ export function FillInBlankWorkspace({
           showLeft={revealAnswerEnabled}
           left={
             revealAnswerEnabled ? (
-              <AppButton
-                variant="secondary"
-                size="m"
-                tone="gray"
-                iconPosition="start"
-                iconName={teacherRevealActive ? "eye-slash" : "eye"}
+              <Button
+                variant="outlined" color="secondary"
+                size="medium"
+                startIconName={teacherRevealActive ? "eye-slash" : "eye"}
                 onClick={() => setIsTeacherAnswerRevealed((prev) => !prev)}
               >
                 {teacherRevealActive ? "Hide answer" : "Reveal answer"}
-              </AppButton>
+              </Button>
             ) : null
           }
           right={
@@ -365,35 +363,32 @@ export function FillInBlankWorkspace({
                 <AssessmentSuccessFeedback />
               ) : null}
               {isSubmittedForFeedback && isCorrect ? (
-                <AppButton
-                  variant="primary"
-                  size="m"
-                  tone="purple"
+                <Button
+                  variant="contained" color="primary"
+                  size="medium"
                   onClick={() => navigate(continuePath)}
                 >
                   Continue
-                </AppButton>
+                </Button>
               ) : null}
               {isSubmittedForFeedback && !isCorrect ? (
-                <AppButton
-                  variant="primary"
-                  tone="purple"
-                  size="m"
+                <Button
+                  variant="contained" color="primary"
+                  size="medium"
                   onClick={resetAfterSubmit}
                 >
                   Try again
-                </AppButton>
+                </Button>
               ) : null}
               {!isSubmittedForFeedback ? (
-                <AppButton
-                  variant="primary"
-                  size="m"
-                  tone="purple"
+                <Button
+                  variant="contained" color="primary"
+                  size="medium"
                   onClick={handleSubmit}
                   disabled={!canSubmit || teacherRevealActive}
                 >
                   Submit answer
-                </AppButton>
+                </Button>
               ) : null}
             </>
           }

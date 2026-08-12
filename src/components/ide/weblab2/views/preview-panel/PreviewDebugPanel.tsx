@@ -1,8 +1,5 @@
-import { AppButton } from "../../../../ui/AppButton";
-import { AlertBanner } from "../../../../ui/AlertBanner";
+import { Alert, Button, CloseIconButton, SegmentedButton, Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
-import { Tooltip } from "../../../../ui/Tooltip";
-import { SegmentedControl, type SegmentedOption } from "../../../../ui/SegmentedControl";
 import type {
   PreviewConsoleMessage,
   PreviewDebugTab,
@@ -24,9 +21,9 @@ interface PreviewDebugPanelProps {
   onClose: () => void;
 }
 
-const DEBUG_TABS: SegmentedOption<PreviewDebugTab>[] = [
-  { value: "console", label: "Console", iconName: "terminal" },
-  { value: "network", label: "Network", iconName: "globe" },
+const DEBUG_TABS = [
+  { value: "console", label: "Console", iconName: "terminal" as const },
+  { value: "network", label: "Network", iconName: "globe" as const },
 ];
 
 function formatTimestamp(timestamp: string) {
@@ -136,14 +133,15 @@ function MetadataField({
       <div className={styles.metadataLabelRow}>
         <span className={styles.metadataLabel}>{label}</span>
         {copyValue ? (
-          <AppButton
+          <Button
             aria-label={`Copy ${label.toLowerCase()}`}
             className={styles.copyButton}
-            iconName="copy"
+            variant="text"
+            color="tertiary"
+            size="extraSmall"
+            iconOnly
+            startIconName="copy"
             onClick={() => copyText(copyValue)}
-            size="xs"
-            tone="gray"
-            variant="tertiary"
           />
         ) : null}
       </div>
@@ -195,31 +193,32 @@ export function PreviewDebugPanel({
   const renderHeader = () => (
     <div className={styles.header}>
       <div className={styles.headerTabs}>
-        <SegmentedControl
+        <SegmentedButton
+          size="extraSmall"
           options={DEBUG_TABS}
           value={activeTab}
-          onChange={onTabChange}
+          onChange={(nextValue) => onTabChange(nextValue as PreviewDebugTab)}
+          aria-label="Debug panel tabs"
         />
       </div>
       <span className={styles.headerLabel}>DEBUG</span>
       <div className={styles.headerActions}>
-        <AppButton
+        <Button
           aria-label="Clear debug output"
-          iconName="eraser"
+          variant="text"
+          color="tertiary"
+          size="extraSmall"
+          iconOnly
+          startIconName="eraser"
           onClick={onClearAll}
-          size="xs"
-          tone="gray"
           title="Clear debug output"
-          variant="tertiary"
         />
-        <AppButton
+        <CloseIconButton
           aria-label="Close debug panel"
-          iconName="xmark"
+          size="extraSmall"
+          color="secondary"
           onClick={onClose}
-          size="xs"
-          tone="gray"
           title="Close debug panel"
-          variant="tertiary"
         />
       </div>
     </div>
@@ -256,18 +255,19 @@ export function PreviewDebugPanel({
       <div className={styles.activityHeader}>
         <span>Activity</span>
         <Tooltip
-          content={isNetworkBlocked ? "Unblock network activity" : "Block network activity"}
-          position="bottom"
+          title={isNetworkBlocked ? "Unblock network activity" : "Block network activity"}
+          placement="bottom"
         >
-          <AppButton
+          <Button
             aria-label={isNetworkBlocked ? "Unblock network activity" : "Block network activity"}
             aria-pressed={isNetworkBlocked}
             className={isNetworkBlocked ? styles.networkBlockButtonActive : ""}
-            iconName="ban"
+            variant="outlined"
+            color="secondary"
+            size="extraSmall"
+            iconOnly
+            startIconName="ban"
             onClick={onToggleNetworkBlocked}
-            size="xs"
-            tone="gray"
-            variant="secondary"
           />
         </Tooltip>
       </div>
@@ -316,15 +316,13 @@ export function PreviewDebugPanel({
         </div>
         <div className={styles.detailBody}>
           {request.status === "request-error" && request.error ? (
-            <AlertBanner
+            <Alert
               className={styles.detailAlert}
-              dismissible={false}
-              sentiment="danger"
-              showIcon
-              size="xs"
+              sentiment="error"
+              size="extraSmall"
             >
               {request.error}
-            </AlertBanner>
+            </Alert>
           ) : null}
           <div className={styles.metadataGrid}>
             <MetadataField label="Method" value={request.method} />

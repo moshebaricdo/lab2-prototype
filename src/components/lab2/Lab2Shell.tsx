@@ -21,11 +21,11 @@ import {
   isProgressionLevelLinks,
   mapLevelLinksWithShareMode,
 } from "../../lib/levelShareLinks";
+import { Dialog } from "@moshebaricdo/cads-react";
 import { AnnotationOverlay } from "./dev/AnnotationOverlay";
-import { Dialog } from "../ui/Dialog";
-import { AppButton } from "../ui/AppButton";
 import { BackpackProvider } from "../../hooks/BackpackContext";
 import { BackpackSeedEffect } from "./BackpackSeedEffect";
+import { CadsLabProvider } from "./CadsLabProvider";
 import styles from "./Lab2Shell.module.scss";
 
 type Lab2ShellProps =
@@ -115,22 +115,14 @@ export function Lab2Shell(props: Lab2ShellProps) {
       open={isFlowCompletionOpen}
       onClose={() => setIsFlowCompletionOpen(false)}
       title={flowCompletion?.title ?? "Task complete"}
-      footer={
-        <AppButton
-          variant="primary"
-          tone="purple"
-          size="s"
-          onClick={() => setIsFlowCompletionOpen(false)}
-        >
-          {flowCompletion?.buttonLabel ?? "Close"}
-        </AppButton>
+      description={
+        flowCompletion?.message ??
+        "Thanks, you have completed this shared level."
       }
-    >
-      <p>
-        {flowCompletion?.message ??
-          "Thanks, you have completed this shared level."}
-      </p>
-    </Dialog>
+      primaryActionLabel={flowCompletion?.buttonLabel ?? "Close"}
+      onPrimaryAction={() => setIsFlowCompletionOpen(false)}
+      hasSecondaryAction={false}
+    />
   );
   const themeScopeClassName = [
     styles.themeScope,
@@ -145,16 +137,18 @@ export function Lab2Shell(props: Lab2ShellProps) {
 
   if (props.hideResourcePanel === true) {
     return (
-      <div className={styles.root}>
-        <TopNavigation {...resolvedTopNavigationProps} />
-        <div className={themeScopeClassName} data-theme={theme}>
-          <div className={styles.body}>
-            {children}
+      <CadsLabProvider>
+        <div className={styles.root}>
+          <TopNavigation {...resolvedTopNavigationProps} />
+          <div className={themeScopeClassName} data-theme={theme}>
+            <div className={styles.body}>{children}</div>
+            {!isShareMode && (
+              <AnnotationOverlay annotations={annotationsResult} />
+            )}
+            {flowCompletionDialog}
           </div>
-          {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
-          {flowCompletionDialog}
         </div>
-      </div>
+      </CadsLabProvider>
     );
   }
 
@@ -178,27 +172,31 @@ export function Lab2Shell(props: Lab2ShellProps) {
     sidebarProps.surfaceVariant === "card";
 
   return (
-    <BackpackProvider>
-      <BackpackSeedEffect items={sidebarProps.backpackSeedItemsIfEmpty} />
-      <div className={styles.root}>
-        <TopNavigation {...resolvedTopNavigationProps} />
-        <div className={themeScopeClassName} data-theme={theme}>
-          <div className={styles.body}>
-            <Sidebar
-              {...sidebarProps}
-              annotations={isShareMode ? undefined : annotationsResult}
-              onCollapsedChange={(collapsed) => {
-                setSidebarCollapsed(collapsed);
-                sidebarProps.onCollapsedChange?.(collapsed);
-              }}
-            />
-            {!resizeDisabled && <ResizableHandle onResize={onResize} />}
-            {children}
+    <CadsLabProvider>
+      <BackpackProvider>
+        <BackpackSeedEffect items={sidebarProps.backpackSeedItemsIfEmpty} />
+        <div className={styles.root}>
+          <TopNavigation {...resolvedTopNavigationProps} />
+          <div className={themeScopeClassName} data-theme={theme}>
+            <div className={styles.body}>
+              <Sidebar
+                {...sidebarProps}
+                annotations={isShareMode ? undefined : annotationsResult}
+                onCollapsedChange={(collapsed) => {
+                  setSidebarCollapsed(collapsed);
+                  sidebarProps.onCollapsedChange?.(collapsed);
+                }}
+              />
+              {!resizeDisabled && <ResizableHandle onResize={onResize} />}
+              {children}
+            </div>
+            {!isShareMode && (
+              <AnnotationOverlay annotations={annotationsResult} />
+            )}
+            {flowCompletionDialog}
           </div>
-          {!isShareMode && <AnnotationOverlay annotations={annotationsResult} />}
-          {flowCompletionDialog}
         </div>
-      </div>
-    </BackpackProvider>
+      </BackpackProvider>
+    </CadsLabProvider>
   );
 }

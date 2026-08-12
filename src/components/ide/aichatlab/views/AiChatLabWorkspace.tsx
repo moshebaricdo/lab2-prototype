@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ChatMessage } from "../../../../types/chat";
-import type { MockTutorConfig, TutorRequestMode } from "../../../../types/tutor";
+import type { MockTutorConfig } from "../../../../types/tutor";
 import { AiChatLabChatPanel } from "./AiChatLabChatPanel";
 import { AiChatLabConfigPanel } from "./AiChatLabConfigPanel";
 import { AiChatLabModelCardPanel } from "./AiChatLabModelCardPanel";
@@ -18,8 +18,6 @@ import styles from "./AiChatLabWorkspace.module.scss";
 export function AiChatLabWorkspace(props: AiChatLabWorkspaceProps) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(props.initialMessages);
   const [chatInput, setChatInput] = useState("");
-  const [tutorRequestMode, setTutorRequestMode] =
-    useState<TutorRequestMode>("auto");
   const [config, setConfig] = useState<ModelConfigState>(() =>
     createConfigState(props),
   );
@@ -176,6 +174,7 @@ export function AiChatLabWorkspace(props: AiChatLabWorkspaceProps) {
       ]
         .filter(Boolean)
         .join(" ")}
+      data-cads-spike="aichatlab"
     >
       {isShareModeActive && (
         <AiChatLabModelCardPanel
@@ -205,7 +204,9 @@ export function AiChatLabWorkspace(props: AiChatLabWorkspaceProps) {
           showPublishIntentControl={props.showPublishIntentControl}
           showPublishLimitationsControl={props.showPublishLimitationsControl}
           showPublishTestingControl={props.showPublishTestingControl}
-          showPublishExamplePromptsControl={props.showPublishExamplePromptsControl}
+          showPublishExamplePromptsControl={
+            props.showPublishExamplePromptsControl
+          }
           onUpdateConfig={updateConfig}
           onResetConfig={resetConfig}
           onShowPublishedView={() => props.onShareModeChange?.(true)}
@@ -223,8 +224,6 @@ export function AiChatLabWorkspace(props: AiChatLabWorkspaceProps) {
         setChatInput={setChatInput}
         chatPlaceholder={props.chatPlaceholder}
         mockTutorConfig={mockTutorConfig}
-        tutorRequestMode={tutorRequestMode}
-        setTutorRequestMode={setTutorRequestMode}
         onClearChat={clearChat}
         onDownloadChat={downloadChat}
       />

@@ -3,10 +3,10 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
+import { FaIcon, type FaIconProps } from "@moshebaricdo/cads-react/icons";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import { ScrollArea } from "../../../ui/scroll-area";
-import { FaIcon, type FaIconProps } from "../../../ui/icons/FaIcon";
 import type { ModelConfigState } from "./AiChatLabWorkspace.types";
 import { getModelLabel } from "./aiChatLabModel";
 import styles from "./AiChatLabWorkspace.module.scss";
@@ -71,16 +71,17 @@ function ModelCardSection({
         <span className={styles.modelCardSummaryTitle}>
           <FaIcon
             name={iconName}
-            size="s"
+            size="small"
             className={styles.modelCardSummaryIcon}
           />
           {title}
         </span>
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          iconName={expanded ? "chevron-up" : "chevron-down"}
+        <Button
+          variant="text"
+          color="tertiary"
+          size="extraSmall"
+          iconOnly
+          startIconName={expanded ? "chevron-up" : "chevron-down"}
           aria-label={expanded ? `Collapse ${title}` : `Expand ${title}`}
           aria-expanded={expanded}
           onKeyDown={(event) => event.stopPropagation()}
@@ -90,7 +91,9 @@ function ModelCardSection({
           }}
         />
       </div>
-      {expanded ? <div className={styles.modelCardSectionBody}>{children}</div> : null}
+      {expanded ? (
+        <div className={styles.modelCardSectionBody}>{children}</div>
+      ) : null}
     </section>
   );
 }
@@ -106,18 +109,21 @@ export function AiChatLabModelCardPanel({
       <PanelHeader
         label="MODEL CARD"
         right={
-          <AppButton
-            variant="secondary"
-            tone="gray"
-            size="xs"
-            iconName="sliders"
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="extraSmall"
+            startIconName="sliders"
             onClick={onConfigView}
           >
             Config view
-          </AppButton>
+          </Button>
         }
       />
-      <ScrollArea className={styles.modelCardBody} viewportClassName={styles.configViewport}>
+      <ScrollArea
+        className={styles.modelCardBody}
+        viewportClassName={styles.configViewport}
+      >
         <div className={styles.modelCardInner}>
           <h2 className={styles.modelCardName}>
             {config.modelName.trim() || "Untitled chatbot"}
@@ -161,20 +167,28 @@ export function AiChatLabModelCardPanel({
             {examplePromptItems.length > 0 ? (
               <div className={styles.modelCardPromptList}>
                 {examplePromptItems.map((prompt, index) => (
-                  <article key={`${prompt}-${index}`} className={styles.addedCard}>
+                  <article
+                    key={`${prompt}-${index}`}
+                    className={styles.addedCard}
+                  >
                     <p className={styles.addedCardText}>{prompt}</p>
                   </article>
                 ))}
               </div>
             ) : (
-              <p className={styles.modelCardText}>No example prompts added yet.</p>
+              <p className={styles.modelCardText}>
+                No example prompts added yet.
+              </p>
             )}
           </ModelCardSection>
 
           <ModelCardSection title="Technical Info" iconName="sliders">
             <dl className={styles.modelCardFields}>
               <ModelCardField label="Model name" value={config.modelName} />
-              <ModelCardField label="Model" value={getModelLabel(config.modelId)} />
+              <ModelCardField
+                label="Model"
+                value={getModelLabel(config.modelId)}
+              />
               <ModelCardField
                 label="Temperature"
                 value={config.temperature.toFixed(1)}

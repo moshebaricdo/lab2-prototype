@@ -1,5 +1,4 @@
-import { AppActionDropdown } from "../../../ui/AppDropdown";
-import { AppButton } from "../../../ui/AppButton";
+import { Button, Dropdown } from "@moshebaricdo/cads-react";
 import styles from "./SketchLabHeader.module.scss";
 
 interface SketchLabHeaderProps {
@@ -16,49 +15,46 @@ export function SketchLabHeader({
   return (
     <div className={styles.root}>
       <div className={styles.left}>
-        <AppActionDropdown
-          align="start"
-          size="xs"
-          listLabel="Save sketch"
-          trigger={
-            <AppButton
-              type="button"
-              variant="secondary"
-              tone="gray"
-              size="xs"
-              iconName="floppy-disk"
-              aria-label="Save sketch"
-            />
-          }
-          items={[
+        <Dropdown
+          role="action"
+          size="extraSmall"
+          buttonVariant="outlined"
+          buttonColor="secondary"
+          iconOnly
+          startIconName="floppy-disk"
+          aria-label="Save sketch"
+          menuPlacement="bottomLeft"
+          options={[
             {
-              id: "save-device",
+              value: "save-device",
               label: "Save to device",
               iconName: "download",
-              onSelect: onDownloadLocal,
             },
             {
-              id: "save-backpack",
+              value: "save-backpack",
               label: "Save to backpack",
               iconName: "backpack",
-              onSelect: onSaveToBackpack,
             },
           ]}
+          onAction={(actionValue) => {
+            if (actionValue === "save-device") onDownloadLocal();
+            if (actionValue === "save-backpack") onSaveToBackpack();
+          }}
         />
       </div>
       <div className={styles.center}>
         <span className={styles.label}>Workspace</span>
       </div>
       <div className={styles.right}>
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          iconName="arrow-rotate-left"
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="extraSmall"
+          startIconName="arrow-rotate-left"
           onClick={onStartOver}
         >
           Start over
-        </AppButton>
+        </Button>
       </div>
     </div>
   );

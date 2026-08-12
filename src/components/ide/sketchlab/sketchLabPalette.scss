@@ -1,7 +1,7 @@
 /**
  * Sketch Lab canvas paint palette — intentional hex values for student artwork
  * colors (not app chrome). Theme flips light/dark paint sets; do not remap to
- * `--ds-*` product tokens.
+ * `--background-*` / `--text-*` / `--border-*` product tokens.
  */
 :root {
   --sketch-palette-bg-gray: #dfe3e9;

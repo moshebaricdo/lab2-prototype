@@ -1,7 +1,5 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronDown, faCircleQuestion } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
-import { AppButton } from "../AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { GlobalNavMenu } from "./GlobalNavMenu";
 import {
   LevelProgressBubbles,
@@ -115,23 +113,21 @@ export function TopNavigation({
       )}
 
       <div className={styles.rightGroup}>
-        <AppButton
-          variant="secondary"
-          tone="white"
-          size="s"
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="small"
+          endIconName="chevron-down"
           className={styles.userButton}
         >
           Username
-          <FontAwesomeIcon
-            icon={faChevronDown}
-            className={styles.userChevron}
-          />
-        </AppButton>
-        <AppButton
-          variant="tertiary"
-          tone="white"
-          size="s"
-          icon={<FontAwesomeIcon icon={faCircleQuestion} className={styles.iconGlyph} />}
+        </Button>
+        <Button
+          variant="text"
+          color="tertiary"
+          size="small"
+          iconOnly
+          startIconName="circle-question"
           className={styles.rightIconButton}
           aria-label="Help"
         />

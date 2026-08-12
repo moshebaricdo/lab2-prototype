@@ -33,10 +33,10 @@
 
 .answerOption {
   align-items: start;
-  background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-border-neutral-secondary);
-  border-radius: var(--radius);
-  color: var(--ds-text-neutral-primary);
+  background: var(--background-neutral-secondary);
+  border: 1px solid var(--border-neutral-secondary);
+  border-radius: var(--shape-sm);
+  color: var(--text-neutral-primary);
   cursor: pointer;
   display: flex;
   gap: 12px;
@@ -46,7 +46,7 @@
 }
 
 .answerOption:hover {
-  border-color: var(--ds-border-neutral-primary);
+  border-color: var(--border-neutral-primary);
 }
 
 .answerOption:first-of-type {
@@ -54,21 +54,21 @@
 }
 
 .answerOptionChecked {
-  border-color: var(--ds-border-focused-primary);
-  background: var(--ds-background-brand-light);
+  border-color: var(--border-focused-primary);
+  background: var(--background-brand-light);
 }
 
 .answerOptionChecked:hover {
-  border-color: var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
 }
 
 .answerOptionRevealedCorrect {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
 }
 
 .answerOptionRevealedCorrect:hover {
-  border-color: var(--ds-border-success-primary);
+  border-color: var(--border-success-primary);
 }
 
 @keyframes answerCorrectShimmerSweep {
@@ -109,8 +109,8 @@
       100deg,
       transparent 0%,
       transparent 28%,
-      color-mix(in srgb, var(--ds-background-neutral-white-fixed) 88%, transparent) 48%,
-      color-mix(in srgb, var(--ds-background-neutral-white-fixed) 45%, var(--ds-background-success-light)) 52%,
+      color-mix(in srgb, var(--background-neutral-white-fixed) 88%, transparent) 48%,
+      color-mix(in srgb, var(--background-neutral-white-fixed) 45%, var(--background-success-light)) 52%,
       transparent 72%,
       transparent 100%
     );
@@ -136,16 +136,16 @@
 }
 
 .answerOptionSelectionCapped:hover {
-  border-color: var(--ds-border-neutral-primary);
+  border-color: var(--border-neutral-primary);
 }
 
 .answerOptionIncorrect {
-  background: var(--ds-background-error-light);
-  border-color: var(--ds-border-error-primary);
+  background: var(--background-error-light);
+  border-color: var(--border-error-primary);
 }
 
 .answerOptionIncorrect:hover {
-  border-color: var(--ds-border-error-primary);
+  border-color: var(--border-error-primary);
 }
 
 .answerText {
@@ -163,9 +163,9 @@
 }
 
 .answerOptionLetter {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   flex-shrink: 0;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1.45;
   min-width: 1.25em;
 }
@@ -184,10 +184,10 @@
 }
 
 .answerCodeBlock {
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-xs);
   margin: 0;
   overflow-x: auto;
@@ -210,14 +210,14 @@
 }
 
 .answerImageBlock img {
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
   display: block;
   max-width: min(360px, 100%);
 }
 
 .answerImageCaption {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   margin-top: 6px;
 }
@@ -228,7 +228,7 @@
 
 .revealedCheck {
   align-items: center;
-  color: var(--ds-text-success-primary);
+  color: var(--text-success-primary);
   display: inline-flex;
   flex-shrink: 0;
   font-size: var(--text-body-sm);
@@ -237,7 +237,7 @@
 
 .revealedIncorrect {
   align-items: center;
-  color: var(--ds-text-error-primary-fixed);
+  color: var(--text-error-primary-fixed);
   display: inline-flex;
   flex-shrink: 0;
   font-size: var(--text-body-sm);
@@ -246,7 +246,7 @@
 
 .persistedWrongMark {
   align-items: center;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   display: inline-flex;
   flex-shrink: 0;
   font-size: var(--text-body-sm);

@@ -1,11 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCircleInfo,
-  faChevronDown,
-  faChevronUp,
-} from "@fortawesome/free-solid-svg-icons";
-import { AppButton } from "../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import type { InstructionPinnedStep } from "../../../types/tutor";
 import styles from "./InstructionsDrawer.module.scss";
 
@@ -461,16 +455,16 @@ export function InstructionsDrawer({
           .filter(Boolean)
           .join(" ")}
       />
-      <AppButton
-        variant="tertiary"
-        tone="black"
-        size="xs"
-        icon={<FontAwesomeIcon icon={faCircleInfo} />}
+      <Button
+        variant="text"
+        color="secondary"
+        size="extraSmall"
+        startIconName="circle-info"
+        endIconName={isOpen ? "chevron-up" : "chevron-down"}
         onClick={handleToggleOpen}
       >
-        {isOpen ? hideLabel : showLabel}{" "}
-        <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} />
-      </AppButton>
+        {isOpen ? hideLabel : showLabel}
+      </Button>
     </div>
   );
 

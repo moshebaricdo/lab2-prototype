@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppButton } from "../../../ui/AppButton";
-import { AppTextField } from "../../../ui/AppTextField";
-import { Modal } from "../../../ui/Modal";
+import { Modal, TextInput } from "@moshebaricdo/cads-react";
 import styles from "../../shared/CreateFileModal.module.scss";
 
 interface NameInputModalProps {
@@ -58,28 +56,20 @@ export function NameInputModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <Modal
-      isOpen={isOpen}
+      open={isOpen}
       onClose={onClose}
       title={title}
-      description={description}
-      footer={
-        <>
-          <AppButton variant="secondary" tone="gray" size="m" onClick={onClose}>
-            Cancel
-          </AppButton>
-          <AppButton variant="primary" tone="purple" size="m" onClick={handleSubmit}>
-            {confirmLabel}
-          </AppButton>
-        </>
-      }
+      primaryActionLabel={confirmLabel}
+      secondaryActionLabel="Cancel"
+      onPrimaryAction={handleSubmit}
+      onSecondaryAction={onClose}
     >
+      <p>{description}</p>
       <div className={styles.inputRow}>
         <div className={styles.fieldGroup}>
-          <AppTextField
+          <TextInput
             label={fieldLabel}
             type="text"
             value={value}
@@ -90,9 +80,10 @@ export function NameInputModal({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             autoFocus
-            errorText={error || undefined}
-            size="m"
-            tone="gray"
+            error={Boolean(error)}
+            helperText={error || undefined}
+            size="medium"
+            color="secondary"
           />
         </div>
       </div>

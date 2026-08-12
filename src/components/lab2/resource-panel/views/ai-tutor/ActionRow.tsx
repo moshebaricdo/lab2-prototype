@@ -1,8 +1,5 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
-import { faThumbsUp, faThumbsDown } from "@fortawesome/free-regular-svg-icons";
 import { useState } from "react";
-import { AppButton } from "../../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import styles from "./ActionRow.module.scss";
 
 interface ActionRowProps {
@@ -37,20 +34,22 @@ export function ActionRow({
   return (
     <div className={styles.root} data-name="Action Row">
       <div className={styles.leftActions}>
-        <AppButton
-          variant="tertiary"
-          tone="gray"
-          size="xs"
-          icon={<FontAwesomeIcon icon={faCopy} />}
+        <Button
+          variant="text"
+          color="tertiary"
+          size="extraSmall"
+          iconOnly
+          startIconName="copy"
           onClick={onCopy}
           aria-label="Copy response"
         />
         {showDownload && (
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            icon={<FontAwesomeIcon icon={faDownload} />}
+          <Button
+            variant="text"
+            color="tertiary"
+            size="extraSmall"
+            iconOnly
+            startIconName="download"
             onClick={onDownload}
             aria-label="Download response"
           />
@@ -61,20 +60,22 @@ export function ActionRow({
         <div className={styles.rightActions}>
           <p className={styles.prompt}>Was this helpful?</p>
           <div className={styles.feedbackActions}>
-            <AppButton
-              variant="tertiary"
-              tone={feedback === "up" ? "black" : "gray"}
-              size="xs"
-              icon={<FontAwesomeIcon icon={faThumbsUp} />}
+            <Button
+              variant="text"
+              color={feedback === "up" ? "secondary" : "tertiary"}
+              size="extraSmall"
+              iconOnly
+              startIconName="thumbs-up"
               onClick={handleThumbsUp}
               className={feedback === "up" ? styles.feedbackActive : ""}
               aria-label="Mark response helpful"
             />
-            <AppButton
-              variant="tertiary"
-              tone={feedback === "down" ? "black" : "gray"}
-              size="xs"
-              icon={<FontAwesomeIcon icon={faThumbsDown} />}
+            <Button
+              variant="text"
+              color={feedback === "down" ? "secondary" : "tertiary"}
+              size="extraSmall"
+              iconOnly
+              startIconName="thumbs-down"
               onClick={handleThumbsDown}
               className={feedback === "down" ? styles.feedbackActive : ""}
               aria-label="Mark response not helpful"

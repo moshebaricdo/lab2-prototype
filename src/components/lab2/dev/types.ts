@@ -1,10 +1,10 @@
 import type {
-  AppButtonProps,
+  ButtonColor,
+  ButtonProps,
   ButtonSize,
-  ButtonTone,
   ButtonVariant,
-  FaIconName,
-} from "../../ui/AppButton";
+} from "@moshebaricdo/cads-react";
+import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 
 export type DevPanelFieldType =
   | "text"
@@ -97,10 +97,10 @@ export interface DevPanelActionField extends DevPanelFieldBase {
   buttonLabel?: string;
   iconName?: FaIconName;
   variant?: ButtonVariant;
-  tone?: ButtonTone;
+  color?: ButtonColor;
   size?: ButtonSize;
   disabled?: boolean;
-  onAction: AppButtonProps["onClick"];
+  onAction: ButtonProps["onClick"];
 }
 
 export type DevPanelField =

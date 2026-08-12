@@ -81,7 +81,7 @@ export const dsHighlightStyle = HighlightStyle.define([
   {
     tag: tags.heading,
     color: "var(--ds-syntax-keyword)",
-    fontWeight: "var(--font-weight-semibold)",
+    fontWeight: "var(--font-weight-semi-bold)",
   },
   {
     tag: tags.invalid,

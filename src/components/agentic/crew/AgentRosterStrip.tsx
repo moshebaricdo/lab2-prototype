@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaIcon } from "../../ui/icons/FaIcon";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "@moshebaricdo/cads-react";
 import type { AgentSpecialist } from "../../../types/agentLab";
 import { AgentLibraryMenu } from "./AgentLibraryMenu";
 import styles from "./AgentRosterStrip.module.scss";
@@ -168,9 +168,8 @@ export function AgentRosterStrip({
             {chipContent}
           </button>
           <Tooltip
-            content={`About the ${specialist.role}`}
-            position="top"
-            sideOffset={6}
+            title={`About the ${specialist.role}`}
+            placement="top"
           >
             <button
               type="button"
@@ -213,9 +212,8 @@ export function AgentRosterStrip({
     return (
       <Tooltip
         key={specialist.id}
-        content={specialist.role}
-        position="top"
-        sideOffset={6}
+        title={specialist.role}
+        placement="top"
       >
         <span className={styles.chipWrap} ref={attachRef}>
           {chip}

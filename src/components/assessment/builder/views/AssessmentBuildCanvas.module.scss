@@ -22,16 +22,16 @@
   margin: 0;
   font-family: var(--font-heading);
   font-size: var(--text-heading-lg);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
   line-height: 1.2;
 }
 
 .stats {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .statsSep {
@@ -49,12 +49,12 @@
 
 .card {
   overflow: hidden;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-default);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   box-shadow: 0 1px 2px color-mix(
     in srgb,
-    var(--ds-background-neutral-black-fixed) 5%,
+    var(--background-neutral-black-fixed) 5%,
     transparent
   );
   transition:
@@ -64,30 +64,30 @@
 }
 
 .cardExpanded {
-  border-color: var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
   box-shadow:
-    0 1px 2px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 5%, transparent),
-    0 0 0 1px var(--ds-border-selected-primary);
+    0 1px 2px color-mix(in srgb, var(--background-neutral-black-fixed) 5%, transparent),
+    0 0 0 1px var(--border-selected-primary);
 }
 
 .cardPlaceholder {
   opacity: 0.35;
   border-style: dashed;
-  border-color: var(--ds-border-neutral-primary);
+  border-color: var(--border-neutral-primary);
 }
 
 .dragOverlayCard {
   overflow: hidden;
-  border: 1px solid var(--ds-border-selected-primary);
-  border-radius: var(--radius-default);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-selected-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   box-shadow:
     0 8px 24px color-mix(
       in srgb,
-      var(--ds-background-neutral-black-fixed) 16%,
+      var(--background-neutral-black-fixed) 16%,
       transparent
     ),
-    0 0 0 1px var(--ds-border-selected-primary);
+    0 0 0 1px var(--border-selected-primary);
   cursor: grabbing;
 }
 
@@ -114,23 +114,23 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  border-radius: var(--radius-round);
-  background: var(--ds-background-neutral-tertiary);
-  font-family: var(--font-body);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-tertiary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-secondary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-secondary);
 }
 
 .cardPrompt {
   flex: 1;
   min-width: 0;
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
   line-height: 1.4;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .typeBadge {
@@ -140,14 +140,14 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  border-radius: var(--radius-round);
+  border-radius: var(--shape-round);
 }
 
 .cardActionsDivider {
   flex-shrink: 0;
   width: 1px;
   height: 8px;
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
 }
 
 .cardActions {
@@ -157,13 +157,13 @@
 }
 
 .deleteButton {
-  color: var(--ds-text-error-primary);
+  color: var(--text-error-primary);
 }
 
 .cardEditor {
   padding: 16px;
-  border-top: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-top: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
 }
 
 .addDropZone {
@@ -172,8 +172,8 @@
   align-items: center;
   gap: 14px;
   padding: 16px 20px 20px;
-  border: 1px dashed var(--ds-border-neutral-primary);
-  border-radius: var(--radius-default);
+  border: 1px dashed var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
 }
 
 .addDropZoneEmpty {
@@ -187,9 +187,9 @@
   align-items: center;
   gap: 16px;
   padding: 16px 18px;
-  border: 1px solid var(--ds-border-selected-primary);
-  border-radius: var(--radius-default);
-  background: var(--ds-background-brand-light);
+  border: 1px solid var(--border-selected-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-brand-light);
 }
 
 .bankCalloutIcon {
@@ -199,9 +199,9 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-default);
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-brand-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-brand-primary);
 }
 
 .bankCalloutBody {
@@ -221,18 +221,18 @@
 
 .bankCalloutTitle {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-md);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }
 
 .bankCalloutText {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   line-height: 1.4;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
 }
 
 .sectionDivider {
@@ -246,14 +246,14 @@
   height: 1px;
   min-width: 0;
   flex: 1;
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
 }
 
 .sectionDividerLabel {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-quaternary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-quaternary);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -268,17 +268,17 @@
 
 .createSectionLabel {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   text-align: center;
 }
 
 .addDropZoneLabel {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   text-align: center;
 }
 
@@ -290,22 +290,22 @@
 }
 
 .typeTile {
-  --type-tile-tone: var(--ds-border-neutral-primary);
+  --type-tile-tone: var(--border-neutral-primary);
   display: flex;
   flex-direction: column;
   gap: 8px;
   font-size: var(--text-body-sm);
-  font-family: var(--font-body);
-  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family-main);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1.4;
   text-align: left;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   min-width: 0;
   height: fit-content;
   padding: 12px 14px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-default);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   cursor: pointer;
   transition:
     border-color 0.12s ease-out,
@@ -327,7 +327,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-default);
+  border-radius: var(--shape-sm);
 
   [data-fa-icon] {
     font-size: var(--text-body-sm);
@@ -335,72 +335,72 @@
 }
 
 .tonegreen {
-  --type-tile-tone: var(--ds-border-success-primary);
+  --type-tile-tone: var(--border-success-primary);
 
   &.typeBadge {
-    background: var(--ds-background-success-light);
-    color: var(--ds-text-success-primary);
+    background: var(--background-success-light);
+    color: var(--text-success-primary);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-success-light);
-    color: var(--ds-text-success-primary);
+    background: var(--background-success-light);
+    color: var(--text-success-primary);
   }
 }
 
 .toneorange {
-  --type-tile-tone: var(--ds-background-accent-orange-primary);
+  --type-tile-tone: var(--background-accent-orange-primary);
 
   &.typeBadge {
-    background: var(--ds-background-accent-orange-light);
-    color: var(--ds-background-accent-orange-strong);
+    background: var(--background-accent-orange-light);
+    color: var(--background-accent-orange-strong);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-accent-orange-light);
-    color: var(--ds-background-accent-orange-strong);
+    background: var(--background-accent-orange-light);
+    color: var(--background-accent-orange-strong);
   }
 }
 
 .tonepurple {
-  --type-tile-tone: var(--ds-border-selected-primary);
+  --type-tile-tone: var(--border-selected-primary);
 
   &.typeBadge {
-    background: var(--ds-background-brand-light);
-    color: var(--ds-text-brand-primary);
+    background: var(--background-brand-light);
+    color: var(--text-brand-primary);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-brand-light);
-    color: var(--ds-text-brand-primary);
+    background: var(--background-brand-light);
+    color: var(--text-brand-primary);
   }
 }
 
 .tonered {
-  --type-tile-tone: var(--ds-border-error-primary);
+  --type-tile-tone: var(--border-error-primary);
 
   &.typeBadge {
-    background: var(--ds-background-error-light);
-    color: var(--ds-text-error-primary);
+    background: var(--background-error-light);
+    color: var(--text-error-primary);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-error-light);
-    color: var(--ds-text-error-primary);
+    background: var(--background-error-light);
+    color: var(--text-error-primary);
   }
 }
 
 .toneblue {
-  --type-tile-tone: var(--ds-border-info-primary);
+  --type-tile-tone: var(--border-info-primary);
 
   &.typeBadge {
-    background: var(--ds-background-info-light);
-    color: var(--ds-text-info-primary);
+    background: var(--background-info-light);
+    color: var(--text-info-primary);
   }
 
   .typeTileIcon {
-    background: var(--ds-background-info-light);
-    color: var(--ds-text-info-primary);
+    background: var(--background-info-light);
+    color: var(--text-info-primary);
   }
 }
 

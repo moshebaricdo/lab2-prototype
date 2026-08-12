@@ -1,6 +1,4 @@
-import { AppActionDropdown } from "../../../../ui/AppDropdown";
-import { AppButton } from "../../../../ui/AppButton";
-import { Tooltip } from "../../../../ui/Tooltip";
+import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import {
@@ -119,24 +117,28 @@ export function BackpackFileChip({
           </span>
         ) : showImportButton ? (
           importSupported && onAddToProject ? (
-            <Tooltip content={importActionTooltip} position="top">
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="plus"
-                aria-label={`${importActionTooltip}: ${item.name}`}
-                onClick={onAddToProject}
-              />
+            <Tooltip title={importActionTooltip} placement="top">
+              <span>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="plus"
+                  aria-label={`${importActionTooltip}: ${item.name}`}
+                  onClick={onAddToProject}
+                />
+              </span>
             </Tooltip>
           ) : (
-            <Tooltip content={importDisabledTooltip} position="top">
+            <Tooltip title={importDisabledTooltip} placement="top">
               <span className={styles.addButtonWrap}>
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  size="xs"
-                  iconName="plus"
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="plus"
                   disabled
                   aria-label={`${importActionTooltip}: ${item.name} (${importDisabledTooltip})`}
                 />
@@ -146,21 +148,26 @@ export function BackpackFileChip({
         ) : null}
 
         {menuItems.length > 0 ? (
-          <AppActionDropdown
-            align="end"
-            side="bottom"
-            size="xs"
-            sideOffset={4}
-            trigger={
-              <AppButton
-                variant="tertiary"
-                tone="gray"
-                size="xs"
-                iconName="ellipsis-vertical"
-                aria-label={`Actions for ${item.name}`}
-              />
-            }
-            items={menuItems}
+          <Dropdown
+            role="action"
+            size="extraSmall"
+            buttonVariant="text"
+            buttonColor="tertiary"
+            iconOnly
+            startIconName="ellipsis-vertical"
+            aria-label={`Actions for ${item.name}`}
+            menuPlacement="bottomRight"
+            options={menuItems.map((menuItem) => ({
+              value: menuItem.id,
+              label: menuItem.label,
+              iconName: menuItem.iconName,
+              destructive: menuItem.destructive,
+            }))}
+            onAction={(actionValue) => {
+              menuItems
+                .find((menuItem) => menuItem.id === actionValue)
+                ?.onSelect?.();
+            }}
           />
         ) : null}
       </div>

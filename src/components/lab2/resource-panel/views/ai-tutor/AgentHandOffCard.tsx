@@ -1,4 +1,4 @@
-import { AppButton } from "../../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import type { AgentHandOffCardData } from "../../../../../types/chat";
@@ -36,17 +36,17 @@ export function AgentHandOffCard({
           <p className={styles.reason}>{handOff.reason}</p>
         ) : null}
         {hasBrief ? <p className={styles.brief}>{handOff.brief}</p> : null}
-        <AppButton
-          variant="primary"
-          tone="purple"
-          size="s"
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
           fullWidth
-          iconName={dispatched ? "check" : hasBrief ? "play" : "arrow-right"}
+          startIconName={dispatched ? "check" : hasBrief ? "play" : "arrow-right"}
           disabled={disabled || dispatched || !onAction}
           onClick={onAction}
         >
           {dispatched ? "Sent" : hasBrief ? "Run" : "Switch"}
-        </AppButton>
+        </Button>
       </div>
     </div>
   );

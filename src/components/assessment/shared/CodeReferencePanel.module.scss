@@ -1,7 +1,7 @@
 @use "../../../styles/_mixins.scss" as *;
 
 .root {
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -43,7 +43,7 @@
 .tab {
   align-items: center;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   cursor: pointer;
   display: flex;
   gap: 8px;
@@ -52,20 +52,20 @@
 }
 
 .tab:focus-visible {
-  box-shadow: 0 0 0 2px var(--ds-border-focused-primary);
+  box-shadow: 0 0 0 2px var(--border-focused-primary);
   outline: none;
 }
 
 .tabActive {
-  background: var(--ds-background-brand-primary);
+  background: var(--background-brand-primary);
 }
 
 .tabIdle {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .tabIdle:hover {
-  background: var(--ds-background-neutral-tertiary);
+  background: var(--background-neutral-tertiary);
 }
 
 /* Icon wrapper — fixed size for alignment */
@@ -84,11 +84,11 @@
 }
 
 .tabIconActive {
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--text-neutral-white-fixed);
 }
 
 .tabIconInactive {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .tabName {
@@ -99,18 +99,18 @@
 }
 
 .tabNameActive {
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--text-neutral-white-fixed);
 }
 
 .tabNameInactive {
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
 }
 
 /* ---------- Code area ---------- */
 
 .codeArea {
-  background-color: var(--ds-background-neutral-secondary);
-  border-radius: var(--radius-sm);
+  background-color: var(--background-neutral-secondary);
+  border-radius: var(--shape-sm);
   display: flex;
   flex: 1;
   min-height: 0;
@@ -123,7 +123,7 @@
   background: linear-gradient(
     to bottom,
     rgb(0 0 0 / 0%) 0%,
-    var(--ds-background-neutral-secondary) 100%
+    var(--background-neutral-secondary) 100%
   );
   bottom: 8px;
   content: "";
@@ -160,8 +160,8 @@
 }
 
 .lineNumberText {
-  color: var(--ds-text-neutral-quaternary);
-  font-family: var(--font-mono);
+  color: var(--text-neutral-quaternary);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-sm);
   line-height: 24px;
   margin: 0;
@@ -172,9 +172,9 @@
 .codeTextarea {
   background: transparent;
   border: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   flex: 1;
-  font-family: var(--font-mono);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-sm);
   line-height: 24px;
   min-width: 0;
@@ -205,8 +205,8 @@
 }
 
 .codeLineText {
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-mono);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-sm);
   line-height: 24px;
   margin: 0;

@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--ds-background-neutral-black-fixed) 40%, transparent);
+  background: color-mix(in srgb, var(--background-neutral-black-fixed) 40%, transparent);
   animation: fadeIn 150ms ease-out;
   overscroll-behavior: contain;
 }
@@ -20,9 +20,9 @@
   width: 100%;
   position: relative;
   overflow: visible;
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-md);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
   box-shadow: var(--shadow-lg);
   animation: slideUp 200ms ease-out;
 }
@@ -45,14 +45,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px 16px;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
 }
 
 .title {
   /* Semantic <h2> — CADS Heading/H2/Semi Bold (Space Grotesk Medium) */
   @include type-heading-h2-semibold;
 
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   margin: 0;
 }
 
@@ -72,7 +72,7 @@
   justify-content: flex-end;
   gap: 8px;
   padding: 16px 24px 20px;
-  border-top: 1px solid var(--ds-border-neutral-primary);
+  border-top: 1px solid var(--border-neutral-primary);
 }
 
 /* Reusable form primitives for dialog bodies */
@@ -87,45 +87,45 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-sm);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .fieldInput {
   display: block;
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
-  font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-regular);
   box-sizing: border-box;
   outline: none;
   transition: border-color 120ms, box-shadow 120ms;
 
   &::placeholder {
-    color: var(--ds-text-neutral-placeholder);
+    color: var(--text-neutral-placeholder);
   }
 
   &:focus {
-    border-color: var(--ds-border-selected-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-border-selected-primary) 15%, transparent);
+    border-color: var(--border-selected-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--border-selected-primary) 15%, transparent);
   }
 }
 
 .fieldHint {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
-  font-weight: var(--font-weight-normal);
-  color: var(--ds-text-neutral-quaternary);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-neutral-quaternary);
   margin: 0;
 }
 

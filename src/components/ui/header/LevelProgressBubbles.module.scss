@@ -2,8 +2,8 @@
   position: relative;
   height: 32px;
   flex-shrink: 0;
-  background: var(--ds-background-neutral-secondary);
-  border-radius: var(--radius-sm);
+  background: var(--background-neutral-secondary);
+  border-radius: var(--shape-sm);
 }
 
 .inner {
@@ -75,11 +75,11 @@
 }
 
 .currentFill {
-  fill: var(--ds-background-success-primary);
+  fill: var(--background-success-primary);
   transition: fill 150ms;
 
   .bubbleCurrent:hover & {
-    fill: var(--ds-background-success-strong);
+    fill: var(--background-success-strong);
   }
 }
 
@@ -107,11 +107,11 @@
   width: 100%;
   height: 100%;
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   font-style: normal;
   line-height: 0;
   text-align: center;
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--text-neutral-white-fixed);
 
   p {
     line-height: var(--leading-body-sm);
@@ -144,24 +144,24 @@
 }
 
 .circleNotStarted {
-  fill: var(--ds-background-neutral-white-fixed);
-  stroke: var(--ds-border-neutral-primary);
+  fill: var(--background-neutral-white-fixed);
+  stroke: var(--border-neutral-primary);
   transition: fill 150ms, stroke 150ms;
 
   .bubble:hover & {
-    fill: var(--ds-background-success-primary);
-    stroke: var(--ds-background-success-primary);
+    fill: var(--background-success-primary);
+    stroke: var(--background-success-primary);
   }
 }
 
 .circleCompleted {
-  fill: var(--ds-background-success-primary);
-  stroke: var(--ds-background-success-primary);
+  fill: var(--background-success-primary);
+  stroke: var(--background-success-primary);
   transition: fill 150ms, stroke 150ms;
 
   .bubble:hover & {
-    fill: var(--ds-background-success-strong);
-    stroke: var(--ds-background-success-strong);
+    fill: var(--background-success-strong);
+    stroke: var(--background-success-strong);
   }
 }
 
@@ -170,7 +170,7 @@
 .borderOverlay {
   position: absolute;
   inset: 0;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
   pointer-events: none;
 }

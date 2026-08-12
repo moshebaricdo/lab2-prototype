@@ -7,9 +7,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  border-radius: var(--radius);
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  border-radius: var(--shape-sm);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
 }
 
 .presentationBanner {
@@ -18,7 +18,7 @@
 
 .presentationToast {
   animation: toastSlideIn 100ms ease-out;
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 18%, transparent);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--background-neutral-black-fixed) 18%, transparent);
 }
 
 .presentationToast.isExiting {
@@ -27,31 +27,31 @@
 }
 
 .sentimentBrand {
-  background: var(--ds-background-brand-light);
+  background: var(--background-brand-light);
 }
 
 .sentimentSuccess {
-  background: var(--ds-background-success-light);
+  background: var(--background-success-light);
 }
 
 .sentimentDanger {
-  background: var(--ds-background-error-light);
+  background: var(--background-error-light);
 }
 
 .sentimentWarning {
-  background: var(--ds-background-warning-light);
+  background: var(--background-warning-light);
 }
 
 .sentimentInfo {
-  background: var(--ds-background-info-light);
+  background: var(--background-info-light);
 }
 
 .sentimentNeutral {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .sentimentAqua {
-  background: var(--ds-background-brand-light);
+  background: var(--background-brand-light);
 }
 
 .content {
@@ -84,7 +84,7 @@
 }
 
 .link {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
 }
 
 .icon {
@@ -92,37 +92,37 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   line-height: 1;
 }
 
 .sentimentBrand .icon {
-  color: var(--ds-text-brand-primary);
+  color: var(--text-brand-primary);
 }
 
 .sentimentSuccess .icon {
-  color: var(--ds-text-success-primary-fixed);
+  color: var(--text-success-primary-fixed);
 }
 
 .sentimentDanger .icon {
-  color: var(--ds-text-error-primary-fixed);
+  color: var(--text-error-primary-fixed);
 }
 
 .sentimentWarning .icon {
-  color: var(--ds-text-warning-primary-fixed);
+  color: var(--text-warning-primary-fixed);
 }
 
 .sentimentInfo .icon {
-  color: var(--ds-text-info-primary-fixed);
+  color: var(--text-info-primary-fixed);
 }
 
 .sentimentAqua .icon {
-  color: var(--ds-text-brand-primary);
+  color: var(--text-brand-primary);
 }
 
 .closeButton {
   flex: 0 0 auto;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .sizeL {

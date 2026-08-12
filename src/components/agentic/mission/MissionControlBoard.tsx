@@ -9,8 +9,7 @@ import type {
   MissionTaskStatus,
 } from "../../../types/agentLab";
 import type { MissionTaskScript } from "../../../data/agentic";
-import { AppButton } from "../../ui/AppButton";
-import { AppNativeSelect } from "../../ui/AppDropdown";
+import { Button, Dropdown } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import styles from "./MissionControlBoard.module.scss";
@@ -273,18 +272,18 @@ export function MissionControlBoard({
             </div>
           </div>
           <div className={styles.missionActions}>
-            <AppButton
-              variant="primary"
-              tone="purple"
-              size="m"
-              iconName="rocket"
+            <Button
+              variant="contained"
+              color="primary"
+              size="medium"
+              startIconName="rocket"
               disabled={launchableCount === 0}
               onClick={launchAll}
             >
               {hasLaunched
                 ? `Re-launch ready tasks (${launchableCount})`
                 : `Launch run (${launchableCount} of ${mission.tasks.length} ready)`}
-            </AppButton>
+            </Button>
             <span className={styles.missionHint}>
               Agents run in parallel and never see each other&apos;s chat —
               only the files you pack.
@@ -350,16 +349,18 @@ export function MissionControlBoard({
 
                 <label className={styles.fieldLabel}>
                   Assigned specialist
-                  <AppNativeSelect
+                  <Dropdown
+                    role="input"
                     className={styles.specialistSelect}
-                    size="s"
-                    tone="gray"
-                    fullWidth
+                    size="small"
+                    color="secondary"
+                    width="full"
                     value={runtime.specialistId}
                     disabled={!isEditable}
-                    onValueChange={(value) =>
-                      updateRuntime(task.id, { specialistId: value })
-                    }
+                    onChange={(nextValue) => {
+                      const value = Array.isArray(nextValue) ? nextValue[0] : nextValue;
+                      if (value) updateRuntime(task.id, { specialistId: value });
+                    }}
                     options={mission.specialists.map((s) => ({
                       value: s.id,
                       label: s.role,
@@ -447,49 +448,49 @@ export function MissionControlBoard({
                 <div className={styles.taskActions}>
                   {runtime.status === "proposal-ready" && (
                     <>
-                      <AppButton
-                        variant="primary"
-                        tone="purple"
-                        size="xs"
-                        iconName="check"
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="extraSmall"
+                        startIconName="check"
                         onClick={() =>
                           updateRuntime(task.id, { status: "approved" })
                         }
                       >
                         Approve
-                      </AppButton>
-                      <AppButton
-                        variant="secondary"
-                        tone="black"
-                        size="xs"
-                        iconName="arrows-rotate"
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        size="extraSmall"
+                        startIconName="arrows-rotate"
                         onClick={() => runTask(task)}
                       >
                         Send back &amp; re-run
-                      </AppButton>
+                      </Button>
                     </>
                   )}
                   {runtime.status === "needs-rework" && (
-                    <AppButton
-                      variant="primary"
-                      tone="purple"
-                      size="xs"
-                      iconName="arrows-rotate"
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="extraSmall"
+                      startIconName="arrows-rotate"
                       onClick={() => runTask(task)}
                     >
                       Fix briefcase &amp; re-run
-                    </AppButton>
+                    </Button>
                   )}
                   {runtime.status === "ready" && hasLaunched && (
-                    <AppButton
-                      variant="secondary"
-                      tone="black"
-                      size="xs"
-                      iconName="play"
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      size="extraSmall"
+                      startIconName="play"
                       onClick={() => runTask(task)}
                     >
                       Run this task
-                    </AppButton>
+                    </Button>
                   )}
                   {runtime.status === "approved" && (
                     <span className={styles.approvedNote}>

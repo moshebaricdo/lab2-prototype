@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
 import type { FileItem } from "../../../../types/file";
@@ -138,17 +138,17 @@ export function ValidationPanel({
           </div>
         )}
 
-        <AppButton
-          variant="primary"
-          tone="purple"
-          size="m"
-          iconName="clipboard-check"
+        <Button
+          variant="contained"
+          color="primary"
+          size="medium"
+          startIconName="clipboard-check"
           fullWidth
           onClick={handleValidate}
           disabled={tests.length === 0}
         >
           Validate
-        </AppButton>
+        </Button>
       </div>
     </div>
   );

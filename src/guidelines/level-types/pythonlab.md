@@ -52,6 +52,8 @@ The console header includes controls to run code, clear output, and toggle betwe
 - Shared file manager: `src/components/ide/shared/FileManager.tsx` (same as Web Lab 2)
 - Shared create-file modal: `src/components/ide/shared/CreateFileModal.tsx`
 - Shared version banner: `src/components/ide/shared/VersionBanner.tsx`
+
+Shared IDE chrome uses packaged CADS (`Button`, `Dropdown`, `Tooltip`, `TextInput`, `Alert`) and unprefixed Foundations. CodeMirror syntax colors stay on `--ds-syntax-*`.
 - Validation tab: `src/components/lab2/resource-panel/views/ValidationPanel.tsx`
 - Mock data: `src/data/pythonlab/projects/default` (`main.py`, `README.md`, and `instructions.md`)
 
@@ -76,3 +78,7 @@ The Validation tab reads the current in-memory project files and runs the config
 ## Runtime
 
 `PythonWorkspace` runs the selected file through the Pyodide wrapper in `pythonRunner.ts`. The runner starts a web worker, streams stdout/stderr back into the console, and supports interactive `input()` by showing a terminal-style prompt row while Python waits for the next line. Local dev and preview set cross-origin isolation headers in `vite.config.ts` so `SharedArrayBuffer` can be used for worker stdin; the local COEP mode is `credentialless` so Web Lab previews can still show third-party demo images. Deployed hosting must send compatible COOP/COEP headers for terminal input to work in production.
+
+## Styling
+
+Workspace chrome (`PythonWorkspace`) uses `@moshebaricdo/cads-react` (`Button`, `Tooltip`) and CADS Foundations tokens in `PythonWorkspace.module.scss`. The Run control is contained primary (not orange). Shared `FileManager` / `CodeEditor` / `VersionBanner` also use CADS; CodeMirror syntax stays on `--ds-syntax-*`.

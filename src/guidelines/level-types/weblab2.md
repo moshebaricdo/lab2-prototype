@@ -77,7 +77,7 @@ See **`src/guidelines/level-types/weblab2-agents.md`** for the full capability d
 
 ## Current UX Behavior
 
-- File manager + editor + preview workspace
+- File manager + editor + preview workspace. Shared IDE chrome (`src/components/ide/shared`) uses packaged CADS primitives and unprefixed Foundations; CodeMirror syntax colors stay on `--ds-syntax-*`.
 - Web Lab 2's file manager plus menu supports uploading project files and image assets from the student's computer. Uploaded UI assets are session-scoped; image contents are stored as data URLs in the in-memory/session file tree and are not encoded into share URLs.
 - Tutor chat uploads are staged into an `uploads/` project folder as soon as they are attached in the composer; removing the attachment before send deletes the staged file. Tutor then decides from message intent whether to reference those files in code. When that same send produces a code edit proposal, staged image uploads from the user message also appear as **new** rows in the assistant Files modified card (alongside Tutor's HTML/CSS/JS edits) and in pending AI file highlighting. Staged uploads stay silent: they do not add chat success/failure messages, count as project content for the new-project empty state, switch view mode, expand the file manager, or auto-open in the editor. Once the workspace is visible for real project files, the `uploads/` folder appears in the file manager.
 - The Upload Mechanisms progression compares the current functional staged-upload flow with two mock-only alternatives: an in-chat add-files action card and upload file chips with plus buttons. The mock alternatives intentionally do not mutate the project tree.

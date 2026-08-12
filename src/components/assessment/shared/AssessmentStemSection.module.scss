@@ -67,7 +67,7 @@
 
 .description :global(strong),
 .descriptionOnly :global(strong) {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
 }
 
 .description :global(em),
@@ -77,19 +77,19 @@
 
 .description :global(code),
 .descriptionOnly :global(code) {
-  background: var(--ds-background-neutral-secondary);
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
+  background: var(--background-neutral-secondary);
+  border-radius: var(--shape-sm);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-xs);
   padding: 1px 4px;
 }
 
 .description :global(pre),
 .descriptionOnly :global(pre) {
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-xs);
   margin: 0 0 8px;
   overflow-x: auto;
@@ -106,8 +106,8 @@
 
 .description :global(img),
 .descriptionOnly :global(img) {
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
   display: block;
   margin-top: 8px;
   max-width: 100%;

@@ -2,17 +2,17 @@
 
 /* Soft functional color coding — a tint per agent, not a persona. */
 .root {
-  --agent-violet: var(--ds-background-brand-primary);
-  --agent-blue: var(--ds-text-info-primary-fixed);
-  --agent-magenta: var(--ds-background-accent-pink-primary);
-  --agent-green: var(--ds-background-success-primary);
+  --agent-violet: var(--background-brand-primary);
+  --agent-blue: var(--text-info-primary-fixed);
+  --agent-magenta: var(--background-accent-pink-primary);
+  --agent-green: var(--background-success-primary);
 
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 8px;
-  border-top: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-primary);
+  border-top: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .tablist {
@@ -54,7 +54,7 @@
   background: linear-gradient(
     to left,
     rgb(0 0 0 / 0%),
-    var(--ds-background-neutral-primary)
+    var(--background-neutral-primary)
   );
 }
 
@@ -63,7 +63,7 @@
   background: linear-gradient(
     to right,
     rgb(0 0 0 / 0%),
-    var(--ds-background-neutral-primary)
+    var(--background-neutral-primary)
   );
 }
 
@@ -99,10 +99,10 @@
   height: 26px;
   padding: 0 7px;
   border: 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--shape-lg);
   background: transparent;
-  color: var(--ds-text-neutral-tertiary);
-  font-family: var(--font-body);
+  color: var(--text-neutral-tertiary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
@@ -115,8 +115,8 @@
   &[data-accent="green"] { --agent-accent: var(--agent-green); }
 
   &:hover:not(:disabled) {
-    background: var(--ds-background-neutral-secondary);
-    color: var(--ds-text-neutral-primary);
+    background: var(--background-neutral-secondary);
+    color: var(--text-neutral-primary);
   }
 
   &:focus-visible {
@@ -136,7 +136,7 @@
   height: 24px;
   padding: 0;
   gap: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   justify-content: center;
 }
 
@@ -159,11 +159,11 @@
   padding: 0;
   gap: 0;
   border: 1px solid color-mix(in srgb, var(--agent-accent) 40%, transparent);
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   background: color-mix(
     in srgb,
     var(--agent-accent) 10%,
-    var(--ds-background-neutral-primary)
+    var(--background-neutral-primary)
   );
   color: var(--agent-accent);
   cursor: default;
@@ -173,7 +173,7 @@
     background: color-mix(
       in srgb,
       var(--agent-accent) 14%,
-      var(--ds-background-neutral-primary)
+      var(--background-neutral-primary)
     );
   }
 }
@@ -182,7 +182,7 @@
   background: color-mix(
     in srgb,
     var(--agent-accent) 10%,
-    var(--ds-background-neutral-primary)
+    var(--background-neutral-primary)
   );
   color: var(--agent-accent);
 }
@@ -202,7 +202,7 @@
   color: inherit;
   font-family: inherit;
   font-size: inherit;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   white-space: nowrap;
   cursor: pointer;
 
@@ -235,8 +235,8 @@
   border: 0;
   border-left: 1px solid color-mix(in srgb, var(--agent-accent) 40%, transparent);
   border-radius: 0;
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-neutral-tertiary);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-tertiary);
   font-size: var(--text-body-xs);
   line-height: 1;
   cursor: pointer;
@@ -254,7 +254,7 @@
   width: 1px;
   height: 16px;
   margin: 0 3px;
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
 }
 
 /* ─── Simplified context card ────────────────────────── */
@@ -264,12 +264,12 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
 
-  &[data-accent="violet"] { --agent-accent: var(--ds-background-brand-primary); }
-  &[data-accent="blue"] { --agent-accent: var(--ds-text-info-primary-fixed); }
-  &[data-accent="magenta"] { --agent-accent: var(--ds-background-accent-pink-primary); }
-  &[data-accent="green"] { --agent-accent: var(--ds-background-success-primary); }
+  &[data-accent="violet"] { --agent-accent: var(--background-brand-primary); }
+  &[data-accent="blue"] { --agent-accent: var(--text-info-primary-fixed); }
+  &[data-accent="magenta"] { --agent-accent: var(--background-accent-pink-primary); }
+  &[data-accent="green"] { --agent-accent: var(--background-success-primary); }
 }
 
 .cardHeader {
@@ -284,7 +284,7 @@
   flex-shrink: 0;
   width: 26px;
   height: 26px;
-  border-radius: var(--radius-md);
+  border-radius: var(--shape-md);
   background: color-mix(in srgb, var(--agent-accent) 12%, transparent);
   color: var(--agent-accent);
 }
@@ -292,14 +292,14 @@
 .cardRole {
   margin: 0;
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }
 
 .cardTagline {
   margin: 0;
   font-size: var(--text-body-xxs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   line-height: var(--leading-body-xxs);
 }
 
@@ -314,9 +314,9 @@
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  border-radius: var(--radius-lg);
-  background: var(--ds-background-neutral-secondary);
-  color: var(--ds-text-neutral-primary);
+  border-radius: var(--shape-lg);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-xxs);
   font-weight: var(--font-weight-medium);
 }
@@ -326,7 +326,7 @@
   gap: 6px;
   margin: 0;
   font-size: var(--text-body-xxs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   line-height: var(--leading-body-xxs);
 }
 

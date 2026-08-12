@@ -1,0 +1,106 @@
+.page {
+  min-height: 100vh;
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-body);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  padding: 12px var(--space-s);
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+}
+
+.logoLink {
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-body-md);
+  color: var(--text-neutral-primary);
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: 4px;
+
+  a {
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-body-sm);
+    color: var(--text-neutral-primary);
+    text-decoration: none;
+
+    &:hover {
+      background: var(--background-neutral-tertiary);
+    }
+  }
+}
+
+.navActive {
+  background: var(--background-selected-primary) !important;
+  color: var(--text-selected-primary) !important;
+}
+
+.main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-m) var(--space-s) var(--space-xl);
+}
+
+.intro {
+  margin-bottom: var(--space-m);
+}
+
+.title {
+  margin: 0 0 8px;
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-heading-lg);
+  line-height: var(--leading-heading-lg);
+}
+
+.lede {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
+  color: var(--text-neutral-secondary);
+
+  code {
+    font-family: var(--font-mono);
+    font-size: var(--text-body-xs);
+  }
+}
+
+.section {
+  margin-bottom: var(--space-m);
+
+  h2 {
+    margin: 0 0 12px;
+    font-size: var(--text-heading-xs);
+    line-height: var(--leading-heading-xs);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.manifest {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-body-xs);
+  overflow: auto;
+  max-height: 320px;
+}

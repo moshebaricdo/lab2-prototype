@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
-import { Tooltip } from "../components/ui/Tooltip";
+import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
 import { Dialog } from "../components/ui/Dialog";
-import { AppButton } from "../components/ui/AppButton";
-import { AppActionDropdown } from "../components/ui/AppDropdown";
+import { CadsLabProvider } from "../components/lab2/CadsLabProvider";
 import { useState, useCallback, type ReactNode } from "react";
 import {
   useSavedVariants,
@@ -37,13 +36,12 @@ import {
   teacherDashboardExperimentLinks,
 } from "./levelTypeLinks";
 import { buildShareLinkDropdownItems } from "../lib/shareLinkActions";
-import { FaIcon } from "../components/ui/icons/FaIcon";
 import { getLevelTypeIconConfig } from "../lib/levelTypeIcon";
 import styles from "./LevelsIndexPage.module.scss";
 
-function levelTypeTooltipStartIcon(path: string) {
+function levelTypeTooltipIconName(path: string) {
   const icon = getLevelTypeIconConfig(path);
-  return <FaIcon family={icon.family} name={icon.name} size="xs" />;
+  return icon.family === "solid" ? icon.name : undefined;
 }
 
 interface LevelPage {
@@ -176,11 +174,11 @@ function levelTypeForPath(basePath: string): string {
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <AppButton
-      variant="secondary"
-      tone="black"
-      size="xs"
-      iconName={copied ? "check" : "clipboard"}
+    <Button
+      variant="outlined"
+      color="secondary"
+      size="extraSmall"
+      startIconName={copied ? "check" : "clipboard"}
       onClick={() => {
         navigator.clipboard.writeText(text);
         setCopied(true);
@@ -188,7 +186,7 @@ function CopyButton({ text }: { text: string }) {
       }}
     >
       {copied ? "Copied" : "Copy"}
-    </AppButton>
+    </Button>
   );
 }
 
@@ -268,11 +266,12 @@ function CollapsibleSectionCard({
           >
             {expanded ? "Collapse section" : "Expand section"}
           </button>
-          <AppButton
-            variant="secondary"
-            tone="gray"
-            size="xs"
-            iconName={expanded ? "chevron-up" : "chevron-down"}
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="extraSmall"
+            iconOnly
+            startIconName={expanded ? "chevron-up" : "chevron-down"}
             aria-expanded={expanded}
             aria-label={expanded ? `Collapse ${title}` : `Expand ${title}`}
             onClick={onToggle}
@@ -324,7 +323,12 @@ function SavedVariantsSection() {
         onToggle={() => setExpanded((current) => !current)}
       >
         <div className={styles.variantsList}>
-          {variants.map((v) => (
+          {variants.map((v) => {
+            const shareItems = buildShareLinkDropdownItems({
+              onLockedLevel: () => copyVariantShareLink(v, "locked-level"),
+              onFlow: () => copyVariantShareLink(v, "flow"),
+            });
+            return (
               <div key={v.id} className={styles.variantRow}>
                 <div className={styles.variantInfo}>
                   <Link
@@ -347,7 +351,7 @@ function SavedVariantsSection() {
                   </div>
                 </div>
                 <div className={styles.variantActions}>
-                  <Tooltip content="Open in new tab" position="top">
+                  <Tooltip title="Open in new tab" placement="top">
                     <Link
                       to={buildVariantUrl(v.basePath, v.overrides, {
                         searchParams: v.searchParams,
@@ -355,58 +359,59 @@ function SavedVariantsSection() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <AppButton
-                        variant="tertiary"
-                        tone="gray"
-                        size="xs"
-                        iconName="arrow-up-right-from-square"
+                      <Button
+                        variant="text"
+                        color="tertiary"
+                        size="extraSmall"
+                        iconOnly
+                        startIconName="arrow-up-right-from-square"
                         tabIndex={-1}
                       />
                     </Link>
                   </Tooltip>
-                  <AppActionDropdown
-                    size="xs"
-                    align="end"
-                    side="bottom"
-                    sideOffset={6}
+                  <Dropdown
+                    role="action"
+                    size="extraSmall"
+                    buttonVariant="text"
+                    buttonColor="tertiary"
+                    iconOnly
+                    startIconName="share-nodes"
+                    aria-label={`Share ${v.name}`}
+                    menuPlacement="bottomRight"
                     menuWidth={208}
-                    listLabel={`Share ${v.name}`}
-                    trigger={
-                      <AppButton
-                        variant="tertiary"
-                        tone="gray"
-                        size="xs"
-                        iconName="share-nodes"
-                        aria-label={`Share ${v.name}`}
-                        title="Share links"
-                      />
-                    }
-                    items={buildShareLinkDropdownItems({
-                      onLockedLevel: () => copyVariantShareLink(v, "locked-level"),
-                      onFlow: () => copyVariantShareLink(v, "flow"),
-                    })}
+                    options={shareItems.map((item) => ({
+                      value: item.id,
+                      label: item.label,
+                      iconName: item.iconName,
+                    }))}
+                    onAction={(actionValue) => {
+                      shareItems.find((item) => item.id === actionValue)?.onSelect();
+                    }}
                   />
-                  <Tooltip content="Promote to code" position="top">
-                    <AppButton
-                      variant="tertiary"
-                      tone="gray"
-                      size="xs"
-                      iconName="code"
+                  <Tooltip title="Promote to code" placement="top">
+                    <Button
+                      variant="text"
+                      color="tertiary"
+                      size="extraSmall"
+                      iconOnly
+                      startIconName="code"
                       onClick={() => handlePromote(v)}
                     />
                   </Tooltip>
-                  <Tooltip content="Delete" position="top">
-                    <AppButton
-                      variant="tertiary"
-                      tone="gray"
-                      size="xs"
-                      iconName="trash"
+                  <Tooltip title="Delete" placement="top">
+                    <Button
+                      variant="text"
+                      color="tertiary"
+                      size="extraSmall"
+                      iconOnly
+                      startIconName="trash"
                       onClick={() => deleteVariant(v.id)}
                     />
                   </Tooltip>
                 </div>
               </div>
-          ))}
+            );
+          })}
         </div>
       </CollapsibleSectionCard>
     </div>
@@ -418,8 +423,9 @@ export function LevelsIndexPage() {
   const [levelTypesExpanded, setLevelTypesExpanded] = useState(true);
 
   return (
-    <main className={styles.page}>
-      <div className={styles.container}>
+    <CadsLabProvider>
+      <main className={styles.page}>
+        <div className={styles.container}>
         <h1 className={styles.pageTitle}>Lab2 Sandbox</h1>
         <p className={styles.pageSubtitle}>
           This environment provides functional base templates for Lab2 environments and assessment levels.
@@ -452,9 +458,8 @@ export function LevelsIndexPage() {
                         {entry.pages.map((page, index) => (
                           <Tooltip
                             key={page.path}
-                            content={page.name}
-                            position="top"
-                            sideOffset={8}
+                            title={page.name}
+                            placement="top"
                           >
                             <Link
                               to={page.path}
@@ -492,10 +497,9 @@ export function LevelsIndexPage() {
                   {sampleProgressionLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -521,10 +525,9 @@ export function LevelsIndexPage() {
                   {webLab2ValidationProgressionLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -548,10 +551,9 @@ export function LevelsIndexPage() {
                   {uploadMechanismsProgressionLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -575,10 +577,9 @@ export function LevelsIndexPage() {
                   {backpackFilterProgressionLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -603,10 +604,9 @@ export function LevelsIndexPage() {
                   {agenticProgressionLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -630,10 +630,9 @@ export function LevelsIndexPage() {
                   {drawerImprovementsExperimentLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -657,10 +656,9 @@ export function LevelsIndexPage() {
                   {fileChipTabsExperimentLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -684,10 +682,9 @@ export function LevelsIndexPage() {
                   {webLab2ExperimentLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -711,10 +708,9 @@ export function LevelsIndexPage() {
                   {teacherDashboardExperimentLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -738,10 +734,9 @@ export function LevelsIndexPage() {
                   {assessmentExperimentLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
-                      content={page.name}
-                      position="top"
-                      sideOffset={8}
-                      startIcon={levelTypeTooltipStartIcon(page.path)}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
                     >
                       <Link
                         to={page.path}
@@ -759,6 +754,7 @@ export function LevelsIndexPage() {
 
         </div>
       </div>
-    </main>
+      </main>
+    </CadsLabProvider>
   );
 }

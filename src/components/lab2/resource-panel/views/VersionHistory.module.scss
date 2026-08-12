@@ -38,7 +38,7 @@
   max-width: 340px;
   flex-direction: column;
   align-items: center;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   text-align: center;
 }
 
@@ -48,24 +48,24 @@
   height: 44px;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-round);
-  background: var(--ds-background-neutral-septenary);
-  color: var(--ds-text-neutral-primary-inverse);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-septenary);
+  color: var(--text-neutral-primary-inverse);
   font-size: var(--text-heading-sm);
   margin-bottom: 12px;
 }
 
 .emptyStateTitle {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-md);
   margin-bottom: 4px;
 }
 
 .emptyStateText {
   width: 80%;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
 }
@@ -88,13 +88,13 @@
 .connector {
   width: 22px;
   height: 8px;
-  border-right: 1px solid var(--ds-border-neutral-primary);
+  border-right: 1px solid var(--border-neutral-primary);
 }
 
 .card {
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
 }
 
 .row {
@@ -103,7 +103,7 @@
   justify-content: space-between;
   height: 40px;
   padding: 8px 8px 8px 12px;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
   cursor: pointer;
 }
 
@@ -127,16 +127,16 @@
 
 .rowMain:focus-visible {
   outline: none;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
+  border-radius: var(--shape-sm);
+  box-shadow: 0 0 0 2px var(--border-selected-primary);
 }
 
 .radio {
   width: 18px;
   height: 18px;
-  border: 2px solid var(--ds-text-neutral-primary);
-  border-radius: var(--radius-round);
-  background: var(--ds-background-neutral-primary);
+  border: 2px solid var(--text-neutral-primary);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -144,36 +144,36 @@
 }
 
 .row:hover .radio {
-  background: var(--ds-background-brand-light);
+  background: var(--background-brand-light);
 }
 
 .radioSelected {
-  border-color: var(--ds-background-selected-primary);
+  border-color: var(--background-selected-primary);
 }
 
 .radioDot {
   width: 8px;
   height: 8px;
-  border-radius: var(--radius-round);
-  background: var(--ds-background-selected-primary);
+  border-radius: var(--shape-round);
+  background: var(--background-selected-primary);
 }
 
 .label {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-sm);
 }
 
 .labelAutosave {
-  font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-regular);
 }
 
 .description {
   margin: 0;
   padding: 8px 12px;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
 }
@@ -182,32 +182,32 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   padding: 2px 8px;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   transition: background-color 0.2s ease;
 }
 
 .restoreButton:hover {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .restoreButton:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 2px var(--border-selected-primary);
 }
 
 .autosaveIcon {
-  color: var(--ds-text-neutral-placeholder);
+  color: var(--text-neutral-placeholder);
   font-size: var(--text-body-sm);
 }
 
 .aiSaveIcon {
-  color: var(--ds-text-neutral-placeholder);
+  color: var(--text-neutral-placeholder);
   font-size: var(--text-body-sm);
 }
 
@@ -225,13 +225,13 @@
   width: 100%;
   height: 70px;
   box-sizing: border-box;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   padding: 5px 10px;
   margin-bottom: 6px;
   resize: none;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
 }
@@ -241,12 +241,12 @@
 }
 
 .textarea[data-keyboard-focused="true"] {
-  outline: 2px solid var(--ds-border-selected-primary);
+  outline: 2px solid var(--border-selected-primary);
   outline-offset: 2px;
 }
 
 .textarea::placeholder {
-  color: var(--ds-text-neutral-placeholder);
+  color: var(--text-neutral-placeholder);
 }
 
 .toggleWrap {
@@ -264,11 +264,11 @@
   height: 64px;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-round);
-  background: var(--ds-background-selected-primary);
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed));
+  border-radius: var(--shape-round);
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed));
   font-size: var(--text-heading-lg);
-  box-shadow: 0 3px 9px color-mix(in srgb, var(--ds-background-neutral-black-fixed) 20%, transparent);
+  box-shadow: 0 3px 9px color-mix(in srgb, var(--background-neutral-black-fixed) 20%, transparent);
 }
 
 .startOverHeader {
@@ -280,7 +280,7 @@
 
 .startOverTitle {
   width: 100%;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-heading-xl);
   line-height: var(--leading-heading-xl);
 }
@@ -299,7 +299,7 @@
 
 .startOverText {
   margin: 0;
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
   font-size: var(--text-body-md);
   line-height: var(--leading-body-md);
 }

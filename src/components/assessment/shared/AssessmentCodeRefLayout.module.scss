@@ -1,7 +1,7 @@
 /* Outer wrapper: same neutral background and centering as the standard assessment workspace. */
 .workspace {
   align-items: flex-start;
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
   display: flex;
   flex: 1;
   justify-content: center;
@@ -32,9 +32,9 @@
 
 /* Code panel card — its own bordered surface with a resize edge on the right. */
 .codeCard {
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-card);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -82,9 +82,9 @@
 
 /* Assessment panel card — its own bordered surface. Flex set via inline style for ratio. */
 .assessmentCard {
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-card);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
   display: flex;
   flex-direction: column;
   min-height: 0;

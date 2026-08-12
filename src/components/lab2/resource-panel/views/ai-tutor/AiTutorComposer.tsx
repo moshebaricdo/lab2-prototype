@@ -9,11 +9,8 @@ import {
   type DragEvent,
   type RefObject,
 } from "react";
-import { AppButton } from "../../../../ui/AppButton";
-import { AppActionDropdown } from "../../../../ui/AppDropdown";
-import { AppTextArea } from "../../../../ui/AppTextField";
+import { Button, Dropdown, TextInput, Tooltip } from "@moshebaricdo/cads-react";
 import { FileChip } from "../../../../ui/FileChip";
-import { Tooltip } from "../../../../ui/Tooltip";
 import { faIconForFileName, fileExtensionLabelFromName, getFileChipIconProps } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
@@ -156,15 +153,14 @@ export function AiTutorComposer({
   const selectedTutorMode = TUTOR_MODE_OPTIONS.find(
     (option) => option.value === tutorRequestMode,
   ) ?? TUTOR_MODE_OPTIONS[0];
-  const tutorModeItems = useMemo(
+  const tutorModeOptions = useMemo(
     () =>
       TUTOR_MODE_OPTIONS.map((option) => ({
-        id: option.value,
+        value: option.value,
         label: option.label,
         iconName: option.iconName,
-        onSelect: () => setTutorRequestMode(option.value),
       })),
-    [setTutorRequestMode],
+    [],
   );
 
   return (
@@ -248,24 +244,27 @@ export function AiTutorComposer({
           {...focusWithinProps}
         >
           <div className={styles.textareaFrame}>
-            <AppTextArea
-              ref={textareaRef}
+            <TextInput
+              ref={(node) => {
+                textareaRef.current = node?.querySelector("textarea") ?? null;
+              }}
               value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
+              onChange={(event) => setChatInput(event.target.value)}
               onScroll={updateTextareaScrollFades}
-              onKeyDown={(e) => {
+              onKeyDown={(event) => {
                 if (disabled) return;
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
                   onSend();
                 }
               }}
               placeholder={placeholder ?? (isClarified ? "Message AI Tutor..." : "Type something...")}
-              appearance="bare"
-              controlClassName={styles.textarea}
+              className={styles.textarea}
               disabled={disabled}
               rows={1}
-              size="s"
+              multiline
+              size="small"
+              color="secondary"
             />
             {canTextareaScrollUp ? (
               <div className={`${styles.textareaFade} ${styles.textareaFadeTop}`} />
@@ -276,37 +275,37 @@ export function AiTutorComposer({
           </div>
           <div className={styles.inputActions}>
             <div className={styles.composerShortcutGroup}>
-              <Tooltip content="Add file" position="top">
-                <AppButton
-                  variant="secondary"
-                  aria-label="Add file"
-                  tone="gray"
-                  size="xs"
-                  iconName="plus"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={disabled}
-                />
+              <Tooltip title="Add file" placement="top">
+                <span>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    size="extraSmall"
+                    iconOnly
+                    aria-label="Add file"
+                    startIconName="plus"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={disabled}
+                  />
+                </span>
               </Tooltip>
               {onCheckWork ? (
                 <>
                   <span className={styles.composerShortcutDivider} aria-hidden="true" />
-                  <Tooltip content="Check my work" position="top">
-                    <AppButton
-                      variant="secondary"
-                      aria-label={checkWorkDisabled ? "Checking work" : "Check my work"}
-                      tone="gray"
-                      size="xs"
-                      icon={checkWorkDisabled ? (
-                        <FaIcon
-                          name="spinner-third"
-                          size="xs"
-                          className={styles.validationReviewSpinner}
-                        />
-                      ) : undefined}
-                      iconName={checkWorkDisabled ? undefined : "clipboard-list"}
-                      onClick={onCheckWork}
-                      disabled={disabled || checkWorkDisabled}
-                    />
+                  <Tooltip title="Check my work" placement="top">
+                    <span>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        size="extraSmall"
+                        iconOnly
+                        aria-label={checkWorkDisabled ? "Checking work" : "Check my work"}
+                        startIconName="clipboard-list"
+                        loading={checkWorkDisabled}
+                        onClick={onCheckWork}
+                        disabled={disabled || checkWorkDisabled}
+                      />
+                    </span>
                   </Tooltip>
                 </>
               ) : null}
@@ -320,31 +319,19 @@ export function AiTutorComposer({
             </div>
             <div className={styles.sendButtonRow}>
               {showModelSelector ? (
-                <AppActionDropdown
-                  items={tutorModeItems}
-                  size="xs"
-                  align="end"
-                  listLabel="Tutor mode"
-                  trigger={
-                    <AppButton
-                      variant="secondary"
-                      tone="gray"
-                      size="xs"
-                      iconName={selectedTutorMode.iconName}
-                      className={styles.modelDropdown}
-                      aria-label={`Tutor mode: ${selectedTutorMode.label}`}
-                      disabled={disabled}
-                    >
-                      <span className={styles.modeTriggerContent}>
-                        <span>{selectedTutorMode.label}</span>
-                        <FaIcon
-                          name="chevron-down"
-                          size="xs"
-                          className={styles.modeTriggerChevron}
-                        />
-                      </span>
-                    </AppButton>
-                  }
+                <Dropdown
+                  role="action"
+                  size="extraSmall"
+                  buttonVariant="outlined"
+                  buttonColor="secondary"
+                  label={selectedTutorMode.label}
+                  startIconName={selectedTutorMode.iconName}
+                  className={styles.modelDropdown}
+                  aria-label={`Tutor mode: ${selectedTutorMode.label}`}
+                  disabled={disabled}
+                  menuPlacement="bottomRight"
+                  options={tutorModeOptions}
+                  onAction={(value) => setTutorRequestMode(value as TutorRequestMode)}
                 />
               ) : null}
               {isClarified ? (
@@ -363,11 +350,12 @@ export function AiTutorComposer({
                   Send
                 </button>
               ) : (
-                <AppButton
-                  variant="primary"
-                  tone="purple"
-                  size="xs"
-                  iconName="arrow-up"
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="arrow-up"
                   className={`${styles.sendButton} ${
                     canSend
                       ? styles.sendButtonEnabled

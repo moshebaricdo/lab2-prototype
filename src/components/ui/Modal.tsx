@@ -1,7 +1,7 @@
+import { CloseIconButton } from "@moshebaricdo/cads-react";
 import { type ReactNode, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "../../hooks/useTheme";
-import { AppIconButton } from "./AppIconButton";
 import styles from "./Modal.module.scss";
 
 interface ModalProps {
@@ -49,11 +49,9 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <AppIconButton
-          variant="tertiary"
-          tone="gray"
-          size="xs"
-          iconName="xmark"
+        <CloseIconButton
+          size="extraSmall"
+          color="secondary"
           onClick={onClose}
           className={styles.closeButton}
           aria-label="Close dialog"

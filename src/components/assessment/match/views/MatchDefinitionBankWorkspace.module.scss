@@ -19,26 +19,26 @@
 .slotCard,
 .promptCard {
   align-items: center;
-  border-radius: var(--radius);
+  border-radius: var(--shape-sm);
   display: flex;
   min-height: 72px;
 }
 
 .termCard {
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  color: var(--ds-text-brand-neutral-primary);
-  font-family: var(--font-body);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   justify-content: center;
   padding: 12px;
 }
 
 .slotCard {
-  background: var(--ds-background-neutral-primary);
-  border: 1px dashed var(--ds-border-neutral-primary);
-  color: var(--ds-text-neutral-quaternary);
+  background: var(--background-neutral-primary);
+  border: 1px dashed var(--border-neutral-primary);
+  color: var(--text-neutral-quaternary);
   cursor: pointer;
   justify-content: center;
   text-align: center;
@@ -57,40 +57,40 @@
 }
 
 .slotCardMatched {
-  background: var(--ds-background-brand-light);
-  border-color: var(--ds-border-selected-primary);
+  background: var(--background-brand-light);
+  border-color: var(--border-selected-primary);
 }
 
 .slotCardOver {
-  border-color: var(--ds-border-selected-primary);
-  background: var(--ds-background-brand-light);
+  border-color: var(--border-selected-primary);
+  background: var(--background-brand-light);
 }
 
 .slotCardSelected {
-  border-color: var(--ds-border-selected-primary);
-  box-shadow: 0 0 0 1px var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
+  box-shadow: 0 0 0 1px var(--border-selected-primary);
 }
 
 .slotPlaceholder {
-  color: var(--ds-text-neutral-placeholder);
+  color: var(--text-neutral-placeholder);
 }
 
 .slotCardCorrect {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
-  color: var(--ds-text-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
+  color: var(--text-success-primary);
 }
 
 .slotCardIncorrect {
-  background: var(--ds-background-error-light);
-  border-color: var(--ds-border-error-primary);
-  color: var(--ds-text-error-primary-fixed);
+  background: var(--background-error-light);
+  border-color: var(--border-error-primary);
+  color: var(--text-error-primary-fixed);
 }
 
 .promptCard {
-  background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  color: var(--ds-text-neutral-primary);
+  background: var(--background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
   cursor: grab;
   gap: 12px;
   text-align: center;
@@ -98,27 +98,27 @@
 }
 
 .promptCard:hover {
-  border: 1px solid var(--ds-border-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
 }
 
 .promptCardCompact {
   min-height: 100%;
   width: 100%;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
   border: none;
 }
 
 .promptCardCompact:not(.promptCardCorrect):not(.promptCardIncorrect):hover {
-  background: var(--ds-background-brand-light);
+  background: var(--background-brand-light);
   border: none;
 }
 
 .promptCardCompact.promptCardCorrect {
-  border: 0px solid var(--ds-border-success-primary);
+  border: 0px solid var(--border-success-primary);
 }
 
 .promptCardCompact.promptCardIncorrect {
-  border: 0px solid var(--ds-border-error-primary);
+  border: 0px solid var(--border-error-primary);
 }
 
 .promptCard:focus-visible {
@@ -130,24 +130,24 @@
 }
 
 .promptCardSelected {
-  border-color: var(--ds-border-selected-primary);
-  box-shadow: 0 0 0 1px var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
+  box-shadow: 0 0 0 1px var(--border-selected-primary);
 }
 
 .promptCardCorrect {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
-  color: var(--ds-text-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
+  color: var(--text-success-primary);
 }
 
 .promptCardIncorrect {
-  background: var(--ds-background-error-light);
-  border-color: var(--ds-border-error-primary);
-  color: var(--ds-text-error-primary-fixed);
+  background: var(--background-error-light);
+  border-color: var(--border-error-primary);
+  color: var(--text-error-primary-fixed);
 }
 
 .promptHandle {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   flex-shrink: 0;
 }
 
@@ -160,10 +160,10 @@
 .dragOverlayCard {
   align-items: center;
   text-align: center;
-  background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
-  color: var(--ds-text-neutral-primary);
+  background: var(--background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  color: var(--text-neutral-primary);
   cursor: grabbing;
   display: flex;
   gap: 12px;
@@ -173,24 +173,24 @@
 }
 
 .termCardMatched {
-  background: var(--ds-background-brand-light);
-  border-color: var(--ds-border-selected-primary);
+  background: var(--background-brand-light);
+  border-color: var(--border-selected-primary);
 }
 
 .termCardCorrect {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
-  color: var(--ds-text-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
+  color: var(--text-success-primary);
 }
 
 .termCardIncorrect {
-  background: var(--ds-background-error-light);
-  border-color: var(--ds-border-error-primary);
-  color: var(--ds-text-error-primary-fixed);
+  background: var(--background-error-light);
+  border-color: var(--border-error-primary);
+  color: var(--text-error-primary-fixed);
 }
 
 .partialFeedback {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-md);
   font-weight: var(--font-weight-medium);
   margin: 0;

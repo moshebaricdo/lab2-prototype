@@ -12,8 +12,6 @@ export type {
   WebLabPreviewConfig,
 } from "./PreviewPanel";
 export { VersionBanner } from "./VersionBanner";
-export { SegmentedControl } from "../../../ui/SegmentedControl";
-export type { SegmentedOption } from "../../../ui/SegmentedControl";
 export { ResizableHandle } from "../../../ui/ResizableHandle";
 
 export {

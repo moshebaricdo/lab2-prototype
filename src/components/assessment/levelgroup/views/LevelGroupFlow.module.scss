@@ -9,9 +9,9 @@
 }
 
 .blockEyebrow {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.06em;
   margin: 0 0 12px;
   text-transform: uppercase;
@@ -26,11 +26,11 @@
 }
 
 .stepAssessmentName {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   flex: 0 1 auto;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1.25;
   margin: 0;
   max-width: min(36ch, 100%);
@@ -38,9 +38,9 @@
 }
 
 .stepCounterLabel {
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
   flex-shrink: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   font-variant-numeric: tabular-nums;
   margin: 0;
@@ -48,14 +48,14 @@
 }
 
 .stepHint {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   margin: 0;
 }
 
 .linearTrack {
-  background: var(--ds-border-neutral-primary);
-  border-radius: var(--radius-round);
+  background: var(--border-neutral-primary);
+  border-radius: var(--shape-round);
   flex: 1 1 140px;
   height: 6px;
   min-width: 120px;
@@ -70,8 +70,8 @@
 }
 
 .linearFill {
-  background: var(--ds-background-brand-primary);
-  border-radius: var(--radius-round);
+  background: var(--background-brand-primary);
+  border-radius: var(--shape-round);
   height: 100%;
   transition: width 0.22s ease;
 }
@@ -89,8 +89,8 @@
 }
 
 .dot {
-  background: var(--ds-border-neutral-primary);
-  border-radius: var(--radius-round);
+  background: var(--border-neutral-primary);
+  border-radius: var(--shape-round);
   flex-shrink: 0;
   height: 8px;
   transition:
@@ -103,7 +103,7 @@
 
 /* Answered on another step (not the one on screen) */
 .dotAnswered {
-  background: var(--ds-background-selected-primary);
+  background: var(--background-selected-primary);
 }
 
 /*
@@ -111,7 +111,7 @@
  * so “position” and “answered” are both visible.
  */
 .dotAnsweredViewing {
-  background: color-mix(in srgb, var(--ds-background-brand-primary) 88%, var(--ds-text-neutral-primary));
+  background: color-mix(in srgb, var(--background-brand-primary) 88%, var(--text-neutral-primary));
   transform: scale(1.4);
   z-index: 1;
 }
@@ -123,22 +123,22 @@
 }
 
 .dotInProgress {
-  background: var(--ds-background-brand-light);
-  border: 1px solid var(--ds-border-selected-primary);
+  background: var(--background-brand-light);
+  border: 1px solid var(--border-selected-primary);
 }
 
 /* Not reached yet */
 .dotUnanswered {
-  background: var(--ds-background-neutral-tertiary);
+  background: var(--background-neutral-tertiary);
 }
 
 /* After submit — graded vs needs review */
 .dotSubmittedMet {
-  background: var(--ds-background-success-light);
-  box-shadow: 0 0 0 1px var(--ds-border-success-primary);
+  background: var(--background-success-light);
+  box-shadow: 0 0 0 1px var(--border-success-primary);
 }
 
 .dotSubmittedMiss {
-  background: var(--ds-background-error-light);
-  box-shadow: 0 0 0 1px var(--ds-border-error-primary);
+  background: var(--background-error-light);
+  box-shadow: 0 0 0 1px var(--border-error-primary);
 }

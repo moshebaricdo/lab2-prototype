@@ -10,9 +10,9 @@
   align-items: center;
   gap: 2px;
   padding: 6px;
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-md);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
@@ -26,7 +26,7 @@
   width: 1px;
   height: 8px;
   margin: 0 4px;
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
   flex-shrink: 0;
 }
 
@@ -69,25 +69,25 @@
 
 .drawingShape {
   fill: none;
-  stroke: var(--ds-border-error-primary);
+  stroke: var(--border-error-primary);
   stroke-width: 2.5;
 }
 
 .drawingShapeRect {
-  fill: color-mix(in srgb, var(--ds-background-error-primary) 8%, transparent);
-  stroke: var(--ds-border-error-primary);
+  fill: color-mix(in srgb, var(--background-error-primary) 8%, transparent);
+  stroke: var(--border-error-primary);
   stroke-width: 2.5;
   rx: 4;
 }
 
 .drawingArrowHead {
-  fill: var(--ds-background-error-primary);
+  fill: var(--background-error-primary);
   stroke: none;
 }
 
 .drawingFreeform {
   fill: none;
-  stroke: var(--ds-border-error-primary);
+  stroke: var(--border-error-primary);
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -128,11 +128,11 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--ds-background-selected-primary);
-  color: var(--ds-text-neutral-white-fixed);
-  font-family: var(--font-body);
+  background: var(--background-selected-primary);
+  color: var(--text-neutral-white-fixed);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   transition: transform 100ms, box-shadow 100ms;
   user-select: none;
@@ -144,7 +144,7 @@
 
 .pinMarkerActive {
   transform: scale(1.1);
-  background: var(--ds-background-selected-strong);
+  background: var(--background-selected-strong);
 }
 
 .pinEraser {
@@ -166,9 +166,9 @@
   position: fixed;
   z-index: 97;
   width: 280px;
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-md);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   padding: 8px 10px 10px 10px;
   display: flex;
@@ -183,20 +183,20 @@
 }
 
 .popoverTitle {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
   margin: 0;
 }
 
 .popoverSelector {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-xxs);
-  color: var(--ds-text-neutral-quaternary);
-  background: var(--ds-background-neutral-secondary);
+  color: var(--text-neutral-quaternary);
+  background: var(--background-neutral-secondary);
   padding: 2px 6px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   word-break: break-all;
 }
 
@@ -205,11 +205,11 @@
   width: 100%;
   min-height: 60px;
   padding: 8px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--input-background);
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
   resize: vertical;
@@ -218,15 +218,15 @@
   transition: border-color 120ms;
 
   &::placeholder {
-    color: var(--ds-text-neutral-quaternary);
+    color: var(--text-neutral-quaternary);
   }
 
   &:hover {
-    border-color: var(--ds-border-neutral-primary);
+    border-color: var(--border-neutral-primary);
   }
 
   &:focus {
-    outline: 2px solid var(--ds-border-selected-primary);
+    outline: 2px solid var(--border-selected-primary);
     outline-offset: 2px;
   }
 }

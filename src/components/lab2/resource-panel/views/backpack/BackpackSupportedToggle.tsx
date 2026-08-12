@@ -1,4 +1,4 @@
-import { AppCheckbox } from "../../../../ui/AppCheckbox";
+import { Checkbox } from "@moshebaricdo/cads-react";
 import styles from "./BackpackSupportedToggle.module.scss";
 
 interface BackpackSupportedToggleProps {
@@ -20,8 +20,8 @@ export function BackpackSupportedToggle({
 
   return (
     <label className={styles.root}>
-      <AppCheckbox
-        checkboxSize="xs"
+      <Checkbox
+        size="extraSmall"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
       />

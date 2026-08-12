@@ -6,9 +6,8 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import emptyStateNoFilesOpen from "../../../../assets/empty-states/empty-state-no-files-open.svg";
 import type { FileItem } from "../../../../types/file";
 import { getFileTypeIconConfigForFileItem } from "../../../../lib/fileTypeIcons";
-import { AppButton } from "../../../ui/AppButton";
+import { Button, Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
-import { Tooltip } from "../../../ui/Tooltip";
 import { EmptyState } from "../EmptyState";
 import { CodeMirrorHost } from "./CodeMirrorHost";
 import { useEditorReadOnlyOverride } from "../../../../hooks/useEditorReadOnly";
@@ -357,9 +356,8 @@ export function CodeEditor({
           >
             {fileTabVariant === "edge" && onFileManagerExpand ? (
               <Tooltip
-                content="Open file manager"
-                position="bottom"
-                sideOffset={4}
+                title="Open file manager"
+                placement="bottom"
               >
                 <button
                   type="button"
@@ -426,15 +424,15 @@ export function CodeEditor({
               description="Open a file from the file manager to start coding your project."
               imageSrc={emptyStateNoFilesOpen}
               actions={onCreateFile ? (
-                <AppButton
-                  variant="primary"
-                  tone="purple"
-                  size="s"
-                  iconName="plus"
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  startIconName="plus"
                   onClick={onCreateFile}
                 >
                   Create file
-                </AppButton>
+                </Button>
               ) : undefined}
             />
           ) : selectedOpenFile && selectedCode != null && contentOverride ? (

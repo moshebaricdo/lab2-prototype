@@ -5,8 +5,8 @@
   height: 40px;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-warning-light);
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-warning-light);
   padding: 8px 12px;
 }
 
@@ -20,21 +20,21 @@
 
 .icon {
   width: 16px;
-  color: var(--ds-text-warning-primary-fixed);
+  color: var(--text-warning-primary-fixed);
   font-size: var(--text-body-sm);
   text-align: center;
 }
 
 .message {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
   line-height: 1.64;
   white-space: nowrap;
 }
 
 .version {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
 }
 
 .closeButton {
@@ -42,19 +42,19 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   background: transparent;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   transition: background-color 0.2s ease;
 }
 
 .closeButton:hover {
-  background: var(--ds-background-warning-light);
+  background: var(--background-warning-light);
 }
 
 .closeButton:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--ds-border-focused-primary);
+  box-shadow: 0 0 0 2px var(--border-focused-primary);
 }
 
 .closeIcon {

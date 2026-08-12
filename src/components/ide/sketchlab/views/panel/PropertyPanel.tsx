@@ -1,7 +1,5 @@
 import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { AppButton } from "../../../../ui/AppButton";
-import { AppTextField } from "../../../../ui/AppTextField";
-import { Tooltip } from "../../../../ui/Tooltip";
+import { Button, TextInput, Tooltip } from "@moshebaricdo/cads-react";
 import type {
   SketchImageNodeData,
   SketchLineNodeData,
@@ -17,7 +15,6 @@ import {
   SKETCH_LINE_STYLE_OPTIONS,
   SKETCH_THICKNESS_OPTIONS,
 } from "../../sketchLabOptions";
-import { SketchIcon } from "../../sketchLabIcons";
 import {
   ActionsRow,
   AlignmentDropdown,
@@ -154,16 +151,19 @@ function PanelShell({
       >
         <span className={styles.headerLabel}>{label}</span>
         <div className={styles.headerActions}>
-          <Tooltip content="Close panel" position="left">
-            <AppButton
-              className={styles.closeButton}
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              icon={<SketchIcon icon="close" size="xs" />}
-              aria-label="Close panel"
-              onClick={onClose}
-            />
+          <Tooltip title="Close panel" placement="left">
+            <span>
+              <Button
+                className={styles.closeButton}
+                variant="text"
+                color="tertiary"
+                size="extraSmall"
+                iconOnly
+                startIconName="xmark"
+                aria-label="Close panel"
+                onClick={onClose}
+              />
+            </span>
           </Tooltip>
         </div>
       </div>
@@ -502,9 +502,10 @@ function ImagePanel({ node, ...props }: { node: SketchNode } & PropertyPanelProp
         </PropertyRow>
       </PropertySection>
       <PropertySection title="Alt Text">
-        <AppTextField
+        <TextInput
           className={styles.altField}
-          size="s"
+          size="small"
+          color="secondary"
           value={data.alt}
           placeholder="Describe the image"
           onChange={(event) => update({ alt: event.target.value })}

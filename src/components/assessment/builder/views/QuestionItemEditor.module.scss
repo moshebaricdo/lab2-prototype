@@ -41,20 +41,20 @@
 }
 
 .bankMetaLabel {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }
 
 .sectionHeading {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .optionList {
@@ -98,9 +98,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   cursor: pointer;
 }
 
@@ -112,9 +112,9 @@
 
 .hint {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .selectField {
@@ -124,9 +124,9 @@
 }
 
 .selectLabel {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }
 

@@ -8,10 +8,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { AppButton } from "../../../../ui/AppButton";
-import { AppActionDropdown } from "../../../../ui/AppDropdown";
-import { Tooltip } from "../../../../ui/Tooltip";
-import type { FaIconName } from "../../../../ui/AppButton";
+import { Button, CloseIconButton, Dropdown, SegmentedButton, Tooltip } from "@moshebaricdo/cads-react";
+import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { PreviewColorPicker } from "./PreviewColorPicker";
 import type {
@@ -259,19 +257,24 @@ function ToolbarIconButton({
   variant = "secondary",
   onClick,
 }: ToolbarIconButtonProps) {
+  const button = (
+    <Button
+      variant={variant === "tertiary" ? "text" : "outlined"}
+      color={variant === "tertiary" ? "tertiary" : "secondary"}
+      size="extraSmall"
+      iconOnly
+      startIconName={iconName}
+      disabled={disabled}
+      aria-label={label}
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={[pressed ? styles.toolbarButtonActive : "", className].filter(Boolean).join(" ")}
+    />
+  );
+
   return (
-    <Tooltip content={label} position="bottom" disableHoverableContent>
-      <AppButton
-        variant={variant}
-        tone="gray"
-        size="xs"
-        iconName={iconName}
-        disabled={disabled}
-        aria-label={label}
-        aria-pressed={pressed}
-        onClick={onClick}
-        className={[pressed ? styles.toolbarButtonActive : "", className].filter(Boolean).join(" ")}
-      />
+    <Tooltip title={label} placement="bottom" disableInteractive>
+      {disabled ? <span>{button}</span> : button}
     </Tooltip>
   );
 }
@@ -483,7 +486,7 @@ export function DesignInspectorPanel({
   };
 
   const renderDragHandle = () => (
-    <Tooltip content="Drag toolbar" position="bottom" disableHoverableContent>
+    <Tooltip title="Drag toolbar" placement="bottom" disableInteractive>
       <button
         type="button"
         className={styles.dragHandle}
@@ -600,34 +603,24 @@ export function DesignInspectorPanel({
   ) => (
     <div className={styles.fieldInline}>
       <span className={styles.fieldLabel}>{label}</span>
-      <AppActionDropdown
-        size="xs"
-        align="start"
-        trigger={
-          (() => {
-            const selectedOption = options.find((option) => option.value === computedStyles?.[property]);
-            return (
-          <AppButton
-            variant="secondary"
-            tone="gray"
-            size="xs"
-            iconName={selectedOption?.iconName}
-            disabled={controlsDisabled}
-            className={`${styles.compactDropdownTrigger} ${
-              selectedOption ? "" : styles.compactDropdownPlaceholder
-            }`}
-          >
-            {selectedOption?.label ?? "Select"}
-          </AppButton>
-            );
-          })()
-        }
-        items={options.map((option) => ({
-          id: option.value,
+      <Dropdown
+        role="input"
+        size="extraSmall"
+        color="secondary"
+        value={computedStyles?.[property] ?? ""}
+        placeholder="Select"
+        disabled={controlsDisabled}
+        startIconName={options.find((option) => option.value === computedStyles?.[property])?.iconName}
+        options={options.map((option) => ({
+          value: option.value,
           label: option.label,
           iconName: option.iconName,
-          onSelect: () => apply(property, option.value),
         }))}
+        onChange={(nextValue) => {
+          const value = Array.isArray(nextValue) ? nextValue[0] : nextValue;
+          if (value) apply(property, value);
+        }}
+        aria-label={label}
       />
     </div>
   );
@@ -642,11 +635,15 @@ export function DesignInspectorPanel({
     const isDropdownOpen = activeToolbarDropdown === property;
 
     return (
-      <AppActionDropdown
-        size="xs"
-        align="start"
-        side={popupPlacement === "above" ? "top" : "bottom"}
-        sideOffset={POPOVER_GAP}
+      <Dropdown
+        role="action"
+        size="extraSmall"
+        iconOnly
+        startIconName={selectedOption?.iconName ?? iconName}
+        buttonVariant="outlined"
+        buttonColor="secondary"
+        aria-label={label}
+        disabled={controlsDisabled}
         open={isDropdownOpen}
         onOpenChange={(isOpen) => {
           if (isOpen) {
@@ -661,23 +658,13 @@ export function DesignInspectorPanel({
 
           setActiveToolbarDropdown((current) => (current === property ? null : current));
         }}
-        contentClassName={styles.toolbarDropdownContent}
-        trigger={
-          <AppButton
-            variant="secondary"
-            tone="gray"
-            size="xs"
-            iconName={selectedOption?.iconName ?? iconName}
-            disabled={controlsDisabled}
-            aria-label={label}
-          />
-        }
-        items={options.map((option) => ({
-          id: option.value,
+        menuPlacement={popupPlacement === "above" ? "topLeft" : "bottomLeft"}
+        options={options.map((option) => ({
+          value: option.value,
           label: option.label,
           iconName: option.iconName,
-          onSelect: () => apply(property, option.value),
         }))}
+        onAction={(actionValue) => apply(property, actionValue)}
       />
     );
   };
@@ -687,24 +674,18 @@ export function DesignInspectorPanel({
 
     return (
       <div className={styles.displayModeGroup} role="group" aria-label="Display">
-        {DISPLAY_OPTIONS.map((option) => (
-          <AppButton
-            key={option.value}
-            variant="tertiary"
-            tone="black"
-            size="xs"
-            iconName={option.iconName}
-            disabled={controlsDisabled}
-            aria-label={`Set display to ${option.label}`}
-            aria-pressed={activeDisplay === option.value}
-            className={`${styles.displayModeButton} ${
-              activeDisplay === option.value ? styles.displayModeButtonActive : ""
-            }`}
-            onClick={() => apply("display", option.value)}
-          >
-            {option.label}
-          </AppButton>
-        ))}
+        <SegmentedButton
+          size="extraSmall"
+          value={activeDisplay}
+          onChange={(nextValue) => apply("display", nextValue)}
+          disabled={controlsDisabled}
+          options={DISPLAY_OPTIONS.map((option) => ({
+            value: option.value,
+            label: option.label,
+            iconName: option.iconName,
+          }))}
+          aria-label="Display"
+        />
       </div>
     );
   };
@@ -718,7 +699,7 @@ export function DesignInspectorPanel({
         onClick={() => onAddToTutor(selectedElement)}
       />
       {selectedElement.id ? (
-        <Tooltip content="Click to copy" position="bottom" disableHoverableContent>
+        <Tooltip title="Click to copy" placement="bottom" disableInteractive>
           <button
             type="button"
             className={styles.label}
@@ -806,11 +787,9 @@ export function DesignInspectorPanel({
         onClick={onResetStyles}
         variant="tertiary"
       />
-      <AppButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="xmark"
+      <CloseIconButton
+        size="extraSmall"
+        color="secondary"
         aria-label="Clear selection"
         onClick={onClearSelection}
       />
@@ -1098,11 +1077,12 @@ export function DesignInspectorPanel({
           <div className={styles.inlineFields}>
             <div className={styles.fieldHeader}>
               <span className={styles.popupTitle}>Padding</span>
-              <AppButton
-                variant="tertiary"
-                tone="gray"
-                size="xs"
-                iconName={arePaddingValuesLinked ? "lock" : "lock-open"}
+              <Button
+                variant="text"
+                color="tertiary"
+                size="extraSmall"
+                iconOnly
+                startIconName={arePaddingValuesLinked ? "lock" : "lock-open"}
                 disabled={controlsDisabled}
                 className={styles.lockButton}
                 aria-label={arePaddingValuesLinked ? "Unlock padding values" : "Lock padding values"}
@@ -1117,11 +1097,12 @@ export function DesignInspectorPanel({
           <div className={styles.inlineFields}>
             <div className={styles.fieldHeader}>
               <span className={styles.popupTitle}>Weight</span>
-              <AppButton
-                variant="tertiary"
-                tone="gray"
-                size="xs"
-                iconName={areBorderWidthsLinked ? "lock" : "lock-open"}
+              <Button
+                variant="text"
+                color="tertiary"
+                size="extraSmall"
+                iconOnly
+                startIconName={areBorderWidthsLinked ? "lock" : "lock-open"}
                 disabled={controlsDisabled}
                 className={styles.lockButton}
                 aria-label={areBorderWidthsLinked ? "Unlock border widths" : "Lock border widths"}

@@ -11,7 +11,7 @@ import { PreviewPanel } from "./PreviewPanel";
 import { PreviewDebugPanel } from "./preview-panel/PreviewDebugPanel";
 import { ResizableHandle } from "../../../ui/ResizableHandle";
 import { VersionBanner } from "./VersionBanner";
-import { SegmentedControl, type SegmentedOption } from "../../../ui/SegmentedControl";
+import { SegmentedButton } from "@moshebaricdo/cads-react";
 import { WorkspaceHeader } from "./WorkspaceHeader";
 import { versionLabels } from "../../../../data/weblab2";
 import type { FileItem } from "../../../../types/file";
@@ -276,10 +276,10 @@ export function Workspace({
     setIsFileManagerCollapsed(collapsed);
   };
 
-  const viewModeOptions: SegmentedOption<ViewMode>[] = [
-    { value: "code", label: "Code", iconName: "code" },
-    { value: "preview", label: "Preview", iconName: "eye" },
-    { value: "split", label: "Split View", iconName: "table-columns" },
+  const viewModeOptions = [
+    { value: "code", label: "Code", iconName: "code" as const },
+    { value: "preview", label: "Preview", iconName: "eye" as const },
+    { value: "split", label: "Split View", iconName: "table-columns" as const },
   ];
   const isViewingHistoryVersion = selectedHistoryVersion !== "current";
   const isEmptyProject = !hasWorkspaceProjectFiles(fileStructure);
@@ -351,10 +351,12 @@ export function Workspace({
     <div className={styles.root}>
       <WorkspaceHeader
         left={shouldShowNewProjectEmptyState ? undefined : (
-          <SegmentedControl
+          <SegmentedButton
+            size="extraSmall"
             options={viewModeOptions}
             value={viewMode}
-            onChange={setViewMode}
+            onChange={(nextValue) => setViewMode(nextValue as ViewMode)}
+            aria-label="Workspace view mode"
           />
         )}
         aiChangesActive={hasPendingAiChanges}

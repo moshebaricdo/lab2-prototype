@@ -3,14 +3,14 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .canvasWrap {
   position: relative;
   flex: 1;
   min-height: 0;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .flow {
@@ -19,7 +19,7 @@
 }
 
 .flow :global(.react-flow__background) {
-  color: var(--ds-background-neutral-secondary);
+  color: var(--background-neutral-secondary);
 }
 
 .flowGrab :global(.react-flow__pane) {

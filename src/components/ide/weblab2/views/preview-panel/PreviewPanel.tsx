@@ -8,7 +8,7 @@ import {
 } from "react";
 import emptyStatePreview from "../../../../../assets/empty-states/empty-state-preview.svg";
 import emptyStatePreviewStopped from "../../../../../assets/empty-states/empty-state-preview-stopped.svg";
-import { AppButton } from "../../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { ResizableHandle } from "../../../../ui/ResizableHandle";
 import { EmptyState } from "../../../shared/EmptyState";
 import { stampPreviewReloadNonce } from "../buildPreviewSrcDoc";
@@ -502,15 +502,15 @@ export function PreviewPanel({
         description="You stopped the preview. If there was an error, review your code or use AI Tutor to help debug before reloading."
         imageSrc={emptyStatePreviewStopped}
         actions={
-          <AppButton
-            variant="secondary"
-            tone="gray"
-            size="s"
-            iconName="rotate"
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="small"
+            startIconName="rotate"
             onClick={handleReload}
           >
             Reload Preview
-          </AppButton>
+          </Button>
         }
       />
     </div>

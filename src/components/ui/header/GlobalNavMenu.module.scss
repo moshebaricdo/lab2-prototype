@@ -4,9 +4,9 @@
   z-index: 110;
   width: 240px;
   overflow: hidden;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   box-shadow: 1px 2px 2px 0 rgb(0 0 0 / 7%), 0 2px 6px 0 rgb(0 0 0 / 4%);
 }
 
@@ -27,5 +27,5 @@
   @include type-label-3;
 
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }

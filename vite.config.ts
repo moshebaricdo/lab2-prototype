@@ -76,7 +76,13 @@ export default defineConfig({
   worker: {
     format: "es",
   },
-  /** Pre-bundle core deps so cold start / HMR invalidation is cheaper. */
+  /**
+   * Pre-bundle core deps so cold start / HMR invalidation is cheaper.
+   * Exclude CADS: esbuild drops `import './foo.css'` from the published dist.
+   * Because CADS is excluded, Vite will not discover its CJS transitives —
+   * include those (and the MUI subpaths CADS deep-imports) so ESM default
+   * imports like `import PropTypes from 'prop-types'` get an interop wrapper.
+   */
   optimizeDeps: {
     include: [
       "react",
@@ -84,6 +90,35 @@ export default defineConfig({
       "react/jsx-runtime",
       "react-router",
       "react-router-dom",
+      "@emotion/react",
+      "@emotion/styled",
+      "prop-types",
+      "react-is",
+      "hoist-non-react-statics",
+      "react-transition-group",
+      "@mui/material",
+      "@mui/material/Box",
+      "@mui/material/Button",
+      "@mui/material/ButtonBase",
+      "@mui/material/Checkbox",
+      "@mui/material/ClickAwayListener",
+      "@mui/material/CssBaseline",
+      "@mui/material/Dialog",
+      "@mui/material/Drawer",
+      "@mui/material/FormControlLabel",
+      "@mui/material/IconButton",
+      "@mui/material/Pagination",
+      "@mui/material/Paper",
+      "@mui/material/Popper",
+      "@mui/material/Radio",
+      "@mui/material/Slider",
+      "@mui/material/Snackbar",
+      "@mui/material/Tooltip",
+      "@mui/material/styles",
+    ],
+    exclude: [
+      "@moshebaricdo/cads-react",
+      "@moshebaricdo/cads-variables",
     ],
   },
   server: {

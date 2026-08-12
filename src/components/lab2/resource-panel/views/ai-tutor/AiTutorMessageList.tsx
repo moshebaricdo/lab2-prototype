@@ -1,6 +1,6 @@
 import { useState, type KeyboardEvent, type RefObject } from "react";
+import { Button } from "@moshebaricdo/cads-react";
 import { ScrollArea } from "../../../../ui/scroll-area";
-import { AppButton } from "../../../../ui/AppButton";
 import { FileChip } from "../../../../ui/FileChip";
 import { getFileChipIconProps, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
@@ -360,24 +360,18 @@ function ValidationReviewCard({
   if (isOffer) {
     return onRequestReview ? (
       <div className={styles.validationReviewInlineAction}>
-        <AppButton
-          variant="primary"
-          tone="purple"
-          size="s"
-          icon={isRunning ? (
-            <FaIcon
-              name="spinner-third"
-              size="s"
-              className={styles.validationReviewSpinner}
-            />
-          ) : undefined}
-          iconName={isRunning ? undefined : "clipboard-check"}
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          startIconName="clipboard-check"
+          loading={isRunning}
           fullWidth
           disabled={disabled}
           onClick={onRequestReview}
         >
           {isRunning ? "Checking..." : "Check my work"}
-        </AppButton>
+        </Button>
       </div>
     ) : null;
   }
@@ -442,32 +436,31 @@ function ValidationReviewCard({
           )}
 
           {compact && isExpanded && (
-            <AppButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
+            <Button
+              variant="text"
+              color="secondary"
+              size="extraSmall"
               onClick={() => setIsExpanded(false)}
             >
               Collapse previous check
-            </AppButton>
+            </Button>
           )}
         </div>
       </div>
 
       {review.status === "likely_complete" && onContinue && (
         <div className={styles.validationReviewInlineAction}>
-          <AppButton
-            variant="primary"
-            tone="purple"
-            size="s"
-            iconName="arrow-right"
-            iconPosition="end"
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            endIconName="arrow-right"
             fullWidth
             disabled={disabled}
             onClick={onContinue}
           >
             {continueLabel}
-          </AppButton>
+          </Button>
         </div>
       )}
     </div>
@@ -654,26 +647,26 @@ export function AiTutorMessageList({
 
                         {msg.fileChanges && msg.codeChangeStatus === "pending" && (
                           <div className={styles.codeChangeActions}>
-                            <AppButton
-                              variant="secondary"
-                              tone="gray"
-                              size="s"
-                              iconName="xmark"
+                            <Button
+                              variant="outlined"
+                              color="secondary"
+                              size="small"
+                              startIconName="xmark"
                               fullWidth
                               onClick={() => onCodeChangeAction(idx, "rejected")}
                             >
                               Reject
-                            </AppButton>
-                            <AppButton
-                              variant="primary"
-                              tone="purple"
-                              size="s"
-                              iconName="check"
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              size="small"
+                              startIconName="check"
                               fullWidth
                               onClick={() => onCodeChangeAction(idx, "accepted")}
                             >
                               Accept
-                            </AppButton>
+                            </Button>
                           </div>
                         )}
 

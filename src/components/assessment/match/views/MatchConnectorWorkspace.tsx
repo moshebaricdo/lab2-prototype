@@ -12,7 +12,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
@@ -69,7 +69,7 @@ function buildCurvePath(
   return `M ${start.x} ${start.y} C ${start.x + cpOffset} ${start.y}, ${end.x - cpOffset} ${end.y}, ${end.x} ${end.y}`;
 }
 
-const BRAND_STROKE = "var(--ds-border-selected-primary)";
+const BRAND_STROKE = "var(--border-selected-primary)";
 
 function renderMatchContentBlock(
   block: MultiChoiceAnswerContentBlock,
@@ -1232,27 +1232,24 @@ export function MatchConnectorWorkspace({
               left={
                 embedded ? undefined : (
                   <>
-                    <AppButton
-                      variant="secondary"
-                      tone="gray"
-                      iconPosition="start"
-                      iconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
-                      size="m"
+                    <Button
+                      variant="outlined" color="secondary"
+                      startIconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
+                      size="medium"
                       onClick={() => {
                         setIsTeacherAnswerRevealed((cur) => !cur);
                       }}
                     >
                       {isTeacherAnswerRevealed ? "Hide answer" : "Reveal answer"}
-                    </AppButton>
+                    </Button>
                     {!isSubmittedForFeedback && hasAnyAssignment ? (
-                      <AppButton
-                        variant="secondary"
-                        tone="gray"
-                        size="m"
+                      <Button
+                        variant="outlined" color="secondary"
+                        size="medium"
                         onClick={clearAll}
                       >
                         Clear all
-                      </AppButton>
+                      </Button>
                     ) : null}
                   </>
                 )
@@ -1282,35 +1279,32 @@ export function MatchConnectorWorkspace({
                       </p>
                     )}
                     {isSubmitted && isPerfectMatch && (
-                      <AppButton
-                        variant="primary"
-                        size="m"
-                        tone="purple"
+                      <Button
+                        variant="contained" color="primary"
+                        size="medium"
                         onClick={() => navigate(continuePath)}
                       >
                         Continue
-                      </AppButton>
+                      </Button>
                     )}
                     {isSubmitted && !isPerfectMatch && (
-                      <AppButton
-                        variant="primary"
-                        tone="purple"
-                        size="m"
+                      <Button
+                        variant="contained" color="primary"
+                        size="medium"
                         onClick={tryAgain}
                       >
                         Try again
-                      </AppButton>
+                      </Button>
                     )}
                     {!isSubmitted && (
-                      <AppButton
-                        variant="primary"
-                        size="m"
-                        tone="purple"
+                      <Button
+                        variant="contained" color="primary"
+                        size="medium"
                         onClick={handleSubmitMatches}
                         disabled={!allAssigned || teacherRevealActive}
                       >
                         Submit matches
-                      </AppButton>
+                      </Button>
                     )}
                   </>
                 )

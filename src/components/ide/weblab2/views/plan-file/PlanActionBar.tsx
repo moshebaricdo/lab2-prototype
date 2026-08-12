@@ -1,4 +1,4 @@
-import { AppButton } from "../../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import styles from "./PlanActionBar.module.scss";
 
@@ -47,30 +47,28 @@ export function PlanActionBar({
       {showControls ? (
         <div className={styles.controls}>
           {showEditPlan ? (
-            <AppButton
-              variant="secondary"
-              tone="gray"
-              size="xs"
-              iconName={isPreview ? "pen-to-square" : "check"}
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="extraSmall"
+              startIconName={isPreview ? "pen-to-square" : "check"}
               onClick={() => onViewModeChange(isPreview ? "source" : "preview")}
             >
               {isPreview ? "Edit" : "Done"}
-            </AppButton>
+            </Button>
           ) : null}
           {showBuildPlan ? (
-            <AppButton
-              variant="primary"
-              tone="purple"
-              size="xs"
-              icon={buildPlanRunning ? (
-                <FaIcon name="spinner" size="xs" className={styles.spinner} />
-              ) : undefined}
-              iconName={buildPlanRunning ? undefined : "wand-magic-sparkles"}
+            <Button
+              variant="contained"
+              color="primary"
+              size="extraSmall"
+              startIconName="wand-magic-sparkles"
+              loading={buildPlanRunning}
               onClick={onBuildPlan}
               disabled={buildPlanDisabled || buildPlanRunning}
             >
               Build plan
-            </AppButton>
+            </Button>
           ) : null}
         </div>
       ) : null}

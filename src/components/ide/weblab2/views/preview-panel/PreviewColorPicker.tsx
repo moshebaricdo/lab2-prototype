@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { HexColorPicker } from "react-colorful";
-import { Tooltip } from "../../../../ui/Tooltip";
+import { Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import styles from "./PreviewColorPicker.module.scss";
 
@@ -309,7 +309,7 @@ export function PreviewColorPicker({
   ) : null;
 
   return (
-    <Tooltip content={label} position="bottom" disableHoverableContent>
+    <Tooltip title={label} placement="bottom" disableInteractive>
       <div
         ref={rootRef}
         className={`${styles.root} ${fullWidth ? styles.rootFullWidth : ""}`}

@@ -1,5 +1,5 @@
 import { Panel, useReactFlow } from "@xyflow/react";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import styles from "./SketchCanvasControls.module.scss";
 
 interface SketchCanvasControlsProps {
@@ -19,46 +19,51 @@ export function SketchCanvasControls({
 
   return (
     <Panel position="bottom-right" className={styles.root}>
-      <AppButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="arrow-rotate-left"
+      <Button
+        variant="text"
+        color="tertiary"
+        size="extraSmall"
+        iconOnly
+        startIconName="arrow-rotate-left"
         aria-label="Undo"
         disabled={!canUndo}
         onClick={onUndo}
       />
-      <AppButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="arrow-rotate-right"
+      <Button
+        variant="text"
+        color="tertiary"
+        size="extraSmall"
+        iconOnly
+        startIconName="arrow-rotate-right"
         aria-label="Redo"
         disabled={!canRedo}
         onClick={onRedo}
       />
       <div className={styles.divider} role="separator" />
-      <AppButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="magnifying-glass-plus"
+      <Button
+        variant="text"
+        color="tertiary"
+        size="extraSmall"
+        iconOnly
+        startIconName="magnifying-glass-plus"
         aria-label="Zoom in"
         onClick={() => zoomIn()}
       />
-      <AppButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="magnifying-glass-minus"
+      <Button
+        variant="text"
+        color="tertiary"
+        size="extraSmall"
+        iconOnly
+        startIconName="magnifying-glass-minus"
         aria-label="Zoom out"
         onClick={() => zoomOut()}
       />
-      <AppButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="up-right-and-down-left-from-center"
+      <Button
+        variant="text"
+        color="tertiary"
+        size="extraSmall"
+        iconOnly
+        startIconName="up-right-and-down-left-from-center"
         aria-label="Fit view"
         onClick={() => fitView({ padding: 0.3, maxZoom: 1 })}
       />

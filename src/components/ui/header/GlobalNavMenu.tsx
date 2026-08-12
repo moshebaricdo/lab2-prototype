@@ -1,8 +1,6 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { useState } from "react";
-import { AppButton } from "../AppButton";
-import { AppNativeSelect } from "../AppDropdown";
-import { FaIcon } from "../icons/FaIcon";
+import { Button, Dropdown } from "@moshebaricdo/cads-react";
 import { useTheme, type ThemeMode } from "../../../hooks/useTheme";
 import styles from "./GlobalNavMenu.module.scss";
 import navStyles from "./TopNavigation.module.scss";
@@ -19,11 +17,12 @@ export function GlobalNavMenu() {
   return (
     <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
       <PopoverPrimitive.Trigger asChild>
-        <AppButton
-          variant="tertiary"
-          tone="white"
-          size="s"
-          icon={<FaIcon name="bars" size="s" />}
+        <Button
+          variant="text"
+          color="tertiary"
+          size="small"
+          iconOnly
+          startIconName="bars"
           className={navStyles.rightIconButton}
           aria-label="Menu"
           aria-haspopup="dialog"
@@ -40,14 +39,15 @@ export function GlobalNavMenu() {
           <div className={styles.panel} role="group" aria-label="Appearance">
             <div className={styles.field}>
               <p className={styles.label}>Theme</p>
-              <AppNativeSelect
+              <Dropdown
+                role="input"
+                size="small"
+                color="secondary"
+                width="full"
                 value={theme}
-                onValueChange={(value) => setTheme(value as ThemeMode)}
                 options={THEME_OPTIONS}
-                placeholder=""
-                size="s"
-                tone="gray"
-                fullWidth
+                onChange={(value) => setTheme(String(value) as ThemeMode)}
+                aria-label="Theme"
               />
             </div>
           </div>

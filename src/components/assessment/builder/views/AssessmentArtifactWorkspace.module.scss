@@ -1,25 +1,25 @@
 .domainSummaryCard {
   padding: var(--space-4);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-md);
-  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-secondary);
 }
 
 .domainSummaryTitle {
   margin: 0 0 var(--space-3);
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }
 
 .domainSummaryRow {
   display: flex;
   justify-content: space-between;
   gap: var(--space-3);
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .timerBar {

@@ -6,9 +6,9 @@
   width: 226px;
   display: flex;
   flex-direction: column;
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-md);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
   box-shadow: 0 2px 3px rgb(0 0 0 / 5%);
   overflow: hidden;
 }
@@ -19,8 +19,8 @@
   justify-content: space-between;
   height: 32px;
   padding: 0 10px;
-  background: var(--ds-background-neutral-secondary);
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  background: var(--background-neutral-secondary);
+  border-bottom: 1px solid var(--border-neutral-primary);
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -45,16 +45,16 @@
 .closeButton:hover,
 .closeButton:active {
   background: transparent !important;
-  color: var(--ds-text-neutral-primary) !important;
+  color: var(--text-neutral-primary) !important;
 }
 
 .headerLabel {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
 }
 
 .headerActions {
@@ -68,7 +68,7 @@
   flex-direction: column;
   gap: 4px;
   padding: 10px 10px;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
 }
 
 .section:last-child {
@@ -77,10 +77,10 @@
 
 .sectionTitle {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }
 
 .row {
@@ -92,9 +92,9 @@
 }
 
 .rowLabel {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   white-space: nowrap;
 }
 
@@ -111,8 +111,8 @@
 .swatchDot {
   width: 16px;
   height: 16px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--shape-sm);
+  border: 1px solid var(--border-neutral-primary);
   box-sizing: border-box;
 }
 
@@ -120,8 +120,8 @@
   background-image: linear-gradient(
     45deg,
     transparent 45%,
-    var(--ds-background-error-primary) 45%,
-    var(--ds-background-error-primary) 55%,
+    var(--background-error-primary) 45%,
+    var(--background-error-primary) 55%,
     transparent 55%
   );
 }
@@ -147,8 +147,8 @@
   width: 24px;
   height: 24px;
   padding: 0;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--shape-sm);
+  border: 1px solid var(--border-neutral-primary);
   cursor: pointer;
   box-sizing: border-box;
   display: inline-flex;
@@ -157,13 +157,13 @@
 }
 
 .swatchButtonSelected {
-  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 2px var(--border-selected-primary);
 }
 
 .swatchCustom {
   position: relative;
-  color: var(--ds-text-neutral-tertiary);
-  background: var(--ds-background-neutral-primary);
+  color: var(--text-neutral-tertiary);
+  background: var(--background-neutral-primary);
 }
 
 .swatchCustomInput {
@@ -177,7 +177,7 @@
   height: 1px;
   margin-block: 2px;
   margin-inline: calc(-1 * var(--menu-outer-padding, 2px));
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
   flex-shrink: 0;
 }
 
@@ -188,11 +188,11 @@
   gap: var(--menu-item-gap, 4px);
   min-height: var(--menu-item-min-height, 22px);
   padding: var(--menu-item-padding, 3px 6px);
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--menu-item-font, var(--text-body-xs));
   font-weight: var(--font-weight-medium);
   line-height: 1.54;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .customInputLabel {
@@ -204,19 +204,19 @@
   width: 56px;
   height: 20px;
   padding: 0 6px;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
   font-weight: var(--font-weight-medium);
   line-height: 1.54;
-  color: var(--ds-text-neutral-primary);
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
+  color: var(--text-neutral-primary);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
 }
 
 .customInput:focus-visible {
   outline: 0;
-  box-shadow: 0 0 0 2px var(--ds-border-focused-primary);
+  box-shadow: 0 0 0 2px var(--border-focused-primary);
 }
 
 /* Rotation menu */
@@ -236,34 +236,26 @@
   min-width: 0;
 }
 
-.rotationSlider > div {
-  min-height: 20px;
-}
-
-.rotationSlider input[type="range"] {
-  height: 20px;
-}
-
 .rotationValueInput {
   box-sizing: border-box;
   width: 48px;
   height: 22px;
   flex: 0 0 auto;
   padding: 0 4px;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
   font-weight: var(--font-weight-medium);
   line-height: 1.54;
   text-align: center;
-  color: var(--ds-text-neutral-primary);
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
+  color: var(--text-neutral-primary);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
 }
 
 .rotationValueInput:focus-visible {
   outline: 0;
-  box-shadow: 0 0 0 2px var(--ds-border-focused-primary);
+  box-shadow: 0 0 0 2px var(--border-focused-primary);
 }
 
 /* Actions row */
@@ -275,13 +267,13 @@
 
 .actionDelete {
   margin-left: auto;
-  color: var(--ds-text-error-primary) !important;
-  border-color: var(--ds-border-error-primary) !important;
+  color: var(--text-error-primary) !important;
+  border-color: var(--border-error-primary) !important;
 }
 
 .actionDelete:hover {
-  color: var(--ds-text-neutral-white-fixed) !important;
-  background: var(--ds-background-error-primary) !important;
+  color: var(--text-neutral-white-fixed) !important;
+  background: var(--background-error-primary) !important;
 }
 
 .groupItemsButton {

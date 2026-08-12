@@ -18,9 +18,9 @@
 
 .groupCard {
   overflow: hidden;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-default);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
 }
 
 .groupHeader {
@@ -30,8 +30,8 @@
   gap: 10px;
   min-height: 40px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
 }
 
 .groupHeaderWithAction {
@@ -40,12 +40,12 @@
 
 .groupHeading {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .groupBody {
@@ -56,10 +56,10 @@
 }
 
 .groupMeta {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-secondary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-secondary);
 }
 
 .filterFields {
@@ -85,10 +85,10 @@
 }
 
 .filterLabel {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }
 
 .bankList {
@@ -99,9 +99,9 @@
 
 .emptyListHint {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   text-align: center;
 }
 
@@ -110,42 +110,42 @@
   flex-direction: column;
   gap: 2px;
   padding: 10px 12px;
-  border-radius: var(--radius-md);
-  background: var(--ds-background-neutral-secondary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-secondary);
 }
 
 .summaryMode {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }
 
 .summaryMeta {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .subTitle {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .hint {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .divider {
   height: 1px;
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
 }
 
 .fieldGroup {
@@ -166,20 +166,20 @@
   gap: 10px;
   width: 100%;
   padding: 8px 8px 8px 10px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-md);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
   text-align: left;
   cursor: pointer;
 }
 
 .row:hover {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .rowActive {
-  border-color: var(--ds-border-selected-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-color: var(--border-selected-primary);
+  background: var(--background-neutral-secondary);
 }
 
 .rowIndex {
@@ -189,12 +189,12 @@
   flex-shrink: 0;
   width: 20px;
   height: 20px;
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-quaternary);
-  font-family: var(--font-body);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-quaternary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-secondary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-secondary);
 }
 
 .rowMain {
@@ -206,24 +206,24 @@
 }
 
 .rowLabel {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .rowMeta {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .rowChevron {
   flex-shrink: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .bankRow {
@@ -232,9 +232,9 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px 8px 8px 10px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-default);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
 }
 
 .bankRowMain {
@@ -250,21 +250,21 @@
 .kindBadge {
   align-self: flex-start;
   padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-secondary);
-  font-family: var(--font-body);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-secondary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-secondary);
 }
 
 .checkRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   cursor: pointer;
 }
 
@@ -279,8 +279,8 @@
   flex-direction: column;
   gap: 4px;
   padding: 8px 10px;
-  border-radius: var(--radius-md);
-  background: var(--ds-background-neutral-secondary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-secondary);
 }
 
 .emptyState {
@@ -293,13 +293,13 @@
 }
 
 .emptyIcon {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .emptyTitle {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
 }

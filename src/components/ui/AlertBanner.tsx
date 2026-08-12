@@ -1,3 +1,4 @@
+import { CloseIconButton, Link } from "@moshebaricdo/cads-react";
 import {
   type AnchorHTMLAttributes,
   type HTMLAttributes,
@@ -7,8 +8,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { AppIconButton } from "./AppIconButton";
-import { AppLink } from "./AppLink";
 import { FaIcon } from "./icons/FaIcon";
 import type { FaIconName } from "../../icons/faProRegularCodepoints";
 import styles from "./AlertBanner.module.scss";
@@ -38,7 +37,7 @@ export interface AlertBannerProps extends HTMLAttributes<HTMLDivElement> {
   size?: AlertBannerSize;
 }
 
-export interface AlertBannerLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+export interface AlertBannerLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "type"> {
   children: ReactNode;
 }
 
@@ -171,14 +170,12 @@ export function AlertBanner({
       </div>
 
       {dismissible && onDismiss ? (
-        <AppIconButton
+        <CloseIconButton
           aria-label="Dismiss alert"
           className={styles.closeButton}
-          iconName="xmark"
           onClick={dismiss}
-          size="xs"
-          tone="gray"
-          variant="tertiary"
+          size="extraSmall"
+          color="secondary"
         />
       ) : null}
     </div>
@@ -191,15 +188,15 @@ export function AlertBannerLink({
   ...props
 }: AlertBannerLinkProps) {
   return (
-    <AppLink
-      tone="inherit"
-      underline
-      size="s"
-      className={[styles.link, className].filter(Boolean).join(" ")}
+    <Link
       {...props}
+      type="primary"
+      size="small"
+      isExternal={false}
+      className={[styles.link, className].filter(Boolean).join(" ")}
     >
       {children}
-    </AppLink>
+    </Link>
   );
 }
 

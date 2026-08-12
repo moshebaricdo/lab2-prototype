@@ -4,10 +4,10 @@
 
 .prompt {
   margin: 0 0 4px;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
   line-height: var(--leading-body-sm);
 }
 
@@ -26,15 +26,15 @@
 
 .fileIcon {
   flex-shrink: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-sm);
 }
 
 .fileName {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-normal);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-neutral-primary);
   line-height: var(--leading-body-sm);
 }
 

@@ -126,6 +126,16 @@ export function TypographySandboxPage() {
             >
               Typography
             </Link>
+            <Link
+              to="/design-system/cads"
+              className={`${styles.headerNavLink} ${
+                location.pathname.startsWith("/design-system/cads")
+                  ? styles.headerNavLinkActive
+                  : ""
+              }`}
+            >
+              CADS packages
+            </Link>
           </nav>
         </div>
         <AppButton

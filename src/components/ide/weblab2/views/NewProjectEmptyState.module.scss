@@ -4,7 +4,7 @@
   min-width: 0;
   flex: 1;
   overflow: auto;
-  background-color: var(--ds-background-neutral-secondary);
+  background-color: var(--background-neutral-secondary);
 }
 
 .intro {
@@ -43,9 +43,9 @@
 
 .eyebrow {
   margin: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -53,17 +53,17 @@
 
 .heading {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-family: var(--font-heading);
   font-size: var(--text-heading-lg);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1.2;
 }
 
 .description {
   max-width: 560px;
   margin: 0;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-md);
   line-height: 1.5;
 }
@@ -82,9 +82,9 @@
   min-width: 0;
   flex-direction: column;
   gap: 18px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-card);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
   padding: 20px;
 }
 
@@ -96,8 +96,8 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--ds-background-brand-light), transparent),
-      var(--ds-background-neutral-primary) 44%
+      color-mix(in srgb, var(--background-brand-light), transparent),
+      var(--background-neutral-primary) 44%
     );
 }
 
@@ -109,30 +109,30 @@
   padding: 1.5px;
   background: conic-gradient(
     from var(--new-project-ai-glow-angle),
-    var(--ds-border-selected-strong) 0deg,
-    var(--ds-border-selected-strong) 246deg,
+    var(--border-selected-strong) 0deg,
+    var(--border-selected-strong) 246deg,
     color-mix(
       in srgb,
-      var(--ds-background-selected-primary),
-      var(--ds-border-selected-strong)
+      var(--background-selected-primary),
+      var(--border-selected-strong)
     ) 286deg,
-    var(--ds-background-selected-primary) 312deg,
+    var(--background-selected-primary) 312deg,
     color-mix(
       in srgb,
-      var(--ds-background-selected-primary),
-      var(--ds-border-selected-strong)
+      var(--background-selected-primary),
+      var(--border-selected-strong)
     ) 338deg,
-    var(--ds-border-selected-strong) 360deg
+    var(--border-selected-strong) 360deg
   );
   content: "";
   filter: drop-shadow(0 0 5px color-mix(
     in srgb,
-    var(--ds-border-selected-strong),
-    var(--ds-background-selected-primary)
+    var(--border-selected-strong),
+    var(--background-selected-primary)
   ));
   mask:
-    linear-gradient(var(--ds-text-neutral-white-fixed) 0 0) content-box,
-    linear-gradient(var(--ds-text-neutral-white-fixed) 0 0);
+    linear-gradient(var(--text-neutral-white-fixed) 0 0) content-box,
+    linear-gradient(var(--text-neutral-white-fixed) 0 0);
   mask-composite: exclude;
   pointer-events: none;
   animation: new-project-ai-border-spin 3s linear infinite;
@@ -151,16 +151,16 @@
 
 .startPathTitle {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-family: var(--font-heading);
   font-size: var(--text-heading-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1.2;
 }
 
 .startPathText {
   margin: 0;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-sm);
   line-height: 1.48;
 }
@@ -174,9 +174,9 @@
   justify-content: center;
   gap: 12px;
   margin-top: auto;
-  border: 1px dashed var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px dashed var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   padding: 16px;
   text-align: center;
   transition:
@@ -193,8 +193,8 @@
 }
 
 .manualDropZoneActive {
-  border-color: var(--ds-border-selected-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-color: var(--border-selected-primary);
+  background: var(--background-neutral-secondary);
 }
 
 .starterUploadInput {
@@ -210,14 +210,14 @@
 
 .manualDropText {
   margin: 0;
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
   font-size: var(--text-body-xs);
   line-height: 1.4;
 }
 
 .startPathError {
   margin: 0;
-  color: var(--ds-text-error-primary);
+  color: var(--text-error-primary);
   font-size: var(--text-body-xs);
   line-height: 1.4;
 }
@@ -237,9 +237,9 @@
   min-height: var(--new-project-option-card-height);
   align-items: center;
   gap: 10px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   color: inherit;
   cursor: pointer;
   padding: 12px;
@@ -251,8 +251,8 @@
 }
 
 .aiPromptButton:hover:not(:disabled) {
-  border-color: var(--ds-border-selected-strong);
-  background: var(--ds-background-brand-light);
+  border-color: var(--border-selected-strong);
+  background: var(--background-brand-light);
 }
 
 .aiPromptButton:active:not(:disabled) {
@@ -260,7 +260,7 @@
 }
 
 .aiPromptButton:focus-visible {
-  outline: 2px solid var(--ds-border-selected-primary);
+  outline: 2px solid var(--border-selected-primary);
   outline-offset: 2px;
 }
 
@@ -276,14 +276,14 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  color: var(--ds-text-brand-primary);
+  color: var(--text-brand-primary);
 }
 
 .aiPromptTitle {
   display: block;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1.4;
 }
 

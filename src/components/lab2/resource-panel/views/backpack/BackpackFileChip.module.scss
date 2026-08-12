@@ -5,9 +5,9 @@
   height: 52px;
   align-items: stretch;
   overflow: hidden;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
 }
 
 .iconRail {
@@ -18,18 +18,18 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-right: 1px solid var(--ds-border-selected-primary);
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  background: var(--ds-background-selected-primary);
+  border-right: 1px solid var(--border-selected-primary);
+  border-radius: var(--shape-sm) 0 0 var(--shape-sm);
+  background: var(--background-selected-primary);
 }
 
 .iconRailImage {
-  border-right-color: var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-primary);
+  border-right-color: var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .iconGlyph {
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-primary-inverse));
+  color: var(--text-selected-primary, var(--text-neutral-primary-inverse));
   font-size: var(--text-body-lg);
 }
 
@@ -54,9 +54,9 @@
   width: 100%;
   max-width: 100%;
   overflow: hidden;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-sm);
   margin: 0 0 -2px;
   text-overflow: ellipsis;
@@ -73,7 +73,7 @@
 
 .metaLabel {
   overflow: hidden;
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
   margin: 0;
@@ -85,8 +85,8 @@
   width: 4px;
   height: 4px;
   flex-shrink: 0;
-  border-radius: var(--radius-round);
-  background: var(--ds-text-neutral-tertiary);
+  border-radius: var(--shape-round);
+  background: var(--text-neutral-tertiary);
 }
 
 .actions {
@@ -106,19 +106,19 @@
   align-items: center;
   gap: 2px;
   padding: 2px 12px 2px 8px;
-  border-radius: var(--radius-round);
-  background: var(--ds-background-success-light);
+  border-radius: var(--shape-round);
+  background: var(--background-success-light);
 }
 
 .addedBadgeIcon {
-  color: var(--ds-text-success-primary);
+  color: var(--text-success-primary);
   font-size: var(--text-body-xxs);
 }
 
 .addedBadgeLabel {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   line-height: var(--leading-body-xxs);
   text-transform: uppercase;

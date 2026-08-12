@@ -16,27 +16,34 @@ Prototype environment for levels where the lab surface is an AI chat stream. Som
 
 - `src/pages/aichatlab/AiChatLabLevelPage.tsx`
 - `src/pages/aichatlab/aiChatLabPageConfig.ts` — default content, sample rubric, and AI Chat Lab dev-panel fields
+- `src/components/lab2/CadsLabProvider.tsx` — Lab2-scoped `@moshebaricdo/cads-*` provider + variables/fonts (`Lab2Shell`)
 - `src/components/ide/aichatlab/views/AiChatLabWorkspace.tsx`
 - `src/components/ide/aichatlab/views/AiChatLabConfigPanel.tsx`
 - `src/components/ide/aichatlab/views/AiChatLabModelCardPanel.tsx`
-- `src/components/ide/aichatlab/views/AiChatLabChatPanel.tsx`
+- `src/components/ide/aichatlab/views/AiChatLabChatPanel.tsx` — CADS `AiChatMessage` / `AiChatInput` stream (no longer `AiTutorPanel`)
 - `src/components/ide/aichatlab/views/aiChatLabModel.ts` — model options, config initialization, and mock response helpers
 - `src/components/ide/aichatlab/views/AiChatLabWorkspace.types.ts`
-- `src/components/ui/AppSlider.tsx` — shared design-system slider used for temperature/model configuration controls
-- `src/components/lab2/resource-panel/views/ai-tutor/AiTutorPanel.tsx` — shared chat stream/composer shell reused for the lab chat surface
 - `src/components/lab2/resource-panel/Sidebar.tsx`
 - `src/components/lab2/resource-panel/views/InstructionsPanel.tsx`
 - `src/pages/levelTypeLinks.ts`
 
+## CADS consumption
+
+AI Chat Lab workspace columns (config, model card, chat) and the shared resource panel both consume packaged CADS (`@moshebaricdo/cads-*` from GitHub Packages) via `Lab2Shell` → `CadsLabProvider`. Local SCSS for those surfaces uses **CADS Foundations** variable names (unprefixed `--background-*` / `--text-*` / `--shape-*`, etc.), not prototype `--ds-*`.
+
+- Bootstrap: `components/lab2/CadsLabProvider.tsx` → `CadsProvider baseline={false}` + `@moshebaricdo/cads-variables/variables.css` + icon fonts.
+- Workspace primitives: `Button`, `TextInput`, `Dropdown`, `Slider`, `Tabs`, `Tooltip`, `Alert`, `FaIcon`, plus AI `AiChatMessage` / `AiChatInput`.
+- Layout chrome (`PanelHeader`, panel frames, SCSS modules) stays local but tokens match Foundations.
+
 ## Current UX Behavior
 
 - The AI chat stream is the lab workspace, not the sidebar Tutor.
-- The lab chat stream reuses the shared `AiTutorPanel` / message-list / composer components, with the instructions drawer hidden because instructions live in the sidebar.
+- The lab chat stream uses CADS `AiChatMessage` + `AiChatInput` with a local mock reply path (no shared `AiTutorPanel`).
 - The resource panel uses a standalone Instructions tab and can still show optional Resources, Rubric, Teacher Resources, and Dev tabs.
 - AI Tutor is hidden for AI Chat Lab routes because the level itself is the AI conversation.
 - The workspace supports either chat-only mode or a two-column lab surface with model customization plus chat.
 - Configuration tabs are progressively disclosed:
-  - Setup: optional model selector, compact temperature (`AppSlider` size `s`, no stepper), and optional system prompt.
+  - Setup: optional model selector, compact temperature (CADS `Slider` size `small` with ± controls), and optional system prompt.
   - Retrieval: optional retrieval notes, with an added-items list for saved retrieval entries.
   - Publish: optional name, description, intended use, limitations and warnings, testing and evaluation, and example prompts/topics, with added cards for saved example prompts.
 - Setup and Retrieval tabs use an Update footer action. Publish uses Save and Publish actions, shows a success toast after publish, and can switch into the published model-card view.
@@ -53,4 +60,4 @@ Prototype environment for levels where the lab surface is an AI chat stream. Som
 ## Known Gaps
 
 - No real LLM provider, retrieval index, publishing backend, or saved model-card persistence.
-- The Backpack tab uses the production type-availability panel with an **aichatlab** allow-list that permits all file types for now. **+** (tooltip: "Add to chat") attaches the item as a composer file chip in the workspace chat via `weblab:add-backpack-item-to-chat`.
+- The Backpack tab uses the production type-availability panel with an **aichatlab** allow-list that permits all file types for now. **+** (tooltip: "Add to chat") still dispatches `weblab:add-backpack-item-to-chat`, but the CADS chat composer spike does not yet listen for that event (attachments are a follow-up).

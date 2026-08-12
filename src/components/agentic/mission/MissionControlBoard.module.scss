@@ -1,14 +1,14 @@
 @use "../../../styles/_mixins.scss" as *;
 
-$good: var(--ds-text-success-primary);
-$warn: var(--ds-text-warning-secondary);
+$good: var(--text-success-primary);
+$warn: var(--text-warning-secondary);
 
 .root {
   display: flex;
   flex: 1;
   min-width: 0;
   min-height: 0;
-  background: var(--ds-background-neutral-quaternary);
+  background: var(--background-neutral-quaternary);
 }
 
 .scroller {
@@ -29,9 +29,9 @@ $warn: var(--ds-text-warning-secondary);
   align-items: flex-start;
   justify-content: space-between;
   padding: 20px 24px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-lg);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-lg);
+  background: var(--background-neutral-primary);
 }
 
 .missionIntro {
@@ -44,13 +44,13 @@ $warn: var(--ds-text-warning-secondary);
   gap: 10px;
   margin: 0 0 8px;
   font-size: var(--text-heading-xs);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .missionBrief {
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 
   p {
     margin: 0 0 8px;
@@ -61,7 +61,7 @@ $warn: var(--ds-text-warning-secondary);
   }
 
   strong {
-    color: var(--ds-text-neutral-primary);
+    color: var(--text-neutral-primary);
   }
 }
 
@@ -77,7 +77,7 @@ $warn: var(--ds-text-warning-secondary);
   max-width: 260px;
   font-size: var(--text-body-xs);
   text-align: right;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 /* Debrief */
@@ -85,14 +85,14 @@ $warn: var(--ds-text-warning-secondary);
 .debrief {
   padding: 16px 20px;
   border: 1px solid color-mix(in srgb, #{$good} 45%, transparent);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, #{$good} 8%, var(--ds-background-neutral-primary));
+  border-radius: var(--shape-lg);
+  background: color-mix(in srgb, #{$good} 8%, var(--background-neutral-primary));
 
   p {
     margin: 6px 0 0;
     font-size: var(--text-body-sm);
     line-height: var(--leading-body-sm);
-    color: var(--ds-text-neutral-primary);
+    color: var(--text-neutral-primary);
   }
 }
 
@@ -119,9 +119,9 @@ $warn: var(--ds-text-warning-secondary);
   flex-direction: column;
   gap: 10px;
   padding: 16px 18px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-lg);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-lg);
+  background: var(--background-neutral-primary);
 }
 
 .taskHeader {
@@ -134,14 +134,14 @@ $warn: var(--ds-text-warning-secondary);
 .taskTitle {
   margin: 0;
   font-size: var(--text-body-sm);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .taskBrief {
   margin: 0;
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .statusBadge {
@@ -150,20 +150,20 @@ $warn: var(--ds-text-warning-secondary);
   gap: 6px;
   flex-shrink: 0;
   padding: 3px 10px;
-  border-radius: var(--radius-round);
+  border-radius: var(--shape-round);
   font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   white-space: nowrap;
 }
 
 .statusToneIdle {
-  background: var(--ds-background-neutral-quaternary);
-  color: var(--ds-text-neutral-quaternary);
+  background: var(--background-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .statusToneBusy {
-  background: color-mix(in srgb, var(--ds-text-info-primary-fixed) 12%, transparent);
-  color: var(--ds-text-info-primary-fixed);
+  background: color-mix(in srgb, var(--text-info-primary-fixed) 12%, transparent);
+  color: var(--text-info-primary-fixed);
 }
 
 .statusToneGood {
@@ -195,10 +195,10 @@ $warn: var(--ds-text-warning-secondary);
   flex-direction: row;
   flex-wrap: wrap;
   font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .specialistSelect {
@@ -209,7 +209,7 @@ $warn: var(--ds-text-warning-secondary);
 
 .specialistNote {
   font-size: var(--text-body-xs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 /* Briefcase */
@@ -219,9 +219,9 @@ $warn: var(--ds-text-warning-secondary);
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  border: 1px dashed var(--ds-border-neutral-primary);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--ds-background-neutral-quaternary) 50%, var(--ds-background-neutral-primary));
+  border: 1px dashed var(--border-neutral-primary);
+  border-radius: var(--shape-lg);
+  background: color-mix(in srgb, var(--background-neutral-quaternary) 50%, var(--background-neutral-primary));
 }
 
 .briefcaseItems {
@@ -235,23 +235,23 @@ $warn: var(--ds-text-warning-secondary);
   align-items: center;
   gap: 8px;
   padding: 5px 8px;
-  border-radius: var(--radius-md);
+  border-radius: var(--shape-md);
   font-size: var(--text-body-xs);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   cursor: pointer;
   transition: background 0.1s ease;
 
   &:hover {
-    background: var(--ds-background-neutral-quaternary);
+    background: var(--background-neutral-quaternary);
   }
 
   input {
-    accent-color: var(--ds-background-brand-primary);
+    accent-color: var(--background-brand-primary);
   }
 }
 
 .briefcaseItemPacked {
-  background: color-mix(in srgb, var(--ds-background-brand-primary) 7%, transparent);
+  background: color-mix(in srgb, var(--background-brand-primary) 7%, transparent);
 }
 
 .briefcaseItemLocked {
@@ -265,13 +265,13 @@ $warn: var(--ds-text-warning-secondary);
 
 .briefcaseItemLabel {
   flex: 1;
-  font-family: var(--font-mono);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-xs);
 }
 
 .briefcaseItemTokens {
   font-size: var(--text-body-xxs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .meterRow {
@@ -284,19 +284,19 @@ $warn: var(--ds-text-warning-secondary);
   position: relative;
   flex: 1;
   height: 8px;
-  border-radius: var(--radius-round);
-  background: var(--ds-background-neutral-quaternary);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-quaternary);
   overflow: hidden;
 }
 
 .meterFill {
   height: 100%;
-  border-radius: var(--radius-round);
+  border-radius: var(--shape-round);
   transition: width 0.25s ease, background 0.25s ease;
 }
 
 .meterFillStarved {
-  background: var(--ds-background-brand-mid);
+  background: var(--background-brand-mid);
 }
 
 .meterFillFocused {
@@ -312,18 +312,18 @@ $warn: var(--ds-text-warning-secondary);
   top: -1px;
   bottom: -1px;
   width: 2px;
-  background: var(--ds-text-neutral-quaternary);
+  background: var(--text-neutral-quaternary);
   opacity: 0.55;
 }
 
 .meterLabel {
   font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   white-space: nowrap;
 }
 
 .meterLabelStarved {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .meterLabelFocused {
@@ -341,8 +341,8 @@ $warn: var(--ds-text-warning-secondary);
   flex-direction: column;
   gap: 6px;
   padding: 12px 14px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--shape-lg);
+  border: 1px solid var(--border-neutral-primary);
 }
 
 .outcomeGood {
@@ -358,14 +358,14 @@ $warn: var(--ds-text-warning-secondary);
 .outcomeHeadline {
   font-size: var(--text-body-sm);
   font-weight: var(--font-weight-bold);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .outcomeSummary {
   margin: 0;
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 
   p {
     margin: 0;
@@ -376,7 +376,7 @@ $warn: var(--ds-text-warning-secondary);
   margin: 0;
   padding-left: 18px;
   font-size: var(--text-body-xs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 
   li + li {
     margin-top: 2px;
@@ -397,12 +397,12 @@ $warn: var(--ds-text-warning-secondary);
   align-items: center;
   gap: 6px;
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   color: $good;
 }
 
 .boardFootnote {
   font-size: var(--text-body-xxs);
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   text-align: center;
 }

@@ -10,8 +10,8 @@
   display: flex;
   min-height: 40px;
   align-items: center;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
   padding: 0 8px;
 }
 
@@ -36,19 +36,19 @@
   min-height: 24px;
   align-items: center;
   gap: 0;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
 }
 
 .urlBox .urlBarButton:hover:not(:disabled),
 .urlBox .urlBarButton:active:not(:disabled) {
   background: transparent;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
 }
 
 .urlBoxDisabled {
-  border-color: var(--ds-border-neutral-primary);
+  border-color: var(--border-neutral-primary);
 }
 
 .urlForm {
@@ -66,7 +66,7 @@
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-xs);
   line-height: 1.64;
   text-align: left;
@@ -75,18 +75,18 @@
 }
 
 .urlInput::placeholder {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   opacity: 1;
 }
 
 .urlInput:hover {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .urlInput:focus-visible,
 .urlInputEditing {
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-neutral-primary);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
   border-radius: 0;
   outline: none;
 }
@@ -99,9 +99,9 @@
 .urlInputDisabled:hover,
 .urlInputDisabled:focus-visible {
   background: transparent;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   cursor: default;
-  -webkit-text-fill-color: var(--ds-text-neutral-quaternary);
+  -webkit-text-fill-color: var(--text-neutral-quaternary);
 }
 
 .suggestionPopover {
@@ -111,9 +111,9 @@
   right: 0;
   left: -6px;
   overflow: hidden;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: 0 0 var(--shape-sm) var(--shape-sm);
+  background: var(--background-neutral-primary);
 }
 
 .suggestionList {
@@ -130,10 +130,10 @@
   flex-direction: row;
   align-items: flex-start;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   background: transparent;
   cursor: pointer;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   gap: 6px;
   padding: 4px 6px;
   text-align: left;
@@ -141,30 +141,30 @@
 
 .suggestionOption:hover,
 .suggestionOptionActive {
-  background: var(--ds-background-neutral-tertiary);
+  background: var(--background-neutral-tertiary);
 }
 
 .suggestionName {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-regular);
   line-height: 1.2;
 }
 
 .suggestionNameMatch {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
 }
 
 .suggestionPath {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-regular);
   line-height: 1.2;
 }
 
 .urlError {
   margin: 0;
-  color: var(--ds-text-error-primary);
+  color: var(--text-error-primary);
   font-size: var(--text-body-xs);
   font-weight: var(--font-weight-medium);
   line-height: 1.4;
@@ -193,9 +193,9 @@
   right: -2px;
   width: 7px;
   height: 7px;
-  border: 1px solid var(--ds-background-neutral-primary);
-  border-radius: var(--radius-round);
-  background: var(--ds-background-error-primary);
+  border: 1px solid var(--background-neutral-primary);
+  border-radius: var(--shape-round);
+  background: var(--background-error-primary);
   pointer-events: none;
 }
 
@@ -205,25 +205,25 @@
 
 .designModeButtonActive {
   border-color: transparent !important;
-  background: var(--ds-background-selected-primary) !important;
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed)) !important;
+  background: var(--background-selected-primary) !important;
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed)) !important;
 }
 
 .designModeButtonActive:hover {
   border-color: transparent !important;
-  background: var(--ds-background-selected-strong) !important;
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed)) !important;
+  background: var(--background-selected-strong) !important;
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed)) !important;
 }
 
 .previewBody {
   min-height: 0;
   flex: 1;
   overflow: auto;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .previewBody:has(.mobileFrame) {
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .previewCenter {
@@ -272,9 +272,9 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    color-mix(in srgb, var(--ds-background-selected-primary) 10%, transparent) 25%,
-    color-mix(in srgb, var(--ds-background-selected-primary) 28%, transparent) 50%,
-    color-mix(in srgb, var(--ds-background-selected-primary) 10%, transparent) 75%,
+    color-mix(in srgb, var(--background-selected-primary) 10%, transparent) 25%,
+    color-mix(in srgb, var(--background-selected-primary) 28%, transparent) 50%,
+    color-mix(in srgb, var(--background-selected-primary) 10%, transparent) 75%,
     transparent 100%
   );
   content: "";
@@ -286,7 +286,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--ds-background-neutral-white-fixed);
+  background: var(--background-neutral-white-fixed);
 }
 
 .previewIframe {
@@ -294,7 +294,7 @@
   width: 100%;
   height: 100%;
   border: 0;
-  background: var(--ds-background-neutral-white-fixed);
+  background: var(--background-neutral-white-fixed);
 }
 
 .previewIframeLoading {
@@ -356,7 +356,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--ds-background-neutral-black-fixed) 80%, transparent);
+  background: color-mix(in srgb, var(--background-neutral-black-fixed) 80%, transparent);
   padding: 16px;
 }
 
@@ -368,8 +368,8 @@
   max-height: calc(100vh - 32px);
   flex-direction: column;
   overflow: hidden;
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
 }
 
 .scaleUp {

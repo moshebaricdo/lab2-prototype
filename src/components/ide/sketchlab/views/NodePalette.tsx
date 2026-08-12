@@ -1,8 +1,7 @@
 import { useRef } from "react";
-import { AppButton } from "../../../ui/AppButton";
-import { Tooltip } from "../../../ui/Tooltip";
+import { Button, Tooltip } from "@moshebaricdo/cads-react";
 import type { SketchCanvasTool, SketchShapeKind } from "../../../../types/sketchLab";
-import { SketchIcon, type SketchIconKey } from "../sketchLabIcons";
+import { SKETCH_ICONS, type SketchIconKey } from "../sketchLabIcons";
 import styles from "./NodePalette.module.scss";
 
 interface NodePaletteProps {
@@ -51,61 +50,76 @@ export function NodePalette({
   return (
     <div className={styles.root} role="toolbar" aria-label="Canvas tools" aria-orientation="vertical">
       {CANVAS_TOOLS.map((item) => (
-        <Tooltip key={item.tool} content={item.label} position="right">
-          <AppButton
-            variant="tertiary"
-            tone="black"
-            size="s"
-            className={canvasTool === item.tool ? styles.toolActive : undefined}
-            icon={<SketchIcon icon={item.icon} size="s" />}
-            aria-label={item.label}
-            aria-pressed={canvasTool === item.tool}
-            onClick={() => onCanvasToolChange(item.tool)}
-          />
+        <Tooltip key={item.tool} title={item.label} placement="right">
+          <span>
+            <Button
+              variant="text"
+              color="tertiary"
+              size="small"
+              iconOnly
+              className={canvasTool === item.tool ? styles.toolActive : undefined}
+              startIconName={SKETCH_ICONS[item.icon].name}
+              aria-label={item.label}
+              aria-pressed={canvasTool === item.tool}
+              onClick={() => onCanvasToolChange(item.tool)}
+            />
+          </span>
         </Tooltip>
       ))}
       <div className={styles.divider} role="separator" />
       {SHAPE_TOOLS.map((tool) => (
-        <Tooltip key={tool.shape} content={tool.label} position="right">
-          <AppButton
-            variant="tertiary"
-            tone="black"
-            size="s"
-            icon={<SketchIcon icon={tool.icon} size="s" />}
-            aria-label={`Add ${tool.label.toLowerCase()}`}
-            onClick={() => onAddShape(tool.shape)}
-          />
+        <Tooltip key={tool.shape} title={tool.label} placement="right">
+          <span>
+            <Button
+              variant="text"
+              color="tertiary"
+              size="small"
+              iconOnly
+              startIconName={SKETCH_ICONS[tool.icon].name}
+              aria-label={`Add ${tool.label.toLowerCase()}`}
+              onClick={() => onAddShape(tool.shape)}
+            />
+          </span>
         </Tooltip>
       ))}
-      <Tooltip content="Add text" position="right">
-        <AppButton
-          variant="tertiary"
-          tone="black"
-          size="s"
-          icon={<SketchIcon icon="tool-text" size="s" />}
-          aria-label="Add text"
-          onClick={onAddText}
-        />
+      <Tooltip title="Add text" placement="right">
+        <span>
+          <Button
+            variant="text"
+            color="tertiary"
+            size="small"
+            iconOnly
+            startIconName={SKETCH_ICONS["tool-text"].name}
+            aria-label="Add text"
+            onClick={onAddText}
+          />
+        </span>
       </Tooltip>
-      <Tooltip content="Add line" position="right">
-        <AppButton
-          variant="tertiary"
-          tone="black"
-          size="s"
-          icon={<SketchIcon icon="tool-line" size="s" />}
-          aria-label="Add line"
-          onClick={onAddLine}
-        />
+      <Tooltip title="Add line" placement="right">
+        <span>
+          <Button
+            variant="text"
+            color="tertiary"
+            size="small"
+            iconOnly
+            startIconName={SKETCH_ICONS["tool-line"].name}
+            aria-label="Add line"
+            onClick={onAddLine}
+          />
+        </span>
       </Tooltip>
-      <Tooltip content="Add image" position="right">
-        <AppButton
-          variant="tertiary"
-          tone="black"
-          size="s"
-          icon={<SketchIcon icon="tool-image" size="s" />}
-          aria-label="Add image"
-          onClick={() => fileInputRef.current?.click()}
-        />
+      <Tooltip title="Add image" placement="right">
+        <span>
+          <Button
+            variant="text"
+            color="tertiary"
+            size="small"
+            iconOnly
+            startIconName={SKETCH_ICONS["tool-image"].name}
+            aria-label="Add image"
+            onClick={() => fileInputRef.current?.click()}
+          />
+        </span>
       </Tooltip>
       <input
         ref={fileInputRef}

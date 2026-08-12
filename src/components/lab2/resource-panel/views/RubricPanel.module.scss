@@ -20,16 +20,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
   padding: 8px 10px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
 }
 
 .navLabel {
   flex: 1;
   min-width: 0;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
   text-align: center;
@@ -38,8 +38,8 @@
 /* ── Header card ── */
 
 .headerCard {
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
   overflow: hidden;
 }
 
@@ -47,18 +47,18 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
   padding: 12px;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
 }
 
 .rubricName {
   margin: 0;
   flex: 1;
   min-width: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-md);
 }
 
@@ -68,10 +68,10 @@
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  border-radius: var(--radius-round);
+  border-radius: var(--shape-round);
   padding: 2px 10px;
   font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-xxs);
   white-space: nowrap;
   text-transform: uppercase;
@@ -79,18 +79,18 @@
 }
 
 .pillComplete {
-  background: var(--ds-background-success-primary);
-  color: var(--ds-text-neutral-white-fixed);
+  background: var(--background-success-primary);
+  color: var(--text-neutral-white-fixed);
 }
 
 .pillNeedsRevisions {
-  background: var(--ds-background-warning-primary);
-  color: var(--ds-text-neutral-primary);
+  background: var(--background-warning-primary);
+  color: var(--text-neutral-primary);
 }
 
 .pillDefault {
-  background: var(--ds-background-neutral-septenary);
-  color: var(--ds-text-neutral-white-fixed);
+  background: var(--background-neutral-septenary);
+  color: var(--text-neutral-white-fixed);
 }
 
 /* ── Feedback section ── */
@@ -110,16 +110,16 @@
 }
 
 .feedbackLabel {
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .feedbackBody {
   margin: 0;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
 }
@@ -128,9 +128,9 @@
 
 .tableCard {
   overflow: hidden;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
 }
 
 .tableHeader {
@@ -139,15 +139,15 @@
   justify-content: space-between;
   min-height: 40px;
   padding: 8px 12px;
-  background: var(--ds-background-neutral-secondary);
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  background: var(--background-neutral-secondary);
+  border-bottom: 1px solid var(--border-neutral-primary);
 }
 
 .tableHeaderLabel {
   margin: 0;
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--text-neutral-tertiary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -155,7 +155,7 @@
 /* ── Category rows ── */
 
 .categoryRow {
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
 }
 
 .categoryRow:last-child {
@@ -175,21 +175,21 @@
   margin-top: 3px;
   width: 18px;
   height: 18px;
-  border-radius: var(--radius-round);
+  border-radius: var(--shape-round);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .markerSelected {
-  background: var(--ds-text-selected-primary);
-  color: var(--ds-text-neutral-white-fixed);
+  background: var(--text-selected-primary);
+  color: var(--text-neutral-white-fixed);
   font-size: var(--text-body-xxs);
 }
 
 .markerUnselected {
-  border: 2px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-primary);
+  border: 2px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .categoryInfo {
@@ -211,19 +211,19 @@
 
 .categoryLabel {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-sm);
 }
 
 .categoryLabelSelected {
-  color: var(--ds-text-brand-primary);
+  color: var(--text-brand-primary);
 }
 
 .categoryDescription {
   margin: 2px 0 0;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
 }
@@ -231,29 +231,29 @@
 /* ── Empty state ── */
 
 .emptyCard {
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   padding: 24px 14px;
   text-align: center;
 }
 
 .emptyIcon {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-heading-md);
   margin-bottom: 8px;
 }
 
 .emptyTitle {
   margin: 0 0 4px;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
 }
 
 .emptyBody {
   margin: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
 }

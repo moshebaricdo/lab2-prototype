@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertBanner } from "../../../ui/AlertBanner";
-import { AppButton } from "../../../ui/AppButton";
+import { Alert, Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { ScrollArea } from "../../../ui/scroll-area";
 import { useBackpack } from "../../../../hooks/BackpackContext";
@@ -88,15 +87,15 @@ function FilteredEmptyState({
   return (
     <div className={styles.filteredEmpty}>
       <p className={styles.filteredEmptyText}>{message}</p>
-      <AppButton
+      <Button
         type="button"
-        variant="tertiary"
-        tone="gray"
-        size="xs"
+        variant="text"
+        color="secondary"
+        size="extraSmall"
         onClick={onReset}
       >
         Show all files
-      </AppButton>
+      </Button>
     </div>
   );
 }
@@ -208,6 +207,24 @@ export function BackpackPanel({
     }
   }, [activeTypeFilter, filterExperiment, typeFilterOptions]);
 
+  useEffect(() => {
+    if (!showSaveSuccessAlert) return undefined;
+    const timeoutId = window.setTimeout(() => setShowSaveSuccessAlert(false), 2000);
+    return () => window.clearTimeout(timeoutId);
+  }, [showSaveSuccessAlert, setShowSaveSuccessAlert]);
+
+  useEffect(() => {
+    if (!showSaveErrorAlert) return undefined;
+    const timeoutId = window.setTimeout(() => setShowSaveErrorAlert(false), 2000);
+    return () => window.clearTimeout(timeoutId);
+  }, [showSaveErrorAlert, setShowSaveErrorAlert]);
+
+  useEffect(() => {
+    if (!showImportErrorAlert) return undefined;
+    const timeoutId = window.setTimeout(() => setShowImportErrorAlert(false), 2000);
+    return () => window.clearTimeout(timeoutId);
+  }, [showImportErrorAlert, setShowImportErrorAlert]);
+
   const importActionTooltip =
     importLab === "aichatlab" ? "Add to chat" : "Add to project";
 
@@ -307,15 +324,14 @@ export function BackpackPanel({
             <div className={styles.sectionDivider}>
               <span className={styles.sectionDividerLine} aria-hidden="true" />
               <div className={styles.unsupportedToggle}>
-                <AppButton
+                <Button
                   type="button"
-                  variant="tertiary"
-                  tone="gray"
-                  size="xs"
-                  iconName={
+                  variant="text"
+                  color="secondary"
+                  size="extraSmall"
+                  endIconName={
                     isUnsupportedExpanded ? "chevron-up" : "chevron-down"
                   }
-                  iconPosition="end"
                   aria-expanded={isUnsupportedExpanded}
                   aria-controls="backpack-unsupported-list"
                   onClick={() =>
@@ -323,7 +339,7 @@ export function BackpackPanel({
                   }
                 >
                   Not supported in this lab ({unsupported.length})
-                </AppButton>
+                </Button>
               </div>
               <span className={styles.sectionDividerLine} aria-hidden="true" />
             </div>
@@ -473,43 +489,34 @@ export function BackpackPanel({
       {hasToasts ? (
         <div className={styles.toastWrap}>
           {showSaveSuccessAlert ? (
-            <AlertBanner
+            <Alert
               sentiment="success"
-              size="xs"
-              showIcon
-              dismissible
-              duration={2000}
-              presentation="toast"
-              onDismiss={() => setShowSaveSuccessAlert(false)}
+              size="extraSmall"
+              isDismissible
+              onClose={() => setShowSaveSuccessAlert(false)}
             >
               File successfully saved to Backpack!
-            </AlertBanner>
+            </Alert>
           ) : null}
           {showSaveErrorAlert ? (
-            <AlertBanner
-              sentiment="danger"
-              size="xs"
-              showIcon
-              dismissible
-              duration={2000}
-              presentation="toast"
-              onDismiss={() => setShowSaveErrorAlert(false)}
+            <Alert
+              sentiment="error"
+              size="extraSmall"
+              isDismissible
+              onClose={() => setShowSaveErrorAlert(false)}
             >
               An error occurred while saving to the Backpack, please try again.
-            </AlertBanner>
+            </Alert>
           ) : null}
           {showImportErrorAlert ? (
-            <AlertBanner
-              sentiment="danger"
-              size="xs"
-              showIcon
-              dismissible
-              duration={2000}
-              presentation="toast"
-              onDismiss={() => setShowImportErrorAlert(false)}
+            <Alert
+              sentiment="error"
+              size="extraSmall"
+              isDismissible
+              onClose={() => setShowImportErrorAlert(false)}
             >
               An error occurred while adding the file to your project, please try again.
-            </AlertBanner>
+            </Alert>
           ) : null}
         </div>
       ) : null}

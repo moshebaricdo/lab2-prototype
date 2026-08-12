@@ -1,5 +1,5 @@
 import { FaIcon } from "../../../ui/icons/FaIcon";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import type { LevelGroupQuestionBlock } from "../../../../data/assessment/levelGroup";
 import {
   blockMeetsExpectations,
@@ -112,27 +112,23 @@ export function LevelGroupResultsCard({
         </div>
 
         <div className={styles.actions}>
-          <AppButton
-            variant="secondary"
-            tone="gray"
-            size="m"
-            iconPosition="start"
-            iconName="rotate-right"
+          <Button
+            variant="outlined" color="secondary"
+            size="medium"
+            startIconName="rotate-right"
             onClick={onStartOver}
           >
             Try again
-          </AppButton>
+          </Button>
           {onContinue ? (
-            <AppButton
-              variant="primary"
-              tone="purple"
-              size="m"
-              iconPosition="end"
-              iconName="arrow-right"
+            <Button
+              variant="contained" color="primary"
+              size="medium"
+              endIconName="arrow-right"
               onClick={onContinue}
             >
               {continueLabel}
-            </AppButton>
+            </Button>
           ) : null}
         </div>
       </div>

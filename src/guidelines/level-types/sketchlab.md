@@ -114,14 +114,19 @@ so nothing else changes. Placeholder entries are flagged `PLACEHOLDER`.
 
 ## Styling
 
-SCSS modules + `--ds-*` tokens only. Preset swatch colors resolve through
+SCSS modules + CADS Foundations tokens (`--background-*`, `--text-*`, `--border-*`,
+`--shape-*`, `--font-family-main`). Preset swatch colors resolve through
 `--sketch-palette-*` tokens in `sketchLabPalette.scss` (light + dark variants for
 backgrounds; theme-aware neutrals for borders and text/lines). See
 `getPaletteSwatches` / `resolveColor` in `sketchLabOptions.ts`. ReactFlow's base
 stylesheet (`@xyflow/react/dist/style.css`) is imported once in
 `SketchLabWorkspace.tsx`; canvas zoom controls live in `SketchCanvasControls.tsx`
-(AppButton tertiary gray xs). Background dots and connection handles are themed in
-`SketchLabWorkspace.module.scss` / `SketchNodes.module.scss`.
+(CADS `Button` text / tertiary / extraSmall / iconOnly). Background dots and
+connection handles are themed in `SketchLabWorkspace.module.scss` /
+`SketchNodes.module.scss`. Workspace chrome uses `@moshebaricdo/cads-react` (`Button`,
+`Dropdown`, `Tooltip`, `Slider`, `TextInput`). Color/size/rotation property menus
+still use a local `MenuField` (Radix popover + `AppDropdown.module.scss`) because
+CADS `Dropdown` cannot host swatch grids, custom number rows, or in-menu sliders.
 
 ## Known Gaps
 

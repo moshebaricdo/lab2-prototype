@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AppButton, type FaIconName } from "../../ui/AppButton";
-import { AppIconButton } from "../../ui/AppIconButton";
-import { AppTextArea } from "../../ui/AppTextField";
+import {
+  Button,
+  CloseIconButton,
+  TextInput,
+} from "@moshebaricdo/cads-react";
+import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import type {
   Annotation,
   AnnotationTool,
@@ -27,10 +30,12 @@ function PinPopover({
   onClose: () => void;
 }) {
   const [note, setNote] = useState(annotation.note);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fieldRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    requestAnimationFrame(() => textareaRef.current?.focus());
+    requestAnimationFrame(() => {
+      fieldRef.current?.querySelector("textarea")?.focus();
+    });
   }, []);
 
   const handleSave = () => {
@@ -60,11 +65,12 @@ function PinPopover({
     >
       <div className={styles.popoverHeader}>
         <p className={styles.popoverTitle}>Pin {annotation.number}</p>
-        <AppIconButton
-          variant="tertiary"
-          tone="gray"
-          size="xs"
-          iconName="trash"
+        <Button
+          variant="text"
+          color="tertiary"
+          size="extraSmall"
+          iconOnly
+          startIconName="trash"
           onClick={() => {
             onDelete(annotation.id);
             onClose();
@@ -73,8 +79,9 @@ function PinPopover({
         />
       </div>
       <p className={styles.popoverSelector}>{annotation.selector}</p>
-      <AppTextArea
-        ref={textareaRef}
+      <TextInput
+        ref={fieldRef}
+        multiline
         value={note}
         onChange={(e) => setNote(e.target.value)}
         onKeyDown={(e) => {
@@ -89,24 +96,24 @@ function PinPopover({
         }}
         placeholder="Add a note... (Enter to save, Shift+Enter for newline)"
         rows={3}
-        size="s"
-        tone="gray"
+        size="small"
+        color="secondary"
       />
       <div className={styles.popoverActions}>
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="extraSmall"
           onClick={() => {
             if (!annotation.note && !note.trim()) onDelete(annotation.id);
             onClose();
           }}
         >
           Cancel
-        </AppButton>
-        <AppButton variant="primary" tone="purple" size="xs" onClick={handleSave}>
+        </Button>
+        <Button variant="contained" color="primary" size="extraSmall" onClick={handleSave}>
           Save
-        </AppButton>
+        </Button>
       </div>
     </div>
   );
@@ -154,12 +161,13 @@ function AnnotationToolbar({ state }: { state: UseAnnotationsResult }) {
         <div key={gi} className={styles.toolbarGroup}>
           {gi > 0 && <div className={styles.toolbarDivider} />}
           {group.map(({ tool, icon, label }) => (
-            <AppButton
+            <Button
               key={tool}
-              variant={activeTool === tool ? "primary" : "tertiary"}
-              tone={activeTool === tool ? "teal" : "gray"}
-              size="xs"
-              iconName={icon}
+              variant={activeTool === tool ? "contained" : "text"}
+              color={activeTool === tool ? "primary" : "tertiary"}
+              size="extraSmall"
+              iconOnly
+              startIconName={icon}
               onClick={() => setActiveTool(tool)}
               aria-label={label}
             />
@@ -169,29 +177,32 @@ function AnnotationToolbar({ state }: { state: UseAnnotationsResult }) {
 
       <div className={styles.toolbarDivider} />
 
-      <AppButton
-        variant={copied ? "primary" : "tertiary"}
-        tone={copied ? "teal" : "gray"}
-        size="xs"
-        iconName={copied ? "check" : "clipboard"}
+      <Button
+        variant={copied ? "contained" : "text"}
+        color={copied ? "primary" : "tertiary"}
+        size="extraSmall"
+        iconOnly
+        startIconName={copied ? "check" : "clipboard"}
         onClick={handleCopy}
         disabled={totalItems === 0}
         aria-label="Copy as AI prompt"
       />
-      <AppIconButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="camera"
+      <Button
+        variant="text"
+        color="tertiary"
+        size="extraSmall"
+        iconOnly
+        startIconName="camera"
         onClick={handleScreenshot}
         disabled={capturing}
         aria-label="Screenshot with drawings"
       />
-      <AppIconButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="trash"
+      <Button
+        variant="text"
+        color="tertiary"
+        size="extraSmall"
+        iconOnly
+        startIconName="trash"
         onClick={clearAll}
         disabled={totalItems === 0}
         aria-label="Clear all annotations"
@@ -199,11 +210,9 @@ function AnnotationToolbar({ state }: { state: UseAnnotationsResult }) {
 
       <div className={styles.toolbarDivider} />
 
-      <AppIconButton
-        variant="tertiary"
-        tone="gray"
-        size="xs"
-        iconName="xmark"
+      <CloseIconButton
+        size="extraSmall"
+        color="secondary"
         onClick={() => state.setIsActive(false)}
         aria-label="Exit annotation mode"
       />
@@ -256,7 +265,7 @@ function DrawingLayer({ state }: { state: UseAnnotationsResult }) {
     addShape({
       type: activeTool as "rectangle" | "arrow" | "freeform",
       points: activeTool === "freeform" ? [...pts] : [pts[0], pts[pts.length - 1]],
-      color: "var(--ds-background-brand-primary)",
+      color: "var(--background-brand-primary)",
     });
     pointsRef.current = [];
     setLivePoints([]);

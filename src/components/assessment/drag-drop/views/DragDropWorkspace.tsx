@@ -21,7 +21,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
@@ -1479,25 +1479,22 @@ export function DragDropWorkspace({
           left={
             embedded ? undefined : (
               <>
-                <AppButton
-                  variant="secondary"
-                  size="m"
-                  tone="gray"
-                  iconPosition="start"
-                  iconName={teacherRevealActive ? "eye-slash" : "eye"}
+                <Button
+                  variant="outlined" color="secondary"
+                  size="medium"
+                  startIconName={teacherRevealActive ? "eye-slash" : "eye"}
                   onClick={() => setIsTeacherAnswerRevealed((prev) => !prev)}
                 >
                   {teacherRevealActive ? "Hide answer" : "Reveal answer"}
-                </AppButton>
+                </Button>
                 {!isSubmittedForFeedback && hasAnyAssignment ? (
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    size="m"
+                  <Button
+                    variant="outlined" color="secondary"
+                    size="medium"
                     onClick={clearAll}
                   >
                     Clear all
-                  </AppButton>
+                  </Button>
                 ) : null}
               </>
             )
@@ -1509,35 +1506,32 @@ export function DragDropWorkspace({
                 <AssessmentSuccessFeedback />
               ) : null}
               {isSubmittedForFeedback && isCorrect ? (
-                <AppButton
-                  variant="primary"
-                  size="m"
-                  tone="purple"
+                <Button
+                  variant="contained" color="primary"
+                  size="medium"
                   onClick={() => navigate(continuePath)}
                 >
                   Continue
-                </AppButton>
+                </Button>
               ) : null}
               {isSubmittedForFeedback && !isCorrect ? (
-                <AppButton
-                  variant="primary"
-                  tone="purple"
-                  size="m"
+                <Button
+                  variant="contained" color="primary"
+                  size="medium"
                   onClick={resetAfterSubmit}
                 >
                   Try again
-                </AppButton>
+                </Button>
               ) : null}
               {!isSubmittedForFeedback ? (
-                <AppButton
-                  variant="primary"
-                  size="m"
-                  tone="purple"
+                <Button
+                  variant="contained" color="primary"
+                  size="medium"
                   onClick={handleSubmit}
                   disabled={!canSubmit || teacherRevealActive}
                 >
                   Submit answer
-                </AppButton>
+                </Button>
               ) : null}
             </>
           }

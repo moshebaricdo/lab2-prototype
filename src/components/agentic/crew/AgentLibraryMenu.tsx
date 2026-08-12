@@ -1,6 +1,6 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { type CSSProperties, useMemo, useState } from "react";
-import { AppIconButton } from "../../ui/AppIconButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import { useBackpack } from "../../../hooks/BackpackContext";
 import { deserializeAgentBackpackItem } from "../../../lib/backpack/agentBackpack";
@@ -110,11 +110,12 @@ export function AgentLibraryMenu({
   return (
     <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
       <PopoverPrimitive.Trigger asChild>
-        <AppIconButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          iconName="plus"
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="extraSmall"
+          iconOnly
+          startIconName="plus"
           className={styles.trigger}
           aria-label="Add agents to this project"
           aria-haspopup="menu"

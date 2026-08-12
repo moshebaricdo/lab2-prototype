@@ -9,7 +9,7 @@ import {
 import { EditorState } from "@codemirror/state";
 import { syntaxHighlighting } from "@codemirror/language";
 import { unifiedMergeView } from "@codemirror/merge";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import type { FileKind } from "../../../../types/file";
 import { dsHighlightStyle } from "./highlightStyle";
 import { editorTheme } from "./theme";
@@ -227,15 +227,15 @@ export function CodeMirrorHost({
           className={styles.floatingActionBar}
           style={{ top: floatingBar.top, left: floatingBar.left }}
         >
-          <AppButton
-            variant="tertiary"
-            tone="black"
-            size="xs"
-            iconName="message-code"
+          <Button
+            variant="text"
+            color="secondary"
+            size="extraSmall"
+            startIconName="message-code"
             onClick={handleAddToTutor}
           >
             Add to AI Tutor Chat
-          </AppButton>
+          </Button>
         </div>
       )}
     </div>

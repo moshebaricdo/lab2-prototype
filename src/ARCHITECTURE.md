@@ -69,6 +69,7 @@ src/
 │   │       └── Logo.tsx
 │   ├── lab2/                       # Lab2 frame — shared by ALL level types
 │   │   ├── Lab2Shell.tsx
+│   │   ├── CadsLabProvider.tsx     # CADS theme + variables for Lab2 frame
 │   │   ├── resource-panel/
 │   │   │   ├── Sidebar.tsx
 │   │   │   ├── ContinueButton.tsx
@@ -144,7 +145,10 @@ src/
 │   ├── aichatlab/
 │   ├── bubble-choice/
 │   ├── design-system/              # Standalone DS tooling routes (not level index entries)
-│   │   └── tokens/                 # CodeAI color system JSON + Figma snapshot for the color sandbox
+│   │   ├── tokens/                 # CodeAI color system JSON + Figma snapshot for the color sandbox
+│   │   ├── ColorSandboxPage.tsx
+│   │   ├── TypographySandboxPage.tsx
+│   │   └── CadsParityPage.tsx      # Packaged @moshebaricdo/cads-* parity (GitHub Packages)
 │   ├── free-response/
 │   ├── levelgroup/
 │   ├── assessment-builder/
@@ -250,6 +254,10 @@ Light/dark mode in the sandbox toolbar shares `useTheme()` with the global nav h
 Runtime app tokens are generated into `src/styles/tokens.css` by `scripts/generate-tokens.mjs`, which resolves the CodeAI ColorSystem through `scripts/colorSystemToCss.mjs` into plain `:root` / `.dark` blocks. Naming matches Figma and the exporter (`semanticTokenCssName` / `semanticExportVarName` — e.g. collapsed `brand-*`, singular `border-*`, flat `selected` / sentiment). See `scripts/tokenMigrationMap.md`.
 
 **Full theming guide:** `src/guidelines/color-theming.md` documents the token cascade, selected-vs-brand roles, naming contract, and sandbox authoring boundaries.
+
+## CADS package bridge
+
+Standalone CADS platform repo: **`moshebaricdo/cads`** (`@moshebaricdo/cads-variables`, `@moshebaricdo/cads-react`). Consumed from GitHub Packages (`^0.1.0`); `.npmrc` scopes `@moshebaricdo` to `https://npm.pkg.github.com`. CI and fresh clones need `NODE_AUTH_TOKEN` with `read:packages`. Local CADS iteration may temporarily `npm install ../cads/packages/react ../cads/packages/variables` — do not commit that `file:` rewrite. Route `/design-system/cads` renders packaged components inside a `CadsProvider` for parity checks against local `App*` atoms. **`Lab2Shell`** wraps the frame in `components/lab2/CadsLabProvider.tsx` (`CadsProvider baseline={false}` + variables/fonts). Lab2 chrome (header, resource panel, IDE shared, lab workspaces, assessment, dev panel) uses CADS primitives and **CADS Foundations** names (`--background-*`, `--shape-*`, …). CodeMirror syntax colors stay on `--ds-syntax-*`. Color sandbox and teacher dashboard may still use `--ds-*` / `App*`. Migration handoff: `src/guidelines/cads-migration.md`. Docs mini-site: `pnpm --filter @moshebaricdo/cads-docs dev` in the cads repo. AI substrate: `cadsManifest`, docs `/llms.txt`, and `.cursor/skills/cads-prototyping`.
 
 ## Migration Notes
 

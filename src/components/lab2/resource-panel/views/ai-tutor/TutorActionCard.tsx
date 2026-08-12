@@ -1,4 +1,4 @@
-import { AppButton } from "../../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { getFileChipIconProps } from "../../../../ui/fileChipMeta";
 import styles from "./TutorActionCard.module.scss";
@@ -40,25 +40,25 @@ export function TutorActionCard({
         })}
       </div>
       <div className={styles.actions}>
-        <AppButton
-          variant="primary"
-          tone="purple"
-          size="s"
-          iconName="plus"
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          startIconName="plus"
           fullWidth
           onClick={onAdd}
         >
           Add to project
-        </AppButton>
-        <AppButton
-          variant="secondary"
-          tone="black"
-          size="s"
+        </Button>
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="small"
           fullWidth
           onClick={onDismiss}
         >
           Keep as reference only
-        </AppButton>
+        </Button>
       </div>
     </div>
   );

@@ -1,12 +1,5 @@
-import { AppButton } from "../../../ui/AppButton";
-import { AppCheckbox } from "../../../ui/AppCheckbox";
-import {
-  AppMultiSelectDropdown,
-  AppNativeSelect,
-} from "../../../ui/AppDropdown";
-import { AppRadio } from "../../../ui/AppRadio";
+import { Button, Checkbox, Dropdown, Radio, TextInput } from "@moshebaricdo/cads-react";
 import { AppTag } from "../../../ui/AppTag";
-import { AppTextArea, AppTextField } from "../../../ui/AppTextField";
 import {
   QUESTION_DIFFICULTIES,
   QUESTION_DIFFICULTY_LABELS,
@@ -36,6 +29,10 @@ function updateQuestion(
   patch: Partial<QuestionItem>,
 ) {
   onUpdateQuestion({ ...question, ...patch });
+}
+
+function asStringArray(value: string | string[]): string[] {
+  return Array.isArray(value) ? value : [value];
 }
 
 export function QuestionItemEditor({
@@ -75,19 +72,19 @@ export function QuestionItemEditor({
     <div className={styles.root}>
       <div className={styles.section}>
         <div className={graded ? styles.metaRow : undefined}>
-          <AppTextField
+          <TextInput
             label="Bank label"
             helperText="Internal name in the question bank — not the student-facing question."
-            size="s"
-            tone="gray"
+            size="small"
+            color="secondary"
             value={question.title}
             onChange={(event) => patch({ title: event.target.value })}
           />
           {graded && (
-            <AppTextField
+            <TextInput
               label="Points"
-              size="s"
-              tone="gray"
+              size="small"
+              color="secondary"
               type="number"
               min={0}
               step={1}
@@ -118,40 +115,44 @@ export function QuestionItemEditor({
         <div className={styles.bankMetaRow}>
           <div className={styles.bankMetaField}>
             <span className={styles.bankMetaLabel}>Course</span>
-            <AppNativeSelect
+            <Dropdown
+              role="input"
               options={courseOptions}
               value={question.courseId}
-              onValueChange={handleCourseChange}
-              size="xs"
-              tone="gray"
-              fullWidth
-              iconName="book"
+              onChange={(value) => handleCourseChange(String(value))}
+              size="extraSmall"
+              color="secondary"
+              width="full"
+              startIconName="book"
             />
           </div>
           <div className={styles.bankMetaField}>
             <span className={styles.bankMetaLabel}>Difficulty</span>
-            <AppNativeSelect
+            <Dropdown
+              role="input"
               options={difficultyOptions}
               value={question.difficulty ?? "intermediate"}
-              onValueChange={handleDifficultyChange}
-              size="xs"
-              tone="gray"
-              fullWidth
-              iconName="signal"
+              onChange={(value) => handleDifficultyChange(String(value))}
+              size="extraSmall"
+              color="secondary"
+              width="full"
+              startIconName="signal"
             />
           </div>
         </div>
         <div className={styles.bankMetaField}>
           <span className={styles.bankMetaLabel}>Domains</span>
-          <AppMultiSelectDropdown
+          <Dropdown
+            role="input"
+            menuType="checklist"
             options={domainOptions}
-            selectedValues={selectedDomainIds}
-            onSelectedValuesChange={handleDomainChange}
+            value={selectedDomainIds}
+            onChange={(value) => handleDomainChange(asStringArray(value))}
             placeholder="Select domains"
-            size="xs"
-            tone="gray"
-            fullWidth
-            iconName="tag"
+            size="extraSmall"
+            color="secondary"
+            width="full"
+            startIconName="tag"
             disabled={domainOptions.length === 0}
           />
         </div>
@@ -182,19 +183,21 @@ function QuestionStemFields({
 }: QuestionStemFieldsProps) {
   return (
     <>
-      <AppTextArea
+      <TextInput
+        multiline
         label="Question"
         helperText="Main heading shown to students."
-        size="s"
-        tone="gray"
+        size="small"
+        color="secondary"
         value={prompt}
         onChange={(event) => onPromptChange(event.target.value)}
       />
-      <AppTextArea
+      <TextInput
+        multiline
         label="Body (markdown)"
         helperText="Optional markdown shown below the question heading."
-        size="s"
-        tone="gray"
+        size="small"
+        color="secondary"
         value={description ?? ""}
         onChange={(event) =>
           onDescriptionChange(event.target.value.trim() || undefined)
@@ -318,8 +321,8 @@ function MultiChoiceEditor({ question, onUpdateQuestion }: KindEditorProps) {
           <div key={answer.id} className={styles.optionRow}>
             <div className={styles.optionControl}>
               {isMultiple ? (
-                <AppCheckbox
-                  checkboxSize="s"
+                <Checkbox
+                  size="small"
                   checked={(content.correctAnswerIds ?? []).includes(answer.id)}
                   onChange={(event) =>
                     toggleCorrectMultiple(answer.id, event.target.checked)
@@ -327,8 +330,8 @@ function MultiChoiceEditor({ question, onUpdateQuestion }: KindEditorProps) {
                   aria-label={`Mark ${answer.text ?? answer.id} as correct`}
                 />
               ) : (
-                <AppRadio
-                  radioSize="s"
+                <Radio
+                  size="small"
                   name={`correct-${question.bankId}`}
                   checked={content.correctAnswerId === answer.id}
                   onChange={() => setCorrectSingle(answer.id)}
@@ -337,19 +340,20 @@ function MultiChoiceEditor({ question, onUpdateQuestion }: KindEditorProps) {
               )}
             </div>
             <div className={styles.optionField}>
-              <AppTextField
-                size="s"
-                tone="gray"
+              <TextInput
+                size="small"
+                color="secondary"
                 value={answer.text ?? ""}
                 onChange={(event) => updateAnswer(answer.id, event.target.value)}
               />
             </div>
             <div className={styles.rowActions}>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="circle-minus"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="circle-minus"
                 aria-label="Remove option"
                 disabled={content.answers.length <= 2}
                 onClick={() => removeAnswer(answer.id)}
@@ -358,30 +362,28 @@ function MultiChoiceEditor({ question, onUpdateQuestion }: KindEditorProps) {
           </div>
         ))}
       </div>
-      <AppButton
-        variant="secondary"
-        tone="gray"
-        size="xs"
-        iconName="plus"
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        startIconName="plus"
         className={styles.addRow}
         onClick={addAnswer}
       >
         Add option
-      </AppButton>
+      </Button>
       {!isMultiple && (
-        <label className={styles.checkRow}>
-          <AppCheckbox
-            checkboxSize="s"
-            checked={content.surveyMode === true}
-            onChange={(event) =>
-              updateContent({
-                surveyMode: event.target.checked,
-                ...(event.target.checked ? { correctAnswerId: undefined } : {}),
-              })
-            }
-          />
-          <span>Survey mode (ungraded)</span>
-        </label>
+        <Checkbox
+          size="small"
+          checked={content.surveyMode === true}
+          onChange={(event) =>
+            updateContent({
+              surveyMode: event.target.checked,
+              ...(event.target.checked ? { correctAnswerId: undefined } : {}),
+            })
+          }
+          label="Survey mode (ungraded)"
+              />
       )}
     </div>
   );
@@ -407,17 +409,17 @@ function FreeResponseEditor({ question, onUpdateQuestion }: KindEditorProps) {
         onDescriptionChange={(value) => updateContent({ description: value })}
       />
       <div className={styles.compactRow}>
-        <AppTextField
+        <TextInput
           label="Placeholder"
-          size="s"
-          tone="gray"
+          size="small"
+          color="secondary"
           value={content.placeholder}
           onChange={(event) => updateContent({ placeholder: event.target.value })}
         />
-        <AppTextField
+        <TextInput
           label="Min characters"
-          size="s"
-          tone="gray"
+          size="small"
+          color="secondary"
           type="number"
           min={0}
           step={1}
@@ -520,19 +522,20 @@ function MatchEditor({ question, onUpdateQuestion }: KindEditorProps) {
         {content.terms.map((term) => (
           <div key={term.id} className={styles.optionRow}>
             <div className={styles.optionField}>
-              <AppTextField
-                size="s"
-                tone="gray"
+              <TextInput
+                size="small"
+                color="secondary"
                 value={term.text}
                 onChange={(event) => updateTerm(term.id, event.target.value)}
               />
             </div>
             <div className={styles.rowActions}>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="circle-minus"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="circle-minus"
                 aria-label="Remove term"
                 disabled={content.terms.length <= 2}
                 onClick={() => removeTerm(term.id)}
@@ -541,37 +544,38 @@ function MatchEditor({ question, onUpdateQuestion }: KindEditorProps) {
           </div>
         ))}
       </div>
-      <AppButton
-        variant="secondary"
-        tone="gray"
-        size="xs"
-        iconName="plus"
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        startIconName="plus"
         className={styles.addRow}
         onClick={addTerm}
       >
         Add term
-      </AppButton>
+      </Button>
 
       <h4 className={styles.sectionHeading}>Definitions</h4>
       <div className={styles.optionList}>
         {content.prompts.map((prompt) => (
           <div key={prompt.id} className={styles.optionRow}>
             <div className={styles.optionField}>
-              <AppTextField
-                size="s"
-                tone="gray"
+              <TextInput
+                size="small"
+                color="secondary"
                 value={prompt.text}
                 onChange={(event) => updatePrompt(prompt.id, { text: event.target.value })}
               />
               <div className={styles.selectField}>
                 <span className={styles.selectLabel}>Matches term</span>
-                <AppNativeSelect
-                  size="s"
-                  tone="gray"
-                  fullWidth
+                <Dropdown
+                  role="input"
+                  size="small"
+                  color="secondary"
+                  width="full"
                   value={prompt.correctTermId}
-                  onValueChange={(value) =>
-                    updatePrompt(prompt.id, { correctTermId: value })
+                  onChange={(value) =>
+                    updatePrompt(prompt.id, { correctTermId: String(value) })
                   }
                   options={content.terms.map((term) => ({
                     value: term.id,
@@ -581,11 +585,12 @@ function MatchEditor({ question, onUpdateQuestion }: KindEditorProps) {
               </div>
             </div>
             <div className={styles.rowActions}>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="circle-minus"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="circle-minus"
                 aria-label="Remove definition"
                 disabled={content.prompts.length <= 2}
                 onClick={() => removePrompt(prompt.id)}
@@ -594,16 +599,16 @@ function MatchEditor({ question, onUpdateQuestion }: KindEditorProps) {
           </div>
         ))}
       </div>
-      <AppButton
-        variant="secondary"
-        tone="gray"
-        size="xs"
-        iconName="plus"
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        startIconName="plus"
         className={styles.addRow}
         onClick={addPrompt}
       >
         Add definition
-      </AppButton>
+      </Button>
     </div>
   );
 }
@@ -665,19 +670,20 @@ function DragDropParsonsEditor({ question, onUpdateQuestion }: KindEditorProps) 
               <span className={styles.hint}>{index + 1}</span>
             </div>
             <div className={styles.optionField}>
-              <AppTextField
-                size="s"
-                tone="gray"
+              <TextInput
+                size="small"
+                color="secondary"
                 value={block.text}
                 onChange={(event) => updateBlock(block.id, event.target.value)}
               />
             </div>
             <div className={styles.rowActions}>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="circle-minus"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="circle-minus"
                 aria-label="Remove line"
                 disabled={blocks.length <= 2}
                 onClick={() => removeBlock(block.id)}
@@ -686,16 +692,16 @@ function DragDropParsonsEditor({ question, onUpdateQuestion }: KindEditorProps) 
           </div>
         ))}
       </div>
-      <AppButton
-        variant="secondary"
-        tone="gray"
-        size="xs"
-        iconName="plus"
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        startIconName="plus"
         className={styles.addRow}
         onClick={addBlock}
       >
         Add line
-      </AppButton>
+      </Button>
     </div>
   );
 }
@@ -782,19 +788,20 @@ function DragDropCategorizationEditor({ question, onUpdateQuestion }: KindEditor
         {buckets.map((bucket) => (
           <div key={bucket.id} className={styles.optionRow}>
             <div className={styles.optionField}>
-              <AppTextField
-                size="s"
-                tone="gray"
+              <TextInput
+                size="small"
+                color="secondary"
                 value={bucket.label}
                 onChange={(event) => updateBucket(bucket.id, event.target.value)}
               />
             </div>
             <div className={styles.rowActions}>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="circle-minus"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="circle-minus"
                 aria-label="Remove category"
                 disabled={buckets.length <= 2}
                 onClick={() => removeBucket(bucket.id)}
@@ -803,37 +810,38 @@ function DragDropCategorizationEditor({ question, onUpdateQuestion }: KindEditor
           </div>
         ))}
       </div>
-      <AppButton
-        variant="secondary"
-        tone="gray"
-        size="xs"
-        iconName="plus"
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        startIconName="plus"
         className={styles.addRow}
         onClick={addBucket}
       >
         Add category
-      </AppButton>
+      </Button>
 
       <h4 className={styles.sectionHeading}>Items</h4>
       <div className={styles.optionList}>
         {items.map((item) => (
           <div key={item.id} className={styles.optionRow}>
             <div className={styles.optionField}>
-              <AppTextField
-                size="s"
-                tone="gray"
+              <TextInput
+                size="small"
+                color="secondary"
                 value={item.text}
                 onChange={(event) => updateItem(item.id, { text: event.target.value })}
               />
               <div className={styles.selectField}>
                 <span className={styles.selectLabel}>Correct category</span>
-                <AppNativeSelect
-                  size="s"
-                  tone="gray"
-                  fullWidth
+                <Dropdown
+                  role="input"
+                  size="small"
+                  color="secondary"
+                  width="full"
                   value={item.correctBucketIds?.[0] ?? ""}
-                  onValueChange={(value) =>
-                    updateItem(item.id, { correctBucketIds: [value] })
+                  onChange={(value) =>
+                    updateItem(item.id, { correctBucketIds: [String(value)] })
                   }
                   options={buckets.map((bucket) => ({
                     value: bucket.id,
@@ -843,11 +851,12 @@ function DragDropCategorizationEditor({ question, onUpdateQuestion }: KindEditor
               </div>
             </div>
             <div className={styles.rowActions}>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="circle-minus"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="circle-minus"
                 aria-label="Remove item"
                 disabled={items.length <= 2}
                 onClick={() => removeItem(item.id)}
@@ -856,16 +865,16 @@ function DragDropCategorizationEditor({ question, onUpdateQuestion }: KindEditor
           </div>
         ))}
       </div>
-      <AppButton
-        variant="secondary"
-        tone="gray"
-        size="xs"
-        iconName="plus"
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        startIconName="plus"
         className={styles.addRow}
         onClick={addItem}
       >
         Add item
-      </AppButton>
+      </Button>
     </div>
   );
 }
@@ -934,19 +943,19 @@ function FillInBlankEditor({ question, onUpdateQuestion }: KindEditorProps) {
         {content.blanks.map((blank, index) => (
           <div key={blank.id} className={styles.optionRow}>
             <div className={styles.optionField}>
-              <AppTextField
+              <TextInput
                 label={`Blank ${index + 1} placeholder`}
-                size="s"
-                tone="gray"
+                size="small"
+                color="secondary"
                 value={blank.placeholder}
                 onChange={(event) =>
                   updateBlank(blank.id, { placeholder: event.target.value })
                 }
               />
-              <AppTextField
+              <TextInput
                 label="Accepted answers"
-                size="s"
-                tone="gray"
+                size="small"
+                color="secondary"
                 value={blank.acceptedAnswers.join(", ")}
                 onChange={(event) =>
                   updateBlank(blank.id, {
@@ -959,11 +968,12 @@ function FillInBlankEditor({ question, onUpdateQuestion }: KindEditorProps) {
               />
             </div>
             <div className={styles.rowActions}>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="circle-minus"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="circle-minus"
                 aria-label="Remove blank"
                 disabled={content.blanks.length <= 1}
                 onClick={() => removeBlank(blank.id)}
@@ -972,16 +982,16 @@ function FillInBlankEditor({ question, onUpdateQuestion }: KindEditorProps) {
           </div>
         ))}
       </div>
-      <AppButton
-        variant="secondary"
-        tone="gray"
-        size="xs"
-        iconName="plus"
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        startIconName="plus"
         className={styles.addRow}
         onClick={addBlank}
       >
         Add blank
-      </AppButton>
+      </Button>
     </div>
   );
 }

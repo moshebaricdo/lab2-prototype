@@ -11,7 +11,7 @@ import {
 } from "@dnd-kit/core";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
@@ -735,27 +735,24 @@ export function MatchDefinitionBankWorkspace({
           <AssessmentBottomRow
             left={
               <>
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  iconPosition="start"
-                  iconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
-                  size="m"
+                <Button
+                  variant="outlined" color="secondary"
+                  startIconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
+                  size="medium"
                   onClick={() =>
                     setIsTeacherAnswerRevealed((current) => !current)
                   }
                 >
                   {isTeacherAnswerRevealed ? "Hide answer" : "Reveal answer"}
-                </AppButton>
+                </Button>
                 {!isSubmitted && hasAnyAssignment ? (
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    size="m"
+                  <Button
+                    variant="outlined" color="secondary"
+                    size="medium"
                     onClick={clearAll}
                   >
                     Clear all
-                  </AppButton>
+                  </Button>
                 ) : null}
               </>
             }
@@ -771,20 +768,18 @@ export function MatchDefinitionBankWorkspace({
                   </p>
                 ) : null}
                 {isSubmitted && isPerfectMatch ? (
-                  <AppButton
-                    variant="primary"
-                    size="m"
-                    tone="purple"
+                  <Button
+                    variant="contained" color="primary"
+                    size="medium"
                     onClick={() => navigate(continuePath)}
                   >
                     Continue
-                  </AppButton>
+                  </Button>
                 ) : null}
                 {isSubmitted && !isPerfectMatch ? (
-                  <AppButton
-                    variant="primary"
-                    tone="purple"
-                    size="m"
+                  <Button
+                    variant="contained" color="primary"
+                    size="medium"
                     onClick={() => {
                       setAssignments(buildInitialAssignments(termIds));
                       setActivePromptId(null);
@@ -793,13 +788,12 @@ export function MatchDefinitionBankWorkspace({
                     }}
                   >
                     Try again
-                  </AppButton>
+                  </Button>
                 ) : null}
                 {!isSubmitted ? (
-                  <AppButton
-                    variant="primary"
-                    size="m"
-                    tone="purple"
+                  <Button
+                    variant="contained" color="primary"
+                    size="medium"
                     onClick={() => {
                       if (!allAssigned || isTeacherAnswerRevealed) return;
                       const perfect = level.question.terms.every((term) => {
@@ -816,7 +810,7 @@ export function MatchDefinitionBankWorkspace({
                     disabled={!allAssigned || isTeacherAnswerRevealed}
                   >
                     Submit
-                  </AppButton>
+                  </Button>
                 ) : null}
               </>
             }

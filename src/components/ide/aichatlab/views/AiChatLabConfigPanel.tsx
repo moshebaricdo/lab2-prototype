@@ -4,15 +4,18 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import { AlertBanner } from "../../../ui/AlertBanner";
-import { AppButton } from "../../../ui/AppButton";
-import { AppNativeSelect } from "../../../ui/AppDropdown";
-import { AppSlider } from "../../../ui/AppSlider";
-import { AppTextArea, AppTextField } from "../../../ui/AppTextField";
+import {
+  Alert,
+  Button,
+  Dropdown,
+  Slider,
+  Tabs,
+  TextInput,
+  Tooltip,
+} from "@moshebaricdo/cads-react";
+import { FaIcon } from "@moshebaricdo/cads-react/icons";
 import { PanelHeader } from "../../../ui/PanelHeader";
-import { Tooltip } from "../../../ui/Tooltip";
 import { ScrollArea } from "../../../ui/scroll-area";
-import { FaIcon } from "../../../ui/icons/FaIcon";
 import type {
   AiChatConfigTab,
   ModelConfigState,
@@ -139,99 +142,109 @@ export function AiChatLabConfigPanel({
         label="MODEL CUSTOMIZATION"
         right={
           <div className={styles.headerActions}>
-            <Tooltip content="Start over" position="bottom">
-              <AppButton
-                variant="tertiary"
-                tone="gray"
-                size="xs"
-                iconName="arrow-rotate-left"
-                onClick={onResetConfig}
-                aria-label="Start over"
-              />
+            <Tooltip title="Start over" placement="bottom">
+              <span>
+                <Button
+                  variant="text"
+                  color="tertiary"
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="arrow-rotate-left"
+                  onClick={onResetConfig}
+                  aria-label="Start over"
+                />
+              </span>
             </Tooltip>
             {showPublishSuccess && (
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="share-nodes"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                startIconName="share-nodes"
                 onClick={onShowPublishedView}
               >
                 Published view
-              </AppButton>
+              </Button>
             )}
           </div>
         }
       />
       {visibleTabs.length > 0 ? (
         <>
-          <div className={styles.tabBar} role="tablist" aria-label="Model configuration tabs">
-            {visibleTabs.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                role="tab"
-                aria-selected={activeConfigTab === tab}
-                className={[
-                  styles.tabButton,
-                  activeConfigTab === tab ? styles.tabButtonActive : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => setActiveConfigTab(tab)}
-              >
-                {TAB_LABELS[tab]}
-              </button>
-            ))}
+          <div className={styles.tabBar}>
+            <Tabs
+              type="secondary"
+              size="medium"
+              aria-label="Model configuration tabs"
+              value={activeConfigTab}
+              onChange={(value) =>
+                setActiveConfigTab(value as AiChatConfigTab)
+              }
+              items={visibleTabs.map((tab) => ({
+                value: tab,
+                label: TAB_LABELS[tab],
+              }))}
+            />
           </div>
 
-          <ScrollArea className={styles.configBody} viewportClassName={styles.configViewport}>
+          <ScrollArea
+            className={styles.configBody}
+            viewportClassName={styles.configViewport}
+          >
             <div className={styles.configInner}>
               {activeConfigTab === "setup" && (
                 <div className={styles.fieldStack}>
                   {showModelControl && (
                     <ConfigField label="Model">
-                      <AppNativeSelect
+                      <Dropdown
+                        role="input"
+                        size="small"
+                        color="secondary"
+                        width="full"
                         value={config.modelId}
                         options={MODEL_OPTIONS}
-                        onValueChange={(value) => onUpdateConfig("modelId", value)}
-                        size="s"
-                        tone="gray"
-                        fullWidth
+                        onChange={(value) =>
+                          onUpdateConfig(
+                            "modelId",
+                            Array.isArray(value) ? value[0] ?? "" : value,
+                          )
+                        }
                         aria-label="Choose model"
                       />
                     </ConfigField>
                   )}
                   {showTemperatureControl && (
                     <ConfigField>
-                      <AppSlider
+                      <Slider
                         value={config.temperature}
                         min={0}
                         max={1}
                         step={0.1}
-                        size="s"
+                        size="small"
                         label="Temperature"
-                        valueLabel={config.temperature.toFixed(1)}
-                        showInputValue
-                        showControlButtons
-                        formatValue={(value) => value.toFixed(1)}
-                        decrementAriaLabel="Lower temperature"
-                        incrementAriaLabel="Raise temperature"
-                        onValueChange={(value) => onUpdateConfig("temperature", value)}
+                        displayValue={config.temperature.toFixed(1)}
+                        showControls
+                        fullWidth
+                        onChange={(_event, value) => {
+                          const next = Array.isArray(value) ? value[0] : value;
+                          onUpdateConfig("temperature", next);
+                        }}
+                        aria-label="Temperature"
                       />
                     </ConfigField>
                   )}
                   {showSystemPromptControl && (
                     <ConfigField>
-                      <AppTextArea
+                      <TextInput
                         label="System Prompt"
                         value={config.systemPrompt}
                         onChange={(event) =>
                           onUpdateConfig("systemPrompt", event.target.value)
                         }
+                        multiline
                         rows={8}
-                        size="s"
-                        tone="gray"
+                        size="small"
+                        color="secondary"
                       />
                     </ConfigField>
                   )}
@@ -243,27 +256,31 @@ export function AiChatLabConfigPanel({
                   {showRetrievalSourceControl ? (
                     <>
                       <ConfigField>
-                        <AppTextArea
+                        <TextInput
                           label="Retrieval Notes"
                           value={config.retrievalSource}
                           onChange={(event) =>
-                            onUpdateConfig("retrievalSource", event.target.value)
+                            onUpdateConfig(
+                              "retrievalSource",
+                              event.target.value,
+                            )
                           }
+                          multiline
                           rows={8}
-                          size="s"
-                          tone="gray"
+                          size="small"
+                          color="secondary"
                         />
                       </ConfigField>
-                      <AppButton
-                        variant="secondary"
-                        tone="gray"
-                        size="s"
-                        iconName="plus"
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                        startIconName="plus"
                         onClick={onAddRetrievalItem}
                         disabled={!config.retrievalSource.trim()}
                       >
                         Add retrieval note
-                      </AppButton>
+                      </Button>
                       <AddedItemsSection
                         title="Added retrieval"
                         items={retrievalItems}
@@ -272,10 +289,15 @@ export function AiChatLabConfigPanel({
                     </>
                   ) : (
                     <div className={styles.emptyConfig}>
-                      <FaIcon name="database" size="l" className={styles.emptyIcon} />
+                      <FaIcon
+                        name="database"
+                        size="large"
+                        className={styles.emptyIcon}
+                      />
                       <p className={styles.emptyTitle}>Retrieval is hidden</p>
                       <p className={styles.emptyBody}>
-                        Turn on retrieval fields in the dev panel to add model context.
+                        Turn on retrieval fields in the dev panel to add model
+                        context.
                       </p>
                     </div>
                   )}
@@ -286,97 +308,114 @@ export function AiChatLabConfigPanel({
                 <div className={styles.fieldStack}>
                   {showPublishNameControl && (
                     <ConfigField>
-                      <AppTextField
+                      <TextInput
                         label="Name"
                         value={config.modelName}
                         onChange={(event) =>
                           onUpdateConfig("modelName", event.target.value)
                         }
-                        size="s"
-                        tone="gray"
+                        size="small"
+                        color="secondary"
                       />
                     </ConfigField>
                   )}
                   {showPublishDescriptionControl && (
                     <ConfigField>
-                      <AppTextArea
+                      <TextInput
                         label="Description"
                         value={config.modelDescription}
                         onChange={(event) =>
-                          onUpdateConfig("modelDescription", event.target.value)
+                          onUpdateConfig(
+                            "modelDescription",
+                            event.target.value,
+                          )
                         }
+                        multiline
                         rows={5}
-                        size="s"
-                        tone="gray"
+                        size="small"
+                        color="secondary"
                       />
                     </ConfigField>
                   )}
                   {showPublishIntentControl && (
                     <ConfigField>
-                      <AppTextArea
+                      <TextInput
                         label="Intended Use"
                         value={config.modelIntent}
                         onChange={(event) =>
                           onUpdateConfig("modelIntent", event.target.value)
                         }
+                        multiline
                         rows={4}
-                        size="s"
-                        tone="gray"
+                        size="small"
+                        color="secondary"
                       />
                     </ConfigField>
                   )}
                   {showPublishLimitationsControl && (
                     <ConfigField>
-                      <AppTextArea
+                      <TextInput
                         label="Limitations and Warnings"
                         value={config.modelLimitations}
                         onChange={(event) =>
-                          onUpdateConfig("modelLimitations", event.target.value)
+                          onUpdateConfig(
+                            "modelLimitations",
+                            event.target.value,
+                          )
                         }
+                        multiline
                         rows={5}
-                        size="s"
-                        tone="gray"
+                        size="small"
+                        color="secondary"
                       />
                     </ConfigField>
                   )}
                   {showPublishTestingControl && (
                     <ConfigField>
-                      <AppTextArea
+                      <TextInput
                         label="Testing and Evaluation"
                         value={config.modelTestingEvaluation}
                         onChange={(event) =>
-                          onUpdateConfig("modelTestingEvaluation", event.target.value)
+                          onUpdateConfig(
+                            "modelTestingEvaluation",
+                            event.target.value,
+                          )
                         }
+                        multiline
                         rows={5}
-                        size="s"
-                        tone="gray"
+                        size="small"
+                        color="secondary"
                       />
                     </ConfigField>
                   )}
                   {showPublishExamplePromptsControl && (
                     <>
                       <ConfigField>
-                        <AppTextArea
+                        <TextInput
                           label="Example Prompts and Topics"
                           value={config.examplePrompts}
                           onChange={(event) =>
-                            onUpdateConfig("examplePrompts", event.target.value)
+                            onUpdateConfig(
+                              "examplePrompts",
+                              event.target.value,
+                            )
                           }
+                          multiline
                           rows={5}
-                          size="s"
-                          tone="gray"
+                          size="small"
+                          color="secondary"
                         />
                       </ConfigField>
-                      <AppButton
-                        variant="secondary"
-                        tone="gray"
-                        size="s"
-                        iconName="plus"
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                        startIconName="plus"
                         onClick={onAddExamplePromptItem}
                         disabled={!config.examplePrompts.trim()}
                       >
                         Add example prompt
-                      </AppButton>
+                      </Button>
                       <AddedItemsSection
                         title="Added example prompts"
                         items={examplePromptItems}
@@ -390,63 +429,63 @@ export function AiChatLabConfigPanel({
           </ScrollArea>
 
           <div className={styles.configFooter}>
-            <p className={styles.configStatus}>
-              {configStatusText}
-            </p>
+            <p className={styles.configStatus}>{configStatusText}</p>
             {activeConfigTab === "publish" ? (
               <>
                 {showPublishSuccess && (
-                  <AlertBanner
+                  <Alert
                     className={styles.publishToast}
-                    dismissible={false}
-                    presentation="toast"
+                    isDismissible={false}
                     sentiment="success"
-                    showIcon
-                    size="xs"
+                    size="extraSmall"
                   >
                     Model card published.
-                  </AlertBanner>
+                  </Alert>
                 )}
                 <div className={styles.footerButtonRow}>
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    size="s"
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    size="small"
                     fullWidth
-                    iconName="floppy-disk"
+                    startIconName="floppy-disk"
                     onClick={onSaveConfig}
                   >
                     Save
-                  </AppButton>
-                  <AppButton
-                    variant="primary"
-                    tone="purple"
-                    size="s"
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
                     fullWidth
-                    iconName="share-nodes"
+                    startIconName="share-nodes"
                     onClick={onPublishModelCard}
                   >
                     Publish
-                  </AppButton>
+                  </Button>
                 </div>
               </>
             ) : (
-              <AppButton
-                variant="primary"
-                tone="purple"
-                size="s"
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
                 fullWidth
-                iconName="floppy-disk"
+                startIconName="floppy-disk"
                 onClick={onSaveConfig}
               >
                 Update
-              </AppButton>
+              </Button>
             )}
           </div>
         </>
       ) : (
         <div className={styles.emptyConfig}>
-          <FaIcon name="sliders" size="l" className={styles.emptyIcon} />
+          <FaIcon
+            name="sliders"
+            size="large"
+            className={styles.emptyIcon}
+          />
           <p className={styles.emptyTitle}>No configuration tabs</p>
           <p className={styles.emptyBody}>
             Enable setup, retrieval, or publish tabs in the dev panel.

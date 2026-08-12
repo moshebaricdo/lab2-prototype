@@ -1,10 +1,13 @@
-import type { Dispatch, SetStateAction } from "react";
-import { AppButton } from "../../../ui/AppButton";
+import { type Dispatch, type FormEvent, type SetStateAction } from "react";
+import {
+  AiChatInput,
+  AiChatMessage,
+  Button,
+  Tooltip,
+} from "@moshebaricdo/cads-react";
 import { PanelHeader } from "../../../ui/PanelHeader";
-import { Tooltip } from "../../../ui/Tooltip";
-import { AiTutorPanel } from "../../../lab2/resource-panel/views/ai-tutor/AiTutorPanel";
 import type { ChatMessage } from "../../../../types/chat";
-import type { MockTutorConfig, TutorRequestMode } from "../../../../types/tutor";
+import type { MockTutorConfig } from "../../../../types/tutor";
 import styles from "./AiChatLabWorkspace.module.scss";
 
 interface AiChatLabChatPanelProps {
@@ -14,10 +17,20 @@ interface AiChatLabChatPanelProps {
   setChatInput: Dispatch<SetStateAction<string>>;
   chatPlaceholder: string;
   mockTutorConfig: MockTutorConfig;
-  tutorRequestMode: TutorRequestMode;
-  setTutorRequestMode: Dispatch<SetStateAction<TutorRequestMode>>;
   onClearChat: () => void;
   onDownloadChat: () => void;
+}
+
+async function resolveAssistantReply(
+  response: MockTutorConfig["response"],
+  input: string,
+  conversation: ChatMessage[],
+): Promise<ChatMessage | null> {
+  if (!response) return null;
+  if (typeof response === "function") {
+    return response(input, conversation);
+  }
+  return response;
 }
 
 export function AiChatLabChatPanel({
@@ -27,57 +40,103 @@ export function AiChatLabChatPanel({
   setChatInput,
   chatPlaceholder,
   mockTutorConfig,
-  tutorRequestMode,
-  setTutorRequestMode,
   onClearChat,
   onDownloadChat,
 }: AiChatLabChatPanelProps) {
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    const content = chatInput.trim();
+    if (!content) return;
+
+    const userMessage: ChatMessage = { role: "user", content };
+    const nextMessages = [...chatMessages, userMessage];
+    setChatMessages(nextMessages);
+    setChatInput("");
+
+    void resolveAssistantReply(
+      mockTutorConfig.response,
+      content,
+      nextMessages,
+    ).then((reply) => {
+      if (!reply) return;
+      setChatMessages((current) => [...current, reply]);
+    });
+  };
+
   return (
     <section className={styles.chatPanel}>
       <PanelHeader
         label="AI CHAT"
         right={
           <div className={styles.headerActions}>
-            <Tooltip content="Clear chat" position="bottom">
-              <AppButton
-                variant="tertiary"
-                tone="gray"
-                size="xs"
-                iconName="eraser"
-                onClick={onClearChat}
-                disabled={chatMessages.length === 0 && chatInput.length === 0}
-                aria-label="Clear AI chat"
-              />
+            <Tooltip title="Clear chat" placement="bottom">
+              <span>
+                <Button
+                  variant="text"
+                  color="tertiary"
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="eraser"
+                  onClick={onClearChat}
+                  disabled={chatMessages.length === 0 && chatInput.length === 0}
+                  aria-label="Clear AI chat"
+                />
+              </span>
             </Tooltip>
-            <Tooltip content="Download chat" position="bottom">
-              <AppButton
-                variant="tertiary"
-                tone="gray"
-                size="xs"
-                iconName="download"
-                onClick={onDownloadChat}
-                disabled={chatMessages.length === 0}
-                aria-label="Download AI chat"
-              />
+            <Tooltip title="Download chat" placement="bottom">
+              <span>
+                <Button
+                  variant="text"
+                  color="tertiary"
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="download"
+                  onClick={onDownloadChat}
+                  disabled={chatMessages.length === 0}
+                  aria-label="Download AI chat"
+                />
+              </span>
             </Tooltip>
           </div>
         }
       />
-      <AiTutorPanel
-        chatMessages={chatMessages}
-        setChatMessages={setChatMessages}
-        chatInput={chatInput}
-        setChatInput={setChatInput}
-        showInstructionsDrawer={false}
-        inputExperiment="default"
-        mockTutorConfig={mockTutorConfig}
-        showModelSelector={false}
-        composerPlaceholder={chatPlaceholder}
-        emptyStateTitle="Start a conversation"
-        emptyStateText="Try a prompt, then tweak the model settings and compare the response."
-        tutorRequestMode={tutorRequestMode}
-        setTutorRequestMode={setTutorRequestMode}
-      />
+
+      <div className={styles.chatBody}>
+        {chatMessages.length === 0 ? (
+          <div className={styles.chatEmpty}>
+            <p className={styles.emptyTitle}>Start a conversation</p>
+            <p className={styles.emptyBody}>
+              Try a prompt, then tweak the model settings and compare the
+              response.
+            </p>
+          </div>
+        ) : (
+          <div className={styles.chatMessageList}>
+            {chatMessages.map((message, index) => (
+              <AiChatMessage
+                key={`${message.role}-${index}-${message.content.slice(0, 24)}`}
+                context="Tutor"
+                author={message.role === "user" ? "Human" : "AI"}
+                hasActionRow={message.role === "assistant"}
+                hasFlagging={false}
+                hasDownload={false}
+              >
+                {message.content}
+              </AiChatMessage>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.chatComposer}>
+        <AiChatInput
+          value={chatInput}
+          onChange={(event) => setChatInput(event.target.value)}
+          onSubmit={handleSubmit}
+          placeholder={chatPlaceholder}
+          leftActions={<span />}
+        />
+      </div>
     </section>
   );
 }

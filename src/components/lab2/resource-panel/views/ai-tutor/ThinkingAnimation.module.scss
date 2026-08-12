@@ -25,16 +25,16 @@
 }
 
 .label {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
   background-image: linear-gradient(
     90deg,
-    var(--ds-text-neutral-tertiary) 0%,
-    var(--ds-text-neutral-tertiary) 40%,
-    var(--ds-text-neutral-primary) 50%,
-    var(--ds-text-neutral-tertiary) 60%,
-    var(--ds-text-neutral-tertiary) 100%
+    var(--text-neutral-tertiary) 0%,
+    var(--text-neutral-tertiary) 40%,
+    var(--text-neutral-primary) 50%,
+    var(--text-neutral-tertiary) 60%,
+    var(--text-neutral-tertiary) 100%
   );
   background-size: 200% 100%;
   background-clip: text;
@@ -48,11 +48,11 @@
 :global([data-theme="dark"]) .label {
   background-image: linear-gradient(
     90deg,
-    var(--ds-text-neutral-tertiary) 0%,
-    var(--ds-text-neutral-tertiary) 40%,
-    var(--ds-text-neutral-primary) 50%,
-    var(--ds-text-neutral-tertiary) 60%,
-    var(--ds-text-neutral-tertiary) 100%
+    var(--text-neutral-tertiary) 0%,
+    var(--text-neutral-tertiary) 40%,
+    var(--text-neutral-primary) 50%,
+    var(--text-neutral-tertiary) 60%,
+    var(--text-neutral-tertiary) 100%
   );
 }
 
@@ -98,7 +98,7 @@
 /* ─── Agent variant — accent pulse dot instead of the bot head ───────── */
 
 .agentDot {
-  --agent-thinking-accent: var(--ds-text-info-primary);
+  --agent-thinking-accent: var(--text-info-primary);
 
   flex-shrink: 0;
   width: 8px;
@@ -108,10 +108,10 @@
   background: var(--agent-thinking-accent);
   animation: agentDotPulse 1.5s ease-in-out infinite;
 
-  &[data-accent="violet"] { --agent-thinking-accent: var(--ds-background-brand-primary); }
-  &[data-accent="blue"] { --agent-thinking-accent: var(--ds-border-selected-primary); }
-  &[data-accent="magenta"] { --agent-thinking-accent: var(--ds-background-accent-pink-primary); }
-  &[data-accent="green"] { --agent-thinking-accent: var(--ds-background-success-primary); }
+  &[data-accent="violet"] { --agent-thinking-accent: var(--background-brand-primary); }
+  &[data-accent="blue"] { --agent-thinking-accent: var(--border-selected-primary); }
+  &[data-accent="magenta"] { --agent-thinking-accent: var(--background-accent-pink-primary); }
+  &[data-accent="green"] { --agent-thinking-accent: var(--background-success-primary); }
 }
 
 @keyframes agentDotPulse {

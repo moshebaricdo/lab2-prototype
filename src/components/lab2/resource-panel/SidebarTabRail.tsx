@@ -1,6 +1,5 @@
 import type { ComponentProps } from "react";
-import { AppIconButton } from "../../ui/AppIconButton";
-import { Tooltip } from "../../ui/Tooltip";
+import { Button, Tooltip } from "@moshebaricdo/cads-react";
 import { AiTutorIcon } from "../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type { SidebarProps, SidebarTab } from "./Sidebar.types";
@@ -97,7 +96,7 @@ function SidebarTabButton({
   onSelectTab: (tab: SidebarTab) => void;
 }) {
   return (
-    <Tooltip content={tooltip} position="right">
+    <Tooltip title={tooltip} placement="right">
       <button
         type="button"
         onClick={() => onSelectTab(tab)}
@@ -246,8 +245,8 @@ export function SidebarTabRail({
       <div className={styles.railTopSpacer}>
         {collapsible && (
           <Tooltip
-            content={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            position="right"
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            placement="right"
           >
             <button
               type="button"
@@ -301,55 +300,67 @@ export function SidebarTabRail({
         {annotations && (
           <>
             <Tooltip
-              content={annotations.isActive ? "Exit annotation mode" : "Annotate"}
-              position="right"
+              title={annotations.isActive ? "Exit annotation mode" : "Annotate"}
+              placement="right"
             >
-              <AppIconButton
-                variant={annotations.isActive ? "primary" : "tertiary"}
-                tone={annotations.isActive ? "purple" : "gray"}
-                size="xs"
-                iconName="thumbtack"
-                onClick={() => annotations.setIsActive(!annotations.isActive)}
-                aria-label={
-                  annotations.isActive
-                    ? "Exit annotation mode"
-                    : "Start annotation mode"
-                }
-              />
+              <span>
+                <Button
+                  variant={annotations.isActive ? "contained" : "text"}
+                  color={annotations.isActive ? "primary" : "tertiary"}
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="thumbtack"
+                  onClick={() => annotations.setIsActive(!annotations.isActive)}
+                  aria-label={
+                    annotations.isActive
+                      ? "Exit annotation mode"
+                      : "Start annotation mode"
+                  }
+                />
+              </span>
             </Tooltip>
             <div className={styles.bottomActionDivider} aria-hidden="true" />
           </>
         )}
-        <Tooltip content="Settings" position="right">
-          <AppIconButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            onClick={onToggleSettings}
-            iconName="gear"
-            aria-label="Settings"
-            aria-pressed={isSettingsOpen}
-          />
+        <Tooltip title="Settings" placement="right">
+          <span>
+            <Button
+              variant="text"
+              color="tertiary"
+              size="extraSmall"
+              iconOnly
+              onClick={onToggleSettings}
+              startIconName="gear"
+              aria-label="Settings"
+              aria-pressed={isSettingsOpen}
+            />
+          </span>
         </Tooltip>
         <div className={styles.bottomActionDivider} aria-hidden="true" />
         <div className={styles.bottomActionGroup}>
-          <Tooltip content="AI Usage Disclaimer" position="right">
-            <AppIconButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              iconName="triangle-exclamation"
-              aria-label="AI Usage Disclaimer"
-            />
+          <Tooltip title="AI Usage Disclaimer" placement="right">
+            <span>
+              <Button
+                variant="text"
+                color="tertiary"
+                size="extraSmall"
+                iconOnly
+                startIconName="triangle-exclamation"
+                aria-label="AI Usage Disclaimer"
+              />
+            </span>
           </Tooltip>
-          <Tooltip content="Copyright" position="right">
-            <AppIconButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              iconName="copyright"
-              aria-label="Copyright"
-            />
+          <Tooltip title="Copyright" placement="right">
+            <span>
+              <Button
+                variant="text"
+                color="tertiary"
+                size="extraSmall"
+                iconOnly
+                startIconName="copyright"
+                aria-label="Copyright"
+              />
+            </span>
           </Tooltip>
         </div>
       </div>

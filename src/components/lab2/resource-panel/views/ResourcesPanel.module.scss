@@ -1,7 +1,7 @@
 .root {
   min-height: 0;
   flex: 1;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .viewport {
@@ -22,7 +22,7 @@
 }
 
 .section + .section {
-  border-top: 1px solid var(--ds-border-neutral-primary);
+  border-top: 1px solid var(--border-neutral-primary);
   padding-top: 12px;
 }
 
@@ -34,15 +34,15 @@
 
 .sectionTitle {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-sm);
 }
 
 .body {
   margin: 0;
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
 }
@@ -60,15 +60,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
   padding: 8px 8px 8px 12px;
 }
 
 .resourceTitle {
   min-width: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
 }

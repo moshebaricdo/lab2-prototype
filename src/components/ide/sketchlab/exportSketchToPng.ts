@@ -40,7 +40,7 @@ function classNameOf(node: Element): string {
 function resolveCanvasBackground(): string {
   if (typeof window === "undefined") return "#ffffff";
   const token = getComputedStyle(document.documentElement)
-    .getPropertyValue("--ds-background-neutral-primary")
+    .getPropertyValue("--background-neutral-primary")
     .trim();
   return token || "#ffffff";
 }

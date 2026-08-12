@@ -1,6 +1,6 @@
 import * as Popover from "@radix-ui/react-popover";
 import { useId, useState, type ReactNode } from "react";
-import { AppTextArea, AppTextField } from "../../ui/AppTextField";
+import { TextInput } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import dropdownStyles from "../../ui/AppDropdown.module.scss";
 import {
@@ -197,15 +197,14 @@ export function AgentIdentityCard({
     <div className={styles.editBody}>
       <div className={styles.topRow}>
         <IdentityField label="Name" htmlFor={nameFieldId}>
-          <AppTextField
+          <TextInput
             id={nameFieldId}
             value={role}
             onChange={(event) => onRoleChange?.(event.target.value)}
             placeholder="e.g. Style helper"
-            size="s"
-            tone="gray"
-            fullWidth
-            controlClassName={styles.identityControl}
+            size="small"
+            color="secondary"
+            className={styles.identityControl}
             aria-label="Agent name"
           />
         </IdentityField>
@@ -256,14 +255,14 @@ export function AgentIdentityCard({
       </div>
 
       <IdentityField label="Description" htmlFor={descriptionFieldId}>
-        <AppTextArea
+        <TextInput
           id={descriptionFieldId}
+          multiline
           rows={2}
           value={tagline}
           onChange={(event) => onTaglineChange?.(event.target.value)}
-          size="s"
-          tone="gray"
-          fullWidth
+          size="small"
+          color="secondary"
           placeholder="One line on what this agent does."
           aria-label="Agent description"
         />

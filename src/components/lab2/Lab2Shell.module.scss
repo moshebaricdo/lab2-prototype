@@ -13,8 +13,8 @@
   flex: 1;
   flex-direction: column;
   overflow: hidden;
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-neutral-primary);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
   color-scheme: light;
 }
 
@@ -23,7 +23,7 @@
 }
 
 .themeScopeFloatingSurface {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .body {

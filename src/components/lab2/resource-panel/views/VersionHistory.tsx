@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AppButton } from "../../../ui/AppButton";
-import { AppTextArea } from "../../../ui/AppTextField";
+import { Alert, Button, TextInput, Tooltip } from "@moshebaricdo/cads-react";
 import { AiTutorIcon } from "../../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Dialog } from "../../../ui/Dialog";
-import { Tooltip } from "../../../ui/Tooltip";
 import { ScrollArea } from "../../../ui/scroll-area";
-import { AlertBanner } from "../../../ui/AlertBanner";
 import styles from "./VersionHistory.module.scss";
 
 export interface VersionItem {
@@ -76,6 +73,18 @@ export function VersionHistory({
       document.removeEventListener("pointerdown", handlePointerDown, true);
     };
   }, []);
+
+  useEffect(() => {
+    if (!showSaveSuccessAlert || !setShowSaveSuccessAlert) return undefined;
+    const timeoutId = window.setTimeout(() => setShowSaveSuccessAlert(false), 2500);
+    return () => window.clearTimeout(timeoutId);
+  }, [showSaveSuccessAlert, setShowSaveSuccessAlert]);
+
+  useEffect(() => {
+    if (!showRestoreSuccessAlert || !setShowRestoreSuccessAlert) return undefined;
+    const timeoutId = window.setTimeout(() => setShowRestoreSuccessAlert(false), 2500);
+    return () => window.clearTimeout(timeoutId);
+  }, [showRestoreSuccessAlert, setShowRestoreSuccessAlert]);
 
   const timelineEntries = useMemo(() => {
     const entries: Array<
@@ -188,13 +197,13 @@ export function VersionHistory({
                 <span>Restore</span>
               </button>
             ) : version.isAutoSave ? (
-              <Tooltip content="Autosave version" position="top">
+              <Tooltip title="Autosave version" placement="top">
                 <span className={styles.autosaveIcon}>
                   <FaIcon name="cloud-arrow-up" size="s" />
                 </span>
               </Tooltip>
             ) : version.isAiSave ? (
-              <Tooltip content="AI Tutor save" position="top">
+              <Tooltip title="AI Tutor save" placement="top">
                 <span className={styles.aiSaveIcon}>
                   <AiTutorIcon
                     className={styles.aiSaveIconSvg}
@@ -259,7 +268,7 @@ export function VersionHistory({
                 </div>
 
                 <div className={styles.savePanel}>
-                  <AppTextArea
+                  <TextInput
                     value={versionDescription}
                     onFocus={() => {
                       setIsDescriptionKeyboardFocused(lastFocusWasKeyboardRef.current);
@@ -277,23 +286,24 @@ export function VersionHistory({
                     }}
                     data-keyboard-focused={isDescriptionKeyboardFocused ? "true" : undefined}
                     placeholder="Describe your changes"
-                    appearance="bare"
-                    controlClassName={styles.textarea}
-                    size="s"
-                    tone="gray"
+                    className={styles.textarea}
+                    multiline
+                    rows={3}
+                    size="small"
+                    color="secondary"
                   />
 
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    size="s"
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    size="small"
                     fullWidth
-                    iconName="floppy-disk"
+                    startIconName="floppy-disk"
                     onClick={handleSaveVersion}
                     disabled={!versionDescription.trim()}
                   >
                     Save current version
-                  </AppButton>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -309,16 +319,16 @@ export function VersionHistory({
                   <div className={styles.section}>
                     <div className={styles.connector} />
                     <div className={styles.toggleWrap}>
-                      <AppButton
-                        variant="tertiary"
-                        tone="gray"
-                        size="xs"
-                        iconName={isExpanded ? "angles-up" : "angles-down"}
+                      <Button
+                        variant="text"
+                        color="secondary"
+                        size="extraSmall"
+                        startIconName={isExpanded ? "angles-up" : "angles-down"}
                         onClick={() => toggleAutoSaveGroup(entry.id)}
                       >
                         {isExpanded ? "Hide" : "Show"} {entry.versions.length} auto-save
                         {entry.versions.length === 1 ? "" : "s"}
-                      </AppButton>
+                      </Button>
                     </div>
                   </div>
 
@@ -333,29 +343,25 @@ export function VersionHistory({
       {showSaveSuccessAlert || showRestoreSuccessAlert ? (
         <div className={styles.toastWrap}>
           {showSaveSuccessAlert ? (
-            <AlertBanner
-              duration={2500}
-              onDismiss={() => setShowSaveSuccessAlert?.(false)}
-              presentation="toast"
+            <Alert
+              isDismissible
+              onClose={() => setShowSaveSuccessAlert?.(false)}
               sentiment="success"
-              showIcon
-              size="xs"
+              size="extraSmall"
             >
               Successfully saved version.
-            </AlertBanner>
+            </Alert>
           ) : null}
 
           {showRestoreSuccessAlert ? (
-            <AlertBanner
-              duration={2500}
-              onDismiss={() => setShowRestoreSuccessAlert?.(false)}
-              presentation="toast"
+            <Alert
+              isDismissible
+              onClose={() => setShowRestoreSuccessAlert?.(false)}
               sentiment="success"
-              showIcon
-              size="xs"
+              size="extraSmall"
             >
               Version successfully restored!
-            </AlertBanner>
+            </Alert>
           ) : null}
         </div>
       ) : null}
@@ -375,22 +381,22 @@ export function VersionHistory({
         closeButtonClassName={styles.startOverClose}
         footer={
           <>
-            <AppButton
-              variant="secondary"
-              tone="gray"
-              size="m"
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="medium"
               onClick={() => setShowStartOverConfirm(false)}
             >
               Cancel
-            </AppButton>
-            <AppButton
-              variant="primary"
-              tone="purple"
-              size="m"
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              size="medium"
               onClick={handleConfirmStartOver}
             >
               Start over
-            </AppButton>
+            </Button>
           </>
         }
       >

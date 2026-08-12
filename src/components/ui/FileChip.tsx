@@ -1,8 +1,7 @@
+import { Button, Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon, type FaIconFamily } from "./icons/FaIcon";
 import type { FaBrandIconName } from "../../icons/faBrandsCodepoints";
 import type { FaIconName } from "../../icons/faProRegularCodepoints";
-import { AppButton } from "./AppButton";
-import { Tooltip } from "./Tooltip";
 import { UploadProgressRing } from "./UploadProgressRing";
 import styles from "./FileChip.module.scss";
 
@@ -87,17 +86,20 @@ export function FileChip({
       );
     }
     return (
-      <Tooltip content="Add to project" position="top">
-        <AppButton
-          variant="tertiary"
-          tone="gray"
-          size="xs"
-          iconName="plus"
-          disabled={disabled}
-          aria-label={`Add ${fileName} to project`}
-          onClick={onAdd}
-          className={styles.inlineAddButton}
-        />
+      <Tooltip title="Add to project" placement="top">
+        <span>
+          <Button
+            variant="text"
+            color="tertiary"
+            size="extraSmall"
+            iconOnly
+            startIconName="plus"
+            disabled={disabled}
+            aria-label={`Add ${fileName} to project`}
+            onClick={onAdd}
+            className={styles.inlineAddButton}
+          />
+        </span>
       </Tooltip>
     );
   })();

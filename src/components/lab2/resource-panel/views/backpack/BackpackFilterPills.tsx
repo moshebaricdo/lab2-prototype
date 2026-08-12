@@ -1,4 +1,4 @@
-import { AppButton } from "../../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import styles from "./BackpackFilterPills.module.scss";
 
 interface BackpackFilterPillOption<Id extends string> {
@@ -34,18 +34,18 @@ export function BackpackFilterPills<Id extends string>({
           const label = `${option.label} (${option.count})`;
 
           return (
-            <AppButton
+            <Button
               key={option.id}
               type="button"
-              size="xs"
-              variant="tertiary"
-              tone={isActive ? "white" : "gray"}
+              size="extraSmall"
+              variant="text"
+              color="secondary"
               aria-pressed={isActive}
               className={`${styles.pill} ${isActive ? styles.pillActive : ""}`}
               onClick={() => onChange(option.id)}
             >
               {label}
-            </AppButton>
+            </Button>
           );
         })}
       </div>

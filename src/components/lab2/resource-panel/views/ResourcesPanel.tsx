@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { ScrollArea } from "../../../ui/scroll-area";
 import styles from "./ResourcesPanel.module.scss";
 
@@ -47,11 +47,12 @@ function ResourceActionRow({
   return (
     <div className={styles.resourceItem}>
       <span className={styles.resourceTitle}>{label}</span>
-      <AppButton
-        variant="secondary"
-        tone="gray"
-        size="xs"
-        iconName={iconName}
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        iconOnly
+        startIconName={iconName}
         disabled
         aria-label={label}
       />

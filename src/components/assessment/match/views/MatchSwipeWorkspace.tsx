@@ -6,7 +6,7 @@ import {
   type TouchEvent as ReactTouchEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
@@ -448,14 +448,14 @@ export function MatchSwipeWorkspace({
             >
               <section className={styles.deck}>
                 <div className={styles.deckHeader}>
-                  <AppButton
-                    size="s"
-                    tone="gray"
-                    variant="secondary"
-                    iconName="arrow-left"
+                  <Button
+                    size="small"
+                    variant="outlined" color="secondary"
+                    startIconName="arrow-left"
                     aria-label="Previous term"
                     onClick={() => setTermIndex((current) => prevIndex(current, terms.length))}
                     disabled={interactionLocked}
+                    iconOnly
                   />
                   <div className={styles.deckTitleGroup}>
                     <h3 className={styles.deckTitle}>{termLabel}</h3>
@@ -470,15 +470,14 @@ export function MatchSwipeWorkspace({
                       )}
                     </p>
                   </div>
-                  <AppButton
-                    size="s"
-                    tone="gray"
-                    variant="secondary"
-                    iconName="arrow-right"
+                  <Button
+                    size="small"
+                    variant="outlined" color="secondary"
+                    endIconName="arrow-right"
                     aria-label="Next term"
-                    iconPosition="end"
                     onClick={() => setTermIndex((current) => nextIndex(current, terms.length))}
                     disabled={interactionLocked}
+                    iconOnly
                   />
                 </div>
                 <div
@@ -505,14 +504,14 @@ export function MatchSwipeWorkspace({
 
               <section className={styles.deck}>
                 <div className={styles.deckHeader}>
-                  <AppButton
-                    size="s"
-                    tone="gray"
-                    variant="secondary"
-                    iconName="arrow-left"
+                  <Button
+                    size="small"
+                    variant="outlined" color="secondary"
+                    startIconName="arrow-left"
                     aria-label="Previous definition"
                     onClick={() => setPromptIndex((current) => prevIndex(current, prompts.length))}
                     disabled={interactionLocked}
+                    iconOnly
                   />
                   <div className={styles.deckTitleGroup}>
                     <h3 className={styles.deckTitle}>{promptLabel}</h3>
@@ -527,15 +526,14 @@ export function MatchSwipeWorkspace({
                       )}
                     </p>
                   </div>
-                  <AppButton
-                    size="s"
-                    tone="gray"
-                    variant="secondary"
-                    iconName="arrow-right"
+                  <Button
+                    size="small"
+                    variant="outlined" color="secondary"
+                    endIconName="arrow-right"
                     aria-label="Next definition"
-                    iconPosition="end"
                     onClick={() => setPromptIndex((current) => nextIndex(current, prompts.length))}
                     disabled={interactionLocked}
+                    iconOnly
                   />
                 </div>
                 <div
@@ -571,7 +569,7 @@ export function MatchSwipeWorkspace({
                 <path
                   d="M 253 0 L 253 36 Q 253 50, 267 50 L 380 50"
                   fill="none"
-                  stroke="var(--ds-border-neutral-primary)"
+                  stroke="var(--border-neutral-primary)"
                   strokeWidth="1"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -579,7 +577,7 @@ export function MatchSwipeWorkspace({
                 <path
                   d="M 759 0 L 759 36 Q 759 50, 745 50 L 600 50"
                   fill="none"
-                  stroke="var(--ds-border-neutral-primary)"
+                  stroke="var(--border-neutral-primary)"
                   strokeWidth="1"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -588,28 +586,24 @@ export function MatchSwipeWorkspace({
               <div className={styles.connectorBtnWrap}>
                 <div className={styles.connectorBtnContent}>
                   {currentPairIsLinked && !interactionLocked ? (
-                    <AppButton
-                      size="m"
-                      tone="gray"
-                      variant="secondary"
-                      iconName="link-slash"
-                      iconPosition="start"
+                    <Button
+                      size="medium"
+                      variant="outlined" color="secondary"
+                      startIconName="link-slash"
                       onClick={unmatchCurrentPair}
                     >
                       Unmatch this pair
-                    </AppButton>
+                    </Button>
                   ) : (
-                    <AppButton
-                      size="m"
-                      tone="purple"
-                      variant="primary"
-                      iconName="link"
-                      iconPosition="start"
+                    <Button
+                      size="medium"
+                      variant="contained" color="primary"
+                      startIconName="link"
                       onClick={assignCurrentPair}
                       disabled={interactionLocked || !currentTerm || !currentPrompt}
                     >
                       Match current pair
-                    </AppButton>
+                    </Button>
                   )}
                 </div>
                 <p className={styles.connectorProgress}>
@@ -632,13 +626,13 @@ export function MatchSwipeWorkspace({
                   >
                     {isSummaryOpen ? "Hide all terms and definitions" : "Show all terms and definitions"}
                   </button>
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    size="xs"
-                    iconName={isSummaryOpen ? "chevron-up" : "chevron-down"}
+                  <Button
+                    variant="outlined" color="secondary"
+                    size="extraSmall"
+                    startIconName={isSummaryOpen ? "chevron-up" : "chevron-down"}
                     aria-label={isSummaryOpen ? "Collapse full match list" : "Expand full match list"}
                     onClick={() => setIsSummaryOpen((current) => !current)}
+                    iconOnly
                   />
                 </div>
               </div>
@@ -804,12 +798,10 @@ export function MatchSwipeWorkspace({
           <AssessmentBottomRow
             left={
               <>
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  iconPosition="start"
-                  iconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
-                  size="m"
+                <Button
+                  variant="outlined" color="secondary"
+                  startIconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
+                  size="medium"
                   onClick={() => {
                     setIsTeacherAnswerRevealed((current) => {
                       if (!current) setIsSummaryOpen(true);
@@ -818,16 +810,15 @@ export function MatchSwipeWorkspace({
                   }}
                 >
                   {isTeacherAnswerRevealed ? "Hide answer" : "Reveal answer"}
-                </AppButton>
+                </Button>
                 {!isSubmitted && hasAnyAssignment ? (
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    size="m"
+                  <Button
+                    variant="outlined" color="secondary"
+                    size="medium"
                     onClick={clearAll}
                   >
                     Clear all
-                  </AppButton>
+                  </Button>
                 ) : null}
               </>
             }
@@ -840,33 +831,30 @@ export function MatchSwipeWorkspace({
                   </p>
                 ) : null}
                 {isSubmitted && isPerfectMatch ? (
-                  <AppButton
-                    variant="primary"
-                    size="m"
-                    tone="purple"
+                  <Button
+                    variant="contained" color="primary"
+                    size="medium"
                     onClick={() => navigate(continuePath)}
                   >
                     Continue
-                  </AppButton>
+                  </Button>
                 ) : null}
                 {isSubmitted && !isPerfectMatch ? (
-                  <AppButton
-                    variant="primary"
-                    tone="purple"
-                    size="m"
+                  <Button
+                    variant="contained" color="primary"
+                    size="medium"
                     onClick={() => {
                       setAssignments(buildInitialAssignments(termIds));
                       setIsSubmitted(false);
                     }}
                   >
                     Try again
-                  </AppButton>
+                  </Button>
                 ) : null}
                 {!isSubmitted ? (
-                  <AppButton
-                    variant="primary"
-                    size="m"
-                    tone="purple"
+                  <Button
+                    variant="contained" color="primary"
+                    size="medium"
                     onClick={() => {
                       if (!allAssigned || isTeacherAnswerRevealed) return;
                       const perfect = terms.every((term) => {
@@ -880,7 +868,7 @@ export function MatchSwipeWorkspace({
                     disabled={!allAssigned || isTeacherAnswerRevealed}
                   >
                     Submit
-                  </AppButton>
+                  </Button>
                 ) : null}
               </>
             }

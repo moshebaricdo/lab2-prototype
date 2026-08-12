@@ -8,9 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { AppButton } from "../../../ui/AppButton";
-import { AppCheckbox } from "../../../ui/AppCheckbox";
-import { AppRadio } from "../../../ui/AppRadio";
+import { Button, Checkbox, Radio } from "@moshebaricdo/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import {
@@ -503,7 +501,7 @@ export function MultiChoiceWorkspace({
                     }
                   >
                     {isMultiSelect ? (
-                      <AppCheckbox
+                      <Checkbox
                         name={`multi-response-${level.id}`}
                         value={answer.id}
                         checked={checked}
@@ -513,26 +511,15 @@ export function MultiChoiceWorkspace({
                           selectionCapped
                         }
                         tabIndex={0}
-                        hovered={
-                          !isAnswerLocked &&
-                          !teacherRevealActive &&
-                          !selectionCapped &&
-                          hoveredAnswerId === answer.id
-                        }
                         onChange={() => toggleMulti(answer.id)}
                       />
                     ) : (
-                      <AppRadio
+                      <Radio
                         name={`multi-choice-${level.id}`}
                         value={answer.id}
                         checked={checked}
                         disabled={isAnswerLocked || teacherRevealActive}
                         tabIndex={0}
-                        hovered={
-                          !isAnswerLocked &&
-                          !teacherRevealActive &&
-                          hoveredAnswerId === answer.id
-                        }
                         onChange={() => setSingle(answer.id)}
                       />
                     )}
@@ -575,19 +562,17 @@ export function MultiChoiceWorkspace({
             <AssessmentBottomRow
               left={
                 embedded || isSurveyLevel ? undefined : (
-                  <AppButton
-                    variant="secondary"
-                    tone="gray"
-                    iconPosition="start"
-                    iconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
-                    size="m"
+                  <Button
+                    variant="outlined" color="secondary"
+                    startIconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
+                    size="medium"
                     onClick={() => {
                       setHoveredAnswerId(null);
                       setIsTeacherAnswerRevealed((current) => !current);
                     }}
                   >
                     {isTeacherAnswerRevealed ? "Hide answer" : "Reveal answer"}
-                  </AppButton>
+                  </Button>
                 )
               }
               right={
@@ -609,35 +594,32 @@ export function MultiChoiceWorkspace({
                       </AssessmentSuccessFeedback>
                     )}
                     {isSubmitted && isCorrect && (
-                      <AppButton
-                        variant="primary"
-                        size="m"
-                        tone="purple"
+                      <Button
+                        variant="contained" color="primary"
+                        size="medium"
                         onClick={() => navigate(continuePath)}
                       >
                         Continue
-                      </AppButton>
+                      </Button>
                     )}
                     {isSubmitted && !isCorrect && (
-                      <AppButton
-                        variant="primary"
-                        tone="purple"
-                        size="m"
+                      <Button
+                        variant="contained" color="primary"
+                        size="medium"
                         onClick={resetAfterSubmit}
                       >
                         Try again
-                      </AppButton>
+                      </Button>
                     )}
                     {!isSubmitted && (
-                      <AppButton
-                        variant="primary"
-                        size="m"
-                        tone="purple"
+                      <Button
+                        variant="contained" color="primary"
+                        size="medium"
                         onClick={handleSubmitAnswer}
                         disabled={!canSubmit || teacherRevealActive}
                       >
                         Submit answer
-                      </AppButton>
+                      </Button>
                     )}
                   </>
                 )

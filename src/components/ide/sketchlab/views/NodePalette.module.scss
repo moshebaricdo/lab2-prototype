@@ -8,28 +8,28 @@
   flex-direction: column;
   gap: 4px;
   padding: 6px;
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-lg);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-lg);
   box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
 .divider {
   height: 1px;
   margin: 2px -6px;
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
 }
 
 .toolActive {
-  background: var(--ds-background-selected-primary) !important;
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed)) !important;
+  background: var(--background-selected-primary) !important;
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed)) !important;
   border-color: transparent !important;
 }
 
 .toolActive:hover {
-  background: var(--ds-background-selected-strong) !important;
+  background: var(--background-selected-strong) !important;
 }
 
 .toolActive:active {
-  background: var(--ds-background-selected-strong) !important;
+  background: var(--background-selected-strong) !important;
 }

@@ -1,6 +1,5 @@
-import { AppButton } from "../../ui/AppButton";
+import { Button, Tooltip } from "@moshebaricdo/cads-react";
 import { PanelHeader } from "../../ui/PanelHeader";
-import { Tooltip } from "../../ui/Tooltip";
 import { useOptionalBackpack } from "../../../hooks/BackpackContext";
 import { DevPanelContent, DevPanelHeaderActions } from "../dev";
 import { ContinueButton } from "./ContinueButton";
@@ -219,43 +218,52 @@ export function SidebarPanelContent({
         right={
           activeTab === "ai-tutor" ? (
             <div className="flex gap-1">
-              <Tooltip content="Export chat log" position="bottom">
-                <AppButton
-                  variant="tertiary"
-                  tone="gray"
-                  size="xs"
-                  iconName="download"
-                  onClick={() => downloadChatLog(chatMessages)}
-                  disabled={chatMessages.length === 0}
-                  aria-label="Export AI Tutor chat log"
-                />
+              <Tooltip title="Export chat log" placement="bottom">
+                <span>
+                  <Button
+                    variant="text"
+                    color="tertiary"
+                    size="extraSmall"
+                    iconOnly
+                    startIconName="download"
+                    onClick={() => downloadChatLog(chatMessages)}
+                    disabled={chatMessages.length === 0}
+                    aria-label="Export AI Tutor chat log"
+                  />
+                </span>
               </Tooltip>
-              <Tooltip content="Clear chat" position="bottom">
-                <AppButton
-                  variant="tertiary"
-                  tone="gray"
-                  size="xs"
-                  iconName="eraser"
-                  onClick={onClearTutorChat}
-                  disabled={
-                    chatMessages.length === 0 &&
-                    !hasComposerContent &&
-                    !isTutorRequestRunning
-                  }
-                  aria-label="Clear AI Tutor chat"
-                />
+              <Tooltip title="Clear chat" placement="bottom">
+                <span>
+                  <Button
+                    variant="text"
+                    color="tertiary"
+                    size="extraSmall"
+                    iconOnly
+                    startIconName="eraser"
+                    onClick={onClearTutorChat}
+                    disabled={
+                      chatMessages.length === 0 &&
+                      !hasComposerContent &&
+                      !isTutorRequestRunning
+                    }
+                    aria-label="Clear AI Tutor chat"
+                  />
+                </span>
               </Tooltip>
             </div>
           ) : activeTab === "backpack" && backpack ? (
-            <Tooltip content="Refresh backpack" position="bottom">
-              <AppButton
-                variant="tertiary"
-                tone="gray"
-                size="xs"
-                iconName="arrows-rotate"
-                onClick={backpack.refreshBackpack}
-                aria-label="Refresh backpack"
-              />
+            <Tooltip title="Refresh backpack" placement="bottom">
+              <span>
+                <Button
+                  variant="text"
+                  color="tertiary"
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="arrows-rotate"
+                  onClick={backpack.refreshBackpack}
+                  aria-label="Refresh backpack"
+                />
+              </span>
             </Tooltip>
           ) : activeTab === "dev" && devPanelOverrideResult ? (
             <DevPanelHeaderActions

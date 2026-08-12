@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@moshebaricdo/cads-react";
 import { ScrollArea } from "../../../ui/scroll-area";
-import { AppButton } from "../../../ui/AppButton";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import styles from "./RubricPanel.module.scss";
 
@@ -81,11 +81,12 @@ export function RubricPanel({ rubrics }: RubricPanelProps) {
       <div className={styles.inner} key={rubricIndex}>
         {showRubricNav && (
           <div className={styles.navCard}>
-            <AppButton
-              variant="secondary"
-              tone="gray"
-              size="xs"
-              iconName="chevron-left"
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="extraSmall"
+              iconOnly
+              startIconName="chevron-left"
               disabled={rubricIndex === 0}
               onClick={() => setRubricIndex((i) => Math.max(0, i - 1))}
               aria-label="Previous rubric"
@@ -93,11 +94,12 @@ export function RubricPanel({ rubrics }: RubricPanelProps) {
             <span className={styles.navLabel}>
               Viewing {rubricIndex + 1} of {rubrics.length}
             </span>
-            <AppButton
-              variant="secondary"
-              tone="gray"
-              size="xs"
-              iconName="chevron-right"
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="extraSmall"
+              iconOnly
+              startIconName="chevron-right"
               disabled={rubricIndex >= rubrics.length - 1}
               onClick={() =>
                 setRubricIndex((i) =>
@@ -175,11 +177,12 @@ export function RubricPanel({ rubrics }: RubricPanelProps) {
                           {cat.label}
                         </p>
                         {hasDescription && (
-                          <AppButton
-                            variant="tertiary"
-                            tone="gray"
-                            size="xs"
-                            iconName={expanded ? "chevron-up" : "chevron-down"}
+                          <Button
+                            variant="text"
+                            color="tertiary"
+                            size="extraSmall"
+                            iconOnly
+                            startIconName={expanded ? "chevron-up" : "chevron-down"}
                             onClick={() => toggleDescription(cat.id)}
                             aria-expanded={expanded}
                             aria-label={

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
-import { AppButton } from "../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { ScrollArea } from "../../ui/scroll-area";
 import type { DevPanelField, DevPanelFieldValues } from "./types";
 import { DevPanelFieldRow } from "./DevPanelFields";
@@ -106,11 +106,12 @@ export function DevPanelContent<T extends Record<string, unknown>>({
                 >
                   <div className={styles.groupHeader}>
                     <p className={styles.groupHeading}>{group.name}</p>
-                    <AppButton
-                      variant="secondary"
-                      tone="gray"
-                      size="xs"
-                      iconName={isExpanded ? "chevron-up" : "chevron-down"}
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      size="extraSmall"
+                      iconOnly
+                      startIconName={isExpanded ? "chevron-up" : "chevron-down"}
                       onClick={() => {
                         setExpandedGroups((current) => ({
                           ...current,

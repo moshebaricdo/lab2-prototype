@@ -6,8 +6,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { AppButton } from "../../../../ui/AppButton";
-import { AppTextArea } from "../../../../ui/AppTextField";
+import { Button, TextInput } from "@moshebaricdo/cads-react";
 import { FileChip } from "../../../../ui/FileChip";
 import {
   getFileChipIconProps,
@@ -199,16 +198,19 @@ export function NewProjectPlanQuestionnaireCard({
                         );
                       })}
                     </div>
-                    <AppTextArea
-                      ref={textareaRef}
+                    <TextInput
+                      ref={(node) => {
+                        textareaRef.current = node?.querySelector("textarea") ?? null;
+                      }}
                       key={activeQuestion.id}
                       id={`${fieldIdPrefix}-${activeQuestion.id}`}
                       value={customChoiceValue}
                       placeholder={activeQuestion.placeholder}
                       rows={2}
                       disabled={disabled}
-                      size="s"
-                      tone="gray"
+                      size="small"
+                      color="secondary"
+                      multiline
                       onFocus={() => {
                         if (selectedChoice) {
                           setAnswers((current) => ({
@@ -240,11 +242,12 @@ export function NewProjectPlanQuestionnaireCard({
                         <span className={styles.moodboardPrompt}>
                           Have a moodboard or style reference?
                         </span>
-                        <AppButton
-                          variant="secondary"
-                          tone="gray"
-                          size="xs"
-                          iconName="upload"
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          size="extraSmall"
+                          iconOnly
+                          startIconName="upload"
                           onClick={() => moodboardInputRef.current?.click()}
                           disabled={disabled}
                           aria-label="Upload moodboard or style reference"
@@ -271,16 +274,19 @@ export function NewProjectPlanQuestionnaireCard({
                     </div>
                   </>
                 ) : (
-                  <AppTextArea
-                    ref={textareaRef}
+                  <TextInput
+                    ref={(node) => {
+                      textareaRef.current = node?.querySelector("textarea") ?? null;
+                    }}
                     key={activeQuestion.id}
                     id={`${fieldIdPrefix}-${activeQuestion.id}`}
                     value={answers[activeQuestion.id]}
                     placeholder={activeQuestion.placeholder}
                     rows={3}
                     disabled={disabled}
-                    size="s"
-                    tone="gray"
+                    size="small"
+                    color="secondary"
+                    multiline
                     onChange={(event) => {
                       const value = event.currentTarget.value;
                       setAnswers((current) => ({
@@ -298,21 +304,23 @@ export function NewProjectPlanQuestionnaireCard({
               {activeQuestionIndex + 1} of {NEW_PROJECT_PLAN_QUESTION_FIELDS.length}
             </span>
             <div className={styles.actions}>
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="arrow-left"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="arrow-left"
                 disabled={disabled || isFirstQuestion}
                 onClick={() => setActiveQuestionIndex((current) => Math.max(0, current - 1))}
                 aria-label="Previous question"
               />
-              <AppButton
+              <Button
                 type="submit"
-                variant="primary"
-                tone="purple"
-                size="xs"
-                iconName="arrow-right"
+                variant="contained"
+                color="primary"
+                size="extraSmall"
+                iconOnly
+                startIconName="arrow-right"
                 disabled={isLastQuestion ? !canSubmit : !canContinue}
                 aria-label={isLastQuestion ? "Create plan" : "Next question"}
               />

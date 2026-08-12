@@ -18,6 +18,8 @@ The sync tracks **four kinds of drift**, all first-class:
 
 **Sandbox source of truth (CodeAI):** `src/pages/design-system/tokens/codeAiColorSystem.json` — a serialized `ColorSystem` (see `src/pages/design-system/colorSystemData.ts` for the shape: `families[].steps[].hex` primitives; `semantics[]` with per-theme `ref` (primitive step id), `semanticRef` (semantic alias), `fallbackHex`, and `comments`).
 
+**Platform SoT (standalone CADS):** sibling repo `../cads` → `packages/variables/src/data/codeAiColorSystem.json`. After a sandbox sync that should ship to the packaged system, also update that file and run `pnpm generate:variables` (or `pnpm figma:sync`) in `../cads`. Repeatable sync tooling: `../cads/tooling/figma-sync`. Parity UI: `/design-system/cads`.
+
 Read `src/guidelines/color-theming.md` before making changes — it documents the token pipeline, baseline versioning, and known pitfalls.
 
 ## Tooling: which Figma MCP to use

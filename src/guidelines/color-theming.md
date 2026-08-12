@@ -86,9 +86,26 @@ From CADS Figma (`typography`, `spacing-shape`, effect styles):
 
 Route `/design-system/colors`. Single CodeAI document in `localStorage` (`lab2:color-sandbox:doc`). Light/dark via shared `useTheme()`. Export CSS and optional **Apply to app** remain. Bump `COLOR_SANDBOX_CODEAI_BASELINE_VERSION` when `codeAiColorSystem.json` changes.
 
+## Standalone CADS packages
+
+The Lab2 sandbox keeps its local `App*` atoms and committed `codeAiColorSystem.json` for exploration. Packaged CADS is published from **`moshebaricdo/cads`** to GitHub Packages:
+
+| Package | Role |
+|---|---|
+| `@moshebaricdo/cads-variables` | Canonical variables document + generated `variables.css` / MUI theme |
+| `@moshebaricdo/cads-react` | MUI-wrapped components + icons (`/icons` subpath) |
+
+Installed here as `@moshebaricdo/cads-react` / `@moshebaricdo/cads-variables` `^0.1.0` from `https://npm.pkg.github.com`. Parity route: **`/design-system/cads`**. New prototypes may opt into the packages; do not big-bang replace `App*`.
+
+**Foundations on Lab2 CADS surfaces:** `Lab2Shell` → `CadsLabProvider` loads `@moshebaricdo/cads-variables/variables.css`. Lab2 chrome (header, resource panel, IDE, assessment, dev panel) uses **unprefixed** Foundations names (`--background-neutral-primary`, `--shape-sm`, …). Color sandbox and teacher dashboard may still use generated `--ds-*` from `tokens.css`. Prefer Foundations names on any new CADS-backed surface.
+
+**Dark mode:** `useTheme` sets `document.documentElement` `data-theme` and toggles the `.dark` class. CADS requires `.dark` (or `[data-theme='Dark']`) on an ancestor; portaled Dropdown/Tooltip menus render under `body`, so the html `.dark` class is what themes them.
+
+When promoting a color-sandbox export to the platform SoT, copy/merge into `../cads/packages/variables/src/data/codeAiColorSystem.json` and run `pnpm generate:variables` in that repo (or `pnpm figma:sync`). The Lab2 `figma-color-sync` skill remains valid for sandbox-local sync; the cads `tooling/figma-sync` script is the long-term home.
+
 ## Authoring checklist
 
-1. Use `--ds-*` in component SCSS — never `--foreground` / `--accent` / etc.
+1. On CADS-migrated surfaces, use Foundations vars (unprefixed). Elsewhere use `--ds-*` — never `--foreground` / `--accent` / etc.
 2. Use `brand` for actions; `selected` for active chrome; `focused` for focus rings.
 3. Prefer CADS typography via `AppText` / `_typography.scss` mixins (see `typography.md`) over raw px or unitless line-heights.
 4. After editing `codeAiColorSystem.json`, regenerate tokens and bump the sandbox baseline version.

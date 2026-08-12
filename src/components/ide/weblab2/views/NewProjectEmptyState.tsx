@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import emptyStateNewProject from "../../../../assets/empty-states/empty-state-new-project.svg";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { TutorRequestMode, TutorStartOptions } from "../../../../types/tutor";
 import styles from "./NewProjectEmptyState.module.scss";
@@ -118,26 +118,26 @@ export function NewProjectEmptyState({
               onDrop={handleStarterDrop}
             >
               <div className={styles.manualActions}>
-                <AppButton
-                  variant="primary"
-                  tone="purple"
-                  size="s"
-                  iconName="plus"
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  startIconName="plus"
                   onClick={onCreateFile}
                   disabled={isViewingHistoryVersion}
                 >
                   Create file
-                </AppButton>
-                <AppButton
-                  variant="secondary"
-                  tone="gray"
-                  size="s"
-                  iconName="file-arrow-up"
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  size="small"
+                  startIconName="file-arrow-up"
                   onClick={() => uploadInputRef.current?.click()}
                   disabled={isViewingHistoryVersion || !onUploadStarterFiles || isUploadingStarterFiles}
                 >
                   Browse files
-                </AppButton>
+                </Button>
               </div>
               <div className={styles.manualUploadHint}>
                 <p className={styles.manualDropText}>

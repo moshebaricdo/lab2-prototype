@@ -1,9 +1,9 @@
 @use "../../../../styles/_mixins.scss" as *;
 
 .resultsCard {
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-card);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
   padding: 20px 24px;
   width: 100%;
 }
@@ -40,7 +40,7 @@
 
 .scoreRingBg {
   fill: none;
-  stroke: var(--ds-background-neutral-tertiary);
+  stroke: var(--background-neutral-tertiary);
   stroke-width: 5;
 }
 
@@ -52,21 +52,21 @@
 }
 
 .scoreRingFillSuccess {
-  stroke: var(--ds-background-success-primary);
+  stroke: var(--background-success-primary);
 }
 
 .scoreRingFillPartial {
-  stroke: var(--ds-background-success-primary);
+  stroke: var(--background-success-primary);
 }
 
 .scoreRingFillLow {
-  stroke: var(--ds-background-accent-warning-primary);
+  stroke: var(--background-accent-orange-primary);
 }
 
 .scoreRingLabel {
   font-size: var(--text-body-md);
   font-variant-numeric: tabular-nums;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   position: relative;
   z-index: 1;
 }
@@ -82,17 +82,17 @@
 }
 
 .scoreHeadline {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-family: var(--font-heading);
   font-size: var(--text-heading-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1.2;
   margin: 0;
 }
 
 .metaRow {
   align-items: center;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   display: flex;
   flex-wrap: wrap;
   gap: 6px 16px;
@@ -107,7 +107,7 @@
 }
 
 .metaIcon {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 /* ── Actions ───────────────────────────────────────────────────── */

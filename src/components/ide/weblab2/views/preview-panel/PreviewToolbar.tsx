@@ -7,9 +7,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { AppButton } from "../../../../ui/AppButton";
-import { Tooltip } from "../../../../ui/Tooltip";
-import { SegmentedControl, type SegmentedOption } from "../../../../ui/SegmentedControl";
+import { Button, SegmentedButton, Tooltip } from "@moshebaricdo/cads-react";
 import {
   findPreviewHtmlFile,
   normalizePreviewPath,
@@ -47,20 +45,18 @@ interface PreviewToolbarProps {
   isPreviewStopped?: boolean;
 }
 
-const PREVIEW_MODE_OPTIONS: SegmentedOption<PreviewMode>[] = [
+const PREVIEW_MODE_OPTIONS = [
   {
     value: "desktop",
-    label: "",
-    iconName: "desktop",
-    ariaLabel: "Desktop preview",
-    title: "Desktop preview",
+    label: "Desktop preview",
+    iconName: "desktop" as const,
+    tooltip: "Desktop preview",
   },
   {
     value: "mobile",
-    label: "",
-    iconName: "mobile-screen",
-    ariaLabel: "Mobile preview",
-    title: "Mobile preview",
+    label: "Mobile preview",
+    iconName: "mobile-screen" as const,
+    tooltip: "Mobile preview",
   },
 ];
 
@@ -272,24 +268,26 @@ export function PreviewToolbar({
   const renderUrlBar = () => (
     <div className={styles.urlWrap}>
       <div className={`${styles.urlBox} ${isPreviewUnavailable ? styles.urlBoxDisabled : ""}`}>
-        <AppButton
-          variant="tertiary"
-          tone="gray"
+        <Button
+          variant="text"
+          color="tertiary"
+          size="extraSmall"
+          iconOnly
+          startIconName="chevron-left"
           aria-label="Back"
           title="Back"
-          iconName="chevron-left"
-          size="xs"
           className={styles.urlBarButton}
           onClick={handleBack}
           disabled={isPreviewUnavailable || !canGoBack}
         />
-        <AppButton
-          variant="tertiary"
-          tone="gray"
+        <Button
+          variant="text"
+          color="tertiary"
+          size="extraSmall"
+          iconOnly
+          startIconName="chevron-right"
           aria-label="Forward"
           title="Forward"
-          iconName="chevron-right"
-          size="xs"
           className={styles.urlBarButton}
           onClick={handleForward}
           disabled={isPreviewUnavailable || !canGoForward}
@@ -387,44 +385,46 @@ export function PreviewToolbar({
         </form>
 
         <Tooltip
-          content={
+          title={
             isPreviewUnavailable
               ? "Stop preview is unavailable without preview content"
               : isPreviewStopped
                 ? "Preview already stopped"
                 : "Stop preview"
           }
-          position="bottom"
+          placement="bottom"
         >
           <span className={styles.urlBarButtonWrap}>
-            <AppButton
-              variant="tertiary"
-              tone="gray"
+            <Button
+              variant="text"
+              color="tertiary"
+              size="extraSmall"
+              iconOnly
+              startIconName="stop"
               onClick={onStop}
               aria-label="Stop preview"
-              iconName="stop"
-              size="xs"
               className={styles.urlBarButton}
               disabled={isPreviewUnavailable || isPreviewStopped}
             />
           </span>
         </Tooltip>
         <Tooltip
-          content={
+          title={
             isPreviewUnavailable
               ? "Reload preview is unavailable without preview content"
               : "Reload preview"
           }
-          position="bottom"
+          placement="bottom"
         >
           <span className={styles.urlBarButtonWrap}>
-            <AppButton
-              variant="tertiary"
-              tone="gray"
+            <Button
+              variant="text"
+              color="tertiary"
+              size="extraSmall"
+              iconOnly
+              startIconName="rotate"
               onClick={onReload}
               aria-label="Reload preview"
-              iconName="rotate"
-              size="xs"
               className={styles.urlBarButton}
               disabled={isPreviewUnavailable}
             />
@@ -435,14 +435,15 @@ export function PreviewToolbar({
   );
 
   const renderDesignModeButton = () => (
-    <AppButton
-      variant="secondary"
-      tone="gray"
+    <Button
+      variant="outlined"
+      color="secondary"
+      size="extraSmall"
+      iconOnly
+      startIconName="palette"
       onClick={onToggleDesignMode}
       aria-label={isDesignMode ? "Turn off design select mode" : "Turn on design select mode"}
       aria-pressed={isDesignMode}
-      iconName="palette"
-      size="xs"
       disabled={designModeDisabled}
       className={isDesignMode ? styles.designModeButtonActive : ""}
     />
@@ -454,24 +455,25 @@ export function PreviewToolbar({
 
     return (
       <Tooltip
-        content={
+        title={
           isDebugPanelUnavailable
             ? "Debug panel is unavailable without preview content"
             : isDebugPanelOpen
               ? "Hide debug panel"
               : "Debug panel"
         }
-        position="bottom"
+        placement="bottom"
       >
         <span className={styles.debugToggleWrap}>
-          <AppButton
-            variant="secondary"
-            tone="gray"
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="extraSmall"
+            iconOnly
+            startIconName="bug"
             onClick={onToggleDebugPanel}
             aria-label={isDebugPanelOpen ? "Hide debug panel" : "Show debug panel"}
             aria-pressed={isDebugPanelOpen}
-            iconName="bug"
-            size="xs"
             disabled={isDebugPanelUnavailable}
             className={isDebugPanelOpen ? styles.designModeButtonActive : ""}
           />
@@ -494,35 +496,43 @@ export function PreviewToolbar({
               renderDesignModeButton()
             ) : (
               <Tooltip
-                content={
+                title={
                   designModeDisabled
                     ? designModeDisabledReason ?? "Design select mode is unavailable"
                     : isDesignMode
                       ? "Exit design mode"
                       : "Design mode"
                 }
-                position="bottom"
+                placement="bottom"
               >
-                {renderDesignModeButton()}
+                {designModeDisabled ? (
+                  <span>{renderDesignModeButton()}</span>
+                ) : (
+                  renderDesignModeButton()
+                )}
               </Tooltip>
             )
           ) : null}
           <div className={styles.segmentWrap}>
-            <SegmentedControl<PreviewMode>
+            <SegmentedButton
+              size="extraSmall"
+              iconOnly
               options={PREVIEW_MODE_OPTIONS}
               value={previewMode}
-              onChange={onPreviewModeChange}
+              onChange={(nextValue) => onPreviewModeChange(nextValue as PreviewMode)}
               disabled={previewModeDisabled}
+              aria-label="Preview mode"
             />
           </div>
-          <AppButton
-            variant="tertiary"
-            tone="gray"
+          <Button
+            variant="text"
+            color="tertiary"
+            size="extraSmall"
+            iconOnly
+            startIconName={isFullscreen ? "compress" : "expand"}
             onClick={onToggleFullscreen}
             aria-label={isFullscreen ? "Exit fullscreen preview" : "Open fullscreen preview"}
             title={isFullscreen ? "Exit fullscreen preview" : "Open fullscreen preview"}
-            iconName={isFullscreen ? "compress" : "expand"}
-            size="xs"
           />
         </div>
       </div>

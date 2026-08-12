@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import type { AssessmentArtifact } from "../../../../types/assessmentBuilder";
@@ -237,16 +237,14 @@ export function AssessmentArtifactWorkspace({
                   </div>
                 }
                 right={
-                  <AppButton
-                    variant="primary"
-                    tone="purple"
-                    size="m"
-                    iconPosition="end"
-                    iconName="arrow-right"
+                  <Button
+                    variant="contained" color="primary"
+                    size="medium"
+                    endIconName="arrow-right"
                     onClick={() => setAssessmentStarted(true)}
                   >
                     Begin
-                  </AppButton>
+                  </Button>
                 }
               />
             </>
@@ -258,38 +256,34 @@ export function AssessmentArtifactWorkspace({
                 showLeft={!surveyMode && !suppressReveal}
                 left={
                   !surveyMode && !suppressReveal ? (
-                    <AppButton
-                      variant="secondary"
-                      tone="gray"
-                      iconPosition="start"
-                      iconName={groupTeacherReveal ? "eye-slash" : "eye"}
-                      size="m"
+                    <Button
+                      variant="outlined" color="secondary"
+                      startIconName={groupTeacherReveal ? "eye-slash" : "eye"}
+                      size="medium"
                       onClick={() => setGroupTeacherReveal((v) => !v)}
                     >
                       {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
-                    </AppButton>
+                    </Button>
                   ) : null
                 }
                 right={
                   currentStep < steps.length - 1 ? (
-                    <AppButton
-                      variant="primary"
-                      tone="purple"
-                      size="m"
+                    <Button
+                      variant="contained" color="primary"
+                      size="medium"
                       onClick={() => setCurrentStep((v) => v + 1)}
                     >
                       Next
-                    </AppButton>
+                    </Button>
                   ) : (
-                    <AppButton
-                      variant="primary"
-                      tone="purple"
-                      size="m"
+                    <Button
+                      variant="contained" color="primary"
+                      size="medium"
                       disabled={!canSubmit}
                       onClick={() => setIsSubmitted(true)}
                     >
                       Submit
-                    </AppButton>
+                    </Button>
                   )
                 }
               />
@@ -307,28 +301,25 @@ export function AssessmentArtifactWorkspace({
                   showLeft={!surveyMode && !suppressReveal}
                   left={
                     !surveyMode && !suppressReveal ? (
-                      <AppButton
-                        variant="secondary"
-                        tone="gray"
-                        iconPosition="start"
-                        iconName={groupTeacherReveal ? "eye-slash" : "eye"}
-                        size="m"
+                      <Button
+                        variant="outlined" color="secondary"
+                        startIconName={groupTeacherReveal ? "eye-slash" : "eye"}
+                        size="medium"
                         onClick={() => setGroupTeacherReveal((v) => !v)}
                       >
                         {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
-                      </AppButton>
+                      </Button>
                     ) : null
                   }
                   right={
-                    <AppButton
-                      variant="primary"
-                      tone="purple"
-                      size="m"
+                    <Button
+                      variant="contained" color="primary"
+                      size="medium"
                       disabled={!canSubmit}
                       onClick={() => setIsSubmitted(true)}
                     >
                       {surveyMode ? "Submit responses" : "Submit"}
-                    </AppButton>
+                    </Button>
                   }
                 />
               )}

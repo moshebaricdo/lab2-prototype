@@ -7,7 +7,7 @@
   justify-content: space-between;
   height: 50px;
   padding: 0 8px;
-  background: var(--ds-background-brand-primary);
+  background: var(--background-brand-primary);
 }
 
 .leftGroup {
@@ -45,8 +45,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: var(--ds-background-neutral-white-fixed);
-  border-radius: var(--radius-sm);
+  background: var(--background-neutral-white-fixed);
+  border-radius: var(--shape-sm);
   padding: 4px 4px 4px 12px;
 }
 
@@ -83,7 +83,7 @@
 .title {
   @include type-body-3-semibold;
 
-  color: var(--ds-text-neutral-white-fixed);
+  color: var(--text-neutral-white-fixed);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -93,8 +93,8 @@
 .titleDark {
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -104,7 +104,7 @@
 .subtitle {
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
-  font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-regular);
   color: rgb(255 255 255 / 70%);
   margin: 0;
   overflow: hidden;
@@ -115,8 +115,8 @@
 .subtitleDark {
   font-size: var(--text-body-xxs);
   line-height: var(--leading-body-xxs);
-  font-weight: var(--font-weight-normal);
-  color: var(--ds-text-neutral-secondary);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-neutral-secondary);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -130,30 +130,19 @@
 }
 
 .userButton {
-  border-color: var(--ds-border-neutral-secondary);
-  background: transparent;
-  color: var(--ds-text-neutral-white-fixed);
-}
-
-.userButton:hover {
-  background: rgb(255 255 255 / 10%);
-}
-
-.userChevron {
-  width: 16px;
-  height: 16px;
-  margin-left: 4px;
+  --btn-bg: transparent !important;
+  --btn-fg: var(--text-neutral-white-fixed) !important;
+  --btn-border: var(--border-neutral-secondary) !important;
+  --btn-bg-hover: rgb(255 255 255 / 10%) !important;
+  --btn-bg-press: rgb(255 255 255 / 20%) !important;
+  --btn-fg-press: var(--text-neutral-white-fixed) !important;
 }
 
 .rightIconButton {
-  color: var(--ds-text-neutral-white-fixed);
-}
-
-.rightIconButton:hover {
-  background: rgb(255 255 255 / 10%);
-}
-
-.iconGlyph {
-  width: var(--text-sm);
-  height: var(--text-sm);
+  --btn-bg: transparent !important;
+  --btn-fg: var(--text-neutral-white-fixed) !important;
+  --btn-border: transparent !important;
+  --btn-bg-hover: rgb(255 255 255 / 10%) !important;
+  --btn-bg-press: rgb(255 255 255 / 20%) !important;
+  --btn-fg-press: var(--text-neutral-white-fixed) !important;
 }

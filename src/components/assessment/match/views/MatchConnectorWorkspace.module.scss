@@ -49,10 +49,10 @@
 
 .promptCard,
 .termCard {
-  background: var(--ds-background-neutral-secondary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
-  color: var(--ds-text-neutral-primary);
+  background: var(--background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  color: var(--text-neutral-primary);
   cursor: pointer;
   display: flex;
   flex: 1;
@@ -67,7 +67,7 @@
 
 .promptCard:hover:not(.cardCorrect):not(.cardIncorrect):not(.cardRevealed),
 .termCard:hover:not(.cardCorrect):not(.cardIncorrect):not(.cardRevealed) {
-  border-color: var(--ds-border-neutral-primary);
+  border-color: var(--border-neutral-primary);
 }
 
 .promptCard:focus-visible,
@@ -103,42 +103,42 @@
 
 .promptCardSelected,
 .termCardSelected {
-  border-color: var(--ds-border-selected-primary);
-  box-shadow: 0 0 0 2px var(--ds-background-brand-light);
+  border-color: var(--border-selected-primary);
+  box-shadow: 0 0 0 2px var(--background-brand-light);
 }
 
 /* Connected */
 
 .promptCardConnected,
 .termCardConnected {
-  background: var(--ds-background-brand-light);
-  border-color: var(--ds-border-selected-primary);
+  background: var(--background-brand-light);
+  border-color: var(--border-selected-primary);
 }
 
 /* ── Feedback states ──────────────────────────────────────────── */
 
 .cardCorrect {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
   cursor: default;
 }
 
 .cardIncorrect {
-  background: var(--ds-background-error-light);
-  border-color: var(--ds-border-error-primary);
+  background: var(--background-error-light);
+  border-color: var(--border-error-primary);
   cursor: default;
 }
 
 .cardRevealed {
-  background: var(--ds-background-success-light);
-  border-color: var(--ds-border-success-primary);
+  background: var(--background-success-light);
+  border-color: var(--border-success-primary);
   cursor: default;
 }
 
 /* ── Card content ─────────────────────────────────────────────── */
 
 .promptText {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   flex: 1;
   font-size: var(--text-body-sm);
   line-height: 1.45;
@@ -190,10 +190,10 @@
 }
 
 .matchCardCodeBlock {
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-xs);
   margin: 0;
   min-width: 0;
@@ -218,8 +218,8 @@
 }
 
 .matchCardImageBlock img {
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
   display: block;
   height: auto;
   max-height: 120px;
@@ -228,7 +228,7 @@
 }
 
 .matchCardImageCaption {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-xs);
   margin-top: 6px;
 }
@@ -244,11 +244,11 @@
 }
 
 .feedbackBadgeCorrect {
-  color: var(--ds-text-success-primary);
+  color: var(--text-success-primary);
 }
 
 .feedbackBadgeIncorrect {
-  color: var(--ds-text-error-primary);
+  color: var(--text-error-primary);
 }
 
 /* ── Connector dots ───────────────────────────────────────────── */
@@ -267,8 +267,8 @@
 }
 
 .connectorDot {
-  background: var(--ds-background-neutral-primary);
-  border: 1.5px solid var(--ds-border-neutral-primary);
+  background: var(--background-neutral-primary);
+  border: 1.5px solid var(--border-neutral-primary);
   border-radius: 50%;
   cursor: crosshair;
   display: inline-block;
@@ -295,7 +295,7 @@
 }
 
 .connectorDot:hover:not(.connectorDotLocked) {
-  border-color: var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
   transform: translateY(-50%) scale(1.1);
 }
 
@@ -305,33 +305,33 @@
 }
 
 .connectorDotActive {
-  background: var(--ds-background-selected-primary);
-  border-color: var(--ds-border-selected-primary);
+  background: var(--background-selected-primary);
+  border-color: var(--border-selected-primary);
 }
 
 .connectorDotSelected {
-  border-color: var(--ds-border-selected-primary);
-  box-shadow: 0 0 0 3px var(--ds-background-brand-light);
+  border-color: var(--border-selected-primary);
+  box-shadow: 0 0 0 3px var(--background-brand-light);
 }
 
 .connectorDotDragHover {
-  border-color: var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
   transform: translateY(-50%) scale(1.2);
 }
 
 .connectorDotCorrect {
-  background: var(--ds-border-success-primary);
-  border-color: var(--ds-border-success-primary);
+  background: var(--border-success-primary);
+  border-color: var(--border-success-primary);
 }
 
 .connectorDotIncorrect {
-  background: var(--ds-border-error-primary);
-  border-color: var(--ds-border-error-primary);
+  background: var(--border-error-primary);
+  border-color: var(--border-error-primary);
 }
 
 .connectorDotRevealed {
-  background: var(--ds-border-success-primary);
-  border-color: var(--ds-border-success-primary);
+  background: var(--border-success-primary);
+  border-color: var(--border-success-primary);
 }
 
 /* ── SVG paths ────────────────────────────────────────────────── */
@@ -344,21 +344,21 @@
 }
 
 .connectorPathCorrect {
-  stroke: var(--ds-border-success-primary);
+  stroke: var(--border-success-primary);
 }
 
 .connectorPathIncorrect {
-  stroke: var(--ds-border-error-primary);
+  stroke: var(--border-error-primary);
 }
 
 .connectorPathRevealed {
-  stroke: var(--ds-border-success-primary);
+  stroke: var(--border-success-primary);
 }
 
 .draftPath {
   fill: none;
   opacity: 0.6;
-  stroke: var(--ds-border-neutral-primary);
+  stroke: var(--border-neutral-primary);
   stroke-dasharray: 6 4;
   stroke-linecap: round;
   stroke-width: 2;
@@ -367,7 +367,7 @@
 /* ── Bottom-row partial feedback ───────────────────────────────── */
 
 .partialFeedback {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   font-size: var(--text-body-md);
   font-weight: var(--font-weight-medium);
   margin: 0;

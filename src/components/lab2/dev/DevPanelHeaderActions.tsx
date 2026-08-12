@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { AppActionDropdown } from "../../ui/AppDropdown";
-import { AppButton } from "../../ui/AppButton";
-import { AppTextField } from "../../ui/AppTextField";
+import { Button, Dropdown, TextInput, Tooltip } from "@moshebaricdo/cads-react";
 import { Dialog } from "../../ui/Dialog";
-import dialogStyles from "../../ui/Dialog.module.scss";
-import { Tooltip } from "../../ui/Tooltip";
 import { useSavedVariants } from "../../../hooks/useSavedVariants";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
 import type { DevPanelShareParamsProvider } from "../resource-panel/Sidebar.types";
 import { buildShareLinkDropdownItems } from "../../../lib/shareLinkActions";
+import styles from "./DevPanel.module.scss";
 
 interface DevPanelHeaderActionsProps {
   hasShareParams?: boolean;
@@ -41,6 +38,7 @@ export function DevPanelHeaderActions({
       overrideResult.copyShareLink("flow", { extraSearchParams });
     },
   });
+  const saveDisabled = !overrideResult.hasOverrides && !hasShareParams;
 
   const handleSaveAndCopy = () => {
     if (!saveName.trim()) return;
@@ -64,28 +62,28 @@ export function DevPanelHeaderActions({
         title="Save and copy variant"
         footer={
           <>
-            <AppButton
-              variant="secondary"
-              tone="black"
-              size="s"
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="small"
               onClick={() => setShowSaveModal(false)}
             >
               Cancel
-            </AppButton>
-            <AppButton
-              variant="primary"
-              tone="purple"
-              size="s"
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
               onClick={handleSaveAndCopy}
               disabled={!saveName.trim()}
             >
               Save and copy
-            </AppButton>
+            </Button>
           </>
         }
       >
-        <div className={dialogStyles.fieldGroup}>
-          <AppTextField
+        <div className={styles.saveFieldGroup}>
+          <TextInput
             label="Variant name"
             value={saveName}
             onChange={(e) => setSaveName(e.target.value)}
@@ -94,10 +92,10 @@ export function DevPanelHeaderActions({
             }}
             placeholder="e.g. Shorter stems, 2-col layout"
             autoFocus
-            size="s"
-            tone="gray"
+            size="small"
+            color="secondary"
           />
-          <p className={dialogStyles.fieldHint}>
+          <p className={styles.saveFieldHint}>
             Saves this variant to <strong>/levels</strong> and copies the
             current override link.
           </p>
@@ -105,49 +103,57 @@ export function DevPanelHeaderActions({
       </Dialog>
       <div className="flex gap-1">
         <Tooltip
-          content={saved ? "Saved and copied!" : "Save and copy"}
-          position="bottom"
+          title={saved ? "Saved and copied!" : "Save and copy"}
+          placement="bottom"
         >
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            iconName="floppy-disk"
-            onClick={() => {
-              setSaveName("");
-              setShowSaveModal(true);
-            }}
-            disabled={!overrideResult.hasOverrides && !hasShareParams}
-          />
-        </Tooltip>
-        <AppActionDropdown
-          size="xs"
-          align="end"
-          side="bottom"
-          sideOffset={6}
-          menuWidth={208}
-          listLabel="Share links"
-          trigger={
-            <AppButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              iconName="share-nodes"
-              aria-label="Share links"
-              title="Share links"
+          <span>
+            <Button
+              variant="text"
+              color="tertiary"
+              size="extraSmall"
+              iconOnly
+              startIconName="floppy-disk"
+              onClick={() => {
+                setSaveName("");
+                setShowSaveModal(true);
+              }}
+              disabled={saveDisabled}
             />
-          }
-          items={shareLinkItems}
+          </span>
+        </Tooltip>
+        <Dropdown
+          role="action"
+          size="extraSmall"
+          buttonVariant="text"
+          buttonColor="tertiary"
+          iconOnly
+          startIconName="share-nodes"
+          aria-label="Share links"
+          menuPlacement="bottomRight"
+          menuWidth={208}
+          options={shareLinkItems.map((item) => ({
+            value: item.id,
+            label: item.label,
+            iconName: item.iconName,
+          }))}
+          onAction={(actionValue) => {
+            shareLinkItems
+              .find((item) => item.id === actionValue)
+              ?.onSelect();
+          }}
         />
-        <Tooltip content="Reset all overrides" position="bottom">
-          <AppButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            iconName="rotate-left"
-            onClick={() => overrideResult.resetAll()}
-            disabled={!overrideResult.hasOverrides}
-          />
+        <Tooltip title="Reset all overrides" placement="bottom">
+          <span>
+            <Button
+              variant="text"
+              color="tertiary"
+              size="extraSmall"
+              iconOnly
+              startIconName="rotate-left"
+              onClick={() => overrideResult.resetAll()}
+              disabled={!overrideResult.hasOverrides}
+            />
+          </span>
         </Tooltip>
       </div>
     </>

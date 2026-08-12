@@ -1,11 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { AppButton } from "../../ui/AppButton";
-import { AppNativeSelect } from "../../ui/AppDropdown";
-import { AppSlider } from "../../ui/AppSlider";
-import { AppTextArea, AppTextField } from "../../ui/AppTextField";
-import { Tooltip } from "../../ui/Tooltip";
+import { Button, Dropdown, Slider, TextInput, Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type { DevPanelField, DevPanelUploadedFile } from "./types";
 import styles from "./DevPanel.module.scss";
@@ -25,14 +21,14 @@ interface FieldProps {
 
 function TextField({ field, value, controlId, onChange }: FieldProps) {
   return (
-    <AppTextField
+    <TextInput
       id={controlId}
       type="text"
       value={(value as string) ?? ""}
       onChange={(e) => onChange(e.target.value)}
       placeholder={field.label}
-      size="s"
-      tone="gray"
+      size="small"
+      color="secondary"
     />
   );
 }
@@ -60,8 +56,9 @@ function TextareaField({ field, value, controlId, onChange }: FieldProps) {
 
   if (!useMarkdownPreview) {
     return (
-      <AppTextArea
+      <TextInput
         id={controlId}
+        multiline
         value={draftText}
         onBlur={() => {
           isEditingRef.current = false;
@@ -73,8 +70,8 @@ function TextareaField({ field, value, controlId, onChange }: FieldProps) {
         }}
         placeholder={field.label}
         rows={rows}
-        size="s"
-        tone="gray"
+        size="small"
+        color="secondary"
       />
     );
   }
@@ -106,10 +103,10 @@ function TextareaField({ field, value, controlId, onChange }: FieldProps) {
           )}
         </div>
       ) : (
-        <AppTextArea
+        <TextInput
           id={controlId}
-          appearance="bare"
-          controlClassName={styles.textarea}
+          multiline
+          className={styles.textareaBare}
           value={draftText}
           onBlur={() => {
             isEditingRef.current = false;
@@ -121,6 +118,8 @@ function TextareaField({ field, value, controlId, onChange }: FieldProps) {
           }}
           placeholder={field.label}
           rows={rows}
+          size="small"
+          color="secondary"
         />
       )}
     </div>
@@ -132,18 +131,17 @@ function NumberField({ field, value, controlId, onChange }: FieldProps) {
   const max = field.type === "number" ? field.max : undefined;
   const step = field.type === "number" ? field.step : undefined;
   return (
-    <AppTextField
+    <TextInput
       id={controlId}
       type="number"
-      value={(value as number) ?? ""}
+      value={value == null ? "" : String(value)}
       onChange={(e) => onChange(Number(e.target.value))}
       min={min}
       max={max}
       step={step}
-      className={styles.numberField}
-      fullWidth={false}
-      size="s"
-      tone="gray"
+      style={{ width: 72 }}
+      size="small"
+      color="secondary"
     />
   );
 }
@@ -152,15 +150,21 @@ function SliderField({ field, value, controlId, onChange }: FieldProps) {
   if (field.type !== "slider") return null;
   const numVal = (value as number) ?? field.min;
   return (
-    <AppSlider
+    <Slider
       id={controlId}
       value={numVal}
       min={field.min}
       max={field.max}
       step={field.step ?? 0.01}
-      valueLabel={String(numVal)}
-      showInputValue
-      onValueChange={onChange}
+      displayValue={String(numVal)}
+      showDisplayValue
+      showHelper={false}
+      fullWidth
+      size="small"
+      aria-label={field.label}
+      onChange={(_event, next) => {
+        onChange(Array.isArray(next) ? next[0] : next);
+      }}
     />
   );
 }
@@ -177,20 +181,25 @@ function BooleanField({ value, controlId, onChange }: FieldProps) {
   );
 }
 
-function SelectField({ field, value, controlId, onChange }: FieldProps) {
+function SelectField({ field, value, onChange }: FieldProps) {
   if (field.type !== "select") return null;
   return (
-    <AppNativeSelect
-      id={controlId}
+    <Dropdown
+      role="input"
+      aria-label={field.label}
       value={String(value ?? "")}
-      onValueChange={(raw) => {
-        onChange(field.valueType === "number" ? Number(raw) : raw);
+      onChange={(raw) => {
+        const next = Array.isArray(raw) ? raw[0] ?? "" : raw;
+        onChange(field.valueType === "number" ? Number(next) : next);
       }}
-      options={field.options}
+      options={field.options.map((option) => ({
+        value: option.value,
+        label: option.label,
+      }))}
       placeholder=""
-      size="s"
-      tone="gray"
-      fullWidth
+      size="small"
+      color="secondary"
+      width="full"
     />
   );
 }
@@ -232,11 +241,12 @@ function FileUploadField({ field, value, controlId, onChange }: FieldProps) {
 
   return (
     <div className={styles.fileUploadWrap}>
-      <AppButton
-        variant="secondary"
-        tone="gray"
-        size="xs"
-        iconName="upload"
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        iconOnly
+        startIconName="upload"
         className={styles.fileUploadButton}
         onClick={() => inputRef.current?.click()}
         aria-label={field.buttonLabel ?? field.label}
@@ -302,11 +312,12 @@ function FileUploadField({ field, value, controlId, onChange }: FieldProps) {
 function ActionField({ field }: FieldProps) {
   if (field.type !== "action") return null;
   return (
-    <AppButton
-      variant="secondary"
-      tone="gray"
-      size="xs"
-      iconName={field.iconName}
+    <Button
+      variant={field.variant ?? "outlined"}
+      color={field.color ?? "secondary"}
+      size={field.size ?? "extraSmall"}
+      iconOnly
+      startIconName={field.iconName}
       disabled={field.disabled}
       className={styles.actionButton}
       onClick={field.onAction}
@@ -376,7 +387,7 @@ export function DevPanelFieldRow({
             {field.label}
           </label>
           {field.description ? (
-            <Tooltip content={field.description} position="top" sideOffset={8}>
+            <Tooltip title={field.description} placement="top">
               <button
                 type="button"
                 className={styles.infoButton}
@@ -392,11 +403,12 @@ export function DevPanelFieldRow({
         </div>
         <div className={styles.fieldActions}>
           {isOverridden && field.type !== "action" && (
-            <AppButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              iconName="rotate-left"
+            <Button
+              variant="text"
+              color="tertiary"
+              size="extraSmall"
+              iconOnly
+              startIconName="rotate-left"
               className={styles.resetButton}
               onClick={onReset}
               aria-label={`Reset ${field.label}`}
@@ -404,15 +416,15 @@ export function DevPanelFieldRow({
           )}
           {hasContractEditor ? (
             <Tooltip
-              content={`${showContractEditor ? "Hide" : "View/add to"} ${field.label} contract`}
-              position="top"
-              sideOffset={8}
+              title={`${showContractEditor ? "Hide" : "View/add to"} ${field.label} contract`}
+              placement="top"
             >
-              <AppButton
-                variant="secondary"
-                tone="gray"
-                size="xs"
-                iconName="pencil"
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                startIconName="pencil"
                 className={styles.contractToggleButton}
                 aria-label={`${showContractEditor ? "Hide" : "View/add to"} ${field.label} contract`}
                 aria-controls={contractId}
@@ -429,25 +441,27 @@ export function DevPanelFieldRow({
           <div className={styles.contractEditor}>
             {isContractOverridden ? (
               <div className={styles.contractEditorHeader}>
-                <AppButton
-                  variant="tertiary"
-                  tone="gray"
-                  size="xs"
-                  iconName="rotate-left"
+                <Button
+                  variant="text"
+                  color="tertiary"
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="rotate-left"
                   className={styles.resetButton}
                   onClick={onContractReset}
                   aria-label={`Reset ${field.label} contract`}
                 />
               </div>
             ) : null}
-            <AppTextArea
+            <TextInput
               id={contractId}
+              multiline
               value={contractText}
               onChange={(event) => onContractChange?.(event.target.value)}
               placeholder={field.contract?.placeholder ?? "Add to contract (optional). Write additional instructions in markdown."}
               rows={field.contract?.rows ?? 4}
-              size="s"
-              tone="gray"
+              size="small"
+              color="secondary"
             />
           </div>
         </div>

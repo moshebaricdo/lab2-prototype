@@ -3,9 +3,9 @@
 /* Rectangular file chip (Figma: Upload / File) */
 .fileChip {
   align-items: stretch;
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
   display: flex;
   height: 32px;
   max-width: min(100%, 280px);
@@ -16,13 +16,13 @@
 }
 
 .fileChipAdded {
-  border-color: var(--ds-border-selected-primary);
+  border-color: var(--border-selected-primary);
 }
 
 .iconRail {
   align-items: center;
-  background: var(--ds-background-selected-primary);
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  background: var(--background-selected-primary);
+  border-radius: var(--shape-sm) 0 0 var(--shape-sm);
   display: flex;
   flex-shrink: 0;
   height: 100%;
@@ -31,7 +31,7 @@
 }
 
 .iconGlyph {
-  color: var(--ds-text-neutral-primary-inverse);
+  color: var(--text-neutral-primary-inverse);
   font-size: var(--text-body-sm);
 }
 
@@ -46,9 +46,9 @@
 }
 
 .fileName {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1;
   margin: 0;
   overflow: hidden;
@@ -57,10 +57,10 @@
 }
 
 .extension {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
   flex-shrink: 0;
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-normal);
+  font-weight: var(--font-weight-regular);
   line-height: 1;
   margin: 0;
   white-space: nowrap;
@@ -69,9 +69,9 @@
 /* Image chip in container (add mode) — mirrors .fileChip layout */
 .imageChipContainer {
   align-items: stretch;
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
   display: flex;
   height: 32px;
   max-width: min(100%, 280px);
@@ -82,7 +82,7 @@
 }
 
 .imageChipThumb {
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-radius: var(--shape-sm) 0 0 var(--shape-sm);
   flex-shrink: 0;
   height: 100%;
   overflow: hidden;
@@ -99,7 +99,7 @@
 
 /* Square image thumbnail chip (composer / static) */
 .imageChip {
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   flex-shrink: 0;
   height: 32px;
   overflow: visible;
@@ -109,7 +109,7 @@
 }
 
 .imageChipMedia {
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   height: 100%;
   overflow: hidden;
   position: relative;
@@ -117,7 +117,7 @@
 }
 
 .uploadOverlay {
-  background: var(--ds-background-neutral-primary-inverse);
+  background: var(--background-neutral-primary-inverse);
   border-radius: inherit;
   inset: 0;
   opacity: 0.55;
@@ -145,15 +145,15 @@
   height: 100%;
   object-fit: cover;
   width: 100%;
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
 }
 
 /* Remove button — dark circle overlapping top-right (composer only) */
 .actionButton {
   align-items: center;
-  background: var(--ds-background-neutral-primary-inverse);
+  background: var(--background-neutral-primary-inverse);
   border: none;
-  border-radius: var(--radius-round);
+  border-radius: var(--shape-round);
   cursor: pointer;
   display: flex;
   flex-shrink: 0;
@@ -181,11 +181,11 @@
 }
 
 .actionIcon {
-  color: var(--ds-text-neutral-primary-inverse);
+  color: var(--text-neutral-primary-inverse);
   font-size: var(--text-body-xxs);
 }
 
-/* Inline "+ Add" button (inside chip, uses AppButton xs) */
+/* Inline "+ Add" button (inside chip, CADS extraSmall icon-only) */
 .inlineAddButton {
   align-self: center;
   margin-right: 3px;
@@ -207,6 +207,6 @@
 }
 
 .addedBadgeIcon {
-  color: var(--ds-text-success-primary);
+  color: var(--text-success-primary);
   font-size: var(--text-body-xs);
 }

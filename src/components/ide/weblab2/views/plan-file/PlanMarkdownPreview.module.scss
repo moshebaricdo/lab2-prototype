@@ -20,7 +20,7 @@
   top: 0;
   background: linear-gradient(
     to bottom,
-    var(--ds-background-neutral-primary),
+    var(--background-neutral-primary),
     transparent
   );
 }
@@ -29,7 +29,7 @@
   bottom: 0;
   background: linear-gradient(
     to top,
-    var(--ds-background-neutral-primary),
+    var(--background-neutral-primary),
     transparent
   );
 }
@@ -42,8 +42,8 @@
 
 .content {
   max-width: 780px;
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-md);
   line-height: 1.55;
 }
@@ -52,8 +52,8 @@
 .content h2,
 .content h3 {
   margin: 0 0 10px;
-  color: var(--ds-text-neutral-primary);
-  font-weight: var(--font-weight-semibold);
+  color: var(--text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1.25;
 }
 
@@ -86,9 +86,9 @@
 }
 
 .content code {
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-tertiary);
-  font-family: var(--font-mono);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-tertiary);
+  font-family: var(--font-family-mono);
   font-size: var(--text-body-xs);
   padding: 1px 5px;
 }

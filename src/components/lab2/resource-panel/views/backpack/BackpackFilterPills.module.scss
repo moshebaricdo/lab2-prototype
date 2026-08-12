@@ -10,21 +10,21 @@
 
 .pill {
   flex-shrink: 0;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-round);
-  background: var(--ds-background-neutral-primary);
-  color: var(--ds-text-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-secondary);
   font-size: var(--text-body-xs);
   line-height: var(--leading-body-xs);
 }
 
 .pillActive {
-  border-color: var(--ds-border-selected-primary);
-  background: var(--ds-background-selected-primary);
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed));
+  border-color: var(--border-selected-primary);
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed));
 }
 
 .pillActive:hover:not(:disabled) {
-  background: var(--ds-background-selected-primary);
-  color: var(--ds-text-selected-primary, var(--ds-text-neutral-white-fixed));
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary, var(--text-neutral-white-fixed));
 }

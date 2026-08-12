@@ -48,19 +48,23 @@
 }
 
 .label {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-xs);
 }
 
 .chevron {
   margin-left: auto;
   flex-shrink: 0;
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
+}
+
+.sortWrap {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .sortButton {
-  margin-left: auto;
   flex-shrink: 0;
 }

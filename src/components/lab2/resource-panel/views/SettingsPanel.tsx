@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppButton } from "../../../ui/AppButton";
-import { AppNativeSelect } from "../../../ui/AppDropdown";
-import { AppTextField } from "../../../ui/AppTextField";
+import { Button, Dropdown, TextInput } from "@moshebaricdo/cads-react";
 import { useTutorApiSettings } from "../../../../hooks/useTutorApiSettings";
 import styles from "./SettingsPanel.module.scss";
 
@@ -79,11 +77,12 @@ export function SettingsPanel({
       <div className={styles.header}>
         <div className={styles.headerSide} aria-hidden="true" />
         <p className={styles.title}>settings</p>
-        <AppButton
-          variant="tertiary"
-          size="xs"
-          tone="gray"
-          iconName="xmark"
+        <Button
+          variant="text"
+          color="tertiary"
+          size="extraSmall"
+          iconOnly
+          startIconName="xmark"
           onClick={onClose}
           aria-label="Close settings"
           className={styles.closeButton}
@@ -94,28 +93,28 @@ export function SettingsPanel({
         {SETTINGS_FIELDS.map((field) => (
           <div key={field.key} className={styles.field}>
             <p className={styles.label}>{field.label}</p>
-            <AppNativeSelect
+            <Dropdown
+              role="input"
+              size="small"
+              color="secondary"
+              width="full"
               value={fieldValues[field.key] ?? field.value}
-              onValueChange={(value) =>
-                setFieldValues((current) => ({
-                  ...current,
-                  [field.key]: value,
-                }))
-              }
               options={field.options.map((option) => ({
                 value: option,
                 label: option,
               }))}
-              placeholder=""
-              size="s"
-              tone="gray"
-              fullWidth
+              onChange={(nextValue) =>
+                setFieldValues((current) => ({
+                  ...current,
+                  [field.key]: String(nextValue),
+                }))
+              }
             />
           </div>
         ))}
 
         <div className={styles.field}>
-          <AppTextField
+          <TextInput
             label="Tutor API key (prototype)"
             type="password"
             value={apiKey}
@@ -127,8 +126,8 @@ export function SettingsPanel({
                 ? "Key is available for prototype tutor calls."
                 : "Optional for now. Mock tutor edits work without a key."
             }
-            size="s"
-            tone="gray"
+            size="small"
+            color="secondary"
           />
         </div>
 

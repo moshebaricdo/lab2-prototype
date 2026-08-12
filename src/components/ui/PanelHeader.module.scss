@@ -6,17 +6,17 @@
   min-height: 40px;
   align-items: center;
   justify-content: space-between;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
   padding: 0 8px;
   flex-shrink: 0;
 }
 
 .borderBottom {
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
 }
 
 .borderTop {
-  border-top: 1px solid var(--ds-border-neutral-primary);
+  border-top: 1px solid var(--border-neutral-primary);
 }
 
 .label {

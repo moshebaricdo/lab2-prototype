@@ -42,6 +42,10 @@ function applyThemeMode(theme: ThemeMode) {
 
   const root = document.documentElement;
   root.dataset.theme = theme;
+  // CADS Foundations + portaled menus (Dropdown/Tooltip Popper → body) key off
+  // `.dark` on an ancestor. Lab2Shell scopes `.dark` for in-tree chrome; keep
+  // html in sync so portaled CADS surfaces follow the header theme toggle.
+  root.classList.toggle("dark", theme === "dark");
   delete root.dataset.brandTheme;
   delete root.dataset.codeaiActiveChrome;
 }

@@ -1,9 +1,7 @@
 import { useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
 import { ScrollArea } from "../../ui/scroll-area";
-import { AppActionDropdown } from "../../ui/AppDropdown";
 import { FaIcon } from "../../ui/icons/FaIcon";
-import { AppButton } from "../../ui/AppButton";
-import { Tooltip } from "../../ui/Tooltip";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import type { FileItem } from "../../../types/file";
 import { useOptionalBackpack } from "../../../hooks/BackpackContext";
@@ -400,81 +398,88 @@ export function FileManager({
               {(isHovered || openMenuPath === itemPath) &&
                 !hasChildren &&
                 item.type !== "folder" && (
-                  <AppActionDropdown
-                    open={openMenuPath === itemPath}
-                    onOpenChange={(open) => {
-                      setOpenMenuPath(open ? itemPath : null);
-                    }}
-                    align="start"
-                    sideOffset={4}
-                    size="xs"
-                    menuWidth={180}
-                    listLabel={`${item.name} actions`}
-                    trigger={
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                        className={styles.menuTrigger}
-                        aria-label={`${item.name} actions`}
-                      >
-                        <FaIcon
-                          name="ellipsis-vertical"
-                          size="s"
-                          className={styles.menuIcon}
-                        />
-                      </button>
-                    }
-                    items={[
-                      ...(onRenameFile
-                        ? [{
-                            id: "rename",
-                            label: "Rename",
-                            iconName: "pencil" as FaIconName,
-                            onSelect: () => onRenameFile(item, itemPath),
-                          }]
-                        : []),
-                      ...(onAddFileToChat
-                        ? [{
-                            id: "add-to-chat",
-                            label: "Add to AI Tutor Chat",
-                            iconName: "comment" as FaIconName,
-                            onSelect: () => onAddFileToChat(item, itemPath),
-                          }]
-                        : []),
-                      {
-                        id: "download",
-                        label: "Download",
-                        iconName: "download" as FaIconName,
-                        onSelect: () => downloadFile(item),
-                      },
-                      ...(backpack
-                        ? [{
-                            id: "save-to-backpack",
-                            label: "Save to Backpack",
-                            iconName: "backpack" as FaIconName,
-                            onSelect: () => {
-                              const result = backpack.saveFileToBackpack(item, {
-                                sourceLab: backpackSourceLab,
-                              });
-                              if (result === true) {
-                                window.dispatchEvent(new CustomEvent(OPEN_BACKPACK_PANEL_EVENT));
-                              }
-                            },
-                          }]
-                        : []),
-                      ...(onDeleteFile
-                        ? [{
-                            id: "delete",
-                            label: "Delete",
-                            iconName: "trash" as FaIconName,
-                            destructive: true,
-                            onSelect: () => onDeleteFile(item, itemPath),
-                          }]
-                        : []),
-                    ]}
-                  />
+                  <div
+                    className={styles.rowMenu}
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
+                    <Dropdown
+                      role="action"
+                      size="extraSmall"
+                      buttonVariant="text"
+                      buttonColor="tertiary"
+                      iconOnly
+                      startIconName="ellipsis-vertical"
+                      aria-label={`${item.name} actions`}
+                      menuPlacement="bottomLeft"
+                      open={openMenuPath === itemPath}
+                      onOpenChange={(open) => {
+                        setOpenMenuPath(open ? itemPath : null);
+                      }}
+                      options={[
+                        ...(onRenameFile
+                          ? [{
+                              value: "rename",
+                              label: "Rename",
+                              iconName: "pencil" as FaIconName,
+                            }]
+                          : []),
+                        ...(onAddFileToChat
+                          ? [{
+                              value: "add-to-chat",
+                              label: "Add to AI Tutor Chat",
+                              iconName: "comment" as FaIconName,
+                            }]
+                          : []),
+                        {
+                          value: "download",
+                          label: "Download",
+                          iconName: "download" as FaIconName,
+                        },
+                        ...(backpack
+                          ? [{
+                              value: "save-to-backpack",
+                              label: "Save to Backpack",
+                              iconName: "backpack" as FaIconName,
+                            }]
+                          : []),
+                        ...(onDeleteFile
+                          ? [{
+                              value: "delete",
+                              label: "Delete",
+                              iconName: "trash" as FaIconName,
+                              destructive: true,
+                            }]
+                          : []),
+                      ]}
+                      onAction={(actionValue) => {
+                        if (actionValue === "rename") {
+                          onRenameFile?.(item, itemPath);
+                          return;
+                        }
+                        if (actionValue === "add-to-chat") {
+                          onAddFileToChat?.(item, itemPath);
+                          return;
+                        }
+                        if (actionValue === "download") {
+                          downloadFile(item);
+                          return;
+                        }
+                        if (actionValue === "save-to-backpack" && backpack) {
+                          const result = backpack.saveFileToBackpack(item, {
+                            sourceLab: backpackSourceLab,
+                          });
+                          if (result === true) {
+                            window.dispatchEvent(new CustomEvent(OPEN_BACKPACK_PANEL_EVENT));
+                          }
+                          return;
+                        }
+                        if (actionValue === "delete") {
+                          onDeleteFile?.(item, itemPath);
+                        }
+                      }}
+                    />
+                  </div>
                 )}
             </div>
           </div>
@@ -514,13 +519,14 @@ export function FileManager({
       >
         {/* Panel Header with folder button - aligned with code editor tabs */}
         <div className={styles.collapsedHeader}>
-          <Tooltip content="Open file manager" position="bottom">
-            <AppButton
+          <Tooltip title="Open file manager" placement="bottom">
+            <Button
               onClick={onToggleCollapse}
-              iconName="folder"
-              variant="secondary"
-              tone="gray"
-              size="xs"
+              startIconName="folder"
+              variant="outlined"
+              color="secondary"
+              size="extraSmall"
+              iconOnly
               aria-label="Open file manager"
             />
           </Tooltip>
@@ -545,42 +551,74 @@ export function FileManager({
             </div>
 
             <div className={styles.headerActions}>
-              <AppActionDropdown
-                align="start"
-                side="bottom"
-                size="xs"
-                sideOffset={4}
-                trigger={
-                  <AppButton
-                    iconName="plus"
-                    variant="tertiary"
-                    tone="gray"
-                    size="xs"
-                  />
-                }
-                items={[
+              <Dropdown
+                role="action"
+                size="extraSmall"
+                buttonVariant="text"
+                buttonColor="tertiary"
+                iconOnly
+                startIconName="plus"
+                aria-label="Create"
+                menuPlacement="bottomLeft"
+                options={[
                   ...(onNewFile
-                    ? [{ id: "new-file", label: "New File", iconName: "file" as FaIconName, onSelect: onNewFile }]
+                    ? [{
+                        value: "new-file",
+                        label: "New File",
+                        iconName: "file" as FaIconName,
+                      }]
                     : []),
                   ...(onNewFolder
-                    ? [{ id: "new-folder", label: "New Folder", iconName: "folder" as FaIconName, onSelect: onNewFolder }]
+                    ? [{
+                        value: "new-folder",
+                        label: "New Folder",
+                        iconName: "folder" as FaIconName,
+                      }]
                     : []),
                   ...(onNewPlan
-                    ? [{ id: "new-plan", label: "New Plan", iconName: "file-lines" as FaIconName, onSelect: onNewPlan }]
+                    ? [{
+                        value: "new-plan",
+                        label: "New Plan",
+                        iconName: "file-lines" as FaIconName,
+                      }]
                     : []),
                   ...(onUploadFiles
                     ? [{
-                        id: "upload-files",
+                        value: "upload-files",
                         label: isUploadingFiles ? "Uploading..." : "Upload Files",
                         iconName: "file-arrow-up" as FaIconName,
                         disabled: isUploadingFiles,
-                        onSelect: () => uploadInputRef.current?.click(),
                       }]
                     : []),
                   ...(backpack
-                    ? [{ id: "import-backpack", label: "Import from Backpack", iconName: "backpack" as FaIconName, onSelect: () => window.dispatchEvent(new CustomEvent(OPEN_BACKPACK_PANEL_EVENT)) }]
+                    ? [{
+                        value: "import-backpack",
+                        label: "Import from Backpack",
+                        iconName: "backpack" as FaIconName,
+                      }]
                     : []),
                 ]}
+                onAction={(actionValue) => {
+                  if (actionValue === "new-file") {
+                    onNewFile?.();
+                    return;
+                  }
+                  if (actionValue === "new-folder") {
+                    onNewFolder?.();
+                    return;
+                  }
+                  if (actionValue === "new-plan") {
+                    onNewPlan?.();
+                    return;
+                  }
+                  if (actionValue === "upload-files") {
+                    uploadInputRef.current?.click();
+                    return;
+                  }
+                  if (actionValue === "import-backpack") {
+                    window.dispatchEvent(new CustomEvent(OPEN_BACKPACK_PANEL_EVENT));
+                  }
+                }}
               />
               <input
                 ref={uploadInputRef}
@@ -591,13 +629,14 @@ export function FileManager({
                 tabIndex={-1}
                 onChange={handleUploadChange}
               />
-              <Tooltip content="Hide file manager" position="bottom">
-                <AppButton
+              <Tooltip title="Hide file manager" placement="bottom">
+                <Button
                   onClick={onToggleCollapse}
-                  iconName="arrow-left-to-line"
-                  variant="tertiary"
-                  tone="gray"
-                  size="xs"
+                  startIconName="arrow-left-to-line"
+                  variant="text"
+                  color="tertiary"
+                  size="extraSmall"
+                  iconOnly
                   aria-label="Hide file manager"
                 />
               </Tooltip>

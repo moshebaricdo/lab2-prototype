@@ -1,11 +1,10 @@
-import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
+import { Tooltip } from "@moshebaricdo/cads-react";
 import {
   findLevelLinkIndex,
   includesLevelPath,
 } from "../../../lib/levelShareLinks";
-import { Tooltip } from "../Tooltip";
 import styles from "./LevelProgressBubbles.module.scss";
 
 export interface LevelProgressLink {
@@ -171,38 +170,30 @@ export function LevelProgressBubbles({
   return (
     <div className={styles.root}>
       <div className={styles.inner}>
-        <TooltipPrimitive.Provider delayDuration={0} skipDelayDuration={300}>
-          <div className={styles.bubbleRow}>
-            {Array.from({ length: resolvedTotalLevels }).map(
-              (_, index) => {
-                const state = getBubbleState(index);
-                const label = getBubbleLabel(index);
-                const to = isLinkMode && !readOnly ? resolvedLevelLinks[index].path : undefined;
-                return (
-                  <div key={index} className={styles.bubbleItem}>
-                    <Tooltip
-                      content={label}
-                      position="top"
-                      sideOffset={8}
-                      withProvider={false}
-                      disableHoverableContent
-                    >
-                      <div className={state === "current" ? styles.tooltipWrapFlipped : styles.tooltipWrap}>
-                        <Bubble
-                          state={state}
-                          levelNumber={state === "current" ? resolvedCurrentLevel : undefined}
-                          to={to}
-                          label={label}
-                          readOnly={readOnly}
-                        />
-                      </div>
-                    </Tooltip>
-                  </div>
-                );
-              },
-            )}
-          </div>
-        </TooltipPrimitive.Provider>
+        <div className={styles.bubbleRow}>
+          {Array.from({ length: resolvedTotalLevels }).map(
+            (_, index) => {
+              const state = getBubbleState(index);
+              const label = getBubbleLabel(index);
+              const to = isLinkMode && !readOnly ? resolvedLevelLinks[index].path : undefined;
+              return (
+                <div key={index} className={styles.bubbleItem}>
+                  <Tooltip title={label} placement="top">
+                    <div className={state === "current" ? styles.tooltipWrapFlipped : styles.tooltipWrap}>
+                      <Bubble
+                        state={state}
+                        levelNumber={state === "current" ? resolvedCurrentLevel : undefined}
+                        to={to}
+                        label={label}
+                        readOnly={readOnly}
+                      />
+                    </div>
+                  </Tooltip>
+                </div>
+              );
+            },
+          )}
+        </div>
       </div>
       <div aria-hidden="true" className={styles.borderOverlay} />
     </div>

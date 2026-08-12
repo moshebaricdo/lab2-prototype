@@ -1,9 +1,9 @@
 .card {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   overflow: hidden;
 }
 
@@ -12,12 +12,12 @@
   height: 32px;
   align-items: center;
   padding: 0 12px;
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
-  color: var(--ds-text-neutral-tertiary);
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-tertiary);
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-xs);
+  font-weight: var(--font-weight-semi-bold);
   letter-spacing: 0.04em;
   line-height: 1;
   text-transform: uppercase;
@@ -43,9 +43,9 @@
   gap: 8px;
   min-width: 0;
   width: 100%;
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius);
-  background: var(--ds-background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
   padding: 6px 6px;
   text-align: left;
   transition:
@@ -56,9 +56,9 @@
 }
 
 .choiceRow {
-  color: var(--ds-text-neutral-secondary);
+  color: var(--text-neutral-secondary);
   cursor: pointer;
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
 }
@@ -78,12 +78,12 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-secondary);
-  color: var(--ds-text-neutral-secondary);
-  font-family: var(--font-body);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-secondary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: 1;
   transition:
     background-color 0.15s ease,
@@ -100,42 +100,42 @@
 }
 
 .choiceRow:hover:not(:disabled) {
-  border-color: var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-color: var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
 }
 
 .choiceRow:hover:not(:disabled) .optionBadge {
-  background: var(--ds-background-neutral-septenary);
-  color: var(--ds-text-neutral-white-fixed);
+  background: var(--background-neutral-septenary);
+  color: var(--text-neutral-white-fixed);
 }
 
 .customRow:focus-within {
-  border-color: var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-color: var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
 }
 
 .customRow:focus-within .optionBadge {
-  background: var(--ds-background-neutral-septenary);
-  color: var(--ds-text-neutral-white-fixed);
+  background: var(--background-neutral-septenary);
+  color: var(--text-neutral-white-fixed);
 }
 
 .customRow:hover:not(:has(.customInput:disabled)) {
-  border-color: var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-secondary);
+  border-color: var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
 }
 
 .customRow:hover:not(:has(.customInput:disabled)) .optionBadge {
-  background: var(--ds-background-neutral-septenary);
-  color: var(--ds-text-neutral-white-fixed);
+  background: var(--background-neutral-septenary);
+  color: var(--text-neutral-white-fixed);
 }
 
 .choiceRow:focus-visible {
-  outline: 2px solid var(--ds-border-selected-primary);
+  outline: 2px solid var(--border-selected-primary);
   outline-offset: 2px;
 }
 
 .customRow:focus-within {
-  outline: 2px solid var(--ds-border-selected-primary);
+  outline: 2px solid var(--border-selected-primary);
   outline-offset: 2px;
 }
 
@@ -150,15 +150,15 @@
   min-width: 0;
   border: 0;
   background: transparent;
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
   padding: 0;
 }
 
 .customInput::placeholder {
-  color: var(--ds-text-neutral-quaternary);
+  color: var(--text-neutral-quaternary);
 }
 
 .customInput:focus {

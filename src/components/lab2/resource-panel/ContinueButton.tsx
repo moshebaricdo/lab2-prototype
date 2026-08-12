@@ -1,9 +1,9 @@
 import { ButtonHTMLAttributes } from "react";
-import { AppButton } from "../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import styles from "./ContinueButton.module.scss";
 
 interface ContinueButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement> {
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "color"> {
   label?: string;
   fullWidth?: boolean;
 }
@@ -16,18 +16,17 @@ export function ContinueButton({
   ...props
 }: ContinueButtonProps) {
   return (
-    <AppButton
-      variant="primary"
-      tone="purple"
-      size="s"
+    <Button
+      variant="contained"
+      color="primary"
+      size="small"
       fullWidth={fullWidth}
-      iconName="arrow-right"
-      iconPosition="end"
+      endIconName="arrow-right"
       className={`${styles.root} ${className}`}
       disabled={disabled}
       {...props}
     >
       <span className={styles.label}>{label}</span>
-    </AppButton>
+    </Button>
   );
 }

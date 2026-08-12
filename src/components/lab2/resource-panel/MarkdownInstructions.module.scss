@@ -9,10 +9,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-secondary);
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--instructions-md-body);
   line-height: var(--leading-body-sm);
   padding: 12px;
@@ -21,30 +21,30 @@
   h5,
   h6 {
     margin: 4px 0 0;
-    color: var(--ds-text-neutral-primary);
-    font-family: var(--font-body);
+    color: var(--text-neutral-primary);
+    font-family: var(--font-family-main);
     font-size: var(--instructions-md-body);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-semi-bold);
     line-height: var(--leading-body-sm);
   }
 
   a {
-    color: var(--ds-text-brand-primary);
+    color: var(--text-brand-primary);
     font-weight: var(--font-weight-medium);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
 
   strong {
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-semi-bold);
   }
 
   code {
-    border-radius: var(--radius-sm);
-    background: var(--ds-background-neutral-primary);
-    border: 1px solid var(--ds-border-neutral-primary);
-    color: var(--ds-text-neutral-primary);
-    font-family: var(--font-mono);
+    border-radius: var(--shape-sm);
+    background: var(--background-neutral-primary);
+    border: 1px solid var(--border-neutral-primary);
+    color: var(--text-neutral-primary);
+    font-family: var(--font-family-mono);
     font-size: var(--instructions-md-code);
     line-height: var(--leading-body-sm);
     padding: 1px 4px;
@@ -53,9 +53,9 @@
   pre {
     overflow-x: auto;
     margin: 4px 0 0;
-    border: 1px solid var(--ds-border-neutral-primary);
-    border-radius: var(--radius-sm);
-    background: var(--ds-background-neutral-primary);
+    border: 1px solid var(--border-neutral-primary);
+    border-radius: var(--shape-sm);
+    background: var(--background-neutral-primary);
     padding: 8px;
 
     code {
@@ -67,8 +67,8 @@
 
   blockquote {
     margin: 4px 0 0;
-    border-left: 4px solid var(--ds-border-neutral-primary);
-    color: var(--ds-text-neutral-tertiary);
+    border-left: 4px solid var(--border-neutral-primary);
+    color: var(--text-neutral-tertiary);
     padding-left: 10px;
   }
 
@@ -82,28 +82,28 @@
 
   th,
   td {
-    border: 1px solid var(--ds-border-neutral-primary);
+    border: 1px solid var(--border-neutral-primary);
     padding: 4px 6px;
     text-align: left;
     vertical-align: top;
   }
 
   th {
-    background: var(--ds-background-neutral-primary);
-    color: var(--ds-text-neutral-primary);
-    font-weight: var(--font-weight-semibold);
+    background: var(--background-neutral-primary);
+    color: var(--text-neutral-primary);
+    font-weight: var(--font-weight-semi-bold);
   }
 
   img {
     max-width: 100%;
-    border-radius: var(--radius-sm);
+    border-radius: var(--shape-sm);
   }
 
   input[type="checkbox"] {
     width: 12px;
     height: 12px;
     margin: 0 6px 0 0;
-    accent-color: var(--ds-background-selected-primary);
+    accent-color: var(--background-selected-primary);
   }
 
   ul:has(input[type="checkbox"]) {
@@ -114,10 +114,10 @@
 
 .heading {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-heading);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-heading);
   font-size: var(--instructions-md-h1);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-heading-md);
 }
 
@@ -128,19 +128,19 @@
 
 .text {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--instructions-md-body);
   line-height: var(--leading-body-sm);
 }
 
 .textStrong {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
 }
 
 .list {
   margin: 0;
   padding-left: 21px;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--instructions-md-body);
   line-height: var(--leading-body-sm);
   list-style-position: outside;
@@ -159,7 +159,7 @@ ol.list {
 }
 
 .listItem::marker {
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .nestedList {
@@ -176,7 +176,7 @@ ol.list {
   width: 100%;
   margin: 8px 0;
   border: 0;
-  border-top: 1px solid var(--ds-border-neutral-primary);
+  border-top: 1px solid var(--border-neutral-primary);
 }
 
 .stepHeader {
@@ -184,7 +184,7 @@ ol.list {
   width: 100%;
   align-items: center;
   gap: 4px;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
 }
 
 .stepIcon {
@@ -194,9 +194,9 @@ ol.list {
 
 .stepTitle {
   margin: 0;
-  color: var(--ds-text-neutral-primary);
-  font-family: var(--font-body);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
   font-size: var(--instructions-md-h3);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-lg);
 }

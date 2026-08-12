@@ -1,6 +1,6 @@
 .workspace {
   align-items: flex-start;
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
   display: flex;
   flex: 1;
   justify-content: center;
@@ -19,9 +19,9 @@
 }
 
 .card {
-  background: var(--ds-background-neutral-primary);
-  border: 1px solid var(--ds-border-neutral-primary);
-  border-radius: var(--radius-card);
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
   margin: 0 auto;
   max-width: 920px;
   width: 100%;

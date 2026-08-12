@@ -28,11 +28,15 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: "@moshebaricdo"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
       - name: Install dependencies
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
         run: npm ci
 
       - name: Build site

@@ -1,18 +1,16 @@
 import * as Popover from "@radix-ui/react-popover";
 import { useState, type ReactNode } from "react";
+import { Button, Slider, Tooltip } from "@moshebaricdo/cads-react";
 import { useTheme } from "../../../../../hooks/useTheme";
-import { AppButton } from "../../../../ui/AppButton";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
-import { AppSlider } from "../../../../ui/AppSlider";
-import { Tooltip } from "../../../../ui/Tooltip";
 import dropdownStyles from "../../../../ui/AppDropdown.module.scss";
 import type {
   SketchAlign,
   SketchColorValue,
   SketchSizeKey,
 } from "../../../../../types/sketchLab";
-import { SketchIcon, type SketchIconKey } from "../../sketchLabIcons";
+import { SketchIcon, SKETCH_ICONS, type SketchIconKey } from "../../sketchLabIcons";
 import {
   SKETCH_ALIGN_OPTIONS,
   SKETCH_ROTATION_MAX,
@@ -185,17 +183,21 @@ function RotationSliderRow({
 
   return (
     <div className={styles.rotationCustomRow}>
-      <AppSlider
+      <Slider
         className={styles.rotationSlider}
         value={value}
         min={min}
         max={max}
         step={1}
-        size="s"
-        showLabel={false}
-        showInputValue={false}
+        size="small"
+        showLabelRow={false}
+        showDisplayValue={false}
+        fullWidth
         aria-label="Rotation"
-        onValueChange={(next) => onChange(clamp(next))}
+        onChange={(_event, next) => {
+          const numeric = Array.isArray(next) ? next[0] : next;
+          if (typeof numeric === "number") onChange(clamp(numeric));
+        }}
       />
       <input
         type="number"
@@ -485,6 +487,37 @@ export interface SketchActionHandlers {
   onDelete: () => void;
 }
 
+function ActionIconButton({
+  tooltip,
+  icon,
+  ariaLabel,
+  onClick,
+  className,
+}: {
+  tooltip: string;
+  icon: SketchIconKey;
+  ariaLabel: string;
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <Tooltip title={tooltip} placement="top">
+      <span>
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="extraSmall"
+          iconOnly
+          startIconName={SKETCH_ICONS[icon].name}
+          aria-label={ariaLabel}
+          onClick={onClick}
+          className={className}
+        />
+      </span>
+    </Tooltip>
+  );
+}
+
 export function GroupActionsRow({
   onDuplicate,
   onBringForward,
@@ -500,57 +533,37 @@ export function GroupActionsRow({
 }) {
   return (
     <div className={styles.actions}>
-      <Tooltip content="Duplicate" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-duplicate" size="xs" />}
-          aria-label="Duplicate"
-          onClick={onDuplicate}
-        />
-      </Tooltip>
-      <Tooltip content="Send to front" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-bring-forward" size="xs" />}
-          aria-label="Send to front"
-          onClick={onBringForward}
-        />
-      </Tooltip>
-      <Tooltip content="Send to back" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-send-back" size="xs" />}
-          aria-label="Send to back"
-          onClick={onToggleLayer}
-        />
-      </Tooltip>
-      <Tooltip content="Ungroup" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-ungroup" size="xs" />}
-          aria-label="Ungroup"
-          onClick={onUngroup}
-        />
-      </Tooltip>
-      <Tooltip content="Delete" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          className={styles.actionDelete}
-          icon={<SketchIcon icon="action-delete" size="xs" />}
-          aria-label="Delete"
-          onClick={onDelete}
-        />
-      </Tooltip>
+      <ActionIconButton
+        tooltip="Duplicate"
+        icon="action-duplicate"
+        ariaLabel="Duplicate"
+        onClick={onDuplicate}
+      />
+      <ActionIconButton
+        tooltip="Send to front"
+        icon="action-bring-forward"
+        ariaLabel="Send to front"
+        onClick={onBringForward}
+      />
+      <ActionIconButton
+        tooltip="Send to back"
+        icon="action-send-back"
+        ariaLabel="Send to back"
+        onClick={onToggleLayer}
+      />
+      <ActionIconButton
+        tooltip="Ungroup"
+        icon="action-ungroup"
+        ariaLabel="Ungroup"
+        onClick={onUngroup}
+      />
+      <ActionIconButton
+        tooltip="Delete"
+        icon="action-delete"
+        ariaLabel="Delete"
+        onClick={onDelete}
+        className={styles.actionDelete}
+      />
     </div>
   );
 }
@@ -561,16 +574,17 @@ export function MultiSelectGroupButton({
   onGroup: () => void;
 }) {
   return (
-    <AppButton
+    <Button
       className={styles.groupItemsButton}
-      variant="secondary"
-      tone="gray"
-      size="xs"
-      icon={<SketchIcon icon="action-group" size="xs" />}
+      variant="outlined"
+      color="secondary"
+      size="extraSmall"
+      startIconName={SKETCH_ICONS["action-group"].name}
+      fullWidth
       onClick={onGroup}
     >
       Group items
-    </AppButton>
+    </Button>
   );
 }
 
@@ -587,47 +601,31 @@ export function MultiSelectActionsRow({
 }) {
   return (
     <div className={styles.multiSelectIconRow}>
-      <Tooltip content="Duplicate all." position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-duplicate" size="xs" />}
-          aria-label="Duplicate all"
-          onClick={onDuplicate}
-        />
-      </Tooltip>
-      <Tooltip content="Send all to front" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-bring-forward" size="xs" />}
-          aria-label="Send all to front"
-          onClick={onBringForward}
-        />
-      </Tooltip>
-      <Tooltip content="Send all to back" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-send-back" size="xs" />}
-          aria-label="Send all to back"
-          onClick={onToggleLayer}
-        />
-      </Tooltip>
-      <Tooltip content="Delete all" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          className={styles.actionDelete}
-          icon={<SketchIcon icon="action-delete" size="xs" />}
-          aria-label="Delete all"
-          onClick={onDelete}
-        />
-      </Tooltip>
+      <ActionIconButton
+        tooltip="Duplicate all."
+        icon="action-duplicate"
+        ariaLabel="Duplicate all"
+        onClick={onDuplicate}
+      />
+      <ActionIconButton
+        tooltip="Send all to front"
+        icon="action-bring-forward"
+        ariaLabel="Send all to front"
+        onClick={onBringForward}
+      />
+      <ActionIconButton
+        tooltip="Send all to back"
+        icon="action-send-back"
+        ariaLabel="Send all to back"
+        onClick={onToggleLayer}
+      />
+      <ActionIconButton
+        tooltip="Delete all"
+        icon="action-delete"
+        ariaLabel="Delete all"
+        onClick={onDelete}
+        className={styles.actionDelete}
+      />
     </div>
   );
 }
@@ -640,47 +638,31 @@ export function ActionsRow({
 }: SketchActionHandlers) {
   return (
     <div className={styles.actions}>
-      <Tooltip content="Duplicate" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-duplicate" size="xs" />}
-          aria-label="Duplicate"
-          onClick={onDuplicate}
-        />
-      </Tooltip>
-      <Tooltip content="Send to front" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-bring-forward" size="xs" />}
-          aria-label="Send to front"
-          onClick={onBringForward}
-        />
-      </Tooltip>
-      <Tooltip content="Send to back" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          icon={<SketchIcon icon="action-send-back" size="xs" />}
-          aria-label="Send to back"
-          onClick={onToggleLayer}
-        />
-      </Tooltip>
-      <Tooltip content="Delete" position="top">
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
-          className={styles.actionDelete}
-          icon={<SketchIcon icon="action-delete" size="xs" />}
-          aria-label="Delete"
-          onClick={onDelete}
-        />
-      </Tooltip>
+      <ActionIconButton
+        tooltip="Duplicate"
+        icon="action-duplicate"
+        ariaLabel="Duplicate"
+        onClick={onDuplicate}
+      />
+      <ActionIconButton
+        tooltip="Send to front"
+        icon="action-bring-forward"
+        ariaLabel="Send to front"
+        onClick={onBringForward}
+      />
+      <ActionIconButton
+        tooltip="Send to back"
+        icon="action-send-back"
+        ariaLabel="Send to back"
+        onClick={onToggleLayer}
+      />
+      <ActionIconButton
+        tooltip="Delete"
+        icon="action-delete"
+        ariaLabel="Delete"
+        onClick={onDelete}
+        className={styles.actionDelete}
+      />
     </div>
   );
 }

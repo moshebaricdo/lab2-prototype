@@ -1,4 +1,4 @@
-import { AppNativeSelect } from "../../../../ui/AppDropdown";
+import { Dropdown } from "@moshebaricdo/cads-react";
 import styles from "./BackpackFilterDropdown.module.scss";
 
 interface BackpackFilterDropdownOption<Id extends string> {
@@ -28,20 +28,21 @@ export function BackpackFilterDropdown<Id extends string>({
 
   return (
     <div className={styles.root}>
-      <label className={styles.label} htmlFor={selectId}>
+      <label className={styles.label} id={selectId}>
         {label}
       </label>
-      <AppNativeSelect
-        id={selectId}
-        size="xs"
-        tone="gray"
-        fullWidth
+      <Dropdown
+        role="input"
+        size="extraSmall"
+        color="secondary"
+        width="full"
         value={value}
+        aria-label={label}
         options={options.map((option) => ({
           value: option.id,
           label: `${option.label} (${option.count})`,
         }))}
-        onValueChange={(nextValue) => onChange(nextValue as Id)}
+        onChange={(nextValue) => onChange(String(nextValue) as Id)}
       />
     </div>
   );

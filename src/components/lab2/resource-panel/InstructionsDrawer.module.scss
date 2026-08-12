@@ -17,7 +17,7 @@
 .drawerContent {
   position: relative;
   width: 100%;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .scrollFrame {
@@ -32,8 +32,8 @@
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
-  border-radius: var(--radius-sm);
-  background: var(--ds-background-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
 }
 
 .scrollFade {
@@ -48,7 +48,7 @@
   top: 8px;
   background: linear-gradient(
     to bottom,
-    var(--ds-background-neutral-primary) 15%,
+    var(--background-neutral-primary) 15%,
     rgb(255 255 255 / 0%)
   );
 }
@@ -58,7 +58,7 @@
   background: linear-gradient(
     to bottom,
     rgb(255 255 255 / 0%),
-    var(--ds-background-neutral-primary) 85%
+    var(--background-neutral-primary) 85%
   );
 }
 
@@ -74,13 +74,13 @@
 }
 
 .inlineExpandButton {
-  border: 1px solid var(--ds-border-neutral-primary);
-  background: var(--ds-background-neutral-primary);
-  border-radius: var(--radius-round);
+  border: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+  border-radius: var(--shape-round);
   padding: 4px 10px;
-  color: var(--ds-text-neutral-primary);
+  color: var(--text-neutral-primary);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-xs-semibold);
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 10%);
   pointer-events: auto;
@@ -88,12 +88,12 @@
 }
 
 .inlineExpandButton:hover {
-  background: var(--ds-background-neutral-secondary);
+  background: var(--background-neutral-secondary);
 }
 
 .inlineExpandButton:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--ds-border-selected-primary);
+  box-shadow: 0 0 0 2px var(--border-selected-primary);
 }
 
 .resizeHandle {
@@ -110,7 +110,7 @@
 
 .resizeBar {
   width: 100%;
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
   transition: height 0.15s ease;
 }
 
@@ -128,7 +128,7 @@
   bottom: 0;
   left: 0;
   height: 1px;
-  background: var(--ds-border-neutral-primary);
+  background: var(--border-neutral-primary);
   pointer-events: none;
 }
 
@@ -180,7 +180,7 @@
   justify-content: center;
   border-bottom-right-radius: 8px;
   border-bottom-left-radius: 8px;
-  background: var(--ds-background-neutral-primary);
+  background: var(--background-neutral-primary);
   padding: 4px;
   pointer-events: auto;
   margin-top: -1px;
@@ -194,24 +194,24 @@
   gap: 2px;
   padding: 10px 12px 11px;
   text-align: left;
-  background: var(--ds-background-neutral-primary);
-  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  background: var(--background-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
   pointer-events: auto;
 }
 
 .pinnedStepLabel {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--ds-text-neutral-primary);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-neutral-primary);
   line-height: var(--leading-body-xs-semibold);
 }
 
 .pinnedStepSummary {
-  font-family: var(--font-body);
+  font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-normal);
-  color: var(--ds-text-neutral-quaternary);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-neutral-quaternary);
   line-height: var(--leading-body-xs);
 }
 
@@ -233,8 +233,8 @@
   40%,
   60% {
     box-shadow:
-      0 0 0 1px var(--ds-border-selected-primary),
-      0 0 10px 4px var(--ds-background-brand-light);
+      0 0 0 1px var(--border-selected-primary),
+      0 0 10px 4px var(--background-brand-light);
   }
 }
 
@@ -246,7 +246,7 @@
 .toggleBorder {
   position: absolute;
   inset: 0;
-  border: 1px solid var(--ds-border-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
   border-bottom-right-radius: 8px;
   border-bottom-left-radius: 8px;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);

@@ -1,18 +1,18 @@
 import { EditorView } from "@codemirror/view";
 
-const surface = "var(--ds-background-neutral-primary)";
+const surface = "var(--background-neutral-primary)";
 const activeLineBg =
-  "color-mix(in srgb, var(--ds-background-neutral-secondary) 55%, transparent)";
+  "color-mix(in srgb, var(--background-neutral-secondary) 55%, transparent)";
 const selectionBg =
-  "color-mix(in srgb, var(--ds-background-brand-light) 80%, transparent)";
+  "color-mix(in srgb, var(--background-brand-light) 80%, transparent)";
 
-const addedLineBg = "var(--ds-background-success-light)";
-const removedLineBg = "var(--ds-background-error-light)";
-const modifiedLineBg = "var(--ds-background-brand-light)";
+const addedLineBg = "var(--background-success-light)";
+const removedLineBg = "var(--background-error-light)";
+const modifiedLineBg = "var(--background-brand-light)";
 
-const addedAccent = "var(--ds-background-success-primary)";
-const removedAccent = "var(--ds-background-error-primary)";
-const modifiedAccent = "var(--ds-background-selected-strong)";
+const addedAccent = "var(--background-success-primary)";
+const removedAccent = "var(--background-error-primary)";
+const modifiedAccent = "var(--background-selected-strong)";
 
 /**
  * CodeMirror theme that pins all surfaces, gutters, selections and diff
@@ -22,16 +22,16 @@ const modifiedAccent = "var(--ds-background-selected-strong)";
 export const editorTheme = EditorView.theme({
   "&": {
     backgroundColor: "transparent",
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-family-mono)",
     fontSize: "var(--text-code)",
     height: "100%",
   },
   ".cm-content": {
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-family-mono)",
     fontSize: "var(--text-code)",
     lineHeight: "20px",
     padding: "0",
-    caretColor: "var(--ds-text-neutral-primary)",
+    caretColor: "var(--text-neutral-primary)",
   },
   "&.cm-readonly .cm-content": {
     caretColor: "transparent",
@@ -59,9 +59,9 @@ export const editorTheme = EditorView.theme({
   ".cm-gutters": {
     backgroundColor: surface,
     border: "none",
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-family-mono)",
     fontSize: "var(--text-code)",
-    color: "var(--ds-text-neutral-quaternary)",
+    color: "var(--text-neutral-quaternary)",
     paddingLeft: "6px",
   },
   ".cm-gutter": {
@@ -82,7 +82,7 @@ export const editorTheme = EditorView.theme({
   },
   ".cm-activeLineGutter": {
     backgroundColor: "transparent",
-    color: "var(--ds-text-neutral-primary)",
+    color: "var(--text-neutral-primary)",
   },
 
   ".cm-changedLine": {
@@ -109,13 +109,13 @@ export const editorTheme = EditorView.theme({
     textDecoration: "none",
   },
   ".cm-deletedLine del, del.cm-deletedText": {
-    color: "var(--ds-text-error-primary)",
+    color: "var(--text-error-primary)",
     textDecoration: "none",
   },
 
   "& .cm-deletedChunk": {
     backgroundColor: "transparent !important",
-    color: "var(--ds-text-error-primary)",
+    color: "var(--text-error-primary)",
     paddingLeft: "0 !important",
   },
 

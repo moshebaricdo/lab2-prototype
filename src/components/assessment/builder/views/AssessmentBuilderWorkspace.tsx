@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { SegmentedButton } from "@moshebaricdo/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
-import {
-  SegmentedControl,
-  type SegmentedOption,
-} from "../../../ui/SegmentedControl";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import { initialChatMessages } from "../../../../data/weblab2";
@@ -27,9 +24,9 @@ import styles from "./AssessmentBuilderWorkspace.module.scss";
 
 type WorkspaceMode = "edit" | "preview";
 
-const WORKSPACE_MODE_OPTIONS: SegmentedOption<WorkspaceMode>[] = [
-  { value: "edit", label: "Build", iconName: "pen-to-square" },
-  { value: "preview", label: "Preview", iconName: "eye" },
+const WORKSPACE_MODE_OPTIONS = [
+  { value: "edit", label: "Build", iconName: "pen-to-square" as const },
+  { value: "preview", label: "Preview", iconName: "eye" as const },
 ];
 
 interface AssessmentBuilderWorkspaceProps {
@@ -272,10 +269,11 @@ export function AssessmentBuilderWorkspace({
         <PanelHeader
           label="Outline"
           left={
-            <SegmentedControl<WorkspaceMode>
+            <SegmentedButton
+              size="extraSmall"
               options={WORKSPACE_MODE_OPTIONS}
               value={workspaceMode}
-              onChange={(value) => setWorkspaceMode(value)}
+              onChange={(value) => setWorkspaceMode(value as WorkspaceMode)}
             />
           }
         />

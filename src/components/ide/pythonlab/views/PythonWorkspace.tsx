@@ -3,11 +3,9 @@ import { FileManager } from "../../shared/FileManager";
 import { CodeEditor } from "../../shared/code-editor";
 import { VersionBanner } from "../../shared/VersionBanner";
 import { ResizableHandle } from "../../../ui/ResizableHandle";
-import { AppButton } from "../../../ui/AppButton";
-import { FaIcon } from "../../../ui/icons/FaIcon";
+import { Button, Tooltip } from "@moshebaricdo/cads-react";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import { ScrollArea } from "../../../ui/scroll-area";
-import { Tooltip } from "../../../ui/Tooltip";
 import type { FileItem } from "../../../../types/file";
 import { startPythonRun, type PythonRunSession } from "../runtime/pythonRunner";
 import styles from "./PythonWorkspace.module.scss";
@@ -270,14 +268,14 @@ export function PythonWorkspace({
     <PanelHeader
       label="WORKSPACE"
       right={
-        <AppButton
-          variant="secondary"
-          tone="gray"
-          size="xs"
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="extraSmall"
           onClick={() => setConsoleOnly(!consoleOnly)}
         >
           {consoleOnly ? "Show editor" : "Console only"}
-        </AppButton>
+        </Button>
       }
     />
   );
@@ -369,59 +367,63 @@ export function PythonWorkspace({
     <PanelHeader
       label="CONSOLE"
       left={
-        <AppButton
-          variant="primary"
-          tone="purple"
-          size="xs"
-          icon={isRunning ? (
-            <FaIcon name="spinner" size="xs" className={styles.spinner} />
-          ) : undefined}
-          iconName={isRunning ? undefined : "play"}
+        <Button
+          variant="contained"
+          color="primary"
+          size="extraSmall"
+          startIconName={isRunning ? "spinner" : "play"}
+          className={isRunning ? styles.running : undefined}
           onClick={handleRun}
           disabled={isRunning}
         >
           {isRunning ? "Running" : "Run"}
-        </AppButton>
+        </Button>
       }
       right={
         <div className={styles.consoleHeaderActions}>
           <Tooltip
-            content={
+            title={
               consoleLayout === "horizontal"
                 ? "Move console to the right"
                 : "Move console below editor"
             }
-            position="bottom"
+            placement="bottom"
           >
-            <AppButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              iconName={consoleLayout === "horizontal"
-                ? "square-half-stroke-horizontal"
-                : "square-half-stroke"}
-              aria-label={
-                consoleLayout === "horizontal"
-                  ? "Move console to the right"
-                  : "Move console below editor"
-              }
-              onClick={() =>
-                setConsoleLayout((layout) =>
-                  layout === "horizontal" ? "vertical" : "horizontal"
-                )
-              }
-            />
+            <span>
+              <Button
+                variant="text"
+                color="tertiary"
+                size="extraSmall"
+                iconOnly
+                startIconName={consoleLayout === "horizontal"
+                  ? "square-half-stroke-horizontal"
+                  : "square-half-stroke"}
+                aria-label={
+                  consoleLayout === "horizontal"
+                    ? "Move console to the right"
+                    : "Move console below editor"
+                }
+                onClick={() =>
+                  setConsoleLayout((layout) =>
+                    layout === "horizontal" ? "vertical" : "horizontal"
+                  )
+                }
+              />
+            </span>
           </Tooltip>
-          <Tooltip content="Clear console output" position="bottom">
-            <AppButton
-              variant="tertiary"
-              tone="gray"
-              size="xs"
-              iconName="eraser"
-              aria-label="Clear console output"
-              disabled={consoleOutput.length === 0}
-              onClick={() => setConsoleOutput([])}
-            />
+          <Tooltip title="Clear console output" placement="bottom">
+            <span>
+              <Button
+                variant="text"
+                color="tertiary"
+                size="extraSmall"
+                iconOnly
+                startIconName="eraser"
+                aria-label="Clear console output"
+                disabled={consoleOutput.length === 0}
+                onClick={() => setConsoleOutput([])}
+              />
+            </span>
           </Tooltip>
         </div>
       }

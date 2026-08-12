@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppButton } from "../../../ui/AppButton";
+import { Button } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { AssessmentBottomRow, CodeReferencePanel } from "../../shared";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
@@ -198,42 +198,37 @@ export function LevelGroupSteppedWorkspace({
   };
 
   const backButton = (
-    <AppButton
-      variant="secondary"
-      tone="gray"
-      iconPosition="start"
-      iconName="arrow-left"
-      size="m"
+    <Button
+      variant="outlined" color="secondary"
+      startIconName="arrow-left"
+      size="medium"
       onClick={goBack}
       disabled={activeStep === 0 || isSubmitted}
     >
       Back
-    </AppButton>
+    </Button>
   );
 
   const forwardActions =
     !currentBlock && !isSubmitted ? null : isSubmitted ? null : !isLast ? (
-      <AppButton
-        variant="primary"
-        tone="purple"
-        iconPosition="end"
-        iconName="arrow-right"
-        size="m"
+      <Button
+        variant="contained" color="primary"
+        endIconName="arrow-right"
+        size="medium"
         onClick={goNext}
         disabled={!currentComplete}
       >
         Next
-      </AppButton>
+      </Button>
     ) : (
-      <AppButton
-        variant="primary"
-        size="m"
-        tone="purple"
+      <Button
+        variant="contained" color="primary"
+        size="medium"
         onClick={() => setIsSubmitted(true)}
         disabled={!canSubmitFinal}
       >
         Submit
-      </AppButton>
+      </Button>
     );
 
   const dotProgress = (
@@ -417,16 +412,14 @@ export function LevelGroupSteppedWorkspace({
                     </div>
                   }
                   right={
-                    <AppButton
-                      variant="primary"
-                      tone="purple"
-                      size="m"
-                      iconPosition="end"
-                      iconName="arrow-right"
+                    <Button
+                      variant="contained" color="primary"
+                      size="medium"
+                      endIconName="arrow-right"
                       onClick={() => setAssessmentStarted(true)}
                     >
                       Begin assessment
-                    </AppButton>
+                    </Button>
                   }
                 />
               </>
@@ -538,16 +531,14 @@ export function LevelGroupSteppedWorkspace({
 
             {isSubmitted ? (
               <div className={styles.steppedSubmittedFooterRow}>
-                <AppButton
-                  variant="primary"
-                  tone="purple"
-                  size="m"
-                  iconPosition="end"
-                  iconName="arrow-right"
+                <Button
+                  variant="contained" color="primary"
+                  size="medium"
+                  endIconName="arrow-right"
                   onClick={handleContinue}
                 >
                   {continueTarget.label}
-                </AppButton>
+                </Button>
               </div>
             ) : null}
 
@@ -573,17 +564,15 @@ export function LevelGroupSteppedWorkspace({
                 aria-atomic="true"
               >
                 <div className={styles.steppedTimedFooterStart}>
-                    <AppButton
-                      variant="secondary"
-                      tone="gray"
-                      iconPosition="start"
-                      iconName="arrow-left"
-                      size="m"
+                    <Button
+                      variant="outlined" color="secondary"
+                      startIconName="arrow-left"
+                      size="medium"
                       onClick={goBack}
                       disabled={activeStep === 0}
                     >
                       Back
-                    </AppButton>
+                    </Button>
                 </div>
                 <div className={styles.steppedTimedFooterChrome}>
                   <span className={styles.steppedTimedTimer}>
@@ -630,27 +619,24 @@ export function LevelGroupSteppedWorkspace({
                   {currentBlock ? (
                     <>
                       {!isLast ? (
-                        <AppButton
-                          variant="primary"
-                          tone="purple"
-                          iconPosition="end"
-                          iconName="arrow-right"
-                          size="m"
+                        <Button
+                          variant="contained" color="primary"
+                          endIconName="arrow-right"
+                          size="medium"
                           onClick={goNext}
                           disabled={!currentComplete}
                         >
                           Next
-                        </AppButton>
+                        </Button>
                       ) : (
-                        <AppButton
-                          variant="primary"
-                          size="m"
-                          tone="purple"
+                        <Button
+                          variant="contained" color="primary"
+                          size="medium"
                           onClick={() => setIsSubmitted(true)}
                           disabled={!canSubmitFinal}
                         >
                           Submit
-                        </AppButton>
+                        </Button>
                       )}
                     </>
                   ) : null}
@@ -664,56 +650,49 @@ export function LevelGroupSteppedWorkspace({
                 showLeft={true}
                 left={
                   <div className={styles.groupFooterLeft}>
-                    <AppButton
-                      variant="secondary"
-                      tone="gray"
-                      iconPosition="start"
-                      iconName={groupTeacherReveal ? "eye-slash" : "eye"}
-                      size="m"
+                    <Button
+                      variant="outlined" color="secondary"
+                      startIconName={groupTeacherReveal ? "eye-slash" : "eye"}
+                      size="medium"
                       onClick={() =>
                         setGroupTeacherReveal((previous) => !previous)
                       }
                     >
                       {groupTeacherReveal ? "Hide answers" : "Reveal answers"}
-                    </AppButton>
+                    </Button>
                   </div>
                 }
                 right={
                   currentBlock ? (
                     <>
-                      <AppButton
-                        variant="secondary"
-                        tone="gray"
-                        iconPosition="start"
-                        iconName="arrow-left"
-                        size="m"
+                      <Button
+                        variant="outlined" color="secondary"
+                        startIconName="arrow-left"
+                        size="medium"
                         onClick={goBack}
                         disabled={activeStep === 0}
                       >
                         Back
-                      </AppButton>
+                      </Button>
                       {!isLast ? (
-                        <AppButton
-                          variant="primary"
-                          tone="purple"
-                          iconPosition="end"
-                          iconName="arrow-right"
-                          size="m"
+                        <Button
+                          variant="contained" color="primary"
+                          endIconName="arrow-right"
+                          size="medium"
                           onClick={goNext}
                           disabled={!currentComplete}
                         >
                           Next
-                        </AppButton>
+                        </Button>
                       ) : (
-                        <AppButton
-                          variant="primary"
-                          size="m"
-                          tone="purple"
+                        <Button
+                          variant="contained" color="primary"
+                          size="medium"
                           onClick={() => setIsSubmitted(true)}
                           disabled={!canSubmitFinal}
                         >
                           Submit
-                        </AppButton>
+                        </Button>
                       )}
                     </>
                   ) : null

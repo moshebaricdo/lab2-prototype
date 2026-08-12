@@ -1,7 +1,7 @@
+import { CloseIconButton } from "@moshebaricdo/cads-react";
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "../../hooks/useTheme";
-import { AppIconButton } from "./AppIconButton";
 import styles from "./Dialog.module.scss";
 
 interface DialogProps {
@@ -99,11 +99,9 @@ export function Dialog({
           <h2 id={titleId} className={[styles.title, titleClassName].filter(Boolean).join(" ")}>
             {title}
           </h2>
-          <AppIconButton
-            variant="tertiary"
-            tone="gray"
-            size="xs"
-            iconName="xmark"
+          <CloseIconButton
+            size="extraSmall"
+            color="secondary"
             onClick={onClose}
             aria-label="Close"
             className={closeButtonClassName}

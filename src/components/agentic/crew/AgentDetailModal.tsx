@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { Dialog } from "../../ui/Dialog";
-import { AppButton } from "../../ui/AppButton";
-import { AppCheckbox } from "../../ui/AppCheckbox";
-import { AppActionDropdown } from "../../ui/AppDropdown";
-import { AppTextArea } from "../../ui/AppTextField";
-import { AppSlider } from "../../ui/AppSlider";
+import { Button, Checkbox, Dropdown, Slider, TextInput } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type {
   AgentAccent,
@@ -445,80 +441,81 @@ export function AgentDetailModal({
   const footer = (
     <div className={styles.footer}>
       {overflowItems.length > 0 ? (
-        <AppActionDropdown
-          align="start"
-          side="top"
-          sideOffset={4}
-          size="s"
-          listLabel="More actions"
-          trigger={
-            <AppButton
-              variant="secondary"
-              tone="gray"
-              size="s"
-              iconName="ellipsis-vertical"
-              aria-label="More agent actions"
-            />
-          }
-          items={overflowItems}
+        <Dropdown
+          role="action"
+          size="small"
+          iconOnly
+          startIconName="ellipsis-vertical"
+          buttonVariant="text"
+          buttonColor="tertiary"
+          aria-label="More agent actions"
+          menuPlacement="topLeft"
+          options={overflowItems.map((item) => ({
+            value: item.id,
+            label: item.label,
+            iconName: item.iconName,
+          }))}
+          onAction={(actionValue) => {
+            overflowItems.find((item) => item.id === actionValue)?.onSelect?.();
+          }}
         />
       ) : null}
       <span className={styles.footerSpacer} />
       {isCreateMode ? (
         <>
-          <AppButton
-            variant="secondary"
-            tone="gray"
-            size="s"
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="small"
             onClick={onClose}
           >
             Cancel
-          </AppButton>
-          <AppButton
-            variant="primary"
-            tone="purple"
-            size="s"
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
             disabled={!identityValid}
             onClick={handleCreate}
           >
             Create
-          </AppButton>
+          </Button>
         </>
       ) : canEditConfig && isEditing ? (
         <>
-          <AppButton
-            variant="secondary"
-            tone="gray"
-            size="s"
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="small"
             onClick={handleCancelEdit}
           >
             Cancel
-          </AppButton>
-          <AppButton
-            variant="primary"
-            tone="purple"
-            size="s"
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
             disabled={!isDirty || !identityValid}
             onClick={handleSaveEdit}
           >
             Save
-          </AppButton>
+          </Button>
         </>
       ) : (
         <>
           {canEditConfig ? (
-            <AppButton
-              variant="secondary"
-              tone="gray"
-              size="s"
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="small"
               onClick={() => setIsEditing(true)}
             >
               Edit
-            </AppButton>
+            </Button>
           ) : null}
-          <AppButton variant="primary" tone="purple" size="s" onClick={onClose}>
+          <Button variant="contained" color="primary" size="small" onClick={onClose}>
             Back to project
-          </AppButton>
+          </Button>
         </>
       )}
     </div>
@@ -564,14 +561,14 @@ export function AgentDetailModal({
           </h2>
           <div className={styles.cardBody}>
             {isEditingConfig ? (
-              <AppTextArea
+              <TextInput
                 id="agent-core-prompt"
+                multiline
                 rows={5}
                 value={contract}
                 onChange={(event) => setContract(event.target.value)}
-                size="s"
-                tone="gray"
-                fullWidth
+                size="small"
+                color="secondary"
                 helperText="Standing instructions this agent follows on every turn."
                 aria-labelledby="agent-prompt-heading"
               />
@@ -616,8 +613,8 @@ export function AgentDetailModal({
                       <div className={styles.fileChecklist}>
                         {allProjectFiles.map((path) => (
                           <label key={path} className={styles.fileRow}>
-                            <AppCheckbox
-                              checkboxSize="s"
+                            <Checkbox
+                              size="small"
                               checked={writablePaths.some((selected) =>
                                 pathsMatch(selected, path),
                               )}
@@ -696,26 +693,21 @@ export function AgentDetailModal({
                     {AGENT_EFFORT_FIELD_HELPER}
                   </p>
                 </div>
-                <AppSlider
+                <Slider
                   id="agent-effort-slider"
                   value={agentEffortIndex(effort)}
                   min={0}
                   max={AGENT_EFFORT_STEPS.length - 1}
                   step={1}
-                  size="s"
-                  tone="brand"
-                  showLabel={false}
-                  showControlButtons
-                  showStepper
-                  stepperLabels={AGENT_EFFORT_STEPS.map(
-                    (step) => AGENT_EFFORT_LABELS[step],
-                  )}
+                  size="small"
+                  showLabelRow={false}
+                  showControls
+                  fullWidth
                   aria-labelledby="agent-effort-label"
-                  decrementAriaLabel="Lower effort"
-                  incrementAriaLabel="Raise effort"
-                  onValueChange={(value) =>
-                    setEffort(agentEffortFromIndex(value))
-                  }
+                  onChange={(_event, value) => {
+                    const next = Array.isArray(value) ? value[0] : value;
+                    setEffort(agentEffortFromIndex(next));
+                  }}
                 />
               </div>
             ) : (
@@ -791,8 +783,8 @@ export function AgentDetailModal({
                 <div className={styles.fileChecklist}>
                   {allProjectFiles.map((path) => (
                     <label key={path} className={styles.fileRow}>
-                      <AppCheckbox
-                        checkboxSize="s"
+                      <Checkbox
+                        size="small"
                         checked={filePaths.some((selected) =>
                           pathsMatch(selected, path),
                         )}
