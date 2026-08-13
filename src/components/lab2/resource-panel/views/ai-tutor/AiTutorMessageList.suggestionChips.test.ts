@@ -4,7 +4,7 @@ import {
   hasLaterChatMessageForTest,
   hasInstructionGuideActionsForTest,
   validationReviewSuggestionActionsForTest,
-} from "./AiTutorMessageList";
+} from "./aiTutorMessageListLogic";
 
 function review(overrides: Partial<ValidationReviewCardData>): ValidationReviewCardData {
   return {

@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { ValidationReviewCardData } from "../../../../../types/validationReview";
 import {
-  buildInstructionGuideSeedMessage,
-  buildValidationReviewActionPrompt,
   buildValidationReviewOfferMessage,
   buildValidationReviewResultMessage,
-} from "./AiTutorPanel";
+} from "../../../../../lib/validation/validationReviewMessaging";
+import {
+  buildInstructionGuideSeedMessage,
+  buildValidationReviewActionPrompt,
+} from "./aiTutorPanelHelpers";
 
 const partialReview: ValidationReviewCardData = {
   kind: "summary",

@@ -41,12 +41,8 @@ import {
   enrichEditOptionPrompt,
 } from "../../../../../lib/tutor/routing/editClarification";
 import type { ValidationReviewCardData } from "../../../../../types/validationReview";
-import { buildLevelProgressSnapshot } from "../../../../../lib/validation/levelProgress";
 import {
-  buildValidationReviewOfferMessage,
-  buildValidationReviewResultMessage,
   resolveValidationResultMessage,
-  shortValidationCriterionLabel,
 } from "../../../../../lib/validation/validationReviewMessaging";
 import { AiTutorComposer } from "./AiTutorComposer";
 import { AiTutorMessageList } from "./AiTutorMessageList";
@@ -85,6 +81,11 @@ import {
   composerModeAfterCardAction,
   composerModeForSend,
 } from "../../../../../lib/tutor/routing/tutorComposerMode";
+import {
+  buildInstructionGuideSeedMessage,
+  buildValidationReviewActionPrompt,
+} from "./aiTutorPanelHelpers";
+import type { ValidationReviewFollowUpAction } from "./aiTutorMessageListLogic";
 import styles from "./AiTutorPanel.module.scss";
 
 const FOCUS_TUTOR_INPUT_EVENT = "weblab:focus-tutor-input";
@@ -92,7 +93,6 @@ type PanelValidationReviewRequestSource = Extract<
   ValidationReviewRequestSource,
   "card" | "composer"
 >;
-type ValidationReviewFollowUpAction = "hint" | "debug" | "suggestion";
 
 interface CodeAttachmentContext {
   content: string;
@@ -278,6 +278,10 @@ export {
   buildValidationReviewOfferMessage,
   buildValidationReviewResultMessage,
 } from "../../../../../lib/validation/validationReviewMessaging";
+export {
+  buildInstructionGuideSeedMessage,
+  buildValidationReviewActionPrompt,
+} from "./aiTutorPanelHelpers";
 
 function latestSummaryReview(messages: ChatMessage[]) {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -287,43 +291,10 @@ function latestSummaryReview(messages: ChatMessage[]) {
   return null;
 }
 
-export function buildValidationReviewActionPrompt(
-  action: ValidationReviewFollowUpAction,
-  review?: ValidationReviewCardData | null,
-) {
-  const progress = buildLevelProgressSnapshot(review);
-  const nextCriterion = progress?.nextIncompleteCriterion?.label;
-  const target = nextCriterion
-    ? ` for this next checklist item: ${shortValidationCriterionLabel(nextCriterion)}`
-    : " for what to check next";
-
-  if (action === "debug") {
-    return `Help me work through${target} without giving away the full answer. Ask me what I tried first, then guide me toward what to test next.`;
-  }
-
-  if (action === "suggestion") {
-    return `Give me one concrete suggestion${target}. Keep it focused on my current project and explain why it would help.`;
-  }
-
-  return `Give me one small hint${target}. Do not tell me the exact fix yet.`;
-}
-
 function validationReviewActionDisplayLabel(action: ValidationReviewFollowUpAction) {
   if (action === "debug") return "Help me debug";
   if (action === "suggestion") return "Give me a suggestion";
   return "Give me a hint";
-}
-
-export function buildInstructionGuideSeedMessage(
-  guide: InstructionGuide,
-  content: string,
-): ChatMessage {
-  return {
-    role: "assistant",
-    content,
-    instructionGuide: guide,
-    instructionGuideSignature: getInstructionGuideSignature(guide),
-  };
 }
 
 function formatPreviewElementAttachmentName(detail: PreviewElementAttachmentDetail) {

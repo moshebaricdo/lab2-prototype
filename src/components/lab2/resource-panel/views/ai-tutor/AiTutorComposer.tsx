@@ -7,17 +7,22 @@ import {
   useState,
   type ChangeEvent,
   type DragEvent,
+  type FormEvent,
+  type MouseEvent,
   type RefObject,
 } from "react";
-import { Button, Dropdown, TextInput, Tooltip } from "@moshebaricdo/cads-react";
-import { FileChip } from "../../../../ui/FileChip";
-import { faIconForFileName, fileExtensionLabelFromName, getFileChipIconProps } from "../../../../ui/fileChipMeta";
+import {
+  AiChatInput,
+  Button,
+  Dropdown,
+  Tooltip,
+} from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
-import { useKeyboardFocusWithin } from "../../../../../hooks/useKeyboardFocusWithin";
 import type { ChatAttachment } from "../../../../../types/chat";
 import type { AiTutorInputExperiment, TutorRequestMode } from "../../../../../types/tutor";
 import { attachmentDisplayName } from "./attachmentUtils";
+import { TutorChatFileChip, tutorChatChipType } from "./tutorChatFileChip";
 import styles from "./AiTutorPanel.module.scss";
 
 const TUTOR_MODE_OPTIONS = [
@@ -32,6 +37,7 @@ const TUTOR_MODE_OPTIONS = [
 }>;
 
 const TEXTAREA_MAX_HEIGHT = 132;
+const SEND_BUTTON_SELECTOR = 'button[aria-label="Send"]';
 
 interface AiTutorComposerProps {
   inputExperiment: AiTutorInputExperiment;
@@ -89,46 +95,42 @@ export function AiTutorComposer({
   onDrop,
 }: AiTutorComposerProps) {
   const isClarified = inputExperiment === "clarified-send";
-  const { isKeyboardFocusWithin, focusWithinProps } =
-    useKeyboardFocusWithin<HTMLDivElement>();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
   const shimmerTimeoutRef = useRef<number | null>(null);
   const [isShimmering, setIsShimmering] = useState(false);
-  const [canTextareaScrollUp, setCanTextareaScrollUp] = useState(false);
-  const [canTextareaScrollDown, setCanTextareaScrollDown] = useState(false);
   const showDropHelper = isDragOverInput && attachedFiles.length === 0;
+  const hasCustomLeftActions = Boolean(onCheckWork || showModelSelector);
+  const forceSendEnabled = canSend && !disabled && chatInput.trim().length === 0;
 
-  const updateTextareaScrollFades = useCallback(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const hasOverflow = textarea.scrollHeight - textarea.clientHeight > 1;
-    setCanTextareaScrollUp(hasOverflow && textarea.scrollTop > 1);
-    setCanTextareaScrollDown(
-      hasOverflow && textarea.scrollTop + textarea.clientHeight < textarea.scrollHeight - 1,
-    );
-  }, []);
+  const textareaEl = () =>
+    composerRef.current?.querySelector("textarea") ?? null;
 
   const syncTextareaOverflow = useCallback(() => {
-    const textarea = textareaRef.current;
+    const textarea = textareaEl();
     if (!textarea) return;
 
     textarea.style.height = "auto";
     const nextHeight = Math.min(textarea.scrollHeight, TEXTAREA_MAX_HEIGHT);
     textarea.style.height = `${nextHeight}px`;
-    const hasOverflow = textarea.scrollHeight > nextHeight + 1;
-    textarea.style.overflowY = hasOverflow ? "auto" : "hidden";
-
-    updateTextareaScrollFades();
-  }, [updateTextareaScrollFades]);
+    textarea.style.overflowY =
+      textarea.scrollHeight > nextHeight + 1 ? "auto" : "hidden";
+  }, []);
 
   useLayoutEffect(() => {
     syncTextareaOverflow();
-  }, [chatInput, syncTextareaOverflow]);
+  }, [chatInput, attachedFiles.length, syncTextareaOverflow]);
+
+  useLayoutEffect(() => {
+    const sendButton = composerRef.current?.querySelector<HTMLButtonElement>(
+      SEND_BUTTON_SELECTOR,
+    );
+    if (!sendButton) return;
+    sendButton.disabled = !canSend || disabled;
+  }, [canSend, disabled, chatInput, attachedFiles.length]);
 
   useEffect(() => {
     const focusTutorInput = () => {
-      textareaRef.current?.focus();
+      textareaEl()?.focus();
       setIsShimmering(false);
       window.requestAnimationFrame(() => {
         setIsShimmering(true);
@@ -163,11 +165,119 @@ export function AiTutorComposer({
     [],
   );
 
+  const openFilePicker = () => fileInputRef.current?.click();
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!canSend || disabled) return;
+    onSend();
+  };
+
+  const handleComposerClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    if (!forceSendEnabled) return;
+    const target = event.target as HTMLElement | null;
+    if (!target?.closest(SEND_BUTTON_SELECTOR)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onSend();
+  };
+
+  const attachmentRow = attachedFiles.length > 0 ? (
+    <div className={styles.attachmentRow}>
+      {attachedFiles.map((fileLabel) => {
+        const meta = uploadedAttachmentContexts[fileLabel] ?? attachmentMeta?.[fileLabel];
+        const codeTimestamp = codeAttachmentTimestamps[fileLabel];
+        const displayName = meta?.fileName ?? attachmentDisplayName(fileLabel);
+        const chipType = tutorChatChipType({
+          source: meta?.source,
+          imageSrc: meta?.imageSrc,
+          mimeType: meta?.mimeType,
+          isCodeReference: Boolean(codeTimestamp),
+        });
+        return (
+          <TutorChatFileChip
+            key={fileLabel}
+            fileName={displayName}
+            title={fileLabel}
+            useCase="inputField"
+            type={chipType}
+            metadata={codeTimestamp ?? meta?.timestamp}
+            imageSrc={meta?.imageSrc}
+            uploadProgress={uploadProgressByPath[fileLabel]}
+            onRemove={() => onRemoveAttachedFile(fileLabel)}
+          />
+        );
+      })}
+      {isDragOverInput && (
+        <div className={styles.attachmentAddSlot} aria-hidden>
+          <FaIcon
+            name="plus"
+            size="xs"
+            className={styles.attachmentAddSlotIcon}
+          />
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  const leftActions = hasCustomLeftActions ? (
+    <div className={styles.composerShortcutGroup}>
+      <Tooltip title="Add file" placement="top">
+        <span>
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="extraSmall"
+            startIconName="plus"
+            disabled={disabled}
+            onClick={openFilePicker}
+          >
+            Add file
+          </Button>
+        </span>
+      </Tooltip>
+      {onCheckWork ? (
+        <>
+          <span className={styles.composerShortcutDivider} aria-hidden="true" />
+          <Tooltip title="Check my work" placement="top">
+            <span>
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                iconOnly
+                aria-label={checkWorkDisabled ? "Checking work" : "Check my work"}
+                startIconName="clipboard-list"
+                loading={checkWorkDisabled}
+                onClick={onCheckWork}
+                disabled={disabled || checkWorkDisabled}
+              />
+            </span>
+          </Tooltip>
+        </>
+      ) : null}
+      {showModelSelector ? (
+        <Dropdown
+          role="action"
+          size="extraSmall"
+          buttonVariant="outlined"
+          buttonColor="secondary"
+          label={selectedTutorMode.label}
+          startIconName={selectedTutorMode.iconName}
+          className={styles.modelDropdown}
+          aria-label={`Tutor mode: ${selectedTutorMode.label}`}
+          disabled={disabled}
+          menuPlacement="bottomRight"
+          options={tutorModeOptions}
+          onAction={(value) => setTutorRequestMode(value as TutorRequestMode)}
+        />
+      ) : null}
+    </div>
+  ) : undefined;
+
   return (
     <div
       className={`${styles.inputSection} ${
-        isClarified ? styles.inputSectionClarified : ""
-      } ${
         showDropHelper ? styles.inputSectionDropActive : ""
       } ${
         disabled ? styles.inputSectionDisabled : ""
@@ -180,43 +290,6 @@ export function AiTutorComposer({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
-        {attachedFiles.length > 0 && (
-          <div className={styles.attachmentRow}>
-            {attachedFiles.map((fileLabel) => {
-              const meta = uploadedAttachmentContexts[fileLabel] ?? attachmentMeta?.[fileLabel];
-              const codeTimestamp = codeAttachmentTimestamps[fileLabel];
-              const displayName = meta?.fileName ?? attachmentDisplayName(fileLabel);
-              const isFullProjectFile = !codeTimestamp && (!meta || meta.source === "project");
-              const metadataLabel = isFullProjectFile
-                ? undefined
-                : codeTimestamp ?? meta?.timestamp ?? fileExtensionLabelFromName(displayName);
-              const fileIcon = getFileChipIconProps(displayName);
-              return (
-                <FileChip
-                  key={fileLabel}
-                  fileName={displayName}
-                  nameTitle={fileLabel}
-                  extensionLabel={metadataLabel}
-                  iconName={fileIcon.iconName}
-                  iconFamily={fileIcon.iconFamily}
-                  imageSrc={meta?.imageSrc}
-                  uploadProgress={uploadProgressByPath[fileLabel]}
-                  onRemove={() => onRemoveAttachedFile(fileLabel)}
-                />
-              );
-            })}
-            {isDragOverInput && (
-              <div className={styles.attachmentAddSlot} aria-hidden>
-                <FaIcon
-                  name="plus"
-                  size="xs"
-                  className={styles.attachmentAddSlotIcon}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
         {showDropHelper && (
           <div
             className={styles.dropHelperText}
@@ -233,142 +306,51 @@ export function AiTutorComposer({
           </div>
         )}
 
+        {attachmentRow}
+
         <div
-          className={`${styles.inputCard} ${
-            isDragOverInput ? styles.inputCardDropActive : ""
+          ref={composerRef}
+          className={`${styles.composerFrame} ${
+            isDragOverInput ? styles.composerFrameDropActive : ""
           } ${
-            isKeyboardFocusWithin ? styles.inputCardKeyboardFocused : ""
-          } ${
-            isShimmering ? styles.inputCardShimmer : ""
+            isShimmering ? styles.composerFrameShimmer : ""
           }`}
-          {...focusWithinProps}
+          data-force-send={forceSendEnabled ? "true" : undefined}
+          onClickCapture={handleComposerClickCapture}
         >
-          <div className={styles.textareaFrame}>
-            <TextInput
-              ref={(node) => {
-                textareaRef.current = node?.querySelector("textarea") ?? null;
-              }}
-              value={chatInput}
-              onChange={(event) => setChatInput(event.target.value)}
-              onScroll={updateTextareaScrollFades}
-              onKeyDown={(event) => {
+          <AiChatInput
+            value={chatInput}
+            onChange={(event) => setChatInput(event.target.value)}
+            onSubmit={handleSubmit}
+            onAddFile={hasCustomLeftActions ? undefined : openFilePicker}
+            leftActions={leftActions}
+            placeholder={
+              placeholder ?? (isClarified ? "Message AI Tutor..." : "Type something...")
+            }
+            disabled={disabled}
+            textareaProps={{
+              onInput: syncTextareaOverflow,
+              onKeyDown: (event) => {
                 if (disabled) return;
-                if (event.key === "Enter" && !event.shiftKey) {
+                if (
+                  event.key === "Enter" &&
+                  !event.shiftKey &&
+                  forceSendEnabled
+                ) {
                   event.preventDefault();
                   onSend();
                 }
-              }}
-              placeholder={placeholder ?? (isClarified ? "Message AI Tutor..." : "Type something...")}
-              className={styles.textarea}
-              disabled={disabled}
-              rows={1}
-              multiline
-              size="small"
-              color="secondary"
-            />
-            {canTextareaScrollUp ? (
-              <div className={`${styles.textareaFade} ${styles.textareaFadeTop}`} />
-            ) : null}
-            {canTextareaScrollDown ? (
-              <div className={`${styles.textareaFade} ${styles.textareaFadeBottom}`} />
-            ) : null}
-          </div>
-          <div className={styles.inputActions}>
-            <div className={styles.composerShortcutGroup}>
-              <Tooltip title="Add file" placement="top">
-                <span>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    size="extraSmall"
-                    iconOnly
-                    aria-label="Add file"
-                    startIconName="plus"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={disabled}
-                  />
-                </span>
-              </Tooltip>
-              {onCheckWork ? (
-                <>
-                  <span className={styles.composerShortcutDivider} aria-hidden="true" />
-                  <Tooltip title="Check my work" placement="top">
-                    <span>
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        size="extraSmall"
-                        iconOnly
-                        aria-label={checkWorkDisabled ? "Checking work" : "Check my work"}
-                        startIconName="clipboard-list"
-                        loading={checkWorkDisabled}
-                        onClick={onCheckWork}
-                        disabled={disabled || checkWorkDisabled}
-                      />
-                    </span>
-                  </Tooltip>
-                </>
-              ) : null}
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                className={styles.fileInput}
-                onChange={onUploadFileSelection}
-              />
-            </div>
-            <div className={styles.sendButtonRow}>
-              {showModelSelector ? (
-                <Dropdown
-                  role="action"
-                  size="extraSmall"
-                  buttonVariant="outlined"
-                  buttonColor="secondary"
-                  label={selectedTutorMode.label}
-                  startIconName={selectedTutorMode.iconName}
-                  className={styles.modelDropdown}
-                  aria-label={`Tutor mode: ${selectedTutorMode.label}`}
-                  disabled={disabled}
-                  menuPlacement="bottomRight"
-                  options={tutorModeOptions}
-                  onAction={(value) => setTutorRequestMode(value as TutorRequestMode)}
-                />
-              ) : null}
-              {isClarified ? (
-                <button
-                  type="button"
-                  className={`${styles.sendButtonTeal} ${
-                    canSend
-                      ? styles.sendButtonTealEnabled
-                      : styles.sendButtonTealDisabled
-                  }`}
-                  disabled={!canSend}
-                  onClick={onSend}
-                  aria-label="Send message"
-                >
-                  <FaIcon name="arrow-up" size="xs" />
-                  Send
-                </button>
-              ) : (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="extraSmall"
-                  iconOnly
-                  startIconName="arrow-up"
-                  className={`${styles.sendButton} ${
-                    canSend
-                      ? styles.sendButtonEnabled
-                      : styles.sendButtonDisabled
-                  }`}
-                  disabled={!canSend}
-                  onClick={onSend}
-                  aria-label="Send message"
-                />
-              )}
-            </div>
-          </div>
+              },
+            }}
+          />
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className={styles.fileInput}
+          onChange={onUploadFileSelection}
+        />
       </div>
     </div>
   );

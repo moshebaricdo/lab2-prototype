@@ -122,43 +122,20 @@
   gap: 4px;
 }
 
-.messageRow {
-  display: flex;
-}
-
-.messageRowUser {
-  justify-content: flex-end;
-}
-
-.messageBubble {
-  max-width: 100%;
-  border-radius: var(--shape-md);
-  padding: 12px;
-}
-
-.messageBubbleUser {
-  background: var(--background-neutral-secondary);
-  border-bottom-right-radius: 0;
-  color: var(--text-neutral-primary);
-}
-
-.messageBubbleAssistant {
-  background: var(--background-brand-light);
-  border-bottom-left-radius: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.messageBubbleWithCard {
+.chatMessageWithCard {
   width: 100%;
 }
 
-.messageText {
-  margin: 0;
-  font-size: var(--text-body-sm);
-  white-space: pre-line;
-  line-height: var(--leading-body-sm);
+.messageCustomContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.messageRow {
+  display: flex;
 }
 
 /* ─── Rich message content (replaces plain <p> for formatted messages) */
@@ -169,6 +146,10 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+
+  p + p {
+    margin-top: 0;
+  }
 }
 
 .messageParagraph {
@@ -428,16 +409,6 @@
   color: var(--text-neutral-primary);
 }
 
-.assistantMessageFooter {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.actionRowWrap {
-  height: 24px;
-}
-
 /* ─── Alert bubble (e.g. "files added to project") ──── */
 
 .alertBubble {
@@ -512,15 +483,7 @@
   content: "";
 }
 
-.inputSectionClarified {
-  border-top: 1px solid var(--border-neutral-primary);
-}
-
-.inputSectionClarified.inputSectionDropActive {
-  border-top-color: transparent;
-}
-
-/* Wraps attachment row + input card; receives file-drop drag handlers. */
+/* Wraps CADS AiChatInput; receives file-drop drag handlers. */
 .inputComposer {
   position: relative;
   display: flex;
@@ -535,6 +498,32 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+
+.composerChipUploading {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.composerChipUploadOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary-inverse);
+  opacity: 0.55;
+}
+
+.composerChipUploadProgress {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .attachmentAddSlot {
@@ -594,39 +583,39 @@
   }
 }
 
-.inputCard {
+.composerFrame {
   position: relative;
   isolation: isolate;
   overflow: visible;
-  border: 1px solid var(--border-neutral-secondary);
   border-radius: var(--shape-sm);
-  background: var(--background-neutral-primary);
-  padding: 8px;
-  transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    opacity 0.15s ease;
 }
 
-.inputCardDropActive {
+.composerFrameDropActive {
   opacity: 0.7;
 }
 
-.inputCardShimmer {
-  border-color: var(--border-neutral-secondary);
-  animation: tutorComposerNativeBorderFade 4s ease-in-out;
+.composerFrame[data-force-send="true"] :global(button[aria-label="Send"].MuiButton-root.MuiButton-root) {
+  background-color: var(--background-brand-primary);
+  color: var(--text-neutral-white-fixed);
 }
 
-.inputCardShimmer::before,
-.inputCardShimmer::after {
+.composerFrame[data-force-send="true"] :global(button[aria-label="Send"].MuiButton-root.MuiButton-root:hover) {
+  background-color: var(--background-brand-primary);
+}
+
+.composerFrameShimmer :global([data-cads-component="AiChatInput"]) {
+  border-color: transparent;
+}
+
+.composerFrameShimmer::before,
+.composerFrameShimmer::after {
   position: absolute;
   inset: 0;
   pointer-events: none;
   content: "";
 }
 
-.inputCardShimmer::before {
+.composerFrameShimmer::before {
   position: absolute;
   z-index: 0;
   inset: 0;
@@ -665,7 +654,7 @@
     tutorComposerBorderFade 4s ease-in-out;
 }
 
-.inputCardShimmer::after {
+.composerFrameShimmer::after {
   z-index: 0;
   border-radius: var(--shape-sm);
   box-shadow: inset 0 0 0 1px color-mix(
@@ -681,13 +670,6 @@
   syntax: "<angle>";
   inherits: false;
   initial-value: 0deg;
-}
-
-@keyframes tutorComposerBorderGlow {
-  from,
-  to {
-    --tutor-composer-glow-angle: 0deg;
-  }
 }
 
 @keyframes tutorComposerBorderSpin {
@@ -712,18 +694,6 @@
   }
 }
 
-@keyframes tutorComposerNativeBorderFade {
-  0%,
-  100% {
-    border-color: var(--border-neutral-secondary);
-  }
-
-  16%,
-  84% {
-    border-color: transparent;
-  }
-}
-
 @keyframes tutorComposerInnerGlow {
   0%,
   100% {
@@ -734,68 +704,6 @@
   84% {
     opacity: 1;
   }
-}
-
-.inputCardKeyboardFocused {
-  outline: 2px solid var(--border-selected-primary);
-  outline-offset: 2px;
-}
-
-/* ─── Textarea ────────────────────────────────────────── */
-
-.textareaFrame {
-  position: relative;
-}
-
-.textarea {
-  min-height: 40px;
-  border: 0;
-  overflow-y: hidden;
-  padding: 0;
-  resize: none;
-}
-
-.textareaFade {
-  position: absolute;
-  right: 0;
-  left: 0;
-  height: 12px;
-  pointer-events: none;
-}
-
-.textareaFadeTop {
-  top: 0;
-  background: linear-gradient(
-    to bottom,
-    var(--background-neutral-primary) 15%,
-    transparent
-  );
-}
-
-.textareaFadeBottom {
-  bottom: 0;
-  background: linear-gradient(
-    to top,
-    var(--background-neutral-primary) 15%,
-    transparent
-  );
-}
-
-.textarea:focus-visible {
-  box-shadow: none;
-}
-
-.textarea::placeholder {
-  color: var(--text-neutral-placeholder);
-}
-
-/* ─── Input actions row ───────────────────────────────── */
-
-.inputActions {
-  margin-top: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .fileInput {
@@ -815,185 +723,8 @@
   background: var(--border-neutral-primary);
 }
 
-.addFilePopover {
-  width: 280px;
-  padding: 8px;
-}
-
-.addFileMenu {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.addFileMenuTitle {
-  margin: 0 0 4px;
-  padding: 0 4px;
-  color: var(--text-neutral-tertiary);
-  font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semi-bold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.addFileMenuItem {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  grid-template-areas:
-    "icon name"
-    "icon path";
-  column-gap: 8px;
-  align-items: center;
-  border: 0;
-  border-radius: var(--shape-sm);
-  background: transparent;
-  padding: 7px 8px;
-  text-align: left;
-}
-
-.addFileMenuItem:hover:not(:disabled) {
-  background: var(--background-neutral-secondary);
-}
-
-.addFileMenuItem:disabled {
-  cursor: default;
-  opacity: 0.5;
-}
-
-.addFileMenuIcon {
-  grid-area: icon;
-  color: var(--text-neutral-tertiary);
-}
-
-.addFileMenuName {
-  grid-area: name;
-  overflow: hidden;
-  color: var(--text-neutral-primary);
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: var(--leading-body-sm);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.addFileMenuPath {
-  grid-area: path;
-  overflow: hidden;
-  color: var(--text-neutral-tertiary);
-  font-size: var(--text-body-xxs);
-  line-height: var(--leading-body-xxs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.addFileMenuEmpty {
-  margin: 0;
-  padding: 8px;
-  color: var(--text-neutral-tertiary);
-  font-size: var(--text-body-xs);
-}
-
-.sendButtonRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.modelSelectLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.modelSelectText {
-  color: var(--text-neutral-quaternary);
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-medium);
-}
-
 .modelDropdown {
   min-width: 80px;
-}
-
-.modeTriggerContent {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.modeTriggerChevron {
-  flex-shrink: 0;
-  color: currentColor;
-}
-
-/* Default small send icon button (purple, icon-only) */
-.sendButton {
-  width: 24px;
-  height: 24px;
-  transition: background-color 0.2s ease;
-}
-
-.sendButtonEnabled {
-  background: var(--background-brand-primary);
-  color: var(--text-neutral-white-fixed);
-}
-
-.sendButtonEnabled:hover {
-  background: var(--background-selected-strong);
-  color: var(--text-neutral-white-fixed);
-}
-
-.sendButtonDisabled {
-  background: var(--background-neutral-quaternary);
-  cursor: not-allowed;
-}
-
-.sendIcon {
-  width: 12px;
-  height: 12px;
-}
-
-/* ─── Clarified-send: teal send button ────────────────── */
-
-.sendButtonTeal {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  height: 28px;
-  min-width: 28px;
-  border: 0;
-  border-radius: var(--shape-sm);
-  padding: 0 10px;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semi-bold);
-  line-height: 1;
-  transition: background-color 0.2s ease;
-}
-
-.sendButtonTeal:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--border-focused-primary);
-}
-
-.sendButtonTealEnabled {
-  background: var(--background-selected-strong);
-  color: var(--text-neutral-white-fixed);
-  cursor: pointer;
-}
-
-.sendButtonTealEnabled:hover {
-  background: var(--background-selected-primary);
-  color: var(--text-neutral-primary);
-}
-
-.sendButtonTealDisabled {
-  background: var(--background-neutral-quaternary);
-  color: var(--text-disabled-neutral-inverse);
-  cursor: not-allowed;
 }
 
 /* ─── Code-change accept / reject buttons ──────────── */
@@ -1001,7 +732,6 @@
 .codeChangeActions {
   display: flex;
   gap: 8px;
-  margin-top: -8px;
 }
 
 .codeChangeActions > * {
@@ -1249,7 +979,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  flex-direction: row-reverse;
+  justify-content: flex-end;
   gap: 8px;
   padding: 4px 0;
 }

@@ -1,15 +1,15 @@
-import { useState, type KeyboardEvent, type RefObject } from "react";
-import { Button } from "@moshebaricdo/cads-react";
+import { useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
+import { AiChatMessage, Button } from "@moshebaricdo/cads-react";
 import { ScrollArea } from "../../../../ui/scroll-area";
 import { FileChip } from "../../../../ui/FileChip";
 import { getFileChipIconProps, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
-import { ActionRow } from "./ActionRow";
 import { EditOptionsCard } from "./EditOptionsCard";
 import { AgentHandOffCard } from "./AgentHandOffCard";
 import { NewProjectPlanQuestionnaireCard } from "./NewProjectPlanQuestionnaireCard";
 import { TutorActionCard } from "./TutorActionCard";
 import { ThinkingAnimation } from "./ThinkingAnimation";
+import { TutorChatFileChip, tutorChatChipType } from "./tutorChatFileChip";
 import type {
   AgentHandOffCardData,
   ChatAttachment,
@@ -24,13 +24,15 @@ import type {
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import type {
   ValidationReviewCardData,
-  ValidationReviewItemStatus,
 } from "../../../../../types/validationReview";
 import { isAddableUploadAttachment } from "./uploadIntentClassifier";
-import { copyTextToClipboard, FileChangesCard, renderMessageContent } from "./messageFormatting";
+import { FileChangesCard, renderMessageContent } from "./messageFormatting";
+import {
+  hasLaterChatMessageForTest,
+  validationReviewSuggestionActions,
+  type ValidationReviewFollowUpAction,
+} from "./aiTutorMessageListLogic";
 import styles from "./AiTutorPanel.module.scss";
-
-type ValidationReviewFollowUpAction = "hint" | "debug" | "suggestion";
 
 interface AiTutorMessageListProps {
   scrollWrapRef: RefObject<HTMLDivElement | null>;
@@ -101,80 +103,46 @@ function MessageAttachments({
 
   if (msg.role !== "user" || !msg.attachments?.length) return null;
 
-  const codeRefs = msg.attachments.filter((a) => a.source === "code-reference");
-  const nonCodeRefs = msg.attachments.filter((a) => a.source !== "code-reference");
-
   return (
-    <>
-      {codeRefs.length > 0 && (
-        <div className={`${styles.messageRow} ${styles.messageRowUser}`}>
-          <div className={styles.streamAttachmentRow}>
-            {codeRefs.map((att) => {
-              const fileIcon = getFileChipIconProps(att.path);
-              return (
-              <FileChip
-                key={att.path}
-                fileName={att.fileName}
-                nameTitle={att.path}
-                extensionLabel={metadataLabelForAttachment(att)}
-                iconName={fileIcon.iconName}
-                iconFamily={fileIcon.iconFamily}
-                mode="static"
-              />
-              );
-            })}
-          </div>
-        </div>
-      )}
+    <div className={styles.streamAttachmentRow}>
+      {msg.attachments.map((att) => {
+        const isUpload = att.source === "upload";
+        const canAdd = showFileChipActionsInStream && isUpload && isAddableUploadAttachment(att);
+        if (showFileChipActionsInStream && isUpload) {
+          const fileIcon = getFileChipIconProps(att.path);
+          return (
+            <FileChip
+              key={att.path}
+              fileName={att.fileName}
+              nameTitle={att.path}
+              extensionLabel={metadataLabelForAttachment(att)}
+              iconName={fileIcon.iconName}
+              iconFamily={fileIcon.iconFamily}
+              imageSrc={att.imageSrc}
+              mode="add"
+              onAdd={canAdd ? () => onMarkAttachmentAdded(idx, att.path) : undefined}
+              addedToProject={att.addedToProject}
+            />
+          );
+        }
 
-      {!showFileChipActionsInStream && nonCodeRefs.length > 0 && (
-        <div className={`${styles.messageRow} ${styles.messageRowUser}`}>
-          <div className={styles.streamAttachmentRow}>
-            {nonCodeRefs.map((att) => {
-              const fileIcon = getFileChipIconProps(att.fileName);
-              return (
-              <FileChip
-                key={att.path}
-                fileName={att.fileName}
-                nameTitle={att.path}
-                extensionLabel={metadataLabelForAttachment(att)}
-                iconName={fileIcon.iconName}
-                iconFamily={fileIcon.iconFamily}
-                imageSrc={att.imageSrc}
-                mode="static"
-              />
-              );
+        return (
+          <TutorChatFileChip
+            key={att.path}
+            fileName={att.fileName}
+            title={att.path}
+            useCase="chatStream"
+            type={tutorChatChipType({
+              source: att.source,
+              imageSrc: att.imageSrc,
+              mimeType: att.mimeType,
             })}
-          </div>
-        </div>
-      )}
-
-      {showFileChipActionsInStream && (
-        <div className={`${styles.messageRow} ${styles.messageRowUser}`}>
-          <div className={styles.streamAttachmentRow}>
-            {msg.attachments.map((att) => {
-              const isUpload = att.source === "upload";
-              const canAdd = isUpload && isAddableUploadAttachment(att);
-              const fileIcon = getFileChipIconProps(att.path);
-              return (
-                <FileChip
-                  key={att.path}
-                  fileName={att.fileName}
-                  nameTitle={att.path}
-                  extensionLabel={metadataLabelForAttachment(att)}
-                  iconName={fileIcon.iconName}
-                  iconFamily={fileIcon.iconFamily}
-                  imageSrc={att.imageSrc}
-                  mode={isUpload ? "add" : "static"}
-                  onAdd={canAdd ? () => onMarkAttachmentAdded(idx, att.path) : undefined}
-                  addedToProject={att.addedToProject}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </>
+            metadata={metadataLabelForAttachment(att)}
+            imageSrc={att.imageSrc}
+          />
+        );
+      })}
+    </div>
   );
 }
 
@@ -219,73 +187,17 @@ function hasAssistantCardContent(message: ChatMessage) {
     message.newProjectPlanQuestionnaire ||
     message.editOptions?.status === "pending" ||
     message.validationReview ||
-    message.instructionGuide ||
     message.actionCard ||
     message.agentHandOff ||
     (message.fileChanges && message.fileChanges.length > 0),
   );
 }
 
-export function hasLaterChatMessageForTest(messages: ChatMessage[], messageIndex: number) {
-  return messages.length > messageIndex + 1;
-}
-
-export function hasInstructionGuideActionsForTest() {
-  return false;
-}
-
-function validationReviewText(review: ValidationReviewCardData) {
-  return [
-    review.title,
-    review.nextStep,
-    ...(review.requirements ?? []),
-    ...(review.requirementLabels ?? []),
-    ...(review.items ?? []).flatMap((item) => [item.label, item.detail]),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-}
-
-function shouldPreferDebugFollowUp(review: ValidationReviewCardData) {
-  if (review.followUpPreference === "debug") return true;
-  if (review.followUpPreference === "suggestion") return false;
-
-  const text = validationReviewText(review);
-  const isStylingFocused =
-    review.mode === "open-ended" ||
-    /\b(style|styling|css|color|colour|font|typography|spacing|layout|align|alignment|padding|margin|visual|design|polish|responsive)\b/i.test(text);
-  const looksBugFocused =
-    review.mode === "technical" ||
-    /\b(debug|bug|error|broken|fix|logic|javascript|selector|promise|loop|function|event|click|console|trace|not working|fails?)\b/i.test(text);
-
-  return looksBugFocused && !isStylingFocused;
-}
-
-function validationReviewSuggestionActions(review: ValidationReviewCardData) {
-  const actions: Array<{
-    action: ValidationReviewFollowUpAction;
-    label: string;
-    iconName: "lightbulb" | "bug" | "wand-magic-sparkles";
-  }> = [
-    { action: "hint", label: "Give me a hint", iconName: "lightbulb" },
-  ];
-
-  if (shouldPreferDebugFollowUp(review)) {
-    actions.push({ action: "debug", label: "Help me debug", iconName: "bug" });
-    return actions;
-  }
-
-  actions.push({
-    action: "suggestion",
-    label: "Give me a suggestion",
-    iconName: "wand-magic-sparkles",
-  });
-
-  return actions;
-}
-
-export const validationReviewSuggestionActionsForTest = validationReviewSuggestionActions;
+export {
+  hasLaterChatMessageForTest,
+  hasInstructionGuideActionsForTest,
+  validationReviewSuggestionActionsForTest,
+} from "./aiTutorMessageListLogic";
 
 function ValidationReviewSuggestionChips({
   review,
@@ -467,6 +379,157 @@ function ValidationReviewCard({
   );
 }
 
+function buildAssistantCustomContent({
+  msg,
+  idx,
+  latestReviewIndex,
+  interactiveCardsDisabled,
+  onNewProjectPlanQuestionnaireSubmit,
+  onEditOptionsSelect,
+  onEditOptionsCustomSubmit,
+  onCodeChangeAction,
+  onOpenFileChangeInEditor,
+  onOpenFileChangeInPreview,
+  onValidationReviewRequest,
+  onValidationReviewContinue,
+  validationReviewContinueLabel,
+  validationReviewRunning,
+  onActionCardUpdate,
+  onAgentHandOff,
+}: {
+  msg: ChatMessage;
+  idx: number;
+  latestReviewIndex: number;
+  interactiveCardsDisabled: boolean;
+  onNewProjectPlanQuestionnaireSubmit: AiTutorMessageListProps["onNewProjectPlanQuestionnaireSubmit"];
+  onEditOptionsSelect: AiTutorMessageListProps["onEditOptionsSelect"];
+  onEditOptionsCustomSubmit: AiTutorMessageListProps["onEditOptionsCustomSubmit"];
+  onCodeChangeAction: AiTutorMessageListProps["onCodeChangeAction"];
+  onOpenFileChangeInEditor: AiTutorMessageListProps["onOpenFileChangeInEditor"];
+  onOpenFileChangeInPreview: AiTutorMessageListProps["onOpenFileChangeInPreview"];
+  onValidationReviewRequest: AiTutorMessageListProps["onValidationReviewRequest"];
+  onValidationReviewContinue: AiTutorMessageListProps["onValidationReviewContinue"];
+  validationReviewContinueLabel: AiTutorMessageListProps["validationReviewContinueLabel"];
+  validationReviewRunning: boolean;
+  onActionCardUpdate: AiTutorMessageListProps["onActionCardUpdate"];
+  onAgentHandOff: AiTutorMessageListProps["onAgentHandOff"];
+}): ReactNode {
+  if (msg.role !== "assistant") return undefined;
+
+  const parts: ReactNode[] = [];
+
+  if (msg.newProjectPlanQuestionnaire) {
+    parts.push(
+      <NewProjectPlanQuestionnaireCard
+        key="questionnaire"
+        questionnaire={msg.newProjectPlanQuestionnaire}
+        disabled={interactiveCardsDisabled}
+        onSubmit={(answers, moodboardAttachments) =>
+          onNewProjectPlanQuestionnaireSubmit(idx, answers, moodboardAttachments)
+        }
+      />,
+    );
+  }
+
+  if (msg.editOptions?.status === "pending") {
+    parts.push(
+      <EditOptionsCard
+        key="edit-options"
+        editOptions={msg.editOptions}
+        disabled={interactiveCardsDisabled || !onEditOptionsSelect}
+        onSelect={(option) => onEditOptionsSelect?.(idx, option)}
+        onCustomSubmit={(customDirection) =>
+          onEditOptionsCustomSubmit?.(idx, customDirection)
+        }
+      />,
+    );
+  }
+
+  if (msg.fileChanges && msg.fileChanges.length > 0) {
+    parts.push(
+      <FileChangesCard
+        key="file-changes"
+        changes={msg.fileChanges}
+        onOpenFileInEditor={onOpenFileChangeInEditor}
+        onOpenFileInPreview={onOpenFileChangeInPreview}
+      />,
+    );
+  }
+
+  if (msg.fileChanges && msg.codeChangeStatus === "pending") {
+    parts.push(
+      <div key="code-change-actions" className={styles.codeChangeActions}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="small"
+          startIconName="xmark"
+          fullWidth
+          onClick={() => onCodeChangeAction(idx, "rejected")}
+        >
+          Reject
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          startIconName="check"
+          fullWidth
+          onClick={() => onCodeChangeAction(idx, "accepted")}
+        >
+          Accept
+        </Button>
+      </div>,
+    );
+  }
+
+  if (msg.validationReview) {
+    parts.push(
+      <ValidationReviewCard
+        key="validation-review"
+        review={msg.validationReview}
+        disabled={interactiveCardsDisabled}
+        compact={
+          msg.validationReview.kind === "summary" && idx !== latestReviewIndex
+        }
+        onRequestReview={onValidationReviewRequest}
+        onContinue={onValidationReviewContinue}
+        continueLabel={validationReviewContinueLabel}
+        isRunning={validationReviewRunning}
+      />,
+    );
+  }
+
+  if (msg.actionCard) {
+    parts.push(
+      <TutorActionCard
+        key="action-card"
+        prompt={msg.actionCard.prompt}
+        files={msg.actionCard.files}
+        status={msg.actionCard.status}
+        onAdd={() => onActionCardUpdate(idx, "added")}
+        onDismiss={() => onActionCardUpdate(idx, "dismissed")}
+      />,
+    );
+  }
+
+  if (msg.agentHandOff) {
+    parts.push(
+      <AgentHandOffCard
+        key="agent-hand-off"
+        handOff={msg.agentHandOff}
+        disabled={interactiveCardsDisabled || !onAgentHandOff}
+        onAction={() =>
+          msg.agentHandOff && onAgentHandOff?.(msg.agentHandOff, idx)
+        }
+      />,
+    );
+  }
+
+  if (parts.length === 0) return undefined;
+  return <div className={styles.messageCustomContent}>{parts}</div>;
+}
+
 export function AiTutorMessageList({
   scrollWrapRef,
   canScrollUp,
@@ -557,6 +620,24 @@ export function AiTutorMessageList({
 
             const hasCardContent = hasAssistantCardContent(msg);
             const hasLaterChatMessage = hasLaterChatMessageForTest(chatMessages, idx);
+            const customContent = buildAssistantCustomContent({
+              msg,
+              idx,
+              latestReviewIndex,
+              interactiveCardsDisabled,
+              onNewProjectPlanQuestionnaireSubmit,
+              onEditOptionsSelect,
+              onEditOptionsCustomSubmit,
+              onCodeChangeAction,
+              onOpenFileChangeInEditor,
+              onOpenFileChangeInPreview,
+              onValidationReviewRequest,
+              onValidationReviewContinue,
+              validationReviewContinueLabel,
+              validationReviewRunning,
+              onActionCardUpdate,
+              onAgentHandOff,
+            });
 
             return (
               <div
@@ -594,146 +675,35 @@ export function AiTutorMessageList({
                   </div>
                 ) : (
                   <>
-                    <div
-                      className={`${styles.messageRow} ${
-                        msg.role === "user" ? styles.messageRowUser : styles.messageRowAssistant
-                      }`}
-                      data-tutor-message-anchor={msg.role === "assistant" ? "assistant-reply-start" : undefined}
+                    <AiChatMessage
+                      context="Tutor"
+                      author={msg.role === "user" ? "Human" : "AI"}
+                      className={hasCardContent ? styles.chatMessageWithCard : undefined}
+                      hasActionRow={msg.role === "assistant"}
+                      hasDownload={false}
+                      hasFlagging={false}
+                      data-tutor-message-anchor={
+                        msg.role === "assistant" ? "assistant-reply-start" : undefined
+                      }
+                      customContent={customContent}
                     >
-                      <div
-                        className={[
-                          styles.messageBubble,
-                          msg.role === "user"
-                            ? styles.messageBubbleUser
-                            : styles.messageBubbleAssistant,
-                          hasCardContent ? styles.messageBubbleWithCard : "",
-                        ].filter(Boolean).join(" ")}
-                      >
-                        {renderMessageContent(msg.content)}
+                      {msg.content.trim() ? renderMessageContent(msg.content) : null}
+                    </AiChatMessage>
 
-                        {msg.role === "assistant" && msg.newProjectPlanQuestionnaire && (
-                          <NewProjectPlanQuestionnaireCard
-                            questionnaire={msg.newProjectPlanQuestionnaire}
-                            disabled={interactiveCardsDisabled}
-                            onSubmit={(answers, moodboardAttachments) =>
-                              onNewProjectPlanQuestionnaireSubmit(
-                                idx,
-                                answers,
-                                moodboardAttachments,
-                              )
-                            }
-                          />
-                        )}
-
-                        {msg.role === "assistant" &&
-                          msg.editOptions?.status === "pending" && (
-                          <EditOptionsCard
-                            editOptions={msg.editOptions}
-                            disabled={interactiveCardsDisabled || !onEditOptionsSelect}
-                            onSelect={(option) => onEditOptionsSelect?.(idx, option)}
-                            onCustomSubmit={(customDirection) =>
-                              onEditOptionsCustomSubmit?.(idx, customDirection)
-                            }
-                          />
-                        )}
-
-                        {msg.fileChanges && msg.fileChanges.length > 0 && (
-                          <FileChangesCard
-                            changes={msg.fileChanges}
-                            onOpenFileInEditor={onOpenFileChangeInEditor}
-                            onOpenFileInPreview={onOpenFileChangeInPreview}
-                          />
-                        )}
-
-                        {msg.fileChanges && msg.codeChangeStatus === "pending" && (
-                          <div className={styles.codeChangeActions}>
-                            <Button
-                              variant="outlined"
-                              color="secondary"
-                              size="small"
-                              startIconName="xmark"
-                              fullWidth
-                              onClick={() => onCodeChangeAction(idx, "rejected")}
-                            >
-                              Reject
-                            </Button>
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              size="small"
-                              startIconName="check"
-                              fullWidth
-                              onClick={() => onCodeChangeAction(idx, "accepted")}
-                            >
-                              Accept
-                            </Button>
-                          </div>
-                        )}
-
-                        {msg.role === "assistant" && msg.validationReview && (
-                          <ValidationReviewCard
+                    {msg.role === "assistant" &&
+                      msg.validationReview?.kind === "summary" &&
+                      idx === latestReviewIndex &&
+                      !msg.validationReviewFollowUpAction &&
+                      !hasLaterChatMessage &&
+                      msg.validationReview.status !== "likely_complete" && (
+                        <div className={styles.suggestionChipWrap}>
+                          <ValidationReviewSuggestionChips
                             review={msg.validationReview}
                             disabled={interactiveCardsDisabled}
-                            compact={
-                              msg.validationReview.kind === "summary" &&
-                              idx !== latestReviewIndex
-                            }
-                            onRequestReview={onValidationReviewRequest}
-                            onContinue={onValidationReviewContinue}
-                            continueLabel={validationReviewContinueLabel}
-                            isRunning={validationReviewRunning}
-                          />
-                        )}
-
-                        {msg.role === "assistant" && msg.actionCard && (
-                          <TutorActionCard
-                            prompt={msg.actionCard.prompt}
-                            files={msg.actionCard.files}
-                            status={msg.actionCard.status}
-                            onAdd={() => onActionCardUpdate(idx, "added")}
-                            onDismiss={() => onActionCardUpdate(idx, "dismissed")}
-                          />
-                        )}
-
-                        {msg.role === "assistant" && msg.agentHandOff && (
-                          <AgentHandOffCard
-                            handOff={msg.agentHandOff}
-                            disabled={interactiveCardsDisabled || !onAgentHandOff}
-                            onAction={() =>
-                              msg.agentHandOff &&
-                              onAgentHandOff?.(msg.agentHandOff, idx)
-                            }
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    {msg.role === "assistant" && (
-                      <div className={styles.assistantMessageFooter}>
-                        <div className={styles.actionRowWrap}>
-                          <ActionRow
-                            onCopy={() => void copyTextToClipboard(msg.content)}
-                            showDownload={false}
-                            showFeedback={false}
+                            onAction={onValidationReviewAction}
                           />
                         </div>
-
-                        {msg.validationReview?.kind === "summary" &&
-                          idx === latestReviewIndex &&
-                          !msg.validationReviewFollowUpAction &&
-                          !hasLaterChatMessage &&
-                          msg.validationReview.status !== "likely_complete" && (
-                            <div className={styles.suggestionChipWrap}>
-                              <ValidationReviewSuggestionChips
-                                review={msg.validationReview}
-                                disabled={interactiveCardsDisabled}
-                                onAction={onValidationReviewAction}
-                              />
-                            </div>
-                          )}
-
-                      </div>
-                    )}
+                      )}
                   </>
                 )}
               </div>
