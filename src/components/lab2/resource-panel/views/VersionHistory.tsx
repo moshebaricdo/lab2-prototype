@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, TextInput, Tooltip } from "@moshebaricdo/cads-react";
 import { AiTutorIcon } from "../../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../../ui/icons/FaIcon";
@@ -45,9 +45,7 @@ export function VersionHistory({
     () => new Set(),
   );
   const [versionDescription, setVersionDescription] = useState("");
-  const [isDescriptionKeyboardFocused, setIsDescriptionKeyboardFocused] = useState(false);
   const [showStartOverConfirm, setShowStartOverConfirm] = useState(false);
-  const lastFocusWasKeyboardRef = useRef(false);
 
   const selectedVersion = externalSelectedVersion ?? internalSelectedVersion;
 
@@ -55,24 +53,6 @@ export function VersionHistory({
     () => versions.find((item) => item.id === "current") ?? defaultVersions[0],
     [versions],
   );
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Tab") {
-        lastFocusWasKeyboardRef.current = true;
-      }
-    };
-    const handlePointerDown = () => {
-      lastFocusWasKeyboardRef.current = false;
-    };
-
-    document.addEventListener("keydown", handleKeyDown, true);
-    document.addEventListener("pointerdown", handlePointerDown, true);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown, true);
-      document.removeEventListener("pointerdown", handlePointerDown, true);
-    };
-  }, []);
 
   useEffect(() => {
     if (!showSaveSuccessAlert || !setShowSaveSuccessAlert) return undefined;
@@ -270,10 +250,6 @@ export function VersionHistory({
                 <div className={styles.savePanel}>
                   <TextInput
                     value={versionDescription}
-                    onFocus={() => {
-                      setIsDescriptionKeyboardFocused(lastFocusWasKeyboardRef.current);
-                    }}
-                    onBlur={() => setIsDescriptionKeyboardFocused(false)}
                     onChange={(event) => setVersionDescription(event.target.value)}
                     onKeyDown={(event) => {
                       if (
@@ -284,9 +260,7 @@ export function VersionHistory({
                         handleSaveVersion();
                       }
                     }}
-                    data-keyboard-focused={isDescriptionKeyboardFocused ? "true" : undefined}
                     placeholder="Describe your changes"
-                    className={styles.textarea}
                     multiline
                     rows={3}
                     size="small"

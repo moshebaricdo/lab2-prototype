@@ -217,36 +217,10 @@
 }
 
 .savePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   padding: 8px;
-}
-
-.textarea {
-  display: block;
-  width: 100%;
-  height: 70px;
-  box-sizing: border-box;
-  border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-sm);
-  background: var(--background-neutral-primary);
-  padding: 5px 10px;
-  margin-bottom: 6px;
-  resize: none;
-  color: var(--text-neutral-primary);
-  font-size: var(--text-body-sm);
-  line-height: var(--leading-body-sm);
-}
-
-.textarea:focus {
-  outline: none;
-}
-
-.textarea[data-keyboard-focused="true"] {
-  outline: 2px solid var(--border-selected-primary);
-  outline-offset: 2px;
-}
-
-.textarea::placeholder {
-  color: var(--text-neutral-placeholder);
 }
 
 .toggleWrap {
