@@ -42,8 +42,18 @@ export function TopNavigation({
   hideProgression = false,
   disableProgressionLinks = false,
 }: TopNavigationProps) {
+  const continueButton = showContinueButton ? (
+    <ContinueButton
+      fullWidth={false}
+      size="small"
+      onClick={onContinue}
+      label={continueLabel ?? "Continue"}
+      className={styles.continueButton}
+    />
+  ) : null;
+
   return (
-    <div className={styles.root}>
+    <div className={`${styles.root} dark`} data-theme="Dark">
       <div className={styles.leftGroup}>
         <div className={styles.logoWrap}>
           {disableLogoLink ? (
@@ -62,76 +72,49 @@ export function TopNavigation({
         </div>
       </div>
 
-      <div className={styles.centerSpacer} />
-
-      {!hideProgression && (
-        <div className={styles.bubbleCenter}>
-          {showContinueButton ? (
-            <div className={styles.progressionContainer}>
-              <div className={styles.levelHeadingInline}>
-                <p className={styles.titleDark}>{title}</p>
-                <p className={styles.subtitleDark}>{subtitle}</p>
-              </div>
-              <div className={styles.bubbleWrap}>
-                <LevelProgressBubbles
-                  currentLevel={currentLevel}
-                  totalLevels={totalLevels}
-                  completedLevels={completedLevels}
-                  levelLinks={levelLinks}
-                  currentLevelPath={currentLevelPath}
-                  completedLevelPaths={completedLevelPaths}
-                  readOnly={disableProgressionLinks}
-                />
-              </div>
-              <ContinueButton
-                fullWidth={false}
-                onClick={onContinue}
-                label={continueLabel ?? "Continue"}
-                className={styles.continueButton}
-              />
+      <div className={styles.centerGroup}>
+        {!hideProgression ? (
+          <>
+            <div className={styles.levelHeading}>
+              <p className={styles.title}>{title}</p>
+              <p className={styles.subtitle}>{subtitle}</p>
             </div>
-          ) : (
-            <>
-              <div className={styles.levelHeading}>
-                <p className={styles.title}>{title}</p>
-                <p className={styles.subtitle}>{subtitle}</p>
-              </div>
-              <div className={styles.bubbleWrap}>
-                <LevelProgressBubbles
-                  currentLevel={currentLevel}
-                  totalLevels={totalLevels}
-                  completedLevels={completedLevels}
-                  levelLinks={levelLinks}
-                  currentLevelPath={currentLevelPath}
-                  completedLevelPaths={completedLevelPaths}
-                  readOnly={disableProgressionLinks}
-                />
-              </div>
-            </>
-          )}
-        </div>
-      )}
+            <LevelProgressBubbles
+              currentLevel={currentLevel}
+              totalLevels={totalLevels}
+              completedLevels={completedLevels}
+              levelLinks={levelLinks}
+              currentLevelPath={currentLevelPath}
+              completedLevelPaths={completedLevelPaths}
+              readOnly={disableProgressionLinks}
+            />
+          </>
+        ) : null}
+        {continueButton}
+      </div>
 
       <div className={styles.rightGroup}>
         <Button
           variant="outlined"
           color="secondary"
-          size="small"
+          size="extraSmall"
           endIconName="chevron-down"
           className={styles.userButton}
         >
           Username
         </Button>
-        <Button
-          variant="text"
-          color="tertiary"
-          size="small"
-          iconOnly
-          startIconName="circle-question"
-          className={styles.rightIconButton}
-          aria-label="Help"
-        />
-        <GlobalNavMenu />
+        <div className={styles.iconGroup}>
+          <Button
+            variant="text"
+            color="tertiary"
+            size="extraSmall"
+            iconOnly
+            startIconName="circle-question"
+            className={`${styles.rightIconButton} ${styles.helpButton}`}
+            aria-label="Help"
+          />
+          <GlobalNavMenu />
+        </div>
       </div>
     </div>
   );

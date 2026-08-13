@@ -15,7 +15,7 @@ export function WebLab2GenericLevelPage() {
       showOnlyFilesWithContent
       tutorMode={{ kind: "functional" }}
       tutorSupportContext="curriculum-level"
-      continueButtonPlacement="header"
+      continueButtonPlacement="sidebar"
     />
   );
 }

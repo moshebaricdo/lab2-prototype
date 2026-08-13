@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { AppButton } from "../../components/ui/AppButton";
-import { FaIcon } from "../../components/ui/icons/FaIcon";
 import { GlobalNavMenu } from "../../components/ui/header/GlobalNavMenu";
 import { Logo } from "../../components/ui/icons/Logo";
 import { NAV_LINKS, TEACHER_NAME } from "./teacherDashboardData";
@@ -8,7 +7,7 @@ import styles from "./TeacherDashboardNav.module.scss";
 
 export function TeacherDashboardNav() {
   return (
-    <header className={styles.root}>
+    <header className={`${styles.root} dark`} data-theme="Dark">
       <div className={styles.leftGroup}>
         <Link to="/levels" className={styles.logoBox} aria-label="Go to levels page">
           <Logo />
@@ -26,32 +25,34 @@ export function TeacherDashboardNav() {
         <AppButton
           variant="secondary"
           tone="white"
-          size="s"
-          iconName="chevron-down"
+          size="xs"
+          iconName="plus"
           iconPosition="end"
           className={styles.outlineButton}
         >
-          New Project
+          New project
         </AppButton>
         <AppButton
           variant="secondary"
           tone="white"
-          size="s"
-          iconName="circle-user"
+          size="xs"
+          iconName="chevron-down"
+          iconPosition="end"
           className={styles.outlineButton}
         >
           {TEACHER_NAME}
-          <FaIcon name="chevron-down" size="xs" className={styles.userChevron} />
         </AppButton>
-        <AppButton
-          variant="tertiary"
-          tone="white"
-          size="s"
-          iconName="circle-question"
-          className={styles.iconButton}
-          aria-label="Help"
-        />
-        <GlobalNavMenu />
+        <div className={styles.iconGroup}>
+          <AppButton
+            variant="tertiary"
+            tone="white"
+            size="xs"
+            iconName="circle-question"
+            className={`${styles.iconButton} ${styles.helpButton}`}
+            aria-label="Help"
+          />
+          <GlobalNavMenu />
+        </div>
       </div>
     </header>
   );

@@ -16,7 +16,7 @@ export function WebLab2DemoProjectLevelPage() {
       tutorSupportContext="standalone-project"
       showRubricTab
       rubricData={demoRubrics}
-      continueButtonPlacement="header"
+      continueButtonPlacement="sidebar"
     />
   );
 }

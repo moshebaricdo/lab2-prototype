@@ -15,7 +15,7 @@ export function WebLab2BlankDemoProjectLevelPage() {
       tutorMode={{ kind: "functional" }}
       tutorSupportContext="standalone-project"
       rubricData={demoRubrics}
-      continueButtonPlacement="header"
+      continueButtonPlacement="sidebar"
       collapseSidebarByDefault={true}
       enableSidebarCollapse={true}
     />

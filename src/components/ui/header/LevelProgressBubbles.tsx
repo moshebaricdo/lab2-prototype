@@ -1,109 +1,103 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
+import { FaIcon } from "@moshebaricdo/cads-react/icons";
 import {
   findLevelLinkIndex,
   includesLevelPath,
 } from "../../../lib/levelShareLinks";
 import styles from "./LevelProgressBubbles.module.scss";
 
+export type ProgressBubbleStatus = "notStarted" | "inProgress" | "completed";
+
 export interface LevelProgressLink {
   name: string;
   path: string;
+  /** Figma Progress Bubbles `isAssessment` (star glyph). Inferred from `path` when omitted. */
+  isAssessment?: boolean;
 }
 
-type BubbleState = "not-started" | "completed" | "current";
+const ASSESSMENT_PATH_PATTERN =
+  /\/levels\/(?:multi|free-response|match-|drag-drop|fill-in-blank|levelgroup|assessment-builder|progression-free-response|progression-levelgroup)/;
+
+function inferIsAssessment(path: string | undefined): boolean {
+  return Boolean(path && ASSESSMENT_PATH_PATTERN.test(path));
+}
 
 interface BubbleProps {
-  state: BubbleState;
-  levelNumber?: number;
+  status: ProgressBubbleStatus;
+  isActive: boolean;
+  isAssessment: boolean;
+  levelNumber: number;
   to?: string;
   label: string;
   readOnly?: boolean;
 }
 
-const circleClassByState: Record<Exclude<BubbleState, "current">, string> = {
-  "not-started": styles.circleNotStarted,
-  completed: styles.circleCompleted,
-};
+function bubbleClassName({
+  status,
+  isActive,
+}: Pick<BubbleProps, "status" | "isActive">): string {
+  const parts = [
+    styles.bubble,
+    isActive ? styles.bubbleActive : styles.bubbleInactive,
+  ];
+  if (status === "completed") parts.push(styles.statusCompleted);
+  else if (status === "inProgress") parts.push(styles.statusInProgress);
+  else parts.push(styles.statusNotStarted);
+  return parts.join(" ");
+}
 
-function Bubble({ state, levelNumber, to, label, readOnly = false }: BubbleProps) {
-  const isCurrent = state === "current";
-  const bubbleClass = isCurrent ? styles.bubbleCurrent : styles.bubble;
+function Bubble({
+  status,
+  isActive,
+  isAssessment,
+  levelNumber,
+  to,
+  label,
+  readOnly = false,
+}: BubbleProps) {
+  const className = bubbleClassName({ status, isActive });
+  const starSize = isActive ? "5px" : "6px";
 
   const BubbleWrapper = ({ children }: { children: ReactNode }) => {
     if (to) {
       return (
-        <Link to={to} className={bubbleClass} aria-label={label}>
+        <Link to={to} className={className} aria-label={label} aria-current={isActive ? "step" : undefined}>
           {children}
         </Link>
       );
     }
     if (readOnly) {
       return (
-        <span className={bubbleClass} aria-label={label}>
+        <span className={className} aria-label={label} aria-current={isActive ? "step" : undefined}>
           {children}
         </span>
       );
     }
     return (
-      <button type="button" className={bubbleClass} aria-label={label}>
+      <button
+        type="button"
+        className={className}
+        aria-label={label}
+        aria-current={isActive ? "step" : undefined}
+      >
         {children}
       </button>
     );
   };
 
-  if (isCurrent && levelNumber) {
-    return (
-      <BubbleWrapper>
-        <div className={styles.currentSvgWrap}>
-          <svg
-            className={styles.currentSvg}
-            fill="none"
-            preserveAspectRatio="none"
-            viewBox="0 0 24 24"
-          >
-            <ellipse
-              cx="11.9181"
-              cy="11.9297"
-              className={styles.currentFill}
-              rx="11.9181"
-              ry="11.9297"
-              transform="matrix(1 0 0.000970931 1 0 0)"
-            />
-          </svg>
-        </div>
-        <div className={styles.currentNumberWrap}>
-          <div className={styles.currentNumberInner}>
-            <div className={styles.currentNumberText}>
-              <p>{levelNumber}</p>
-            </div>
-          </div>
-        </div>
-      </BubbleWrapper>
-    );
-  }
-
   return (
     <BubbleWrapper>
-      <div className={styles.bubbleSvgWrap}>
-        <div className={styles.bubbleSvgInner}>
-          <svg
-            className={styles.bubbleSvg}
-            fill="none"
-            preserveAspectRatio="none"
-            viewBox="0 0 13 13"
-          >
-            <circle
-              cx="6.5"
-              cy="6.5"
-              className={circleClassByState[state as Exclude<BubbleState, "current">]}
-              r="5.75"
-              strokeWidth="1.5"
-            />
-          </svg>
-        </div>
-      </div>
+      {isActive ? <span className={styles.levelNumber}>{levelNumber}</span> : null}
+      {isAssessment && !isActive ? (
+        <FaIcon name="star" family="solid" fontSize={starSize} className={styles.star} />
+      ) : null}
+      {isAssessment && isActive ? (
+        <span className={styles.assessmentBadge} aria-hidden="true">
+          <FaIcon name="star" family="solid" fontSize={starSize} />
+        </span>
+      ) : null}
     </BubbleWrapper>
   );
 }
@@ -127,6 +121,7 @@ export function LevelProgressBubbles({
   completedLevelPaths,
   readOnly = false,
 }: LevelProgressBubblesProps) {
+  const navigate = useNavigate();
   const isLinkMode = Boolean(levelLinks && levelLinks.length > 0);
   const resolvedLevelLinks = isLinkMode ? levelLinks ?? [] : [];
   const resolvedTotalLevels = isLinkMode
@@ -156,46 +151,84 @@ export function LevelProgressBubbles({
       : completedLevels,
   );
 
-  const getBubbleState = (
-    index: number,
-  ): "not-started" | "completed" | "current" => {
-    if (index === resolvedCurrentLevel - 1) return "current";
+  const getStatus = (index: number): ProgressBubbleStatus => {
     if (completedLevelsSet.has(index + 1)) return "completed";
-    return "not-started";
+    if (index === resolvedCurrentLevel - 1) return "inProgress";
+    return "notStarted";
   };
 
   const getBubbleLabel = (index: number) =>
     isLinkMode ? resolvedLevelLinks[index].name : `Level ${index + 1}`;
 
+  const moreMenuOptions = isLinkMode
+    ? resolvedLevelLinks.map((levelLink) => ({
+        value: levelLink.path,
+        label: levelLink.name,
+      }))
+    : Array.from({ length: resolvedTotalLevels }, (_, index) => ({
+        value: String(index + 1),
+        label: `Level ${index + 1}`,
+      }));
+
   return (
-    <div className={styles.root}>
-      <div className={styles.inner}>
-        <div className={styles.bubbleRow}>
-          {Array.from({ length: resolvedTotalLevels }).map(
-            (_, index) => {
-              const state = getBubbleState(index);
-              const label = getBubbleLabel(index);
-              const to = isLinkMode && !readOnly ? resolvedLevelLinks[index].path : undefined;
-              return (
-                <div key={index} className={styles.bubbleItem}>
-                  <Tooltip title={label} placement="top">
-                    <div className={state === "current" ? styles.tooltipWrapFlipped : styles.tooltipWrap}>
-                      <Bubble
-                        state={state}
-                        levelNumber={state === "current" ? resolvedCurrentLevel : undefined}
-                        to={to}
-                        label={label}
-                        readOnly={readOnly}
-                      />
-                    </div>
-                  </Tooltip>
-                </div>
-              );
-            },
-          )}
-        </div>
+    <div className={styles.root} data-theme="Light">
+      <div className={styles.bubbleSlot}>
+        {Array.from({ length: resolvedTotalLevels }).map((_, index) => {
+          const isActive = index === resolvedCurrentLevel - 1;
+          const status = getStatus(index);
+          const label = getBubbleLabel(index);
+          const link = isLinkMode ? resolvedLevelLinks[index] : undefined;
+          const to = link && !readOnly ? link.path : undefined;
+          const isAssessment = link?.isAssessment ?? inferIsAssessment(link?.path);
+          return (
+            <div key={link?.path ?? index} className={styles.bubbleItem}>
+              <Tooltip
+                title={label}
+                placement="top"
+                slotProps={{ popper: { disablePortal: true } }}
+              >
+                <span className={styles.tooltipWrap}>
+                  <Bubble
+                    status={status}
+                    isActive={isActive}
+                    isAssessment={isAssessment}
+                    levelNumber={index + 1}
+                    to={to}
+                    label={label}
+                    readOnly={readOnly}
+                  />
+                </span>
+              </Tooltip>
+            </div>
+          );
+        })}
       </div>
-      <div aria-hidden="true" className={styles.borderOverlay} />
+      <div className={styles.moreSlot}>
+        {isLinkMode && !readOnly ? (
+          <Dropdown
+            role="action"
+            size="extraSmall"
+            iconOnly
+            startIconName="chevron-down"
+            buttonVariant="text"
+            buttonColor="secondary"
+            aria-label="More levels"
+            menuPlacement="bottomRight"
+            disablePortal
+            options={moreMenuOptions}
+            onAction={(value) => navigate(String(value))}
+          />
+        ) : (
+          <Button
+            variant="text"
+            color="secondary"
+            size="extraSmall"
+            iconOnly
+            startIconName="chevron-down"
+            aria-label="More levels"
+          />
+        )}
+      </div>
     </div>
   );
 }

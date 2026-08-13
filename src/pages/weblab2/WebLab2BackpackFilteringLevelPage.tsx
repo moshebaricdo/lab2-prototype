@@ -62,7 +62,7 @@ function commonProps(
     useFilePreview: true,
     showInstructionsDrawer: true,
     instructionsMarkdown: BACKPACK_FILTER_EXPERIMENT_INSTRUCTIONS,
-    continueButtonPlacement: "header" as const,
+    continueButtonPlacement: "sidebar" as const,
     initialViewMode: "split" as const,
     initialOpenFiles: "index.html",
     levelLinks: backpackFilterProgressionLinks,

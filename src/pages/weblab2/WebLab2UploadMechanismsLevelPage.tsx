@@ -111,7 +111,7 @@ function commonProps(currentLevelPath: string, currentLevel: number) {
     fileStructureOverride: uploadMechanismStarterFileStructure,
     useFilePreview: true,
     showInstructionsDrawer: false,
-    continueButtonPlacement: "header" as const,
+    continueButtonPlacement: "sidebar" as const,
     initialViewMode: "split" as const,
     initialOpenFiles: "index.html",
     levelLinks: uploadMechanismsProgressionLinks,

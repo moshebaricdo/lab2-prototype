@@ -18,7 +18,7 @@ export function WebLab2ValidationLevel() {
       tutorMode={{ kind: "functional" }}
       tutorSupportContext="curriculum-level"
       validationReviewConfig={validationPhotoCarouselReviewConfig}
-      continueButtonPlacement="header"
+      continueButtonPlacement="sidebar"
       storageKeySuffix="script-fixture-v2"
       instructionsDrawerInitialHeightRatio={0.5}
       enableSidebarCollapse={true}

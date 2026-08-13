@@ -5,54 +5,40 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 50px;
-  padding: 0 8px;
+  height: 48px;
+  padding: 0 var(--spacing-p-xs);
+  color-scheme: dark;
   background: var(--background-brand-primary);
 }
 
 .leftGroup {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: var(--spacing-p-xxs);
+  min-width: 0;
 }
 
 .logoWrap {
   display: flex;
   align-items: center;
-  padding-left: 6px;
-  padding-right: 12px;
 }
 
 .logoBox {
-  width: 120px;
-  height: 36px;
+  display: block;
+  flex-shrink: 0;
+  width: 142px;
+  height: 24px;
+  padding-right: 12px;
+  box-sizing: content-box;
 }
 
-.centerSpacer {
-  flex: 1;
-  min-width: 0;
-}
-
-.bubbleCenter {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-}
-
-.progressionContainer {
+.centerGroup {
   display: flex;
+  flex: 1 0 0;
   align-items: center;
-  gap: 4px;
-  background: var(--background-neutral-white-fixed);
-  border-radius: var(--shape-sm);
-  padding: 4px 4px 4px 12px;
-}
-
-.bubbleWrap {
-  position: relative;
-  height: 32px;
+  justify-content: center;
+  gap: var(--spacing-p-xxs);
+  min-width: 0;
 }
 
 .continueButton {
@@ -60,63 +46,29 @@
 }
 
 .levelHeading {
-  position: absolute;
-  right: calc(100% + 16px);
-  top: 50%;
-  transform: translateY(-50%);
-  text-align: right;
-  white-space: nowrap;
-}
-
-.levelHeadingInline {
-  text-align: left;
-  white-space: nowrap;
-  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 0px;
-  height: 32px;
+  align-items: flex-end;
   justify-content: center;
-  padding-right: 6px;
+  text-align: right;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .title {
-  @include type-body-3-semibold;
+  @include type-body-4-semibold;
 
   color: var(--text-neutral-white-fixed);
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.titleDark {
-  font-size: var(--text-body-xs);
-  line-height: var(--leading-body-xs);
-  font-weight: var(--font-weight-semi-bold);
-  color: var(--text-neutral-primary);
-  margin: 0;
+  margin: 0 0 -2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .subtitle {
-  font-size: var(--text-body-xs);
-  line-height: var(--leading-body-xs);
-  font-weight: var(--font-weight-regular);
-  color: rgb(255 255 255 / 70%);
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+  @include type-body-5-regular;
 
-.subtitleDark {
-  font-size: var(--text-body-xxs);
-  line-height: var(--leading-body-xxs);
-  font-weight: var(--font-weight-regular);
-  color: var(--text-neutral-secondary);
+  color: var(--text-neutral-white-fixed);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -126,13 +78,22 @@
 .rightGroup {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.iconGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .userButton {
   --btn-bg: transparent !important;
   --btn-fg: var(--text-neutral-white-fixed) !important;
-  --btn-border: var(--border-neutral-secondary) !important;
+  --btn-border: var(--border-neutral-white-fixed) !important;
   --btn-bg-hover: rgb(255 255 255 / 10%) !important;
   --btn-bg-press: rgb(255 255 255 / 20%) !important;
   --btn-fg-press: var(--text-neutral-white-fixed) !important;
@@ -145,4 +106,10 @@
   --btn-bg-hover: rgb(255 255 255 / 10%) !important;
   --btn-bg-press: rgb(255 255 255 / 20%) !important;
   --btn-fg-press: var(--text-neutral-white-fixed) !important;
+}
+
+@media (max-width: 960px) {
+  .helpButton {
+    display: none;
+  }
 }

@@ -20,7 +20,7 @@ export function GlobalNavMenu() {
         <Button
           variant="text"
           color="tertiary"
-          size="small"
+          size="extraSmall"
           iconOnly
           startIconName="bars"
           className={navStyles.rightIconButton}
