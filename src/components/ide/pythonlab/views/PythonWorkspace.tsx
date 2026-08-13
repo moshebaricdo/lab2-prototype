@@ -369,7 +369,7 @@ export function PythonWorkspace({
       left={
         <Button
           variant="contained"
-          color="primary"
+          color="orange"
           size="extraSmall"
           startIconName={isRunning ? "spinner" : "play"}
           className={isRunning ? styles.running : undefined}
