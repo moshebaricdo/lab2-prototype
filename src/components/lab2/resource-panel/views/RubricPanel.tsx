@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button, Tag } from "@moshebaricdo/cads-react";
 import { ScrollArea } from "../../../ui/scroll-area";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import styles from "./RubricPanel.module.scss";
@@ -116,19 +116,28 @@ export function RubricPanel({ rubrics }: RubricPanelProps) {
           <div className={styles.titleRow}>
             <p className={styles.rubricName}>{rubric.name}</p>
             {isGraded && submissionStatus === "complete" && (
-              <span className={`${styles.statusPill} ${styles.pillComplete}`}>
-                Complete
-              </span>
+              <Tag
+                size="small"
+                color="success"
+                label="Complete"
+                className={styles.statusTag}
+              />
             )}
             {isGraded && submissionStatus === "needs-revisions" && (
-              <span className={`${styles.statusPill} ${styles.pillNeedsRevisions}`}>
-                Needs work
-              </span>
+              <Tag
+                size="small"
+                color="warning"
+                label="Needs work"
+                className={styles.statusTag}
+              />
             )}
             {!isGraded && (
-              <span className={`${styles.statusPill} ${styles.pillDefault}`}>
-                Not graded
-              </span>
+              <Tag
+                size="small"
+                color="neutral"
+                label="Not graded"
+                className={styles.statusTag}
+              />
             )}
           </div>
           <div className={styles.feedbackSection}>

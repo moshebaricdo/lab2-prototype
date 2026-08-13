@@ -1,5 +1,4 @@
-import { Button, Checkbox, Dropdown, Radio, TextInput } from "@moshebaricdo/cads-react";
-import { AppTag } from "../../../ui/AppTag";
+import { Button, Checkbox, Dropdown, Radio, Tag, TextInput } from "@moshebaricdo/cads-react";
 import {
   QUESTION_DIFFICULTIES,
   QUESTION_DIFFICULTY_LABELS,
@@ -123,6 +122,7 @@ export function QuestionItemEditor({
               size="extraSmall"
               color="secondary"
               width="full"
+              menuWidth="trigger"
               startIconName="book"
             />
           </div>
@@ -159,7 +159,12 @@ export function QuestionItemEditor({
         {question.tags.length > 0 && (
           <div className={styles.tagRow}>
             {question.tags.map((tag) => (
-              <AppTag key={tag.id}>{tag.label}</AppTag>
+              <Tag
+                key={tag.id}
+                size="small"
+                color="neutral"
+                label={tag.label}
+              />
             ))}
           </div>
         )}

@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Button, Checkbox, Dropdown, TextInput, Tooltip } from "@moshebaricdo/cads-react";
-import { AppTag } from "../../../ui/AppTag";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Button, Checkbox, Dropdown, Tag, TextInput, Tooltip } from "@moshebaricdo/cads-react";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { SidebarTab } from "../../../lab2/resource-panel/Sidebar.types";
 import {
@@ -25,6 +24,23 @@ function subscribeToBankStorage(callback: () => void) {
 
 function asStringArray(value: string | string[]): string[] {
   return Array.isArray(value) ? value : [value];
+}
+
+/** CADS checklist menus ignore `menuWidth` and hug content; lock to the trigger. */
+function syncChecklistMenuToTrigger(triggerRoot: HTMLElement | null) {
+  const trigger = triggerRoot?.querySelector("button");
+  const menu = document.querySelector<HTMLElement>("[data-cads-dropdown-menu]");
+  if (!trigger || !menu) return;
+  const width = `${Math.round(trigger.getBoundingClientRect().width)}px`;
+  const popper = menu.parentElement;
+  if (popper) {
+    popper.style.width = width;
+    popper.style.minWidth = width;
+  }
+  menu.style.width = width;
+  menu.style.minWidth = width;
+  menu.style.setProperty("--dd-panel-width", width);
+  menu.style.setProperty("--dd-panel-min-width", width);
 }
 
 interface AssessmentBuilderPanelProps {
@@ -65,6 +81,7 @@ export function AssessmentBuilderPanel({
   const [selectedDifficulties, setSelectedDifficulties] = useState<
     QuestionDifficulty[]
   >([]);
+  const courseFilterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setSelectedCourseIds([artifact.courseId]);
@@ -179,7 +196,7 @@ export function AssessmentBuilderPanel({
               </div>
               <div className={styles.groupBody}>
                 <div className={styles.filterFields}>
-                  <div className={styles.filterField}>
+                  <div className={styles.filterField} ref={courseFilterRef}>
                     <span className={styles.filterLabel}>Course</span>
                     <Dropdown
                       role="input"
@@ -187,10 +204,18 @@ export function AssessmentBuilderPanel({
                       options={courseOptions}
                       value={selectedCourseIds}
                       onChange={(value) => setSelectedCourseIds(asStringArray(value))}
+                      onOpenChange={(open) => {
+                        if (open) {
+                          requestAnimationFrame(() => {
+                            syncChecklistMenuToTrigger(courseFilterRef.current);
+                          });
+                        }
+                      }}
                       placeholder="All courses"
                       size="extraSmall"
                       color="secondary"
                       width="full"
+                      menuWidth="trigger"
                       startIconName="book"
                     />
                   </div>
@@ -269,12 +294,19 @@ export function AssessmentBuilderPanel({
                               question.difficulty != null) && (
                               <span className={styles.tagRow}>
                                 {question.tags.map((tag) => (
-                                  <AppTag key={tag.id}>{tag.label}</AppTag>
+                                  <Tag
+                                    key={tag.id}
+                                    size="small"
+                                    color="neutral"
+                                    label={tag.label}
+                                  />
                                 ))}
                                 {question.difficulty != null && (
-                                  <AppTag>
-                                    {QUESTION_DIFFICULTY_LABELS[question.difficulty]}
-                                  </AppTag>
+                                  <Tag
+                                    size="small"
+                                    color="neutral"
+                                    label={QUESTION_DIFFICULTY_LABELS[question.difficulty]}
+                                  />
                                 )}
                               </span>
                             )}

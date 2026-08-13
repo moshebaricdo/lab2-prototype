@@ -14,8 +14,7 @@ import {
   type DraggableAttributes,
 } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
-import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
-import { AppTag } from "../../../ui/AppTag";
+import { Button, Dropdown, Tag, Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
 import { ScrollArea } from "../../../ui/scroll-area";
@@ -544,7 +543,7 @@ export function AssessmentBuildCanvas({
                     <h2 className={styles.bankCalloutTitle}>
                       Add from question bank
                     </h2>
-                    <AppTag size="s">Recommended</AppTag>
+                    <Tag size="small" color="brand" label="Recommended" />
                   </div>
                   <p className={styles.bankCalloutText}>
                     Reuse existing questions so updates stay in sync across
