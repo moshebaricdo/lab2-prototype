@@ -196,7 +196,7 @@ Before merging UI work:
 
 Recent organization cleanup established:
 
-- `TopNavigation` + `LevelProgressBubbles` in `src/components/ui/header`
+- `TopNavigation` + `LevelProgressBubbles` in `src/components/ui/header` (CADS Global Header **labLevel**: 48px dark on-brand bar, extraSmall controls, 30px light-mode progress pill)
 - resource panel views in `src/components/lab2/resource-panel/views`
 - shared atoms (`AppButton`, `AppIconButton`, `AppLink`, `AppTextField`/`AppTextArea`, `AppSlider`, `AppTag`, `Tooltip`, `AlertBanner`) in `src/components/ui`
 - AI Chat Lab workspace chrome in `src/components/ide/aichatlab/views`

@@ -11,15 +11,15 @@ Related: `.cursor/skills/cads-prototyping/SKILL.md`, `color-theming.md`, `/desig
 | Surface | Components | Foundations tokens (SCSS) |
 |---|---|---|
 | `Lab2Shell` → `CadsLabProvider` | Theme bootstrap for all Lab2 routes; flow-complete uses CADS `Dialog` | Loads `variables.css` + icon fonts; `baseline={false}` |
-| Header (`TopNavigation` / `GlobalNavMenu` / `LevelProgressBubbles`) | CADS `Button` / `Dropdown` / `Tooltip` | Unprefixed Foundations (white-on-brand via `--btn-*` overrides) |
+| Header (`TopNavigation` / `GlobalNavMenu` / `LevelProgressBubbles`) | CADS `Button` / `Dropdown` / `Tooltip` / `FaIcon` — extraSmall outlined/text on-brand; progress indicator matches CADS Global Header **labLevel** (always light); header chrome always dark | Unprefixed Foundations (white-on-brand via `--btn-*` overrides; header `dark` / `data-theme="Dark"`, progress pill `data-theme="Light"`) |
 | AI Chat Lab workspace | CADS primitives + `AiChatMessage` / `AiChatInput` | Unprefixed Foundations |
-| Resource panel (shared) | CADS `Button` / `TextInput` / `Dropdown` / `Tooltip` / `Alert` / `Checkbox` | Unprefixed Foundations |
+| Resource panel (shared) | CADS `Button` / `TextInput` / `Dropdown` / `Tooltip` / `Alert` / `Checkbox` / `AiChatMessage` + `AiChatInput` + `AiChatFileChip` (Tutor) / `Tag` (rubric status) | Unprefixed Foundations |
 | `PanelHeader` | Still local layout; labels use Foundations via mixin | Unprefixed Foundations |
 | Shared overlays (`Dialog` / `Modal` / `AlertBanner` / `FileChip`) | CADS `CloseIconButton` / `Button` / `Tooltip` / `Link` | Unprefixed Foundations |
 | IDE shared chrome (`FileManager`, `CreateFileModal`, `EmptyState`, `VersionBanner`, code-editor chrome) | CADS `Button` / `Dropdown` / `Tooltip` / `TextInput` / `Alert` | Unprefixed Foundations (`--ds-syntax-*` kept in CodeMirror highlight style) |
 | Web Lab 2 workspace + agentic chrome | CADS `Button` / `Dropdown` / `Tooltip` / `SegmentedButton` / `Alert` / `Modal` | Unprefixed Foundations |
 | Python Lab / Sketch Lab workspaces | CADS `Button` / `Dropdown` / `Tooltip` / `Slider` / `TextInput` | Unprefixed Foundations |
-| Assessment workspaces + builder | CADS `Button` / `TextInput` / `Checkbox` / `Radio` / `Dropdown` / `SegmentedButton` / `Tooltip` | Unprefixed Foundations |
+| Assessment workspaces + builder | CADS `Button` / `TextInput` / `Checkbox` / `Radio` / `Dropdown` / `SegmentedButton` / `Tooltip` / `Tag` | Unprefixed Foundations |
 | Lab2 dev panel + `/levels` index | CADS `Button` / `Dropdown` / `TextInput` / `Slider` / `Tooltip` | Unprefixed Foundations (`LevelsIndexPage` wraps `CadsLabProvider`) |
 | Local `ui/` atoms (`AppButton`, etc.) | Freeze for new UI; do not extend. Remaining call sites: color sandbox, teacher dashboard | `--ds-*` |
 
@@ -47,6 +47,7 @@ Parity sandbox: `/design-system/cads`. Spike consumer: `/levels/aichatlab*`.
 | `variant="secondary"` | `variant="outlined" color="secondary"` |
 | `variant="tertiary"` + icon-only | `variant="text" color="tertiary" iconOnly` |
 | `variant="tertiary"` + label | `variant="text" color="secondary"` |
+| Python Lab **Run** | `variant="contained" color="orange"` (contained-only; CADS falls back to primary for other variants) |
 | `tone` | Drop; use `color` |
 | size `l` / `m` / `s` / `xs` | `large` / `medium` / `small` / `extraSmall` |
 | `iconName` | `startIconName` (or `endIconName` if `iconPosition="end"`) |
@@ -60,15 +61,18 @@ Panel-header icon buttons: always `variant="text" color="tertiary" size="extraSm
 |---|---|
 | `Tooltip` `content` / `position` | `title` / `placement` (wrap disabled triggers in `<span>`) |
 | `AlertBanner` | `Alert` (`dismissible`→`isDismissible`, `onDismiss`→`onClose`; `danger`→`error`) |
-| `AppNativeSelect` | `Dropdown role="input"` (`onValueChange`→`onChange`, `width="full"`) |
+| `AppNativeSelect` | `Dropdown role="input"` (`onValueChange`→`onChange`, `width="full"`; set `menuWidth="trigger"` when the menu should match the field) |
 | `AppActionDropdown` + custom trigger | `Dropdown role="action"`; for kebab menus use `iconOnly` + `startIconName="ellipsis-vertical"` + `buttonVariant="text"` + `buttonColor="tertiary"` + `aria-label` |
 | `AppTextField` / `AppTextArea` | `TextInput` (+ `multiline` / `rows`) |
+| Custom Tutor composer (`TextInput` + send) | `AiChatInput` (`leftActions` / `onAddFile`; Web Lab + Python Lab share `AiTutorComposer`). Composer file chips are a sibling `AiChatFileChip` row **above** the field, not the in-field `attachments` slot. |
+| Custom Tutor bubbles + `ActionRow` | `AiChatMessage` (`context="Tutor"`). File-change lists, questionnaires, edit-options, validation, action, and hand-off cards go in `customContent`. |
+| `AppTag` | `Tag` (`label`, `color`, `size` `large`/`medium`/`small`, `startIconName`, `isDismissible`/`onClose`) |
 | `AppCheckbox` | `Checkbox` |
 | `AppSlider` | `Slider` |
 
 `Alert` has no `duration` — keep auto-dismiss with a local `useEffect` timeout if needed.
 
-`TextInput` refs the wrapper; native `<textarea>` may need `querySelector("textarea")` for focus/autosize (see Tutor composer).
+`AiChatInput` refs the wrapper; native `<textarea>` may need `querySelector("textarea")` for focus/autosize (see Tutor composer). CADS send enables on non-empty text; Tutor still allows send with attachments only. Pass `customContent` (not extra children) for in-bubble Tutor cards so the CADS action row stays under the bubble.
 
 ---
 
@@ -99,12 +103,13 @@ Dark mode: CADS keys off `.dark` (or `[data-theme='Dark']`) on an **ancestor**. 
 3. **Font files outside allow list** — Local `file:` / symlinked CADS icon fonts may warn under Vite `server.fs.allow`; extend allow list if icons 404 in dev. Published packages do not need this.
 4. **`Button` `fullWidth`** — Fixed upstream in CADS (`--btn-width: 100%`). If Continue/Finish hugs again, confirm you’re on a rebuilt `@moshebaricdo/cads-react`.
 5. **Action `Dropdown` `iconOnly`** — Added upstream for kebab overflow. Needs rebuilt CADS; pass `aria-label` + `startIconName`.
-6. **Slider track lag** — MUI track `left`/`width` transitions can lag the thumb; AI Chat Lab kills them in workspace SCSS. Prefer upstreaming into CADS Slider later.
-7. **Do not invent props** — Check `cadsManifest` / docs `/llms.txt`. Tag uses `color` not `tone`; etc.
-8. **Selected vs brand** — Never paint selected chrome with brand fills (see `color-theming.md`).
-9. **AiChatMessage hug** — Width/hug lives in CADS. Local `.chatMessageList` should not force stretch in a way that fights `align-self` / `fit-content`.
-10. **Header white-on-brand** — CADS Button has no white tone. On the purple header, override `--btn-bg` / `--btn-fg` / `--btn-border` / `--btn-bg-hover` with `!important` so they beat the inline chrome vars.
-11. **Package name** — Consumer imports are `@moshebaricdo/cads-*` (not `@codeai`). Icons: `@moshebaricdo/cads-react/icons`. CSS: `@moshebaricdo/cads-variables/variables.css`.
+6. **Checklist `Dropdown` `menuWidth`** — CADS forces checklist menus to hug content, so `menuWidth="trigger"` is ignored. Assessment builder Course (and similar full-width checklists) sync the portaled menu to the trigger on open until CADS respects the prop.
+7. **Slider track lag** — MUI track `left`/`width` transitions can lag the thumb; AI Chat Lab kills them in workspace SCSS. Prefer upstreaming into CADS Slider later.
+8. **Do not invent props** — Check `cadsManifest` / docs `/llms.txt`. Tag uses `color` not `tone`; etc.
+9. **Selected vs brand** — Never paint selected chrome with brand fills (see `color-theming.md`).
+10. **AiChatMessage hug** — Width/hug lives in CADS. Local `.chatMessageList` should not force stretch in a way that fights `align-self` / `fit-content`.
+11. **Header white-on-brand** — CADS Button has no white tone. On the purple header, override `--btn-bg` / `--btn-fg` / `--btn-border` / `--btn-bg-hover` with `!important` so they beat the inline chrome vars.
+12. **Package name** — Consumer imports are `@moshebaricdo/cads-*` (not `@codeai`). Icons: `@moshebaricdo/cads-react/icons`. CSS: `@moshebaricdo/cads-variables/variables.css`.
 
 ---
 

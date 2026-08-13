@@ -169,7 +169,7 @@ src/
 
 `App.tsx` composes route-level pages. Each page generally composes:
 
-1. `TopNavigation` from `components/ui/header`
+1. `TopNavigation` from `components/ui/header` (CADS Global Header **labLevel** chrome: extraSmall outlined/text controls, lesson title + bubble progress indicator)
 2. `Lab2Shell` from `components/lab2`
 3. `Sidebar` from `components/lab2/resource-panel`
 4. A level-specific workspace, such as `components/ide/weblab2/views/Workspace`, `components/ide/pythonlab/views/PythonWorkspace`, `components/ide/sketchlab/views/SketchLabWorkspace`, `components/ide/aichatlab/views/AiChatLabWorkspace`, or an assessment workspace under `components/assessment/<type>/views`
@@ -201,7 +201,7 @@ Route pages get state and handlers from dedicated hooks:
 - `useVersionHistoryState` for version selection/save/restore feedback
 - `useSketchLabState` for ReactFlow canvas nodes/edges, selection, and route-scoped `sessionStorage` persistence (Sketch Lab only)
 - `useBackpackState` / `BackpackProvider` for cross-level Backpack persistence (`localStorage` key `lab2:backpack`). `Lab2Shell` wraps the resource panel and workspace in `BackpackProvider` so file-manager save actions and the Backpack tab share one store. `BackpackProvider` is idempotent — if an ancestor already provides the store it passes through rather than creating a second one, so a page (e.g. `WebLab2LevelPage`, for its agent-library dialogs) can hoist the provider above `Lab2Shell` and keep a single store. `BackpackItem.fileKind` is `FileKind | "agent"`: the `"agent"` kind is a saved custom agent (JSON payload, `lib/backpack/agentBackpack.ts`) that lives only in the backpack + the agent recall sheet, never the project file tree. IDE routes pass `backpackImportLab` and `onImportBackpackItem` into `Sidebar`; per-lab extension allow-lists in `backpackImportAllowlist.ts` gate the **+** import action (unsupported types stay visible with a disabled button and tooltip). Production Backpack panel layout defaults to **type-availability** (file-type filter row + name sort + unsupported-at-bottom). Optional `backpackFilterExperiment` on experiment routes overrides this (`default` legacy source-lab sections, filter pills, supported toggle, dropdown — see Backpack Filtering sample progression). A session **Added** badge appears on that chip after a successful import.
-- `ThemeProvider` / `useTheme` for Lab2-scoped light/dark token switching, persisted in session storage (`lab2:theme`). Light/dark markers are applied by `Lab2Shell` below `TopNavigation` so the header stays brand-stable. The color sandbox and global nav menu share the same `useTheme()` state.
+- `ThemeProvider` / `useTheme` for Lab2-scoped light/dark token switching, persisted in session storage (`lab2:theme`). Light/dark markers are applied by `Lab2Shell` below `TopNavigation`. The header itself is pinned: `dark` / `data-theme="Dark"` on the nav, `data-theme="Light"` on the progress indicator, so the page theme toggle does not restyle header chrome. The color sandbox and global nav menu share the same `useTheme()` state.
 
 `useFileWorkspaceState` accepts both single-folder project wrappers and rootless file trees. Rootless trees are used by blank Web Lab projects; new files, folders, and AI proposal additions are inserted at the top level until the user creates their own folders.
 

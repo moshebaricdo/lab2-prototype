@@ -81,4 +81,4 @@ The Validation tab reads the current in-memory project files and runs the config
 
 ## Styling
 
-Workspace chrome (`PythonWorkspace`) uses `@moshebaricdo/cads-react` (`Button`, `Tooltip`) and CADS Foundations tokens in `PythonWorkspace.module.scss`. The Run control is contained primary (not orange). Shared `FileManager` / `CodeEditor` / `VersionBanner` also use CADS; CodeMirror syntax stays on `--ds-syntax-*`.
+Workspace chrome (`PythonWorkspace`) uses `@moshebaricdo/cads-react` (`Button`, `Tooltip`) and CADS Foundations tokens in `PythonWorkspace.module.scss`. The Run control is contained orange (`color="orange"`). Shared `FileManager` / `CodeEditor` / `VersionBanner` also use CADS; CodeMirror syntax stays on `--ds-syntax-*`. The shared AI Tutor panel uses CADS `AiChatMessage` / `AiChatInput` / `AiChatFileChip` (same controls as Web Lab 2; attachment chips sit above the composer field).

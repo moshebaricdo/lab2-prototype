@@ -38,7 +38,7 @@ Legacy levelgroup routes remain under Assessment sets / Experiments for comparis
 | Builder state hook | `src/hooks/useAssessmentBuilderState.ts` |
 | Bank hook | `src/hooks/useQuestionBank.ts` |
 | Mock bank + drafts | `src/data/assessmentBuilder/` |
-| Tag chip primitive (bank domain/difficulty; DS-aligned `fill`/`color`/`size`, overline caps, optional start/end icons, `onDismiss` close) | `src/components/ui/AppTag.tsx` |
+| Tag chip primitive (bank domain/difficulty, canvas “Recommended”) | CADS `Tag` from `@moshebaricdo/cads-react` |
 
 ## Canonical schema
 
@@ -136,8 +136,8 @@ Three dedicated rail tabs: **Question bank** (`clipboard-question`) and **Settin
 
 **Question bank tab**
 
-- Filter row uses **`AppMultiSelectDropdown`** (not tag pills): **Course**, **Domains**, **Difficulty** (`QUESTION_DIFFICULTIES` from `lib/assessmentBuilder/difficulty.ts`). Filters apply across all course banks loaded from `getAllCourseBanks`.
-- Bank list items show domain tags and difficulty via **`AppTag`**. Click a question already in the outline to focus/expand it in the canvas.
+- Filter row uses CADS **`Dropdown`** checklists: **Course**, **Domains**, **Difficulty** (`QUESTION_DIFFICULTIES` from `lib/assessmentBuilder/difficulty.ts`). Course menu width matches the select (`menuWidth="trigger"`, with a checklist hug workaround). Filters apply across all course banks loaded from `getAllCourseBanks`.
+- Bank list items show domain tags and difficulty via CADS **`Tag`**. Click a question already in the outline to focus/expand it in the canvas.
 - Drag a bank question onto the canvas add zone or use add actions to append a live `bank` ref (auto-expands in the outline).
 
 **Settings tab**

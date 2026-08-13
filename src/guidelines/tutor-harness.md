@@ -38,7 +38,7 @@ Existing model gates (non-exhaustive): `requestIntentClassifier`, `editClarifica
 
 ## Entry Points
 
-- UI panel: `src/components/lab2/resource-panel/views/ai-tutor/AiTutorPanel.tsx`
+- UI panel: `src/components/lab2/resource-panel/views/ai-tutor/AiTutorPanel.tsx` (CADS `AiChatMessage` / `AiChatInput` / `AiChatFileChip`; in-chat cards use `customContent`)
 - Sidebar wiring: `src/components/lab2/resource-panel/Sidebar.tsx`
 - Page orchestration: `src/pages/weblab2/WebLab2LevelPage.tsx`
 - Tutor client: `src/lib/tutor/tutorClient.ts`
