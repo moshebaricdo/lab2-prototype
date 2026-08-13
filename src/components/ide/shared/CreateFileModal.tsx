@@ -45,6 +45,7 @@ function FileTypeDropdown({
       size="medium"
       color="secondary"
       width="full"
+      menuWidth="trigger"
       startIconName={cadsFileTypeIcon(selectedType)}
       value={selectedType}
       options={fileTypes.map((type) => ({
@@ -158,10 +159,7 @@ export function CreateFileModal({
       }
     >
       <div className={styles.inputRow}>
-        <div
-          className={styles.fieldGroup}
-          style={{ flex: "0 1 76%" }}
-        >
+        <div className={`${styles.fieldGroup} ${styles.fileNameField}`}>
           <TextInput
             label="File name"
             type="text"
@@ -180,10 +178,7 @@ export function CreateFileModal({
           />
         </div>
 
-        <div
-          className={styles.fieldGroup}
-          style={{ flex: "0 1 30%" }}
-        >
+        <div className={`${styles.fieldGroup} ${styles.fileTypeField}`}>
           <FileTypeDropdown
             selectedType={fileType}
             fileTypes={fileTypes}
