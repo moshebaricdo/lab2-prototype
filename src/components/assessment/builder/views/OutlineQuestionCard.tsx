@@ -211,7 +211,7 @@ export function OutlineQuestionCard({
                 <>
                   <Button
                     variant="text"
-                    color="tertiary"
+                    color="secondary"
                     size="small"
                     onClick={onDiscard}
                   >

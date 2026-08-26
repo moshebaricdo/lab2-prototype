@@ -162,8 +162,15 @@ export function QuestionBankPanel({
     sort,
   ]);
 
+  /* The default course scope is the panel's baseline, not a user filter —
+   * the badge only counts deviations from it. */
+  const isDefaultScope =
+    selectedCourseIds.length === 1 &&
+    selectedCourseIds[0] === defaultCourseId &&
+    selectedUnitIds.length === 0;
   const activeFilterCount =
-    selectedCourseIds.length + selectedUnitIds.length + selectedStandardIds.length;
+    (isDefaultScope ? 0 : selectedCourseIds.length + selectedUnitIds.length) +
+    selectedStandardIds.length;
 
   const handleResetFilters = () => {
     setSelectedCourseIds([defaultCourseId]);

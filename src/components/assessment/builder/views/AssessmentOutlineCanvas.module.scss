@@ -102,7 +102,8 @@
   align-items: center;
   gap: var(--outline-gap);
   min-height: 36px;
-  padding: 4px calc(var(--outline-pad-x) + 1px);
+  /* Border replaces the collapsed header's +1px compensation. */
+  padding: 4px var(--outline-pad-x);
   border: 1px solid var(--border-selected-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);

@@ -10,8 +10,9 @@
   align-items: center;
   gap: var(--outline-gap);
   min-height: 36px;
-  /* +1px matches the card border so the icon column lines up. */
-  padding: 6px calc(var(--outline-pad-x) + 1px);
+  /* The transparent border stands in for the card border so the icon
+   * column lines up with bordered cards at the same padding. */
+  padding: 6px var(--outline-pad-x);
   border: 1px dashed transparent;
   border-radius: var(--shape-sm);
   background: transparent;
