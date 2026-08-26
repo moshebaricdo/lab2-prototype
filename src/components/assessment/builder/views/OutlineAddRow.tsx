@@ -1,3 +1,4 @@
+import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Dropdown } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
@@ -6,30 +7,36 @@ import type { BlankQuestionKind } from "../../../../lib/assessmentBuilder";
 import { CREATE_QUESTION_OPTIONS } from "./questionKindMeta";
 import styles from "./OutlineAddRow.module.scss";
 
-interface AddRowButtonProps {
+interface AddRowButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconName: FaIconName;
   label: string;
   isDropActive?: boolean;
-  onClick?: () => void;
 }
 
-function AddRowButton({ iconName, label, isDropActive, onClick }: AddRowButtonProps) {
-  return (
-    <button
-      type="button"
-      className={[styles.addRow, isDropActive ? styles.addRowDropActive : ""]
-        .filter(Boolean)
-        .join(" ")}
-      onClick={onClick}
-    >
-      <span className={styles.gutter} aria-hidden />
-      <span className={styles.icon}>
-        <FaIcon name={iconName} size="s" aria-hidden />
-      </span>
-      <span className={styles.label}>{label}</span>
-    </button>
-  );
-}
+/**
+ * Forwards ref + rest props so it can serve as a CADS `Dropdown` custom
+ * trigger (Dropdown clones it with ref, onClick, and ARIA attributes).
+ */
+const AddRowButton = forwardRef<HTMLButtonElement, AddRowButtonProps>(
+  function AddRowButton({ iconName, label, isDropActive, ...rest }, ref) {
+    return (
+      <button
+        type="button"
+        {...rest}
+        ref={ref}
+        className={[styles.addRow, isDropActive ? styles.addRowDropActive : ""]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <span className={styles.gutter} aria-hidden />
+        <span className={styles.icon}>
+          <FaIcon name={iconName} size="s" aria-hidden />
+        </span>
+        <span className={styles.label}>{label}</span>
+      </button>
+    );
+  },
+);
 
 interface OutlineAddQuestionRowProps {
   /** dnd droppable id (`end:<sectionId>` / `end:flat`) — appends on drop. */

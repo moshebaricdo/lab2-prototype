@@ -13,7 +13,9 @@ const STORAGE_KEY = "lab2:assessment-bank";
 let cachedRaw: string | null = null;
 let cachedBanks: AssessmentCourseBank[] | null = null;
 
-let bankSnapshotRawKey: string | null = null;
+/** `undefined` = never read. Distinct from `null` (storage key absent) so a
+ * fresh profile still seeds the default banks on first snapshot read. */
+let bankSnapshotRawKey: string | null | undefined;
 let banksListSnapshot: AssessmentCourseBank[] = [];
 const courseBankSnapshots = new Map<string, AssessmentCourseBank | undefined>();
 const questionMapSnapshots = new Map<string, Map<string, QuestionItem>>();
@@ -146,9 +148,10 @@ function writeBanks(banks: AssessmentCourseBank[], options?: { notify?: boolean 
 
 function refreshBankSnapshotsIfNeeded() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw === bankSnapshotRawKey) return;
-  bankSnapshotRawKey = raw;
+  if (bankSnapshotRawKey !== undefined && raw === bankSnapshotRawKey) return;
   banksListSnapshot = readBanks();
+  // readBanks may have seeded/hydrated storage; key off the persisted value.
+  bankSnapshotRawKey = localStorage.getItem(STORAGE_KEY);
   courseBankSnapshots.clear();
   questionMapSnapshots.clear();
 }
