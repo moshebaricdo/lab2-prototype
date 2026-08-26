@@ -2,7 +2,7 @@
 
 Living snapshot of **product decisions** and **prototype state** for this workstream. Specs and implementation details live in the linked docs; this file is the turn-by-turn source of truth for what is in, out, and still open.
 
-**Last updated:** 2026-08-25
+**Last updated:** 2026-08-26
 
 **How to maintain:** update this file in the same turn as substantive product or architecture changes (scope, modes, tagging, schema, routes, builder UX model). Skip for visual polish, copy nits, and bugfixes that do not change the model.
 
@@ -41,13 +41,18 @@ Mode presets in P0 (`applyP0ModePreset`):
 
 ## What the P0 builder has today
 
-- Lab2 workspace: **Build** outline (inline question editor) + **Preview** of the full assessment flow.
+- Lab2 workspace: **Build** is the block-based outline canvas (`AssessmentOutlineCanvas`) + **Preview** of the full assessment flow. Legacy routes keep the old `AssessmentBuildCanvas`.
+- Outline canvas: uncontainerized overview header (title, question count, time, attempts), pinned intro card (exam mode), sections-as-pages, single-row question cards on a shared left-gutter grid.
+- Sections: flat vs sectioned is a structural invariant — first **Add section** wraps existing questions into Section 1; ungrouping/deleting the last section flattens back. Numbering is `1, 2, 3…` flat and `page.item` (`2.1`) sectioned. `sections` is authoring truth; flattened `questionRefs` stays in sync for adapters/preview/scoring.
+- Reorder: dnd-kit drag for questions (within and across sections) and collapsed sections; expanded sections move via overflow menu (Move up / Move down). Live outline preview + renumbering while dragging.
+- Add actions: ghost **+ Add question** row per section (popover: question bank + five one-off types), ghost **+ Add section** at the outline end, ghost **+ Add intro screen** when exam mode has no intro. No between-block buttons; bank adds append to the targeted (default last) section.
+- Single-save edit model: cards expand in place; **Done** when clean (no forced save decision), **Save** when dirty. Saving a dirty bank ref prompts *Update the shared question* vs *Save a copy in this assessment only* (converts to inline). One-offs save directly with a secondary *Add to question bank*.
 - Resource panel: **Question bank** and **Settings** (Tutor is a setting, not a panel).
-- Bank filters: search, A–Z / Recent sort, combined Course or unit, Standard (concept codes). Rows show type icon, stem preview, unit + standard chips.
+- Bank panel (Figma `169:39016`): search field + outlined filter button (badge counts deviations from the default course scope), uppercase result-count overline, bordered result cards (type icon, semibold title, stem peek, unit + standard tags with `+N` overflow, brand plus / disabled check action).
 - Inline editor catalog fields: course, unit, concepts (no difficulty; no per-question survey toggle).
-- Settings: title, CFU vs Exam mode, Tutor, exam timing/attempts/intro.
-- Persistence: `localStorage` (`lab2:assessment-bank`, `lab2:assessment-drafts`). Existing banks hydrate missing units/concepts/questions on read.
-- Seeded P0 exam: 8 AI Foundations questions across Supervised Learning, Responsible AI, and Models in Practice. Extra bank items (including Web Dev) exist so filters are demonstrable.
+- Settings: title, CFU vs Exam mode, Tutor, exam timing/attempts/intro (intro stays in sync with the outline's intro card).
+- Persistence: `localStorage` (`lab2:assessment-bank`, `lab2:assessment-drafts`). Existing banks hydrate missing units/concepts/questions on read; the P0 draft hydrates legacy flat drafts to the sectioned seed.
+- Seeded P0 exam: 8 AI Foundations questions across 3 sections (Supervised Learning, Responsible AI, Models in Practice) with an intro screen. Extra bank items (including Web Dev) exist so filters are demonstrable.
 
 ---
 
@@ -89,21 +94,33 @@ Mode presets in P0 (`applyP0ModePreset`):
 
 ---
 
-## Locked builder UX (not in the React prototype yet)
+## Locked builder UX
 
 Paper hi-fi frames: `HF · 01`–`04` in *Modernizing Assessments*.
 
-- **Outline:** pinned intro (not reorderable), sections as nested pages, collapsed rows show type icon (same as the bank) · internal name · stem peek · grab · `page.item` · edit · remove. No catalog chips on collapsed rows.
-- **Inspect** is a middle depth on the same card: unit, standard, points, shared vs copy vs one-off, usage, placement. Edit is a separate action.
-- **Edit is in-place** (scroll the card into view). One **Save** — not a “this assessment / question bank” menu. One-offs may still *Add to question bank*.
+**Now in the React prototype (P0 route):**
+
+- **Outline:** pinned intro (not reorderable), sections as nested pages, collapsed rows show grab · `page.item` · type icon (same as the bank) · internal name · stem peek · edit · remove. No catalog chips on collapsed rows.
+- **Edit is in-place** (scroll the card into view). One **Save** — not a “this assessment / question bank” menu. One-offs may still *Add to question bank*. **Done** exits a clean editor with no save decision.
+- **Draft + shared question:** prompt *Update the shared question* vs *Save a copy in this assessment only*.
+
+**Not in the React prototype yet:**
+
+- **Inspect** as a middle depth on the same card: unit, standard, points, shared vs copy vs one-off, usage, placement. Edit is a separate action. (Prototype shows provenance in the expanded footer only.)
 - **Live vs draft** is **in a deployed script**, not a per-level publish button. A duplicate of a live level is a draft.
-- **Draft + shared question:** prompt *Update the shared question* vs *Edit a copy in this assessment only*.
 - **Live script:** one assessment banner (“students can see changes”). Shared-question edits copy silently. Placement changes (points, order, page) never copy.
 - Catalog chips stay on **bank rows**. Collapsed outline stays identification-only; provenance can be a single inspect/collapsed signal later.
 
 ## Changelog
 
 Newest first. Log **decisions and model changes**, not polish.
+
+### 2026-08-26
+
+- P0 Build canvas rebuilt as the block-based outline (`AssessmentOutlineCanvas`): overview header, pinned intro card, sections-as-pages with the wrap/flatten invariant, dnd-kit cross-section drag, ghost add rows. Legacy routes keep `AssessmentBuildCanvas`.
+- Schema: `AssessmentSection` + optional `sections` on `AssessmentArtifact`; flattened `questionRefs` kept in sync so adapters/preview/scoring are untouched. P0 seed now sectioned (3 sections + intro).
+- Single-save model shipped on P0: Done-when-clean, Save-when-dirty, shared-question prompt (*Update the shared question* vs *Save a copy in this assessment only* → inline conversion). Two-destination save menu removed from the P0 editor.
+- Question bank panel matches Figma `169:39016`: search + filter button (badge counts deviations from default course scope), result-count overline, bordered result cards with tag rows.
 
 ### 2026-08-25
 

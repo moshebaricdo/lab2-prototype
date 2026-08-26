@@ -31,10 +31,15 @@ Legacy levelgroup routes remain under Assessment sets / Experiments for comparis
 | Adapters (canonical → preview payloads) | `src/lib/assessmentBuilder/adapters.ts` |
 | Scoring + domain aggregation | `src/lib/assessmentBuilder/scoring.ts` |
 | Pool draw + shuffle runtime | `src/lib/assessmentBuilder/examRuntime.ts` |
+| Sectioned-outline helpers (invariants, numbering, moves) | `src/lib/assessmentBuilder/outline.ts` |
 | Bank persistence | `src/lib/assessmentBuilder/bankStorage.ts` |
 | Draft persistence | `src/lib/assessmentBuilder/draftStorage.ts` |
 | Builder workspace (Build/Preview shell) | `src/components/assessment/builder/views/AssessmentBuilderWorkspace.tsx` |
-| Build canvas (draggable outline, inline question editor) | `src/components/assessment/builder/views/AssessmentBuildCanvas.tsx` |
+| **P0 outline canvas** (overview header, sections, dnd) | `src/components/assessment/builder/views/AssessmentOutlineCanvas.tsx` |
+| P0 outline blocks | `OutlineQuestionCard.tsx`, `OutlineSectionBlock.tsx`, `OutlineIntroCard.tsx`, `OutlineAddRow.tsx` (same folder) |
+| Shared-question save prompt | `src/components/assessment/builder/views/SaveQuestionPrompt.tsx` |
+| Question kind icon/label metadata | `src/components/assessment/builder/views/questionKindMeta.ts` |
+| Legacy build canvas (blank/seeded routes only) | `src/components/assessment/builder/views/AssessmentBuildCanvas.tsx` |
 | Inline question editor (type-specific fields) | `src/components/assessment/builder/views/QuestionItemEditor.tsx` |
 | Builder panel (bank, settings) | `src/components/assessment/builder/views/AssessmentBuilderPanel.tsx` |
 | P0 question bank (filters + results) | `src/components/assessment/builder/views/QuestionBankPanel.tsx` |
@@ -73,6 +78,7 @@ Assessment-level config:
 - `mode`: `checkpoint` | `quiz` | `exam` (P0 authoring: **checkpoint** and **exam** only; `survey` remains on the type for legacy drafts)
 - `layout`: `scroll` | `stepped`
 - `questionRefs`: live `bank` references or `inline` snapshots
+- `sections?`: `AssessmentSection[]` (`{ id, title?, description?, questionRefs }`). Structural invariant: absent/empty = flat outline; non-empty = **every** question lives in a section (sections are pages to the learner). When sectioned, `sections` is authoring truth and the flattened `questionRefs` mirror is re-derived on every mutation (`withSections` in `outline.ts`) so adapters/preview/scoring stay section-unaware.
 - `poolDrawRules?`: draw N questions from tagged pool at runtime (not authored in P0)
 - `shuffle`: question + option order (**off and hidden in P0**)
 - `timing?`, `attempts?`, `tutor`, `intro?`, `surveyMode?` (survey mode hidden in P0)
@@ -99,9 +105,25 @@ The builder splits responsibilities between a **workspace** (center outline + in
 - Resource panel width uses the shared `useLayoutState` default (**400px**); drag-resize clamps between 300px and 600px, same as other assessment levels.
 - On mount, the active tab defaults to **`builder-bank`**. Irrelevant default tabs are hidden (`showAiTutorTab: false`, `showBackpackTab: false`, `showHistoryTab: false`). The Tutor is a *setting* (`tutor.enabled`), not a panel here.
 
-### Build canvas (center) — `AssessmentBuildCanvas`
+### P0 build canvas (center) — `AssessmentOutlineCanvas`
 
-Rendered in **Build** mode. The canvas is the assessment **outline** (the old `builder-outline` sidebar tab is gone).
+Rendered in **Build** mode on the P0 route (`p0Aligned`). Block-based visual outline; every block type shares one left-gutter grid (`--outline-*` vars on the canvas root) so handles, indices, type icons, and names sit at identical x-positions in flat, sectioned, intro, and add rows.
+
+**Overview header** — uncontainerized: title plus an icon metadata row (question count always; time limit when set; attempts, with "Unlimited attempts" when unset).
+
+**Intro card** (`OutlineIntroCard`) — pinned first block when `artifact.intro` exists (exam mode); never draggable. Expands in place to edit `overviewContent`; time/attempts show read-only (owned by Settings). Removing it clears `intro` and surfaces a ghost **+ Add intro screen** row; stays in sync with the Settings toggle.
+
+**Sections** (`OutlineSectionBlock`) — slim header row (collapse chevron · number · title with `Section N` fallback · question count · overflow menu) plus a left rail grouping the cards beneath. Expanded sections reorder via the overflow menu (Move up / Move down); a **collapsed** section becomes a compact draggable row. Overflow also has **Ungroup section** (questions merge into the neighbor; ungrouping the only section flattens the outline) and **Delete section** (confirm when non-empty; deleting the last section flattens to empty).
+
+**Question cards** (`OutlineQuestionCard`) — single collapsed row, fixed columns: grab · index (`page.item` sectioned, `N` flat) · type icon · internal name · stem peek · edit · remove. No catalog chips collapsed. Drag with dnd-kit (`@dnd-kit/core`, manual pattern — no sortable dep) within and across sections, with a live outline preview and renumbering while dragging.
+
+**Edit state** — the card expands in place around `QuestionItemEditor`. Footer: provenance tag (Shared question / This assessment only), **Done** when clean (closes with no save decision), **Discard changes** + **Save** when dirty. Saving a dirty **bank** ref opens `SaveQuestionPrompt`: *Update the shared question* (bank upsert) vs *Save a copy in this assessment only* (converts the ref to inline). Inline/one-off items save directly and offer *Add to question bank*.
+
+**Add actions** — ghost **+ Add question** row at the end of each section (or the flat list) opening a compact popover: *Question bank…* (focuses the bank tab and targets that section) plus the five one-off types. Ghost **+ Add section** at the outline bottom ("Group questions into a section" when the outline is flat and non-empty — wraps everything into Section 1). Add rows double as drop targets for question drags.
+
+### Legacy build canvas — `AssessmentBuildCanvas`
+
+Rendered in **Build** mode on the blank/seeded legacy routes. The canvas is the assessment **outline** (the old `builder-outline` sidebar tab is gone).
 
 **Header**
 
@@ -146,10 +168,12 @@ Three dedicated rail tabs: **Question bank** (`clipboard-question`) and **Settin
 
 **Question bank tab**
 
-- **P0** (`QuestionBankPanel`, CADS-aligned to the finalized Figma sidebar):
-  - **Filters** card: search field, icon-only **A–Z / Recent** sort, combined **Course or unit** checklist with dismissible info chips, **Standard** checklist with dismissible pink chips (codes when present). Reset in the card header.
-  - **Questions** card: count tag, divider list rows. Each row shows type icon + internal title, one-line stem preview, unit (info) + first standard (pink) with `+N` overflow, and an icon-only Add / Added control.
-  - Survey items stay hidden. Course-or-unit matching is a union (selected courses or selected units).
+- **P0** (`QuestionBankPanel`, matches Figma `169:39016`):
+  - Flat padded column — no group cards. Top row: full-width **search** field (icon inside) + compact outlined **filter button** (`bars-filter`) whose count badge only counts deviations from the default course scope (hidden at baseline).
+  - Filter button opens a popover holding the **Course or unit** and **Standard** checklists, the **A–Z / Recently updated** sort, and a reset action.
+  - Uppercase **"N results"** overline below the search row.
+  - Each result is a bordered card: type icon + semibold internal title, one-line tertiary stem preview, tag row (unit info tag, first standard pink tag, `+N` overflows) and a right-aligned icon-only action — brand contained **plus** to add, disabled outlined **check** once added (clicking an added row focuses it in the outline).
+  - Survey items stay hidden. Course-or-unit matching is a union (selected courses or selected units). Adds append to the targeted section (default: last).
 - **Legacy** blank/seeded: **Course**, **Domains**, **Difficulty** (`QUESTION_DIFFICULTIES` from `lib/assessmentBuilder/difficulty.ts`).
 - Course menu width matches the select (`menuWidth="trigger"`, with a checklist hug workaround). Filters apply across all course banks loaded from `getAllCourseBanks`.
 - Click a question already in the outline to focus/expand it in the canvas.

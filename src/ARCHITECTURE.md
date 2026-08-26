@@ -175,7 +175,7 @@ src/
 3. `Sidebar` from `components/lab2/resource-panel`
 4. A level-specific workspace, such as `components/ide/weblab2/views/Workspace`, `components/ide/pythonlab/views/PythonWorkspace`, `components/ide/sketchlab/views/SketchLabWorkspace`, `components/ide/aichatlab/views/AiChatLabWorkspace`, or an assessment workspace under `components/assessment/<type>/views`
 
-Assessment builder pages compose `AssessmentBuilderWorkspace`, which adds resource-panel **Builder** tabs (`builder-bank`, `builder-settings` via `showBuilderTab`) and previews canonical `AssessmentArtifact` content via adapters in `lib/assessmentBuilder/`. The build outline and inline question editor live in the center canvas (`AssessmentBuildCanvas` + `QuestionItemEditor`). Resource panel width follows the shared `useLayoutState` default (400px; resize 300–600px).
+Assessment builder pages compose `AssessmentBuilderWorkspace`, which adds resource-panel **Builder** tabs (`builder-bank`, `builder-settings` via `showBuilderTab`) and previews canonical `AssessmentArtifact` content via adapters in `lib/assessmentBuilder/`. The build outline and inline question editor live in the center canvas (`AssessmentOutlineCanvas` on the P0 route, legacy `AssessmentBuildCanvas` elsewhere; both wrap `QuestionItemEditor`). Resource panel width follows the shared `useLayoutState` default (400px; resize 300–600px).
 
 This keeps feature rendering close to feature folders while the hooks layer keeps cross-cutting state logic isolated.
 
@@ -183,10 +183,13 @@ This keeps feature rendering close to feature folders while the hooks layer keep
 
 Assessment builder is a Lab2 level type with its own workspace chrome under `components/assessment/builder/views/`:
 
-- **`AssessmentBuilderWorkspace`** — `Lab2Shell` composition, `PanelHeader` + Build/Preview toggle, sidebar width defaults, question selection
-- **`AssessmentBuildCanvas`** — draggable question outline, add zone, type tile grid
-- **`AssessmentBuilderPanel`** — bank + settings. P0 bank UI lives in **`QuestionBankPanel`** (search, sort, course-or-unit, standards). Legacy bank: course/domain/difficulty.
+- **`AssessmentBuilderWorkspace`** — `Lab2Shell` composition, `PanelHeader` + Build/Preview toggle, sidebar width defaults, question selection, single-save flow (Done/Save + shared-question prompt)
+- **`AssessmentOutlineCanvas`** (P0 route) — block-based outline: overview header, pinned `OutlineIntroCard`, `OutlineSectionBlock` sections-as-pages, `OutlineQuestionCard` rows, `OutlineAddRow` ghost add rows, dnd-kit drag (questions within/across sections, collapsed-section reorder). `SaveQuestionPrompt` handles the shared-question save decision; `questionKindMeta` centralizes type icons/labels.
+- **`AssessmentBuildCanvas`** (legacy routes) — draggable question outline, add zone, type tile grid
+- **`AssessmentBuilderPanel`** — bank + settings. P0 bank UI lives in **`QuestionBankPanel`** (search + filter-popover button, result cards per Figma `169:39016`). Legacy bank: course/domain/difficulty.
 - **`AssessmentArtifactWorkspace`** — embedded preview of the full assessment flow
+
+Sectioned-outline invariants (flat vs fully-sectioned, `page.item` numbering, wrap/flatten, `questionRefs` mirror) live in `lib/assessmentBuilder/outline.ts`.
 
 Canonical schema and runtime helpers live in `types/assessmentBuilder.ts` and `lib/assessmentBuilder/` (adapters, bank/draft `localStorage`, scoring, exam pool draw). Mock fixtures: `data/assessmentBuilder/`. See `src/guidelines/level-types/assessment-builder.md` for routes, UX, and known gaps.
 
