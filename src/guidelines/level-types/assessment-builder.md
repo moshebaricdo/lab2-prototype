@@ -2,12 +2,16 @@
 
 Canonical in-lab authoring for assessment content. The main surface is a **lab-style workspace** that toggles between **Build** (edit) and **Preview** modes; the Lab2 resource panel holds the granular controls (question bank, question editor, settings).
 
+Living workstream status (P0 decisions, what’s in/out, changelog): [`docs/status.md`](../../../docs/status.md).
+
 ## Product model
 
-- **One artifact** (`AssessmentArtifact`) models surveys, quizzes, practice exams, and single-question checkpoints.
-- A **checkpoint** is an assessment with exactly one `QuestionItem` — not a separate level type.
+- **One artifact** (`AssessmentArtifact`) models quizzes, practice exams, and single-question checkpoints (CFUs). Surveys are out of scope for P0.
+- A **checkpoint / CFU** is an assessment with typically one `QuestionItem` — not a separate level type. Switch Mode in P0 settings to apply CFU vs exam presets.
 - The **question bank** stores reusable `QuestionItem` records keyed by `bankId`. Assessments hold live `bankId` references so bank edits propagate everywhere (prototype: `localStorage`).
+- Questions are tagged (and filterable) by **course**, **unit**, and **concept** (loose term for domains / standards). Difficulty is dropped.
 - **Code interpretation** is an optional `codePanel` attachment on any item type, not a sibling type.
+- P0 does **not** shuffle question order or answer options (downstream teacher-dashboard impact).
 
 ## Routes
 
@@ -15,6 +19,7 @@ Canonical in-lab authoring for assessment content. The main surface is a **lab-s
 |-------|------|-------------|
 | `/levels/assessment-builder-new` | `quiz` | Blank assessment — empty outline for authoring from scratch |
 | `/levels/assessment-builder-seeded` | `quiz` | Seeded practice quiz with six bank questions (mixed types) |
+| `/levels/assessment-builder-p0` | `exam` | **P0-aligned prototype** — cert exam seed; Checkpoint (CFU) vs Exam settings; course / unit / concept bank filters. No survey, shuffle, or difficulty. |
 
 Legacy levelgroup routes remain under Assessment sets / Experiments for comparison only.
 
@@ -32,13 +37,16 @@ Legacy levelgroup routes remain under Assessment sets / Experiments for comparis
 | Build canvas (draggable outline, inline question editor) | `src/components/assessment/builder/views/AssessmentBuildCanvas.tsx` |
 | Inline question editor (type-specific fields) | `src/components/assessment/builder/views/QuestionItemEditor.tsx` |
 | Builder panel (bank, settings) | `src/components/assessment/builder/views/AssessmentBuilderPanel.tsx` |
+| P0 question bank (filters + results) | `src/components/assessment/builder/views/QuestionBankPanel.tsx` |
 | Multi-question preview flow | `src/components/assessment/builder/views/AssessmentArtifactWorkspace.tsx` |
 | One-off question factory + kind labels | `src/lib/assessmentBuilder/blankQuestion.ts` |
-| Difficulty labels + filter constants | `src/lib/assessmentBuilder/difficulty.ts` |
+| P0 mode presets (CFU vs exam) | `src/lib/assessmentBuilder/p0Mode.ts` |
+| Course / unit / concept taxonomy helpers | `src/lib/assessmentBuilder/taxonomy.ts` |
+| Difficulty labels + filter constants | `src/lib/assessmentBuilder/difficulty.ts` (legacy builder only) |
 | Builder state hook | `src/hooks/useAssessmentBuilderState.ts` |
 | Bank hook | `src/hooks/useQuestionBank.ts` |
 | Mock bank + drafts | `src/data/assessmentBuilder/` |
-| Tag chip primitive (bank domain/difficulty, canvas “Recommended”) | CADS `Tag` from `@moshebaricdo/cads-react` |
+| Tag chip primitive (bank unit/concept, canvas “Recommended”) | CADS `Tag` from `@moshebaricdo/cads-react` |
 
 ## Canonical schema
 
@@ -49,10 +57,11 @@ Legacy levelgroup routes remain under Assessment sets / Experiments for comparis
 Reusable bank record:
 
 - `bankId`, `courseId`, `title`
+- `unitId?`: curriculum unit within the course bank
 - `item`: discriminated union (`multi` | `freeResponse` | `match` | `dragDrop` | `fillInBlank`)
 - `reveal`: `{ enabled, explanation? }`
-- `tags`: `DomainTag[]`
-- `difficulty?`: `beginner` | `intermediate` | `advanced` (bank filter + display; defaults to `intermediate` on new one-offs via `createBlankQuestion`)
+- `tags`: concept tags (`DomainTag[]` — P0 UI labels these **Concepts**)
+- `difficulty?`: **dropped in P0**; still present on legacy drafts / the blank+seeded builder
 - `codePanel?`: optional read-only code context (code interpretation)
 - `points?`: point value when scored in a graded assessment (defaults to 1; drives the canvas total + `scoreQuestionResponse` `pointsPossible`)
 - `updatedAt`
@@ -61,12 +70,12 @@ Reusable bank record:
 
 Assessment-level config:
 
-- `mode`: `checkpoint` | `survey` | `quiz` | `exam`
+- `mode`: `checkpoint` | `quiz` | `exam` (P0 authoring: **checkpoint** and **exam** only; `survey` remains on the type for legacy drafts)
 - `layout`: `scroll` | `stepped`
 - `questionRefs`: live `bank` references or `inline` snapshots
-- `poolDrawRules?`: draw N questions from tagged pool at runtime
-- `shuffle`: question + option order
-- `timing?`, `attempts?`, `tutor`, `intro?`, `surveyMode?`
+- `poolDrawRules?`: draw N questions from tagged pool at runtime (not authored in P0)
+- `shuffle`: question + option order (**off and hidden in P0**)
+- `timing?`, `attempts?`, `tutor`, `intro?`, `surveyMode?` (survey mode hidden in P0)
 
 ### `QuestionResponse` / `ScoringResult`
 
@@ -122,8 +131,9 @@ Expanded outline cards use **`QuestionItemEditor`** for type-specific fields plu
 - **Bank label** + compact **Points** (numeric, same row when graded) — label is the internal bank listing name, not the student-facing question.
 - **Question** (plain heading) + **Body (markdown)** (optional supplemental stem rendered below the heading in preview).
 - Type-specific fields (e.g. free response **Placeholder** + **Min characters** on one row).
-- **Question bank metadata** — course, difficulty, domains (for bank save / filtering).
+- **Question bank metadata** — P0: course, unit, concepts. Legacy: course, difficulty, domains. Used for bank save / filtering.
 - No per-question **reveal** controls (owned by assessment config).
+- P0 hides the multiple-choice **Survey mode** checkbox.
 
 ### Resource panel (sidebar) — `AssessmentBuilderPanel`
 
@@ -136,13 +146,20 @@ Three dedicated rail tabs: **Question bank** (`clipboard-question`) and **Settin
 
 **Question bank tab**
 
-- Filter row uses CADS **`Dropdown`** checklists: **Course**, **Domains**, **Difficulty** (`QUESTION_DIFFICULTIES` from `lib/assessmentBuilder/difficulty.ts`). Course menu width matches the select (`menuWidth="trigger"`, with a checklist hug workaround). Filters apply across all course banks loaded from `getAllCourseBanks`.
-- Bank list items show domain tags and difficulty via CADS **`Tag`**. Click a question already in the outline to focus/expand it in the canvas.
+- **P0** (`QuestionBankPanel`, CADS-aligned to the finalized Figma sidebar):
+  - **Filters** card: search field, icon-only **A–Z / Recent** sort, combined **Course or unit** checklist with dismissible info chips, **Standard** checklist with dismissible pink chips (codes when present). Reset in the card header.
+  - **Questions** card: count tag, divider list rows. Each row shows type icon + internal title, one-line stem preview, unit (info) + first standard (pink) with `+N` overflow, and an icon-only Add / Added control.
+  - Survey items stay hidden. Course-or-unit matching is a union (selected courses or selected units).
+- **Legacy** blank/seeded: **Course**, **Domains**, **Difficulty** (`QUESTION_DIFFICULTIES` from `lib/assessmentBuilder/difficulty.ts`).
+- Course menu width matches the select (`menuWidth="trigger"`, with a checklist hug workaround). Filters apply across all course banks loaded from `getAllCourseBanks`.
+- Click a question already in the outline to focus/expand it in the canvas.
 - Drag a bank question onto the canvas add zone or use add actions to append a live `bank` ref (auto-expands in the outline).
 
 **Settings tab**
 
-- Assessment-level config: title, mode-specific options (timing, shuffle, tutor, intro, pool draw, etc.).
+- Assessment-level config: title, plus mode-specific options.
+- **P0** exposes **Mode** (`Checkpoint (CFU)` vs `Exam`) and applies presets from `applyP0ModePreset` (no shuffle, no survey). Exam settings include time limit, attempts, and intro. Shuffle controls are hidden.
+- **Legacy** still shows shuffle, tutor, and exam timing/pool-draw hints.
 
 **Persistence**
 
@@ -167,6 +184,8 @@ Renders embedded **`AssessmentArtifactWorkspace`** (full assessment flow via ada
 - Publish-time question pinning deferred
 - Drag-drop scoring marked `ungraded` in prototype scorer
 - Free-response AI/rubric scoring is affordance-only
+- P0 does not shuffle questions/options or author surveys; those remain on the schema for later phases
+- Difficulty is omitted from P0 UI; legacy builder levels still show it
 
 ## Levelbuilder boundary
 

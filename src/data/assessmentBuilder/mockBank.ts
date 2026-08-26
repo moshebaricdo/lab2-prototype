@@ -1,21 +1,58 @@
-import type { AssessmentCourseBank, QuestionItem } from "../../types/assessmentBuilder";
+import type {
+  AssessmentCourseBank,
+  CourseUnit,
+  DomainTag,
+  QuestionItem,
+} from "../../types/assessmentBuilder";
 
-const AIF_DOMAINS = [
-  { id: "domain-ml", label: "Machine Learning Fundamentals" },
-  { id: "domain-ethics", label: "AI Ethics & Safety" },
-  { id: "domain-data", label: "Data & Features" },
+const AIF_CONCEPTS: DomainTag[] = [
+  { id: "domain-ml", label: "Machine Learning Fundamentals", code: "HS-AI-ML-04" },
+  { id: "domain-ethics", label: "AI Ethics & Safety", code: "3B-AP-08" },
+  { id: "domain-data", label: "Data & Features", code: "HS-AI-DAT-02" },
 ];
 
-const WEB_DOMAINS = [
-  { id: "domain-html", label: "HTML & Structure" },
-  { id: "domain-css", label: "CSS & Layout" },
+const AIF_UNITS: CourseUnit[] = [
+  {
+    id: "aif-unit-supervised",
+    label: "Supervised Learning",
+    conceptIds: ["domain-ml", "domain-data"],
+  },
+  {
+    id: "aif-unit-responsible",
+    label: "Responsible AI",
+    conceptIds: ["domain-ethics"],
+  },
+  {
+    id: "aif-unit-models",
+    label: "Models in Practice",
+    conceptIds: ["domain-ml", "domain-data"],
+  },
+];
+
+const WEB_CONCEPTS: DomainTag[] = [
+  { id: "domain-html", label: "HTML & Structure", code: "HS-WEB-SEM-03" },
+  { id: "domain-css", label: "CSS & Layout", code: "3A-AP-18" },
+];
+
+const WEB_UNITS: CourseUnit[] = [
+  {
+    id: "web-unit-html",
+    label: "Semantic markup",
+    conceptIds: ["domain-html"],
+  },
+  {
+    id: "web-unit-css",
+    label: "Page layout",
+    conceptIds: ["domain-css"],
+  },
 ];
 
 export const mockMultiBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-1",
   courseId: "aif-cert",
   title: "Loss function purpose",
-  tags: [AIF_DOMAINS[0]],
+  unitId: "aif-unit-supervised",
+  tags: [AIF_CONCEPTS[0]],
   difficulty: "intermediate",
   reveal: {
     enabled: true,
@@ -55,7 +92,8 @@ export const mockMultiSelectBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-2",
   courseId: "aif-cert",
   title: "Responsible AI practices",
-  tags: [AIF_DOMAINS[1]],
+  unitId: "aif-unit-responsible",
+  tags: [AIF_CONCEPTS[1]],
   difficulty: "beginner",
   reveal: {
     enabled: true,
@@ -83,7 +121,8 @@ export const mockCodeRefBankQuestion: QuestionItem = {
   bankId: "q-aif-code-1",
   courseId: "aif-cert",
   title: "Trace classifier output",
-  tags: [AIF_DOMAINS[0], AIF_DOMAINS[2]],
+  unitId: "aif-unit-models",
+  tags: [AIF_CONCEPTS[0], AIF_CONCEPTS[2]],
   difficulty: "advanced",
   reveal: {
     enabled: true,
@@ -131,7 +170,8 @@ export const mockFreeResponseBankQuestion: QuestionItem = {
   bankId: "q-aif-fr-1",
   courseId: "aif-cert",
   title: "Explain overfitting",
-  tags: [AIF_DOMAINS[0]],
+  unitId: "aif-unit-supervised",
+  tags: [AIF_CONCEPTS[0]],
   difficulty: "beginner",
   reveal: {
     enabled: true,
@@ -163,7 +203,8 @@ export const mockMatchBankQuestion: QuestionItem = {
   bankId: "q-aif-match-1",
   courseId: "aif-cert",
   title: "ML dataset roles",
-  tags: [AIF_DOMAINS[2]],
+  unitId: "aif-unit-supervised",
+  tags: [AIF_CONCEPTS[2]],
   difficulty: "intermediate",
   reveal: { enabled: true },
   updatedAt: Date.now(),
@@ -197,11 +238,13 @@ export const mockMatchBankQuestion: QuestionItem = {
   },
 };
 
+/** Kept for the legacy seeded quiz; not used in the P0 exam. */
 export const mockSurveyBankQuestion: QuestionItem = {
   bankId: "q-aif-survey-1",
   courseId: "aif-cert",
   title: "Course confidence survey",
-  tags: [AIF_DOMAINS[1]],
+  unitId: "aif-unit-responsible",
+  tags: [AIF_CONCEPTS[1]],
   difficulty: "beginner",
   reveal: { enabled: false },
   updatedAt: Date.now(),
@@ -219,10 +262,160 @@ export const mockSurveyBankQuestion: QuestionItem = {
   },
 };
 
+export const mockFillInBlankBankQuestion: QuestionItem = {
+  bankId: "q-aif-fib-1",
+  courseId: "aif-cert",
+  title: "Feature vs label",
+  unitId: "aif-unit-supervised",
+  tags: [AIF_CONCEPTS[2]],
+  points: 1,
+  reveal: {
+    enabled: true,
+    explanation:
+      "Features are the input measurements; the label is the value the model is trained to predict.",
+  },
+  updatedAt: Date.now(),
+  item: {
+    kind: "fillInBlank",
+    content: {
+      prompt: "Complete the sentence about supervised learning data.",
+      segments: [
+        { type: "text", text: "In a labeled dataset, each example has input " },
+        { type: "blank", blankId: "blank-1" },
+        { type: "text", text: " and a target " },
+        { type: "blank", blankId: "blank-2" },
+        { type: "text", text: "." },
+      ],
+      blanks: [
+        {
+          id: "blank-1",
+          placeholder: "inputs",
+          acceptedAnswers: ["features", "feature values", "predictors"],
+        },
+        {
+          id: "blank-2",
+          placeholder: "output",
+          acceptedAnswers: ["label", "labels", "target", "targets"],
+        },
+      ],
+    },
+  },
+};
+
+export const mockParsonsBankQuestion: QuestionItem = {
+  bankId: "q-aif-parsons-1",
+  courseId: "aif-cert",
+  title: "Training loop order",
+  unitId: "aif-unit-models",
+  tags: [AIF_CONCEPTS[0]],
+  points: 2,
+  reveal: {
+    enabled: true,
+    explanation:
+      "Compute predictions, measure loss, then update weights from that error.",
+  },
+  updatedAt: Date.now(),
+  item: {
+    kind: "dragDrop",
+    content: {
+      prompt: "Arrange the steps of one training iteration in the correct order.",
+      mode: "parsons",
+      blocks: [
+        { id: "b1", text: "Compute predictions from current weights" },
+        { id: "b2", text: "Calculate loss against the true labels" },
+        { id: "b3", text: "Update weights to reduce the loss" },
+      ],
+      correctOrder: ["b1", "b2", "b3"],
+    },
+  },
+};
+
+export const mockBiasVarianceBankQuestion: QuestionItem = {
+  bankId: "q-aif-multi-4",
+  courseId: "aif-cert",
+  title: "High variance symptom",
+  unitId: "aif-unit-supervised",
+  tags: [AIF_CONCEPTS[0]],
+  points: 1,
+  reveal: {
+    enabled: true,
+    explanation:
+      "High variance means the model is sensitive to the training sample and generalizes poorly.",
+  },
+  updatedAt: Date.now(),
+  item: {
+    kind: "multi",
+    content: {
+      prompt: "Which outcome most strongly suggests a model has high variance?",
+      answers: [
+        {
+          id: "a",
+          text: "Training accuracy is high, but accuracy on new data is much lower.",
+        },
+        {
+          id: "b",
+          text: "Training and test accuracy are both low.",
+        },
+        {
+          id: "c",
+          text: "The model uses fewer features than the dataset provides.",
+        },
+        {
+          id: "d",
+          text: "Training takes fewer epochs than expected.",
+        },
+      ],
+      correctAnswerId: "a",
+    },
+  },
+};
+
+export const mockFairnessBankQuestion: QuestionItem = {
+  bankId: "q-aif-multi-3",
+  courseId: "aif-cert",
+  title: "Fairness evaluation",
+  unitId: "aif-unit-responsible",
+  tags: [AIF_CONCEPTS[1]],
+  points: 1,
+  reveal: {
+    enabled: true,
+    explanation:
+      "Comparing error rates across groups is a common fairness check; overall accuracy can hide disparities.",
+  },
+  updatedAt: Date.now(),
+  item: {
+    kind: "multi",
+    content: {
+      prompt:
+        "A hiring model is 92% accurate overall. What is the best next fairness check?",
+      answers: [
+        {
+          id: "a",
+          text: "Compare false-positive and false-negative rates across applicant groups.",
+        },
+        {
+          id: "b",
+          text: "Increase the training set size until overall accuracy reaches 99%.",
+        },
+        {
+          id: "c",
+          text: "Remove the model card so applicants cannot inspect the system.",
+        },
+        {
+          id: "d",
+          text: "Switch from a neural net to a linear model without measuring group error.",
+        },
+      ],
+      correctAnswerId: "a",
+    },
+  },
+};
+
 export const mockAifCourseBank: AssessmentCourseBank = {
   courseId: "aif-cert",
   courseName: "AI Foundations Certification",
-  domains: AIF_DOMAINS,
+  domains: AIF_CONCEPTS,
+  units: AIF_UNITS,
   questions: [
     mockMultiBankQuestion,
     mockMultiSelectBankQuestion,
@@ -230,19 +423,25 @@ export const mockAifCourseBank: AssessmentCourseBank = {
     mockFreeResponseBankQuestion,
     mockMatchBankQuestion,
     mockSurveyBankQuestion,
+    mockFillInBlankBankQuestion,
+    mockParsonsBankQuestion,
+    mockBiasVarianceBankQuestion,
+    mockFairnessBankQuestion,
   ],
 };
 
 export const mockWebDevCourseBank: AssessmentCourseBank = {
   courseId: "web-dev-fundamentals",
   courseName: "Web Development Fundamentals",
-  domains: WEB_DOMAINS,
+  domains: WEB_CONCEPTS,
+  units: WEB_UNITS,
   questions: [
     {
       bankId: "q-web-multi-1",
       courseId: "web-dev-fundamentals",
       title: "Semantic HTML elements",
-      tags: [WEB_DOMAINS[0]],
+      unitId: "web-unit-html",
+      tags: [WEB_CONCEPTS[0]],
       difficulty: "beginner",
       reveal: {
         enabled: true,
@@ -267,7 +466,8 @@ export const mockWebDevCourseBank: AssessmentCourseBank = {
       bankId: "q-web-fr-1",
       courseId: "web-dev-fundamentals",
       title: "Flexbox vs grid",
-      tags: [WEB_DOMAINS[1]],
+      unitId: "web-unit-css",
+      tags: [WEB_CONCEPTS[1]],
       difficulty: "intermediate",
       reveal: { enabled: true },
       updatedAt: Date.now(),
@@ -282,3 +482,8 @@ export const mockWebDevCourseBank: AssessmentCourseBank = {
     },
   ],
 };
+
+export const DEFAULT_COURSE_BANKS: AssessmentCourseBank[] = [
+  mockAifCourseBank,
+  mockWebDevCourseBank,
+];

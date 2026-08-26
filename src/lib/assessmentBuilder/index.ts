@@ -13,6 +13,28 @@ export {
   QUESTION_DIFFICULTY_LABELS,
 } from "./difficulty";
 export {
+  applyP0ModePreset,
+  P0_MODE_OPTIONS,
+} from "./p0Mode";
+export {
+  courseScopeValue,
+  findUnit,
+  getConceptOptionsForCourse,
+  getConceptsForBanks,
+  getCourseOrUnitOptions,
+  getUnitOptionsForCourse,
+  getUnitsForBanks,
+  parseCourseOrUnitValues,
+  questionMatchesCourseOrUnit,
+  questionMatchesTaxonomy,
+  questionStemPreview,
+  standardLabel,
+  unitLabel,
+  unitScopeValue,
+  type TaxonomyOption,
+  type UnitOption,
+} from "./taxonomy";
+export {
   aggregateDomainScores,
   scoreQuestionResponse,
 } from "./scoring";

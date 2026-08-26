@@ -147,6 +147,10 @@ export const assessmentBuilderLevelLinks: LevelProgressLink[] = [
     name: "Seeded assessment (6 questions)",
     path: "/levels/assessment-builder-seeded",
   },
+  {
+    name: "P0 builder (CFU + exam)",
+    path: "/levels/assessment-builder-p0",
+  },
 ];
 
 export const levelGroupLevelLinks: LevelProgressLink[] = assessmentSetLevelLinks;

@@ -18,7 +18,10 @@ import { Button, Dropdown, Tag, Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
 import { ScrollArea } from "../../../ui/scroll-area";
-import type { BlankQuestionKind } from "../../../../lib/assessmentBuilder";
+import type {
+  BlankQuestionKind,
+  UnitOption,
+} from "../../../../lib/assessmentBuilder";
 import type {
   AssessmentArtifact,
   QuestionItem,
@@ -34,6 +37,8 @@ interface AssessmentBuildCanvasProps {
   graded: boolean;
   courseOptions: Array<{ value: string; label: string }>;
   getDomainOptionsForCourse: (courseId: string) => Array<{ value: string; label: string }>;
+  getUnitOptionsForCourse?: (courseId: string) => UnitOption[];
+  p0Aligned?: boolean;
   isQuestionDirty: boolean;
   onEditQuestion: (bankId: string) => void;
   onSaveForAssessment: () => void;
@@ -251,6 +256,8 @@ interface SortableQuestionCardProps {
   graded: boolean;
   courseOptions: Array<{ value: string; label: string }>;
   domainOptions: Array<{ value: string; label: string }>;
+  unitOptions: UnitOption[];
+  p0Aligned: boolean;
   onEditQuestion: (bankId: string) => void;
   onSaveForAssessment: () => void;
   onSaveToQuestionBank: () => void;
@@ -267,6 +274,8 @@ function SortableQuestionCard({
   graded,
   courseOptions,
   domainOptions,
+  unitOptions,
+  p0Aligned,
   onEditQuestion,
   onSaveForAssessment,
   onSaveToQuestionBank,
@@ -318,6 +327,8 @@ function SortableQuestionCard({
             graded={graded}
             courseOptions={courseOptions}
             domainOptions={domainOptions}
+            unitOptions={unitOptions}
+            p0Aligned={p0Aligned}
             onUpdateQuestion={onUpdateQuestion}
           />
         </div>
@@ -333,6 +344,8 @@ export function AssessmentBuildCanvas({
   graded,
   courseOptions,
   getDomainOptionsForCourse,
+  getUnitOptionsForCourse,
+  p0Aligned = false,
   isQuestionDirty,
   onEditQuestion,
   onSaveForAssessment,
@@ -473,6 +486,8 @@ export function AssessmentBuildCanvas({
                     graded={graded}
                     courseOptions={courseOptions}
                     domainOptions={getDomainOptionsForCourse(question.courseId)}
+                    unitOptions={getUnitOptionsForCourse?.(question.courseId) ?? []}
+                    p0Aligned={p0Aligned}
                     onEditQuestion={onEditQuestion}
                     onSaveForAssessment={onSaveForAssessment}
                     onSaveToQuestionBank={onSaveToQuestionBank}

@@ -29,6 +29,7 @@ Update docs when a change affects:
 - Tutor request flow, context, validation, proposal, or save behavior
 - known gaps or manual QA expectations
 - refactoring maps or deprecated paths
+- **modernizing assessments** product/architecture decisions (`docs/status.md`) — modes, tagging, schema, builder UX model, P0 scope. Skip for visual polish, copy nits, and bugfixes that do not change the model.
 
 Do not update docs for purely internal code cleanup that leaves behavior, ownership, routes, and public patterns unchanged.
 
@@ -45,6 +46,7 @@ Do not update docs for purely internal code cleanup that leaves behavior, owners
    - level-specific behavior: `src/guidelines/level-types/*.md`
    - Tutor harness: `src/guidelines/tutor-harness.md`
    - file moves/refactors: `src/REFACTORING_SUMMARY.md`
+   - modernizing assessments (substantive product/architecture only): `docs/status.md`
 
 3. Make the smallest accurate doc edit. Keep docs descriptive and current; do not add speculative future plans unless the change creates a known gap.
 

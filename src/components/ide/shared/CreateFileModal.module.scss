@@ -1,3 +1,18 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.description {
+  margin: 0;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--leading-body-md);
+  color: var(--text-neutral-tertiary);
+}
+
 .inputRow {
   display: flex;
   align-items: flex-start;

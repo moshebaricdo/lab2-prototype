@@ -1,5 +1,12 @@
-import type { AssessmentCourseBank, QuestionItem } from "../../types/assessmentBuilder";
-import { mockAifCourseBank, mockWebDevCourseBank } from "../../data/assessmentBuilder/mockBank";
+import type {
+  AssessmentCourseBank,
+  DomainTag,
+  QuestionItem,
+} from "../../types/assessmentBuilder";
+import {
+  DEFAULT_COURSE_BANKS,
+  mockAifCourseBank,
+} from "../../data/assessmentBuilder/mockBank";
 
 const STORAGE_KEY = "lab2:assessment-bank";
 
@@ -11,26 +18,111 @@ let banksListSnapshot: AssessmentCourseBank[] = [];
 const courseBankSnapshots = new Map<string, AssessmentCourseBank | undefined>();
 const questionMapSnapshots = new Map<string, Map<string, QuestionItem>>();
 
+function defaultBanksByCourse(): Map<string, AssessmentCourseBank> {
+  return new Map(DEFAULT_COURSE_BANKS.map((bank) => [bank.courseId, bank]));
+}
+
+function hydrateDomainTag(tag: DomainTag, mock: AssessmentCourseBank): DomainTag {
+  if (tag.code) return tag;
+  const fromCatalog = mock.domains.find((domain) => domain.id === tag.id);
+  return fromCatalog?.code ? { ...tag, code: fromCatalog.code } : tag;
+}
+
+function hydrateQuestion(
+  question: QuestionItem,
+  mock: AssessmentCourseBank,
+): QuestionItem {
+  const tags = question.tags.map((tag) => hydrateDomainTag(tag, mock));
+  const withTags = tags.some((tag, index) => tag !== question.tags[index])
+    ? { ...question, tags }
+    : question;
+  if (withTags.unitId) return withTags;
+  const fromMock = mock.questions.find((entry) => entry.bankId === question.bankId);
+  if (fromMock?.unitId) return { ...withTags, unitId: fromMock.unitId };
+  const unit = (mock.units ?? []).find((entry) =>
+    withTags.tags.some((tag) => entry.conceptIds.includes(tag.id)),
+  );
+  return unit ? { ...withTags, unitId: unit.id } : withTags;
+}
+
+function hydrateCourseBanks(banks: AssessmentCourseBank[]): AssessmentCourseBank[] {
+  const mocks = defaultBanksByCourse();
+  const byCourse = new Map(banks.map((bank) => [bank.courseId, bank]));
+  for (const mock of DEFAULT_COURSE_BANKS) {
+    if (!byCourse.has(mock.courseId)) {
+      byCourse.set(mock.courseId, structuredClone(mock));
+    }
+  }
+
+  return Array.from(byCourse.values()).map((bank) => {
+    const mock = mocks.get(bank.courseId);
+    if (!mock) return bank;
+    const existingIds = new Set(bank.questions.map((question) => question.bankId));
+    const mergedQuestions = [
+      ...bank.questions,
+      ...mock.questions.filter((question) => !existingIds.has(question.bankId)),
+    ].map((question) => hydrateQuestion(question, mock));
+    const domains =
+      bank.domains.length > 0
+        ? bank.domains.map((domain) => hydrateDomainTag(domain, mock))
+        : mock.domains;
+    return {
+      ...bank,
+      units: bank.units?.length ? bank.units : mock.units,
+      domains,
+      questions: mergedQuestions,
+    };
+  });
+}
+
+function banksNeedPersist(
+  parsed: AssessmentCourseBank[],
+  hydrated: AssessmentCourseBank[],
+): boolean {
+  if (parsed.length !== hydrated.length) return true;
+  for (const next of hydrated) {
+    const before = parsed.find((bank) => bank.courseId === next.courseId);
+    if (!before) return true;
+    if ((before.units?.length ?? 0) === 0 && (next.units?.length ?? 0) > 0) {
+      return true;
+    }
+    if (before.questions.length !== next.questions.length) return true;
+    const injectedUnit = next.questions.some((question) => {
+      const original = before.questions.find(
+        (entry) => entry.bankId === question.bankId,
+      );
+      return original != null && original.unitId == null && question.unitId != null;
+    });
+    if (injectedUnit) return true;
+    const injectedCode = next.domains.some((domain) => {
+      const original = before.domains.find((entry) => entry.id === domain.id);
+      return original != null && original.code == null && domain.code != null;
+    });
+    if (injectedCode) return true;
+  }
+  return false;
+}
+
 function readBanks(): AssessmentCourseBank[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw === cachedRaw && cachedBanks) return cachedBanks;
     cachedRaw = raw;
     if (!raw) {
-      cachedBanks = [
-        structuredClone(mockAifCourseBank),
-        structuredClone(mockWebDevCourseBank),
-      ];
+      cachedBanks = structuredClone(DEFAULT_COURSE_BANKS);
       writeBanks(cachedBanks, { notify: false });
       return cachedBanks;
     }
-    cachedBanks = JSON.parse(raw) as AssessmentCourseBank[];
+    const parsed = JSON.parse(raw) as AssessmentCourseBank[];
+    const hydrated = hydrateCourseBanks(parsed);
+    if (banksNeedPersist(parsed, hydrated)) {
+      writeBanks(hydrated, { notify: false });
+      return hydrated;
+    }
+    cachedBanks = hydrated;
     return cachedBanks;
   } catch {
-    cachedBanks = [
-      structuredClone(mockAifCourseBank),
-      structuredClone(mockWebDevCourseBank),
-    ];
+    cachedBanks = structuredClone(DEFAULT_COURSE_BANKS);
     return cachedBanks;
   }
 }

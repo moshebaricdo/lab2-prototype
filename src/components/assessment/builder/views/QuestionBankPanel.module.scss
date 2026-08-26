@@ -1,0 +1,167 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupCard {
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  height: 36px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+}
+
+.groupHeaderWithAction {
+  padding-right: 10px;
+}
+
+.groupHeading {
+  margin: 0;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-xs);
+  font-weight: var(--font-weight-semi-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-neutral-tertiary);
+}
+
+.filterBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+}
+
+.searchRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+}
+
+.searchField {
+  flex: 1;
+  min-width: 0;
+}
+
+.searchField > * {
+  width: 100%;
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+}
+
+.emptyListHint {
+  margin: 0;
+  padding: 16px 10px;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-sm);
+  color: var(--text-neutral-quaternary);
+  text-align: center;
+}
+
+.resultsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.resultRow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 10px 12px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.resultRow:last-child {
+  border-bottom: none;
+}
+
+.resultTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+}
+
+.resultMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  padding-right: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.resultMain:disabled {
+  cursor: default;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kindIcon {
+  flex-shrink: 0;
+  width: 16px;
+  color: var(--text-neutral-primary);
+}
+
+.resultTitle {
+  min-width: 0;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semi-bold);
+  line-height: var(--leading-body-sm);
+  color: var(--text-neutral-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stemPreview {
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--leading-body-xs);
+  color: var(--text-neutral-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resultTags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}

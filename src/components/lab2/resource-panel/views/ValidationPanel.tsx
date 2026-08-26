@@ -141,7 +141,7 @@ export function ValidationPanel({
         <Button
           variant="contained"
           color="primary"
-          size="medium"
+          size="small"
           startIconName="clipboard-check"
           fullWidth
           onClick={handleValidate}

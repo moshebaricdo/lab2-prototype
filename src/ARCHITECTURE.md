@@ -59,7 +59,6 @@ src/
 │   │   ├── Tooltip.tsx
 │   │   ├── AlertBanner.tsx
 │   │   ├── Dialog.tsx
-│   │   ├── Modal.tsx
 │   │   ├── PanelHeader.tsx
 │   │   ├── ResizableHandle.tsx
 │   │   ├── header/
@@ -186,7 +185,7 @@ Assessment builder is a Lab2 level type with its own workspace chrome under `com
 
 - **`AssessmentBuilderWorkspace`** — `Lab2Shell` composition, `PanelHeader` + Build/Preview toggle, sidebar width defaults, question selection
 - **`AssessmentBuildCanvas`** — draggable question outline, add zone, type tile grid
-- **`AssessmentBuilderPanel`** — bank (with course/domain/difficulty filters), question editor, settings (card-based layout)
+- **`AssessmentBuilderPanel`** — bank + settings. P0 bank UI lives in **`QuestionBankPanel`** (search, sort, course-or-unit, standards). Legacy bank: course/domain/difficulty.
 - **`AssessmentArtifactWorkspace`** — embedded preview of the full assessment flow
 
 Canonical schema and runtime helpers live in `types/assessmentBuilder.ts` and `lib/assessmentBuilder/` (adapters, bank/draft `localStorage`, scoring, exam pool draw). Mock fixtures: `data/assessmentBuilder/`. See `src/guidelines/level-types/assessment-builder.md` for routes, UX, and known gaps.
@@ -259,7 +258,7 @@ Runtime app tokens are generated into `src/styles/tokens.css` by `scripts/genera
 
 ## CADS package bridge
 
-Standalone CADS platform repo: **`moshebaricdo/cads`** (`@moshebaricdo/cads-variables`, `@moshebaricdo/cads-react`). Consumed from GitHub Packages (`^0.1.0`); `.npmrc` scopes `@moshebaricdo` to `https://npm.pkg.github.com`. CI and fresh clones need `NODE_AUTH_TOKEN` with `read:packages`. Local CADS iteration may temporarily `npm install ../cads/packages/react ../cads/packages/variables` — do not commit that `file:` rewrite. Route `/design-system/cads` renders packaged components inside a `CadsProvider` for parity checks against local `App*` atoms. **`Lab2Shell`** wraps the frame in `components/lab2/CadsLabProvider.tsx` (`CadsProvider baseline={false}` + variables/fonts). Lab2 chrome (header, resource panel, IDE shared, lab workspaces, assessment, dev panel) uses CADS primitives and **CADS Foundations** names (`--background-*`, `--shape-*`, …). CodeMirror syntax colors stay on `--ds-syntax-*`. Color sandbox and teacher dashboard may still use `--ds-*` / `App*`. Migration handoff: `src/guidelines/cads-migration.md`. Docs mini-site: `pnpm --filter @moshebaricdo/cads-docs dev` in the cads repo. AI substrate: `cadsManifest`, docs `/llms.txt`, and `.cursor/skills/cads-prototyping`.
+Standalone CADS platform repo: **`moshebaricdo/cads`** (`@moshebaricdo/cads-variables`, `@moshebaricdo/cads-react`). Consumed from GitHub Packages (`^0.1.2`); `.npmrc` scopes `@moshebaricdo` to `https://npm.pkg.github.com`. CI and fresh clones need `NODE_AUTH_TOKEN` with `read:packages`. Local CADS iteration may temporarily `npm install ../cads/packages/react ../cads/packages/variables` — do not commit that `file:` rewrite. Route `/design-system/cads` renders packaged components inside a `CadsProvider` for parity checks against local `App*` atoms. **`Lab2Shell`** wraps the frame in `components/lab2/CadsLabProvider.tsx` (`CadsProvider baseline={false}` + variables/fonts). Lab2 chrome (header, resource panel, IDE shared, lab workspaces, assessment, dev panel) uses CADS primitives and **CADS Foundations** names (`--background-*`, `--shape-*`, …). CodeMirror syntax colors stay on `--ds-syntax-*`. Color sandbox and teacher dashboard may still use `--ds-*` / `App*`. Migration handoff: `src/guidelines/cads-migration.md`. Docs mini-site: `pnpm --filter @moshebaricdo/cads-docs dev` in the cads repo. AI substrate: `cadsManifest`, docs `/llms.txt`, and `.cursor/skills/cads-prototyping`.
 
 ## Migration Notes
 

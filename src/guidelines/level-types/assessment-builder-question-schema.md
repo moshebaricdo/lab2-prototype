@@ -12,7 +12,7 @@ The instinct is "bank metadata vs. type fields." But the `points` question only 
 
 | Layer | What it answers | Lives on | Travels with the question when reused? |
 |-------|-----------------|----------|----------------------------------------|
-| **A — Catalog metadata** | *What is this question, for cataloging & reuse?* (title, course, domains, difficulty) | `QuestionItem` (bank record) | Yes — shared across every assessment |
+| **A — Catalog metadata** | *What is this question, for cataloging & reuse?* (title, course, unit, concepts) | `QuestionItem` (bank record) | Yes — shared across every assessment |
 | **B — Content** | *What does the learner see and how is it answered?* (stem, type-specific fields, answer key, explanation text) | `QuestionItem.item` + shared content fields | Yes — intrinsic to the question |
 | **C — Placement config** | *How does this question behave **in this assessment**?* (point weight, order, reveal visibility) | `AssessmentArtifact` / `AssessmentQuestionRef` | No — re-decided per assessment |
 
@@ -37,9 +37,10 @@ Identity and reuse fields. **Optional at the type level**, but **required to sav
 |-------|------|-------------------|-------|
 | `bankId` | `string` | always | Stable id. One-offs get an ephemeral `q-oneoff-…` id until promoted. |
 | `title` | `string` | ✅ | **Internal** bank listing name. Never shown to students — that's the stem (`prompt`). |
-| `courseId` | `string` | ✅ | Scopes the question to a course bank. Domains are drawn from this course's taxonomy. |
-| `tags` (domains) | `DomainTag[]` | ✅ (≥1) | Standards/"domains" tagging. Per-course taxonomy (`AssessmentCourseBank.domains`). Drives pool-draw rules + domain score rollup. |
-| `difficulty` | `beginner \| intermediate \| advanced` | ✅ | Bank filter + authoring signal. Defaults to `intermediate` on new one-offs. |
+| `courseId` | `string` | ✅ | Scopes the question to a course bank. Units and concepts are drawn from this course's taxonomy. |
+| `unitId` | `string` | ✅ in P0 | Curriculum unit within the course (`AssessmentCourseBank.units`). |
+| `tags` (concepts) | `DomainTag[]` | ✅ (≥1) | Concept / domain / standard tagging. Per-course catalog (`AssessmentCourseBank.domains`). Optional `code` is the compact standard id shown on P0 bank chips. P0 bank panel labels these **Standards**; the inline editor still says **Concepts**. Drives pool-draw rules + score rollup. |
+| `difficulty` | `beginner \| intermediate \| advanced` | **dropped in P0** | Legacy bank filter only. Not authored or required on the P0 builder. |
 | `points` | `number` | optional | **Bank default weight** (defaults to 1). Overridable per assessment — see [§6.1](#61-points-bank-default--per-assessment-override). |
 | `updatedAt` | `number` | always | Last edit; used for "live ref" propagation + draft diffing. |
 
@@ -194,9 +195,11 @@ Two related-but-distinct ideas — keep both:
 
 A graded MC *can* be reused in a survey assessment; an intrinsically keyless question *cannot* become graded. Both flags are legitimate; the editor should label them distinctly ("This question has no correct answer" vs. assessment-level "Survey — don't score").
 
-### 6.4 Difficulty & domains: required to bank, optional for one-offs ✅ DECIDED
+### 6.4 Catalog tags: course, unit, concepts (difficulty dropped in P0) ✅ DECIDED
 
-Enforced at the **save-to-bank** gate, not the type. One-offs (survey, HoC checkpoint) may omit them. Promoting a one-off to the bank requires filling them in.
+- **P0:** required to bank: `title`, `courseId`, `unitId`, ≥1 concept tag. Difficulty is not authored.
+- **Legacy builder:** still shows difficulty + domain labels.
+- One-offs may omit catalog metadata. Promoting a one-off to the bank requires filling the P0 catalog fields.
 
 ### 6.5 Internal title vs. student-facing prompt
 
@@ -215,7 +218,7 @@ Requirements differ by **destination**, not by type:
 | Action | Requires |
 |--------|----------|
 | **Save for this assessment** (inline one-off) | Valid Layer-B content only (stem + answer key for the type, unless survey/keyless). No catalog metadata required. |
-| **Save to question bank** (promote/upsert) | Above **plus** Layer-A required fields: `title`, `courseId`, ≥1 domain tag, `difficulty`. |
+| **Save to question bank** (promote/upsert) | Above **plus** Layer-A required fields: `title`, `courseId`, ≥1 concept tag, and in P0 a `unitId`. Difficulty is not required. |
 | **Publish assessment** (future) | All placed questions resolve to valid content; graded modes require a key on every non-survey question; question pinning. (Deferred — see Known gaps in `assessment-builder.md`.) |
 
 ---

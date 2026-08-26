@@ -41,7 +41,7 @@ Read `src/guidelines/level-types/README.md` first (shared assumptions, route map
 | Drag and drop | `src/guidelines/level-types/drag-drop.md` |
 | Fill in the blank | `src/guidelines/level-types/fill-in-blank.md` |
 | Levelgroup | `src/guidelines/level-types/levelgroup.md` |
-| Assessment builder | `src/guidelines/level-types/assessment-builder.md` (see also `src/guidelines/level-types/assessment-builder-levelbuilder-contract.md` for save/handoff boundaries) |
+| Assessment builder | `src/guidelines/level-types/assessment-builder.md` (see also `src/guidelines/level-types/assessment-builder-levelbuilder-contract.md` for save/handoff boundaries). Living project status: **`docs/status.md`** — update on substantive product/architecture turns. |
 | Bubble choice | `src/guidelines/level-types/bubble-choice.md` |
 
 Read **`src/guidelines/level-types/weblab2-agents.md`** when changing specialist agents, the roster strip, orchestrator dispatch, or `agentConfig` on Web Lab 2 levels.
@@ -101,6 +101,7 @@ Before considering work complete, check whether the changes require documentatio
 
 Common docs to check:
 
+- `docs/status.md` when working on **modernizing assessments** (builder, question bank, modes, tagging, assessment schema). Update it in the same turn for substantive product or architecture changes; skip for visual polish, copy nits, and bugfixes that do not change the model.
 - `src/ARCHITECTURE.md` for composition, state ownership, and major file/component changes.
 - `src/guidelines/Guidelines.md` for repo-wide placement, styling, and implementation guidance.
 - `src/guidelines/level-types/*.md` for level-specific routes, key files, UX behavior, data shapes, and known gaps.

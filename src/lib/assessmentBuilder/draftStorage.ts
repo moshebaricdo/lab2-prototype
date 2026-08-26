@@ -1,6 +1,7 @@
 import type { AssessmentArtifact } from "../../types/assessmentBuilder";
 import {
   mockBlankAssessment,
+  mockP0ExamAssessment,
   mockSeededAssessment,
 } from "../../data/assessmentBuilder/mockAssessments";
 
@@ -9,6 +10,7 @@ const STORAGE_KEY = "lab2:assessment-drafts";
 const DEFAULT_DRAFTS: AssessmentArtifact[] = [
   mockBlankAssessment,
   mockSeededAssessment,
+  mockP0ExamAssessment,
 ];
 
 let cachedRaw: string | null = null;

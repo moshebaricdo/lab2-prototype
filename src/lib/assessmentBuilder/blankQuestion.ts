@@ -153,7 +153,6 @@ export function createBlankQuestion(
     courseId,
     title: DEFAULT_TITLES[kind],
     tags: [],
-    difficulty: "intermediate",
     reveal: { enabled: false },
     points: 1,
     updatedAt: now,

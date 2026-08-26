@@ -3,15 +3,19 @@ import { Button, Checkbox, Dropdown, Tag, TextInput, Tooltip } from "@moshebaric
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { SidebarTab } from "../../../lab2/resource-panel/Sidebar.types";
 import {
+  applyP0ModePreset,
   getAllCourseBanksSnapshot,
+  P0_MODE_OPTIONS,
   QUESTION_DIFFICULTIES,
   QUESTION_DIFFICULTY_LABELS,
 } from "../../../../lib/assessmentBuilder";
 import type {
   AssessmentArtifact,
   DomainTag,
+  P0AssessmentMode,
   QuestionDifficulty,
 } from "../../../../types/assessmentBuilder";
+import { QuestionBankPanel } from "./QuestionBankPanel";
 import styles from "./AssessmentBuilderPanel.module.scss";
 
 function subscribeToBankStorage(callback: () => void) {
@@ -50,6 +54,8 @@ interface AssessmentBuilderPanelProps {
   onAddBankQuestion: (bankId: string) => void;
   /** Focus and expand a question already in the outline. */
   onFocusQuestionInOutline?: (bankId: string) => void;
+  /** P0 scope: CFU/exam only; course/unit/concept filters; no survey, shuffle, or difficulty. */
+  p0Aligned?: boolean;
 }
 
 const ITEM_KIND_LABELS: Record<string, string> = {
@@ -70,6 +76,7 @@ export function AssessmentBuilderPanel({
   onUpdateArtifact,
   onAddBankQuestion,
   onFocusQuestionInOutline,
+  p0Aligned = false,
 }: AssessmentBuilderPanelProps) {
   const allCourseBanks = useSyncExternalStore(
     subscribeToBankStorage,
@@ -175,7 +182,17 @@ export function AssessmentBuilderPanel({
   return (
     <ScrollArea className={styles.root}>
       <div className={styles.inner}>
-        {activeTab === "builder-bank" && (
+        {activeTab === "builder-bank" && p0Aligned && (
+          <QuestionBankPanel
+            courseBanks={allCourseBanks}
+            defaultCourseId={artifact.courseId}
+            resolvedQuestionIds={resolvedQuestionIds}
+            onAddBankQuestion={onAddBankQuestion}
+            onFocusQuestionInOutline={onFocusQuestionInOutline}
+          />
+        )}
+
+        {activeTab === "builder-bank" && !p0Aligned && (
           <section className={styles.section}>
             <div className={styles.groupCard}>
               <div className={`${styles.groupHeader} ${styles.groupHeaderWithAction}`}>
@@ -203,7 +220,10 @@ export function AssessmentBuilderPanel({
                       menuType="checklist"
                       options={courseOptions}
                       value={selectedCourseIds}
-                      onChange={(value) => setSelectedCourseIds(asStringArray(value))}
+                      onChange={(value) => {
+                        setSelectedCourseIds(asStringArray(value));
+                        setSelectedDomainIds([]);
+                      }}
                       onOpenChange={(open) => {
                         if (open) {
                           requestAnimationFrame(() => {
@@ -227,7 +247,9 @@ export function AssessmentBuilderPanel({
                         menuType="checklist"
                         options={domainOptions}
                         value={selectedDomainIds}
-                        onChange={(value) => setSelectedDomainIds(asStringArray(value))}
+                        onChange={(value) =>
+                          setSelectedDomainIds(asStringArray(value))
+                        }
                         placeholder="All domains"
                         size="extraSmall"
                         color="secondary"
@@ -350,9 +372,47 @@ export function AssessmentBuilderPanel({
                   }))
                 }
               />
+              {p0Aligned && (
+                <>
+                  <div className={styles.filterField}>
+                    <span className={styles.filterLabel}>Mode</span>
+                    <Dropdown
+                      role="input"
+                      options={P0_MODE_OPTIONS}
+                      value={
+                        artifact.mode === "exam" ? "exam" : "checkpoint"
+                      }
+                      onChange={(value) =>
+                        onUpdateArtifact((current) =>
+                          applyP0ModePreset(current, value as P0AssessmentMode),
+                        )
+                      }
+                      size="extraSmall"
+                      color="secondary"
+                      width="full"
+                      menuWidth="trigger"
+                    />
+                  </div>
+                  {artifact.mode === "checkpoint" && (
+                    <p className={styles.hint}>
+                      A check for understanding (CFU) is typically a single
+                      question in a level progression. Unlimited attempts, no
+                      timer, Tutor on, feedback after each question.
+                    </p>
+                  )}
+                  {artifact.mode === "exam" && (
+                    <p className={styles.hint}>
+                      High-stakes exam defaults: one timed attempt, Tutor off,
+                      no answer reveal during the attempt. Question and option
+                      order stay fixed in P0.
+                    </p>
+                  )}
+                </>
+              )}
               </div>
             </div>
 
+            {!p0Aligned && (
             <div className={styles.groupCard}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupHeading}>Shuffling</h3>
@@ -388,6 +448,7 @@ export function AssessmentBuilderPanel({
               />
               </div>
             </div>
+            )}
 
             <div className={styles.groupCard}>
               <div className={styles.groupHeader}>
@@ -406,7 +467,11 @@ export function AssessmentBuilderPanel({
                 label="Enable AI Tutor"
               />
               {artifact.mode === "exam" && !artifact.tutor.enabled && (
-                <p className={styles.hint}>Practice exams default the Tutor off.</p>
+                <p className={styles.hint}>
+                  {p0Aligned
+                    ? "Exams default the Tutor off."
+                    : "Practice exams default the Tutor off."}
+                </p>
               )}
               </div>
             </div>
@@ -449,7 +514,33 @@ export function AssessmentBuilderPanel({
                       }));
                     }}
                   />
-                  {(artifact.poolDrawRules?.length ?? 0) > 0 && (
+                  {p0Aligned && (
+                    <TextInput
+                      multiline
+                      rows={4}
+                      label="Intro"
+                      size="small"
+                      color="secondary"
+                      value={artifact.intro?.overviewContent ?? ""}
+                      onChange={(event) => {
+                        const overviewContent = event.target.value;
+                        onUpdateArtifact((current) => ({
+                          ...current,
+                          intro: overviewContent.trim()
+                            ? {
+                                overviewContent,
+                                timeMinutes:
+                                  current.timing?.timeLimitMinutes ??
+                                  current.intro?.timeMinutes ??
+                                  45,
+                                attempts: current.attempts?.maxAttempts ?? 1,
+                              }
+                            : undefined,
+                        }));
+                      }}
+                    />
+                  )}
+                  {!p0Aligned && (artifact.poolDrawRules?.length ?? 0) > 0 && (
                     <div className={styles.poolRules}>
                       {artifact.poolDrawRules?.map((rule) => (
                         <p key={rule.id} className={styles.hint}>

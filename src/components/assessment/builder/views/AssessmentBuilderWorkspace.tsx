@@ -13,6 +13,8 @@ import {
   cloneQuestionItem,
   createBlankQuestion,
   getAllCourseBanksSnapshot,
+  getConceptOptionsForCourse,
+  getUnitOptionsForCourse,
   isQuestionDraftDirty,
   type BlankQuestionKind,
 } from "../../../../lib/assessmentBuilder";
@@ -33,12 +35,15 @@ interface AssessmentBuilderWorkspaceProps {
   assessmentId: string;
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
+  /** P0-aligned authoring: CFU/exam only; course/unit/concept tags; no survey, shuffle, or difficulty. */
+  p0Aligned?: boolean;
 }
 
 export function AssessmentBuilderWorkspace({
   assessmentId,
   levelLinks,
   currentLevelPath,
+  p0Aligned = false,
 }: AssessmentBuilderWorkspaceProps) {
   const { artifact, bankQuestions, resolvedQuestions, updateArtifact } =
     useAssessmentBuilderState(assessmentId);
@@ -71,11 +76,11 @@ export function AssessmentBuilderWorkspace({
   );
 
   const getDomainOptionsForCourse = (courseId: string) => {
-    const bank = allCourseBanks.find((entry) => entry.courseId === courseId);
-    return (bank?.domains ?? []).map((domain) => ({
-      value: domain.id,
-      label: domain.label,
-    }));
+    return getConceptOptionsForCourse(allCourseBanks, courseId);
+  };
+
+  const getUnitsForCourse = (courseId: string) => {
+    return getUnitOptionsForCourse(allCourseBanks, courseId);
   };
 
   useEffect(() => {
@@ -129,7 +134,9 @@ export function AssessmentBuilderWorkspace({
   }
 
   const courseId = artifact.courseId;
-  const graded = artifact.mode !== "survey" && artifact.surveyMode !== true;
+  const graded = p0Aligned
+    ? true
+    : artifact.mode !== "survey" && artifact.surveyMode !== true;
 
   const handleAddBankQuestion = (bankId: string) => {
     updateArtifact((current) => ({
@@ -219,9 +226,11 @@ export function AssessmentBuilderWorkspace({
     <Lab2Shell
       topNavigationProps={{
         title: `${artifact.lessonName} - ${artifact.title}`,
-        subtitle: "In-lab assessment builder",
+        subtitle: p0Aligned
+          ? "P0 assessment builder (CFU + exam)"
+          : "In-lab assessment builder",
         currentLevel: artifact.metadata.levelPosition,
-        totalLevels: artifact.metadata.totalLevelsInScript,
+        totalLevels: levelLinks?.length ?? artifact.metadata.totalLevelsInScript,
         levelLinks,
         currentLevelPath,
       }}
@@ -258,6 +267,7 @@ export function AssessmentBuilderWorkspace({
             onUpdateArtifact={updateArtifact}
             onAddBankQuestion={handleAddBankQuestion}
             onFocusQuestionInOutline={setSelectedBankId}
+            p0Aligned={p0Aligned}
           />
         ),
       }}
@@ -286,6 +296,8 @@ export function AssessmentBuilderWorkspace({
               graded={graded}
               courseOptions={courseOptions}
               getDomainOptionsForCourse={getDomainOptionsForCourse}
+              getUnitOptionsForCourse={getUnitsForCourse}
+              p0Aligned={p0Aligned}
               isQuestionDirty={isQuestionDirty}
               onEditQuestion={handleEditQuestion}
               onSaveForAssessment={handleSaveForAssessment}

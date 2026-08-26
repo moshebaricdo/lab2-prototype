@@ -18,6 +18,7 @@ Use these docs as handoff context for follow-up threads.
 - [Fill in the blank](./fill-in-blank.md)
 - [Levelgroup](./levelgroup.md)
 - [Assessment builder](./assessment-builder.md)
+- Modernizing assessments — [living status](../../../docs/status.md) (P0 decisions, prototype routes, changelog)
 - Assessment product specs (repo root): [Question types & fields](../../../docs/question-types-and-fields.md), [Assessment config & modes](../../../docs/assessment-config-and-modes.md)
 - [Bubble choice](./bubble-choice.md)
 - [Teacher Answer Key Pattern](./teacher-answer-key.md)
@@ -48,5 +49,5 @@ Use these docs as handoff context for follow-up threads.
 - `/levels/drag-drop-parsons`, `/levels/drag-drop-categorization`, `/levels/drag-drop-parsons-code-ref` (see `drag-drop.md`)
 - `/levels/fill-in-blank`, `/levels/fill-in-blank-multi`, `/levels/fill-in-blank-code-ref` (see `fill-in-blank.md`)
 - `/levels/levelgroup-scroll`, `/levels/levelgroup-stepped` (see `levelgroup.md`)
-- `/levels/assessment-builder-new` and `/levels/assessment-builder-seeded` (see `assessment-builder.md`)
+- `/levels/assessment-builder-new`, `/levels/assessment-builder-seeded`, and `/levels/assessment-builder-p0` (see `assessment-builder.md`)
 - `/levels/bubble-choice` and `/levels/bubble-choice-images`

@@ -44,7 +44,7 @@ Read these before editing assessment behavior:
 
 6. Keep fixtures realistic but small. Avoid duplicating large data blobs when a reusable fixture can express the pattern.
 
-7. Update level-type docs when UX behavior, routes, data shape, or known gaps change.
+7. Update level-type docs when UX behavior, routes, data shape, or known gaps change. For assessment-builder / modernizing-assessments **product or architecture** changes, also update `docs/status.md` (skip polish-only turns).
 
 8. Verify:
    - `npm run typecheck`

@@ -33,8 +33,9 @@ What a question needs to be a good citizen of the bank. **Required to bank; opti
 |-------|-----------|-------------------|
 | **Internal title** | A name for *authors* searching the bank. Never shown to learners. | ✅ |
 | **Course** | Which course's bank this belongs to. | ✅ |
-| **Domains** | Standards / "domains" tagging — the topics or learning objectives the question assesses. A question can carry several. | ✅ (at least one) |
-| **Difficulty** | Beginner / Intermediate / Advanced. Helps authors filter and balance an assessment. | ✅ |
+| **Unit** | Curriculum unit within the course. | ✅ |
+| **Concepts** | Topics / standards / domains the question assesses. A question can carry several. | ✅ (at least one) |
+| **Difficulty** | *Dropped in P0.* Previously beginner / intermediate / advanced. | — |
 | **Point value (default)** | The question's *suggested* weight. A specific assessment may re-weight it (see [out of scope](#where-assessment-configuration-lives)), but the default belongs to the question. | Optional (defaults to 1) |
 
 > **Likely needed for a production bank** (not yet specified): authorship/owner, status (draft / published / archived), version history, and a usage count (how many assessments reference it). Flagged here so they aren't forgotten.
@@ -176,6 +177,6 @@ The settings below are **not properties of a question item** — they configure 
 
 | Concern | Owner |
 |---------|-------|
-| Internal title, course, domains, difficulty, **default** point value | Question item — Catalog |
+| Internal title, course, unit, concepts, **default** point value | Question item — Catalog |
 | **Type**, stem, body, options, answer key, explanation, rubric, code context | Question item — Content |
 | Reveal visibility, scoring context, order, shuffle, timing, attempts, **point override** | The assessment — *out of scope here* |

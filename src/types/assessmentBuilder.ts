@@ -4,12 +4,23 @@ import type { FreeResponseTeacherAnswer } from "../data/assessment/freeResponse"
 import type { DragDropBucket, DragDropCategorizationItem, DragDropItem } from "../data/assessment/dragDrop";
 import type { FillInBlankDefinition, FillInBlankSegment } from "../data/assessment/fillInBlank";
 
-/** Domain or standard tag attached to a bank question or used in pool draw rules. */
+/** Concept, domain, or standard tag attached to a bank question. */
 export interface DomainTag {
   id: string;
   label: string;
+  /** Compact standard code shown on bank chips (e.g. `3B-AP-08`). */
+  code?: string;
 }
 
+/** Curriculum unit within a course bank. Questions are tagged with `unitId`. */
+export interface CourseUnit {
+  id: string;
+  label: string;
+  /** Concept ids from this course's catalog that belong to the unit. */
+  conceptIds: string[];
+}
+
+/** @deprecated P0 dropped difficulty; kept so legacy builder drafts still typecheck. */
 export type QuestionDifficulty = "beginner" | "intermediate" | "advanced";
 
 export type QuestionItemKind =
@@ -93,8 +104,11 @@ export interface QuestionItem {
   bankId: string;
   courseId: string;
   title: string;
+  /** Curriculum unit this question belongs to. */
+  unitId?: string;
+  /** Concept / domain / standard tags used for bank filters and score rollup. */
   tags: DomainTag[];
-  /** Optional difficulty band for bank filtering and authoring metadata. */
+  /** @deprecated P0 dropped difficulty; ignored by the P0 builder. */
   difficulty?: QuestionDifficulty;
   reveal: RevealConfig;
   codePanel?: CodePanelConfig;
@@ -104,7 +118,11 @@ export interface QuestionItem {
   item: QuestionItemContent;
 }
 
+/** P0 authoring surfaces Checkpoint (CFU) and Exam only. `survey` / `quiz` remain for legacy drafts. */
 export type AssessmentMode = "checkpoint" | "survey" | "quiz" | "exam";
+
+export const P0_ASSESSMENT_MODES = ["checkpoint", "exam"] as const;
+export type P0AssessmentMode = (typeof P0_ASSESSMENT_MODES)[number];
 
 export type AssessmentLayout = "scroll" | "stepped";
 
@@ -199,6 +217,9 @@ export interface DomainScoreSummary {
 export interface AssessmentCourseBank {
   courseId: string;
   courseName: string;
+  /** Concept / domain / standard catalog for this course. */
   domains: DomainTag[];
+  /** Curriculum units; omitted on legacy bank snapshots until hydrated. */
+  units?: CourseUnit[];
   questions: QuestionItem[];
 }

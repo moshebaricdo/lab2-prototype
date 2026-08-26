@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Button, Dropdown, TextInput } from "@moshebaricdo/cads-react";
-import { Modal } from "../../ui/Modal";
+import { Dropdown, Modal, TextInput } from "@moshebaricdo/cads-react";
+import { CadsLabProvider } from "../../lab2/CadsLabProvider";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import {
   getFileTypeIconConfigForCreateFileType,
@@ -126,66 +126,52 @@ export function CreateFileModal({
     }
   };
 
-  if (!isOpen) return null;
-
   const fullFileName = getFullFileName();
   const createButtonLabel = fullFileName ? `Create ${fullFileName}` : "Create file";
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Create a new file"
-      description="Give your new file a name and type."
-      footer={
-        <>
-          <Button
-            variant="outlined"
-            color="secondary"
-            size="medium"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            size="medium"
-            onClick={handleCreate}
-          >
-            {createButtonLabel}
-          </Button>
-        </>
-      }
-    >
-      <div className={styles.inputRow}>
-        <div className={`${styles.fieldGroup} ${styles.fileNameField}`}>
-          <TextInput
-            label="File name"
-            type="text"
-            value={fileName}
-            onChange={(event) => {
-              setFileName(event.target.value);
-              setError("");
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Enter file name"
-            autoFocus
-            error={Boolean(error)}
-            helperText={error || undefined}
-            size="medium"
-            color="secondary"
-          />
-        </div>
+    <CadsLabProvider>
+      <Modal
+        open={isOpen}
+        onClose={onClose}
+        title="Create a new file"
+        primaryActionLabel={createButtonLabel}
+        secondaryActionLabel="Cancel"
+        onPrimaryAction={handleCreate}
+        onSecondaryAction={onClose}
+      >
+        <div className={styles.body}>
+          <p className={styles.description}>Give your new file a name and type.</p>
+          <div className={styles.inputRow}>
+            <div className={`${styles.fieldGroup} ${styles.fileNameField}`}>
+              <TextInput
+                label="File name"
+                type="text"
+                value={fileName}
+                onChange={(event) => {
+                  setFileName(event.target.value);
+                  setError("");
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Enter file name"
+                autoFocus
+                error={Boolean(error)}
+                helperText={error || undefined}
+                size="medium"
+                color="secondary"
+              />
+            </div>
 
-        <div className={`${styles.fieldGroup} ${styles.fileTypeField}`}>
-          <FileTypeDropdown
-            selectedType={fileType}
-            fileTypes={fileTypes}
-            onSelect={setFileType}
-          />
+            <div className={`${styles.fieldGroup} ${styles.fileTypeField}`}>
+              <FileTypeDropdown
+                selectedType={fileType}
+                fileTypes={fileTypes}
+                onSelect={setFileType}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </CadsLabProvider>
   );
 }
