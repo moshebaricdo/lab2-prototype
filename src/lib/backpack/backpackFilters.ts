@@ -111,6 +111,38 @@ export interface BackpackTypeFilterOption {
   count: number;
 }
 
+/** Solid FA icon for a type-filter option (dropdown start icons). */
+export function backpackTypeFilterIconName(
+  id: BackpackTypeFilterId,
+): string {
+  if (id === BACKPACK_TYPE_FILTER_ALL) return "files";
+  if (id === BACKPACK_TYPE_FILTER_MEDIA) return "image";
+  if (id === BACKPACK_TYPE_FILTER_OTHER) return "file";
+  if (id === BACKPACK_TYPE_FILTER_AGENT) return "robot";
+  switch (id) {
+    case "html":
+    case "htm":
+    case "css":
+    case "js":
+    case "mjs":
+    case "cjs":
+      return "file-code";
+    case "json":
+      return "file-brackets-curly";
+    case "py":
+      return "code";
+    case "md":
+    case "txt":
+      return "file-lines";
+    case "csv":
+      return "file-csv";
+    case "pdf":
+      return "file-pdf";
+    default:
+      return "file";
+  }
+}
+
 export function backpackItemTypeId(item: BackpackItem): BackpackTypeFilterId {
   if (isAgentBackpackItem(item)) return BACKPACK_TYPE_FILTER_AGENT;
   if (isBackpackItemImage(item)) return BACKPACK_TYPE_FILTER_MEDIA;
@@ -162,14 +194,71 @@ export function getBackpackTypeFilterOptions(
 /** Name sort direction for the type-availability filter row. */
 export type BackpackSortDirection = "asc" | "desc";
 
+export type BackpackSortMode =
+  | "name-asc"
+  | "name-desc"
+  | "newest"
+  | "oldest"
+  | "type";
+
+export const BACKPACK_SORT_OPTIONS: ReadonlyArray<{
+  id: BackpackSortMode;
+  label: string;
+}> = [
+  { id: "name-asc", label: "Alphabetical A–Z" },
+  { id: "name-desc", label: "Alphabetical Z–A" },
+  { id: "newest", label: "Newest first" },
+  { id: "oldest", label: "Oldest first" },
+  { id: "type", label: "File type" },
+];
+
 export function sortBackpackItemsByName(
   items: BackpackItem[],
   direction: BackpackSortDirection,
 ): BackpackItem[] {
-  const sorted = [...items].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+  return sortBackpackItems(
+    items,
+    direction === "desc" ? "name-desc" : "name-asc",
   );
-  return direction === "desc" ? sorted.reverse() : sorted;
+}
+
+export function sortBackpackItems(
+  items: BackpackItem[],
+  mode: BackpackSortMode,
+): BackpackItem[] {
+  const sorted = [...items];
+  switch (mode) {
+    case "name-asc":
+      return sorted.sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
+    case "name-desc":
+      return sorted.sort((a, b) =>
+        b.name.localeCompare(a.name, undefined, { sensitivity: "base" }),
+      );
+    case "newest":
+      return sorted.sort(
+        (a, b) =>
+          b.savedAt.localeCompare(a.savedAt) ||
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
+    case "oldest":
+      return sorted.sort(
+        (a, b) =>
+          a.savedAt.localeCompare(b.savedAt) ||
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
+    case "type":
+      return sorted.sort((a, b) => {
+        const typeCompare = backpackItemTypeId(a).localeCompare(
+          backpackItemTypeId(b),
+        );
+        return (
+          typeCompare ||
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        );
+      });
+  }
 }
 
 export function filterBackpackItemsByType(

@@ -1,11 +1,15 @@
 .root {
   position: relative;
   display: flex;
+  min-width: 0;
+  width: 100%;
   min-height: 0;
   flex: 1;
+  overflow: hidden;
 }
 
 .scrollArea {
+  min-width: 0;
   min-height: 0;
   flex: 1;
 }
@@ -26,13 +30,15 @@
 }
 
 .filterRow {
+  width: 100%;
+  min-width: 0;
   padding-bottom: 2px;
 }
 
 .filterRowFixed {
   box-sizing: border-box;
-  display: flex;
-  align-items: center;
+  width: 100%;
+  min-width: 0;
 }
 
 .toastWrap {

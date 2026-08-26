@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button } from "@moshebaricdo/cads-react";
+import { Alert, Button, Dialog } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { ScrollArea } from "../../../ui/scroll-area";
 import { useBackpack } from "../../../../hooks/BackpackContext";
@@ -23,9 +23,9 @@ import {
   getBackpackFilterOptions,
   getBackpackTypeFilterOptions,
   partitionBackpackItemsByAvailability,
-  sortBackpackItemsByName,
+  sortBackpackItems,
   type BackpackFilterId,
-  type BackpackSortDirection,
+  type BackpackSortMode,
   type BackpackTypeFilterId,
 } from "../../../../lib/backpack/backpackFilters";
 import { BackpackFilterDropdown } from "./backpack/BackpackFilterDropdown";
@@ -109,10 +109,6 @@ export function BackpackPanel({
     items,
     removeItem,
     renameItem,
-    showSaveSuccessAlert,
-    setShowSaveSuccessAlert,
-    showSaveErrorAlert,
-    setShowSaveErrorAlert,
     showImportErrorAlert,
     setShowImportErrorAlert,
     reportImportError,
@@ -122,12 +118,12 @@ export function BackpackPanel({
     () => new Set(),
   );
   const [renameTarget, setRenameTarget] = useState<BackpackItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BackpackItem | null>(null);
   const [activeFilter, setActiveFilter] = useState<BackpackFilterId>("all");
   const [activeTypeFilter, setActiveTypeFilter] = useState<BackpackTypeFilterId>(
     BACKPACK_TYPE_FILTER_ALL,
   );
-  const [typeSortDirection, setTypeSortDirection] =
-    useState<BackpackSortDirection>("asc");
+  const [sortMode, setSortMode] = useState<BackpackSortMode>("name-asc");
   const [showSupportedOnly, setShowSupportedOnly] = useState(false);
   const [isUnsupportedExpanded, setIsUnsupportedExpanded] = useState(false);
 
@@ -163,9 +159,9 @@ export function BackpackPanel({
       return filterBackpackItems(items, activeFilter, importLab);
     }
     if (filterExperiment === "type-availability") {
-      return sortBackpackItemsByName(
+      return sortBackpackItems(
         filterBackpackItemsByType(items, activeTypeFilter),
-        typeSortDirection,
+        sortMode,
       );
     }
     return items;
@@ -176,7 +172,7 @@ export function BackpackPanel({
     importLab,
     items,
     showSupportedOnly,
-    typeSortDirection,
+    sortMode,
   ]);
 
   const { generalItems, sketchLabItems } = useMemo(
@@ -206,18 +202,6 @@ export function BackpackPanel({
       setActiveTypeFilter(BACKPACK_TYPE_FILTER_ALL);
     }
   }, [activeTypeFilter, filterExperiment, typeFilterOptions]);
-
-  useEffect(() => {
-    if (!showSaveSuccessAlert) return undefined;
-    const timeoutId = window.setTimeout(() => setShowSaveSuccessAlert(false), 2000);
-    return () => window.clearTimeout(timeoutId);
-  }, [showSaveSuccessAlert, setShowSaveSuccessAlert]);
-
-  useEffect(() => {
-    if (!showSaveErrorAlert) return undefined;
-    const timeoutId = window.setTimeout(() => setShowSaveErrorAlert(false), 2000);
-    return () => window.clearTimeout(timeoutId);
-  }, [showSaveErrorAlert, setShowSaveErrorAlert]);
 
   useEffect(() => {
     if (!showImportErrorAlert) return undefined;
@@ -261,7 +245,7 @@ export function BackpackPanel({
           metaLabelOverride="AGENT"
           onDownload={() => downloadBackpackItem(item)}
           onRename={() => setRenameTarget(item)}
-          onDelete={() => removeItem(item.id)}
+          onDelete={() => setDeleteTarget(item)}
         />
       );
     }
@@ -285,7 +269,7 @@ export function BackpackPanel({
         }
         onDownload={() => downloadBackpackItem(item)}
         onRename={() => setRenameTarget(item)}
-        onDelete={() => removeItem(item.id)}
+        onDelete={() => setDeleteTarget(item)}
       />
     );
   };
@@ -414,12 +398,8 @@ export function BackpackPanel({
           options={typeFilterOptions}
           value={activeTypeFilter}
           onChange={(next) => setActiveTypeFilter(next)}
-          sortDirection={typeSortDirection}
-          onToggleSort={() =>
-            setTypeSortDirection((current) =>
-              current === "asc" ? "desc" : "asc",
-            )
-          }
+          sortMode={sortMode}
+          onSortModeChange={setSortMode}
         />
       );
     }
@@ -448,8 +428,7 @@ export function BackpackPanel({
     return null;
   };
 
-  const hasToasts =
-    showSaveSuccessAlert || showSaveErrorAlert || showImportErrorAlert;
+  const hasToasts = showImportErrorAlert;
 
   return (
     <>
@@ -488,26 +467,6 @@ export function BackpackPanel({
 
       {hasToasts ? (
         <div className={styles.toastWrap}>
-          {showSaveSuccessAlert ? (
-            <Alert
-              sentiment="success"
-              size="extraSmall"
-              isDismissible
-              onClose={() => setShowSaveSuccessAlert(false)}
-            >
-              File successfully saved to Backpack!
-            </Alert>
-          ) : null}
-          {showSaveErrorAlert ? (
-            <Alert
-              sentiment="error"
-              size="extraSmall"
-              isDismissible
-              onClose={() => setShowSaveErrorAlert(false)}
-            >
-              An error occurred while saving to the Backpack, please try again.
-            </Alert>
-          ) : null}
           {showImportErrorAlert ? (
             <Alert
               sentiment="error"
@@ -521,6 +480,32 @@ export function BackpackPanel({
         </div>
       ) : null}
     </div>
+    <Dialog
+      type="iconTop"
+      topIconName="trash-can"
+      open={deleteTarget !== null}
+      title="Are you sure?"
+      description={
+        deleteTarget ? (
+          <>
+            You are about to delete <strong>{deleteTarget.name}</strong> from
+            your Backpack.
+          </>
+        ) : null
+      }
+      primaryActionLabel="Delete file"
+      secondaryActionLabel="Cancel"
+      isDismissable
+      maxWidth={400}
+      onPrimaryAction={() => {
+        if (!deleteTarget) return;
+        const itemId = deleteTarget.id;
+        setDeleteTarget(null);
+        removeItem(itemId);
+      }}
+      onSecondaryAction={() => setDeleteTarget(null)}
+      onClose={() => setDeleteTarget(null)}
+    />
     <NameInputModal
       isOpen={renameTarget !== null}
       title="Rename file"

@@ -95,7 +95,7 @@ The Lab2 sandbox keeps its local `App*` atoms and committed `codeAiColorSystem.j
 | `@moshebaricdo/cads-variables` | Canonical variables document + generated `variables.css` / MUI theme |
 | `@moshebaricdo/cads-react` | MUI-wrapped components + icons (`/icons` subpath) |
 
-Installed here as `@moshebaricdo/cads-react` / `@moshebaricdo/cads-variables` `^0.1.0` from `https://npm.pkg.github.com`. Parity route: **`/design-system/cads`**. New prototypes may opt into the packages; do not big-bang replace `App*`.
+Installed here as `@moshebaricdo/cads-react` / `@moshebaricdo/cads-variables` `^0.1.2` from `https://npm.pkg.github.com`. Parity route: **`/design-system/cads`**. New prototypes may opt into the packages; do not big-bang replace `App*`.
 
 **Foundations on Lab2 CADS surfaces:** `Lab2Shell` → `CadsLabProvider` loads `@moshebaricdo/cads-variables/variables.css`. Lab2 chrome (header, resource panel, IDE, assessment, dev panel) uses **unprefixed** Foundations names (`--background-neutral-primary`, `--shape-sm`, …). Color sandbox and teacher dashboard may still use generated `--ds-*` from `tokens.css`. Prefer Foundations names on any new CADS-backed surface.
 

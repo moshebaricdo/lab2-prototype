@@ -11,6 +11,7 @@ Prototype environment for levels where the lab surface is an AI chat stream. Som
 | `/levels/aichatlab` | Chat Only Level | `AiChatLabLevelPage` | Level Types (core config) | Chat-only surface with the resource panel and no config column |
 | `/levels/aichatlab-setup` | Setup Only Level | `AiChatLabSetupLevelPage` | Level Types (core config) | Resource panel, setup tab, model selector, and compact temperature tuning |
 | `/levels/aichatlab-model-card` | Full Model Config Level | `AiChatLabModelCardLevelPage` | Level Types (core config) | Full setup, retrieval, publish, rubric, and published model-card flow |
+| `/levels/progression-backpack-labs-aichat` | Backpack Across Labs · AI Chat | `BackpackCrossLabAiChatLevelPage` | Sample Progressions | Chat-only surface with the shared cross-lab backpack seed (all file types importable) |
 
 ## Key Files
 
@@ -60,4 +61,4 @@ AI Chat Lab workspace columns (config, model card, chat) and the shared resource
 ## Known Gaps
 
 - No real LLM provider, retrieval index, publishing backend, or saved model-card persistence.
-- The Backpack tab uses the production type-availability panel with an **aichatlab** allow-list that permits all file types for now. **+** (tooltip: "Add to chat") still dispatches `weblab:add-backpack-item-to-chat`, but the CADS chat composer spike does not yet listen for that event (attachments are a follow-up).
+- The Backpack tab uses the production type-availability panel with an **aichatlab** allow-list that permits all file types for now. **+** (tooltip: "Add to chat") still dispatches `weblab:add-backpack-item-to-chat`, but the CADS chat composer spike does not yet listen for that event (attachments are a follow-up). The Backpack Across Labs progression (`/levels/progression-backpack-labs-aichat`) is the last level and uses this “everything is supported” allow-list as the contrast case after Web Lab, Python, and Sketch.

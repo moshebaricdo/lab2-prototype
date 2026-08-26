@@ -1,4 +1,4 @@
-import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Dropdown, Tag, Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import {
@@ -111,10 +111,12 @@ export function BackpackFileChip({
 
       <div className={styles.actions}>
         {isAgent ? null : addedToProject ? (
-          <span className={styles.addedBadge} aria-label="Added to project">
-            <FaIcon name="check" size="xs" className={styles.addedBadgeIcon} />
-            <span className={styles.addedBadgeLabel}>Added</span>
-          </span>
+          <Tag
+            size="small"
+            color="success"
+            startIconName="check"
+            label="Added"
+          />
         ) : showImportButton ? (
           importSupported && onAddToProject ? (
             <Tooltip title={importActionTooltip} placement="top">

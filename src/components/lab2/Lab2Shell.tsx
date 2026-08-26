@@ -25,6 +25,7 @@ import { Dialog } from "@moshebaricdo/cads-react";
 import { AnnotationOverlay } from "./dev/AnnotationOverlay";
 import { BackpackProvider } from "../../hooks/BackpackContext";
 import { BackpackSeedEffect } from "./BackpackSeedEffect";
+import { BackpackSaveToasts } from "./BackpackSaveToasts";
 import { CadsLabProvider } from "./CadsLabProvider";
 import styles from "./Lab2Shell.module.scss";
 
@@ -174,7 +175,11 @@ export function Lab2Shell(props: Lab2ShellProps) {
   return (
     <CadsLabProvider>
       <BackpackProvider>
-        <BackpackSeedEffect items={sidebarProps.backpackSeedItemsIfEmpty} />
+        <BackpackSeedEffect
+          items={sidebarProps.backpackSeedItemsIfEmpty}
+          ensureItems={sidebarProps.backpackEnsureSeedItems}
+        />
+        <BackpackSaveToasts />
         <div className={styles.root}>
           <TopNavigation {...resolvedTopNavigationProps} />
           <div className={themeScopeClassName} data-theme={theme}>

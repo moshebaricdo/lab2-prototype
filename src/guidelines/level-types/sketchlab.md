@@ -15,6 +15,7 @@ workspace).
 | --- | --- | --- |
 | `/levels/sketchlab` | Sketch Lab Level | `SketchLabLevelPage` |
 | `/levels/sketchlab-blank` | Standalone Project (Blank) | `SketchLabBlankProjectLevelPage` |
+| `/levels/progression-backpack-labs-sketch` | Backpack Across Labs · Sketch | `BackpackCrossLabSketchLevelPage` |
 
 Registered in `src/App.tsx`, listed under **Lab environments** in
 `src/pages/LevelsIndexPage.tsx`, and linked via `sketchLabLevelLinks` in

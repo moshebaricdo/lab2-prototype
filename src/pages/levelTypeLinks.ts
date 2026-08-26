@@ -289,6 +289,25 @@ export const uploadMechanismsProgressionLinks: LevelProgressLink[] = [
   },
 ];
 
+export const backpackCrossLabProgressionLinks: LevelProgressLink[] = [
+  {
+    name: "Web Lab",
+    path: "/levels/progression-backpack-labs-web",
+  },
+  {
+    name: "Python Lab",
+    path: "/levels/progression-backpack-labs-python",
+  },
+  {
+    name: "Sketch Lab",
+    path: "/levels/progression-backpack-labs-sketch",
+  },
+  {
+    name: "AI Chat Lab",
+    path: "/levels/progression-backpack-labs-aichat",
+  },
+];
+
 export const backpackFilterProgressionLinks: LevelProgressLink[] = [
   {
     name: "Source sections",

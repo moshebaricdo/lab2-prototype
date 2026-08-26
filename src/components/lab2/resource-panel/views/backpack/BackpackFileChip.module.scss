@@ -100,27 +100,3 @@
 .addButtonWrap {
   display: inline-flex;
 }
-
-.addedBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px 12px 2px 8px;
-  border-radius: var(--shape-round);
-  background: var(--background-success-light);
-}
-
-.addedBadgeIcon {
-  color: var(--text-success-primary);
-  font-size: var(--text-body-xxs);
-}
-
-.addedBadgeLabel {
-  color: var(--text-neutral-primary);
-  font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semi-bold);
-  letter-spacing: 0.04em;
-  line-height: var(--leading-body-xxs);
-  text-transform: uppercase;
-  white-space: nowrap;
-}

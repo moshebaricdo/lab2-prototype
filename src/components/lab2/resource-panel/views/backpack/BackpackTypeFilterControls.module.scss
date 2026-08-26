@@ -1,70 +1,31 @@
 .root {
-  display: flex;
+  display: grid;
   width: 100%;
-  align-items: flex-end;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
   gap: 8px;
+}
+
+.rootSplit {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .field {
   display: flex;
-  width: 100%;
-  max-width: 120px;
   min-width: 0;
-  flex: 1;
+  max-width: 100%;
   flex-direction: column;
-  gap: 4px;
+  overflow: hidden;
 }
 
 .dropdownTrigger {
   width: 100%;
-  justify-content: flex-start;
-  gap: 6px;
-}
-
-/* AppButton wraps children in a label span that shrink-wraps by default */
-.dropdownTrigger > span:not([aria-hidden="true"]) {
-  display: flex;
   min-width: 0;
-  flex: 1;
-  justify-content: flex-start;
-  overflow: hidden;
+  max-width: 100%;
 }
 
-.dropdownValue {
-  display: flex;
-  width: 100%;
+.dropdownTrigger :global([data-cads-dropdown-trigger="input"]) {
   min-width: 0;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-}
-
-.dropdownText {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-}
-
-.label {
-  color: var(--text-neutral-primary);
-  font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semi-bold);
-  line-height: var(--leading-body-xs);
-}
-
-.chevron {
-  margin-left: auto;
-  flex-shrink: 0;
-  color: var(--text-neutral-quaternary);
-}
-
-.sortWrap {
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-.sortButton {
-  flex-shrink: 0;
+  max-width: 100%;
 }

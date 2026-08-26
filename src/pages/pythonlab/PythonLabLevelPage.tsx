@@ -8,7 +8,8 @@ import {
   pythonInitialChatMessages,
 } from "../../data/pythonlab";
 import { useChatState } from "../../hooks/useChatState";
-import { useLayoutState } from "../../hooks/useLayoutState";
+import { useLayoutState, type ResourcePanelTab } from "../../hooks/useLayoutState";
+import type { LevelProgressLink } from "../../components/ui/header/LevelProgressBubbles";
 import { useDevPanelInitialOpenFiles } from "../../hooks/useDevPanelInitialOpenFiles";
 import { useFileWorkspaceState } from "../../hooks/useFileWorkspaceState";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
@@ -63,6 +64,14 @@ interface PythonLabLevelPageProps {
   tutorMode?: TutorMode;
   /** File paths to open when the level loads. Pass a newline string or an array of paths. */
   initialOpenFiles?: InitialOpenFilesProp;
+  levelLinks?: LevelProgressLink[];
+  currentLevel?: number;
+  totalLevels?: number;
+  completedLevelPaths?: string[];
+  continueLabel?: string;
+  onContinue?: () => void;
+  backpackEnsureSeedItems?: BackpackItem[];
+  initialResourceTab?: ResourcePanelTab;
 }
 
 type PythonTutorModeKind = "mock" | "functional";
@@ -243,6 +252,14 @@ export function PythonLabLevelPage({
   instructionsContent,
   tutorMode,
   initialOpenFiles,
+  levelLinks,
+  currentLevel = 3,
+  totalLevels = 8,
+  completedLevelPaths,
+  continueLabel,
+  onContinue,
+  backpackEnsureSeedItems,
+  initialResourceTab,
 }: PythonLabLevelPageProps = {}) {
   const {
     activeTab,
@@ -251,7 +268,7 @@ export function PythonLabLevelPage({
     setIsSettingsOpen,
     sidebarWidth,
     setSidebarWidth,
-  } = useLayoutState();
+  } = useLayoutState(initialResourceTab ?? "ai-tutor");
 
   const initialFileStructure = useMemo(
     () => fileStructureOverride ?? pythonFileStructure,
@@ -455,10 +472,11 @@ export function PythonLabLevelPage({
         topNavigationProps={{
           title: resolved.title as string,
           subtitle: topNavigationSubtitle,
-          currentLevel: 3,
-          totalLevels: 8,
-          completedLevels: [1, 2],
-          levelLinks: pythonLabLevelLinks,
+          currentLevel,
+          totalLevels,
+          completedLevels: Array.from({ length: currentLevel - 1 }, (_, index) => index + 1),
+          completedLevelPaths,
+          levelLinks: levelLinks ?? pythonLabLevelLinks,
           currentLevelPath,
         }}
         sidebarProps={{
@@ -499,6 +517,9 @@ export function PythonLabLevelPage({
           availableTutorContextFiles,
           onImportBackpackItem: handleImportBackpackItem,
           backpackImportLab: "pythonlab",
+          backpackEnsureSeedItems,
+          continueLabel,
+          onContinue,
           onTutorSubmit: resolvedTutorModeKind === "functional" ? handleTutorSubmit : undefined,
           isTutorRequestRunning,
           onTutorRequestRunningChange: setIsTutorRequestRunning,

@@ -41,6 +41,7 @@ The console header includes controls to run code, clear output, and toggle betwe
 
 - `/levels/pythonlab` — Python Lab Level with a guided check-in planner project
 - `/levels/pythonlab-blank` — Standalone Project (Blank) with no starter files, instructions drawer hidden, and collapsible sidebar enabled
+- `/levels/progression-backpack-labs-python` — second level of the Backpack Across Labs sample (shared file-type seed; see `src/data/backpack/crossLabBackpackSeed.ts`)
 
 ## Component Structure
 
@@ -50,10 +51,10 @@ The console header includes controls to run code, clear output, and toggle betwe
 - Runtime: `src/components/ide/pythonlab/runtime/pythonRunner.ts`
 - Shared editor: `src/components/ide/shared/CodeEditor.tsx` (same as Web Lab 2)
 - Shared file manager: `src/components/ide/shared/FileManager.tsx` (same as Web Lab 2)
-- Shared create-file modal: `src/components/ide/shared/CreateFileModal.tsx`
+- Shared create-file modal: `src/components/ide/shared/CreateFileModal.tsx` (CADS `Modal`)
 - Shared version banner: `src/components/ide/shared/VersionBanner.tsx`
 
-Shared IDE chrome uses packaged CADS (`Button`, `Dropdown`, `Tooltip`, `TextInput`, `Alert`) and unprefixed Foundations. CodeMirror syntax colors stay on `--ds-syntax-*`.
+Shared IDE chrome uses packaged CADS (`Modal`, `Button`, `Dropdown`, `Tooltip`, `TextInput`, `Alert`) and unprefixed Foundations. CodeMirror syntax colors stay on `--ds-syntax-*`.
 - Validation tab: `src/components/lab2/resource-panel/views/ValidationPanel.tsx`
 - Mock data: `src/data/pythonlab/projects/default` (`main.py`, `README.md`, and `instructions.md`)
 

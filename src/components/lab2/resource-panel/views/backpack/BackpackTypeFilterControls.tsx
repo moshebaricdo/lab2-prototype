@@ -1,6 +1,8 @@
-import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
+import { Dropdown } from "@moshebaricdo/cads-react";
 import {
-  type BackpackSortDirection,
+  BACKPACK_SORT_OPTIONS,
+  backpackTypeFilterIconName,
+  type BackpackSortMode,
   type BackpackTypeFilterId,
   type BackpackTypeFilterOption,
 } from "../../../../../lib/backpack/backpackFilters";
@@ -10,32 +12,37 @@ interface BackpackTypeFilterControlsProps {
   options: BackpackTypeFilterOption[];
   value: BackpackTypeFilterId;
   onChange: (value: BackpackTypeFilterId) => void;
-  sortDirection: BackpackSortDirection;
-  onToggleSort: () => void;
+  sortMode: BackpackSortMode;
+  onSortModeChange: (mode: BackpackSortMode) => void;
 }
 
 export function BackpackTypeFilterControls({
   options,
   value,
   onChange,
-  sortDirection,
-  onToggleSort,
+  sortMode,
+  onSortModeChange,
 }: BackpackTypeFilterControlsProps) {
+  const showTypeFilter = options.length > 1;
+
   return (
-    <div className={styles.root}>
-      {options.length > 1 ? (
+    <div className={showTypeFilter ? `${styles.root} ${styles.rootSplit}` : styles.root}>
+      {showTypeFilter ? (
         <div className={styles.field}>
-          <span className={styles.label}>File type</span>
           <Dropdown
             role="input"
-            size="extraSmall"
+            size="small"
             color="secondary"
             width="full"
             className={styles.dropdownTrigger}
+            style={{ minWidth: 0, maxWidth: "100%" }}
+            label="File type"
             value={value}
+            startIconName={backpackTypeFilterIconName(value)}
             options={options.map((option) => ({
               value: option.id,
               label: `${option.label} (${option.count})`,
+              iconName: backpackTypeFilterIconName(option.id),
             }))}
             onChange={(nextValue) =>
               onChange(String(nextValue) as BackpackTypeFilterId)
@@ -45,31 +52,25 @@ export function BackpackTypeFilterControls({
         </div>
       ) : null}
 
-      <div className={styles.sortWrap}>
-        <Tooltip
-          title={
-            sortDirection === "asc"
-              ? "Sorted A–Z — sort Z–A"
-              : "Sorted Z–A — sort A–Z"
+      <div className={styles.field}>
+        <Dropdown
+          role="input"
+          size="small"
+          color="secondary"
+          width="full"
+          className={styles.dropdownTrigger}
+          style={{ minWidth: 0, maxWidth: "100%" }}
+          label="Sort"
+          value={sortMode}
+          options={BACKPACK_SORT_OPTIONS.map((option) => ({
+            value: option.id,
+            label: option.label,
+          }))}
+          onChange={(nextValue) =>
+            onSortModeChange(String(nextValue) as BackpackSortMode)
           }
-          placement="top"
-        >
-          <span>
-            <Button
-              type="button"
-              variant="outlined"
-              color="secondary"
-              size="extraSmall"
-              className={styles.sortButton}
-              aria-label="Toggle file name sort order"
-              iconOnly
-              startIconName={
-                sortDirection === "asc" ? "arrow-down-a-z" : "arrow-down-z-a"
-              }
-              onClick={onToggleSort}
-            />
-          </span>
-        </Tooltip>
+          aria-label="Sort backpack files"
+        />
       </div>
     </div>
   );

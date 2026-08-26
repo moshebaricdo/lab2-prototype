@@ -3,10 +3,11 @@ import { Lab2Shell } from "../../components/lab2/Lab2Shell";
 import { MarkdownInstructions } from "../../components/lab2/resource-panel/MarkdownInstructions";
 import { SketchLabWorkspace } from "../../components/ide/sketchlab/views";
 import { useChatState } from "../../hooks/useChatState";
-import { useLayoutState } from "../../hooks/useLayoutState";
+import { useLayoutState, type ResourcePanelTab } from "../../hooks/useLayoutState";
 import { usePropsOverride } from "../../hooks/usePropsOverride";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
 import type { DevPanelField } from "../../components/lab2/dev";
+import type { LevelProgressLink } from "../../components/ui/header/LevelProgressBubbles";
 import {
   sketchLabInitialChatMessages,
   sketchLabInstructionsMarkdown,
@@ -24,6 +25,14 @@ interface SketchLabLevelPageProps {
   initialNodes?: SketchNode[];
   initialEdges?: SketchLegacyEdge[];
   instructionsMarkdown?: string;
+  levelLinks?: LevelProgressLink[];
+  currentLevel?: number;
+  totalLevels?: number;
+  completedLevelPaths?: string[];
+  continueLabel?: string;
+  onContinue?: () => void;
+  backpackEnsureSeedItems?: BackpackItem[];
+  initialResourceTab?: ResourcePanelTab;
 }
 
 const sketchLabDevFields: DevPanelField[] = [
@@ -47,6 +56,14 @@ export function SketchLabLevelPage({
   initialNodes = sketchLabStarterNodes,
   initialEdges = sketchLabStarterEdges,
   instructionsMarkdown = sketchLabInstructionsMarkdown,
+  levelLinks,
+  currentLevel,
+  totalLevels,
+  completedLevelPaths,
+  continueLabel,
+  onContinue,
+  backpackEnsureSeedItems,
+  initialResourceTab,
 }: SketchLabLevelPageProps = {}) {
   const {
     activeTab,
@@ -55,7 +72,7 @@ export function SketchLabLevelPage({
     setIsSettingsOpen,
     sidebarWidth,
     setSidebarWidth,
-  } = useLayoutState();
+  } = useLayoutState(initialResourceTab ?? "ai-tutor");
   const { chatMessages, setChatMessages, chatInput, setChatInput } = useChatState(
     sketchLabInitialChatMessages,
     "",
@@ -80,16 +97,20 @@ export function SketchLabLevelPage({
   });
   const resolved = overrideResult.props;
   const levelIndex = currentLevelIndex(currentLevelPath);
+  const resolvedLevelLinks = levelLinks ?? sketchLabLevelLinks;
+  const resolvedCurrentLevel = currentLevel ?? levelIndex + 1;
+  const resolvedTotalLevels = totalLevels ?? resolvedLevelLinks.length;
 
   return (
     <Lab2Shell
       topNavigationProps={{
         title: String(resolved.title),
         subtitle: String(resolved.subtitle),
-        currentLevel: levelIndex + 1,
-        totalLevels: sketchLabLevelLinks.length,
-        completedLevels: Array.from({ length: levelIndex }, (_, index) => index + 1),
-        levelLinks: sketchLabLevelLinks,
+        currentLevel: resolvedCurrentLevel,
+        totalLevels: resolvedTotalLevels,
+        completedLevels: Array.from({ length: resolvedCurrentLevel - 1 }, (_, index) => index + 1),
+        completedLevelPaths,
+        levelLinks: resolvedLevelLinks,
         currentLevelPath,
       }}
       sidebarProps={{
@@ -112,7 +133,8 @@ export function SketchLabLevelPage({
         showAiTutorTab: Boolean(resolved.showAiTutorTab),
         showHistoryTab: false,
         showContinueButton: Boolean(resolved.showContinueButton),
-        continueLabel: String(resolved.continueLabel),
+        continueLabel: continueLabel ?? String(resolved.continueLabel),
+        onContinue,
         surfaceVariant: "edge",
         instructionsContent: <MarkdownInstructions markdown={instructionsMarkdown} />,
         aiTutorComposerPlaceholder: "Ask for sketching help...",
@@ -123,6 +145,7 @@ export function SketchLabLevelPage({
         devPanelOverrideResult: overrideResult,
         backpackImportLab: "sketch-lab",
         onImportBackpackItem: handleImportBackpackItem,
+        backpackEnsureSeedItems,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(300, Math.min(600, prev + delta)));

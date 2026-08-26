@@ -7,9 +7,10 @@ import { MarkdownInstructions } from "../../components/lab2/resource-panel/Markd
 import { AiChatLabWorkspace } from "../../components/ide/aichatlab/views";
 import type { AiChatLabWorkspaceProps } from "../../components/ide/aichatlab/views";
 import { useChatState } from "../../hooks/useChatState";
-import { useLayoutState } from "../../hooks/useLayoutState";
+import { useLayoutState, type ResourcePanelTab } from "../../hooks/useLayoutState";
 import { usePropsOverride } from "../../hooks/usePropsOverride";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
+import type { LevelProgressLink } from "../../components/ui/header/LevelProgressBubbles";
 import { aiChatLabLevelLinks } from "../levelTypeLinks";
 import type { ChatMessage } from "../../types/chat";
 import {
@@ -23,6 +24,13 @@ interface AiChatLabLevelPageProps {
   currentLevelPath?: string;
   defaults?: Partial<AiChatLabDefaults>;
   hideProgression?: boolean;
+  levelLinks?: LevelProgressLink[];
+  currentLevel?: number;
+  totalLevels?: number;
+  completedLevelPaths?: string[];
+  onContinue?: () => void;
+  backpackEnsureSeedItems?: BackpackItem[];
+  initialResourceTab?: ResourcePanelTab;
 }
 
 function currentLevelIndex(path: string) {
@@ -72,6 +80,13 @@ export function AiChatLabLevelPage({
   currentLevelPath = "/levels/aichatlab",
   defaults,
   hideProgression,
+  levelLinks,
+  currentLevel,
+  totalLevels,
+  completedLevelPaths,
+  onContinue,
+  backpackEnsureSeedItems,
+  initialResourceTab,
 }: AiChatLabLevelPageProps = {}) {
   const {
     activeTab,
@@ -80,7 +95,7 @@ export function AiChatLabLevelPage({
     setIsSettingsOpen,
     sidebarWidth,
     setSidebarWidth,
-  } = useLayoutState();
+  } = useLayoutState(initialResourceTab ?? "ai-tutor");
   const sidebarChatState = useChatState([]);
   const versionHistoryState = useVersionHistoryState();
   const overrideResult = usePropsOverride(mergeDefaults(defaults));
@@ -104,16 +119,21 @@ export function AiChatLabLevelPage({
   const surfaceVariant = resolved.surfaceVariant === "edge" ? "edge" : "card";
   const continueInHeader = resolved.continueButtonPlacement === "header";
   const showContinueButton = Boolean(resolved.showContinueButton);
+  const resolvedLevelLinks = levelLinks ?? aiChatLabLevelLinks;
+  const resolvedCurrentLevel = currentLevel ?? levelIndex + 1;
+  const resolvedTotalLevels = totalLevels ?? resolvedLevelLinks.length;
   const topNavigationProps = {
     title: String(resolved.title),
     subtitle: String(resolved.subtitle),
-    currentLevel: levelIndex + 1,
-    totalLevels: aiChatLabLevelLinks.length,
-    completedLevels: Array.from({ length: levelIndex }, (_, index) => index + 1),
-    levelLinks: aiChatLabLevelLinks,
+    currentLevel: resolvedCurrentLevel,
+    totalLevels: resolvedTotalLevels,
+    completedLevels: Array.from({ length: resolvedCurrentLevel - 1 }, (_, index) => index + 1),
+    completedLevelPaths,
+    levelLinks: resolvedLevelLinks,
     currentLevelPath,
     showContinueButton: showContinueButton && continueInHeader,
     continueLabel: String(resolved.continueLabel),
+    onContinue,
     hideProgression,
   };
   const workspace = (
@@ -165,6 +185,7 @@ export function AiChatLabLevelPage({
         rubricData: SAMPLE_RUBRIC,
         showContinueButton: showContinueButton && !continueInHeader,
         continueLabel: String(resolved.continueLabel),
+        onContinue,
         collapsible: surfaceVariant === "card",
         defaultCollapsed: false,
         surfaceVariant,
@@ -176,6 +197,7 @@ export function AiChatLabLevelPage({
         devPanelOverrideResult: overrideResult,
         backpackImportLab: "aichatlab",
         onImportBackpackItem: handleImportBackpackItem,
+        backpackEnsureSeedItems,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(280, Math.min(520, prev + delta)));

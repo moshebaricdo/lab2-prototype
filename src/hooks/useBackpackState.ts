@@ -10,19 +10,47 @@ import { resolveUniqueBackpackName } from "../lib/backpack/resolveUniqueBackpack
 import type { BackpackItem, BackpackSourceLab } from "../types/backpack";
 import type { FileItem } from "../types/file";
 
+function prepareBackpackItemToAdd(
+  item: BackpackItem,
+  current: BackpackItem[],
+): BackpackItem | null {
+  const existingNames = new Set(current.map((entry) => entry.name));
+  const uniqueName = resolveUniqueBackpackName(item.name, existingNames);
+  const itemToAdd =
+    uniqueName === item.name ? item : { ...item, name: uniqueName };
+  const duplicate = current.some(
+    (entry) => entry.name === itemToAdd.name && entry.content === itemToAdd.content,
+  );
+  return duplicate ? null : itemToAdd;
+}
+
 export function useBackpackState() {
   const [items, setItems] = useState<BackpackItem[]>(() => loadBackpackItems());
   const [showSaveSuccessAlert, setShowSaveSuccessAlert] = useState(false);
   const [showSaveErrorAlert, setShowSaveErrorAlert] = useState(false);
   const [showImportErrorAlert, setShowImportErrorAlert] = useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [lastAddedItemId, setLastAddedItemId] = useState<string | null>(null);
+  const [deletedSnapshot, setDeletedSnapshot] = useState<{
+    item: BackpackItem;
+    index: number;
+  } | null>(null);
 
   useEffect(() => {
     const persisted = persistBackpackItems(items);
     if (!persisted) {
       setShowSaveSuccessAlert(false);
       setShowSaveErrorAlert(true);
+      setShowDeleteAlert(false);
     }
   }, [items]);
+
+  const markSaveSuccess = useCallback((itemId: string) => {
+    setLastAddedItemId(itemId);
+    setShowSaveSuccessAlert(true);
+    setShowSaveErrorAlert(false);
+    setShowDeleteAlert(false);
+  }, []);
 
   const saveFileToBackpack = useCallback((
     file: FileItem,
@@ -34,49 +62,64 @@ export function useBackpackState() {
       return nextItem;
     }
 
+    let added: BackpackItem | null = null;
     setItems((current) => {
-      const existingNames = new Set(current.map((item) => item.name));
-      const uniqueName = resolveUniqueBackpackName(nextItem.name, existingNames);
-      const itemToAdd =
-        uniqueName === nextItem.name ? nextItem : { ...nextItem, name: uniqueName };
-
-      const duplicate = current.some(
-        (item) => item.name === itemToAdd.name && item.content === itemToAdd.content,
-      );
-      if (duplicate) return current;
-      return [itemToAdd, ...current];
+      added = prepareBackpackItemToAdd(nextItem, current);
+      return added ? [added, ...current] : current;
     });
-    setShowSaveSuccessAlert(true);
-    setShowSaveErrorAlert(false);
+    if (added) markSaveSuccess(added.id);
     return true;
-  }, []);
+  }, [markSaveSuccess]);
 
   const addBackpackItem = useCallback((item: BackpackItem): true | string => {
     if (!item.content.trim()) {
       setShowSaveErrorAlert(true);
       return "This item has no content to save.";
     }
+    let added: BackpackItem | null = null;
     setItems((current) => {
-      const existingNames = new Set(current.map((entry) => entry.name));
-      const uniqueName = resolveUniqueBackpackName(item.name, existingNames);
-      const itemToAdd =
-        uniqueName === item.name ? item : { ...item, name: uniqueName };
-
-      const duplicate = current.some(
-        (existing) =>
-          existing.name === itemToAdd.name && existing.content === itemToAdd.content,
-      );
-      if (duplicate) return current;
-      return [itemToAdd, ...current];
+      added = prepareBackpackItemToAdd(item, current);
+      return added ? [added, ...current] : current;
     });
-    setShowSaveSuccessAlert(true);
-    setShowSaveErrorAlert(false);
+    if (added) markSaveSuccess(added.id);
     return true;
-  }, []);
+  }, [markSaveSuccess]);
 
   const removeItem = useCallback((itemId: string) => {
-    setItems((current) => current.filter((item) => item.id !== itemId));
+    let snapshot: { item: BackpackItem; index: number } | null = null;
+    setItems((current) => {
+      const index = current.findIndex((entry) => entry.id === itemId);
+      if (index === -1) return current;
+      snapshot = { item: current[index], index };
+      return current.filter((entry) => entry.id !== itemId);
+    });
+    if (!snapshot) return;
+    setDeletedSnapshot(snapshot);
+    setShowDeleteAlert(true);
+    setShowSaveSuccessAlert(false);
+    setShowSaveErrorAlert(false);
   }, []);
+
+  const undoLastSave = useCallback(() => {
+    if (!lastAddedItemId) return;
+    const itemId = lastAddedItemId;
+    setLastAddedItemId(null);
+    setShowSaveSuccessAlert(false);
+    setItems((current) => current.filter((entry) => entry.id !== itemId));
+  }, [lastAddedItemId]);
+
+  const undoLastDelete = useCallback(() => {
+    if (!deletedSnapshot) return;
+    const { item, index } = deletedSnapshot;
+    setDeletedSnapshot(null);
+    setShowDeleteAlert(false);
+    setItems((current) => {
+      if (current.some((entry) => entry.id === item.id)) return current;
+      const next = [...current];
+      next.splice(Math.min(index, next.length), 0, item);
+      return next;
+    });
+  }, [deletedSnapshot]);
 
   const replaceBackpackItem = useCallback((itemId: string, nextItem: BackpackItem) => {
     setItems((current) =>
@@ -124,6 +167,23 @@ export function useBackpackState() {
     setItems((current) => (current.length > 0 ? current : seedItems));
   }, []);
 
+  /** Adds any seed items whose ids are not already in the store; leaves existing items alone. */
+  const ensureSeedItems = useCallback((
+    seedItems: BackpackItem[],
+    options?: { removeIds?: string[] },
+  ) => {
+    setItems((current) => {
+      const removeIds = new Set(options?.removeIds ?? []);
+      const kept = removeIds.size
+        ? current.filter((item) => !removeIds.has(item.id))
+        : current;
+      const existingIds = new Set(kept.map((item) => item.id));
+      const missing = seedItems.filter((item) => !existingIds.has(item.id));
+      if (missing.length === 0 && kept.length === current.length) return current;
+      return [...missing, ...kept];
+    });
+  }, []);
+
   const refreshBackpack = useCallback(() => {
     setItems(loadBackpackItems());
   }, []);
@@ -136,11 +196,17 @@ export function useBackpackState() {
     replaceBackpackItem,
     renameItem,
     seedItemsIfEmpty,
+    ensureSeedItems,
     refreshBackpack,
     showSaveSuccessAlert,
     setShowSaveSuccessAlert,
     showSaveErrorAlert,
     setShowSaveErrorAlert,
+    showDeleteAlert,
+    setShowDeleteAlert,
+    deletedItemName: deletedSnapshot?.item.name ?? null,
+    undoLastSave,
+    undoLastDelete,
     showImportErrorAlert,
     setShowImportErrorAlert,
     reportImportError,

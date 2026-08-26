@@ -26,14 +26,24 @@ const WEB_LAB_PATH_PREFIXES = [
   "/levels/progression-branch-",
   "/levels/progression-upload-mechanisms",
   "/levels/progression-backpack-filter",
+  "/levels/progression-backpack-labs-web",
   "/levels/progression-weblab2-validation",
 ];
 
-const PYTHON_LAB_PATH_PREFIXES = ["/levels/pythonlab"];
+const PYTHON_LAB_PATH_PREFIXES = [
+  "/levels/pythonlab",
+  "/levels/progression-backpack-labs-python",
+];
 
-const SKETCH_LAB_PATH_PREFIXES = ["/levels/sketchlab"];
+const SKETCH_LAB_PATH_PREFIXES = [
+  "/levels/sketchlab",
+  "/levels/progression-backpack-labs-sketch",
+];
 
-const AI_CHAT_LAB_PATH_PREFIXES = ["/levels/aichatlab"];
+const AI_CHAT_LAB_PATH_PREFIXES = [
+  "/levels/aichatlab",
+  "/levels/progression-backpack-labs-aichat",
+];
 
 const TEACHER_DASHBOARD_PATH_PREFIXES = ["/levels/teacher-dashboard"];
 

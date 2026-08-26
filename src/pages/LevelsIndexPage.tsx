@@ -29,6 +29,7 @@ import {
   drawerImprovementsExperimentLinks,
   fileChipTabsExperimentLinks,
   uploadMechanismsProgressionLinks,
+  backpackCrossLabProgressionLinks,
   backpackFilterProgressionLinks,
   webLab2ExperimentLinks,
   webLab2ValidationProgressionLinks,
@@ -159,6 +160,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/bubble-choice": "Bubble choice",
   "/levels/progression-upload-mechanisms": "Sample progression",
   "/levels/progression-backpack-filter": "Sample progression",
+  "/levels/progression-backpack-labs": "Sample progression",
   "/levels/progression": "Sample progression",
   "/levels/teacher-dashboard": "Teacher dashboard",
 };
@@ -549,6 +551,32 @@ export function LevelsIndexPage() {
                 </div>
                 <div className={styles.bubbleRow}>
                   {uploadMechanismsProgressionLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>Backpack Across Labs</h3>
+                  <p className={styles.cardDescription}>
+                    Same pre-seeded file types in Web Lab, Python, Sketch, and AI Chat — supported vs unsupported, type dropdown, and import.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {backpackCrossLabProgressionLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       title={page.name}

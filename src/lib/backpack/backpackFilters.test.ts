@@ -3,9 +3,11 @@ import type { BackpackItem } from "../../types/backpack";
 import {
   BACKPACK_TYPE_FILTER_MEDIA,
   backpackItemTypeId,
+  backpackTypeFilterIconName,
   filterBackpackItemsByType,
   getBackpackFilterOptions,
   getBackpackTypeFilterOptions,
+  sortBackpackItems,
 } from "./backpackFilters";
 
 function item(name: string, overrides: Partial<BackpackItem> = {}): BackpackItem {
@@ -60,6 +62,45 @@ describe("filterBackpackItemsByType", () => {
 
     expect(filterBackpackItemsByType(items, BACKPACK_TYPE_FILTER_MEDIA)).toEqual([
       items[0],
+    ]);
+  });
+});
+
+describe("backpackTypeFilterIconName", () => {
+  it("maps known types to file-type icons", () => {
+    expect(backpackTypeFilterIconName("all")).toBe("files");
+    expect(backpackTypeFilterIconName("media")).toBe("image");
+    expect(backpackTypeFilterIconName("html")).toBe("file-code");
+    expect(backpackTypeFilterIconName("py")).toBe("code");
+    expect(backpackTypeFilterIconName("pdf")).toBe("file-pdf");
+  });
+});
+
+describe("sortBackpackItems", () => {
+  const items = [
+    item("zeta.html", { savedAt: "2026-01-01T00:00:00.000Z" }),
+    item("alpha.py", { savedAt: "2026-03-01T00:00:00.000Z", fileKind: "python" }),
+    item("beta.html", { savedAt: "2026-02-01T00:00:00.000Z", fileKind: "html" }),
+  ];
+
+  it("sorts alphabetically and by saved date", () => {
+    expect(sortBackpackItems(items, "name-asc").map((entry) => entry.name)).toEqual([
+      "alpha.py",
+      "beta.html",
+      "zeta.html",
+    ]);
+    expect(sortBackpackItems(items, "newest").map((entry) => entry.name)).toEqual([
+      "alpha.py",
+      "beta.html",
+      "zeta.html",
+    ]);
+  });
+
+  it("sorts by file type then name", () => {
+    expect(sortBackpackItems(items, "type").map((entry) => entry.name)).toEqual([
+      "beta.html",
+      "zeta.html",
+      "alpha.py",
     ]);
   });
 });

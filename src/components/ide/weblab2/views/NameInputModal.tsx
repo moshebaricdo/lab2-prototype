@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Modal, TextInput } from "@moshebaricdo/cads-react";
+import { CadsLabProvider } from "../../../lab2/CadsLabProvider";
 import styles from "../../shared/CreateFileModal.module.scss";
 
 interface NameInputModalProps {
@@ -57,36 +58,40 @@ export function NameInputModal({
   };
 
   return (
-    <Modal
-      open={isOpen}
-      onClose={onClose}
-      title={title}
-      primaryActionLabel={confirmLabel}
-      secondaryActionLabel="Cancel"
-      onPrimaryAction={handleSubmit}
-      onSecondaryAction={onClose}
-    >
-      <p>{description}</p>
-      <div className={styles.inputRow}>
-        <div className={styles.fieldGroup}>
-          <TextInput
-            label={fieldLabel}
-            type="text"
-            value={value}
-            onChange={(event) => {
-              setValue(event.target.value);
-              setError("");
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            autoFocus
-            error={Boolean(error)}
-            helperText={error || undefined}
-            size="medium"
-            color="secondary"
-          />
+    <CadsLabProvider>
+      <Modal
+        open={isOpen}
+        onClose={onClose}
+        title={title}
+        primaryActionLabel={confirmLabel}
+        secondaryActionLabel="Cancel"
+        onPrimaryAction={handleSubmit}
+        onSecondaryAction={onClose}
+      >
+        <div className={styles.body}>
+          <p className={styles.description}>{description}</p>
+          <div className={styles.inputRow}>
+            <div className={styles.fieldGroup}>
+              <TextInput
+                label={fieldLabel}
+                type="text"
+                value={value}
+                onChange={(event) => {
+                  setValue(event.target.value);
+                  setError("");
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+                autoFocus
+                error={Boolean(error)}
+                helperText={error || undefined}
+                size="medium"
+                color="secondary"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </CadsLabProvider>
   );
 }

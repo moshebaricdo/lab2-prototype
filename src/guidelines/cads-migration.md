@@ -13,10 +13,10 @@ Related: `.cursor/skills/cads-prototyping/SKILL.md`, `color-theming.md`, `/desig
 | `Lab2Shell` → `CadsLabProvider` | Theme bootstrap for all Lab2 routes; flow-complete uses CADS `Dialog` | Loads `variables.css` + icon fonts; `baseline={false}` |
 | Header (`TopNavigation` / `GlobalNavMenu` / `LevelProgressBubbles`) | CADS `Button` / `Dropdown` / `Tooltip` / `FaIcon` — extraSmall outlined/text on-brand; progress indicator matches CADS Global Header **labLevel** (always light); header chrome always dark | Unprefixed Foundations (white-on-brand via `--btn-*` overrides; header `dark` / `data-theme="Dark"`, progress pill `data-theme="Light"`) |
 | AI Chat Lab workspace | CADS primitives + `AiChatMessage` / `AiChatInput` | Unprefixed Foundations |
-| Resource panel (shared) | CADS `Button` / `TextInput` / `Dropdown` / `Tooltip` / `Alert` / `Checkbox` / `AiChatMessage` + `AiChatInput` + `AiChatFileChip` (Tutor) / `Tag` (rubric status) | Unprefixed Foundations |
+| Resource panel (shared) | CADS `Button` / `TextInput` / `Dropdown` / `Tooltip` / `Alert` / `Toast` (backpack save/delete + undo) / `Dialog` (backpack delete confirm) / `Checkbox` / `AiChatMessage` + `AiChatInput` + `AiChatFileChip` (Tutor) / `Tag` (rubric status, backpack Added) | Unprefixed Foundations |
 | `PanelHeader` | Still local layout; labels use Foundations via mixin | Unprefixed Foundations |
-| Shared overlays (`Dialog` / `Modal` / `AlertBanner` / `FileChip`) | CADS `CloseIconButton` / `Button` / `Tooltip` / `Link` | Unprefixed Foundations |
-| IDE shared chrome (`FileManager`, `CreateFileModal`, `EmptyState`, `VersionBanner`, code-editor chrome) | CADS `Button` / `Dropdown` / `Tooltip` / `TextInput` / `Alert` | Unprefixed Foundations (`--ds-syntax-*` kept in CodeMirror highlight style) |
+| Shared overlays (`Dialog` / `AlertBanner` / `FileChip`) | CADS `CloseIconButton` / `Button` / `Tooltip` / `Link` | Unprefixed Foundations |
+| IDE shared chrome (`FileManager`, `CreateFileModal`, `EmptyState`, `VersionBanner`, code-editor chrome) | CADS `Modal` / `Button` / `Dropdown` / `Tooltip` / `TextInput` / `Alert` (`CreateFileModal` and `NameInputModal` wrap `CadsLabProvider` so page-level overlays outside `Lab2Shell` still theme) | Unprefixed Foundations (`--ds-syntax-*` kept in CodeMirror highlight style) |
 | Web Lab 2 workspace + agentic chrome | CADS `Button` / `Dropdown` / `Tooltip` / `SegmentedButton` / `Alert` / `Modal` | Unprefixed Foundations |
 | Python Lab / Sketch Lab workspaces | CADS `Button` / `Dropdown` / `Tooltip` / `Slider` / `TextInput` | Unprefixed Foundations |
 | Assessment workspaces + builder | CADS `Button` / `TextInput` / `Checkbox` / `Radio` / `Dropdown` / `SegmentedButton` / `Tooltip` / `Tag` | Unprefixed Foundations |
@@ -29,7 +29,7 @@ Parity sandbox: `/design-system/cads`. Spike consumer: `/levels/aichatlab*`.
 
 ## Architecture rules
 
-1. **Do not vendor CADS into this repo.** Import `@moshebaricdo/cads-react` and `@moshebaricdo/cads-variables` from GitHub Packages (`^0.1.0`). CI and fresh clones use `.npmrc` + `NODE_AUTH_TOKEN` (see below). Do not commit a `file:../cads` rewrite.
+1. **Do not vendor CADS into this repo.** Import `@moshebaricdo/cads-react` and `@moshebaricdo/cads-variables` from GitHub Packages (`^0.1.2`). CI and fresh clones use `.npmrc` + `NODE_AUTH_TOKEN` (see below). Do not commit a `file:../cads` rewrite.
 2. **One provider:** `src/components/lab2/CadsLabProvider.tsx` wraps `Lab2Shell` (`CadsProvider baseline={false}`). Nested providers are unnecessary for Lab2 routes.
 3. **Consumers import CADS, never raw MUI** (`Button` from `@moshebaricdo/cads-react`).
 4. **New UI on migrated surfaces** uses CADS + Foundations names. Do not add new `--ds-*` or `App*` usage there.
@@ -99,7 +99,7 @@ Dark mode: CADS keys off `.dark` (or `[data-theme='Dark']`) on an **ancestor**. 
 ## Pitfalls (read before migrating)
 
 1. **Vite must not prebundle CADS** — Published `@moshebaricdo/cads-react` injects styles via `import './button.css'` from `dist`. Vite’s esbuild optimizer drops those imports, so buttons/inputs look like unstyled MUI. `vite.config.ts` **excludes** `@moshebaricdo/cads-*` from `optimizeDeps`, and **includes** CJS transitives (`prop-types`, `react-is`, …) plus the `@mui/material/*` subpaths CADS deep-imports — otherwise MUI ESM does `import PropTypes from 'prop-types'` against raw CJS and the app blanks (`does not provide an export named 'default'`). Linked `file:../cads` skipped prebundling automatically; GitHub Packages does not. After changing that config, `rm -rf node_modules/.vite` and restart Vite.
-2. **Local `file:` iteration (do not commit)** — To test unpublished CADS changes: `npm install ../cads/packages/react ../cads/packages/variables`. After rebuilding CADS, clear `node_modules/.vite` and restart Vite. Stale CSS-module hashes make components look “unstyled” / full-width / broken (seen with `AiChatMessage`). Revert to `^0.1.0` before committing.
+2. **Local `file:` iteration (do not commit)** — To test unpublished CADS changes: `npm install ../cads/packages/react ../cads/packages/variables`. After rebuilding CADS, clear `node_modules/.vite` and restart Vite. Stale CSS-module hashes make components look “unstyled” / full-width / broken (seen with `AiChatMessage`). Revert to `^0.1.2` before committing.
 3. **Font files outside allow list** — Local `file:` / symlinked CADS icon fonts may warn under Vite `server.fs.allow`; extend allow list if icons 404 in dev. Published packages do not need this.
 4. **`Button` `fullWidth`** — Fixed upstream in CADS (`--btn-width: 100%`). If Continue/Finish hugs again, confirm you’re on a rebuilt `@moshebaricdo/cads-react`.
 5. **Action `Dropdown` `iconOnly`** — Added upstream for kebab overflow. Needs rebuilt CADS; pass `aria-label` + `startIconName`.
@@ -120,8 +120,7 @@ Lab2 learner/teacher chrome is on CADS. Remaining:
 1. **Retire or thin `App*`** once sandbox/dashboard call sites are gone. Keep color sandbox / token generator on `--ds-*` until Foundations fully replace them app-wide.
 2. **Teacher dashboard** — still `App*` / `--ds-*`.
 3. **Custom menus CADS Dropdown cannot host** — Sketch property swatch grids / in-menu sliders, agent identity color dots / “Added” badges (still use `AppDropdown.module.scss` for layout).
-4. **CreateFileModal** still uses local `ui/Modal` (CADS Modal’s 800px surface fights the two-field layout); internals are CADS.
-5. **CodeMirror syntax** stays on `--ds-syntax-*` until CADS owns syntax.
+4. **CodeMirror syntax** stays on `--ds-syntax-*` until CADS owns syntax.
 
 For each surface:
 
@@ -159,7 +158,7 @@ Packages: [`cads-react`](https://github.com/moshebaricdo/cads/pkgs/npm/cads-reac
 npm install ../cads/packages/react ../cads/packages/variables
 ```
 
-Restore `^0.1.0` in `package.json` / `package-lock.json` before committing.
+Restore `^0.1.2` in `package.json` / `package-lock.json` before committing.
 
 ---
 

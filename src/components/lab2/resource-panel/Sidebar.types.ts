@@ -93,6 +93,8 @@ export interface SidebarProps {
   onImportBackpackItem?: (item: BackpackItem) => true | string | void;
   backpackFilterExperiment?: BackpackFilterExperiment;
   backpackSeedItemsIfEmpty?: BackpackItem[];
+  /** Merge these items into the backpack by id even when the store is not empty. */
+  backpackEnsureSeedItems?: BackpackItem[];
   showTeacherResourcesTab?: boolean;
   showRubricTab?: boolean;
   showStudentLessonResource?: boolean;

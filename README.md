@@ -206,6 +206,7 @@ Demo content is colocated under `src/data/`:
 - **Agentic Web Lab** — `src/data/agentic/` for specialist definitions and `src/data/weblab2/projects/agentic-portfolio/` for the sample starter project
 - **Assessment fixtures** — `src/data/assessment/` (multi, match, free response, levelgroup, bubble choice)
 - **Progressions** — `src/data/progression/`
+- **Cross-lab backpack seed** — `src/data/backpack/crossLabBackpackSeed.ts` (used by `/levels/progression-backpack-labs`)
 
 Validation curriculum levels declare Continue requirements in `assessment.md` under `## AI Review Requirements`. Student-facing prose stays in `instructions.md`.
 

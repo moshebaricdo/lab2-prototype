@@ -323,6 +323,24 @@ const BackpackFilterTypeAvailabilityLevelPage = lazyPage(
   WebLab2BackpackFilteringPages,
   "BackpackFilterTypeAvailabilityLevelPage",
 );
+const BackpackCrossLabPages = () =>
+  import("./pages/progression/BackpackCrossLabProgressionPages");
+const BackpackCrossLabSketchLevelPage = lazyPage(
+  BackpackCrossLabPages,
+  "BackpackCrossLabSketchLevelPage",
+);
+const BackpackCrossLabWebLevelPage = lazyPage(
+  BackpackCrossLabPages,
+  "BackpackCrossLabWebLevelPage",
+);
+const BackpackCrossLabAiChatLevelPage = lazyPage(
+  BackpackCrossLabPages,
+  "BackpackCrossLabAiChatLevelPage",
+);
+const BackpackCrossLabPythonLevelPage = lazyPage(
+  BackpackCrossLabPages,
+  "BackpackCrossLabPythonLevelPage",
+);
 const WebLab2ValidationLevel = lazyPage(
   () => import("./pages/weblab2/WebLab2ValidationLevel"),
   "WebLab2ValidationLevel",
@@ -462,6 +480,31 @@ export default function App() {
           element={
             <Navigate
               to="/levels/progression-backpack-filter-sections"
+              replace
+            />
+          }
+        />
+        <Route
+          path="/levels/progression-backpack-labs-sketch"
+          element={<BackpackCrossLabSketchLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-labs-web"
+          element={<BackpackCrossLabWebLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-labs-aichat"
+          element={<BackpackCrossLabAiChatLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-labs-python"
+          element={<BackpackCrossLabPythonLevelPage />}
+        />
+        <Route
+          path="/levels/progression-backpack-labs"
+          element={
+            <Navigate
+              to="/levels/progression-backpack-labs-web"
               replace
             />
           }

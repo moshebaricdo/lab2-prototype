@@ -314,6 +314,9 @@ interface WebLab2LevelPageProps {
   hideProgression?: boolean;
   backpackFilterExperiment?: BackpackFilterExperiment;
   backpackSeedItemsIfEmpty?: BackpackItem[];
+  backpackEnsureSeedItems?: BackpackItem[];
+  /** Resource panel tab selected when the level first loads. */
+  initialResourceTab?: ResourcePanelTab;
   fileTabVariant?: FileTabVariant;
 }
 
@@ -370,6 +373,8 @@ export function WebLab2LevelPage({
   hideProgression = false,
   backpackFilterExperiment = "type-availability",
   backpackSeedItemsIfEmpty,
+  backpackEnsureSeedItems,
+  initialResourceTab,
   fileTabVariant = "chip",
 }: WebLab2LevelPageProps = {}) {
   const shareMode = useLevelShareMode();
@@ -562,9 +567,10 @@ export function WebLab2LevelPage({
     sidebarWidth,
     setSidebarWidth,
   } = useLayoutState(
-    (isInstructionsTabDrawerExperiment(instructionsDrawerExperiment)
-      ? "instructions"
-      : "ai-tutor") satisfies ResourcePanelTab,
+    (initialResourceTab ??
+      (isInstructionsTabDrawerExperiment(instructionsDrawerExperiment)
+        ? "instructions"
+        : "ai-tutor")) satisfies ResourcePanelTab,
   );
   const {
     fileStructureState,
@@ -1735,6 +1741,7 @@ export function WebLab2LevelPage({
     backpackImportLab: "weblab2",
     backpackFilterExperiment,
     backpackSeedItemsIfEmpty,
+    backpackEnsureSeedItems,
     onStageTutorUpload: enableTutorUploadStaging ? handleStageTutorUpload : undefined,
     onAddTutorUploadToProject: enableTutorUploadStaging
       ? undefined
