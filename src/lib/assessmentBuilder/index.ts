@@ -14,8 +14,27 @@ export {
 } from "./difficulty";
 export {
   applyP0ModePreset,
+  createDefaultExamIntro,
   P0_MODE_OPTIONS,
 } from "./p0Mode";
+export {
+  addSection,
+  appendQuestionRef,
+  createSectionId,
+  deleteSection,
+  formatOutlineNumber,
+  isSectioned,
+  moveQuestionRef,
+  moveSection,
+  moveSectionToIndex,
+  questionRefId,
+  removeQuestionRef,
+  replaceQuestionRef,
+  sectionDisplayTitle,
+  ungroupSection,
+  withSections,
+  type OutlineDropTarget,
+} from "./outline";
 export {
   courseScopeValue,
   findUnit,

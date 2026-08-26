@@ -60,6 +60,8 @@ export const mockP0ExamAssessment: AssessmentArtifact = {
     levelPosition: 3,
     assessmentName: "AI Foundations Certification Exam",
   },
+  // Mirrors the flattened order of `sections` below (sectioned outlines keep
+  // questionRefs in sync so adapters/preview stay section-agnostic).
   questionRefs: [
     { type: "bank", bankId: "q-aif-multi-1" },
     { type: "bank", bankId: "q-aif-match-1" },
@@ -69,6 +71,31 @@ export const mockP0ExamAssessment: AssessmentArtifact = {
     { type: "bank", bankId: "q-aif-fr-1" },
     { type: "bank", bankId: "q-aif-code-1" },
     { type: "bank", bankId: "q-aif-parsons-1" },
+  ],
+  sections: [
+    {
+      id: "sec-p0-supervised",
+      questionRefs: [
+        { type: "bank", bankId: "q-aif-multi-1" },
+        { type: "bank", bankId: "q-aif-match-1" },
+        { type: "bank", bankId: "q-aif-fib-1" },
+      ],
+    },
+    {
+      id: "sec-p0-responsible",
+      questionRefs: [
+        { type: "bank", bankId: "q-aif-multi-4" },
+        { type: "bank", bankId: "q-aif-multi-2" },
+        { type: "bank", bankId: "q-aif-fr-1" },
+      ],
+    },
+    {
+      id: "sec-p0-models",
+      questionRefs: [
+        { type: "bank", bankId: "q-aif-code-1" },
+        { type: "bank", bankId: "q-aif-parsons-1" },
+      ],
+    },
   ],
   shuffle: { shuffleQuestions: false, shuffleOptions: false },
   timing: { timeLimitMinutes: 45 },

@@ -1,46 +1,10 @@
+/* Question bank panel (Figma 169:39016): search + filter button, results
+ * overline, and one bordered card per result. */
+
 .section {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.groupCard {
-  overflow: hidden;
-  border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-md);
-  background: var(--background-neutral-primary);
-}
-
-.groupHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  height: 36px;
-  padding: 10px;
-  border-bottom: 1px solid var(--border-neutral-primary);
-  background: var(--background-neutral-secondary);
-}
-
-.groupHeaderWithAction {
-  padding-right: 10px;
-}
-
-.groupHeading {
-  margin: 0;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semi-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-neutral-tertiary);
-}
-
-.filterBody {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px;
 }
 
 .searchRow {
@@ -59,19 +23,36 @@
   width: 100%;
 }
 
+.filterPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 280px;
+  padding: 12px;
+}
+
 .filterField {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   width: 100%;
 }
 
-.chipRow {
+.filterFooter {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 4px;
-  width: 100%;
+  justify-content: flex-start;
+  padding-top: 2px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.resultCount {
+  margin: 0;
+  padding: 2px 0;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-xxs);
+  font-weight: var(--font-weight-semi-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-neutral-tertiary);
 }
 
 .emptyListHint {
@@ -86,25 +67,33 @@
 .resultsList {
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
-.resultRow {
+.resultCard {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 10px 10px 12px;
-  border-bottom: 1px solid var(--border-neutral-primary);
+  padding: 10px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
-.resultRow:last-child {
-  border-bottom: none;
+.resultCard:hover {
+  border-color: var(--border-neutral-secondary);
+  box-shadow: 0 1px 3px
+    color-mix(in srgb, var(--background-neutral-black-fixed) 5%, transparent);
 }
 
 .resultTop {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 4px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -114,7 +103,9 @@
   gap: 2px;
   min-width: 0;
   flex: 1;
-  padding-right: 12px;
+  padding: 0;
+  border: none;
+  background: transparent;
   text-align: left;
   cursor: pointer;
 }
@@ -123,15 +114,24 @@
   cursor: default;
 }
 
+.resultMain:focus-visible {
+  outline: 2px solid var(--border-selected-primary);
+  outline-offset: 2px;
+  border-radius: var(--shape-sm);
+}
+
 .titleRow {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
   min-width: 0;
 }
 
 .kindIcon {
+  display: flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
   width: 16px;
   color: var(--text-neutral-primary);
 }
@@ -149,6 +149,8 @@
 }
 
 .stemPreview {
+  /* Indent under the title, past the kind icon (16px + 6px gap). */
+  padding-left: 22px;
   font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
   font-weight: var(--font-weight-regular);
@@ -164,4 +166,16 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
+  padding-left: 22px;
+}
+
+/* Unit names truncate to a fixed budget so standards stay visible. */
+.unitTag {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 150px;
+
+  > * {
+    max-width: 100%;
+  }
 }

@@ -1,0 +1,12 @@
+.body {
+  margin: 0;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
+  color: var(--text-neutral-secondary);
+
+  strong {
+    font-weight: var(--font-weight-semi-bold);
+    color: var(--text-neutral-primary);
+  }
+}

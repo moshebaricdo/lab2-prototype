@@ -1,0 +1,62 @@
+/* Ghost add rows — quiet until hover, aligned to the shared outline grid. */
+
+.dropdownHost {
+  width: 100%;
+}
+
+.addRow {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--outline-gap);
+  min-height: 36px;
+  /* +1px matches the card border so the icon column lines up. */
+  padding: 6px calc(var(--outline-pad-x) + 1px);
+  border: 1px dashed transparent;
+  border-radius: var(--shape-sm);
+  background: transparent;
+  color: var(--text-neutral-quaternary);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.addRow:hover {
+  border-color: var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-primary);
+}
+
+.addRow:focus-visible {
+  outline: 2px solid var(--border-selected-primary);
+  outline-offset: 1px;
+}
+
+.addRowDropActive {
+  border-color: var(--border-selected-primary);
+  background: var(--background-brand-light);
+  color: var(--text-neutral-primary);
+}
+
+.gutter {
+  flex-shrink: 0;
+  width: calc(var(--outline-handle) + var(--outline-gap) + var(--outline-index));
+}
+
+.icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--outline-icon);
+}
+
+.label {
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-body-sm);
+}

@@ -1,0 +1,139 @@
+/* Section = slim header row + left rail grouping the cards beneath it.
+ * The rail lives in the reserved `--outline-indent` gutter so question cards
+ * keep identical x-positions whether flat or sectioned. */
+
+.block {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--outline-block-gap);
+}
+
+.block::before {
+  content: "";
+  position: absolute;
+  top: 40px;
+  bottom: 4px;
+  left: 5px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--border-neutral-primary);
+}
+
+.blockCollapsed::before {
+  display: none;
+}
+
+.blockPlaceholder {
+  opacity: 0.35;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--outline-gap);
+  min-height: 36px;
+  margin-left: var(--outline-indent);
+  /* +1px compensates the card border so the chevron shares the handle x. */
+  padding: 4px calc(var(--outline-pad-x) + 1px);
+  border-radius: var(--shape-sm);
+  transition:
+    background 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.headerCollapsed {
+  cursor: grab;
+  touch-action: none;
+}
+
+.headerCollapsed:hover {
+  background: var(--background-neutral-secondary);
+}
+
+.headerCollapsed:active {
+  cursor: grabbing;
+}
+
+.headerDropActive {
+  background: var(--background-brand-light);
+  box-shadow: 0 0 0 1px var(--border-selected-primary);
+}
+
+.chevron {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--outline-handle);
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--shape-sm);
+  background: transparent;
+  color: var(--text-neutral-quaternary);
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.chevron:hover {
+  background: var(--background-neutral-tertiary);
+  color: var(--text-neutral-primary);
+}
+
+.chevron:focus-visible {
+  outline: 2px solid var(--border-selected-primary);
+  outline-offset: 1px;
+}
+
+.index {
+  flex-shrink: 0;
+  width: var(--outline-index);
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-xs);
+  font-weight: var(--font-weight-semi-bold);
+  line-height: var(--leading-body-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-neutral-quaternary);
+}
+
+.title {
+  flex-shrink: 0;
+  overflow: hidden;
+  max-width: 50%;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-semi-bold);
+  line-height: var(--leading-body-sm);
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--leading-body-sm);
+  color: var(--text-neutral-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--outline-block-gap);
+  margin-left: var(--outline-indent);
+}

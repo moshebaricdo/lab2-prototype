@@ -10,18 +10,32 @@ import { useChatState } from "../../../../hooks/useChatState";
 import { useLayoutState } from "../../../../hooks/useLayoutState";
 import { useVersionHistoryState } from "../../../../hooks/useVersionHistoryState";
 import {
+  addSection,
+  appendQuestionRef,
   cloneQuestionItem,
   createBlankQuestion,
+  createDefaultExamIntro,
+  deleteSection,
   getAllCourseBanksSnapshot,
   getConceptOptionsForCourse,
   getUnitOptionsForCourse,
   isQuestionDraftDirty,
+  moveQuestionRef,
+  moveSection,
+  moveSectionToIndex,
+  questionRefId,
+  removeQuestionRef,
+  replaceQuestionRef,
+  ungroupSection,
   type BlankQuestionKind,
+  type OutlineDropTarget,
 } from "../../../../lib/assessmentBuilder";
 import type { QuestionItem } from "../../../../types/assessmentBuilder";
 import { AssessmentBuilderPanel } from "./AssessmentBuilderPanel";
 import { AssessmentBuildCanvas } from "./AssessmentBuildCanvas";
+import { AssessmentOutlineCanvas } from "./AssessmentOutlineCanvas";
 import { AssessmentArtifactWorkspace } from "./AssessmentArtifactWorkspace";
+import { SaveQuestionPrompt } from "./SaveQuestionPrompt";
 import styles from "./AssessmentBuilderWorkspace.module.scss";
 
 type WorkspaceMode = "edit" | "preview";
@@ -53,6 +67,9 @@ export function AssessmentBuilderWorkspace({
   const [editingDraft, setEditingDraft] = useState<QuestionItem | null>(null);
   const [editingBaseline, setEditingBaseline] = useState<QuestionItem | null>(null);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("edit");
+  const [sharedSavePromptOpen, setSharedSavePromptOpen] = useState(false);
+  /** Section that bank adds should land in (set by a section's add row). */
+  const [bankTargetSectionId, setBankTargetSectionId] = useState<string | null>(null);
 
   const allCourseBanks = useSyncExternalStore(
     (callback) => {
@@ -111,6 +128,20 @@ export function AssessmentBuilderWorkspace({
     );
   }, [editingDraft, resolvedQuestions, selectedBankId]);
 
+  const questionsById = useMemo(
+    () => new Map(canvasQuestions.map((question) => [question.bankId, question])),
+    [canvasQuestions],
+  );
+
+  /** Provenance of the question being edited — drives the single-save flow. */
+  const editingRefType = useMemo<"bank" | "inline" | null>(() => {
+    if (!artifact || !selectedBankId) return null;
+    const ref = artifact.questionRefs.find(
+      (entry) => questionRefId(entry) === selectedBankId,
+    );
+    return ref?.type ?? null;
+  }, [artifact, selectedBankId]);
+
   const isQuestionDirty = isQuestionDraftDirty(editingBaseline, editingDraft);
 
   const {
@@ -139,10 +170,21 @@ export function AssessmentBuilderWorkspace({
     : artifact.mode !== "survey" && artifact.surveyMode !== true;
 
   const handleAddBankQuestion = (bankId: string) => {
-    updateArtifact((current) => ({
-      ...current,
-      questionRefs: [...current.questionRefs, { type: "bank", bankId }],
-    }));
+    if (p0Aligned) {
+      const target = artifact.sections?.some(
+        (section) => section.id === bankTargetSectionId,
+      )
+        ? bankTargetSectionId
+        : null;
+      updateArtifact((current) =>
+        appendQuestionRef(current, { type: "bank", bankId }, target),
+      );
+    } else {
+      updateArtifact((current) => ({
+        ...current,
+        questionRefs: [...current.questionRefs, { type: "bank", bankId }],
+      }));
+    }
     setSelectedBankId(bankId);
   };
 
@@ -222,6 +264,143 @@ export function AssessmentBuilderWorkspace({
     setEditingDraft(question);
   };
 
+  // ---- P0 outline canvas handlers (single-save model + sections) ----
+
+  const closeEditor = () => {
+    setSelectedBankId(null);
+    setSharedSavePromptOpen(false);
+  };
+
+  const commitDraftInline = (draft: QuestionItem) => {
+    updateArtifact((current) =>
+      replaceQuestionRef(current, draft.bankId, {
+        type: "inline",
+        item: { ...draft, updatedAt: Date.now() },
+      }),
+    );
+  };
+
+  /** Done when clean; Save commits one-offs directly and prompts for shared questions. */
+  const handleRequestSave = () => {
+    if (!editingDraft || !isQuestionDirty) {
+      closeEditor();
+      return;
+    }
+    if (editingRefType === "bank") {
+      setSharedSavePromptOpen(true);
+      return;
+    }
+    commitDraftInline(editingDraft);
+    closeEditor();
+  };
+
+  const handleUpdateSharedQuestion = () => {
+    if (!editingDraft) return;
+    saveQuestion({ ...editingDraft, updatedAt: Date.now() });
+    closeEditor();
+  };
+
+  const handleSaveCopyInAssessment = () => {
+    if (!editingDraft) return;
+    commitDraftInline(editingDraft);
+    closeEditor();
+  };
+
+  const handleAddDraftToBank = () => {
+    if (!editingDraft) return;
+    const saved = { ...editingDraft, updatedAt: Date.now() };
+    saveQuestion(saved);
+    updateArtifact((current) =>
+      replaceQuestionRef(current, saved.bankId, {
+        type: "bank",
+        bankId: saved.bankId,
+      }),
+    );
+    closeEditor();
+  };
+
+  const handleFocusFromPanel = (bankId: string) => {
+    if (
+      selectedBankId &&
+      selectedBankId !== bankId &&
+      isQuestionDirty &&
+      !window.confirm("Discard unsaved changes to the open question?")
+    ) {
+      return;
+    }
+    setSelectedBankId(bankId);
+  };
+
+  const handleRemoveQuestionById = (bankId: string) => {
+    if (selectedBankId === bankId) closeEditor();
+    updateArtifact((current) => removeQuestionRef(current, bankId));
+  };
+
+  const handleMoveQuestion = (bankId: string, target: OutlineDropTarget) => {
+    updateArtifact((current) => moveQuestionRef(current, bankId, target));
+  };
+
+  const handleAddOneOffTo = (kind: BlankQuestionKind, sectionId: string | null) => {
+    const question = createBlankQuestion(kind, courseId);
+    updateArtifact((current) =>
+      appendQuestionRef(current, { type: "inline", item: question }, sectionId),
+    );
+    setSelectedBankId(question.bankId);
+  };
+
+  const handleOpenBankFor = (sectionId: string | null) => {
+    setBankTargetSectionId(sectionId);
+    setActiveTab("builder-bank");
+  };
+
+  const handleAddSection = () => updateArtifact(addSection);
+
+  const handleMoveSectionBy = (sectionId: string, direction: -1 | 1) => {
+    updateArtifact((current) => moveSection(current, sectionId, direction));
+  };
+
+  const handleMoveSectionToIndex = (sectionId: string, index: number) => {
+    updateArtifact((current) => moveSectionToIndex(current, sectionId, index));
+  };
+
+  const handleUngroupSection = (sectionId: string) => {
+    updateArtifact((current) => ungroupSection(current, sectionId));
+  };
+
+  const handleDeleteSection = (sectionId: string) => {
+    const section = artifact.sections?.find((entry) => entry.id === sectionId);
+    if (
+      selectedBankId &&
+      section?.questionRefs.some((ref) => questionRefId(ref) === selectedBankId)
+    ) {
+      closeEditor();
+    }
+    updateArtifact((current) => deleteSection(current, sectionId));
+  };
+
+  const handleAddIntro = () => {
+    updateArtifact((current) => ({
+      ...current,
+      intro: createDefaultExamIntro(current),
+    }));
+  };
+
+  const handleRemoveIntro = () => {
+    updateArtifact((current) => ({ ...current, intro: undefined }));
+  };
+
+  const handleUpdateIntroContent = (overviewContent: string) => {
+    updateArtifact((current) => ({
+      ...current,
+      intro: {
+        overviewContent,
+        timeMinutes:
+          current.timing?.timeLimitMinutes ?? current.intro?.timeMinutes ?? 45,
+        attempts: current.attempts?.maxAttempts ?? current.intro?.attempts,
+      },
+    }));
+  };
+
   return (
     <Lab2Shell
       topNavigationProps={{
@@ -266,7 +445,9 @@ export function AssessmentBuilderWorkspace({
             artifact={artifact}
             onUpdateArtifact={updateArtifact}
             onAddBankQuestion={handleAddBankQuestion}
-            onFocusQuestionInOutline={setSelectedBankId}
+            onFocusQuestionInOutline={
+              p0Aligned ? handleFocusFromPanel : setSelectedBankId
+            }
             p0Aligned={p0Aligned}
           />
         ),
@@ -289,25 +470,54 @@ export function AssessmentBuilderWorkspace({
         />
         <div className={styles.workspaceSurface}>
           {workspaceMode === "edit" ? (
-            <AssessmentBuildCanvas
-              artifact={artifact}
-              questions={canvasQuestions}
-              selectedBankId={selectedBankId}
-              graded={graded}
-              courseOptions={courseOptions}
-              getDomainOptionsForCourse={getDomainOptionsForCourse}
-              getUnitOptionsForCourse={getUnitsForCourse}
-              p0Aligned={p0Aligned}
-              isQuestionDirty={isQuestionDirty}
-              onEditQuestion={handleEditQuestion}
-              onSaveForAssessment={handleSaveForAssessment}
-              onSaveToQuestionBank={handleSaveToQuestionBank}
-              onUpdateQuestion={handleUpdateQuestionDraft}
-              onRemoveQuestion={handleRemoveQuestion}
-              onReorderQuestion={handleReorderQuestion}
-              onOpenBank={() => setActiveTab("builder-bank")}
-              onAddOneOff={handleAddOneOff}
-            />
+            p0Aligned ? (
+              <AssessmentOutlineCanvas
+                artifact={artifact}
+                questionsById={questionsById}
+                selectedBankId={selectedBankId}
+                isQuestionDirty={isQuestionDirty}
+                courseOptions={courseOptions}
+                getDomainOptionsForCourse={getDomainOptionsForCourse}
+                getUnitOptionsForCourse={getUnitsForCourse}
+                onExpandQuestion={setSelectedBankId}
+                onCloseEditor={closeEditor}
+                onRequestSave={handleRequestSave}
+                onAddDraftToBank={handleAddDraftToBank}
+                onUpdateQuestion={handleUpdateQuestionDraft}
+                onRemoveQuestion={handleRemoveQuestionById}
+                onMoveQuestion={handleMoveQuestion}
+                onAddSection={handleAddSection}
+                onMoveSection={handleMoveSectionBy}
+                onMoveSectionToIndex={handleMoveSectionToIndex}
+                onUngroupSection={handleUngroupSection}
+                onDeleteSection={handleDeleteSection}
+                onAddOneOff={handleAddOneOffTo}
+                onOpenBank={handleOpenBankFor}
+                onAddIntro={handleAddIntro}
+                onRemoveIntro={handleRemoveIntro}
+                onUpdateIntroContent={handleUpdateIntroContent}
+              />
+            ) : (
+              <AssessmentBuildCanvas
+                artifact={artifact}
+                questions={canvasQuestions}
+                selectedBankId={selectedBankId}
+                graded={graded}
+                courseOptions={courseOptions}
+                getDomainOptionsForCourse={getDomainOptionsForCourse}
+                getUnitOptionsForCourse={getUnitsForCourse}
+                p0Aligned={p0Aligned}
+                isQuestionDirty={isQuestionDirty}
+                onEditQuestion={handleEditQuestion}
+                onSaveForAssessment={handleSaveForAssessment}
+                onSaveToQuestionBank={handleSaveToQuestionBank}
+                onUpdateQuestion={handleUpdateQuestionDraft}
+                onRemoveQuestion={handleRemoveQuestion}
+                onReorderQuestion={handleReorderQuestion}
+                onOpenBank={() => setActiveTab("builder-bank")}
+                onAddOneOff={handleAddOneOff}
+              />
+            )
           ) : (
             <AssessmentArtifactWorkspace
               artifact={artifact}
@@ -318,6 +528,15 @@ export function AssessmentBuilderWorkspace({
           )}
         </div>
       </div>
+      {p0Aligned && (
+        <SaveQuestionPrompt
+          open={sharedSavePromptOpen}
+          questionTitle={editingDraft?.title ?? "This question"}
+          onUpdateShared={handleUpdateSharedQuestion}
+          onSaveCopy={handleSaveCopyInAssessment}
+          onCancel={() => setSharedSavePromptOpen(false)}
+        />
+      )}
     </Lab2Shell>
   );
 }

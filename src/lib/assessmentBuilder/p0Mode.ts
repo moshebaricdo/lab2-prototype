@@ -16,6 +16,18 @@ When you are ready, begin.`,
   attempts: 1,
 };
 
+/** Seed an intro screen from the artifact's current timing/attempts. */
+export function createDefaultExamIntro(
+  artifact: AssessmentArtifact,
+): AssessmentIntro {
+  return {
+    ...DEFAULT_EXAM_INTRO,
+    timeMinutes:
+      artifact.timing?.timeLimitMinutes ?? DEFAULT_EXAM_INTRO.timeMinutes,
+    attempts: artifact.attempts?.maxAttempts ?? DEFAULT_EXAM_INTRO.attempts,
+  };
+}
+
 /** Apply P0 Checkpoint (CFU) vs Exam defaults. Shuffle stays off. */
 export function applyP0ModePreset(
   current: AssessmentArtifact,

@@ -26,6 +26,24 @@ function mergeMissingDefaultDrafts(drafts: AssessmentArtifact[]): AssessmentArti
   return [...drafts, ...missing.map((draft) => structuredClone(draft))];
 }
 
+/**
+ * Upgrade stored drafts that predate sectioned outlines. A draft without a
+ * `sections` key was written before sections existed; reseed the P0 exam so
+ * the sectioned outline is demoable. (Flattened drafts keep `sections: []`,
+ * so this only fires once per legacy store.)
+ */
+function hydrateSections(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
+  let changed = false;
+  const next = drafts.map((draft) => {
+    if (draft.id === mockP0ExamAssessment.id && !("sections" in draft)) {
+      changed = true;
+      return structuredClone(mockP0ExamAssessment);
+    }
+    return draft;
+  });
+  return changed ? next : drafts;
+}
+
 function readDrafts(): AssessmentArtifact[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -37,8 +55,8 @@ function readDrafts(): AssessmentArtifact[] {
       return cachedDrafts;
     }
     const parsed = JSON.parse(raw) as AssessmentArtifact[];
-    const merged = mergeMissingDefaultDrafts(parsed);
-    if (merged.length !== parsed.length) {
+    const merged = hydrateSections(mergeMissingDefaultDrafts(parsed));
+    if (merged !== parsed || merged.length !== parsed.length) {
       writeDrafts(merged, { notify: false });
       return merged;
     }

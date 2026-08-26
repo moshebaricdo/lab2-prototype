@@ -1,0 +1,113 @@
+/* P0 outline canvas. The `--outline-*` vars define the shared left-gutter
+ * grid every block type (question, intro, section, add rows) aligns to. */
+
+.root {
+  flex: 1;
+  min-height: 0;
+}
+
+.inner {
+  --outline-indent: 16px;
+  --outline-handle: 20px;
+  --outline-index: 34px;
+  --outline-icon: 18px;
+  --outline-gap: 8px;
+  --outline-pad-x: 12px;
+  --outline-block-gap: 8px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* Left-align the overview with block content, not the rail gutter. */
+  padding-left: var(--outline-indent);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-heading-lg);
+  font-weight: var(--font-weight-semi-bold);
+  line-height: 1.2;
+  color: var(--text-neutral-primary);
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--leading-body-sm);
+  color: var(--text-neutral-tertiary);
+
+  [data-fa-icon] {
+    color: var(--text-neutral-quaternary);
+  }
+}
+
+.outline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--outline-block-gap);
+}
+
+/* Top-level blocks reserve the rail gutter so flat and sectioned states
+ * keep identical card x-positions. */
+.indent {
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--outline-indent);
+}
+
+.emptyHint {
+  margin: 0;
+  margin-left: var(--outline-indent);
+  padding: 8px calc(var(--outline-pad-x) + 1px) 0;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
+  color: var(--text-neutral-quaternary);
+}
+
+.dragCard {
+  overflow: hidden;
+  border: 1px solid var(--border-selected-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  box-shadow:
+    0 8px 24px color-mix(in srgb, var(--background-neutral-black-fixed) 16%, transparent),
+    0 0 0 1px var(--border-selected-primary);
+  cursor: grabbing;
+}
+
+.dragSection {
+  display: flex;
+  align-items: center;
+  gap: var(--outline-gap);
+  min-height: 36px;
+  padding: 4px calc(var(--outline-pad-x) + 1px);
+  border: 1px solid var(--border-selected-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  box-shadow:
+    0 8px 24px color-mix(in srgb, var(--background-neutral-black-fixed) 16%, transparent),
+    0 0 0 1px var(--border-selected-primary);
+  cursor: grabbing;
+}

@@ -163,6 +163,20 @@ export type AssessmentQuestionRef =
   | { type: "bank"; bankId: string }
   | { type: "inline"; item: QuestionItem };
 
+/**
+ * Authoring group of questions presented to learners as a single page.
+ * Structural invariant: an assessment is either flat (no sections) or fully
+ * sectioned (every question lives in a section) — never mixed.
+ */
+export interface AssessmentSection {
+  id: string;
+  /** Custom title (future). Display falls back to `Section N`. */
+  title?: string;
+  /** Learner-facing description (future). */
+  description?: string;
+  questionRefs: AssessmentQuestionRef[];
+}
+
 export interface AssessmentArtifact {
   id: string;
   courseId: string;
@@ -176,6 +190,13 @@ export interface AssessmentArtifact {
     assessmentName?: string;
   };
   questionRefs: AssessmentQuestionRef[];
+  /**
+   * Sectioned outline (P0 builder). When non-empty, sections are the
+   * authoring source of truth and `questionRefs` mirrors their flattened
+   * order so adapters, preview, and scoring stay section-agnostic.
+   * `undefined` or `[]` means a flat outline.
+   */
+  sections?: AssessmentSection[];
   poolDrawRules?: PoolDrawRule[];
   shuffle: ShuffleConfig;
   timing?: TimingConfig;

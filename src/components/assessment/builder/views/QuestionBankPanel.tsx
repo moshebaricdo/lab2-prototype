@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Dropdown, Tag, TextInput, Tooltip } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { AssessmentCourseBank, QuestionItem } from "../../../../types/assessmentBuilder";
 import {
   courseScopeValue,
@@ -14,16 +14,22 @@ import {
   unitLabel,
   unitScopeValue,
 } from "../../../../lib/assessmentBuilder";
+import { questionKindMeta } from "./questionKindMeta";
 import styles from "./QuestionBankPanel.module.scss";
 
 function asStringArray(value: string | string[]): string[] {
   return Array.isArray(value) ? value : [value];
 }
 
-/** CADS checklist menus ignore `menuWidth` and hug content; lock to the trigger. */
+/**
+ * CADS checklist menus ignore `menuWidth` and hug content; lock to the
+ * trigger. The filter popover keeps its own menu open, so target the most
+ * recently opened panel (last in the DOM).
+ */
 function syncChecklistMenuToTrigger(triggerRoot: HTMLElement | null) {
   const trigger = triggerRoot?.querySelector("button");
-  const menu = document.querySelector<HTMLElement>("[data-cads-dropdown-menu]");
+  const menus = document.querySelectorAll<HTMLElement>("[data-cads-dropdown-menu]");
+  const menu = menus[menus.length - 1];
   if (!trigger || !menu) return;
   const width = `${Math.round(trigger.getBoundingClientRect().width)}px`;
   const popper = menu.parentElement;
@@ -35,21 +41,6 @@ function syncChecklistMenuToTrigger(triggerRoot: HTMLElement | null) {
   menu.style.minWidth = width;
   menu.style.setProperty("--dd-panel-width", width);
   menu.style.setProperty("--dd-panel-min-width", width);
-}
-
-function questionKindIcon(question: QuestionItem): string {
-  switch (question.item.kind) {
-    case "multi":
-      return "list-radio";
-    case "freeResponse":
-      return "keyboard";
-    case "fillInBlank":
-      return "i-cursor";
-    case "match":
-      return "diagram-predecessor";
-    case "dragDrop":
-      return "layer-group";
-  }
 }
 
 type BankSort = "az" | "recent";
@@ -134,25 +125,6 @@ export function QuestionBankPanel({
     [courseBanks, selectedUnitIds, standardScopeCourseIds],
   );
 
-  const selectedCourses = useMemo(
-    () => courseBanks.filter((bank) => selectedCourseIds.includes(bank.courseId)),
-    [courseBanks, selectedCourseIds],
-  );
-
-  const selectedUnits = useMemo(
-    () => unitRecords.filter((unit) => selectedUnitIds.includes(unit.value)),
-    [selectedUnitIds, unitRecords],
-  );
-
-  const selectedStandards = useMemo(() => {
-    const byId = new Map(
-      courseBanks.flatMap((bank) => bank.domains).map((domain) => [domain.id, domain]),
-    );
-    return selectedStandardIds
-      .map((id) => byId.get(id))
-      .filter((domain): domain is NonNullable<typeof domain> => domain != null);
-  }, [courseBanks, selectedStandardIds]);
-
   const filteredBankQuestions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const matches = courseBanks
@@ -190,11 +162,13 @@ export function QuestionBankPanel({
     sort,
   ]);
 
-  const handleClearFilters = () => {
+  const activeFilterCount =
+    selectedCourseIds.length + selectedUnitIds.length + selectedStandardIds.length;
+
+  const handleResetFilters = () => {
     setSelectedCourseIds([defaultCourseId]);
     setSelectedUnitIds([]);
     setSelectedStandardIds([]);
-    setSearchQuery("");
     setSort("az");
   };
 
@@ -204,250 +178,255 @@ export function QuestionBankPanel({
     setSelectedUnitIds(next.unitIds);
   };
 
+  const filterPanel = (
+    <div className={styles.filterPanel}>
+      <div className={styles.filterField} ref={courseOrUnitRef}>
+        <Dropdown
+          role="input"
+          menuType="checklist"
+          label="Course or unit"
+          options={courseOrUnitOptions}
+          value={selectedCourseOrUnitValues}
+          onChange={handleCourseOrUnitChange}
+          onOpenChange={(open) => {
+            if (open) {
+              requestAnimationFrame(() => {
+                syncChecklistMenuToTrigger(courseOrUnitRef.current);
+              });
+            }
+          }}
+          placeholder="All courses and units"
+          size="small"
+          color="primary"
+          width="full"
+          menuWidth="trigger"
+          startIconName="circle-check"
+        />
+      </div>
+      <div className={styles.filterField} ref={standardRef}>
+        <Dropdown
+          role="input"
+          menuType="checklist"
+          label="Standard"
+          options={standardOptions}
+          value={selectedStandardIds}
+          onChange={(value) => setSelectedStandardIds(asStringArray(value))}
+          onOpenChange={(open) => {
+            if (open) {
+              requestAnimationFrame(() => {
+                syncChecklistMenuToTrigger(standardRef.current);
+              });
+            }
+          }}
+          placeholder="All standards"
+          size="small"
+          color="primary"
+          width="full"
+          menuWidth="trigger"
+          startIconName="clipboard-list-check"
+          disabled={standardOptions.length === 0}
+        />
+      </div>
+      <div className={styles.filterField}>
+        <Dropdown
+          role="input"
+          label="Sort by"
+          options={[
+            { value: "az", label: "A–Z", iconName: "arrow-down-a-z" },
+            { value: "recent", label: "Recently updated", iconName: "clock-rotate-left" },
+          ]}
+          value={sort}
+          onChange={(value) => setSort(value as BankSort)}
+          size="small"
+          color="primary"
+          width="full"
+          menuWidth="trigger"
+        />
+      </div>
+      <div className={styles.filterFooter}>
+        <Button
+          variant="text"
+          color="secondary"
+          size="extraSmall"
+          startIconName="arrows-rotate"
+          onClick={handleResetFilters}
+        >
+          Reset filters
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <section className={styles.section}>
-      <div className={styles.groupCard}>
-        <div className={`${styles.groupHeader} ${styles.groupHeaderWithAction}`}>
-          <h3 className={styles.groupHeading}>Filters</h3>
-          <Tooltip title="Clear all filters" placement="bottom">
+      <div className={styles.searchRow}>
+        <div className={styles.searchField}>
+          <TextInput
+            size="small"
+            color="primary"
+            startIconName="search"
+            placeholder="Search questions"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            aria-label="Search questions"
+          />
+        </div>
+        <Dropdown
+          role="action"
+          size="small"
+          menuPlacement="bottomRight"
+          menuType="custom"
+          customContent={filterPanel}
+          aria-label="Filter questions"
+          trigger={
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="small"
+              startIconName="bars-filter"
+              iconOnly={activeFilterCount === 0}
+              aria-label={
+                activeFilterCount === 0
+                  ? "Filter questions"
+                  : `Filter questions (${activeFilterCount} active)`
+              }
+            >
+              {activeFilterCount > 0 ? String(activeFilterCount) : undefined}
+            </Button>
+          }
+        />
+      </div>
+
+      <p className={styles.resultCount}>
+        {filteredBankQuestions.length} result
+        {filteredBankQuestions.length === 1 ? "" : "s"}
+      </p>
+
+      {filteredBankQuestions.length === 0 ? (
+        <p className={styles.emptyListHint}>
+          No questions match the current filters.
+        </p>
+      ) : (
+        <div className={styles.resultsList}>
+          {filteredBankQuestions.map((question) => (
+            <BankResultCard
+              key={question.bankId}
+              question={question}
+              courseBanks={courseBanks}
+              inAssessment={resolvedQuestionIds.includes(question.bankId)}
+              onAdd={() => onAddBankQuestion(question.bankId)}
+              onFocus={() => onFocusQuestionInOutline?.(question.bankId)}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+interface BankResultCardProps {
+  question: QuestionItem;
+  courseBanks: AssessmentCourseBank[];
+  inAssessment: boolean;
+  onAdd: () => void;
+  onFocus: () => void;
+}
+
+function BankResultCard({
+  question,
+  courseBanks,
+  inAssessment,
+  onAdd,
+  onFocus,
+}: BankResultCardProps) {
+  const meta = questionKindMeta(question);
+  const unitName = unitLabel(courseBanks, question.unitId);
+  const extraStandards = Math.max(0, question.tags.length - 1);
+
+  return (
+    <div
+      className={[styles.resultCard, inAssessment ? styles.resultCardAdded : ""]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <div className={styles.resultTop}>
+        <button
+          type="button"
+          className={styles.resultMain}
+          disabled={!inAssessment}
+          onClick={() => {
+            if (inAssessment) onFocus();
+          }}
+        >
+          <span className={styles.titleRow}>
+            <Tooltip title={meta.label} placement="top">
+              <span className={styles.kindIcon} aria-label={meta.label}>
+                <FaIcon name={meta.iconName} size="s" aria-hidden />
+              </span>
+            </Tooltip>
+            <span className={styles.resultTitle}>{question.title}</span>
+          </span>
+          <span className={styles.stemPreview}>
+            {questionStemPreview(question)}
+          </span>
+        </button>
+        {inAssessment ? (
+          <Tooltip title="Already in this assessment" placement="left">
             <span>
               <Button
-                variant="text"
-                color="tertiary"
+                variant="outlined"
+                color="secondary"
                 size="extraSmall"
                 iconOnly
-                startIconName="arrows-rotate"
-                aria-label="Clear all filters"
-                onClick={handleClearFilters}
+                startIconName="check"
+                disabled
+                aria-label="Added to assessment"
               />
             </span>
           </Tooltip>
-        </div>
-        <div className={styles.filterBody}>
-          <div className={styles.searchRow}>
-            <div className={styles.searchField}>
-              <TextInput
-                size="small"
-                color="primary"
-                startIconName="search"
-                placeholder="Search questions"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                aria-label="Search questions"
-              />
-            </div>
-            <Dropdown
-              role="action"
-              iconOnly
-              size="small"
-              buttonVariant="outlined"
-              buttonColor="secondary"
-              startIconName="arrow-down-a-z"
-              aria-label="Sort questions"
-              options={[
-                { value: "az", label: "A–Z", iconName: "arrow-down-a-z" },
-                { value: "recent", label: "Recent", iconName: "clock-rotate-left" },
-              ]}
-              onAction={(value) => setSort(value as BankSort)}
-            />
-          </div>
-
-          <div className={styles.filterField} ref={courseOrUnitRef}>
-            <Dropdown
-              role="input"
-              menuType="checklist"
-              label="Course or unit"
-              options={courseOrUnitOptions}
-              value={selectedCourseOrUnitValues}
-              onChange={handleCourseOrUnitChange}
-              onOpenChange={(open) => {
-                if (open) {
-                  requestAnimationFrame(() => {
-                    syncChecklistMenuToTrigger(courseOrUnitRef.current);
-                  });
-                }
-              }}
-              placeholder="All courses and units"
-              size="small"
-              color="primary"
-              width="full"
-              menuWidth="trigger"
-              startIconName="circle-check"
-            />
-            {(selectedCourses.length > 0 || selectedUnits.length > 0) && (
-              <div className={styles.chipRow}>
-                {selectedCourses.map((course) => (
-                  <Tag
-                    key={course.courseId}
-                    size="small"
-                    color="info"
-                    startIconName="book"
-                    label={course.courseName}
-                    isDismissible
-                    onClose={() =>
-                      setSelectedCourseIds((current) =>
-                        current.filter((id) => id !== course.courseId),
-                      )
-                    }
-                  />
-                ))}
-                {selectedUnits.map((unit) => (
-                  <Tag
-                    key={unit.value}
-                    size="small"
-                    color="info"
-                    startIconName="book"
-                    label={unit.label}
-                    isDismissible
-                    onClose={() =>
-                      setSelectedUnitIds((current) =>
-                        current.filter((id) => id !== unit.value),
-                      )
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className={styles.filterField} ref={standardRef}>
-            <Dropdown
-              role="input"
-              menuType="checklist"
-              label="Standard"
-              options={standardOptions}
-              value={selectedStandardIds}
-              onChange={(value) => setSelectedStandardIds(asStringArray(value))}
-              onOpenChange={(open) => {
-                if (open) {
-                  requestAnimationFrame(() => {
-                    syncChecklistMenuToTrigger(standardRef.current);
-                  });
-                }
-              }}
-              placeholder="All standards"
-              size="small"
-              color="primary"
-              width="full"
-              menuWidth="trigger"
-              startIconName="clipboard-list-check"
-              disabled={standardOptions.length === 0}
-            />
-            {selectedStandards.length > 0 && (
-              <div className={styles.chipRow}>
-                {selectedStandards.map((standard) => (
-                  <Tag
-                    key={standard.id}
-                    size="small"
-                    color="pink"
-                    startIconName="clipboard-list-check"
-                    label={standardLabel(standard)}
-                    isDismissible
-                    onClose={() =>
-                      setSelectedStandardIds((current) =>
-                        current.filter((id) => id !== standard.id),
-                      )
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.groupCard}>
-        <div className={styles.groupHeader}>
-          <h3 className={styles.groupHeading}>Questions</h3>
-          <Tag size="small" color="neutral" label={String(filteredBankQuestions.length)} />
-        </div>
-        {filteredBankQuestions.length === 0 ? (
-          <p className={styles.emptyListHint}>No questions match the current filters.</p>
         ) : (
-          <div className={styles.resultsList}>
-            {filteredBankQuestions.map((question) => {
-              const inAssessment = resolvedQuestionIds.includes(question.bankId);
-              const unitName = unitLabel(courseBanks, question.unitId);
-              const extraStandards = Math.max(0, question.tags.length - 1);
-              return (
-                <div key={question.bankId} className={styles.resultRow}>
-                  <div className={styles.resultTop}>
-                    <button
-                      type="button"
-                      className={styles.resultMain}
-                      disabled={!inAssessment}
-                      onClick={() => {
-                        if (inAssessment) onFocusQuestionInOutline?.(question.bankId);
-                      }}
-                    >
-                      <span className={styles.titleRow}>
-                        <FaIcon
-                          name={questionKindIcon(question)}
-                          size="small"
-                          className={styles.kindIcon}
-                          title={question.item.kind}
-                        />
-                        <span className={styles.resultTitle}>{question.title}</span>
-                      </span>
-                      <span className={styles.stemPreview}>
-                        {questionStemPreview(question)}
-                      </span>
-                    </button>
-                    {inAssessment ? (
-                      <Button
-                        variant="text"
-                        color="tertiary"
-                        size="extraSmall"
-                        iconOnly
-                        startIconName="check"
-                        disabled
-                        aria-label="Added to assessment"
-                      />
-                    ) : (
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        size="extraSmall"
-                        iconOnly
-                        startIconName="plus"
-                        aria-label={`Add ${question.title}`}
-                        onClick={() => onAddBankQuestion(question.bankId)}
-                      />
-                    )}
-                  </div>
-                  {(unitName || question.tags.length > 0) && (
-                    <div className={styles.resultTags}>
-                      {unitName && (
-                        <Tag
-                          size="small"
-                          color="info"
-                          startIconName="book"
-                          label={unitName}
-                        />
-                      )}
-                      {question.tags[0] && (
-                        <Tag
-                          size="small"
-                          color="pink"
-                          startIconName="clipboard-list-check"
-                          label={standardLabel(question.tags[0])}
-                        />
-                      )}
-                      {extraStandards > 0 && (
-                        <Tag
-                          size="small"
-                          color="pink"
-                          label={`+${extraStandards}`}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <Tooltip title="Add to assessment" placement="left">
+            <Button
+              variant="contained"
+              color="primary"
+              size="extraSmall"
+              iconOnly
+              startIconName="plus"
+              aria-label={`Add ${question.title}`}
+              onClick={onAdd}
+            />
+          </Tooltip>
         )}
       </div>
-    </section>
+      {(unitName || question.tags.length > 0) && (
+        <div className={styles.resultTags}>
+          {unitName && (
+            <span className={styles.unitTag}>
+              <Tag size="small" color="info" label={unitName} />
+            </span>
+          )}
+          {question.tags[0] && (
+            <Tag
+              size="small"
+              color="pink"
+              label={standardLabel(question.tags[0])}
+            />
+          )}
+          {extraStandards > 0 && (
+            <Tooltip
+              title={question.tags
+                .slice(1)
+                .map((tag) => standardLabel(tag))
+                .join(", ")}
+              placement="top"
+            >
+              <span>
+                <Tag size="small" color="pink" label={`+${extraStandards}`} />
+              </span>
+            </Tooltip>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
