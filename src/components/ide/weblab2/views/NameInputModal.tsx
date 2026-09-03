@@ -63,6 +63,7 @@ export function NameInputModal({
         open={isOpen}
         onClose={onClose}
         title={title}
+        maxWidth={500}
         primaryActionLabel={confirmLabel}
         secondaryActionLabel="Cancel"
         onPrimaryAction={handleSubmit}

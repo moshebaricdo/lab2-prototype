@@ -135,6 +135,7 @@ export function CreateFileModal({
         open={isOpen}
         onClose={onClose}
         title="Create a new file"
+        maxWidth={500}
         primaryActionLabel={createButtonLabel}
         secondaryActionLabel="Cancel"
         onPrimaryAction={handleCreate}
