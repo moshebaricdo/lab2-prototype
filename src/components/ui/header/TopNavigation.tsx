@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@moshebaricdo/cads-react";
 import { GlobalNavMenu } from "./GlobalNavMenu";
@@ -24,6 +25,11 @@ export interface TopNavigationProps {
   disableLogoLink?: boolean;
   hideProgression?: boolean;
   disableProgressionLinks?: boolean;
+  /**
+   * Extra actions after the title (e.g. Back / Save). When set, the title
+   * sits in the left group so it can sit next to those buttons.
+   */
+  leadingActions?: ReactNode;
 }
 
 export function TopNavigation({
@@ -41,6 +47,7 @@ export function TopNavigation({
   disableLogoLink = false,
   hideProgression = false,
   disableProgressionLinks = false,
+  leadingActions,
 }: TopNavigationProps) {
   const continueButton = showContinueButton ? (
     <ContinueButton
@@ -51,6 +58,17 @@ export function TopNavigation({
       className={styles.continueButton}
     />
   ) : null;
+
+  const titleBlock = (
+    <div
+      className={
+        leadingActions ? styles.levelHeadingStart : styles.levelHeading
+      }
+    >
+      <p className={styles.title}>{title}</p>
+      <p className={styles.subtitle}>{subtitle}</p>
+    </div>
+  );
 
   return (
     <div className={`${styles.root} dark`} data-theme="Dark">
@@ -70,25 +88,26 @@ export function TopNavigation({
             </Link>
           )}
         </div>
+        {leadingActions ? (
+          <>
+            {titleBlock}
+            <div className={styles.leadingActions}>{leadingActions}</div>
+          </>
+        ) : null}
       </div>
 
       <div className={styles.centerGroup}>
+        {!hideProgression && !leadingActions ? titleBlock : null}
         {!hideProgression ? (
-          <>
-            <div className={styles.levelHeading}>
-              <p className={styles.title}>{title}</p>
-              <p className={styles.subtitle}>{subtitle}</p>
-            </div>
-            <LevelProgressBubbles
-              currentLevel={currentLevel}
-              totalLevels={totalLevels}
-              completedLevels={completedLevels}
-              levelLinks={levelLinks}
-              currentLevelPath={currentLevelPath}
-              completedLevelPaths={completedLevelPaths}
-              readOnly={disableProgressionLinks}
-            />
-          </>
+          <LevelProgressBubbles
+            currentLevel={currentLevel}
+            totalLevels={totalLevels}
+            completedLevels={completedLevels}
+            levelLinks={levelLinks}
+            currentLevelPath={currentLevelPath}
+            completedLevelPaths={completedLevelPaths}
+            readOnly={disableProgressionLinks}
+          />
         ) : null}
         {continueButton}
       </div>

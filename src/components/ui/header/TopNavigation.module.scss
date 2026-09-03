@@ -55,6 +55,32 @@
   min-width: 0;
 }
 
+.levelHeadingStart {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.leadingActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-p-xxs);
+
+  :global(button) {
+    --btn-bg: transparent !important;
+    --btn-fg: var(--text-neutral-white-fixed) !important;
+    --btn-border: var(--border-neutral-white-fixed) !important;
+    --btn-bg-hover: rgb(255 255 255 / 10%) !important;
+    --btn-bg-press: rgb(255 255 255 / 20%) !important;
+    --btn-fg-press: var(--text-neutral-white-fixed) !important;
+  }
+}
+
 .title {
   @include type-body-4-semibold;
 
