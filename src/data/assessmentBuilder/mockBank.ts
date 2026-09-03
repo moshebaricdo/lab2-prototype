@@ -14,17 +14,17 @@ const AIF_CONCEPTS: DomainTag[] = [
 const AIF_UNITS: CourseUnit[] = [
   {
     id: "aif-unit-supervised",
-    label: "Supervised Learning",
+    label: "Unit 1 · Supervised Learning",
     conceptIds: ["domain-ml", "domain-data"],
   },
   {
     id: "aif-unit-responsible",
-    label: "Responsible AI",
+    label: "Unit 2 · Responsible AI",
     conceptIds: ["domain-ethics"],
   },
   {
     id: "aif-unit-models",
-    label: "Models in Practice",
+    label: "Unit 3 · Models in Practice",
     conceptIds: ["domain-ml", "domain-data"],
   },
 ];
@@ -37,12 +37,12 @@ const WEB_CONCEPTS: DomainTag[] = [
 const WEB_UNITS: CourseUnit[] = [
   {
     id: "web-unit-html",
-    label: "Semantic markup",
+    label: "Unit 1 · Semantic markup",
     conceptIds: ["domain-html"],
   },
   {
     id: "web-unit-css",
-    label: "Page layout",
+    label: "Unit 2 · Page layout",
     conceptIds: ["domain-css"],
   },
 ];
@@ -413,7 +413,7 @@ export const mockFairnessBankQuestion: QuestionItem = {
 
 export const mockAifCourseBank: AssessmentCourseBank = {
   courseId: "aif-cert",
-  courseName: "AI Foundations Certification",
+  courseName: "AI Foundations",
   domains: AIF_CONCEPTS,
   units: AIF_UNITS,
   questions: [

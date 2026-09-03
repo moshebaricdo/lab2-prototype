@@ -12,11 +12,14 @@ export interface DomainTag {
   code?: string;
 }
 
-/** Curriculum unit within a course bank. Questions are tagged with `unitId`. */
+/**
+ * Curriculum unit in a course family. Prototype bank filters use these as a
+ * usage stand-in (questions “used in” this unit). Not an author-assigned tag.
+ */
 export interface CourseUnit {
   id: string;
   label: string;
-  /** Concept ids from this course's catalog that belong to the unit. */
+  /** Standard ids from this course's catalog that belong to the unit. */
   conceptIds: string[];
 }
 
@@ -102,11 +105,18 @@ export type QuestionItemContent =
 /** Canonical reusable question stored in the per-course bank. */
 export interface QuestionItem {
   bankId: string;
+  /**
+   * Prototype stand-in for “used on a quiz in this course family.”
+   * Not an author-assigned tag; P0 UI does not show or edit this.
+   */
   courseId: string;
   title: string;
-  /** Curriculum unit this question belongs to. */
+  /**
+   * Prototype stand-in for “used on a quiz in this unit family.”
+   * Not an author-assigned tag; P0 UI does not show or edit this.
+   */
   unitId?: string;
-  /** Concept / domain / standard tags used for bank filters and score rollup. */
+  /** Standard tags — the only author-assigned catalog tags in P0. */
   tags: DomainTag[];
   /** @deprecated P0 dropped difficulty; ignored by the P0 builder. */
   difficulty?: QuestionDifficulty;
@@ -170,18 +180,41 @@ export type AssessmentQuestionRef =
  */
 export interface AssessmentSection {
   id: string;
-  /** Custom title (future). Display falls back to `Section N`. */
+  /** Custom title shown next to the `Section N` overline. */
   title?: string;
   /** Learner-facing description (future). */
   description?: string;
   questionRefs: AssessmentQuestionRef[];
 }
 
+/**
+ * Where this quiz sits in the curriculum. Levelbuilder-owned in prod
+ * (`script_level`). Prototype-only so chrome and bank auto-scope can
+ * simulate floating vs attached. Course/unit are not tags on questions.
+ */
+export type QuizPlacement =
+  | { kind: "floating" }
+  | {
+      kind: "attached";
+      /** Course-family key (offering), not a year-specific id. */
+      courseId: string;
+      courseLabel: string;
+      /** Unit-family key; omit when the quiz sits at course grain. */
+      unitId?: string;
+      /** Writer-facing unit label, e.g. `Unit 3`. */
+      unitLabel?: string;
+    };
+
 export interface AssessmentArtifact {
   id: string;
   courseId: string;
   title: string;
   lessonName: string;
+  /**
+   * Curriculum placement of this quiz. Missing is treated as floating.
+   * Not authored in this builder — Levelbuilder sets it in prod.
+   */
+  placement?: QuizPlacement;
   mode: AssessmentMode;
   layout: AssessmentLayout;
   metadata: {

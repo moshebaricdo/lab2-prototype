@@ -19,7 +19,7 @@ Levelbuilder does **not** author individual questions, answer keys, or exam asse
 |------|-----------------|
 | Questions | `questionRefs`, inline authoring → bank |
 | Answer keys & explanations | `QuestionItem.reveal`, per-type content |
-| Domain / standard tags | `QuestionItem.tags`, `QuestionItem.unitId`, `poolDrawRules.tagIds` |
+| Domain / standard tags | `QuestionItem.tags`, `poolDrawRules.tagIds` |
 | Assessment mode | `mode` (P0: `checkpoint` \| `exam`; `survey` out of scope) |
 | Exam policy | `timing`, `attempts`, Tutor toggle. Shuffle is **off** for P0. |
 | Pool assembly | `poolDrawRules` |

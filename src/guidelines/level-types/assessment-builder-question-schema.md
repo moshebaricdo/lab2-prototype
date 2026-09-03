@@ -12,7 +12,7 @@ The instinct is "bank metadata vs. type fields." But the `points` question only 
 
 | Layer | What it answers | Lives on | Travels with the question when reused? |
 |-------|-----------------|----------|----------------------------------------|
-| **A — Catalog metadata** | *What is this question, for cataloging & reuse?* (title, course, unit, concepts) | `QuestionItem` (bank record) | Yes — shared across every assessment |
+| **A — Catalog metadata** | *What is this question, for cataloging & reuse?* (title, standards) | `QuestionItem` (bank record) | Yes — shared across every assessment |
 | **B — Content** | *What does the learner see and how is it answered?* (stem, type-specific fields, answer key, explanation text) | `QuestionItem.item` + shared content fields | Yes — intrinsic to the question |
 | **C — Placement config** | *How does this question behave **in this assessment**?* (point weight, order, reveal visibility) | `AssessmentArtifact` / `AssessmentQuestionRef` | No — re-decided per assessment |
 
@@ -37,9 +37,9 @@ Identity and reuse fields. **Optional at the type level**, but **required to sav
 |-------|------|-------------------|-------|
 | `bankId` | `string` | always | Stable id. One-offs get an ephemeral `q-oneoff-…` id until promoted. |
 | `title` | `string` | ✅ | **Internal** bank listing name. Never shown to students — that's the stem (`prompt`). |
-| `courseId` | `string` | ✅ | Scopes the question to a course bank. Units and concepts are drawn from this course's taxonomy. |
-| `unitId` | `string` | ✅ in P0 | Curriculum unit within the course (`AssessmentCourseBank.units`). |
-| `tags` (concepts) | `DomainTag[]` | ✅ (≥1) | Concept / domain / standard tagging. Per-course catalog (`AssessmentCourseBank.domains`). Optional `code` is the compact standard id shown on P0 bank chips. P0 bank panel labels these **Standards**; the inline editor still says **Concepts**. Drives pool-draw rules + score rollup. |
+| `courseId` | `string` | storage only | Prototype usage stand-in for bank filters. **Not a tag.** P0 UI does not show or edit this. |
+| `unitId` | `string` | no | Prototype usage stand-in for bank filters. **Not a tag.** P0 UI does not show or edit this. |
+| `tags` (standards) | `DomainTag[]` | ✅ (≥1) | The only author-assigned catalog tags in P0. Per-course catalog (`AssessmentCourseBank.domains`). Optional `code` is the compact standard id on bank chips. Drives pool-draw rules + score rollup. |
 | `difficulty` | `beginner \| intermediate \| advanced` | **dropped in P0** | Legacy bank filter only. Not authored or required on the P0 builder. |
 | `points` | `number` | optional | **Bank default weight** (defaults to 1). Overridable per assessment — see [§6.1](#61-points-bank-default--per-assessment-override). |
 | `updatedAt` | `number` | always | Last edit; used for "live ref" propagation + draft diffing. |
@@ -195,11 +195,11 @@ Two related-but-distinct ideas — keep both:
 
 A graded MC *can* be reused in a survey assessment; an intrinsically keyless question *cannot* become graded. Both flags are legitimate; the editor should label them distinctly ("This question has no correct answer" vs. assessment-level "Survey — don't score").
 
-### 6.4 Catalog tags: course, unit, concepts (difficulty dropped in P0) ✅ DECIDED
+### 6.4 Catalog tags: standards only (course/unit are not tags) ✅ DECIDED
 
-- **P0:** required to bank: `title`, `courseId`, `unitId`, ≥1 concept tag. Difficulty is not authored.
-- **Legacy builder:** still shows difficulty + domain labels.
-- One-offs may omit catalog metadata. Promoting a one-off to the bank requires filling the P0 catalog fields.
+- **P0:** required to bank: `title`, ≥1 standard tag. Course and unit are **not** authored on the question — they are quiz placement / usage. Difficulty is not authored.
+- **Legacy builder:** still shows course + difficulty + domain labels.
+- One-offs may omit catalog metadata. Promoting a one-off to the bank requires a title and ≥1 standard.
 
 ### 6.5 Internal title vs. student-facing prompt
 
@@ -218,7 +218,7 @@ Requirements differ by **destination**, not by type:
 | Action | Requires |
 |--------|----------|
 | **Save for this assessment** (inline one-off) | Valid Layer-B content only (stem + answer key for the type, unless survey/keyless). No catalog metadata required. |
-| **Save to question bank** (promote/upsert) | Above **plus** Layer-A required fields: `title`, `courseId`, ≥1 concept tag, and in P0 a `unitId`. Difficulty is not required. |
+| **Save to question bank** (promote/upsert) | Above **plus** Layer-A required fields: `title`, ≥1 standard tag. Course/unit are not required. Difficulty is not required. |
 | **Publish assessment** (future) | All placed questions resolve to valid content; graded modes require a key on every non-survey question; question pinning. (Deferred — see Known gaps in `assessment-builder.md`.) |
 
 ---
@@ -251,7 +251,7 @@ Designed from the model, **unburdened by the current implementation**. The edito
 | 2 | **Question** | **Stem** (plain heading) · **Body** (markdown, optional) · **+ Add code context** toggle (optional code panel) | Yes |
 | 3 | **Answer** | Type-specific — see §9.1–9.6. Contains both *authoring the options/structure* and *marking what's correct*, together. | Yes |
 | 4 | **Explanation** | Optional "why this is correct" prose (`reveal.explanation`). One field, type-agnostic. **No reveal-timing toggle** — that's assessment-wide. | Yes (collapsed if empty) |
-| 5 | **Catalog** | **Course** · **Difficulty** · **Domains**. Required to bank; an inline "Save to bank" gate validates these. Dimmed/optional for one-offs. | Collapsible |
+| 5 | **Catalog** | P0: **Standards**. Legacy: Course · Difficulty · Domains. Required to bank; an inline "Save to bank" gate validates these. Dimmed/optional for one-offs. | Collapsible |
 | 6 | **Advanced / Layout** | Presentation + edge options (per type, §9.7). | Collapsed |
 
 **Design rules**

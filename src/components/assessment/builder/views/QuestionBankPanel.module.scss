@@ -1,10 +1,12 @@
 /* Question bank panel (Figma 169:39016): search + filter button, results
  * overline, and one bordered card per result. */
 
+@use "../../../../styles/_mixins.scss" as *;
+
 .section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-p-xxs);
 }
 
 .searchRow {
@@ -23,58 +25,61 @@
   width: 100%;
 }
 
-.filterPanel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 280px;
-  padding: 12px;
-}
-
-.filterField {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.filterFooter {
-  display: flex;
-  justify-content: flex-start;
-  padding-top: 2px;
-  border-top: 1px solid var(--border-neutral-primary);
+.filterButtonActive {
+  --btn-bg: var(--background-selected-primary) !important;
+  --btn-fg: var(--text-selected-primary) !important;
+  --btn-border: var(--border-selected-primary) !important;
+  --btn-bg-hover: var(--background-selected-strong) !important;
+  --btn-fg-hover: var(--text-selected-primary) !important;
+  --btn-bg-press: var(--background-selected-strong) !important;
+  --btn-fg-press: var(--text-selected-primary) !important;
 }
 
 .resultCount {
   margin: 0;
   padding: 2px 0;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-xxs);
-  font-weight: var(--font-weight-semi-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  @include type-overline-3;
   color: var(--text-neutral-tertiary);
 }
 
-.emptyListHint {
-  margin: 0;
-  padding: 16px 10px;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-sm);
-  color: var(--text-neutral-quaternary);
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px 24px;
   text-align: center;
+}
+
+.emptyIcon {
+  display: flex;
+  color: var(--text-neutral-quaternary);
+}
+
+.emptyTitle {
+  margin: 0;
+  @include type-heading-h4-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.emptyBody {
+  margin: 0 0 4px;
+  max-width: 240px;
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
 }
 
 .resultsList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-p-xxs);
 }
 
 .resultCard {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 10px;
+  padding: 10px 10px 12px;
   border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
@@ -85,15 +90,14 @@
 
 .resultCard:hover {
   border-color: var(--border-neutral-secondary);
-  box-shadow: 0 1px 3px
-    color-mix(in srgb, var(--background-neutral-black-fixed) 5%, transparent);
+  box-shadow: var(--shadow-sm);
 }
 
 .resultTop {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--spacing-p-xxs);
   width: 100%;
 }
 
@@ -103,7 +107,7 @@
   gap: 2px;
   min-width: 0;
   flex: 1;
-  padding: 0;
+  padding: 0 12px 0 0;
   border: none;
   background: transparent;
   text-align: left;
@@ -115,46 +119,42 @@
 }
 
 .resultMain:focus-visible {
-  outline: 2px solid var(--border-selected-primary);
-  outline-offset: 2px;
+  @include focus-ring;
   border-radius: var(--shape-sm);
 }
 
-.titleRow {
+.resultTitleRow {
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
-}
-
-.kindIcon {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  color: var(--text-neutral-primary);
+  width: 100%;
 }
 
 .resultTitle {
   min-width: 0;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semi-bold);
-  line-height: var(--leading-body-sm);
+  flex: 1;
+  @include type-body-3-semibold;
   color: var(--text-neutral-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.previewEye {
+  flex-shrink: 0;
+  display: flex;
+  opacity: 0;
+  color: var(--text-neutral-tertiary);
+  transition: opacity 0.12s ease;
+}
+
+.resultCard:hover .previewEye {
+  opacity: 1;
+}
+
 .stemPreview {
-  /* Indent under the title, past the kind icon (16px + 6px gap). */
-  padding-left: 22px;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-regular);
-  line-height: var(--leading-body-xs);
+  @include type-body-4-regular;
   color: var(--text-neutral-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -166,16 +166,4 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  padding-left: 22px;
-}
-
-/* Unit names truncate to a fixed budget so standards stay visible. */
-.unitTag {
-  display: inline-flex;
-  min-width: 0;
-  max-width: 150px;
-
-  > * {
-    max-width: 100%;
-  }
 }

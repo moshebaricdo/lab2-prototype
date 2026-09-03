@@ -19,7 +19,7 @@ Related: `.cursor/skills/cads-prototyping/SKILL.md`, `color-theming.md`, `/desig
 | IDE shared chrome (`FileManager`, `CreateFileModal`, `EmptyState`, `VersionBanner`, code-editor chrome) | CADS `Modal` / `Button` / `Dropdown` / `Tooltip` / `TextInput` / `Alert` (`CreateFileModal` and `NameInputModal` wrap `CadsLabProvider` so page-level overlays outside `Lab2Shell` still theme) | Unprefixed Foundations (`--ds-syntax-*` kept in CodeMirror highlight style) |
 | Web Lab 2 workspace + agentic chrome | CADS `Button` / `Dropdown` / `Tooltip` / `SegmentedButton` / `Alert` / `Modal` | Unprefixed Foundations |
 | Python Lab / Sketch Lab workspaces | CADS `Button` / `Dropdown` / `Tooltip` / `Slider` / `TextInput` | Unprefixed Foundations |
-| Assessment workspaces + builder | CADS `Button` / `TextInput` / `Checkbox` / `Radio` / `Dropdown` / `SegmentedButton` / `Tooltip` / `Tag` | Unprefixed Foundations |
+| Assessment workspaces + builder | CADS `Button` / `TextInput` / `Checkbox` / `Radio` / `Dropdown` / `SegmentedButton` / `Tooltip` / `Tag` / `Dialog` / `FaIcon` | Unprefixed Foundations |
 | Lab2 dev panel + `/levels` index | CADS `Button` / `Dropdown` / `TextInput` / `Slider` / `Tooltip` | Unprefixed Foundations (`LevelsIndexPage` wraps `CadsLabProvider`) |
 | Local `ui/` atoms (`AppButton`, etc.) | Freeze for new UI; do not extend. Remaining call sites: color sandbox, teacher dashboard | `--ds-*` |
 

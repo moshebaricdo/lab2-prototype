@@ -177,6 +177,7 @@ The settings below are **not properties of a question item** — they configure 
 
 | Concern | Owner |
 |---------|-------|
-| Internal title, course, unit, concepts, **default** point value | Question item — Catalog |
+| Internal title, **standards**, **default** point value | Question item — Catalog |
+| Course / unit (where the *quiz* sits) | Levelbuilder placement — not question catalog |
 | **Type**, stem, body, options, answer key, explanation, rubric, code context | Question item — Content |
 | Reveal visibility, scoring context, order, shuffle, timing, attempts, **point override** | The assessment — *out of scope here* |

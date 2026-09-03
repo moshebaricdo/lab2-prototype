@@ -1,14 +1,12 @@
-/* Collapsed row anatomy + expanded editor shell for one outline question.
- * Column metrics come from `--outline-*` vars set on the canvas root so the
- * handle / index / icon / name columns align across every block type. */
+/* Collapsed row + expanded editor shell for one outline question. */
+
+@use "../../../../styles/_mixins.scss" as *;
 
 .card {
   overflow: hidden;
   border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
-  box-shadow: 0 1px 2px
-    color-mix(in srgb, var(--background-neutral-black-fixed) 4%, transparent);
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
@@ -17,15 +15,12 @@
 
 .card:hover:not(.cardExpanded):not(.cardPlaceholder) {
   border-color: var(--border-neutral-secondary);
-  box-shadow: 0 2px 6px
-    color-mix(in srgb, var(--background-neutral-black-fixed) 6%, transparent);
+  box-shadow: var(--shadow-sm);
 }
 
 .cardExpanded {
   border-color: var(--border-selected-primary);
-  box-shadow:
-    0 1px 2px color-mix(in srgb, var(--background-neutral-black-fixed) 4%, transparent),
-    0 0 0 1px var(--border-selected-primary);
+  box-shadow: 0 0 0 1px var(--border-selected-primary);
 }
 
 .cardPlaceholder {
@@ -45,27 +40,26 @@
 .row {
   display: flex;
   align-items: center;
-  gap: var(--outline-gap);
-  min-height: 44px;
-  padding: 8px var(--outline-pad-x);
+  gap: 10px;
+  padding: 10px 8px 10px 10px;
 }
 
-.handle,
-.handleSpacer {
+.kindHandle,
+.kindIcon {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: var(--outline-handle);
-  height: 24px;
+  width: 16px;
+  height: 22px;
+  color: var(--text-neutral-quaternary);
 }
 
-.handle {
+.kindHandle {
   padding: 0;
   border: none;
   border-radius: var(--shape-sm);
   background: transparent;
-  color: var(--text-neutral-quaternary);
   cursor: grab;
   touch-action: none;
   transition:
@@ -73,63 +67,34 @@
     color 0.12s ease;
 }
 
-.handle:hover {
+.kindHandle:hover {
   background: var(--background-neutral-secondary);
   color: var(--text-neutral-primary);
 }
 
-.handle:active {
+.kindHandle:active {
   cursor: grabbing;
 }
 
-.handle:focus-visible {
-  outline: 2px solid var(--border-selected-primary);
-  outline-offset: 1px;
-}
-
-.index {
-  flex-shrink: 0;
-  width: var(--outline-index);
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-xs);
-  font-weight: var(--font-weight-semi-bold);
-  line-height: var(--leading-body-xs);
-  font-variant-numeric: tabular-nums;
-  color: var(--text-neutral-quaternary);
-}
-
-.kindIcon {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: var(--outline-icon);
-  color: var(--text-neutral-primary);
+.kindHandle:focus-visible {
+  @include focus-ring;
 }
 
 .name {
-  flex-shrink: 1;
-  min-width: 48px;
-  max-width: 45%;
+  flex-shrink: 0;
+  max-width: 42%;
   overflow: hidden;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-semi-bold);
-  line-height: var(--leading-body-sm);
+  @include type-body-3-semibold;
   color: var(--text-neutral-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Stem peek shares the name's size — hierarchy comes from weight + color. */
 .stem {
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-regular);
-  line-height: var(--leading-body-sm);
+  @include type-body-3-regular;
   color: var(--text-neutral-tertiary);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -139,15 +104,16 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
 }
 
 .removeButton:hover {
-  color: var(--text-error-primary);
+  --btn-fg: var(--text-error-primary);
+  --btn-bg-hover: var(--background-error-light);
 }
 
 .editor {
-  padding: 16px;
+  padding: var(--spacing-p-xs);
   border-top: 1px solid var(--border-neutral-primary);
   background: var(--background-neutral-secondary);
 }
@@ -155,8 +121,8 @@
 .footer {
   display: flex;
   align-items: center;
-  gap: var(--outline-gap);
-  padding: 10px var(--outline-pad-x);
+  gap: 8px;
+  padding: 10px 8px 10px 10px;
   border-top: 1px solid var(--border-neutral-primary);
   background: var(--background-neutral-primary);
 }
@@ -164,7 +130,7 @@
 .provenance {
   display: flex;
   align-items: center;
-  gap: var(--outline-gap);
+  gap: 8px;
   min-width: 0;
 }
 
@@ -172,6 +138,6 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: var(--outline-gap);
+  gap: 8px;
   margin-left: auto;
 }

@@ -1,5 +1,7 @@
 /* Ghost add rows — quiet until hover, aligned to the shared outline grid. */
 
+@use "../../../../styles/_mixins.scss" as *;
+
 .dropdownHost {
   width: 100%;
 }
@@ -8,11 +10,9 @@
   display: flex;
   width: 100%;
   align-items: center;
-  gap: var(--outline-gap);
+  gap: 10px;
   min-height: 36px;
-  /* The transparent border stands in for the card border so the icon
-   * column lines up with bordered cards at the same padding. */
-  padding: 6px var(--outline-pad-x);
+  padding: 6px 10px;
   border: 1px dashed transparent;
   border-radius: var(--shape-sm);
   background: transparent;
@@ -32,8 +32,7 @@
 }
 
 .addRow:focus-visible {
-  outline: 2px solid var(--border-selected-primary);
-  outline-offset: 1px;
+  @include focus-ring;
 }
 
 .addRowDropActive {
@@ -42,9 +41,47 @@
   color: var(--text-neutral-primary);
 }
 
+.emptySlot {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 64px;
+  padding: 12px 16px;
+  border: 1px dashed var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: transparent;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    border-style 0.12s ease;
+}
+
+.emptySlotDropActive {
+  border-style: solid;
+  border-color: var(--border-selected-primary);
+  background: var(--background-brand-light);
+}
+
+.emptyCopy {
+  margin: 0;
+  @include type-body-4-regular;
+  color: var(--text-neutral-quaternary);
+  text-align: center;
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
 .gutter {
-  flex-shrink: 0;
-  width: calc(var(--outline-handle) + var(--outline-gap) + var(--outline-index));
+  display: none;
 }
 
 .icon {
@@ -52,12 +89,40 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: var(--outline-icon);
+  width: 16px;
 }
 
 .label {
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: var(--leading-body-sm);
+  @include type-body-3-semibold;
+}
+
+.connector {
+  display: flex;
+  align-items: center;
+  padding-left: 18px;
+}
+
+.connectorSection {
+  height: 16px;
+}
+
+.connectorItem {
+  height: 8px;
+}
+
+.tick {
+  width: 1px;
+  height: 100%;
+  background: var(--border-neutral-primary);
+}
+
+.connectorDropActive {
+  padding-left: 0;
+  border-radius: var(--shape-sm);
+  background: var(--background-brand-light);
+  box-shadow: 0 0 0 1px var(--border-selected-primary);
+}
+
+.connectorDropActive .tick {
+  display: none;
 }

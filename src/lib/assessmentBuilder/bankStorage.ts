@@ -70,7 +70,8 @@ function hydrateCourseBanks(banks: AssessmentCourseBank[]): AssessmentCourseBank
         : mock.domains;
     return {
       ...bank,
-      units: bank.units?.length ? bank.units : mock.units,
+      courseName: mock.courseName,
+      units: mock.units ?? bank.units,
       domains,
       questions: mergedQuestions,
     };
@@ -88,6 +89,10 @@ function banksNeedPersist(
     if ((before.units?.length ?? 0) === 0 && (next.units?.length ?? 0) > 0) {
       return true;
     }
+    if (before.courseName !== next.courseName) return true;
+    const beforeUnitLabels = (before.units ?? []).map((unit) => unit.label).join("|");
+    const nextUnitLabels = (next.units ?? []).map((unit) => unit.label).join("|");
+    if (beforeUnitLabels !== nextUnitLabels) return true;
     if (before.questions.length !== next.questions.length) return true;
     const injectedUnit = next.questions.some((question) => {
       const original = before.questions.find(

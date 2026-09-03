@@ -10,16 +10,15 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { FaIcon } from "../../../ui/icons/FaIcon";
+import { FaIcon } from "@moshebaricdo/cads-react/icons";
 import { ScrollArea } from "../../../ui/scroll-area";
 import {
-  formatOutlineNumber,
   isSectioned,
   questionRefId,
   sectionDisplayTitle,
-  type BlankQuestionKind,
   type OutlineDropTarget,
   type UnitOption,
+  type BlankQuestionKind,
 } from "../../../../lib/assessmentBuilder";
 import type {
   AssessmentArtifact,
@@ -28,8 +27,8 @@ import type {
 import { OutlineIntroCard } from "./OutlineIntroCard";
 import {
   OutlineAddIntroRow,
-  OutlineAddQuestionRow,
-  OutlineAddSectionRow,
+  OutlineConnector,
+  OutlineEmptySectionSlot,
 } from "./OutlineAddRow";
 import {
   OutlineQuestionCard,
@@ -52,6 +51,7 @@ interface OutlineItemView {
 
 interface OutlineSectionView {
   id: string;
+  title?: string;
   displayTitle: string;
   items: OutlineItemView[];
 }
@@ -84,22 +84,21 @@ interface AssessmentOutlineCanvasProps {
   onUpdateQuestion: (question: QuestionItem) => void;
   onRemoveQuestion: (bankId: string) => void;
   onMoveQuestion: (bankId: string, target: OutlineDropTarget) => void;
-  onAddSection: () => void;
   onMoveSection: (sectionId: string, direction: -1 | 1) => void;
   onMoveSectionToIndex: (sectionId: string, index: number) => void;
+  onRenameSection: (sectionId: string, title: string) => void;
   onUngroupSection: (sectionId: string) => void;
   onDeleteSection: (sectionId: string) => void;
-  onAddOneOff: (kind: BlankQuestionKind, sectionId: string | null) => void;
-  onOpenBank: (sectionId: string | null) => void;
   onAddIntro: () => void;
   onRemoveIntro: () => void;
   onUpdateIntroContent: (content: string) => void;
+  onAddFromBank: (sectionId: string) => void;
+  onCreateQuestion: (kind: BlankQuestionKind, sectionId: string) => void;
 }
 
 /**
- * Block-based visual outline for the P0 builder: uncontainerized overview
- * header, pinned intro card, sections-as-pages, and single-row question
- * cards on one shared left-gutter grid.
+ * Block-based visual outline for the P0 builder: overview header, pinned
+ * intro, sections-as-pages, question rows, and tick connectors.
  */
 export function AssessmentOutlineCanvas({
   artifact,
@@ -116,16 +115,16 @@ export function AssessmentOutlineCanvas({
   onUpdateQuestion,
   onRemoveQuestion,
   onMoveQuestion,
-  onAddSection,
   onMoveSection,
   onMoveSectionToIndex,
+  onRenameSection,
   onUngroupSection,
   onDeleteSection,
-  onAddOneOff,
-  onOpenBank,
   onAddIntro,
   onRemoveIntro,
   onUpdateIntroContent,
+  onAddFromBank,
+  onCreateQuestion,
 }: AssessmentOutlineCanvasProps) {
   const sectioned = isSectioned(artifact);
 
@@ -152,6 +151,7 @@ export function AssessmentOutlineCanvas({
     if (!sectioned) return null;
     return (artifact.sections ?? []).map((section, index) => ({
       id: section.id,
+      title: section.title,
       displayTitle: sectionDisplayTitle(section, index),
       items: section.questionRefs.flatMap((ref) => {
         const question = questionsById.get(questionRefId(ref));
@@ -385,11 +385,10 @@ export function AssessmentOutlineCanvas({
     });
   };
 
-  const renderQuestionCard = (item: OutlineItemView, outlineNumber: string) => (
+  const renderQuestionCard = (item: OutlineItemView) => (
     <OutlineQuestionCard
       key={item.bankId}
       question={item.question}
-      outlineNumber={outlineNumber}
       expanded={selectedBankId === item.bankId}
       isDragSource={
         activeDrag?.kind === "question" && activeDrag.bankId === item.bankId
@@ -429,23 +428,6 @@ export function AssessmentOutlineCanvas({
     ? (preview.sections?.findIndex((entry) => entry.id === activeSection.id) ?? 0) + 1
     : 0;
 
-  const activeQuestionNumber = useMemo(() => {
-    if (!activeDrag || activeDrag.kind !== "question") return "";
-    if (preview.sections) {
-      for (const [sectionIndex, section] of preview.sections.entries()) {
-        const index = section.items.findIndex(
-          (item) => item.bankId === activeDrag.bankId,
-        );
-        if (index !== -1) return formatOutlineNumber(sectionIndex, index);
-      }
-      return "";
-    }
-    const index = (preview.flat ?? []).findIndex(
-      (item) => item.bankId === activeDrag.bankId,
-    );
-    return index === -1 ? "" : formatOutlineNumber(null, index);
-  }, [activeDrag, preview]);
-
   const maxAttempts = artifact.attempts?.maxAttempts;
   const timeLimit = artifact.timing?.timeLimitMinutes;
   const showIntroGhost = artifact.mode === "exam" && !artifact.intro;
@@ -457,20 +439,19 @@ export function AssessmentOutlineCanvas({
           <h1 className={styles.title}>{artifact.title}</h1>
           <div className={styles.metaRow}>
             <span className={styles.metaItem}>
-              <FaIcon name="circle-question" size="s" aria-hidden />
+              <FaIcon name="circle-question" size="small" />
               {questionCount} question{questionCount === 1 ? "" : "s"}
             </span>
             {timeLimit != null && (
               <span className={styles.metaItem}>
-                <FaIcon name="clock" size="s" aria-hidden />
+                <FaIcon name="clock" size="small" />
                 {timeLimit} minutes
               </span>
             )}
             <span className={styles.metaItem}>
               <FaIcon
                 name={maxAttempts == null ? "infinity" : "arrows-rotate"}
-                size="s"
-                aria-hidden
+                size="small"
               />
               {maxAttempts == null
                 ? "Unlimited attempts"
@@ -489,107 +470,132 @@ export function AssessmentOutlineCanvas({
         >
           <div className={styles.outline}>
             {artifact.intro ? (
-              <div className={styles.indent}>
-                <OutlineIntroCard
-                  overviewContent={artifact.intro.overviewContent}
-                  timeLimitMinutes={timeLimit}
-                  maxAttempts={maxAttempts}
-                  expanded={introExpanded}
-                  onExpand={() => setIntroExpanded(true)}
-                  onCollapse={() => setIntroExpanded(false)}
-                  onUpdateContent={onUpdateIntroContent}
-                  onRemove={handleRemoveIntro}
-                />
-              </div>
+              <OutlineIntroCard
+                overviewContent={artifact.intro.overviewContent}
+                timeLimitMinutes={timeLimit}
+                maxAttempts={maxAttempts}
+                expanded={introExpanded}
+                onExpand={() => setIntroExpanded(true)}
+                onCollapse={() => setIntroExpanded(false)}
+                onUpdateContent={onUpdateIntroContent}
+                onRemove={handleRemoveIntro}
+              />
             ) : (
               showIntroGhost && (
-                <div className={styles.indent}>
-                  <OutlineAddIntroRow
-                    onClick={() => {
-                      onAddIntro();
-                      setIntroExpanded(true);
-                    }}
-                  />
-                </div>
+                <OutlineAddIntroRow
+                  onClick={() => {
+                    onAddIntro();
+                    setIntroExpanded(true);
+                  }}
+                />
               )
             )}
 
             {preview.sections
               ? preview.sections.map((section, sectionIndex) => {
                   const collapsed = collapsedIds.has(section.id);
+                  const showLeadConnector =
+                    Boolean(artifact.intro) ||
+                    showIntroGhost ||
+                    sectionIndex > 0;
                   return (
-                    <OutlineSectionBlock
-                      key={section.id}
-                      sectionId={section.id}
-                      displayTitle={section.displayTitle}
-                      sectionNumber={sectionIndex + 1}
-                      questionCount={section.items.length}
-                      collapsed={collapsed}
-                      isFirst={sectionIndex === 0}
-                      isLast={sectionIndex === preview.sections!.length - 1}
-                      isDragSource={
-                        activeDrag?.kind === "section" &&
-                        activeDrag.sectionId === section.id
-                      }
-                      isQuestionDropTarget={
-                        activeDrag?.kind === "question" &&
-                        overDroppableId === `sec:${section.id}`
-                      }
-                      onToggleCollapsed={() => toggleSectionCollapsed(section.id)}
-                      onMoveUp={() => onMoveSection(section.id, -1)}
-                      onMoveDown={() => onMoveSection(section.id, 1)}
-                      onUngroup={() => onUngroupSection(section.id)}
-                      onDelete={() => handleDeleteSection(section)}
-                    >
-                      {section.items.map((item, itemIndex) =>
-                        renderQuestionCard(
-                          item,
-                          formatOutlineNumber(sectionIndex, itemIndex),
-                        ),
+                    <div key={section.id}>
+                      {showLeadConnector && (
+                        <OutlineConnector size="section" />
                       )}
-                      <OutlineAddQuestionRow
-                        droppableId={`end:${section.id}`}
-                        isDropActive={
-                          activeDrag?.kind === "question" &&
-                          overDroppableId === `end:${section.id}`
+                      <OutlineSectionBlock
+                        sectionId={section.id}
+                        title={section.title}
+                        displayTitle={section.displayTitle}
+                        sectionNumber={sectionIndex + 1}
+                        collapsed={collapsed}
+                        isFirst={sectionIndex === 0}
+                        isLast={sectionIndex === preview.sections!.length - 1}
+                        isDragSource={
+                          activeDrag?.kind === "section" &&
+                          activeDrag.sectionId === section.id
                         }
-                        onAddFromBank={() => onOpenBank(section.id)}
-                        onCreateQuestion={(kind) => onAddOneOff(kind, section.id)}
-                      />
-                    </OutlineSectionBlock>
+                        isQuestionDropTarget={
+                          activeDrag?.kind === "question" &&
+                          overDroppableId === `sec:${section.id}`
+                        }
+                        onToggleCollapsed={() =>
+                          toggleSectionCollapsed(section.id)
+                        }
+                        onRenameTitle={(nextTitle) =>
+                          onRenameSection(section.id, nextTitle)
+                        }
+                        onMoveUp={() => onMoveSection(section.id, -1)}
+                        onMoveDown={() => onMoveSection(section.id, 1)}
+                        onUngroup={() => onUngroupSection(section.id)}
+                        onDelete={() => handleDeleteSection(section)}
+                      >
+                        {!collapsed && (
+                          <OutlineConnector size="section" />
+                        )}
+                        {!collapsed && section.items.length === 0 && (
+                          <OutlineEmptySectionSlot
+                            droppableId={`end:${section.id}`}
+                            isDropActive={
+                              activeDrag?.kind === "question" &&
+                              overDroppableId === `end:${section.id}`
+                            }
+                            onAddFromBank={() => onAddFromBank(section.id)}
+                            onCreateQuestion={(kind) =>
+                              onCreateQuestion(kind, section.id)
+                            }
+                          />
+                        )}
+                        {section.items.map((item, itemIndex) => (
+                          <div key={item.bankId}>
+                            {itemIndex > 0 && (
+                              <OutlineConnector size="item" />
+                            )}
+                            {renderQuestionCard(item)}
+                          </div>
+                        ))}
+                        {!collapsed && section.items.length > 0 && (
+                          <OutlineConnector
+                            size="item"
+                            droppableId={`end:${section.id}`}
+                            isDropActive={
+                              activeDrag?.kind === "question" &&
+                              overDroppableId === `end:${section.id}`
+                            }
+                          />
+                        )}
+                      </OutlineSectionBlock>
+                    </div>
                   );
                 })
               : (
                 <>
-                  {(preview.flat ?? []).map((item, index) =>
-                    renderQuestionCard(item, formatOutlineNumber(null, index)),
-                  )}
+                  {(preview.flat ?? []).map((item, index) => (
+                    <div key={item.bankId}>
+                      {(index > 0 || artifact.intro || showIntroGhost) && (
+                        <OutlineConnector
+                          size={index === 0 ? "section" : "item"}
+                        />
+                      )}
+                      {renderQuestionCard(item)}
+                    </div>
+                  ))}
                   {(preview.flat ?? []).length === 0 && (
                     <p className={styles.emptyHint}>
                       No questions yet — add one from the question bank or
                       create a new one.
                     </p>
                   )}
-                  <div className={styles.indent}>
-                    <OutlineAddQuestionRow
-                      droppableId={FLAT_END_ID}
-                      isDropActive={
-                        activeDrag?.kind === "question" &&
-                        overDroppableId === FLAT_END_ID
-                      }
-                      onAddFromBank={() => onOpenBank(null)}
-                      onCreateQuestion={(kind) => onAddOneOff(kind, null)}
-                    />
-                  </div>
+                  <OutlineConnector
+                    size="section"
+                    droppableId={FLAT_END_ID}
+                    isDropActive={
+                      activeDrag?.kind === "question" &&
+                      overDroppableId === FLAT_END_ID
+                    }
+                  />
                 </>
               )}
-
-            <div className={styles.indent}>
-              <OutlineAddSectionRow
-                wrapsExisting={!sectioned && (baseFlat ?? []).length > 0}
-                onClick={onAddSection}
-              />
-            </div>
           </div>
 
           <DragOverlay dropAnimation={null}>
@@ -598,10 +604,7 @@ export function AssessmentOutlineCanvas({
                 className={styles.dragCard}
                 style={overlayWidth ? { width: overlayWidth } : undefined}
               >
-                <QuestionRowContent
-                  question={activeQuestion}
-                  outlineNumber={activeQuestionNumber}
-                />
+                <QuestionRowContent question={activeQuestion} />
               </div>
             ) : activeSection ? (
               <div
@@ -609,9 +612,8 @@ export function AssessmentOutlineCanvas({
                 style={overlayWidth ? { width: overlayWidth } : undefined}
               >
                 <SectionHeaderContent
-                  displayTitle={activeSection.displayTitle}
                   sectionNumber={activeSectionNumber}
-                  questionCount={activeSection.items.length}
+                  title={activeSection.title}
                   collapsed
                 />
               </div>

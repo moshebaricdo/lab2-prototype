@@ -54,7 +54,7 @@ interface AssessmentBuilderPanelProps {
   onAddBankQuestion: (bankId: string) => void;
   /** Focus and expand a question already in the outline. */
   onFocusQuestionInOutline?: (bankId: string) => void;
-  /** P0 scope: CFU/exam only; course/unit/concept filters; no survey, shuffle, or difficulty. */
+  /** P0 scope: CFU/exam only; course/unit as bank scope; standards as tags. */
   p0Aligned?: boolean;
 }
 
@@ -185,7 +185,7 @@ export function AssessmentBuilderPanel({
         {activeTab === "builder-bank" && p0Aligned && (
           <QuestionBankPanel
             courseBanks={allCourseBanks}
-            defaultCourseId={artifact.courseId}
+            placement={artifact.placement}
             resolvedQuestionIds={resolvedQuestionIds}
             onAddBankQuestion={onAddBankQuestion}
             onFocusQuestionInOutline={onFocusQuestionInOutline}

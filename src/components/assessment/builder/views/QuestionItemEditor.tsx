@@ -2,7 +2,7 @@ import { Button, Checkbox, Dropdown, Radio, Tag, TextInput } from "@moshebaricdo
 import {
   QUESTION_DIFFICULTIES,
   QUESTION_DIFFICULTY_LABELS,
-  type UnitOption,
+  standardLabel,
 } from "../../../../lib/assessmentBuilder";
 import type {
   DomainTag,
@@ -15,8 +15,9 @@ interface QuestionItemEditorProps {
   question: QuestionItem;
   graded: boolean;
   courseOptions: Array<{ value: string; label: string }>;
-  domainOptions: Array<{ value: string; label: string }>;
-  unitOptions?: UnitOption[];
+  domainOptions: Array<{ value: string; label: string; code?: string }>;
+  /** @deprecated Unused in P0; legacy callers may still pass unit options. */
+  unitOptions?: Array<{ value: string; label: string }>;
   p0Aligned?: boolean;
   onUpdateQuestion: (question: QuestionItem) => void;
 }
@@ -42,7 +43,6 @@ export function QuestionItemEditor({
   graded,
   courseOptions,
   domainOptions,
-  unitOptions = [],
   p0Aligned = false,
   onUpdateQuestion,
 }: QuestionItemEditorProps) {
@@ -55,19 +55,8 @@ export function QuestionItemEditor({
   }));
 
   const selectedDomainIds = question.tags.map((tag) => tag.id);
-  const conceptOptions = p0Aligned
-    ? domainOptions.filter((option) => {
-        const unit = unitOptions.find((entry) => entry.value === question.unitId);
-        if (!unit) return true;
-        return unit.conceptIds.includes(option.value);
-      })
-    : domainOptions;
 
   const handleCourseChange = (courseId: string) => {
-    if (p0Aligned) {
-      patch({ courseId, unitId: undefined, tags: [] });
-      return;
-    }
     patch({ courseId });
   };
 
@@ -75,18 +64,18 @@ export function QuestionItemEditor({
     patch({ difficulty: value as QuestionDifficulty });
   };
 
-  const handleUnitChange = (unitId: string) => {
-    const unit = unitOptions.find((entry) => entry.value === unitId);
-    const allowed = new Set(unit?.conceptIds ?? []);
-    const tags = question.tags.filter((tag) => allowed.has(tag.id));
-    patch({ unitId, tags });
-  };
-
   const handleDomainChange = (domainIds: string[]) => {
     const tags: DomainTag[] = domainIds
-      .map((id) => conceptOptions.find((option) => option.value === id))
-      .filter((option): option is { value: string; label: string } => option != null)
-      .map((option) => ({ id: option.value, label: option.label }));
+      .map((id) => domainOptions.find((option) => option.value === id))
+      .filter(
+        (option): option is { value: string; label: string; code?: string } =>
+          option != null,
+      )
+      .map((option) => ({
+        id: option.value,
+        label: option.label,
+        code: option.code,
+      }));
     patch({ tags });
   };
 
@@ -133,86 +122,83 @@ export function QuestionItemEditor({
         <h4 className={styles.sectionHeading}>Question bank metadata</h4>
         <p className={styles.hint}>
           {p0Aligned
-            ? "Used when saving to the shared question bank. Course, unit, and concept tags help authors find and reuse this question."
+            ? "Standards help authors find this question in the bank. Course and unit are not tags — they come from where quizzes using this question are placed."
             : "Used when saving to the shared question bank. Course and domains help authors find and reuse this question."}
         </p>
-        <div className={styles.bankMetaRow}>
+        {p0Aligned ? (
           <div className={styles.bankMetaField}>
-            <span className={styles.bankMetaLabel}>Course</span>
+            <span className={styles.bankMetaLabel}>Standards</span>
             <Dropdown
               role="input"
-              options={courseOptions}
-              value={question.courseId}
-              onChange={(value) => handleCourseChange(String(value))}
+              menuType="checklist"
+              options={domainOptions}
+              value={selectedDomainIds}
+              onChange={(value) => handleDomainChange(asStringArray(value))}
+              placeholder="Select standards"
               size="extraSmall"
               color="secondary"
               width="full"
-              menuWidth="trigger"
-              startIconName="book"
+              startIconName="clipboard-list-check"
+              disabled={domainOptions.length === 0}
             />
           </div>
-          {p0Aligned ? (
+        ) : (
+          <>
+            <div className={styles.bankMetaRow}>
+              <div className={styles.bankMetaField}>
+                <span className={styles.bankMetaLabel}>Course</span>
+                <Dropdown
+                  role="input"
+                  options={courseOptions}
+                  value={question.courseId}
+                  onChange={(value) => handleCourseChange(String(value))}
+                  size="extraSmall"
+                  color="secondary"
+                  width="full"
+                  menuWidth="trigger"
+                  startIconName="book"
+                />
+              </div>
+              <div className={styles.bankMetaField}>
+                <span className={styles.bankMetaLabel}>Difficulty</span>
+                <Dropdown
+                  role="input"
+                  options={difficultyOptions}
+                  value={question.difficulty ?? "intermediate"}
+                  onChange={(value) => handleDifficultyChange(String(value))}
+                  size="extraSmall"
+                  color="secondary"
+                  width="full"
+                  startIconName="signal"
+                />
+              </div>
+            </div>
             <div className={styles.bankMetaField}>
-              <span className={styles.bankMetaLabel}>Unit</span>
+              <span className={styles.bankMetaLabel}>Domains</span>
               <Dropdown
                 role="input"
-                options={unitOptions.map((unit) => ({
-                  value: unit.value,
-                  label: unit.label,
-                }))}
-                value={question.unitId ?? ""}
-                onChange={(value) => handleUnitChange(String(value))}
-                placeholder="Select unit"
+                menuType="checklist"
+                options={domainOptions}
+                value={selectedDomainIds}
+                onChange={(value) => handleDomainChange(asStringArray(value))}
+                placeholder="Select domains"
                 size="extraSmall"
                 color="secondary"
                 width="full"
-                menuWidth="trigger"
-                startIconName="layer-group"
-                disabled={unitOptions.length === 0}
+                startIconName="tag"
+                disabled={domainOptions.length === 0}
               />
             </div>
-          ) : (
-            <div className={styles.bankMetaField}>
-              <span className={styles.bankMetaLabel}>Difficulty</span>
-              <Dropdown
-                role="input"
-                options={difficultyOptions}
-                value={question.difficulty ?? "intermediate"}
-                onChange={(value) => handleDifficultyChange(String(value))}
-                size="extraSmall"
-                color="secondary"
-                width="full"
-                startIconName="signal"
-              />
-            </div>
-          )}
-        </div>
-        <div className={styles.bankMetaField}>
-          <span className={styles.bankMetaLabel}>
-            {p0Aligned ? "Concepts" : "Domains"}
-          </span>
-          <Dropdown
-            role="input"
-            menuType="checklist"
-            options={conceptOptions}
-            value={selectedDomainIds}
-            onChange={(value) => handleDomainChange(asStringArray(value))}
-            placeholder={p0Aligned ? "Select concepts" : "Select domains"}
-            size="extraSmall"
-            color="secondary"
-            width="full"
-            startIconName="tag"
-            disabled={conceptOptions.length === 0}
-          />
-        </div>
+          </>
+        )}
         {question.tags.length > 0 && (
           <div className={styles.tagRow}>
             {question.tags.map((tag) => (
               <Tag
                 key={tag.id}
                 size="small"
-                color="neutral"
-                label={tag.label}
+                color={p0Aligned ? "pink" : "neutral"}
+                label={p0Aligned ? standardLabel(tag) : tag.label}
               />
             ))}
           </div>

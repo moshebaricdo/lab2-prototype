@@ -1,0 +1,310 @@
+/* Filter popover chrome + CADS extraSmall checklist item (896:3791)
+ * copied for typeahead rows. Units add padding-left only. */
+
+@use "../../../../styles/_mixins.scss" as *;
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 325px;
+  overflow: visible;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.field :global([data-cads-field-wrapper]) {
+  width: 100%;
+}
+
+.fieldTrigger {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--control-height-extra-small);
+  gap: 0.375rem;
+  padding-inline: 0.5rem;
+  padding-block: 0.125rem;
+  border: 1px solid var(--border-neutral-secondary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
+  font-weight: var(--font-weight-normal);
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-colors);
+}
+
+.fieldTrigger:hover {
+  background: var(--background-neutral-tertiary);
+}
+
+.fieldTrigger:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--background-neutral-primary),
+    0 0 0 4px var(--border-focused-primary);
+  outline: none;
+}
+
+.fieldCheck {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--text-success-primary);
+}
+
+.fieldValue,
+.fieldPlaceholder {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fieldPlaceholder {
+  color: var(--text-neutral-quaternary);
+}
+
+.fieldChevron {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--text-neutral-tertiary);
+}
+
+.actionRow {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  width: 100%;
+  height: 32px;
+  padding: 4px;
+  border-top: 1px solid var(--border-neutral-primary);
+  gap: 4px;
+}
+
+.menuActionRow {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-shrink: 0;
+  width: 100%;
+  height: 32px;
+  padding: 4px;
+  border-top: 1px solid var(--border-neutral-primary);
+  gap: 4px;
+}
+
+.drill {
+  display: flex;
+  flex-direction: column;
+  width: 325px;
+}
+
+.drillHeader {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  align-items: center;
+  flex-shrink: 0;
+  height: 32px;
+  padding: 4px 6px;
+  background: var(--background-neutral-secondary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.drillTitle {
+  @include type-overline-3;
+  color: var(--text-neutral-quaternary);
+  text-align: center;
+}
+
+.drillHeaderSpacer {
+  width: 24px;
+  height: 24px;
+}
+
+.searchRow {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 40px;
+  padding: 6px;
+  background: var(--background-neutral-secondary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.searchRow > * {
+  width: 100%;
+}
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 416px;
+  padding-block: 4px;
+  overflow: auto;
+}
+
+.optionListEmpty {
+  min-height: 52px;
+  max-height: none;
+}
+
+/* CADS Dropdown extraSmall menuSeparator */
+.separator {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 8px;
+  padding-block: 1px;
+}
+
+.separatorLine {
+  width: 100%;
+  height: 1px;
+  background: var(--border-neutral-primary);
+}
+
+/* CADS Dropdown extraSmall menuOptGroup */
+.menuOptGroup {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.625rem;
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-quaternary);
+  font-family: var(--font-family-main);
+  font-weight: 600;
+  font-size: var(--text-body-xxs);
+  line-height: var(--leading-body-xxs);
+  letter-spacing: var(--tracking-overline);
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* CADS Dropdown extraSmall checklist item */
+.item {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: var(--control-height-extra-small);
+  padding: 0.125rem 0.625rem 0.125rem 0.5rem;
+  border: none;
+  border-radius: 0;
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
+  font-weight: 400;
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:hover:not([aria-selected="true"]) {
+  background: var(--background-neutral-tertiary);
+}
+
+.item[aria-selected="true"] {
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary);
+}
+
+.item[aria-selected="true"]:hover {
+  background: var(--background-selected-strong);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--border-focused-primary);
+  outline-offset: -2px;
+}
+
+.itemIndented {
+  padding-left: 1.5rem;
+}
+
+.itemInner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  gap: 0.25rem;
+}
+
+.checkbox {
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--shape-sm);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-neutral-primary);
+  border: 2px solid var(--border-neutral-solid);
+  color: var(--text-selected-primary-inverse);
+}
+
+.checkboxSelected {
+  background: var(--background-selected-primary-inverse);
+  border: none;
+}
+
+.itemLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.emptyHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 4px 8px;
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-xs);
+  line-height: var(--leading-body-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--text-neutral-quaternary);
+  text-align: center;
+}

@@ -6,9 +6,8 @@ import type {
 } from "../../../../types/assessmentBuilder";
 
 /**
- * Single source of truth for question-type glyphs and labels. The outline
- * cards, bank rows, and add menus must stay in lockstep (locked builder UX:
- * collapsed rows show the same type icon as the bank).
+ * Single source of truth for question-type glyphs and labels. Outline
+ * handles, bank type tags, and add menus must stay in lockstep.
  */
 export interface QuestionKindMeta {
   label: string;
@@ -26,6 +25,15 @@ export const QUESTION_KIND_META: Record<QuestionItemKind, QuestionKindMeta> = {
 export function questionKindMeta(question: QuestionItem): QuestionKindMeta {
   return QUESTION_KIND_META[question.item.kind];
 }
+
+/** Bank filter checklist — same labels/icons as result-row type Tags. */
+export const BANK_KIND_FILTER_OPTIONS: Array<
+  QuestionKindMeta & { kind: QuestionItemKind }
+> = (
+  Object.entries(QUESTION_KIND_META) as Array<
+    [QuestionItemKind, QuestionKindMeta]
+  >
+).map(([kind, meta]) => ({ kind, ...meta }));
 
 /** One-off scaffolds offered by the add-question menu (five P0 entry points). */
 export const CREATE_QUESTION_OPTIONS: Array<

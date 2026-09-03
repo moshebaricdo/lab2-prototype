@@ -8,6 +8,7 @@ import type {
 export interface TaxonomyOption {
   value: string;
   label: string;
+  code?: string;
 }
 
 export interface UnitOption extends TaxonomyOption {
@@ -65,6 +66,7 @@ export function getConceptsForBanks(
   return Array.from(concepts.values()).map((concept) => ({
     value: concept.id,
     label: concept.label,
+    code: concept.code,
   }));
 }
 
@@ -110,90 +112,27 @@ export function standardLabel(tag: DomainTag): string {
   return tag.code ?? tag.label;
 }
 
-const COURSE_SCOPE_PREFIX = "course:";
-const UNIT_SCOPE_PREFIX = "unit:";
-
-export function courseScopeValue(courseId: string): string {
-  return `${COURSE_SCOPE_PREFIX}${courseId}`;
-}
-
-export function unitScopeValue(unitId: string): string {
-  return `${UNIT_SCOPE_PREFIX}${unitId}`;
-}
-
-export function parseCourseOrUnitValues(values: string[]): {
-  courseIds: string[];
-  unitIds: string[];
-} {
-  const courseIds: string[] = [];
-  const unitIds: string[] = [];
-  for (const value of values) {
-    if (value.startsWith(COURSE_SCOPE_PREFIX)) {
-      courseIds.push(value.slice(COURSE_SCOPE_PREFIX.length));
-    } else if (value.startsWith(UNIT_SCOPE_PREFIX)) {
-      unitIds.push(value.slice(UNIT_SCOPE_PREFIX.length));
-    }
-  }
-  return { courseIds, unitIds };
-}
-
-export function getCourseOrUnitOptions(banks: AssessmentCourseBank[]) {
-  const courses = banks.map((bank) => ({
-    value: courseScopeValue(bank.courseId),
-    label: bank.courseName,
-    iconName: "book" as const,
-  }));
-  const units = getUnitsForBanks(banks).map((unit) => ({
-    value: unitScopeValue(unit.value),
-    label: unit.label,
-    iconName: "book" as const,
-  }));
-
-  return [
-    { type: "group" as const, label: "Courses" },
-    ...courses,
-    { type: "group" as const, label: "Units" },
-    ...units,
-  ];
-}
-
-export function questionMatchesCourseOrUnit(
-  question: QuestionItem,
-  selectedCourseIds: string[],
-  selectedUnitIds: string[],
-): boolean {
-  const hasCourse = selectedCourseIds.length > 0;
-  const hasUnit = selectedUnitIds.length > 0;
-  if (!hasCourse && !hasUnit) return true;
-  if (hasCourse && selectedCourseIds.includes(question.courseId)) return true;
-  if (hasUnit && question.unitId != null && selectedUnitIds.includes(question.unitId)) {
-    return true;
-  }
-  return false;
-}
-
 export function questionStemPreview(question: QuestionItem): string {
   return question.item.content.prompt.trim();
 }
 
+/**
+ * Course/unit layer is a union: a full-course selection matches every
+ * question in that family; individually selected units match by `unitId`.
+ * Empty scope matches all. Standards still AND with that union.
+ */
 export function questionMatchesTaxonomy(
   question: QuestionItem,
-  selectedCourseIds: string[],
+  fullCourseIds: string[],
   selectedUnitIds: string[],
   selectedConceptIds: string[],
 ): boolean {
-  if (
-    selectedCourseIds.length > 0 &&
-    !selectedCourseIds.includes(question.courseId)
-  ) {
-    return false;
-  }
-
-  if (
-    selectedUnitIds.length > 0 &&
-    (question.unitId == null || !selectedUnitIds.includes(question.unitId))
-  ) {
-    return false;
+  const hasScope = fullCourseIds.length > 0 || selectedUnitIds.length > 0;
+  if (hasScope) {
+    const matchesCourse = fullCourseIds.includes(question.courseId);
+    const matchesUnit =
+      question.unitId != null && selectedUnitIds.includes(question.unitId);
+    if (!matchesCourse && !matchesUnit) return false;
   }
 
   if (
@@ -204,4 +143,62 @@ export function questionMatchesTaxonomy(
   }
 
   return true;
+}
+
+/** Standards available for the current course/unit union (empty = all). */
+export function getConceptsForScope(
+  banks: AssessmentCourseBank[],
+  fullCourseIds: string[],
+  unitIds: string[],
+): TaxonomyOption[] {
+  if (fullCourseIds.length === 0 && unitIds.length === 0) {
+    return getConceptsForBanks(banks);
+  }
+
+  const merged = new Map<string, TaxonomyOption>();
+  const fromCourses =
+    fullCourseIds.length > 0
+      ? getConceptsForBanks(banks, fullCourseIds)
+      : [];
+  const fromUnits =
+    unitIds.length > 0
+      ? getConceptsForBanks(banks, undefined, unitIds)
+      : [];
+
+  for (const option of [...fromCourses, ...fromUnits]) {
+    merged.set(option.value, option);
+  }
+  return Array.from(merged.values());
+}
+
+/** Group header for the standards typeahead (CSTA / AP / course frameworks). */
+export function standardFrameworkGroup(code?: string): string {
+  if (!code) return "Other";
+  if (/^(1A|1B|2|3A|3B)-/i.test(code)) return "CSTA Framework";
+  if (/^AP[- ]/i.test(code)) return "AP Framework";
+  if (code.startsWith("HS-AI")) return "AI Framework";
+  if (code.startsWith("HS-WEB")) return "Web Framework";
+  return "Other";
+}
+
+export function groupStandardsByFramework(
+  options: TaxonomyOption[],
+): Array<{ group: string; items: TaxonomyOption[] }> {
+  const order = [
+    "CSTA Framework",
+    "AP Framework",
+    "AI Framework",
+    "Web Framework",
+    "Other",
+  ];
+  const grouped = new Map<string, TaxonomyOption[]>();
+  for (const option of options) {
+    const group = standardFrameworkGroup(option.code);
+    const items = grouped.get(group) ?? [];
+    items.push(option);
+    grouped.set(group, items);
+  }
+  return order
+    .filter((group) => grouped.has(group))
+    .map((group) => ({ group, items: grouped.get(group) ?? [] }));
 }

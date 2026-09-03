@@ -87,6 +87,26 @@ export function addSection(artifact: AssessmentArtifact): AssessmentArtifact {
   ]);
 }
 
+/** Set or clear a section's custom title. Empty string removes the title. */
+export function renameSection(
+  artifact: AssessmentArtifact,
+  sectionId: string,
+  title: string,
+): AssessmentArtifact {
+  const sections = artifact.sections ?? [];
+  const index = sections.findIndex((section) => section.id === sectionId);
+  if (index === -1) return artifact;
+  const trimmed = title.trim();
+  const nextTitle = trimmed.length > 0 ? trimmed : undefined;
+  if (sections[index].title === nextTitle) return artifact;
+  return withSections(
+    artifact,
+    sections.map((section) =>
+      section.id === sectionId ? { ...section, title: nextTitle } : section,
+    ),
+  );
+}
+
 /** Move a section up (-1) or down (+1) one slot. */
 export function moveSection(
   artifact: AssessmentArtifact,

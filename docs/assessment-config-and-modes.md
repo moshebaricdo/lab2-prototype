@@ -2,7 +2,7 @@
 
 This doc defines the assessment-level model: what an assessment stores, which settings configure how it runs, and how modes such as Checkpoint, Quiz, Practice Test, and Exam prefill those settings.
 
-**P0 scope (prototype):** prioritize **checkpoints (CFUs)** and **exams**. Surveys are out of scope. Do not shuffle question order or answer options. Drop difficulty. Bank filters are **course / unit / concept**. Living status: [docs/status.md](./status.md).
+**P0 scope (prototype):** prioritize **checkpoints (CFUs)** and **exams**. Surveys are out of scope. Do not shuffle question order or answer options. Drop difficulty. **Standards** are question tags; course/unit are bank scope and quiz placement, not tags. Living status: [docs/status.md](./status.md).
 
 It pairs with [Question Types & Field Requirements](./question-types-and-fields.md). That doc covers reusable question items. This one covers the assessment that selects questions, orders them, and decides how learners take, submit, and review them. Like its companion, this is intentionally tool-agnostic.
 

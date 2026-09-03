@@ -123,7 +123,7 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
       {
         levelType: "Assessment builder",
         description:
-          "In-lab authoring with live preview and question bank. P0 focuses on CFUs and exams.",
+          "In-lab authoring with live preview and question bank. P0 focuses on CFUs and exams; attached vs floating placement scopes the bank.",
         pages: assessmentBuilderLevelLinks,
       },
     ],

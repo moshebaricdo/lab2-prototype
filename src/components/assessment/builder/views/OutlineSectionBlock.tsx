@@ -1,45 +1,97 @@
+import { useEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { Dropdown } from "@moshebaricdo/cads-react";
-import { FaIcon } from "../../../ui/icons/FaIcon";
+import { Button, Dropdown } from "@moshebaricdo/cads-react";
+import { FaIcon } from "@moshebaricdo/cads-react/icons";
 import styles from "./OutlineSectionBlock.module.scss";
 
-function questionCountLabel(count: number): string {
-  if (count === 0) return "No questions";
-  return count === 1 ? "1 question" : `${count} questions`;
-}
-
 interface SectionHeaderContentProps {
-  displayTitle: string;
   sectionNumber: number;
-  questionCount: number;
+  title?: string;
   collapsed: boolean;
   onToggleCollapsed?: () => void;
+  onRenameTitle?: (title: string) => void;
   actions?: React.ReactNode;
 }
 
-/** Header row (chevron · number · title · count · overflow). Reused by the drag overlay. */
+/** Header row (collapse · Section N · title · pencil · overflow). Reused by the drag overlay. */
 export function SectionHeaderContent({
-  displayTitle,
   sectionNumber,
-  questionCount,
+  title,
   collapsed,
   onToggleCollapsed,
+  onRenameTitle,
   actions,
 }: SectionHeaderContentProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(title ?? "");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setDraft(title ?? "");
+  }, [title]);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  const commit = () => {
+    setEditing(false);
+    onRenameTitle?.(draft);
+  };
+
   return (
     <>
       <button
         type="button"
-        className={styles.chevron}
+        className={styles.collapse}
         aria-label={collapsed ? "Expand section" : "Collapse section"}
         aria-expanded={!collapsed}
         onClick={onToggleCollapsed}
       >
-        <FaIcon name={collapsed ? "chevron-right" : "chevron-down"} size="xs" aria-hidden />
+        <FaIcon name="arrows-to-line" size="extraSmall" />
       </button>
-      <span className={styles.index}>{sectionNumber}</span>
-      <span className={styles.title}>{displayTitle}</span>
-      <span className={styles.count}>{questionCountLabel(questionCount)}</span>
+      <span className={styles.overline}>Section {sectionNumber}</span>
+      {editing && onRenameTitle ? (
+        <input
+          ref={inputRef}
+          className={styles.titleInput}
+          value={draft}
+          aria-label="Section title"
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={commit}
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              commit();
+            }
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setDraft(title ?? "");
+              setEditing(false);
+            }
+          }}
+        />
+      ) : (
+        <span className={styles.subtitle}>
+          {title?.trim() || (onRenameTitle ? "Add title" : "")}
+        </span>
+      )}
+      {onRenameTitle && !editing ? (
+        <Button
+          variant="text"
+          color="tertiary"
+          size="extraSmall"
+          iconOnly
+          startIconName="pencil"
+          aria-label="Rename section"
+          onClick={(event) => {
+            event.stopPropagation();
+            setEditing(true);
+          }}
+        />
+      ) : null}
+      <span className={styles.headerSpacer} />
       {actions}
     </>
   );
@@ -47,18 +99,16 @@ export function SectionHeaderContent({
 
 interface OutlineSectionBlockProps {
   sectionId: string;
+  title?: string;
   displayTitle: string;
-  /** 1-based page number (drives `page.item` numbering). */
   sectionNumber: number;
-  questionCount: number;
   collapsed: boolean;
   isFirst: boolean;
   isLast: boolean;
-  /** Section is the active drag source (placeholder styling). */
   isDragSource: boolean;
-  /** A dragged question is hovering this section as an append target. */
   isQuestionDropTarget: boolean;
   onToggleCollapsed: () => void;
+  onRenameTitle: (title: string) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onUngroup: () => void;
@@ -67,21 +117,21 @@ interface OutlineSectionBlockProps {
 }
 
 /**
- * Sections are pages, not heavy cards: a slim header row plus a left rail
- * grouping the question cards beneath. Expanded sections reorder via the
- * overflow menu; collapsing one turns the header into a draggable row.
+ * Section header + nested question cards. Collapse turns the header into a
+ * draggable row; expanded sections reorder via the overflow menu.
  */
 export function OutlineSectionBlock({
   sectionId,
+  title,
   displayTitle,
   sectionNumber,
-  questionCount,
   collapsed,
   isFirst,
   isLast,
   isDragSource,
   isQuestionDropTarget,
   onToggleCollapsed,
+  onRenameTitle,
   onMoveUp,
   onMoveDown,
   onUngroup,
@@ -109,7 +159,7 @@ export function OutlineSectionBlock({
         buttonVariant="text"
         buttonColor="tertiary"
         iconOnly
-        startIconName="ellipsis"
+        startIconName="ellipsis-vertical"
         aria-label={`${displayTitle} options`}
         options={[
           { value: "up", label: "Move up", iconName: "arrow-up", disabled: isFirst },
@@ -151,11 +201,11 @@ export function OutlineSectionBlock({
         {...(collapsed ? { ...listeners, ...attributes } : {})}
       >
         <SectionHeaderContent
-          displayTitle={displayTitle}
           sectionNumber={sectionNumber}
-          questionCount={questionCount}
+          title={title}
           collapsed={collapsed}
           onToggleCollapsed={onToggleCollapsed}
+          onRenameTitle={onRenameTitle}
           actions={menu}
         />
       </div>

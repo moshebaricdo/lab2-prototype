@@ -1,5 +1,4 @@
-import { Modal } from "@moshebaricdo/cads-react";
-import styles from "./SaveQuestionPrompt.module.scss";
+import { Dialog } from "@moshebaricdo/cads-react";
 
 interface SaveQuestionPromptProps {
   open: boolean;
@@ -23,21 +22,23 @@ export function SaveQuestionPrompt({
   onCancel,
 }: SaveQuestionPromptProps) {
   return (
-    <Modal
+    <Dialog
       open={open}
       title="Update the shared question?"
+      description={
+        <>
+          <strong>{questionTitle}</strong> is shared with other assessments.
+          Updating it changes all of them. Saving a copy keeps your edits in this
+          assessment only.
+        </>
+      }
       maxWidth={480}
+      isDismissable
       primaryActionLabel="Update shared question"
       secondaryActionLabel="Save a copy here"
       onPrimaryAction={onUpdateShared}
       onSecondaryAction={onSaveCopy}
       onClose={onCancel}
-    >
-      <p className={styles.body}>
-        <strong>{questionTitle}</strong> comes from the question bank. Updating
-        it changes every assessment that uses it. Saving a copy keeps your edits
-        in this assessment only.
-      </p>
-    </Modal>
+    />
   );
 }

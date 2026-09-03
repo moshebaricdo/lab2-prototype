@@ -7,6 +7,7 @@
 }
 
 .workspaceSurface {
+  position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -14,4 +15,12 @@
   min-width: 0;
   overflow: auto;
   background: var(--background-neutral-secondary);
+}
+
+.toolbarDock {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
 }

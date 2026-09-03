@@ -131,6 +131,10 @@ const AssessmentBuilderP0Page = lazyPage(
   () => import("./pages/assessment-builder/AssessmentBuilderP0Page"),
   "AssessmentBuilderP0Page",
 );
+const AssessmentBuilderP0DraftPage = lazyPage(
+  () => import("./pages/assessment-builder/AssessmentBuilderP0DraftPage"),
+  "AssessmentBuilderP0DraftPage",
+);
 const MatchConnectorCodeLevelPage = lazyPage(
   () => import("./pages/match/MatchConnectorCodeLevelPage"),
   "MatchConnectorCodeLevelPage",
@@ -636,6 +640,10 @@ export default function App() {
         <Route
           path="/levels/assessment-builder-p0"
           element={<AssessmentBuilderP0Page />}
+        />
+        <Route
+          path="/levels/assessment-builder-p0-draft"
+          element={<AssessmentBuilderP0DraftPage />}
         />
         <Route
           path="/levels/levelgroup-scroll"

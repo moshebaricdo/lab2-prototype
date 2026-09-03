@@ -1,5 +1,5 @@
 import { Button, TextInput, Tooltip } from "@moshebaricdo/cads-react";
-import { FaIcon } from "../../../ui/icons/FaIcon";
+import { FaIcon } from "@moshebaricdo/cads-react/icons";
 import styles from "./OutlineIntroCard.module.scss";
 
 interface OutlineIntroCardProps {
@@ -52,24 +52,21 @@ export function OutlineIntroCard({
         onClick={expanded ? undefined : onExpand}
       >
         <div className={styles.row}>
-          <span className={styles.gutter} aria-hidden />
-          <Tooltip title="Intro screen" placement="top">
-            <span className={styles.kindIcon} aria-label="Intro screen">
-              <FaIcon name="presentation-screen" size="s" aria-hidden />
-            </span>
-          </Tooltip>
-          <span className={styles.name}>Intro screen</span>
+          <span className={styles.kindIcon} aria-label="Intro screen">
+            <FaIcon name="hand-wave" size="small" />
+          </span>
+          <span className={styles.name}>Intro Screen</span>
           <span className={styles.stem}>
             {peek || "Tell learners what to expect before they begin."}
           </span>
           <div className={styles.actions}>
             <Tooltip title="Edit intro" placement="top">
               <Button
-                variant="text"
-                color="tertiary"
+                variant="outlined"
+                color="secondary"
                 size="extraSmall"
                 iconOnly
-                startIconName="pen-to-square"
+                startIconName="pencil"
                 aria-label="Edit intro screen"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -83,7 +80,7 @@ export function OutlineIntroCard({
                 color="tertiary"
                 size="extraSmall"
                 iconOnly
-                startIconName="trash-can"
+                startIconName="minus"
                 aria-label="Remove intro screen"
                 className={styles.removeButton}
                 onClick={(event) => {
@@ -109,7 +106,7 @@ export function OutlineIntroCard({
               onChange={(event) => onUpdateContent(event.target.value)}
             />
             <p className={styles.metaLine}>
-              <FaIcon name="circle-info" size="xs" aria-hidden />
+              <FaIcon name="circle-info" size="extraSmall" />
               {introMetaLabel(timeLimitMinutes, maxAttempts)} — edit in Settings.
             </p>
           </div>

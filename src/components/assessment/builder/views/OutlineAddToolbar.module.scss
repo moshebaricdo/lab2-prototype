@@ -1,0 +1,23 @@
+.bar {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.sectionAction {
+  display: flex;
+  align-items: center;
+  padding: 4px 4px 4px 5px;
+  border-right: 1px solid var(--border-neutral-primary);
+}
+
+.typeActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+}

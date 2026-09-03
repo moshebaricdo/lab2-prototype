@@ -148,8 +148,12 @@ export const assessmentBuilderLevelLinks: LevelProgressLink[] = [
     path: "/levels/assessment-builder-seeded",
   },
   {
-    name: "P0 builder (CFU + exam)",
+    name: "P0 builder (attached exam)",
     path: "/levels/assessment-builder-p0",
+  },
+  {
+    name: "P0 builder (floating draft)",
+    path: "/levels/assessment-builder-p0-draft",
   },
 ];
 

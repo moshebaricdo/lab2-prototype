@@ -52,7 +52,14 @@ export const mockP0ExamAssessment: AssessmentArtifact = {
   id: "draft-p0",
   courseId: "aif-cert",
   title: "AI Foundations Certification Exam",
-  lessonName: "AI Foundations",
+  lessonName: "AIF Practice Exam",
+  placement: {
+    kind: "attached",
+    courseId: "aif-cert",
+    courseLabel: "AI Foundations",
+    unitId: "aif-unit-models",
+    unitLabel: "Unit 3",
+  },
   mode: "exam",
   layout: "stepped",
   metadata: {
@@ -75,6 +82,7 @@ export const mockP0ExamAssessment: AssessmentArtifact = {
   sections: [
     {
       id: "sec-p0-supervised",
+      title: "Supervised Learning",
       questionRefs: [
         { type: "bank", bankId: "q-aif-multi-1" },
         { type: "bank", bankId: "q-aif-match-1" },
@@ -83,6 +91,7 @@ export const mockP0ExamAssessment: AssessmentArtifact = {
     },
     {
       id: "sec-p0-responsible",
+      title: "Responsible AI",
       questionRefs: [
         { type: "bank", bankId: "q-aif-multi-4" },
         { type: "bank", bankId: "q-aif-multi-2" },
@@ -91,6 +100,7 @@ export const mockP0ExamAssessment: AssessmentArtifact = {
     },
     {
       id: "sec-p0-models",
+      title: "Models in Practice",
       questionRefs: [
         { type: "bank", bankId: "q-aif-code-1" },
         { type: "bank", bankId: "q-aif-parsons-1" },
@@ -110,5 +120,25 @@ When you are ready, begin the exam.`,
     timeMinutes: 45,
     attempts: 1,
   },
+  updatedAt: Date.now(),
+};
+
+/** P0 floating quiz: not in a live unit. Bank course/unit start empty. */
+export const mockP0FloatingAssessment: AssessmentArtifact = {
+  id: "draft-p0-floating",
+  courseId: "aif-cert",
+  title: "New checkpoint",
+  lessonName: "Untitled",
+  placement: { kind: "floating" },
+  mode: "checkpoint",
+  layout: "stepped",
+  metadata: {
+    ...SHARED_METADATA,
+    levelPosition: 1,
+    assessmentName: "New checkpoint",
+  },
+  questionRefs: [],
+  shuffle: { shuffleQuestions: false, shuffleOptions: false },
+  tutor: { enabled: true, explainWrongAnswers: true },
   updatedAt: Date.now(),
 };

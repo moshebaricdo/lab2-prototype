@@ -2,6 +2,7 @@ import type { AssessmentArtifact } from "../../types/assessmentBuilder";
 import {
   mockBlankAssessment,
   mockP0ExamAssessment,
+  mockP0FloatingAssessment,
   mockSeededAssessment,
 } from "../../data/assessmentBuilder/mockAssessments";
 
@@ -11,6 +12,7 @@ const DEFAULT_DRAFTS: AssessmentArtifact[] = [
   mockBlankAssessment,
   mockSeededAssessment,
   mockP0ExamAssessment,
+  mockP0FloatingAssessment,
 ];
 
 let cachedRaw: string | null = null;
@@ -27,19 +29,50 @@ function mergeMissingDefaultDrafts(drafts: AssessmentArtifact[]): AssessmentArti
 }
 
 /**
- * Upgrade stored drafts that predate sectioned outlines. A draft without a
- * `sections` key was written before sections existed; reseed the P0 exam so
- * the sectioned outline is demoable. (Flattened drafts keep `sections: []`,
- * so this only fires once per legacy store.)
+ * Upgrade stored drafts that predate sectioned outlines, quiz placement,
+ * or named P0 sections. A draft without a `sections` key was written
+ * before sections existed; reseed the P0 exam so the outline is demoable.
+ * Missing placement / seed titles / lesson name fill from the seed
+ * without wiping author edits.
  */
-function hydrateSections(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
+function hydrateDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
   let changed = false;
   const next = drafts.map((draft) => {
-    if (draft.id === mockP0ExamAssessment.id && !("sections" in draft)) {
+    if (draft.id !== mockP0ExamAssessment.id) return draft;
+    if (!("sections" in draft)) {
       changed = true;
       return structuredClone(mockP0ExamAssessment);
     }
-    return draft;
+
+    let updated = draft;
+    if (draft.placement == null) {
+      changed = true;
+      updated = {
+        ...updated,
+        placement: structuredClone(mockP0ExamAssessment.placement),
+      };
+    }
+    if (updated.lessonName === "AI Foundations") {
+      changed = true;
+      updated = { ...updated, lessonName: mockP0ExamAssessment.lessonName };
+    }
+
+    const seedById = new Map(
+      (mockP0ExamAssessment.sections ?? []).map((section) => [
+        section.id,
+        section.title,
+      ]),
+    );
+    const sections = (updated.sections ?? []).map((section) => {
+      const seedTitle = seedById.get(section.id);
+      if (!seedTitle || section.title?.trim()) return section;
+      changed = true;
+      return { ...section, title: seedTitle };
+    });
+    if (sections !== updated.sections) {
+      updated = { ...updated, sections };
+    }
+    return updated;
   });
   return changed ? next : drafts;
 }
@@ -55,7 +88,7 @@ function readDrafts(): AssessmentArtifact[] {
       return cachedDrafts;
     }
     const parsed = JSON.parse(raw) as AssessmentArtifact[];
-    const merged = hydrateSections(mergeMissingDefaultDrafts(parsed));
+    const merged = hydrateDrafts(mergeMissingDefaultDrafts(parsed));
     if (merged !== parsed || merged.length !== parsed.length) {
       writeDrafts(merged, { notify: false });
       return merged;

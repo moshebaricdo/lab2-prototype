@@ -1,5 +1,6 @@
-/* P0 outline canvas. The `--outline-*` vars define the shared left-gutter
- * grid every block type (question, intro, section, add rows) aligns to. */
+/* P0 outline canvas. Padding and type match Figma Lab 2 Frame (197:47986). */
+
+@use "../../../../styles/_mixins.scss" as *;
 
 .root {
   flex: 1;
@@ -7,36 +8,23 @@
 }
 
 .inner {
-  --outline-indent: 16px;
-  --outline-handle: 20px;
-  --outline-index: 34px;
-  --outline-icon: 18px;
-  --outline-gap: 8px;
-  --outline-pad-x: 12px;
-  --outline-block-gap: 8px;
-
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 840px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 28px 24px 64px;
+  padding: 64px 64px 88px;
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  /* Left-align the overview with block content, not the rail gutter. */
-  padding-left: var(--outline-indent);
+  gap: 8px;
 }
 
 .title {
   margin: 0;
-  font-family: var(--font-heading);
-  font-size: var(--text-heading-lg);
-  font-weight: var(--font-weight-semi-bold);
-  line-height: 1.2;
+  @include type-heading-h2-semibold;
   color: var(--text-neutral-primary);
 }
 
@@ -44,17 +32,14 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
 }
 
 .metaItem {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-regular);
-  line-height: var(--leading-body-sm);
+  gap: 6px;
+  @include type-body-3-regular;
   color: var(--text-neutral-tertiary);
 
   [data-fa-icon] {
@@ -65,24 +50,13 @@
 .outline {
   display: flex;
   flex-direction: column;
-  gap: var(--outline-block-gap);
-}
-
-/* Top-level blocks reserve the rail gutter so flat and sectioned states
- * keep identical card x-positions. */
-.indent {
-  display: flex;
-  flex-direction: column;
-  margin-left: var(--outline-indent);
+  width: 100%;
 }
 
 .emptyHint {
   margin: 0;
-  margin-left: var(--outline-indent);
-  padding: 8px calc(var(--outline-pad-x) + 1px) 0;
-  font-family: var(--font-family-main);
-  font-size: var(--text-body-sm);
-  line-height: var(--leading-body-sm);
+  padding: 8px 0 0;
+  @include type-body-3-regular;
   color: var(--text-neutral-quaternary);
 }
 
@@ -91,24 +65,19 @@
   border: 1px solid var(--border-selected-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
-  box-shadow:
-    0 8px 24px color-mix(in srgb, var(--background-neutral-black-fixed) 16%, transparent),
-    0 0 0 1px var(--border-selected-primary);
+  box-shadow: var(--shadow-md);
   cursor: grabbing;
 }
 
 .dragSection {
   display: flex;
   align-items: center;
-  gap: var(--outline-gap);
-  min-height: 36px;
-  /* Border replaces the collapsed header's +1px compensation. */
-  padding: 4px var(--outline-pad-x);
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 0 2px 6px;
   border: 1px solid var(--border-selected-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
-  box-shadow:
-    0 8px 24px color-mix(in srgb, var(--background-neutral-black-fixed) 16%, transparent),
-    0 0 0 1px var(--border-selected-primary);
+  box-shadow: var(--shadow-md);
   cursor: grabbing;
 }

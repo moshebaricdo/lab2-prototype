@@ -1,6 +1,6 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { Button, Tag, Tooltip } from "@moshebaricdo/cads-react";
-import { FaIcon } from "../../../ui/icons/FaIcon";
+import { FaIcon } from "@moshebaricdo/cads-react/icons";
 import type { UnitOption } from "../../../../lib/assessmentBuilder";
 import type { QuestionItem } from "../../../../types/assessmentBuilder";
 import { QuestionItemEditor } from "./QuestionItemEditor";
@@ -12,46 +12,43 @@ export type OutlineRefType = "bank" | "inline";
 
 interface QuestionRowContentProps {
   question: QuestionItem;
-  outlineNumber: string;
-  /** Hide the grab affordance (intro-style pinned rows, drag overlay). */
+  /** Hide the grab affordance (expanded rows, drag overlay still shows it). */
   showHandle?: boolean;
   dragHandleProps?: Record<string, unknown>;
   actions?: React.ReactNode;
 }
 
 /**
- * Collapsed row anatomy (locked spec): grab · index · type icon · internal
- * name · stem peek · actions. Also rendered inside the drag overlay.
+ * Collapsed row anatomy: type icon (drag handle) · internal name · stem
+ * peek · outlined edit · minus. Also rendered inside the drag overlay.
  */
 export function QuestionRowContent({
   question,
-  outlineNumber,
   showHandle = true,
   dragHandleProps,
   actions,
 }: QuestionRowContentProps) {
   const meta = questionKindMeta(question);
+  const icon = <FaIcon name={meta.iconName} size="small" />;
   return (
     <div className={styles.row}>
       {showHandle ? (
-        <button
-          type="button"
-          className={styles.handle}
-          aria-label="Reorder question"
-          onClick={(event) => event.stopPropagation()}
-          {...dragHandleProps}
-        >
-          <FaIcon name="grip-dots-vertical" size="s" aria-hidden />
-        </button>
+        <Tooltip title={meta.label} placement="top">
+          <button
+            type="button"
+            className={styles.kindHandle}
+            aria-label={`Reorder ${meta.label}`}
+            onClick={(event) => event.stopPropagation()}
+            {...dragHandleProps}
+          >
+            {icon}
+          </button>
+        </Tooltip>
       ) : (
-        <span className={styles.handleSpacer} aria-hidden />
-      )}
-      <span className={styles.index}>{outlineNumber}</span>
-      <Tooltip title={meta.label} placement="top">
         <span className={styles.kindIcon} aria-label={meta.label}>
-          <FaIcon name={meta.iconName} size="s" aria-hidden />
+          {icon}
         </span>
-      </Tooltip>
+      )}
       <span className={styles.name}>{question.title}</span>
       <span className={styles.stem}>{question.item.content.prompt.trim()}</span>
       {actions}
@@ -61,7 +58,6 @@ export function QuestionRowContent({
 
 interface OutlineQuestionCardProps {
   question: QuestionItem;
-  outlineNumber: string;
   expanded: boolean;
   /** Card is the active drag source (rendered as placeholder). */
   isDragSource: boolean;
@@ -82,7 +78,6 @@ interface OutlineQuestionCardProps {
 
 export function OutlineQuestionCard({
   question,
-  outlineNumber,
   expanded,
   isDragSource,
   dirty,
@@ -116,11 +111,11 @@ export function OutlineQuestionCard({
     <div className={styles.actions}>
       <Tooltip title="Edit question" placement="top">
         <Button
-          variant="text"
-          color="tertiary"
+          variant="outlined"
+          color="secondary"
           size="extraSmall"
           iconOnly
-          startIconName="pen-to-square"
+          startIconName="pencil"
           aria-label="Edit question"
           onClick={(event) => {
             event.stopPropagation();
@@ -134,7 +129,7 @@ export function OutlineQuestionCard({
           color="tertiary"
           size="extraSmall"
           iconOnly
-          startIconName="trash-can"
+          startIconName="minus"
           aria-label="Remove question"
           className={styles.removeButton}
           onClick={(event) => {
@@ -163,7 +158,6 @@ export function OutlineQuestionCard({
       >
         <QuestionRowContent
           question={question}
-          outlineNumber={outlineNumber}
           showHandle={!expanded}
           dragHandleProps={{ ...listeners, ...attributes }}
           actions={collapsedActions}

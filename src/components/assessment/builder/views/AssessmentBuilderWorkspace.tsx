@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { SegmentedButton } from "@moshebaricdo/cads-react";
+import { useNavigate } from "react-router-dom";
+import { Button, SegmentedButton, Tag } from "@moshebaricdo/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
@@ -19,12 +20,14 @@ import {
   getAllCourseBanksSnapshot,
   getConceptOptionsForCourse,
   getUnitOptionsForCourse,
+  isQuizAttached,
   isQuestionDraftDirty,
   moveQuestionRef,
   moveSection,
   moveSectionToIndex,
   questionRefId,
   removeQuestionRef,
+  renameSection,
   replaceQuestionRef,
   ungroupSection,
   type BlankQuestionKind,
@@ -34,6 +37,7 @@ import type { QuestionItem } from "../../../../types/assessmentBuilder";
 import { AssessmentBuilderPanel } from "./AssessmentBuilderPanel";
 import { AssessmentBuildCanvas } from "./AssessmentBuildCanvas";
 import { AssessmentOutlineCanvas } from "./AssessmentOutlineCanvas";
+import { OutlineAddToolbar } from "./OutlineAddToolbar";
 import { AssessmentArtifactWorkspace } from "./AssessmentArtifactWorkspace";
 import { SaveQuestionPrompt } from "./SaveQuestionPrompt";
 import styles from "./AssessmentBuilderWorkspace.module.scss";
@@ -49,7 +53,7 @@ interface AssessmentBuilderWorkspaceProps {
   assessmentId: string;
   levelLinks?: LevelProgressLink[];
   currentLevelPath?: string;
-  /** P0-aligned authoring: CFU/exam only; course/unit/concept tags; no survey, shuffle, or difficulty. */
+  /** P0-aligned authoring: CFU/exam only; course/unit as bank scope; standards as tags. */
   p0Aligned?: boolean;
 }
 
@@ -59,6 +63,7 @@ export function AssessmentBuilderWorkspace({
   currentLevelPath,
   p0Aligned = false,
 }: AssessmentBuilderWorkspaceProps) {
+  const navigate = useNavigate();
   const { artifact, bankQuestions, resolvedQuestions, updateArtifact } =
     useAssessmentBuilderState(assessmentId);
   const { saveQuestion } = useQuestionBank(artifact?.courseId ?? "aif-cert");
@@ -355,6 +360,10 @@ export function AssessmentBuilderWorkspace({
 
   const handleAddSection = () => updateArtifact(addSection);
 
+  const handleRenameSection = (sectionId: string, title: string) => {
+    updateArtifact((current) => renameSection(current, sectionId, title));
+  };
+
   const handleMoveSectionBy = (sectionId: string, direction: -1 | 1) => {
     updateArtifact((current) => moveSection(current, sectionId, direction));
   };
@@ -404,14 +413,36 @@ export function AssessmentBuilderWorkspace({
   return (
     <Lab2Shell
       topNavigationProps={{
-        title: `${artifact.lessonName} - ${artifact.title}`,
+        title: p0Aligned ? artifact.lessonName : `${artifact.lessonName} - ${artifact.title}`,
         subtitle: p0Aligned
-          ? "P0 assessment builder (CFU + exam)"
+          ? "Saved a few seconds ago"
           : "In-lab assessment builder",
         currentLevel: artifact.metadata.levelPosition,
         totalLevels: levelLinks?.length ?? artifact.metadata.totalLevelsInScript,
         levelLinks,
         currentLevelPath,
+        hideProgression: p0Aligned,
+        leadingActions: p0Aligned ? (
+          <>
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="extraSmall"
+              startIconName="arrow-left"
+              onClick={() => navigate("/levels")}
+            >
+              Back to Levelbuilder
+            </Button>
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="extraSmall"
+              startIconName="floppy-disk"
+            >
+              Save
+            </Button>
+          </>
+        ) : undefined,
       }}
       sidebarProps={{
         activeTab,
@@ -458,7 +489,7 @@ export function AssessmentBuilderWorkspace({
     >
       <div className={styles.workspace}>
         <PanelHeader
-          label="Outline"
+          label="workspace"
           left={
             <SegmentedButton
               size="extraSmall"
@@ -466,6 +497,19 @@ export function AssessmentBuilderWorkspace({
               value={workspaceMode}
               onChange={(value) => setWorkspaceMode(value as WorkspaceMode)}
             />
+          }
+          right={
+            p0Aligned ? (
+              isQuizAttached(artifact.placement) ? (
+                <Tag
+                  color="success"
+                  startIconName="file-half-dashed"
+                  label="Live in 2 scripts"
+                />
+              ) : (
+                <Tag color="neutral" startIconName="file" label="Draft" />
+              )
+            ) : undefined
           }
         />
         <div className={styles.workspaceSurface}>
@@ -486,16 +530,16 @@ export function AssessmentBuilderWorkspace({
                 onUpdateQuestion={handleUpdateQuestionDraft}
                 onRemoveQuestion={handleRemoveQuestionById}
                 onMoveQuestion={handleMoveQuestion}
-                onAddSection={handleAddSection}
                 onMoveSection={handleMoveSectionBy}
                 onMoveSectionToIndex={handleMoveSectionToIndex}
+                onRenameSection={handleRenameSection}
                 onUngroupSection={handleUngroupSection}
                 onDeleteSection={handleDeleteSection}
-                onAddOneOff={handleAddOneOffTo}
-                onOpenBank={handleOpenBankFor}
                 onAddIntro={handleAddIntro}
                 onRemoveIntro={handleRemoveIntro}
                 onUpdateIntroContent={handleUpdateIntroContent}
+                onAddFromBank={handleOpenBankFor}
+                onCreateQuestion={handleAddOneOffTo}
               />
             ) : (
               <AssessmentBuildCanvas
@@ -525,6 +569,15 @@ export function AssessmentBuilderWorkspace({
               stepped={artifact.layout === "stepped"}
               embedded
             />
+          )}
+          {p0Aligned && workspaceMode === "edit" && (
+            <div className={styles.toolbarDock}>
+              <OutlineAddToolbar
+                onAddSection={handleAddSection}
+                onCreateQuestion={(kind) => handleAddOneOffTo(kind, null)}
+                onAddFromBank={() => handleOpenBankFor(null)}
+              />
+            </div>
           )}
         </div>
       </div>
