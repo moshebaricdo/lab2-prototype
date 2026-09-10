@@ -1,44 +1,42 @@
-import { Button, TextInput, Tooltip } from "@moshebaricdo/cads-react";
+import { useEffect, useRef } from "react";
+import { Button, TextInput } from "@moshebaricdo/cads-react";
 import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import type { AssessmentIntro } from "../../../../types/assessmentBuilder";
 import styles from "./OutlineIntroCard.module.scss";
 
 interface OutlineIntroCardProps {
+  title?: string;
   overviewContent: string;
-  timeLimitMinutes?: number;
-  maxAttempts?: number;
   expanded: boolean;
   onExpand: () => void;
   onCollapse: () => void;
-  onUpdateContent: (content: string) => void;
+  onUpdateIntro: (patch: Partial<AssessmentIntro>) => void;
   onRemove: () => void;
 }
 
-function introMetaLabel(timeLimitMinutes?: number, maxAttempts?: number): string {
-  const parts: string[] = [];
-  if (timeLimitMinutes != null) parts.push(`${timeLimitMinutes} minutes`);
-  parts.push(
-    maxAttempts == null
-      ? "Unlimited attempts"
-      : `${maxAttempts} attempt${maxAttempts === 1 ? "" : "s"}`,
-  );
-  return parts.join(" · ");
-}
-
 /**
- * Pinned first block when the assessment has an intro screen. Never
- * draggable; expands in place to edit the overview copy. Time and attempts
- * stay in Settings and render read-only here.
+ * Pinned first block when the quiz shows an intro screen. No tabs — optional
+ * title and markdown content. Remove turns off Show intro in Configuration.
  */
 export function OutlineIntroCard({
+  title,
   overviewContent,
-  timeLimitMinutes,
-  maxAttempts,
   expanded,
   onExpand,
   onCollapse,
-  onUpdateContent,
+  onUpdateIntro,
   onRemove,
 }: OutlineIntroCardProps) {
+  const snapshotRef = useRef({ title: title ?? "", overviewContent });
+  const wasExpanded = useRef(expanded);
+
+  useEffect(() => {
+    if (expanded && !wasExpanded.current) {
+      snapshotRef.current = { title: title ?? "", overviewContent };
+    }
+    wasExpanded.current = expanded;
+  }, [expanded, overviewContent, title]);
+
   const peek = overviewContent.trim().split("\n")[0] ?? "";
 
   return (
@@ -47,78 +45,96 @@ export function OutlineIntroCard({
         .filter(Boolean)
         .join(" ")}
     >
-      <div
-        className={expanded ? undefined : styles.rowClickable}
-        onClick={expanded ? undefined : onExpand}
-      >
+      <div className={styles.headerBar}>
         <div className={styles.row}>
-          <span className={styles.kindIcon} aria-label="Intro screen">
-            <FaIcon name="hand-wave" size="small" />
-          </span>
-          <span className={styles.name}>Intro Screen</span>
-          <span className={styles.stem}>
-            {peek || "Tell learners what to expect before they begin."}
-          </span>
-          <div className={styles.actions}>
-            <Tooltip title="Edit intro" placement="top">
-              <Button
-                variant="outlined"
-                color="secondary"
-                size="extraSmall"
-                iconOnly
-                startIconName="pencil"
-                aria-label="Edit intro screen"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onExpand();
-                }}
-              />
-            </Tooltip>
-            <Tooltip title="Remove intro screen" placement="top">
-              <Button
-                variant="text"
-                color="tertiary"
-                size="extraSmall"
-                iconOnly
-                startIconName="minus"
-                aria-label="Remove intro screen"
-                className={styles.removeButton}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onRemove();
-                }}
-              />
-            </Tooltip>
+          <div className={styles.topRow}>
+            <span className={styles.kindIcon} aria-label="Intro screen">
+              <FaIcon name="hand-wave" size="small" />
+            </span>
+            <span className={styles.preview}>
+              <span className={styles.name}>Intro Screen</span>
+              <span className={styles.stem}>
+                {peek || "Tell learners what to expect before they begin."}
+              </span>
+            </span>
           </div>
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="extraSmall"
+            iconOnly
+            startIconName={expanded ? "chevron-up" : "pencil"}
+            aria-label={expanded ? "Collapse intro" : "Edit intro"}
+            aria-expanded={expanded}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (expanded) onCollapse();
+              else onExpand();
+            }}
+          />
         </div>
       </div>
       {expanded && (
         <>
           <div className={styles.editor}>
             <TextInput
+              label="Intro screen title (optional)"
+              helperText="Leave unset and users will see the name of the quiz level."
+              size="small"
+              color="secondary"
+              value={title ?? ""}
+              onChange={(event) =>
+                onUpdateIntro({
+                  title: event.target.value === "" ? undefined : event.target.value,
+                })
+              }
+            />
+            <TextInput
               multiline
               rows={5}
-              label="Overview"
-              helperText="Shown to learners before the first question."
+              label="Content"
               size="small"
               color="secondary"
               value={overviewContent}
-              onChange={(event) => onUpdateContent(event.target.value)}
+              onChange={(event) =>
+                onUpdateIntro({ overviewContent: event.target.value })
+              }
             />
-            <p className={styles.metaLine}>
-              <FaIcon name="circle-info" size="extraSmall" />
-              {introMetaLabel(timeLimitMinutes, maxAttempts)} — edit in Settings.
-            </p>
           </div>
           <div className={styles.footer}>
             <Button
               variant="outlined"
-              color="secondary"
-              size="small"
-              onClick={onCollapse}
+              color="error"
+              size="extraSmall"
+              onClick={onRemove}
             >
-              Done
+              Remove from quiz
             </Button>
+            <div className={styles.footerActions}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                onClick={() => {
+                  onUpdateIntro({
+                    title: snapshotRef.current.title.trim() || undefined,
+                    overviewContent: snapshotRef.current.overviewContent,
+                  });
+                  onCollapse();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                size="extraSmall"
+                startIconName="floppy-disk"
+                onClick={onCollapse}
+              >
+                Save
+              </Button>
+            </div>
           </div>
         </>
       )}

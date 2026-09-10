@@ -153,7 +153,6 @@ src/
 │   └── assessmentBuilder/          # Canonical schema adapters, bank/draft storage, scoring
 ├── pages/                          # Route-level entry points grouped by level type
 │   ├── aichatlab/
-│   ├── ailab/
 │   ├── bubble-choice/
 │   ├── design-system/              # Standalone DS tooling routes (not level index entries)
 │   │   ├── tokens/                 # CodeAI color system JSON + Figma snapshot for the color sandbox
@@ -187,7 +186,7 @@ src/
 3. `Sidebar` from `components/lab2/resource-panel`
 4. A level-specific workspace, such as `components/ide/weblab2/views/Workspace`, `components/ide/pythonlab/views/PythonWorkspace`, `components/ide/sketchlab/views/SketchLabWorkspace`, `components/ide/aichatlab/views/AiChatLabWorkspace`, `components/ide/ailab/views/AiLabWorkspace`, or an assessment workspace under `components/assessment/<type>/views`
 
-Assessment builder pages compose `AssessmentBuilderWorkspace`, which adds resource-panel **Builder** tabs (`builder-bank`, `builder-settings` via `showBuilderTab`) and previews canonical `AssessmentArtifact` content via adapters in `lib/assessmentBuilder/`. The build outline and inline question editor live in the center canvas (`AssessmentOutlineCanvas` on the P0 route, legacy `AssessmentBuildCanvas` elsewhere; both wrap `QuestionItemEditor`). Resource panel width follows the shared `useLayoutState` default (400px; resize 300–600px).
+Assessment builder pages compose `AssessmentBuilderWorkspace`, which adds resource-panel **Builder** tabs (`builder-bank`, `builder-settings` via `showBuilderTab`) and previews via `QuizAttemptWorkspace`. The build outline and inline question editor live in the center canvas (`AssessmentOutlineCanvas` on the final builder, legacy `AssessmentBuildCanvas` elsewhere).
 
 This keeps feature rendering close to feature folders while the hooks layer keeps cross-cutting state logic isolated.
 
@@ -195,12 +194,14 @@ This keeps feature rendering close to feature folders while the hooks layer keep
 
 Assessment builder is a Lab2 level type with its own workspace chrome under `components/assessment/builder/views/`:
 
-- **`AssessmentBuilderWorkspace`** — `Lab2Shell` composition, `PanelHeader` + Build/Preview toggle, sidebar width defaults, question selection, single-save flow (Done/Save + shared-question prompt)
-- **`AssessmentOutlineCanvas`** (P0 route) — block-based outline: overview header, pinned `OutlineIntroCard`, `OutlineSectionBlock` sections-as-pages, `OutlineQuestionCard` rows, `OutlineAddRow` ghost add rows, dnd-kit drag (questions within/across sections, collapsed-section reorder). `SaveQuestionPrompt` handles the shared-question save decision; `questionKindMeta` centralizes type icons/labels.
+- **`AssessmentBuilderWorkspace`** — `Lab2Shell` composition, Build/Preview toggle, quiz status tag, leave-page dialog, save prompts
+- **`AssessmentOutlineCanvas`** (final builder) — outline, intro card, sections, question tabs, add-question / add-section ghosts
+- **`QuizConfigPanel`** — purpose chooser/dropdown and student settings
+- **`QuizAttemptWorkspace`** — student quiz (also used as Preview) and teacher viewpoints
+- **`QuizPreviewEmptyState`** — Preview tab when the quiz has no questions and intro is off
 - **`CfuQuestionWorkspace`** — student CFU and teacher viewpoints. Single-question incorrect footer layout, last-page labels, and attempt-chip copy live in `lib/assessmentBuilder/studentFooter.ts` and `StudentQuestionCardFooter`. `QuizAttemptChip` is the sitting-count pill. Matching Try again keeps correct pairs via `lib/assessmentBuilder/matchRetry.ts`.
-- **`AssessmentBuildCanvas`** (legacy routes) — draggable question outline, add zone, type tile grid
-- **`AssessmentBuilderPanel`** — bank + settings. P0 bank UI lives in **`QuestionBankPanel`** (search + filter-popover button, result cards per Figma `169:39016`). Legacy bank: course/domain/difficulty.
-- **`AssessmentArtifactWorkspace`** — embedded preview of the full assessment flow
+- **`AssessmentBuildCanvas`** (legacy routes) — older outline
+- **`AssessmentBuilderPanel`** — bank + configuration. Bank preview: **`QuestionBankPreviewModal`**. Question-tab **Standard(s)** and bank filter standards share **`StandardsTypeahead`**.
 
 Sectioned-outline invariants (flat vs fully-sectioned, `page.item` numbering, wrap/flatten, `questionRefs` mirror) live in `lib/assessmentBuilder/outline.ts`.
 

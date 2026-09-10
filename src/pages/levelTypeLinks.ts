@@ -138,7 +138,6 @@ export const assessmentSetLevelLinks: LevelProgressLink[] = [
   },
 ];
 
-
 export const cfuMultiLevelLinks: LevelProgressLink[] = [
   { name: "Multiple choice", path: "/levels/cfu-multi" },
   { name: "Multiple choice: retry", path: "/levels/cfu-multi-retry" },
@@ -292,20 +291,27 @@ export const quizTeacherLevelLinks: LevelProgressLink[] = [
 
 export const assessmentBuilderLevelLinks: LevelProgressLink[] = [
   {
-    name: "New assessment (blank)",
-    path: "/levels/assessment-builder-new",
+    name: "Quiz builder (CFU)",
+    path: "/levels/assessment-builder-p0-cfu",
   },
   {
-    name: "Seeded assessment (6 questions)",
-    path: "/levels/assessment-builder-seeded",
-  },
-  {
-    name: "P0 builder (attached exam)",
+    name: "Quiz builder (exam)",
     path: "/levels/assessment-builder-p0",
   },
   {
-    name: "P0 builder (floating draft)",
+    name: "Quiz builder (new)",
     path: "/levels/assessment-builder-p0-draft",
+  },
+];
+
+export const assessmentBuilderExperimentLinks: LevelProgressLink[] = [
+  {
+    name: "Legacy: new assessment (blank)",
+    path: "/levels/assessment-builder-new",
+  },
+  {
+    name: "Legacy: seeded assessment (6 questions)",
+    path: "/levels/assessment-builder-seeded",
   },
 ];
 

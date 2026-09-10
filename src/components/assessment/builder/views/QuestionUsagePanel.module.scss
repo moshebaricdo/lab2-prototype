@@ -1,0 +1,197 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.toggleBlock {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.helper {
+  margin: 0;
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.statLabel {
+  @include type-label-3;
+  color: var(--text-neutral-primary);
+}
+
+.statValueRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.statValue {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  @include type-body-3-regular;
+  color: var(--text-neutral-primary);
+}
+
+.statValueEmpty {
+  color: var(--text-neutral-placeholder);
+}
+
+.tables {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-p-xxs);
+  width: 100%;
+}
+
+.tableBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.tableTitle {
+  margin: 0;
+  @include type-label-3;
+  color: var(--text-neutral-primary);
+}
+
+.tableFrame {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+}
+
+.row {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 12px;
+}
+
+.headRow {
+  height: 32px;
+  background: var(--background-neutral-secondary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.bodyRow {
+  min-height: 42px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.bodyRow:last-child {
+  border-bottom: none;
+}
+
+.versionsRow {
+  min-height: 0;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.usedInGrid,
+.versionsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 120px 24px;
+  gap: 12px;
+  align-items: center;
+}
+
+.versionsLead {
+  display: grid;
+  grid-column: 1 / 3;
+  grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.headCell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  @include type-overline-3;
+  color: var(--text-neutral-quaternary);
+}
+
+.cell {
+  min-width: 0;
+  @include type-body-3-regular;
+  color: var(--text-neutral-primary);
+}
+
+.cellCluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.versionsGrid .cellCluster {
+  overflow: hidden;
+}
+
+.cellText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inlineTag {
+  flex-shrink: 0;
+}
+
+.muted {
+  color: var(--text-neutral-quaternary);
+}
+
+.emptyRow {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+}
+
+.emptyCell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  @include type-body-3-regular;
+  color: var(--text-neutral-quaternary);
+}

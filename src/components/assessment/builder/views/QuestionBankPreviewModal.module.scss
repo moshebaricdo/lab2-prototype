@@ -1,0 +1,341 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+/* CADS Modal applies className to the surface. Zero default body padding
+ * so the tab bar can sit full-bleed; hide the unused CADS footer. */
+.previewModal > :nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.previewModal > :last-child {
+  display: none;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.tabBar {
+  flex-shrink: 0;
+  width: 100%;
+  padding-inline: 24px;
+  background: var(--background-neutral-secondary);
+}
+
+.tabBar > * {
+  width: 100%;
+  max-width: 100%;
+}
+
+.tabPanel {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 24px 24px;
+}
+
+.tabPane {
+  grid-area: 1 / 1;
+}
+
+.tabPane:not([data-active]) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.stem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.stemHeading {
+  margin: 0;
+  @include type-body-1-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.stemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  @include type-body-3-regular;
+  color: var(--text-neutral-primary);
+
+  :global(p) {
+    margin: 0;
+    @include type-body-3-regular;
+  }
+
+  :global(pre) {
+    margin: 0;
+    overflow-x: auto;
+    padding: 12px 14px;
+    background: var(--background-neutral-primary);
+    border: 1px solid var(--border-neutral-primary);
+    border-radius: var(--shape-sm);
+    font-family: var(--font-family-mono);
+    font-size: var(--text-body-xs);
+  }
+
+  :global(code) {
+    background: var(--background-neutral-secondary);
+    border-radius: var(--shape-sm);
+    font-family: var(--font-family-mono);
+    font-size: var(--text-body-xs);
+    padding: 1px 4px;
+  }
+
+  :global(pre) :global(code) {
+    background: none;
+    padding: 0;
+  }
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 46px;
+  width: 100%;
+  padding: 10px 14px 10px 12px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}
+
+.optionCorrect {
+  background: var(--background-success-light);
+  border-color: var(--border-success-mid, var(--border-success-primary));
+}
+
+.optionMain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.choiceMark {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-disabled-neutral, var(--border-neutral-secondary));
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+}
+
+.choiceCheck {
+  border-radius: var(--shape-sm);
+}
+
+.choiceMarkCorrect {
+  border-color: var(--border-success-primary);
+  color: var(--text-success-primary);
+}
+
+.radioDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--shape-round);
+  background: var(--background-success-primary);
+}
+
+.optionLetter {
+  flex-shrink: 0;
+  @include type-body-2-semibold;
+  color: var(--text-neutral-tertiary);
+}
+
+.optionCorrect .optionLetter {
+  color: var(--text-neutral-primary);
+}
+
+.optionText {
+  min-width: 0;
+  @include type-body-2-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.optionCorrect .optionText {
+  color: var(--text-neutral-primary);
+}
+
+.optionCheck {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: var(--text-success-primary);
+}
+
+.matchList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.matchRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.matchSide {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.matchChip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 46px;
+  min-width: 0;
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--border-success-mid, var(--border-success-primary));
+  border-radius: var(--shape-sm);
+  background: var(--background-success-light);
+}
+
+.knob {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-inline: -8px;
+  border-radius: var(--shape-round);
+  background: var(--background-success-primary);
+  z-index: 1;
+}
+
+.matchLine {
+  flex-shrink: 0;
+  width: 48px;
+  height: 2px;
+  background: var(--background-success-primary);
+}
+
+.matchCheck {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: var(--text-success-primary);
+}
+
+.matchTerm {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  @include type-body-2-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.matchDefinition {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  @include type-body-3-regular;
+  color: var(--text-neutral-primary);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.explanationBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.metaRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+
+.metaBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.standardsBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.detailLabel {
+  @include type-label-3;
+  color: var(--text-neutral-primary);
+}
+
+.detailBody {
+  margin: 0;
+  @include type-body-3-regular;
+  color: var(--text-neutral-primary);
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.footer {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 18px 20px 18px 24px;
+  border-top: 1px solid var(--border-neutral-primary);
+}

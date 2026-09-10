@@ -142,6 +142,10 @@ const AssessmentBuilderP0DraftPage = lazyPage(
   () => import("./pages/assessment-builder/AssessmentBuilderP0DraftPage"),
   "AssessmentBuilderP0DraftPage",
 );
+const AssessmentBuilderP0CfuPage = lazyPage(
+  () => import("./pages/assessment-builder/AssessmentBuilderP0CfuPage"),
+  "AssessmentBuilderP0CfuPage",
+);
 const CfuPages = () => import("./pages/cfu/CfuPages");
 const CfuMultiPage = lazyPage(CfuPages, "CfuMultiPage");
 const CfuMultiRetryPage = lazyPage(CfuPages, "CfuMultiRetryPage");
@@ -744,6 +748,10 @@ export default function App() {
         <Route
           path="/levels/assessment-builder-p0-draft"
           element={<AssessmentBuilderP0DraftPage />}
+        />
+        <Route
+          path="/levels/assessment-builder-p0-cfu"
+          element={<AssessmentBuilderP0CfuPage />}
         />
         <Route path="/levels/cfu-multi" element={<CfuMultiPage />} />
         <Route path="/levels/cfu-multi-retry" element={<CfuMultiRetryPage />} />

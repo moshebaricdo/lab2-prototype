@@ -8,39 +8,37 @@
   flex-direction: column;
 }
 
-.blockPlaceholder {
-  opacity: 0.35;
-}
-
 .header {
   display: flex;
   align-items: center;
   gap: 6px;
   min-height: 28px;
-  padding: 2px 0 2px 6px;
+  padding: 2px 8px 2px 6px;
   border-radius: var(--shape-sm);
   background: var(--background-neutral-secondary);
-  transition:
-    background 0.12s ease,
-    box-shadow 0.12s ease;
-}
-
-.headerCollapsed {
-  cursor: grab;
-  touch-action: none;
-}
-
-.headerCollapsed:hover {
-  background: var(--background-neutral-tertiary);
-}
-
-.headerCollapsed:active {
-  cursor: grabbing;
+  cursor: default;
 }
 
 .headerDropActive {
   background: var(--background-brand-light);
   box-shadow: 0 0 0 1px var(--border-selected-primary);
+}
+
+.collapseHit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.collapseHit:focus-visible {
+  @include focus-ring;
 }
 
 .collapse {
@@ -55,19 +53,16 @@
   border-radius: var(--shape-sm);
   background: transparent;
   color: var(--text-neutral-quaternary);
-  cursor: pointer;
+  pointer-events: none;
   transition:
     background 0.12s ease,
     color 0.12s ease;
 }
 
-.collapse:hover {
+.collapseHit:hover .collapse,
+.collapseHit:focus-visible .collapse {
   background: var(--background-neutral-tertiary);
   color: var(--text-neutral-primary);
-}
-
-.collapse:focus-visible {
-  @include focus-ring;
 }
 
 .overline {
@@ -76,32 +71,18 @@
   color: var(--text-neutral-secondary);
 }
 
-.subtitle {
-  flex-shrink: 1;
-  min-width: 0;
-  overflow: hidden;
+.dot {
+  flex-shrink: 0;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--text-neutral-tertiary);
+}
+
+.count {
+  flex-shrink: 0;
   @include type-body-4-regular;
   color: var(--text-neutral-tertiary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.titleInput {
-  flex-shrink: 1;
-  min-width: 80px;
-  max-width: 220px;
-  height: 24px;
-  padding: 0 6px;
-  border: 1px solid var(--border-neutral-secondary);
-  border-radius: var(--shape-sm);
-  background: var(--background-neutral-primary);
-  @include type-body-4-regular;
-  color: var(--text-neutral-primary);
-}
-
-.titleInput:focus {
-  outline: none;
-  border-color: var(--border-selected-primary);
 }
 
 .headerSpacer {

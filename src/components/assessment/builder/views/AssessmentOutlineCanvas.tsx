@@ -6,6 +6,7 @@ import {
   closestCenter,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
@@ -15,19 +16,23 @@ import { ScrollArea } from "../../../ui/scroll-area";
 import {
   isSectioned,
   questionRefId,
-  sectionDisplayTitle,
+  resolvedAllowRetries,
+  resolvedShowIntro,
   type OutlineDropTarget,
   type UnitOption,
   type BlankQuestionKind,
 } from "../../../../lib/assessmentBuilder";
 import type {
   AssessmentArtifact,
+  AssessmentIntro,
   QuestionItem,
 } from "../../../../types/assessmentBuilder";
 import { OutlineIntroCard } from "./OutlineIntroCard";
 import {
-  OutlineAddIntroRow,
+  OutlineAddQuestionRow,
+  OutlineAddSectionGhost,
   OutlineConnector,
+  OutlineEmptyQuiz,
   OutlineEmptySectionSlot,
 } from "./OutlineAddRow";
 import {
@@ -35,13 +40,22 @@ import {
   QuestionRowContent,
   type OutlineRefType,
 } from "./OutlineQuestionCard";
-import {
-  OutlineSectionBlock,
-  SectionHeaderContent,
-} from "./OutlineSectionBlock";
+import { OutlineSectionBlock } from "./OutlineSectionBlock";
+import { SectionDeleteDialog } from "./SectionDeleteDialog";
 import styles from "./AssessmentOutlineCanvas.module.scss";
 
 const FLAT_END_ID = "end:flat";
+const EXPAND_SCROLL_OFFSET_PX = 52;
+
+/** Prefer question / end slots so section headers don't steal within-section drops. */
+const questionFirstCollision: CollisionDetection = (args) => {
+  const collisions = closestCenter(args);
+  const preferred = collisions.filter((collision) => {
+    const id = String(collision.id);
+    return id.startsWith("q:") || id.startsWith("end:");
+  });
+  return preferred.length > 0 ? preferred : collisions;
+};
 
 interface OutlineItemView {
   bankId: string;
@@ -51,15 +65,11 @@ interface OutlineItemView {
 
 interface OutlineSectionView {
   id: string;
-  title?: string;
   displayTitle: string;
   items: OutlineItemView[];
 }
 
-type ActiveDrag =
-  | { kind: "question"; bankId: string }
-  | { kind: "section"; sectionId: string }
-  | null;
+type ActiveDrag = { kind: "question"; bankId: string } | null;
 
 function insertAt<T>(items: T[], index: number, item: T): T[] {
   const at = Math.max(0, Math.min(items.length, index));
@@ -71,29 +81,25 @@ interface AssessmentOutlineCanvasProps {
   /** bankId → resolved question, with the in-flight editing draft overlaid. */
   questionsById: Map<string, QuestionItem>;
   selectedBankId: string | null;
-  isQuestionDirty: boolean;
+  dirtyBankIds: Set<string>;
   courseOptions: Array<{ value: string; label: string }>;
   getDomainOptionsForCourse: (courseId: string) => Array<{ value: string; label: string }>;
   getUnitOptionsForCourse: (courseId: string) => UnitOption[];
   onExpandQuestion: (bankId: string) => void;
-  /** Close the editor without committing (Done when clean / Discard when dirty). */
-  onCloseEditor: () => void;
-  /** Single-save entry point — the workspace decides direct save vs prompt. */
+  onCollapseQuestion: () => void;
   onRequestSave: () => void;
-  onAddDraftToBank: () => void;
+  onCancelEdits: () => void;
+  onDiscardUnsaved: (bankId: string) => void;
   onUpdateQuestion: (question: QuestionItem) => void;
   onRemoveQuestion: (bankId: string) => void;
   onMoveQuestion: (bankId: string, target: OutlineDropTarget) => void;
   onMoveSection: (sectionId: string, direction: -1 | 1) => void;
-  onMoveSectionToIndex: (sectionId: string, index: number) => void;
-  onRenameSection: (sectionId: string, title: string) => void;
-  onUngroupSection: (sectionId: string) => void;
+  onInsertSection: (sectionId: string, position: "above" | "below") => void;
   onDeleteSection: (sectionId: string) => void;
-  onAddIntro: () => void;
+  onUpdateIntro: (patch: Partial<AssessmentIntro>) => void;
   onRemoveIntro: () => void;
-  onUpdateIntroContent: (content: string) => void;
-  onAddFromBank: (sectionId: string) => void;
-  onCreateQuestion: (kind: BlankQuestionKind, sectionId: string) => void;
+  onCreateQuestion: (kind: BlankQuestionKind, sectionId: string | null) => void;
+  onAddSection: () => void;
 }
 
 /**
@@ -104,27 +110,25 @@ export function AssessmentOutlineCanvas({
   artifact,
   questionsById,
   selectedBankId,
-  isQuestionDirty,
+  dirtyBankIds,
   courseOptions,
   getDomainOptionsForCourse,
   getUnitOptionsForCourse,
   onExpandQuestion,
-  onCloseEditor,
+  onCollapseQuestion,
   onRequestSave,
-  onAddDraftToBank,
+  onCancelEdits,
+  onDiscardUnsaved,
   onUpdateQuestion,
   onRemoveQuestion,
   onMoveQuestion,
   onMoveSection,
-  onMoveSectionToIndex,
-  onRenameSection,
-  onUngroupSection,
+  onInsertSection,
   onDeleteSection,
-  onAddIntro,
+  onUpdateIntro,
   onRemoveIntro,
-  onUpdateIntroContent,
-  onAddFromBank,
   onCreateQuestion,
+  onAddSection,
 }: AssessmentOutlineCanvasProps) {
   const sectioned = isSectioned(artifact);
 
@@ -132,9 +136,13 @@ export function AssessmentOutlineCanvas({
   const [introExpanded, setIntroExpanded] = useState(false);
   const [activeDrag, setActiveDrag] = useState<ActiveDrag>(null);
   const [questionTarget, setQuestionTarget] = useState<OutlineDropTarget | null>(null);
-  const [sectionTargetIndex, setSectionTargetIndex] = useState<number | null>(null);
   const [overDroppableId, setOverDroppableId] = useState<string | null>(null);
   const [overlayWidth, setOverlayWidth] = useState<number | null>(null);
+  const [sectionDelete, setSectionDelete] = useState<{
+    id: string;
+    displayTitle: string;
+    questionCount: number;
+  } | null>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const sensors = useSensors(
@@ -143,16 +151,30 @@ export function AssessmentOutlineCanvas({
 
   useEffect(() => {
     if (!selectedBankId) return;
-    const node = cardRefs.current.get(selectedBankId);
-    node?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    const bankId = selectedBankId;
+    const frame = window.requestAnimationFrame(() => {
+      const node = cardRefs.current.get(bankId);
+      if (!node) return;
+      const viewport = node.closest("[data-slot=\"scroll-area-viewport\"]");
+      if (viewport instanceof HTMLElement) {
+        const top =
+          node.getBoundingClientRect().top -
+          viewport.getBoundingClientRect().top +
+          viewport.scrollTop -
+          EXPAND_SCROLL_OFFSET_PX;
+        viewport.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+        return;
+      }
+      node.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [selectedBankId]);
 
   const baseSections = useMemo<OutlineSectionView[] | null>(() => {
     if (!sectioned) return null;
     return (artifact.sections ?? []).map((section, index) => ({
       id: section.id,
-      title: section.title,
-      displayTitle: sectionDisplayTitle(section, index),
+      displayTitle: `Section ${index + 1}`,
       items: section.questionRefs.flatMap((ref) => {
         const question = questionsById.get(questionRefId(ref));
         return question
@@ -176,16 +198,6 @@ export function AssessmentOutlineCanvas({
   const preview = useMemo(() => {
     let sections = baseSections;
     let flat = baseFlat;
-
-    if (activeDrag?.kind === "section" && sections && sectionTargetIndex != null) {
-      const from = sections.findIndex((entry) => entry.id === activeDrag.sectionId);
-      if (from !== -1 && from !== sectionTargetIndex) {
-        const next = [...sections];
-        const [moved] = next.splice(from, 1);
-        next.splice(Math.max(0, Math.min(next.length, sectionTargetIndex)), 0, moved);
-        sections = next;
-      }
-    }
 
     if (activeDrag?.kind === "question" && questionTarget) {
       if (sections) {
@@ -216,7 +228,7 @@ export function AssessmentOutlineCanvas({
     }
 
     return { sections, flat };
-  }, [activeDrag, baseFlat, baseSections, questionTarget, sectionTargetIndex]);
+  }, [activeDrag, baseFlat, baseSections, questionTarget]);
 
   /** Locate a question within the base outline (index within its own list). */
   const findLocation = (bankId: string): OutlineDropTarget | null => {
@@ -238,12 +250,6 @@ export function AssessmentOutlineCanvas({
       const bankId = id.slice(2);
       setActiveDrag({ kind: "question", bankId });
       setQuestionTarget(findLocation(bankId));
-    } else if (id.startsWith("sec:")) {
-      const sectionId = id.slice(4);
-      setActiveDrag({ kind: "section", sectionId });
-      setSectionTargetIndex(
-        (baseSections ?? []).findIndex((entry) => entry.id === sectionId),
-      );
     }
   };
 
@@ -285,19 +291,11 @@ export function AssessmentOutlineCanvas({
       }
       return;
     }
-
-    if (overId.startsWith("sec:")) {
-      const overIndex = (baseSections ?? []).findIndex(
-        (entry) => entry.id === overId.slice(4),
-      );
-      if (overIndex !== -1) setSectionTargetIndex(overIndex);
-    }
   };
 
   const resetDrag = () => {
     setActiveDrag(null);
     setQuestionTarget(null);
-    setSectionTargetIndex(null);
     setOverDroppableId(null);
     setOverlayWidth(null);
   };
@@ -313,67 +311,27 @@ export function AssessmentOutlineCanvas({
         onMoveQuestion(activeDrag.bankId, questionTarget);
       }
     }
-    if (
-      activeDrag?.kind === "section" &&
-      sectionTargetIndex != null &&
-      event.over
-    ) {
-      onMoveSectionToIndex(activeDrag.sectionId, sectionTargetIndex);
-    }
     resetDrag();
   };
 
   const handleExpand = (bankId: string) => {
-    if (
-      selectedBankId &&
-      selectedBankId !== bankId &&
-      isQuestionDirty &&
-      !window.confirm("Discard unsaved changes to the open question?")
-    ) {
-      return;
-    }
     onExpandQuestion(bankId);
   };
 
   const handleRemove = (item: OutlineItemView) => {
-    const expanded = selectedBankId === item.bankId;
-    if (expanded && isQuestionDirty) {
-      if (!window.confirm("Discard unsaved changes and remove this question?")) return;
-    } else if (item.refType === "inline") {
-      if (
-        !window.confirm(
-          "Remove this question? One-off questions aren't kept anywhere else.",
-        )
-      ) {
-        return;
-      }
-    }
     onRemoveQuestion(item.bankId);
   };
 
   const handleDeleteSection = (section: OutlineSectionView) => {
-    if (
-      section.items.length > 0 &&
-      !window.confirm(
-        `Delete ${section.displayTitle} and its ${section.items.length} question${
-          section.items.length === 1 ? "" : "s"
-        }?`,
-      )
-    ) {
+    if (section.items.length === 0) {
+      onDeleteSection(section.id);
       return;
     }
-    onDeleteSection(section.id);
-  };
-
-  const handleRemoveIntro = () => {
-    if (
-      artifact.intro?.overviewContent.trim() &&
-      !window.confirm("Remove the intro screen? Its overview copy will be lost.")
-    ) {
-      return;
-    }
-    setIntroExpanded(false);
-    onRemoveIntro();
+    setSectionDelete({
+      id: section.id,
+      displayTitle: section.displayTitle,
+      questionCount: section.items.length,
+    });
   };
 
   const toggleSectionCollapsed = (sectionId: string) => {
@@ -393,16 +351,17 @@ export function AssessmentOutlineCanvas({
       isDragSource={
         activeDrag?.kind === "question" && activeDrag.bankId === item.bankId
       }
-      dirty={selectedBankId === item.bankId && isQuestionDirty}
-      refType={item.refType}
+      dirty={dirtyBankIds.has(item.bankId)}
       graded
       courseOptions={courseOptions}
       domainOptions={getDomainOptionsForCourse(item.question.courseId)}
       unitOptions={getUnitOptionsForCourse(item.question.courseId)}
+      currentQuizTitle={artifact.title}
       onExpand={() => handleExpand(item.bankId)}
+      onCollapse={onCollapseQuestion}
       onRequestSave={onRequestSave}
-      onDiscard={onCloseEditor}
-      onAddToBank={onAddDraftToBank}
+      onDiscard={() => onDiscardUnsaved(item.bankId)}
+      onCancelEdits={onCancelEdits}
       onRemove={() => handleRemove(item)}
       onUpdateQuestion={onUpdateQuestion}
       setCardRef={(node) => {
@@ -415,25 +374,27 @@ export function AssessmentOutlineCanvas({
   const questionCount = sectioned
     ? (baseSections ?? []).reduce((sum, section) => sum + section.items.length, 0)
     : (baseFlat ?? []).length;
+  const isEmptyQuiz = !sectioned && questionCount === 0;
+  const showAddSectionGhost = !isEmptyQuiz;
 
   const activeQuestion =
     activeDrag?.kind === "question"
       ? questionsById.get(activeDrag.bankId) ?? null
       : null;
-  const activeSection =
-    activeDrag?.kind === "section"
-      ? preview.sections?.find((entry) => entry.id === activeDrag.sectionId) ?? null
-      : null;
-  const activeSectionNumber = activeSection
-    ? (preview.sections?.findIndex((entry) => entry.id === activeSection.id) ?? 0) + 1
-    : 0;
 
+  const retries = resolvedAllowRetries(artifact);
   const maxAttempts = artifact.attempts?.maxAttempts;
   const timeLimit = artifact.timing?.timeLimitMinutes;
-  const showIntroGhost = artifact.mode === "exam" && !artifact.intro;
+  const showIntro = resolvedShowIntro(artifact) && Boolean(artifact.intro);
+  const attemptsLabel = !retries
+    ? "1 attempt"
+    : maxAttempts == null
+      ? "Unlimited attempts"
+      : `${maxAttempts} attempt${maxAttempts === 1 ? "" : "s"}`;
 
   return (
-    <ScrollArea className={styles.root}>
+    <>
+      <ScrollArea className={styles.root}>
       <div className={styles.inner}>
         <header className={styles.header}>
           <h1 className={styles.title}>{artifact.title}</h1>
@@ -450,53 +411,48 @@ export function AssessmentOutlineCanvas({
             )}
             <span className={styles.metaItem}>
               <FaIcon
-                name={maxAttempts == null ? "infinity" : "arrows-rotate"}
+                name={maxAttempts == null && retries ? "infinity" : "bullseye-arrow"}
                 size="small"
               />
-              {maxAttempts == null
-                ? "Unlimited attempts"
-                : `${maxAttempts} attempt${maxAttempts === 1 ? "" : "s"}`}
+              {attemptsLabel}
             </span>
           </div>
         </header>
 
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={questionFirstCollision}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
           onDragCancel={resetDrag}
         >
           <div className={styles.outline}>
-            {artifact.intro ? (
+            {showIntro && artifact.intro ? (
               <OutlineIntroCard
+                title={artifact.intro.title}
                 overviewContent={artifact.intro.overviewContent}
-                timeLimitMinutes={timeLimit}
-                maxAttempts={maxAttempts}
                 expanded={introExpanded}
                 onExpand={() => setIntroExpanded(true)}
                 onCollapse={() => setIntroExpanded(false)}
-                onUpdateContent={onUpdateIntroContent}
-                onRemove={handleRemoveIntro}
+                onUpdateIntro={onUpdateIntro}
+                onRemove={onRemoveIntro}
               />
-            ) : (
-              showIntroGhost && (
-                <OutlineAddIntroRow
-                  onClick={() => {
-                    onAddIntro();
-                    setIntroExpanded(true);
-                  }}
-                />
-              )
-            )}
+            ) : null}
 
-            {preview.sections
+            {isEmptyQuiz ? (
+              <>
+                {showIntro ? <OutlineConnector size="section" /> : null}
+                <OutlineEmptyQuiz
+                  onCreateQuestion={(kind) => onCreateQuestion(kind, null)}
+                  onAddSection={onAddSection}
+                />
+              </>
+            ) : preview.sections
               ? preview.sections.map((section, sectionIndex) => {
                   const collapsed = collapsedIds.has(section.id);
                   const showLeadConnector =
-                    Boolean(artifact.intro) ||
-                    showIntroGhost ||
+                    showIntro ||
                     sectionIndex > 0;
                   return (
                     <div key={section.id}>
@@ -505,16 +461,12 @@ export function AssessmentOutlineCanvas({
                       )}
                       <OutlineSectionBlock
                         sectionId={section.id}
-                        title={section.title}
                         displayTitle={section.displayTitle}
                         sectionNumber={sectionIndex + 1}
+                        questionCount={section.items.length}
                         collapsed={collapsed}
                         isFirst={sectionIndex === 0}
                         isLast={sectionIndex === preview.sections!.length - 1}
-                        isDragSource={
-                          activeDrag?.kind === "section" &&
-                          activeDrag.sectionId === section.id
-                        }
                         isQuestionDropTarget={
                           activeDrag?.kind === "question" &&
                           overDroppableId === `sec:${section.id}`
@@ -522,12 +474,10 @@ export function AssessmentOutlineCanvas({
                         onToggleCollapsed={() =>
                           toggleSectionCollapsed(section.id)
                         }
-                        onRenameTitle={(nextTitle) =>
-                          onRenameSection(section.id, nextTitle)
-                        }
                         onMoveUp={() => onMoveSection(section.id, -1)}
                         onMoveDown={() => onMoveSection(section.id, 1)}
-                        onUngroup={() => onUngroupSection(section.id)}
+                        onAddAbove={() => onInsertSection(section.id, "above")}
+                        onAddBelow={() => onInsertSection(section.id, "below")}
                         onDelete={() => handleDeleteSection(section)}
                       >
                         {!collapsed && (
@@ -540,7 +490,6 @@ export function AssessmentOutlineCanvas({
                               activeDrag?.kind === "question" &&
                               overDroppableId === `end:${section.id}`
                             }
-                            onAddFromBank={() => onAddFromBank(section.id)}
                             onCreateQuestion={(kind) =>
                               onCreateQuestion(kind, section.id)
                             }
@@ -555,14 +504,19 @@ export function AssessmentOutlineCanvas({
                           </div>
                         ))}
                         {!collapsed && section.items.length > 0 && (
-                          <OutlineConnector
-                            size="item"
-                            droppableId={`end:${section.id}`}
-                            isDropActive={
-                              activeDrag?.kind === "question" &&
-                              overDroppableId === `end:${section.id}`
-                            }
-                          />
+                          <>
+                            <OutlineConnector size="item" />
+                            <OutlineAddQuestionRow
+                              droppableId={`end:${section.id}`}
+                              isDropActive={
+                                activeDrag?.kind === "question" &&
+                                overDroppableId === `end:${section.id}`
+                              }
+                              onCreateQuestion={(kind) =>
+                                onCreateQuestion(kind, section.id)
+                              }
+                            />
+                          </>
                         )}
                       </OutlineSectionBlock>
                     </div>
@@ -572,7 +526,7 @@ export function AssessmentOutlineCanvas({
                 <>
                   {(preview.flat ?? []).map((item, index) => (
                     <div key={item.bankId}>
-                      {(index > 0 || artifact.intro || showIntroGhost) && (
+                      {(index > 0 || showIntro) && (
                         <OutlineConnector
                           size={index === 0 ? "section" : "item"}
                         />
@@ -580,22 +534,27 @@ export function AssessmentOutlineCanvas({
                       {renderQuestionCard(item)}
                     </div>
                   ))}
-                  {(preview.flat ?? []).length === 0 && (
-                    <p className={styles.emptyHint}>
-                      No questions yet — add one from the question bank or
-                      create a new one.
-                    </p>
+                  {(preview.flat ?? []).length > 0 && (
+                    <>
+                      <OutlineConnector size="item" />
+                      <OutlineAddQuestionRow
+                        droppableId={FLAT_END_ID}
+                        isDropActive={
+                          activeDrag?.kind === "question" &&
+                          overDroppableId === FLAT_END_ID
+                        }
+                        onCreateQuestion={(kind) => onCreateQuestion(kind, null)}
+                      />
+                    </>
                   )}
-                  <OutlineConnector
-                    size="section"
-                    droppableId={FLAT_END_ID}
-                    isDropActive={
-                      activeDrag?.kind === "question" &&
-                      overDroppableId === FLAT_END_ID
-                    }
-                  />
                 </>
               )}
+            {showAddSectionGhost ? (
+              <>
+                <OutlineConnector size="section" />
+                <OutlineAddSectionGhost onClick={onAddSection} />
+              </>
+            ) : null}
           </div>
 
           <DragOverlay dropAnimation={null}>
@@ -606,21 +565,22 @@ export function AssessmentOutlineCanvas({
               >
                 <QuestionRowContent question={activeQuestion} />
               </div>
-            ) : activeSection ? (
-              <div
-                className={styles.dragSection}
-                style={overlayWidth ? { width: overlayWidth } : undefined}
-              >
-                <SectionHeaderContent
-                  sectionNumber={activeSectionNumber}
-                  title={activeSection.title}
-                  collapsed
-                />
-              </div>
             ) : null}
           </DragOverlay>
         </DndContext>
       </div>
-    </ScrollArea>
+      </ScrollArea>
+      <SectionDeleteDialog
+        open={sectionDelete != null}
+        displayTitle={sectionDelete?.displayTitle ?? "this section"}
+        questionCount={sectionDelete?.questionCount ?? 0}
+        onConfirm={() => {
+          if (!sectionDelete) return;
+          onDeleteSection(sectionDelete.id);
+          setSectionDelete(null);
+        }}
+        onCancel={() => setSectionDelete(null)}
+      />
+    </>
   );
 }

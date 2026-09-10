@@ -1,76 +1,97 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { Button, Tag, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Tabs, Tag, Tooltip } from "@moshebaricdo/cads-react";
 import { FaIcon } from "@moshebaricdo/cads-react/icons";
 import type { UnitOption } from "../../../../lib/assessmentBuilder";
+import { newQuestionHeaderLabel } from "../../../../lib/assessmentBuilder";
 import type { QuestionItem } from "../../../../types/assessmentBuilder";
 import { QuestionItemEditor } from "./QuestionItemEditor";
 import { questionKindMeta } from "./questionKindMeta";
 import styles from "./OutlineQuestionCard.module.scss";
 
-/** Provenance of the outline entry — drives the save affordances. */
 export type OutlineRefType = "bank" | "inline";
+export type QuestionEditorTab = "question" | "answers" | "usage";
 
 interface QuestionRowContentProps {
   question: QuestionItem;
-  /** Hide the grab affordance (expanded rows, drag overlay still shows it). */
   showHandle?: boolean;
-  dragHandleProps?: Record<string, unknown>;
   actions?: React.ReactNode;
 }
 
 /**
- * Collapsed row anatomy: type icon (drag handle) · internal name · stem
- * peek · outlined edit · minus. Also rendered inside the drag overlay.
+ * Collapsed row: type icon (drag handle) · internal name · stem peek ·
+ * hover discard · unsaved warning · outlined pencil. Expanded: chevron-up.
  */
 export function QuestionRowContent({
   question,
   showHandle = true,
-  dragHandleProps,
   actions,
 }: QuestionRowContentProps) {
   const meta = questionKindMeta(question);
   const icon = <FaIcon name={meta.iconName} size="small" />;
+  const name = question.neverSaved
+    ? newQuestionHeaderLabel(question)
+    : question.title;
+  const stem = question.neverSaved
+    ? "Not saved yet"
+    : question.item.content.prompt.trim();
   return (
     <div className={styles.row}>
-      {showHandle ? (
-        <Tooltip title={meta.label} placement="top">
-          <button
-            type="button"
-            className={styles.kindHandle}
-            aria-label={`Reorder ${meta.label}`}
-            onClick={(event) => event.stopPropagation()}
-            {...dragHandleProps}
-          >
+      <div className={styles.topRow}>
+        {showHandle ? (
+          <span className={styles.kindHandle} aria-label={`Reorder ${meta.label}`}>
             {icon}
-          </button>
-        </Tooltip>
-      ) : (
-        <span className={styles.kindIcon} aria-label={meta.label}>
-          {icon}
+          </span>
+        ) : (
+          <span className={styles.kindIcon} aria-label={meta.label}>
+            {icon}
+          </span>
+        )}
+        <span className={styles.preview}>
+          <span className={styles.name}>{name}</span>
+          <span className={styles.stem}>{stem}</span>
         </span>
-      )}
-      <span className={styles.name}>{question.title}</span>
-      <span className={styles.stem}>{question.item.content.prompt.trim()}</span>
+      </div>
       {actions}
     </div>
+  );
+}
+
+function UnsavedChangesTag() {
+  return (
+    <Tooltip title="Unsaved changes" placement="top">
+      <span
+        className={styles.unsavedWrap}
+        role="img"
+        aria-label="Unsaved changes"
+      >
+        <Tag
+          size="medium"
+          color="warning"
+          startIconName="triangle-exclamation"
+          label=""
+          className={styles.unsavedTag}
+        />
+      </span>
+    </Tooltip>
   );
 }
 
 interface OutlineQuestionCardProps {
   question: QuestionItem;
   expanded: boolean;
-  /** Card is the active drag source (rendered as placeholder). */
   isDragSource: boolean;
   dirty: boolean;
-  refType: OutlineRefType;
   graded: boolean;
   courseOptions: Array<{ value: string; label: string }>;
-  domainOptions: Array<{ value: string; label: string }>;
+  domainOptions: Array<{ value: string; label: string; code?: string }>;
   unitOptions: UnitOption[];
+  currentQuizTitle: string;
   onExpand: () => void;
+  onCollapse: () => void;
   onRequestSave: () => void;
   onDiscard: () => void;
-  onAddToBank: () => void;
+  onCancelEdits: () => void;
   onRemove: () => void;
   onUpdateQuestion: (question: QuestionItem) => void;
   setCardRef: (node: HTMLDivElement | null) => void;
@@ -81,15 +102,16 @@ export function OutlineQuestionCard({
   expanded,
   isDragSource,
   dirty,
-  refType,
   graded,
   courseOptions,
   domainOptions,
   unitOptions,
+  currentQuizTitle,
   onExpand,
+  onCollapse,
   onRequestSave,
   onDiscard,
-  onAddToBank,
+  onCancelEdits,
   onRemove,
   onUpdateQuestion,
   setCardRef,
@@ -100,6 +122,19 @@ export function OutlineQuestionCard({
     disabled: expanded,
   });
   const { setNodeRef: setDroppableRef } = useDroppable({ id: dndId });
+  const [tab, setTab] = useState<QuestionEditorTab>("question");
+  const [suppressHoverReveal, setSuppressHoverReveal] = useState(false);
+  const wasExpandedRef = useRef(expanded);
+
+  useLayoutEffect(() => {
+    if (wasExpandedRef.current && !expanded) {
+      setSuppressHoverReveal(true);
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
+    wasExpandedRef.current = expanded;
+  }, [expanded]);
 
   const setNode = (node: HTMLDivElement | null) => {
     setDraggableRef(node);
@@ -107,37 +142,50 @@ export function OutlineQuestionCard({
     setCardRef(node);
   };
 
+  const neverSaved = question.neverSaved === true;
+
+  const stopRowInteraction = (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+  };
+
   const collapsedActions = (
     <div className={styles.actions}>
-      <Tooltip title="Edit question" placement="top">
-        <Button
-          variant="outlined"
-          color="secondary"
-          size="extraSmall"
-          iconOnly
-          startIconName="pencil"
-          aria-label="Edit question"
-          onClick={(event) => {
-            event.stopPropagation();
-            onExpand();
-          }}
-        />
-      </Tooltip>
-      <Tooltip title="Remove from assessment" placement="top">
-        <Button
-          variant="text"
-          color="tertiary"
-          size="extraSmall"
-          iconOnly
-          startIconName="minus"
-          aria-label="Remove question"
-          className={styles.removeButton}
-          onClick={(event) => {
-            event.stopPropagation();
-            onRemove();
-          }}
-        />
-      </Tooltip>
+      {expanded ? null : (
+        <span className={styles.hoverAction}>
+          <Tooltip title="Remove from quiz" placement="top">
+            <Button
+              variant="text"
+              color="error"
+              size="extraSmall"
+              iconOnly
+              startIconName="trash"
+              aria-label={neverSaved ? "Discard question" : "Remove from quiz"}
+              onPointerDown={stopRowInteraction}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (neverSaved) onDiscard();
+                else onRemove();
+              }}
+            />
+          </Tooltip>
+        </span>
+      )}
+      {dirty && !expanded ? <UnsavedChangesTag /> : null}
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        iconOnly
+        startIconName={expanded ? "chevron-up" : "pencil"}
+        aria-label={expanded ? "Collapse question" : "Edit question"}
+        aria-expanded={expanded}
+        onPointerDown={stopRowInteraction}
+        onClick={(event) => {
+          event.stopPropagation();
+          if (expanded) onCollapse();
+          else onExpand();
+        }}
+      />
     </div>
   );
 
@@ -146,25 +194,42 @@ export function OutlineQuestionCard({
       ref={setNode}
       className={[
         styles.card,
-        expanded ? styles.cardExpanded : "",
+        expanded ? styles.cardExpanded : styles.cardCollapsed,
         isDragSource ? styles.cardPlaceholder : "",
+        suppressHoverReveal ? styles.hoverSuppressed : "",
       ]
         .filter(Boolean)
         .join(" ")}
+      {...(expanded ? {} : { ...listeners, ...attributes })}
+      onPointerLeave={() => setSuppressHoverReveal(false)}
     >
-      <div
-        className={expanded ? styles.rowShell : styles.rowShellClickable}
-        onClick={expanded ? undefined : onExpand}
-      >
+      <div className={styles.headerBar}>
         <QuestionRowContent
           question={question}
           showHandle={!expanded}
-          dragHandleProps={{ ...listeners, ...attributes }}
           actions={collapsedActions}
         />
       </div>
       {expanded && !isDragSource && (
         <>
+          <div className={styles.tabs}>
+            <Tabs
+              type="primary"
+              size="extraSmall"
+              aria-label="Question editor"
+              value={tab}
+              onChange={(value) => setTab(value as QuestionEditorTab)}
+              items={[
+                { value: "question", label: "Question" },
+                { value: "answers", label: "Answers" },
+                {
+                  value: "usage",
+                  label: "Usage",
+                  disabled: neverSaved,
+                },
+              ]}
+            />
+          </div>
           <div className={styles.editor}>
             <QuestionItemEditor
               question={question}
@@ -173,48 +238,60 @@ export function OutlineQuestionCard({
               domainOptions={domainOptions}
               unitOptions={unitOptions}
               p0Aligned
+              activeTab={tab}
+              currentQuizTitle={currentQuizTitle}
               onUpdateQuestion={onUpdateQuestion}
             />
           </div>
           <div className={styles.footer}>
             <div className={styles.provenance}>
-              <Tag
-                size="small"
-                color="neutral"
-                startIconName={
-                  refType === "bank" ? "clipboard-question" : "file"
-                }
-                label={
-                  refType === "bank" ? "Shared question" : "This assessment only"
-                }
-              />
-              {refType === "inline" && (
+              {neverSaved ? null : (
                 <Button
-                  variant="text"
-                  color="secondary"
+                  variant="outlined"
+                  color="error"
                   size="extraSmall"
-                  startIconName="clipboard-question"
-                  onClick={onAddToBank}
+                  onClick={onRemove}
                 >
-                  Add to question bank
+                  Remove from quiz
                 </Button>
               )}
             </div>
             <div className={styles.footerActions}>
-              {dirty ? (
+              {neverSaved ? (
                 <>
                   <Button
-                    variant="text"
-                    color="secondary"
-                    size="small"
+                    variant="outlined"
+                    color="error"
+                    size="extraSmall"
                     onClick={onDiscard}
+                  >
+                    Discard
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="extraSmall"
+                    startIconName="floppy-disk"
+                    onClick={onRequestSave}
+                  >
+                    Save
+                  </Button>
+                </>
+              ) : dirty ? (
+                <>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    size="extraSmall"
+                    onClick={onCancelEdits}
                   >
                     Discard changes
                   </Button>
                   <Button
                     variant="contained"
                     color="primary"
-                    size="small"
+                    size="extraSmall"
+                    startIconName="floppy-disk"
                     onClick={onRequestSave}
                   >
                     Save
@@ -224,10 +301,10 @@ export function OutlineQuestionCard({
                 <Button
                   variant="outlined"
                   color="secondary"
-                  size="small"
-                  onClick={onRequestSave}
+                  size="extraSmall"
+                  onClick={onCollapse}
                 >
-                  Done
+                  Close
                 </Button>
               )}
             </div>

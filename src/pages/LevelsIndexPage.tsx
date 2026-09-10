@@ -15,6 +15,7 @@ import {
   agenticProgressionLinks,
   assessmentExperimentLinks,
   assessmentSetLevelLinks,
+  assessmentBuilderExperimentLinks,
   assessmentBuilderLevelLinks,
   aiChatLabLevelLinks,
   aiLabIndexLinks,
@@ -139,12 +140,6 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
         description: "Survey, practice quiz, and exam-style multi-question flows",
         pages: assessmentSetLevelLinks,
       },
-      {
-        levelType: "Assessment builder",
-        description:
-          "In-lab authoring with live preview and question bank. P0 focuses on CFUs and exams; attached vs floating placement scopes the bank.",
-        pages: assessmentBuilderLevelLinks,
-      },
     ],
   },
   {
@@ -175,6 +170,12 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
         description:
           "Teacher viewpoints: view questions, as a student, an in-progress response, and a completed submission.",
         pages: quizTeacherLevelLinks,
+      },
+      {
+        levelType: "Assessment builder",
+        description:
+          "Final quiz builder: CFU, exam, and new Level seeds from the Modernizing Assessments handoff.",
+        pages: assessmentBuilderLevelLinks,
       },
     ],
   },
@@ -816,6 +817,32 @@ export function LevelsIndexPage() {
                 </div>
                 <div className={styles.bubbleRow}>
                   {teacherDashboardExperimentLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>Legacy Assessment Builder</h3>
+                  <p className={styles.cardDescription}>
+                    Kept exploration: blank outline and six-question seeded quiz.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {assessmentBuilderExperimentLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       title={page.name}

@@ -1,5 +1,4 @@
-/* Question bank panel (Figma 169:39016): search + filter button, results
- * overline, and one bordered card per result. */
+/* Question bank panel (Figma 326:42657 / questionListItem 326:42249). */
 
 @use "../../../../styles/_mixins.scss" as *;
 
@@ -7,13 +6,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-p-xxs);
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 
 .searchRow {
   display: flex;
   align-items: flex-start;
-  gap: 4px;
+  gap: 5px;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .searchField {
@@ -28,7 +31,7 @@
 .filterButtonActive {
   --btn-bg: var(--background-selected-primary) !important;
   --btn-fg: var(--text-selected-primary) !important;
-  --btn-border: var(--border-selected-primary) !important;
+  --btn-border: var(--background-selected-primary) !important;
   --btn-bg-hover: var(--background-selected-strong) !important;
   --btn-fg-hover: var(--text-selected-primary) !important;
   --btn-bg-press: var(--background-selected-strong) !important;
@@ -37,103 +40,109 @@
 
 .resultCount {
   margin: 0;
-  padding: 2px 0;
   @include type-overline-3;
-  color: var(--text-neutral-tertiary);
+  color: var(--text-neutral-quaternary);
+  flex-shrink: 0;
 }
 
 .emptyState {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 32px 16px 24px;
+  justify-content: center;
+  gap: 12px;
+  min-height: 0;
+  width: 100%;
   text-align: center;
+}
+
+.emptyContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .emptyIcon {
   display: flex;
-  color: var(--text-neutral-quaternary);
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-septenary);
+  color: var(--text-neutral-primary-inverse);
+}
+
+.emptyMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 250px;
 }
 
 .emptyTitle {
   margin: 0;
-  @include type-heading-h4-semibold;
+  @include type-body-2-semibold;
   color: var(--text-neutral-primary);
 }
 
 .emptyBody {
-  margin: 0 0 4px;
-  max-width: 240px;
+  margin: 0;
   @include type-body-4-regular;
-  color: var(--text-neutral-tertiary);
+  color: var(--text-neutral-secondary);
 }
 
 .resultsList {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-p-xxs);
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
 .resultCard {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 10px 10px 12px;
+  padding: 10px 10px 12px 12px;
   border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-sm);
+  border-radius: var(--shape-lg);
   background: var(--background-neutral-primary);
-  transition:
-    border-color 0.12s ease,
-    box-shadow 0.12s ease;
-}
-
-.resultCard:hover {
-  border-color: var(--border-neutral-secondary);
-  box-shadow: var(--shadow-sm);
 }
 
 .resultTop {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--spacing-p-xxs);
   width: 100%;
 }
 
-.resultMain {
+.resultText {
   display: flex;
   flex-direction: column;
-  gap: 2px;
   min-width: 0;
   flex: 1;
-  padding: 0 12px 0 0;
-  border: none;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-
-.resultMain:disabled {
-  cursor: default;
-}
-
-.resultMain:focus-visible {
-  @include focus-ring;
-  border-radius: var(--shape-sm);
+  padding-right: 12px;
 }
 
 .resultTitleRow {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
-  width: 100%;
+  max-width: 100%;
 }
 
 .resultTitle {
   min-width: 0;
-  flex: 1;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
   @include type-body-3-semibold;
   color: var(--text-neutral-primary);
   overflow: hidden;
@@ -141,16 +150,72 @@
   white-space: nowrap;
 }
 
-.previewEye {
-  flex-shrink: 0;
-  display: flex;
-  opacity: 0;
-  color: var(--text-neutral-tertiary);
-  transition: opacity 0.12s ease;
+button.resultTitle {
+  cursor: pointer;
 }
 
-.resultCard:hover .previewEye {
+button.resultTitle:focus-visible {
+  @include focus-ring;
+  border-radius: var(--shape-sm);
+}
+
+/* Hover slot collapses so the title can use the full row until the eye appears. */
+.previewEyeSlot {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.resultCard:hover .previewEyeSlot,
+.previewEyeSlot:has(:focus-visible) {
+  width: 1.125rem;
   opacity: 1;
+  pointer-events: auto;
+  overflow: visible;
+}
+
+/* CADS CloseIconButton chrome (small / secondary) with an eye glyph. */
+.previewEye {
+  --cib-box: 1.125rem;
+  --cib-icon: 0.75rem;
+  --cib-color: var(--text-neutral-quaternary);
+  --cib-color-hover: var(--text-neutral-primary);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cib-box);
+  height: var(--cib-box);
+  min-width: 0;
+  padding: 0;
+  overflow: visible;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: var(--cib-icon);
+  color: var(--cib-color);
+  background-color: transparent;
+  cursor: pointer;
+  transition: var(--transition-colors);
+}
+
+.previewEye:hover {
+  color: var(--cib-color-hover);
+  background-color: transparent;
+}
+
+.previewEye:active {
+  color: var(--cib-color);
+}
+
+.previewEye:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--background-neutral-primary),
+    0 0 0 4px var(--border-focused-primary);
+  outline: none;
 }
 
 .stemPreview {
@@ -161,9 +226,43 @@
   white-space: nowrap;
 }
 
+.tagsWrap {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
 .resultTags {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.resultTags > * {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.overflowTag {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.tagMeasure {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
 }

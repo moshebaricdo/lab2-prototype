@@ -2,7 +2,7 @@
 
 Living snapshot of **product decisions** and **prototype state** for this workstream. Specs and implementation details live in the linked docs; this file is the turn-by-turn source of truth for what is in, out, and still open.
 
-**Last updated:** 2026-08-28
+**Last updated:** 2026-09-09
 
 **How to maintain:** update this file in the same turn as substantive product or architecture changes (scope, modes, tagging, schema, routes, builder UX model). Skip for visual polish, copy nits, and bugfixes that do not change the model.
 
@@ -12,77 +12,63 @@ Living snapshot of **product decisions** and **prototype state** for this workst
 
 | Route | Role |
 |-------|------|
-| [`/levels/assessment-builder-p0`](/levels/assessment-builder-p0) | **Active P0 prototype.** Seeded cert exam **attached** to AI Foundations · Unit 3. Checkpoint vs Exam settings; Course / Unit **scope** + Standard tags. |
-| [`/levels/assessment-builder-p0-draft`](/levels/assessment-builder-p0-draft) | P0 **floating** draft (not in a live unit). Same builder; bank course/unit start empty. |
-| [`/levels/assessment-builder-new`](/levels/assessment-builder-new) | Legacy exploration — blank quiz outline. Still shows shuffle, difficulty, survey. |
-| [`/levels/assessment-builder-seeded`](/levels/assessment-builder-seeded) | Legacy exploration — six-question quiz (includes a survey item). |
+| [`/levels/assessment-builder-p0`](/levels/assessment-builder-p0) | **Final quiz builder.** Seeded Unit 3 Assessment: AI in Society (12 questions, 4 pages), attached, Live in 2 units. Purpose, Configuration, outline tabs, bank preview. |
+| [`/levels/assessment-builder-p0-cfu`](/levels/assessment-builder-p0-cfu) | **Final quiz builder.** Seeded Unit 2 CFU · Accountability: one two-correct question, flat outline, unpublished. Purpose already set to check for understanding. |
+| [`/levels/assessment-builder-p0-draft`](/levels/assessment-builder-p0-draft) | **Final quiz builder.** New Level (already named in Levelbuilder: AI Foundations Certification Exam), no purpose until the chooser. |
+| [`/levels/cfu-multi`](/levels/cfu-multi) · [`-retry`](/levels/cfu-multi-retry) · [`-continue`](/levels/cfu-multi-continue) · [`-reveal`](/levels/cfu-multi-reveal) · [`-capped`](/levels/cfu-multi-capped) | Student CFU radio: no-retry (S4), must-correct (S5), can-continue (S6), reveal after submit, capped attempts (S9). |
+| [`/levels/cfu-multi-checkboxes`](/levels/cfu-multi-checkboxes) · [`-continue`](/levels/cfu-multi-checkboxes-continue) · [`-no-retry`](/levels/cfu-multi-checkboxes-no-retry) · [`-reveal`](/levels/cfu-multi-checkboxes-reveal) · [`-capped`](/levels/cfu-multi-checkboxes-capped) | Student CFU two-correct: must-correct, can-continue, no-retry, reveal, capped attempts (S9). |
+| [`/levels/cfu-free-response`](/levels/cfu-free-response) · [`-reveal`](/levels/cfu-free-response-reveal) · [`-capped`](/levels/cfu-free-response-capped) | Student CFU FR. File upload row; no correctness chrome. Reveal does not add an explanation card (teacher views show the exemplar only). Capped shows the attempt chip only. |
+| [`/levels/cfu-matching`](/levels/cfu-matching) · [`-retry`](/levels/cfu-matching-retry) · [`-reattempt`](/levels/cfu-matching-reattempt) · [`-continue`](/levels/cfu-matching-continue) · [`-reveal`](/levels/cfu-matching-reveal) · [`-capped`](/levels/cfu-matching-capped) | Student CFU match: no-retry, must-correct, next attempt with correct pairs locked, can-continue, reveal pairs, capped attempts (S9). |
+| [`/levels/cfu-teacher`](/levels/cfu-teacher) · [`-as-student`](/levels/cfu-teacher-as-student) · [`-response`](/levels/cfu-teacher-response) | Teacher CFU viewpoints. `/levels` lists every viewpoint × question type; header bubbles stay per-viewpoint. |
+| [`/levels/quiz-practice`](/levels/quiz-practice) | Student quiz. Intro, 3 questions, one page, retries, correctness. |
+| [`/levels/quiz-exam-retries`](/levels/quiz-exam-retries) | Student exam. 12q / 4 pages, 3 attempts, correctness on. |
+| [`/levels/quiz-exam-final`](/levels/quiz-exam-final) | Student exam. 1 attempt, correctness on (last-attempt confirm). |
+| [`/levels/quiz-exam`](/levels/quiz-exam) | Student exam. 1 attempt, correctness off → submitted receipt. |
+| [`/levels/quiz-exam-resume`](/levels/quiz-exam-resume) | Student exam. In-progress intro; `sessionStorage` restore; **Resume** lands on the last page. |
+| [`/levels/quiz-teacher`](/levels/quiz-teacher) · [`-as-student`](/levels/quiz-teacher-as-student) · [`-response`](/levels/quiz-teacher-response) · [`-response-submitted`](/levels/quiz-teacher-response-submitted) | Teacher quiz viewpoints on the 12-question exam, including an in-progress response and a completed submission. |
+| [`/levels/assessment-builder-new`](/levels/assessment-builder-new) | Kept exploration — blank legacy outline. Listed under Experiments on `/levels`. |
+| [`/levels/assessment-builder-seeded`](/levels/assessment-builder-seeded) | Kept exploration — six-question legacy quiz. Listed under Experiments on `/levels`. |
 
-Learner-facing question types (multi, free response, match, drag-drop, fill-in-blank, levelgroup) remain as rendering references. Canonical authoring going forward is the in-lab builder, not legacy levelgroup.
+Legacy multi / FR / match / levelgroup routes remain as rendering references.
+
+Decision log: [`docs/quiz-authoring-decisions.md`](./quiz-authoring-decisions.md). Figma: [Quiz Builder](https://www.figma.com/design/M7xfogAObPmbyZ1vTz0258/Modernizing-Assessments?node-id=326-38004), [Quiz Experience](https://www.figma.com/design/M7xfogAObPmbyZ1vTz0258/Modernizing-Assessments?node-id=326-48567) (one-question + several-questions + chrome + teacher; former Question Types page). The old Quiz Experience node (`326:58252`) is a pointer.
 
 ---
 
-## P0 decisions (locked)
+## Locked model (final builder)
 
-These came from internal architecture/scoping and are reflected in the P0 builder (`p0Aligned`):
+Quiz is a lab2 `Level`. Four **purposes** seed settings but do not lock them:
 
-| Decision | Implication |
-|----------|-------------|
-| **Prioritize CFUs and exams** | Checkpoint = check for understanding (typically one question in a progression). Exam = timed, high-stakes cert-style assessment. Quiz remains on the schema for legacy drafts only. |
-| **Surveys out of scope** | No survey mode in P0 authoring. Survey copy/checkboxes hidden. Survey bank items hidden in the P0 bank list. |
-| **No shuffling** | Question order and option order stay fixed. Hidden in P0 settings (teacher-dashboard impact we are not resourced to take). |
-| **Drop difficulty** | No beginner/intermediate/advanced on questions. Not authored, filtered, or shown in P0. |
-| **Standards are tags; course/unit are not** | Bank result cards and the item editor show **standards** (and type) only. Course and unit are **scope** (bank filters) and **placement** (this quiz’s `script_level`), never chips on the question. |
-| **Combined Course + Unit filter** | One **Used in course(s) or unit(s)** typeahead: course rows with nested units. Full-course check matches every question in that family; partial units are OR within/across courses. AND with standards and question types. Family-keyed labels, no year suffixes. |
-| **Auto-scope from placement** | Attached quiz → default bank to that family + unit (clearable). Floating (“Draft · not in a live unit”) → leave course/unit empty; name/standard/type still work. |
+| purpose | Seeds (v1) |
+|---|---|
+| `check_for_understanding` | intro off, no timer, retries on (unlimited), require-correct on, correctness on, reveal off, tutor off |
+| `practice` | intro off, retries on (unlimited), require-correct off, correctness on, reveal off, tutor on, layout scroll |
+| `exam` | intro off, retries off (require-correct hidden), correctness off, reveal hidden, tutor off |
+| `exam_simulation` | intro on, retries on (unlimited), require-correct off, correctness off, tutor off |
 
-Mode presets in P0 (`applyP0ModePreset`):
+Create = four purpose cards. Edit = Purpose dropdown. Dirty helper: *These settings differ from a typical [Purpose]. Purpose is unchanged.*
 
-- **Checkpoint (CFU):** stepped, no timer, unlimited attempts, Tutor on, no intro, shuffle off.
-- **Exam:** stepped, timed (default 45 min), 1 attempt, Tutor off, intro on, shuffle off, no mid-attempt reveal.
+Scoring: multi (including two-correct) and match are all-or-nothing. No student Unsubmit. Incomplete submit is allowed with a confirm. Status tags: Not in a unit / Unpublished / Live in N units / Sunsetting / Deprecated.
 
 ---
 
 ## What the P0 builder has today
 
-- Lab2 workspace: **Build** is the block-based outline canvas (`AssessmentOutlineCanvas`) + **Preview** of the full assessment flow. Legacy routes keep the old `AssessmentBuildCanvas`.
-- Outline canvas: uncontainerized overview header (heading-xl title, question count, time, attempts), pinned intro card (exam mode), sections-as-pages with **Section N** + title, single-row question cards, tick connectors, floating add toolbar.
-- Sections: flat vs sectioned is a structural invariant — first **New section** wraps existing questions into Section 1; ungrouping/deleting the last section flattens back. `sections` is authoring truth; flattened `questionRefs` stays in sync for adapters/preview/scoring.
-- Reorder: dnd-kit drag for questions (type icon is the handle; within and across sections) and collapsed sections; expanded sections move via overflow menu (Move up / Move down). Live outline preview while dragging.
-- Add actions: floating toolbar (**New section** + Multiple Choice / Free Response / Matching; More = remaining P0 types + question bank). An empty section in a populated outline uses a dashed, unfilled slot with **Add from question bank** (opens the rail, scoped to that section) and **Create new** (five P0 types). Tick connectors at populated section / flat ends are append drop targets. Ghost **+ Add intro screen** when exam mode has no intro.
-- Bank panel: search (“Search for a question”) + filter button (selected fill when filters deviate from placement; icon-only), uppercase result-count overline (hidden when empty), bordered result cards (title, hover eye, stem peek, gray **type** Tag then **standard chips** with `+N` overflow, brand plus / disabled check). Empty: centered **No results** + Clear filters. Filter popover: Sort by (A–Z / Z–A / newest / oldest / question type); combined course+unit typeahead; standards typeahead (framework groups); question-type checklist with Select all / Clear all. Closed fields show All vs a summary; Clear filters restores placement defaults.
-- Placement chrome: workspace header **Live in 2 scripts** (attached) or **Draft** (floating). Global header uses the lesson name + “Saved a few seconds ago”, with Back to Levelbuilder / Save.
-- Single-save edit model: cards expand in place; **Done** when clean (no forced save decision), **Save** when dirty. Saving a dirty bank ref prompts *Update the shared question* vs *Save a copy in this assessment only* (converts to inline). One-offs save directly with a secondary *Add to question bank*.
-- Resource panel: **Question bank** and **Settings** (Tutor is a setting, not a panel).
-- Inline editor catalog: **Standards** only (no course/unit; no difficulty; no per-question survey toggle).
-- Settings: title, CFU vs Exam mode, Tutor, exam timing/attempts/intro (intro stays in sync with the outline's intro card).
-- Persistence: `localStorage` (`lab2:assessment-bank`, `lab2:assessment-drafts`). Existing banks hydrate missing units/standards/questions on read; the P0 draft hydrates legacy flat drafts to the sectioned seed and fills missing `placement`, lesson name, and section titles.
-- Seeded P0 exam: 8 AI Foundations questions across 3 named sections (Supervised Learning, Responsible AI, Models in Practice) with an intro screen, **attached** to Unit 3. Header lesson name is **AIF Practice Exam**. Extra bank items (including Web Dev) exist so widening filters is demonstrable.
+- Lab2 workspace: **Build** outline + **Preview** via `QuizAttemptWorkspace` (empty Preview when there are no questions and intro is off). One-question preview uses the CFU in-card **Submit** footer, not the multi-question sticky bar.
+- Outline: intro as a workspace card (optional title + content; config toggles show/hide), sections as pages (no section names), dashed Create question (create-only), ghost ADD SECTION, kebab Add above/below / Move / Delete. Deleting a section shows a top-center toast with Undo. Expanding a question scrolls it to the top of the outline (64px offset). Empty quiz uses the dashed illustration state.
+- Open item tabs Question / Answers / Usage. Unsaved-changes tag on collapse. Leave-page dialog for dirty questions.
+- Save: silent for new; unpublished shared vs published-unit dialogs (no “fork” vocabulary). Save collapses the card and shows a top-center CADS toast (“Question saved”).
+- Bank: hover eye (Close Icon Button chrome, “preview” tooltip) opens Preview / Details / Usage. Filters default to **All**. Filter popover includes **Hide added items from results** (drops questions already on this quiz). Multi-section quizzes use an add-to-section menu. Adds stay collapsed. After add (or closing preview), the result remounts so eye / plus / already-added tooltips do not stick. `listedInBank: false` hidden.
+- Configuration: purpose chooser or dropdown; Content / Rules / Feedback / AI Tutor. Rules nest **Require a correct answer to continue** under Allow multiple attempts (same wrap as Max attempts). When settings differ from the purpose defaults, a **Reset to defaults** control sits beside Purpose.
 
 ---
 
-## Explicitly out of scope (P0)
+## Explicitly out of scope (this pass)
 
-- Surveys / ungraded opinion gathering in this builder.
-- Shuffle questions or options.
-- Difficulty as a catalog field or filter.
-- Teacher dashboard work that shuffling would require.
-- Levelbuilder integration (handoff contract exists; UI not in this sandbox).
-- Publish-time question pinning.
-- Mixed fixed + dynamic pool assembly as an authoring surface (pool-draw remains on the schema, not in P0 settings).
-
----
-
-## Open / later
-
-- Scoring authority (client vs service vs gradebook).
-- Relink a copy back to the shared question; promote a copy to replace the shared question.
-- Grouped-question / shared-code-block layout.
-- Reveal timing combinations for multi-attempt assessments.
-- Drag-drop scoring (prototype scorer marks ungraded).
-- Free-response AI/rubric scoring (affordance only).
-- Whether quiz/practice-test returns as a first-class P0+ mode, or stays a preset of exam/checkpoint settings.
-- Production bank API (authorship, draft/published/archived, usage count).
-- Whether script **deploy** also freezes question copies automatically, or P0 only copies on first live edit. Copy-on-first-edit is enough to protect the shared question while hotfixing.
+- Frozen deep-links per Figma cell (S1.1 … S6.4).
+- Student Unsubmit.
+- Surveys / shuffle / difficulty.
+- Levelbuilder integration.
 
 ---
 
@@ -91,34 +77,36 @@ Mode presets in P0 (`applyP0ModePreset`):
 | Need | Doc |
 |------|-----|
 | Builder UX, routes, known gaps | [`src/guidelines/level-types/assessment-builder.md`](../src/guidelines/level-types/assessment-builder.md) |
+| Decision log | [`docs/quiz-authoring-decisions.md`](./quiz-authoring-decisions.md) |
 | Question field / catalog schema | [`src/guidelines/level-types/assessment-builder-question-schema.md`](../src/guidelines/level-types/assessment-builder-question-schema.md) |
 | Levelbuilder vs in-lab boundary | [`src/guidelines/level-types/assessment-builder-levelbuilder-contract.md`](../src/guidelines/level-types/assessment-builder-levelbuilder-contract.md) |
-| Tool-agnostic assessment config | [`docs/assessment-config-and-modes.md`](./assessment-config-and-modes.md) |
-| Tool-agnostic question types | [`docs/question-types-and-fields.md`](./question-types-and-fields.md) |
-
----
-
-## Locked builder UX
-
-Paper hi-fi frames: `HF · 01`–`04` in *Modernizing Assessments*.
-
-**Now in the React prototype (P0 route):**
-
-- **Outline:** pinned intro (not reorderable), sections as nested pages (**Section N** + title), collapsed rows show type icon (drag handle) · internal name · stem peek · outlined pencil · minus. No `page.item`, no grip-dots, no catalog chips on collapsed rows. Floating add toolbar for new section / question types.
-- **Edit is in-place** (scroll the card into view). One **Save** — not a “this assessment / question bank” menu. One-offs may still *Add to question bank*. **Done** exits a clean editor with no save decision.
-- **Draft + shared question:** prompt *Update the shared question* vs *Save a copy in this assessment only*.
-- **Live vs draft chrome:** attached quizzes show **Live in 2 scripts** on the workspace header; floating quizzes show **Draft**. Placement is not subtitle/meta copy.
-
-**Not in the React prototype yet:**
-
-- **Inspect** as a middle depth on the same card: standards, points, shared vs copy vs one-off, **usage** (derived — “used in N assessments”), placement. Edit is a separate action. (Prototype shows provenance in the expanded footer only.) Do not put editable Course/Unit on inspect.
-- **Live vs draft** is **in a deployed script**, not a per-level publish button. A duplicate of a live level is a draft. (P0 shows the badge; it does not yet simulate script count or copy-on-edit rules.)
-- **Live script:** one assessment banner (“students can see changes”). Shared-question edits copy silently. Placement changes (points, order, page) never copy.
-- Catalog chips stay on **bank rows** (standards only). Collapsed outline stays identification-only; provenance can be a single inspect/collapsed signal later.
 
 ## Changelog
 
 Newest first. Log **decisions and model changes**, not polish.
+
+### 2026-09-09
+
+- Student action labels follow the 2026-09-09 copy pass: last-page **Finish** when results are next and the sitting is not terminal; **Submit** (no arrow) on the last attempt or when reveal is off. One-question cards use **Submit**. Dialog confirm is **Submit now**. Results: practice Try again + Next level; attempts left Try again + Submit this attempt; last attempt / receipt **Next level** only. Time’s up with no reveal is **Next level**. When `max_attempts` is set, an **Attempt N of M** / **Final attempt** chip sits left of the primary. Demos: `/levels/cfu-*-capped`, `/levels/quiz-exam-retries`, `/levels/quiz-exam-final`.
+- Matching Try again keeps correct pairs locked (success styling, no hover/press) and clears the rest. `/levels/cfu-matching-reattempt` opens that next-attempt state (must-correct).
+- Retries and require-correct are two knobs. CfU seeds attempts on + require-correct on (legacy CfU); Practice / exam sim seed require-correct off; Exam hides the wrap. After an incorrect single-question submit: S4 tag + Next level; S5 tag left / Try again primary right; S6 Try again secondary + tag left / Next level right. No “Continue anyways.” Last spent attempt still shows Next level. FR has no Incorrect + Try again footer. Quiz results footer is unchanged.
+- Matching reveal (CFU / quiz / standalone after submit) keeps the student’s matches and adds a **Correct Answer** set underneath when any pair is wrong. Fully correct attempts and teacher peek (no attempt) stay a single board.
+- One-question quiz attempts (builder Preview and student chrome) put **Submit** in the question card footer and hide the sticky attempt bar. Multi-question quizzes keep Back / pagination / Next, then **Finish** or **Submit** on the last page.
+- Quiz builder adds `/levels/assessment-builder-p0-cfu` — a one-question check-for-understanding seed (Unit 2 CFU · Accountability) next to the 12-question exam and empty draft.
+- Teacher viewing a student’s work shows a disabled **Submit** (CFU). Quiz teacher viewpoints add `/levels/quiz-teacher-response-submitted` — a completed exam results review next to the in-progress response demo.
+- Free-response note cards follow the Question Types mocks: teacher / student-response views show the teacher exemplar only. Matching (and multi) still show the answer explanation, and teacher views add the teacher-only note beside it. Student FR reveal no longer surfaces `reveal.explanation`.
+- Quiz results and submit dialogs follow the copy pass: **Keep working** primary, **Submit now** secondary. Results: practice Try again + Next level; exam-with-retries Try again + Submit this attempt; last attempt and receipt Next level. Try again returns to the intro. Time’s-up actions are View results / Next level / Try again.
+- Figma-grid demo levels: one playable student route per CFU type+settings row and per quiz attempt row; three teacher viewpoints each for CFU and quiz. Resume persists `{ page, secondsRemaining, attemptNumber, responses, startedAt }` in `sessionStorage`. Index splits Check for understanding / teacher and Quiz taking / teacher. Teacher viewpoints are in scope.
+- Student chrome follows Figma: **Next level**, **Great job!** / **Incorrect** tags, CADS Alert teacher banners, 50/50 matching columns, FR file-upload row. P0 questions no longer use a code panel (code lives in the stem markdown). About 70% of bank questions now have markdown descriptions. CFU adds `/levels/cfu-free-response-reveal`.
+
+### 2026-09-08
+
+- P0 exam seed (builder + `/levels/quiz-exam`) is Multiple Choice / Free Response / Matching only. Fill-in-the-blank and ordering stay in the mock bank, unlisted, for legacy routes.
+- Optional intro `title` on `AssessmentIntro`. Unset, students see the quiz level name. Workspace empty quiz / empty section / Create question are create-only (bank adds stay on the rail).
+- Question bank filters default to **All** (nothing selected) on open and on **Clear filters**. They no longer restore quiz placement (attached course/unit).
+- Plus on a bank card (and modal **Add to quiz**) opens the add-to-section menu when the quiz has multiple sections, including **New section**.
+- Translated the Modernizing Assessments Figma handoff into the prototype as the **final** builder, CFU, and quiz-taking experience. Kept `/levels/assessment-builder-new` and `assessment-builder-seeded`.
+- Quiz `purpose` seeds Configuration. Status tag + bank preview modal. Student CFU and quiz-taking routes. Seeded exam is 12 questions / 4 pages (Unit 3 Assessment: AI in Society).
 
 ### 2026-08-28
 

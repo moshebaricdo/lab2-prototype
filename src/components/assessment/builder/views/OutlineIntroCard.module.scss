@@ -7,23 +7,19 @@
   border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.card:hover:not(.cardExpanded) {
-  border-color: var(--border-neutral-secondary);
-  box-shadow: var(--shadow-sm);
 }
 
 .cardExpanded {
-  border-color: var(--border-selected-primary);
-  box-shadow: 0 0 0 1px var(--border-selected-primary);
+  background: var(--background-neutral-secondary);
 }
 
-.rowClickable {
-  cursor: pointer;
+.headerBar {
+  width: 100%;
+}
+
+.cardExpanded .headerBar {
+  background: var(--background-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
 }
 
 .row {
@@ -33,13 +29,31 @@
   padding: 10px 8px 10px 10px;
 }
 
+.topRow {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .kindIcon {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 16px;
+  height: 22px;
   color: var(--text-neutral-quaternary);
+}
+
+.preview {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-right: 12px;
 }
 
 .name {
@@ -59,40 +73,27 @@
   white-space: nowrap;
 }
 
-.actions {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 4px;
-}
-
-.removeButton:hover {
-  --btn-fg: var(--text-error-primary);
-  --btn-bg-hover: var(--background-error-light);
-}
-
 .editor {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: var(--spacing-p-xs);
-  border-top: 1px solid var(--border-neutral-primary);
-  background: var(--background-neutral-secondary);
-}
-
-.metaLine {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  @include type-body-4-regular;
-  color: var(--text-neutral-tertiary);
+  gap: 8px;
+  padding: 8px 10px 10px;
+  background: var(--background-neutral-primary);
 }
 
 .footer {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 10px 8px 10px 10px;
   border-top: 1px solid var(--border-neutral-primary);
-  background: var(--background-neutral-primary);
+  background: var(--background-neutral-secondary);
+}
+
+.footerActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
 }

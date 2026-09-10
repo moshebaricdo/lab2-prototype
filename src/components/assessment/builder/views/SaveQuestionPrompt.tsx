@@ -1,7 +1,10 @@
 import { Dialog } from "@moshebaricdo/cads-react";
 
+export type SaveQuestionPromptKind = "shared-unpublished" | "published";
+
 interface SaveQuestionPromptProps {
   open: boolean;
+  kind: SaveQuestionPromptKind;
   questionTitle: string;
   onUpdateShared: () => void;
   onSaveCopy: () => void;
@@ -9,33 +12,47 @@ interface SaveQuestionPromptProps {
 }
 
 /**
- * Single-save decision point for edited bank questions: update the shared
- * question everywhere, or fork an assessment-local copy. Only shown when a
- * shared question is dirty — clean editors close with Done, one-offs save
- * directly.
+ * Save decision for questions used elsewhere. Authors never see “fork.”
+ * Unpublished: update everywhere vs copy for this quiz.
+ * Published: new version for this quiz only.
  */
 export function SaveQuestionPrompt({
   open,
+  kind,
   questionTitle,
   onUpdateShared,
   onSaveCopy,
   onCancel,
 }: SaveQuestionPromptProps) {
+  if (kind === "published") {
+    return (
+      <Dialog
+        open={open}
+        title="Save a new version for this quiz?"
+        description="This question is on a published unit. Saving creates a new version here so existing student work stays on the previous wording. Other quizzes are unchanged."
+        isDismissable
+        primaryActionLabel="Save for this quiz"
+        secondaryActionLabel="Cancel"
+        onPrimaryAction={onSaveCopy}
+        onSecondaryAction={onCancel}
+        onClose={onCancel}
+      />
+    );
+  }
+
   return (
     <Dialog
       open={open}
-      title="Update the shared question?"
+      title="This question is used in other quizzes"
       description={
         <>
-          <strong>{questionTitle}</strong> is shared with other assessments.
-          Updating it changes all of them. Saving a copy keeps your edits in this
-          assessment only.
+          Updating <strong>{questionTitle}</strong> will change those quizzes
+          too.
         </>
       }
-      maxWidth={480}
       isDismissable
-      primaryActionLabel="Update shared question"
-      secondaryActionLabel="Save a copy here"
+      primaryActionLabel="Update everywhere"
+      secondaryActionLabel="Save a copy for this quiz"
       onPrimaryAction={onUpdateShared}
       onSecondaryAction={onSaveCopy}
       onClose={onCancel}

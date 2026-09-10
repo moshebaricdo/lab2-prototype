@@ -1,0 +1,142 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.trigger {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.popoverCard {
+  width: 500px !important;
+  max-width: 500px;
+}
+
+.popover {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  padding: 20px;
+}
+
+.metaStrip {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content max-content;
+  align-items: flex-start;
+  column-gap: 24px;
+  width: 100%;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.statLabel {
+  @include type-label-3;
+  color: var(--text-neutral-primary);
+}
+
+.statValue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  @include type-body-3-regular;
+  color: var(--text-neutral-primary);
+}
+
+.statValueEmpty {
+  color: var(--text-neutral-placeholder);
+}
+
+.tableBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.tableTitle {
+  margin: 0;
+  @include type-label-3;
+  color: var(--text-neutral-primary);
+}
+
+.empty {
+  margin: 0;
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.tableFrame {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) max-content max-content;
+  column-gap: 12px;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+}
+
+.row {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  column-gap: 12px;
+  align-items: center;
+  justify-items: start;
+  width: 100%;
+  padding: 8px 12px;
+}
+
+.headRow {
+  height: 32px;
+  background: var(--background-neutral-secondary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.bodyRow {
+  min-height: 42px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.bodyRow:last-child {
+  border-bottom: none;
+}
+
+.headCell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  @include type-overline-3;
+  color: var(--text-neutral-quaternary);
+}
+
+.cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  @include type-body-4-regular;
+  color: var(--text-neutral-primary);
+}
+
+.cellEmpty {
+  color: var(--text-neutral-placeholder);
+}
+
+.footnote {
+  margin: 0;
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+}

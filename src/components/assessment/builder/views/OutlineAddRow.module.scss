@@ -1,4 +1,4 @@
-/* Ghost add rows — quiet until hover, aligned to the shared outline grid. */
+/* Ghost add rows, empty states, and tick connectors for the P0 outline. */
 
 @use "../../../../styles/_mixins.scss" as *;
 
@@ -35,10 +35,143 @@
   @include focus-ring;
 }
 
-.addRowDropActive {
+.addRowDashed {
+  border-color: var(--border-neutral-primary);
+}
+
+.addRowDashed:hover {
+  border-color: var(--border-neutral-secondary);
+}
+
+.addQuestionRow {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  border: 1px dashed var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: transparent;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    border-style 0.12s ease;
+}
+
+.addQuestionRowDropActive {
+  border-style: solid;
   border-color: var(--border-selected-primary);
   background: var(--background-brand-light);
+}
+
+.sectionGhost {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 28px;
+  padding: 2px 0 2px 6px;
+  border: none;
+  border-radius: var(--shape-sm);
+  background: transparent;
+  color: var(--text-neutral-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.sectionGhost:focus-visible {
+  @include focus-ring;
+}
+
+.sectionGhostPlus {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--shape-sm);
+  color: var(--text-neutral-quaternary);
+  transition: background 0.12s ease;
+}
+
+.sectionGhost:hover .sectionGhostPlus,
+.sectionGhostPlus:hover {
+  background: var(--background-neutral-tertiary);
+}
+
+.sectionGhostLabel {
+  @include type-overline-2;
+  text-transform: uppercase;
+}
+
+.emptyQuiz {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  padding: 30px 10px 32px;
+  border: 1px dashed var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: transparent;
+}
+
+.emptyQuizInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.emptyQuizMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 370px;
+}
+
+.emptyQuizArt {
+  display: block;
+  width: 200px;
+  height: 146px;
+  object-fit: contain;
+}
+
+.emptyQuizCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  text-align: center;
+}
+
+.emptyQuizTitle {
+  margin: 0;
+  @include type-heading-h6-semibold;
   color: var(--text-neutral-primary);
+}
+
+.emptyQuizBody {
+  margin: 0;
+  @include type-body-3-regular;
+  color: var(--text-neutral-secondary);
+}
+
+.emptyQuizActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .emptySlot {
@@ -47,12 +180,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 64px;
-  padding: 12px 16px;
+  gap: 12px;
+  min-height: 46px;
+  padding: 16px 10px 18px;
   border: 1px dashed var(--border-neutral-primary);
-  border-radius: var(--shape-sm);
+  border-radius: var(--shape-md);
   background: transparent;
+  text-align: center;
   transition:
     background 0.12s ease,
     border-color 0.12s ease,
@@ -63,6 +197,25 @@
   border-style: solid;
   border-color: var(--border-selected-primary);
   background: var(--background-brand-light);
+}
+
+.emptySlotCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.emptySlotTitle {
+  margin: 0;
+  @include type-body-3-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.emptySlotHint {
+  margin: 0;
+  @include type-body-4-regular;
+  color: var(--text-neutral-quaternary);
 }
 
 .emptyCopy {
@@ -103,7 +256,7 @@
 }
 
 .connectorSection {
-  height: 16px;
+  height: 12px;
 }
 
 .connectorItem {

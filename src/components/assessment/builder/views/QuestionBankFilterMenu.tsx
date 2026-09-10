@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Button,
+  Checkbox,
   Dropdown,
   FieldWrapper,
   TextInput,
@@ -10,11 +11,9 @@ import type {
   AssessmentCourseBank,
   QuestionItemKind,
 } from "../../../../types/assessmentBuilder";
-import {
-  groupStandardsByFramework,
-  type TaxonomyOption,
-} from "../../../../lib/assessmentBuilder";
-import { BANK_KIND_FILTER_OPTIONS } from "./questionKindMeta";
+import { type TaxonomyOption } from "../../../../lib/assessmentBuilder";
+import { FINAL_BANK_KIND_FILTER_OPTIONS } from "./questionKindMeta";
+import { StandardsTypeaheadPanel } from "./StandardsTypeahead";
 import styles from "./QuestionBankFilterMenu.module.scss";
 
 export type BankSort = "az" | "za" | "newest" | "oldest" | "kind";
@@ -37,6 +36,8 @@ interface QuestionBankFilterMenuProps {
   onStandardIdsChange: (ids: string[]) => void;
   kindIds: QuestionItemKind[];
   onKindIdsChange: (kindIds: QuestionItemKind[]) => void;
+  hideAddedItems: boolean;
+  onHideAddedItemsChange: (hide: boolean) => void;
   isDirty: boolean;
   onReset: () => void;
 }
@@ -49,7 +50,7 @@ const SORT_OPTIONS: Array<{ value: BankSort; label: string }> = [
   { value: "kind", label: "Question Type" },
 ];
 
-const KIND_OPTIONS = BANK_KIND_FILTER_OPTIONS.map((option) => ({
+const KIND_OPTIONS = FINAL_BANK_KIND_FILTER_OPTIONS.map((option) => ({
   value: option.kind,
   label: option.label,
 }));
@@ -97,14 +98,36 @@ function courseUnitSummary(
   return parts.join(", ");
 }
 
+/** CADS checklist menus ignore `menuWidth` and hug content; lock to the trigger. */
+function syncChecklistMenuToTrigger(triggerRoot: HTMLElement | null) {
+  const trigger = triggerRoot?.querySelector("button");
+  const menus = document.querySelectorAll<HTMLElement>(
+    "[data-cads-dropdown-menu]",
+  );
+  const menu = menus[menus.length - 1];
+  if (!trigger || !menu) return;
+  const width = `${Math.round(trigger.getBoundingClientRect().width)}px`;
+  const popper = menu.parentElement;
+  if (popper) {
+    popper.style.width = width;
+    popper.style.minWidth = width;
+  }
+  menu.style.width = width;
+  menu.style.minWidth = width;
+  menu.style.setProperty("--dd-panel-width", width);
+  menu.style.setProperty("--dd-panel-min-width", width);
+}
+
 /** CADS extraSmall checklist row — same chrome as Dropdown menuType=checklist. */
 function ChecklistItem({
   selected,
+  indeterminate,
   indented,
   onClick,
   children,
 }: {
   selected: boolean;
+  indeterminate?: boolean;
   indented?: boolean;
   onClick: () => void;
   children: ReactNode;
@@ -114,6 +137,7 @@ function ChecklistItem({
       type="button"
       role="option"
       aria-selected={selected}
+      aria-checked={indeterminate ? "mixed" : selected}
       className={[styles.item, indented ? styles.itemIndented : ""]
         .filter(Boolean)
         .join(" ")}
@@ -124,12 +148,20 @@ function ChecklistItem({
           aria-hidden
           className={[
             styles.checkbox,
-            selected ? styles.checkboxSelected : "",
+            selected
+              ? styles.checkboxSelected
+              : indeterminate
+                ? styles.checkboxIndeterminate
+                : "",
           ]
             .filter(Boolean)
             .join(" ")}
         >
-          {selected ? <FaIcon name="check" fontSize="0.625rem" /> : null}
+          {selected ? (
+            <FaIcon name="check" fontSize="0.625rem" />
+          ) : indeterminate ? (
+            <FaIcon name="minus" fontSize="0.625rem" />
+          ) : null}
         </span>
         <span className={styles.itemLabel}>{children}</span>
       </span>
@@ -188,12 +220,15 @@ export function QuestionBankFilterMenu({
   onStandardIdsChange,
   kindIds,
   onKindIdsChange,
+  hideAddedItems,
+  onHideAddedItemsChange,
   isDirty,
   onReset,
 }: QuestionBankFilterMenuProps) {
   const [view, setView] = useState<FilterView>("main");
   const [query, setQuery] = useState("");
   const searchWrapRef = useRef<HTMLDivElement>(null);
+  const kindFieldRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -235,22 +270,6 @@ export function QuestionBankFilterMenu({
       })
       .filter((group) => group.include);
   }, [courseBanks, normalizedQuery]);
-
-  const filteredStandards = useMemo(
-    () =>
-      standardOptions.filter((option) =>
-        matchesQuery(
-          `${option.code ?? ""} ${option.label} ${option.value}`,
-          normalizedQuery,
-        ),
-      ),
-    [standardOptions, normalizedQuery],
-  );
-
-  const groupedStandards = useMemo(
-    () => groupStandardsByFramework(filteredStandards),
-    [filteredStandards],
-  );
 
   const courseSummary = courseUnitSummary(
     courseBanks,
@@ -320,11 +339,22 @@ export function QuestionBankFilterMenu({
     });
   };
 
-  if (view === "courses" || view === "standards") {
-    const isCourses = view === "courses";
-    const empty = isCourses
-      ? courseGroups.length === 0
-      : filteredStandards.length === 0;
+  if (view === "standards") {
+    return (
+      <div className={styles.drill}>
+        <StandardsTypeaheadPanel
+          options={standardOptions}
+          selectedIds={standardIds}
+          onChange={onStandardIdsChange}
+          onBack={goBack}
+          onDone={goBack}
+        />
+      </div>
+    );
+  }
+
+  if (view === "courses") {
+    const empty = courseGroups.length === 0;
 
     return (
       <div className={styles.drill}>
@@ -338,27 +368,17 @@ export function QuestionBankFilterMenu({
             aria-label="Back to filters"
             onClick={goBack}
           />
-          <span className={styles.drillTitle}>
-            {isCourses ? "Courses and units" : "Standards"}
-          </span>
+          <span className={styles.drillTitle}>Courses and units</span>
           <span className={styles.drillHeaderSpacer} aria-hidden />
         </div>
         <div className={styles.searchRow} ref={searchWrapRef}>
           <TextInput
             size="extraSmall"
             color="secondary"
-            placeholder={
-              isCourses
-                ? "Search by course or unit name"
-                : "Search by ID or description"
-            }
+            placeholder="Search by course or unit name"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            aria-label={
-              isCourses
-                ? "Search by course or unit name"
-                : "Search by ID or description"
-            }
+            aria-label="Search by course or unit name"
           />
         </div>
         <div
@@ -369,14 +389,21 @@ export function QuestionBankFilterMenu({
             .filter(Boolean)
             .join(" ")}
           role="listbox"
-          aria-label={isCourses ? "Courses and units" : "Standards"}
+          aria-label="Courses and units"
           aria-multiselectable
         >
           {empty ? (
             <p className={styles.emptyHint}>No results</p>
-          ) : isCourses ? (
+          ) : (
             courseGroups.map((group, index) => {
               const courseSelected = fullCourseIds.includes(group.courseId);
+              const selectedUnitCount = group.allUnits.filter((unit) =>
+                unitIds.includes(unit.id),
+              ).length;
+              const courseIndeterminate =
+                !courseSelected &&
+                selectedUnitCount > 0 &&
+                selectedUnitCount < group.allUnits.length;
               return (
                 <div key={group.courseId}>
                   {index > 0 && (
@@ -386,6 +413,7 @@ export function QuestionBankFilterMenu({
                   )}
                   <ChecklistItem
                     selected={courseSelected}
+                    indeterminate={courseIndeterminate}
                     onClick={() =>
                       toggleCourse(
                         group.courseId,
@@ -398,7 +426,7 @@ export function QuestionBankFilterMenu({
                   {group.units.map((unit) => (
                     <ChecklistItem
                       key={unit.id}
-                      selected={!courseSelected && unitIds.includes(unit.id)}
+                      selected={courseSelected || unitIds.includes(unit.id)}
                       indented
                       onClick={() =>
                         toggleUnit(
@@ -414,31 +442,6 @@ export function QuestionBankFilterMenu({
                 </div>
               );
             })
-          ) : (
-            groupedStandards.map((section) => (
-              <div key={section.group}>
-                <p className={styles.menuOptGroup}>{section.group}</p>
-                {section.items.map((option) => {
-                  const code = option.code ?? option.label;
-                  const description =
-                    option.code && option.label !== option.code
-                      ? ` ${option.label}`
-                      : "";
-                  return (
-                    <ChecklistItem
-                      key={option.value}
-                      selected={standardIds.includes(option.value)}
-                      onClick={() =>
-                        onStandardIdsChange(toggleId(standardIds, option.value))
-                      }
-                    >
-                      {code}
-                      {description}
-                    </ChecklistItem>
-                  );
-                })}
-              </div>
-            ))
           )}
         </div>
         <div className={styles.menuActionRow}>
@@ -446,9 +449,7 @@ export function QuestionBankFilterMenu({
             variant="text"
             color="secondary"
             size="extraSmall"
-            onClick={
-              isCourses ? clearCourseScope : () => onStandardIdsChange([])
-            }
+            onClick={clearCourseScope}
           >
             Clear all
           </Button>
@@ -482,25 +483,7 @@ export function QuestionBankFilterMenu({
           />
         </div>
 
-        <FilterFieldTrigger
-          label="Used in course(s) or unit(s):"
-          value={courseSummary}
-          placeholder="All"
-          applied={courseApplied}
-          endIcon="chevron-right"
-          onClick={() => setView("courses")}
-        />
-
-        <FilterFieldTrigger
-          label="Standard(s):"
-          value={standardSummary}
-          placeholder="All"
-          applied={standardsApplied}
-          endIcon="chevron-right"
-          onClick={() => setView("standards")}
-        />
-
-        <div className={styles.field}>
+        <div className={styles.field} ref={kindFieldRef}>
           <Dropdown
             role="input"
             menuType="checklist"
@@ -514,7 +497,43 @@ export function QuestionBankFilterMenu({
             size="extraSmall"
             color="secondary"
             width="full"
+            menuWidth="trigger"
             startIconName={kindIds.length > 0 ? "circle-check" : undefined}
+            onOpenChange={(open) => {
+              if (!open) return;
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  syncChecklistMenuToTrigger(kindFieldRef.current);
+                });
+              });
+            }}
+          />
+        </div>
+
+        <FilterFieldTrigger
+          label="Standard(s):"
+          value={standardSummary}
+          placeholder="All"
+          applied={standardsApplied}
+          endIcon="chevron-right"
+          onClick={() => setView("standards")}
+        />
+
+        <FilterFieldTrigger
+          label="Used in course(s) or unit(s):"
+          value={courseSummary}
+          placeholder="All"
+          applied={courseApplied}
+          endIcon="chevron-right"
+          onClick={() => setView("courses")}
+        />
+
+        <div className={styles.hideAdded}>
+          <Checkbox
+            size="extraSmall"
+            checked={hideAddedItems}
+            onChange={(event) => onHideAddedItemsChange(event.target.checked)}
+            label="Hide added items from results"
           />
         </div>
       </div>

@@ -1,4 +1,6 @@
-/* P0 outline canvas. Padding and type match Figma Lab 2 Frame (197:47986). */
+/* P0 outline canvas. 800px content column, 64px top and bottom
+   (Figma 356:14784). 32px inline padding keeps a gutter when the
+   workspace is narrower than 800px + gutters. */
 
 @use "../../../../styles/_mixins.scss" as *;
 
@@ -8,12 +10,14 @@
 }
 
 .inner {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 800px;
+  gap: 32px;
+  width: 100%;
+  max-width: calc(800px + 64px);
   margin: 0 auto;
-  padding: 64px 64px 88px;
+  padding: 64px 32px;
 }
 
 .header {
@@ -53,28 +57,8 @@
   width: 100%;
 }
 
-.emptyHint {
-  margin: 0;
-  padding: 8px 0 0;
-  @include type-body-3-regular;
-  color: var(--text-neutral-quaternary);
-}
-
 .dragCard {
   overflow: hidden;
-  border: 1px solid var(--border-selected-primary);
-  border-radius: var(--shape-sm);
-  background: var(--background-neutral-primary);
-  box-shadow: var(--shadow-md);
-  cursor: grabbing;
-}
-
-.dragSection {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 28px;
-  padding: 2px 0 2px 6px;
   border: 1px solid var(--border-selected-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);

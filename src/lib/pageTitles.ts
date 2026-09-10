@@ -3,6 +3,7 @@ import {
   agenticProgressionLinks,
   assessmentExperimentLinks,
   assessmentSetLevelLinks,
+  assessmentBuilderExperimentLinks,
   assessmentBuilderLevelLinks,
   cfuLevelLinks,
   cfuTeacherIndexLinks,
@@ -68,6 +69,10 @@ const LEVEL_PAGE_GROUPS: LevelPageGroup[] = [
   { levelType: "File Chip Tabs", pages: fileChipTabsExperimentLinks },
   { levelType: "Web Lab 2 Experiments", pages: webLab2ExperimentLinks },
   { levelType: "Teacher Dashboard", pages: teacherDashboardExperimentLinks },
+  {
+    levelType: "Legacy Assessment Builder",
+    pages: assessmentBuilderExperimentLinks,
+  },
   { levelType: "Assessment Experiments", pages: assessmentExperimentLinks },
 ];
 

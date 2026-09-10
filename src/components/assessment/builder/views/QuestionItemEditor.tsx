@@ -1,4 +1,13 @@
-import { Button, Checkbox, Dropdown, Radio, Tag, TextInput } from "@moshebaricdo/cads-react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
+import { Button, Checkbox, Dropdown, Radio, SegmentedButton, Tag, TextInput } from "@moshebaricdo/cads-react";
 import {
   QUESTION_DIFFICULTIES,
   QUESTION_DIFFICULTY_LABELS,
@@ -9,6 +18,8 @@ import type {
   QuestionDifficulty,
   QuestionItem,
 } from "../../../../types/assessmentBuilder";
+import { QuestionUsagePanel } from "./QuestionUsagePanel";
+import { StandardsTypeaheadField } from "./StandardsTypeahead";
 import styles from "./QuestionItemEditor.module.scss";
 
 interface QuestionItemEditorProps {
@@ -19,11 +30,141 @@ interface QuestionItemEditorProps {
   /** @deprecated Unused in P0; legacy callers may still pass unit options. */
   unitOptions?: Array<{ value: string; label: string }>;
   p0Aligned?: boolean;
+  activeTab?: "question" | "answers" | "usage";
+  currentQuizTitle?: string;
   onUpdateQuestion: (question: QuestionItem) => void;
 }
 
 function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function reorderById<T extends { id: string }>(
+  items: T[],
+  activeId: string,
+  overId: string,
+): T[] {
+  const from = items.findIndex((item) => item.id === activeId);
+  const to = items.findIndex((item) => item.id === overId);
+  if (from < 0 || to < 0 || from === to) return items;
+  const next = [...items];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+}
+
+type OptionReorderApi = {
+  draggingId: string | null;
+  overId: string | null;
+  startDrag: (id: string, event: ReactPointerEvent<HTMLElement>) => void;
+};
+
+const OptionReorderContext = createContext<OptionReorderApi | null>(null);
+
+function SortableOptionStack({
+  onReorder,
+  children,
+}: {
+  onReorder: (activeId: string, overId: string) => void;
+  children: ReactNode;
+}) {
+  const draggingIdRef = useRef<string | null>(null);
+  const overIdRef = useRef<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+
+  const startDrag = useCallback(
+    (id: string, event: ReactPointerEvent<HTMLElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      draggingIdRef.current = id;
+      overIdRef.current = id;
+      setDraggingId(id);
+      setOverId(id);
+
+      const onMove = (moveEvent: PointerEvent) => {
+        const node = document.elementFromPoint(
+          moveEvent.clientX,
+          moveEvent.clientY,
+        );
+        const card = node?.closest("[data-option-id]");
+        const nextOver =
+          card?.getAttribute("data-option-id") ?? draggingIdRef.current;
+        if (nextOver !== overIdRef.current) {
+          overIdRef.current = nextOver;
+          setOverId(nextOver);
+        }
+      };
+
+      const onUp = () => {
+        const active = draggingIdRef.current;
+        const over = overIdRef.current;
+        if (active && over && active !== over) onReorder(active, over);
+        draggingIdRef.current = null;
+        overIdRef.current = null;
+        setDraggingId(null);
+        setOverId(null);
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    },
+    [onReorder],
+  );
+
+  return (
+    <OptionReorderContext.Provider value={{ draggingId, overId, startDrag }}>
+      {children}
+    </OptionReorderContext.Provider>
+  );
+}
+
+function SortableOptionCard({
+  id,
+  dragLabel,
+  children,
+}: {
+  id: string;
+  dragLabel: string;
+  children: ReactNode;
+}) {
+  const reorder = useContext(OptionReorderContext);
+  const isDragging = reorder?.draggingId === id;
+  const isOver = reorder?.overId === id && !isDragging;
+
+  return (
+    <div
+      data-option-id={id}
+      className={[
+        styles.optionCard,
+        isDragging ? styles.optionCardDragging : "",
+        isOver ? styles.optionCardOver : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <div className={styles.optionCardInner}>
+        <span
+          className={styles.dragHandle}
+          aria-label={dragLabel}
+          onPointerDown={(event) => reorder?.startDrag(id, event)}
+        >
+          <Button
+            variant="text"
+            color="tertiary"
+            size="small"
+            iconOnly
+            startIconName="grip-dots-vertical"
+            tabIndex={-1}
+            aria-hidden
+          />
+        </span>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 function updateQuestion(
@@ -44,6 +185,8 @@ export function QuestionItemEditor({
   courseOptions,
   domainOptions,
   p0Aligned = false,
+  activeTab = "question",
+  currentQuizTitle = "",
   onUpdateQuestion,
 }: QuestionItemEditorProps) {
   const patch = (next: Partial<QuestionItem>) =>
@@ -78,6 +221,79 @@ export function QuestionItemEditor({
       }));
     patch({ tags });
   };
+
+  const stem = question.item.content;
+  const updateStem = (prompt: string, description: string | undefined) => {
+    onUpdateQuestion({
+      ...question,
+      item: {
+        ...question.item,
+        content: { ...stem, prompt, description },
+      } as QuestionItem["item"],
+    });
+  };
+
+  if (p0Aligned && activeTab === "usage") {
+    return (
+      <QuestionUsagePanel
+        question={question}
+        currentQuizTitle={currentQuizTitle}
+        onUpdateQuestion={onUpdateQuestion}
+      />
+    );
+  }
+
+  if (p0Aligned && activeTab === "question") {
+    return (
+      <div className={styles.p0Question}>
+        <TextInput
+          label="Internal name"
+          size="small"
+          color="secondary"
+          value={question.title}
+          onChange={(event) => patch({ title: event.target.value })}
+        />
+        <TextInput
+          label="Question title"
+          size="small"
+          color="secondary"
+          value={stem.prompt}
+          onChange={(event) => updateStem(event.target.value, stem.description)}
+        />
+        <TextInput
+          multiline
+          label="Description"
+          size="small"
+          color="secondary"
+          value={stem.description ?? ""}
+          onChange={(event) =>
+            updateStem(stem.prompt, event.target.value || undefined)
+          }
+        />
+        <StandardsTypeaheadField
+          options={domainOptions}
+          selectedIds={selectedDomainIds}
+          onChange={handleDomainChange}
+          disabled={domainOptions.length === 0}
+        />
+      </div>
+    );
+  }
+
+  if (p0Aligned) {
+    return (
+      <div className={styles.p0Question}>
+        <QuestionContentEditor
+          question={question}
+          onUpdateQuestion={onUpdateQuestion}
+          hideSurveyMode
+          includeStem={false}
+          showSelectionMode
+          showExplanation
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.root}>
@@ -211,6 +427,7 @@ export function QuestionItemEditor({
 interface QuestionStemFieldsProps {
   prompt: string;
   description?: string;
+  questionLabel?: string;
   onPromptChange: (value: string) => void;
   onDescriptionChange: (value: string | undefined) => void;
 }
@@ -218,6 +435,7 @@ interface QuestionStemFieldsProps {
 function QuestionStemFields({
   prompt,
   description,
+  questionLabel = "Question",
   onPromptChange,
   onDescriptionChange,
 }: QuestionStemFieldsProps) {
@@ -225,7 +443,7 @@ function QuestionStemFields({
     <>
       <TextInput
         multiline
-        label="Question"
+        label={questionLabel}
         helperText="Main heading shown to students."
         size="small"
         color="secondary"
@@ -234,13 +452,13 @@ function QuestionStemFields({
       />
       <TextInput
         multiline
-        label="Body (markdown)"
-        helperText="Optional markdown shown below the question heading."
+        label="Description"
+        helperText="Optional supporting copy shown below the question title."
         size="small"
         color="secondary"
         value={description ?? ""}
         onChange={(event) =>
-          onDescriptionChange(event.target.value.trim() || undefined)
+          onDescriptionChange(event.target.value || undefined)
         }
       />
     </>
@@ -251,29 +469,62 @@ interface QuestionContentEditorProps {
   question: QuestionItem;
   onUpdateQuestion: (question: QuestionItem) => void;
   hideSurveyMode?: boolean;
+  includeStem?: boolean;
+  showSelectionMode?: boolean;
+  showExplanation?: boolean;
 }
 
 function QuestionContentEditor({
   question,
   onUpdateQuestion,
   hideSurveyMode = false,
+  includeStem = true,
+  showSelectionMode = false,
+  showExplanation = false,
 }: QuestionContentEditorProps) {
+  const p0AnswersLayout = showSelectionMode;
+  const explanationEditor = showExplanation ? (
+    <ExplanationField question={question} onUpdateQuestion={onUpdateQuestion} />
+  ) : null;
+
   switch (question.item.kind) {
     case "multi":
       return (
-        <MultiChoiceEditor
-          question={question}
-          onUpdateQuestion={onUpdateQuestion}
-          hideSurveyMode={hideSurveyMode}
-        />
+        <>
+          <MultiChoiceEditor
+            question={question}
+            onUpdateQuestion={onUpdateQuestion}
+            hideSurveyMode={hideSurveyMode}
+            includeStem={includeStem}
+            showSelectionMode={showSelectionMode}
+            p0AnswersLayout={p0AnswersLayout}
+          />
+          {explanationEditor}
+        </>
       );
     case "freeResponse":
       return (
-        <FreeResponseEditor question={question} onUpdateQuestion={onUpdateQuestion} />
+        <>
+          <FreeResponseEditor
+            question={question}
+            onUpdateQuestion={onUpdateQuestion}
+            includeStem={includeStem}
+            p0AnswersLayout={p0AnswersLayout}
+          />
+          {explanationEditor}
+        </>
       );
     case "match":
       return (
-        <MatchEditor question={question} onUpdateQuestion={onUpdateQuestion} />
+        <>
+          <MatchEditor
+            question={question}
+            onUpdateQuestion={onUpdateQuestion}
+            includeStem={includeStem}
+            p0AnswersLayout={p0AnswersLayout}
+          />
+          {explanationEditor}
+        </>
       );
     case "dragDrop":
       return question.item.content.mode === "categorization" ? (
@@ -295,12 +546,71 @@ interface KindEditorProps {
   question: QuestionItem;
   onUpdateQuestion: (question: QuestionItem) => void;
   hideSurveyMode?: boolean;
+  includeStem?: boolean;
+  showSelectionMode?: boolean;
+  p0AnswersLayout?: boolean;
+}
+
+function ExplanationField({
+  question,
+  onUpdateQuestion,
+}: KindEditorProps) {
+  const isFree = question.item.kind === "freeResponse";
+  const value =
+    question.item.kind === "freeResponse"
+      ? question.item.content.teacherAnswer?.exemplar ?? ""
+      : question.reveal.explanation ?? "";
+
+  return (
+    <div className={styles.bankMetaField}>
+      <TextInput
+        multiline
+        rows={4}
+        label={
+          isFree
+            ? "Exemplar response (teachers only)"
+            : "Answer explanation (optional)"
+        }
+        size="small"
+        color="secondary"
+        value={value}
+        onChange={(event) => {
+          const next = event.target.value;
+          if (question.item.kind === "freeResponse") {
+            onUpdateQuestion({
+              ...question,
+              item: {
+                kind: "freeResponse",
+                content: {
+                  ...question.item.content,
+                  teacherAnswer: {
+                    ...question.item.content.teacherAnswer,
+                    exemplar: next,
+                    rubricCriteria:
+                      question.item.content.teacherAnswer?.rubricCriteria ?? [],
+                  },
+                },
+              },
+            });
+            return;
+          }
+          onUpdateQuestion({
+            ...question,
+            reveal: { ...question.reveal, explanation: next },
+          });
+        }}
+      />
+    </div>
+  );
 }
 
 function MultiChoiceEditor({
   question,
   onUpdateQuestion,
   hideSurveyMode = false,
+  includeStem = true,
+  showSelectionMode = false,
+  p0AnswersLayout = false,
 }: KindEditorProps) {
   if (question.item.kind !== "multi") return null;
   const content = question.item.content;
@@ -357,72 +667,183 @@ function MultiChoiceEditor({
   };
 
   return (
-    <div className={styles.section}>
-      <QuestionStemFields
-        prompt={content.prompt}
-        description={content.description}
-        onPromptChange={(value) => updateContent({ prompt: value })}
-        onDescriptionChange={(value) => updateContent({ description: value })}
-      />
-      <h4 className={styles.sectionHeading}>
-        Answer options{isMultiple ? " (select all correct)" : ""}
-      </h4>
-      <div className={styles.optionList}>
-        {content.answers.map((answer) => (
-          <div key={answer.id} className={styles.optionRow}>
-            <div className={styles.optionControl}>
-              {isMultiple ? (
-                <Checkbox
-                  size="small"
-                  checked={(content.correctAnswerIds ?? []).includes(answer.id)}
-                  onChange={(event) =>
-                    toggleCorrectMultiple(answer.id, event.target.checked)
-                  }
-                  aria-label={`Mark ${answer.text ?? answer.id} as correct`}
-                />
-              ) : (
-                <Radio
-                  size="small"
-                  name={`correct-${question.bankId}`}
-                  checked={content.correctAnswerId === answer.id}
-                  onChange={() => setCorrectSingle(answer.id)}
-                  aria-label={`Mark ${answer.text ?? answer.id} as correct`}
-                />
-              )}
-            </div>
-            <div className={styles.optionField}>
-              <TextInput
-                size="small"
-                color="secondary"
-                value={answer.text ?? ""}
-                onChange={(event) => updateAnswer(answer.id, event.target.value)}
-              />
-            </div>
-            <div className={styles.rowActions}>
-              <Button
-                variant="outlined"
-                color="secondary"
-                size="extraSmall"
-                iconOnly
-                startIconName="circle-minus"
-                aria-label="Remove option"
-                disabled={content.answers.length <= 2}
-                onClick={() => removeAnswer(answer.id)}
-              />
+    <div className={p0AnswersLayout ? styles.p0Answers : styles.section}>
+      {showSelectionMode ? (
+        <div className={`${styles.bankMetaField} ${styles.selectionType}`}>
+          <span className={styles.bankMetaLabel}>Selection type:</span>
+          <SegmentedButton
+            size="small"
+            aria-label="Selection type"
+            value={isMultiple ? "multiple" : "single"}
+            onChange={(value) => {
+              if (value === "multiple") {
+                updateContent({
+                  selectionMode: "multiple",
+                  correctAnswerIds:
+                    content.correctAnswerIds ??
+                    (content.correctAnswerId ? [content.correctAnswerId] : []),
+                  correctAnswerId: undefined,
+                });
+              } else {
+                updateContent({
+                  selectionMode: "single",
+                  correctAnswerId:
+                    content.correctAnswerId ??
+                    content.correctAnswerIds?.[0] ??
+                    content.answers[0]?.id,
+                  correctAnswerIds: undefined,
+                });
+              }
+            }}
+            options={[
+              { value: "single", label: "Single (radio)" },
+              { value: "multiple", label: "Multiple (checkbox)" },
+            ]}
+          />
+        </div>
+      ) : null}
+      {includeStem ? (
+        <QuestionStemFields
+          prompt={content.prompt}
+          description={content.description}
+          onPromptChange={(value) => updateContent({ prompt: value })}
+          onDescriptionChange={(value) => updateContent({ description: value })}
+        />
+      ) : null}
+      {p0AnswersLayout ? (
+        <>
+          <div className={styles.bankMetaField}>
+            <span className={styles.bankMetaLabel}>Options</span>
+            <div className={styles.optionStack}>
+              <SortableOptionStack
+                onReorder={(activeId, overId) =>
+                  updateContent({
+                    answers: reorderById(content.answers, activeId, overId),
+                  })
+                }
+              >
+                {content.answers.map((answer) => {
+                  const isCorrect = isMultiple
+                    ? (content.correctAnswerIds ?? []).includes(answer.id)
+                    : content.correctAnswerId === answer.id;
+                  return (
+                    <SortableOptionCard
+                      key={answer.id}
+                      id={answer.id}
+                      dragLabel={`Reorder ${answer.text || "option"}`}
+                    >
+                      <div className={styles.optionField}>
+                        <TextInput
+                          size="small"
+                          color="secondary"
+                          value={answer.text ?? ""}
+                          onChange={(event) =>
+                            updateAnswer(answer.id, event.target.value)
+                          }
+                        />
+                      </div>
+                      <Button
+                        variant={isCorrect ? "contained" : "outlined"}
+                        color="secondary"
+                        size="small"
+                        iconOnly
+                        startIconName="check"
+                        aria-pressed={isCorrect}
+                        aria-label={
+                          isCorrect
+                            ? `Unmark ${answer.text ?? "option"} as correct`
+                            : `Mark ${answer.text ?? "option"} as correct`
+                        }
+                        className={isCorrect ? styles.correctMark : undefined}
+                        onClick={() => {
+                          if (isMultiple) {
+                            toggleCorrectMultiple(answer.id, !isCorrect);
+                            return;
+                          }
+                          if (!isCorrect) setCorrectSingle(answer.id);
+                        }}
+                      />
+                      <Button
+                        variant="text"
+                        color="error"
+                        size="small"
+                        iconOnly
+                        startIconName="trash"
+                        aria-label="Remove option"
+                        disabled={content.answers.length <= 2}
+                        onClick={() => removeAnswer(answer.id)}
+                      />
+                    </SortableOptionCard>
+                  );
+                })}
+              </SortableOptionStack>
+              <DashedAddRow label="Add option" onClick={addAnswer} />
             </div>
           </div>
-        ))}
-      </div>
-      <Button
-        variant="outlined"
-        color="secondary"
-        size="extraSmall"
-        startIconName="plus"
-        className={styles.addRow}
-        onClick={addAnswer}
-      >
-        Add option
-      </Button>
+        </>
+      ) : (
+        <>
+          <h4 className={styles.sectionHeading}>
+            Answer options{isMultiple ? " (select all correct)" : ""}
+          </h4>
+          <div className={styles.optionList}>
+            {content.answers.map((answer) => (
+              <div key={answer.id} className={styles.optionRow}>
+                <div className={styles.optionControl}>
+                  {isMultiple ? (
+                    <Checkbox
+                      size="small"
+                      checked={(content.correctAnswerIds ?? []).includes(answer.id)}
+                      onChange={(event) =>
+                        toggleCorrectMultiple(answer.id, event.target.checked)
+                      }
+                      aria-label={`Mark ${answer.text ?? answer.id} as correct`}
+                    />
+                  ) : (
+                    <Radio
+                      size="small"
+                      name={`correct-${question.bankId}`}
+                      checked={content.correctAnswerId === answer.id}
+                      onChange={() => setCorrectSingle(answer.id)}
+                      aria-label={`Mark ${answer.text ?? answer.id} as correct`}
+                    />
+                  )}
+                </div>
+                <div className={styles.optionField}>
+                  <TextInput
+                    size="small"
+                    color="secondary"
+                    value={answer.text ?? ""}
+                    onChange={(event) => updateAnswer(answer.id, event.target.value)}
+                  />
+                </div>
+                <div className={styles.rowActions}>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    size="extraSmall"
+                    iconOnly
+                    startIconName="circle-minus"
+                    aria-label="Remove option"
+                    disabled={content.answers.length <= 2}
+                    onClick={() => removeAnswer(answer.id)}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="extraSmall"
+            startIconName="plus"
+            className={styles.addRow}
+            onClick={addAnswer}
+          >
+            Add option
+          </Button>
+        </>
+      )}
       {!isMultiple && !hideSurveyMode && (
         <Checkbox
           size="small"
@@ -434,13 +855,18 @@ function MultiChoiceEditor({
             })
           }
           label="Survey mode (ungraded)"
-              />
+        />
       )}
     </div>
   );
 }
 
-function FreeResponseEditor({ question, onUpdateQuestion }: KindEditorProps) {
+function FreeResponseEditor({
+  question,
+  onUpdateQuestion,
+  includeStem = true,
+  p0AnswersLayout = false,
+}: KindEditorProps) {
   if (question.item.kind !== "freeResponse") return null;
   const content = question.item.content;
 
@@ -451,14 +877,55 @@ function FreeResponseEditor({ question, onUpdateQuestion }: KindEditorProps) {
     });
   };
 
+  if (p0AnswersLayout) {
+    return (
+      <div className={styles.p0Answers}>
+        <TextInput
+          label="Placeholder (optional)"
+          size="small"
+          color="secondary"
+          value={content.placeholder}
+          onChange={(event) => updateContent({ placeholder: event.target.value })}
+        />
+        <TextInput
+          label="Minimum submission length (optional)"
+          size="small"
+          color="secondary"
+          type="number"
+          min={0}
+          step={1}
+          value={content.minCharacters > 0 ? String(content.minCharacters) : ""}
+          onChange={(event) => {
+            const minCharacters = Number.parseInt(event.target.value, 10);
+            updateContent({
+              minCharacters: Number.isFinite(minCharacters)
+                ? Math.max(0, minCharacters)
+                : 0,
+            });
+          }}
+        />
+        <Checkbox
+          size="small"
+          checked={content.allowFileUpload === true}
+          onChange={(event) =>
+            updateContent({ allowFileUpload: event.target.checked })
+          }
+          label="Allow file uploads and/or audio recordings as a submission"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.section}>
-      <QuestionStemFields
-        prompt={content.prompt}
-        description={content.description}
-        onPromptChange={(value) => updateContent({ prompt: value })}
-        onDescriptionChange={(value) => updateContent({ description: value })}
-      />
+      {includeStem ? (
+        <QuestionStemFields
+          prompt={content.prompt}
+          description={content.description}
+          onPromptChange={(value) => updateContent({ prompt: value })}
+          onDescriptionChange={(value) => updateContent({ description: value })}
+        />
+      ) : null}
       <div className={styles.compactRow}>
         <TextInput
           label="Placeholder"
@@ -490,7 +957,12 @@ function FreeResponseEditor({ question, onUpdateQuestion }: KindEditorProps) {
   );
 }
 
-function MatchEditor({ question, onUpdateQuestion }: KindEditorProps) {
+function MatchEditor({
+  question,
+  onUpdateQuestion,
+  includeStem = true,
+  p0AnswersLayout = false,
+}: KindEditorProps) {
   if (question.item.kind !== "match") return null;
   const content = question.item.content;
 
@@ -559,14 +1031,111 @@ function MatchEditor({ question, onUpdateQuestion }: KindEditorProps) {
     });
   };
 
+  const addPair = () => {
+    const termId = createId("term");
+    const promptId = createId("prompt");
+    updateContent({
+      terms: [...content.terms, { id: termId, text: "" }],
+      prompts: [
+        ...content.prompts,
+        { id: promptId, text: "", correctTermId: termId },
+      ],
+    });
+  };
+
+  const removePair = (promptId: string, termId: string) => {
+    if (content.prompts.length <= 2) return;
+    updateContent({
+      prompts: content.prompts.filter((prompt) => prompt.id !== promptId),
+      terms: content.terms.filter((term) => term.id !== termId),
+    });
+  };
+
+  if (p0AnswersLayout) {
+    return (
+      <div className={styles.p0Answers}>
+        <div className={styles.bankMetaField}>
+          <span className={styles.bankMetaLabel}>Options</span>
+          <div className={styles.optionStack}>
+            <SortableOptionStack
+              onReorder={(activeId, overId) =>
+                updateContent({
+                  prompts: reorderById(content.prompts, activeId, overId),
+                })
+              }
+            >
+              {content.prompts.map((prompt) => {
+                const term =
+                  content.terms.find((item) => item.id === prompt.correctTermId) ??
+                  content.terms[0];
+                return (
+                  <SortableOptionCard
+                    key={prompt.id}
+                    id={prompt.id}
+                    dragLabel="Reorder pair"
+                  >
+                    <div className={styles.pairFields}>
+                      <div className={styles.optionField}>
+                        <TextInput
+                          multiline
+                          rows={3}
+                          size="small"
+                          color="secondary"
+                          placeholder="Term"
+                          value={term?.text ?? ""}
+                          onChange={(event) => {
+                            if (!term) return;
+                            updateTerm(term.id, event.target.value);
+                          }}
+                        />
+                      </div>
+                      <div className={styles.optionField}>
+                        <TextInput
+                          multiline
+                          rows={3}
+                          size="small"
+                          color="secondary"
+                          placeholder="Definition"
+                          value={prompt.text}
+                          onChange={(event) =>
+                            updatePrompt(prompt.id, { text: event.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      variant="text"
+                      color="error"
+                      size="small"
+                      iconOnly
+                      startIconName="trash"
+                      aria-label="Remove pair"
+                      disabled={content.prompts.length <= 2}
+                      onClick={() =>
+                        term ? removePair(prompt.id, term.id) : removePrompt(prompt.id)
+                      }
+                    />
+                  </SortableOptionCard>
+                );
+              })}
+            </SortableOptionStack>
+            <DashedAddRow label="Add pair" onClick={addPair} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.section}>
-      <QuestionStemFields
-        prompt={content.prompt}
-        description={content.description}
-        onPromptChange={(value) => updateContent({ prompt: value })}
-        onDescriptionChange={(value) => updateContent({ description: value })}
-      />
+      {includeStem ? (
+        <QuestionStemFields
+          prompt={content.prompt}
+          description={content.description}
+          onPromptChange={(value) => updateContent({ prompt: value })}
+          onDescriptionChange={(value) => updateContent({ description: value })}
+        />
+      ) : null}
 
       <h4 className={styles.sectionHeading}>Terms</h4>
       <div className={styles.optionList}>
@@ -1042,6 +1611,28 @@ function FillInBlankEditor({ question, onUpdateQuestion }: KindEditorProps) {
         onClick={addBlank}
       >
         Add blank
+      </Button>
+    </div>
+  );
+}
+
+function DashedAddRow({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <div className={styles.addOptionRow}>
+      <Button
+        variant="text"
+        color="secondary"
+        size="extraSmall"
+        startIconName="plus"
+        onClick={onClick}
+      >
+        {label}
       </Button>
     </div>
   );

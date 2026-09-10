@@ -1,152 +1,35 @@
-/* Filter popover chrome + CADS extraSmall checklist item (896:3791)
- * copied for typeahead rows. Units add padding-left only. */
+/* Standards typeahead panel (Figma 326:42501) + size-S field trigger. */
 
 @use "../../../../styles/_mixins.scss" as *;
 
 .panel {
-  display: flex;
-  flex-direction: column;
-  width: 325px;
-  overflow: visible;
-}
-
-.fields {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  padding: 8px 10px 10px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.field :global([data-cads-field-wrapper]) {
-  width: 100%;
-}
-
-.fieldTrigger {
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   width: 100%;
-  height: var(--control-height-extra-small);
-  gap: 4px;
-  padding-inline: 0.5rem;
-  padding-block: 0.125rem;
-  border: 1px solid var(--border-neutral-secondary);
-  border-radius: var(--shape-sm);
-  background: var(--background-neutral-primary);
-  color: var(--text-neutral-primary);
-  font-family: var(--font-family-main);
-  font-weight: var(--font-weight-normal);
-  font-size: var(--text-body-xs);
-  line-height: var(--leading-body-xs);
-  text-align: left;
-  cursor: pointer;
-  transition: var(--transition-colors);
-}
-
-.fieldTrigger:hover {
-  background: var(--background-neutral-tertiary);
-}
-
-.fieldTrigger:focus-visible {
-  box-shadow:
-    0 0 0 2px var(--background-neutral-primary),
-    0 0 0 4px var(--border-focused-primary);
-  outline: none;
-}
-
-.fieldCheck {
-  flex-shrink: 0;
-  display: flex;
-  color: var(--text-neutral-primary);
-}
-
-.fieldValue,
-.fieldPlaceholder {
-  flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.fieldPlaceholder {
-  color: var(--text-neutral-quaternary);
-}
-
-.fieldChevron {
-  flex-shrink: 0;
-  display: flex;
-  color: var(--text-neutral-tertiary);
-}
-
-.hideAdded {
-  box-sizing: border-box;
-  display: flex;
-  width: 100%;
-  padding-top: 6px;
-}
-
-.actionRow {
-  box-sizing: border-box;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  width: 100%;
-  height: 32px;
-  padding: 4px;
-  border-top: 1px solid var(--border-neutral-primary);
-  gap: 4px;
-}
-
-.menuActionRow {
-  box-sizing: border-box;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-shrink: 0;
-  width: 100%;
-  height: 32px;
-  padding: 4px;
-  border-top: 1px solid var(--border-neutral-primary);
-  gap: 4px;
-}
-
-.drill {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  width: 325px;
-}
-
-.drillHeader {
+.header {
   box-sizing: border-box;
   display: grid;
   grid-template-columns: 24px 1fr 24px;
   align-items: center;
   flex-shrink: 0;
+  width: 100%;
   height: 32px;
   padding: 4px 6px;
   background: var(--background-neutral-secondary);
   border-bottom: 1px solid var(--border-neutral-primary);
 }
 
-.drillTitle {
+.headerTitle {
   @include type-overline-3;
   color: var(--text-neutral-quaternary);
   text-align: center;
 }
 
-.drillHeaderSpacer {
+.headerSpacer {
   width: 24px;
   height: 24px;
 }
@@ -185,24 +68,6 @@
   max-height: none;
 }
 
-/* CADS Dropdown extraSmall menuSeparator */
-.separator {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  width: 100%;
-  height: 8px;
-  padding-block: 1px;
-}
-
-.separatorLine {
-  width: 100%;
-  height: 1px;
-  background: var(--border-neutral-primary);
-}
-
-/* CADS Dropdown extraSmall menuOptGroup */
 .menuOptGroup {
   box-sizing: border-box;
   display: flex;
@@ -227,7 +92,6 @@
   user-select: none;
 }
 
-/* CADS Dropdown extraSmall checklist item */
 .item {
   box-sizing: border-box;
   display: flex;
@@ -266,10 +130,6 @@
   outline-offset: -2px;
 }
 
-.itemIndented {
-  padding-left: 1.5rem;
-}
-
 .itemInner {
   display: inline-flex;
   align-items: center;
@@ -299,14 +159,6 @@
   color: var(--text-selected-primary-inverse);
 }
 
-/* Standalone CADS Checkbox (navy fill, green icon) — used when the row
-   is not on selected fill, e.g. a parent course with mixed units. */
-.checkboxIndeterminate {
-  background: var(--background-selected-primary);
-  border-color: var(--border-selected-primary);
-  color: var(--text-selected-primary);
-}
-
 .itemLabel {
   flex: 1 1 auto;
   min-width: 0;
@@ -314,6 +166,18 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: left;
+}
+
+.code {
+  font-weight: var(--font-weight-semi-bold);
+}
+
+.description {
+  color: var(--text-neutral-tertiary);
+}
+
+.item[aria-selected="true"] .description {
+  color: inherit;
 }
 
 .emptyHint {
@@ -329,4 +193,93 @@
   font-weight: var(--font-weight-normal);
   color: var(--text-neutral-quaternary);
   text-align: center;
+}
+
+.actionRow {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-shrink: 0;
+  width: 100%;
+  height: 32px;
+  padding: 4px;
+  border-top: 1px solid var(--border-neutral-primary);
+  gap: 4px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.field :global([data-cads-field-wrapper]) {
+  width: 100%;
+}
+
+.dropdownHost {
+  width: 100%;
+}
+
+.dropdownHost > * {
+  width: 100%;
+}
+
+.trigger {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--control-height-small);
+  gap: 6px;
+  padding-inline: 12px;
+  padding-block: 5px;
+  border: 1px solid var(--border-neutral-secondary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-family-main);
+  font-weight: var(--font-weight-normal);
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-colors);
+}
+
+.trigger:hover:not(:disabled) {
+  background: var(--background-neutral-tertiary);
+}
+
+.trigger:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--background-neutral-primary),
+    0 0 0 4px var(--border-focused-primary);
+  outline: none;
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.triggerValue,
+.placeholder {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placeholder {
+  color: var(--text-neutral-quaternary);
+}
+
+.chevron {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--text-neutral-primary);
 }

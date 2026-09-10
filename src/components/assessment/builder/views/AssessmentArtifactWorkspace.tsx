@@ -364,6 +364,7 @@ export function AssessmentArtifactWorkspace({
         setShowSaveSuccessAlert: versionHistory.setShowSaveSuccessAlert,
         showHistoryTab: false,
         showAiTutorTab: artifact.tutor.enabled,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         showInstructionsDrawer: false,

@@ -1,0 +1,60 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.root {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 64px 64px 24px;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 370px;
+}
+
+.art {
+  display: block;
+  width: 200px;
+  height: 146px;
+  object-fit: contain;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  @include type-heading-h6-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.body {
+  margin: 0;
+  @include type-body-3-regular;
+  color: var(--text-neutral-secondary);
+}

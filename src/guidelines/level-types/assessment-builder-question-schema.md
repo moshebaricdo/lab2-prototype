@@ -103,6 +103,8 @@ Each type's answer-key and presentation fields. ⭐ = required for a graded (non
 | `revealAnswerEnabled` | `boolean` | ▫️ | Answer-key (exemplar) visibility only — **not** the explanation. |
 
 > Free response has **no deterministic key**: `exemplar` plays the role that "highlight the correct option" plays for `multi`. `rubricCriteria` / `expectedElements` are a separate grading aid, and the universal `reveal.explanation` ([§3](#the-answer-model--three-distinct-concepts)) is the "why." Don't conflate the three. Scores `ungraded` (manual/AI scoring affordance-only); passes when the min-character gate is met.
+>
+> **P0 student/teacher chrome:** free response shows the teacher exemplar only — never the green answer-explanation card. Matching shows the explanation, and teacher views add the teacher-only note beside it.
 
 ### 4.3 Matching (`match`)
 

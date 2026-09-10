@@ -4,6 +4,19 @@
   gap: 14px;
 }
 
+.p0Question {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.p0Answers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
 .section {
   display: flex;
   flex-direction: column;
@@ -40,6 +53,12 @@
   gap: 4px;
 }
 
+.selectionType {
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+}
+
 .bankMetaLabel {
   font-family: var(--font-family-main);
   font-size: var(--text-body-xs);
@@ -63,6 +82,79 @@
   gap: 8px;
 }
 
+.optionStack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.optionCard {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+}
+
+.optionCardInner {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  background: var(--background-neutral-secondary);
+}
+
+.dragHandle {
+  display: flex;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+
+  :global(button) {
+    pointer-events: none;
+  }
+}
+
+.optionCardDragging {
+  opacity: 0.55;
+}
+
+.optionCardOver {
+  outline: 2px solid var(--border-selected-primary);
+}
+
+.pairFields {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.correctMark {
+  --btn-bg: var(--background-selected-primary) !important;
+  --btn-fg: var(--text-selected-primary) !important;
+  --btn-border: var(--background-selected-primary) !important;
+  --btn-bg-hover: var(--background-selected-strong) !important;
+  --btn-fg-hover: var(--text-selected-primary) !important;
+  --btn-bg-press: var(--background-selected-strong) !important;
+  --btn-fg-press: var(--text-selected-primary) !important;
+}
+
+.addOptionRow {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  border: 1px dashed var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: transparent;
+}
+
 .optionRow {
   display: flex;
   align-items: flex-start;
@@ -81,6 +173,10 @@
 .optionField {
   flex: 1;
   min-width: 0;
+}
+
+.optionField > * {
+  width: 100%;
 }
 
 .rowActions {
