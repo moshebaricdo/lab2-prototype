@@ -5,6 +5,7 @@ import {
   assessmentSetLevelLinks,
   assessmentBuilderLevelLinks,
   aiChatLabLevelLinks,
+  aiLabIndexLinks,
   backpackFilterProgressionLinks,
   bubbleChoiceLevelLinks,
   dragDropLevelLinks,
@@ -31,6 +32,7 @@ type LevelPageGroup = {
 
 /** Group labels mirror the Levels index cards and level-type sections. */
 const LEVEL_PAGE_GROUPS: LevelPageGroup[] = [
+  { levelType: "AI Lab", pages: aiLabIndexLinks },
   { levelType: "AI Chat Lab", pages: aiChatLabLevelLinks },
   { levelType: "Web Lab 2", pages: webLab2LevelLinks },
   { levelType: "Python Lab", pages: pythonLabLevelLinks },

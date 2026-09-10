@@ -121,12 +121,19 @@ src/
 │   │   │       ├── nodes/SketchNodes.tsx
 │   │   │       ├── sketchLabLineGeometry.ts
 │   │   │       └── panel/PropertyPanel.tsx
-│   │   └── aichatlab/views/
-│   │       ├── AiChatLabWorkspace.tsx
-│   │       ├── AiChatLabConfigPanel.tsx
-│   │       ├── AiChatLabModelCardPanel.tsx
-│   │       ├── AiChatLabChatPanel.tsx
-│   │       └── aiChatLabModel.ts
+│   │   ├── aichatlab/views/
+│   │   │   ├── AiChatLabWorkspace.tsx
+│   │   │   ├── AiChatLabConfigPanel.tsx
+│   │   │   ├── AiChatLabModelCardPanel.tsx
+│   │   │   ├── AiChatLabChatPanel.tsx
+│   │   │   └── aiChatLabModel.ts
+│   │   └── ailab/views/
+│   │       ├── AiLabWorkspace.tsx
+│   │       ├── DatasetViews.tsx
+│   │       ├── TrainPanel.tsx
+│   │       ├── TestPanel.tsx
+│   │       ├── DecisionTreeViz.tsx
+│   │       └── KnnScatterViz.tsx
 │   └── agentic/                    # Optional Web Lab 2 specialist agents
 │       ├── crew/                   # Roster strip, modal, useAgentLevelState
 │       └── mission/                # Mission Control concept widget
@@ -144,6 +151,7 @@ src/
 │   └── assessmentBuilder/          # Canonical schema adapters, bank/draft storage, scoring
 ├── pages/                          # Route-level entry points grouped by level type
 │   ├── aichatlab/
+│   ├── ailab/
 │   ├── bubble-choice/
 │   ├── design-system/              # Standalone DS tooling routes (not level index entries)
 │   │   ├── tokens/                 # CodeAI color system JSON + Figma snapshot for the color sandbox
@@ -173,7 +181,7 @@ src/
 1. `TopNavigation` from `components/ui/header` (CADS Global Header **labLevel** chrome: extraSmall outlined/text controls, lesson title + bubble progress indicator)
 2. `Lab2Shell` from `components/lab2`
 3. `Sidebar` from `components/lab2/resource-panel`
-4. A level-specific workspace, such as `components/ide/weblab2/views/Workspace`, `components/ide/pythonlab/views/PythonWorkspace`, `components/ide/sketchlab/views/SketchLabWorkspace`, `components/ide/aichatlab/views/AiChatLabWorkspace`, or an assessment workspace under `components/assessment/<type>/views`
+4. A level-specific workspace, such as `components/ide/weblab2/views/Workspace`, `components/ide/pythonlab/views/PythonWorkspace`, `components/ide/sketchlab/views/SketchLabWorkspace`, `components/ide/aichatlab/views/AiChatLabWorkspace`, `components/ide/ailab/views/AiLabWorkspace`, or an assessment workspace under `components/assessment/<type>/views`
 
 Assessment builder pages compose `AssessmentBuilderWorkspace`, which adds resource-panel **Builder** tabs (`builder-bank`, `builder-settings` via `showBuilderTab`) and previews canonical `AssessmentArtifact` content via adapters in `lib/assessmentBuilder/`. The build outline and inline question editor live in the center canvas (`AssessmentOutlineCanvas` on the P0 route, legacy `AssessmentBuildCanvas` elsewhere; both wrap `QuestionItemEditor`). Resource panel width follows the shared `useLayoutState` default (400px; resize 300–600px).
 
@@ -204,6 +212,7 @@ Route pages get state and handlers from dedicated hooks:
 - `useChatState` for Tutor messages/input where the sidebar Tutor is visible. Web Lab 2 and Python Lab pass route-scoped session storage keys so chat history survives reload alongside file workspace state.
 - `useVersionHistoryState` for version selection/save/restore feedback
 - `useSketchLabState` for ReactFlow canvas nodes/edges, selection, and route-scoped `sessionStorage` persistence (Sketch Lab only)
+- `useAiLabState` for algorithm, section rail, label/features, local train/test, try-it-out values, reserved-row indexes, and optional k (AI Lab only). Classic workspace is `AiLabWorkspace`; the guided studio is `AiLabGuidedWorkspace`.
 - `useBackpackState` / `BackpackProvider` for cross-level Backpack persistence (`localStorage` key `lab2:backpack`). `Lab2Shell` wraps the resource panel and workspace in `BackpackProvider` so file-manager save actions and the Backpack tab share one store. `BackpackProvider` is idempotent — if an ancestor already provides the store it passes through rather than creating a second one, so a page (e.g. `WebLab2LevelPage`, for its agent-library dialogs) can hoist the provider above `Lab2Shell` and keep a single store. `BackpackItem.fileKind` is `FileKind | "agent"`: the `"agent"` kind is a saved custom agent (JSON payload, `lib/backpack/agentBackpack.ts`) that lives only in the backpack + the agent recall sheet, never the project file tree. IDE routes pass `backpackImportLab` and `onImportBackpackItem` into `Sidebar`; per-lab extension allow-lists in `backpackImportAllowlist.ts` gate the **+** import action (unsupported types stay visible with a disabled button and tooltip). Production Backpack panel layout defaults to **type-availability** (50/50 File type dropdown with start icons + text-only Sort dropdown + unsupported-at-bottom). Optional `backpackFilterExperiment` on experiment routes overrides this (`default` legacy source-lab sections, filter pills, supported toggle, dropdown — see Backpack Filtering sample progression). A session CADS `Tag` (**Added**, small, success) appears on that chip after a successful import. Saving from the project file manager raises a viewport CADS `Toast` (`placement="topCenter"`) via `BackpackSaveToasts`. The **Backpack Across Labs** progression (`/levels/progression-backpack-labs-*`) reuses each lab page with `backpackEnsureSeedItems` from `src/data/backpack/crossLabBackpackSeed.ts` so the same HTML/CSS/JS/JSON/Python/docs/images/PDF mix is present in Web Lab, Python, Sketch, and AI Chat. Deleting a backpack item confirms with a CADS `Dialog`, then shows an error `Toast` with **Undo**; the save-success toast uses the same undo action.
 - `ThemeProvider` / `useTheme` for Lab2-scoped light/dark token switching, persisted in session storage (`lab2:theme`). Light/dark markers are applied by `Lab2Shell` below `TopNavigation`. The header itself is pinned: `dark` / `data-theme="Dark"` on the nav, `data-theme="Light"` on the progress indicator, so the page theme toggle does not restyle header chrome. The color sandbox and global nav menu share the same `useTheme()` state.
 

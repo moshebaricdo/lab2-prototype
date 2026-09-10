@@ -231,6 +231,20 @@ export const pythonLabLevelLinks: LevelProgressLink[] = [
   { name: "Standalone Project (Blank)", path: "/levels/pythonlab-blank" },
 ];
 
+export const aiLabLevelLinks: LevelProgressLink[] = [
+  { name: "Train a model", path: "/levels/ailab" },
+  { name: "Audit a model", path: "/levels/ailab-pretrained" },
+];
+
+export const aiLabGuidedLevelLinks: LevelProgressLink[] = [
+  { name: "Train a model (guided)", path: "/levels/ailab-guided" },
+];
+
+export const aiLabIndexLinks: LevelProgressLink[] = [
+  ...aiLabLevelLinks,
+  ...aiLabGuidedLevelLinks,
+];
+
 export const sketchLabLevelLinks: LevelProgressLink[] = [
   { name: "Sketch Lab Level", path: "/levels/sketchlab" },
   { name: "Standalone Project (Blank)", path: "/levels/sketchlab-blank" },

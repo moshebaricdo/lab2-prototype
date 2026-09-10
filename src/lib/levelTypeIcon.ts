@@ -45,6 +45,8 @@ const AI_CHAT_LAB_PATH_PREFIXES = [
   "/levels/progression-backpack-labs-aichat",
 ];
 
+const AI_LAB_PATH_PREFIXES = ["/levels/ailab"];
+
 const TEACHER_DASHBOARD_PATH_PREFIXES = ["/levels/teacher-dashboard"];
 
 function matchesPrefix(pathname: string, prefix: string): boolean {
@@ -56,6 +58,10 @@ export function getLevelTypeIconConfig(path: string): LevelTypeIconConfig {
 
   if (AI_CHAT_LAB_PATH_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix))) {
     return { family: "solid", name: "messages" };
+  }
+
+  if (AI_LAB_PATH_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix))) {
+    return { family: "solid", name: "chart-scatter" };
   }
 
   if (TEACHER_DASHBOARD_PATH_PREFIXES.some((prefix) => matchesPrefix(pathname, prefix))) {

@@ -1,0 +1,726 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.root {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  background: var(--background-neutral-primary);
+}
+
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  max-height: 40px;
+  padding: 0 8px;
+  background: var(--background-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.headerTabs {
+  display: flex;
+  align-self: flex-end;
+  min-width: 0;
+  // Sit on the PH rule so the selected folder tab opens into the panel.
+  margin-bottom: -1px;
+
+  :global([data-cads-tabs]) {
+    // Header border is the full-width rule; hide the Tabs inset baseline.
+    --tabs-baseline-color: transparent;
+    width: max-content;
+    max-width: 100%;
+  }
+}
+
+.headerActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.panel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--background-neutral-primary);
+}
+
+.panelBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.split {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+}
+
+.mainColumn,
+.sideColumn {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.sideColumn {
+  padding: 16px 16px 16px 0;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.sectionPad {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.intro {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.introTitle {
+  @include type-heading-h5-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.viewSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.statement {
+  @include type-heading-h5-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.muted {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+.picker {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.pickerInner {
+  display: flex;
+  width: min(100%, 720px);
+  flex-direction: column;
+  gap: 16px;
+}
+
+.algorithmGrid {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.algorithmCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  cursor: pointer;
+}
+
+.algorithmCardSelected {
+  border-color: var(--border-selected-primary);
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 16%,
+    var(--background-neutral-primary)
+  );
+}
+
+.algorithmTitle {
+  @include type-heading-h5-semibold;
+  display: block;
+  color: var(--text-neutral-primary);
+}
+
+.algorithmDescription {
+  @include type-body-3-regular;
+  display: block;
+  margin-top: 4px;
+  color: var(--text-neutral-secondary);
+}
+
+.algorithmGlyph {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 40px;
+  margin-top: 2px;
+}
+
+.knnGlyph {
+  position: relative;
+  width: 40px;
+  height: 28px;
+}
+
+.knnDot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary-inverse);
+}
+
+.knnDotQuery {
+  background: var(--background-selected-primary);
+  box-shadow: 0 0 0 2px var(--background-neutral-primary);
+}
+
+.treeGlyph {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 4px 8px;
+  width: 40px;
+}
+
+.treeNode {
+  height: 8px;
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary-inverse);
+}
+
+.treeNodeRoot {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 16px;
+  background: var(--background-selected-primary);
+}
+
+.pickerActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.switchModal {
+  display: flex;
+  width: min(100%, 640px);
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px;
+}
+
+.switchTitle {
+  @include type-heading-h4-semibold;
+  margin: 0 0 4px;
+  color: var(--text-neutral-primary);
+}
+
+.switchActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.builder {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 16px 12px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+}
+
+.builderTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.builderRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+}
+
+.featureBlock {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.featureList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.builderHint {
+  @include type-body-3-regular;
+  margin: 0 0 6px;
+  color: var(--text-neutral-tertiary);
+}
+
+.builderResult {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.dataStage {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  padding: 0 16px 16px;
+}
+
+.tableFrame {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th,
+.td {
+  @include type-body-3-regular;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+}
+
+.th {
+  @include type-label-3;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--background-neutral-primary);
+  box-shadow: inset 0 -1px 0 var(--border-neutral-primary);
+}
+
+.thIndex,
+.tdIndex {
+  width: 56px;
+  padding-left: 12px;
+  color: var(--text-neutral-tertiary);
+}
+
+.thButton {
+  @include type-label-2;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-neutral-secondary);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    color: var(--text-neutral-primary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.thButtonActive {
+  color: var(--text-neutral-primary);
+  box-shadow: inset 0 -2px 0 var(--border-selected-primary);
+}
+
+.thLabel .thButton {
+  color: var(--text-success-primary);
+}
+
+.thFeature .thButton {
+  color: var(--text-brand-primary);
+}
+
+.rowReserved .td {
+  color: var(--text-neutral-secondary);
+}
+
+.reservedMark,
+.rowNumber {
+  @include type-label-4;
+  color: var(--text-neutral-tertiary);
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.carousel {
+  display: flex;
+  width: min(100%, 420px);
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}
+
+.cardReserved {
+  background: var(--background-neutral-secondary);
+}
+
+.cardFeatured {
+  width: 100%;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardHeading {
+  @include type-label-2;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.cardRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardLabel {
+  @include type-label-3;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-neutral-tertiary);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-neutral-primary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.cardLabelActive {
+  color: var(--text-neutral-primary);
+  box-shadow: inset 0 -2px 0 var(--border-selected-primary);
+}
+
+.inspectorCard {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  overflow: auto;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+}
+
+.inspectorHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.inspectorEyebrow {
+  @include type-overline-2;
+  margin: 0 0 4px;
+  color: var(--text-neutral-quaternary);
+}
+
+.inspectorTitle {
+  @include type-heading-h5-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.statList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.statSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.statSummaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+
+  dt {
+    @include type-label-4;
+    color: var(--text-neutral-tertiary);
+  }
+
+  dd {
+    @include type-body-3-semibold;
+    margin: 0;
+    color: var(--text-neutral-primary);
+  }
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: minmax(56px, 96px) minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+}
+
+.statLabel {
+  @include type-label-3;
+  overflow: hidden;
+  color: var(--text-neutral-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statCount {
+  @include type-label-3;
+  color: var(--text-neutral-tertiary);
+  text-align: right;
+}
+
+.barTrack {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-tertiary);
+}
+
+.barFill {
+  height: 100%;
+  background: var(--background-selected-primary);
+}
+
+.cardValue {
+  @include type-body-3-regular;
+  color: var(--text-neutral-primary);
+}
+
+.footer {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.resultBanner {
+  padding: 0 16px 12px;
+}
+
+.testLayout {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.1fr);
+}
+
+.vizPane,
+.formPane {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.vizFill {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  padding: 0 16px 16px;
+}
+
+.formPane {
+  border-left: 1px solid var(--border-neutral-primary);
+}
+
+.axisRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.predictGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.prediction {
+  @include type-heading-h4-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.accuracy {
+  @include type-heading-h4-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.neighborList,
+.resultsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.neighborItem,
+.resultButton {
+  @include type-body-3-regular;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  text-align: left;
+}
+
+.resultButton {
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.resultButtonCorrect {
+  border-color: var(--border-success-primary);
+}
+
+.resultButtonIncorrect {
+  border-color: var(--border-error-primary);
+}
+
+@media (max-width: 900px) {
+  .split,
+  .testLayout,
+  .algorithmGrid,
+  .axisRow {
+    grid-template-columns: 1fr;
+  }
+
+  .sideColumn {
+    padding: 0 16px 16px;
+  }
+}

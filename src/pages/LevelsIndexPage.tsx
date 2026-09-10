@@ -17,6 +17,7 @@ import {
   assessmentSetLevelLinks,
   assessmentBuilderLevelLinks,
   aiChatLabLevelLinks,
+  aiLabIndexLinks,
   bubbleChoiceLevelLinks,
   dragDropLevelLinks,
   fillInBlankLevelLinks,
@@ -65,6 +66,11 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
   {
     title: "Lab environments",
     entries: [
+      {
+        levelType: "AI Lab",
+        description: "Data, training, and model testing",
+        pages: aiLabIndexLinks,
+      },
       {
         levelType: "AI Chat Lab",
         description: "AI chat and model prototypes",
@@ -156,6 +162,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/pythonlab": "Python Lab",
   "/levels/sketchlab": "Sketch Lab",
   "/levels/aichatlab": "AI Chat Lab",
+  "/levels/ailab": "AI Lab",
   "/levels/weblab2": "Web Lab 2",
   "/levels/levelgroup": "Assessment experiment",
   "/levels/bubble-choice": "Bubble choice",

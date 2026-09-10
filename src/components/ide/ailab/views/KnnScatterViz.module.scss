@@ -1,0 +1,40 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.root {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chart {
+  flex: 1;
+  min-height: 220px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.legendItem {
+  @include type-label-3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-neutral-secondary);
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--shape-round);
+}
+
+.empty {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}

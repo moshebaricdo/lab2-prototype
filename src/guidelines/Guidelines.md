@@ -4,7 +4,7 @@
 
 This repository is a **Lab2 frame/base**, not a Web Lab-only codebase.
 
-It currently powers Web Lab 2, Python Lab, Sketch Lab, AI Chat Lab, and assessment-style prototypes. The architecture should continue to support additional Lab2-powered environments with minimal structural churn.
+It currently powers Web Lab 2, Python Lab, Sketch Lab, AI Chat Lab, AI Lab, and assessment-style prototypes. The architecture should continue to support additional Lab2-powered environments with minimal structural churn.
 
 When making changes, optimize for:
 
@@ -33,6 +33,7 @@ src/
     ide/pythonlab/runtime/ # Python execution runtime
     ide/sketchlab/views/   # Sketch Lab whiteboard canvas chrome
     ide/aichatlab/views/   # AI Chat Lab-specific chat/config workspace chrome
+    ide/ailab/views/       # AI Lab dataset / train / test workspace chrome
     assessment/            # Assessment level types (shared, multi, match, free-response, drag-drop, fill-in-blank, levelgroup, builder, bubble-choice)
   pages/                   # Route-level entry points, grouped by level type
   data/                    # Demo project data and assessment fixtures
@@ -49,10 +50,10 @@ src/
 - `ui/` contains all universal primitives: buttons, text fields, sliders, tooltips, icons, panel headers, tags (`AppTag`), etc.
 - `lab2/` groups the Lab2 frame shell (`Lab2Shell`, resource panel, dev tools) shared across all Lab2 level types.
 - `ide/shared/` contains shared editor components (CodeEditor, FileManager, EmptyState) used by IDE-type labs.
-- `ide/weblab2/views`, `ide/pythonlab/views`, and `ide/aichatlab/views` hold lab-specific workspace composition.
+- `ide/weblab2/views`, `ide/pythonlab/views`, `ide/aichatlab/views`, and `ide/ailab/views` hold lab-specific workspace composition.
 - `assessment/` contains assessment-specific workspace components; shared assessment chrome belongs in `assessment/shared`; in-lab authoring lives in `assessment/builder/`.
 - `lib/assessmentBuilder/` holds canonical assessment schema adapters, bank/draft persistence, scoring, and exam runtime helpers used by builder routes and preview.
-- `pages/` owns route composition and dev-panel defaults. Keep route files grouped by level type (`pages/weblab2`, `pages/pythonlab`, `pages/aichatlab`, `pages/assessment-builder`, etc.). Standalone design-system tooling belongs under `pages/design-system` and should not be linked from the level index unless it becomes a learner-facing prototype. Packaged CADS (`@moshebaricdo/cads-*` from GitHub Packages) is exercised at `/design-system/cads`. `Lab2Shell` wraps levels in `components/lab2/CadsLabProvider.tsx` so Lab2 chrome (header, resource panel, IDE shared, lab workspaces, assessment, dev panel) uses CADS primitives **and** CADS Foundations CSS variables (unprefixed). Color sandbox and teacher dashboard may still use local `App*` atoms and `--ds-*`. Migration handoff (status, mappings, pitfalls, leftover surfaces): [`cads-migration.md`](cads-migration.md).
+- `pages/` owns route composition and dev-panel defaults. Keep route files grouped by level type (`pages/weblab2`, `pages/pythonlab`, `pages/aichatlab`, `pages/ailab`, `pages/assessment-builder`, etc.). Standalone design-system tooling belongs under `pages/design-system` and should not be linked from the level index unless it becomes a learner-facing prototype. Packaged CADS (`@moshebaricdo/cads-*` from GitHub Packages) is exercised at `/design-system/cads`. `Lab2Shell` wraps levels in `components/lab2/CadsLabProvider.tsx` so Lab2 chrome (header, resource panel, IDE shared, lab workspaces, assessment, dev panel) uses CADS primitives **and** CADS Foundations CSS variables (unprefixed). Color sandbox and teacher dashboard may still use local `App*` atoms and `--ds-*`. Migration handoff (status, mappings, pitfalls, leftover surfaces): [`cads-migration.md`](cads-migration.md).
 - As new IDE labs are introduced, add `ide/<labname>/views/` and reuse shared components from `ide/shared/`.
 - `lib/tutor/` contains the functional Tutor harness for guidance routing, project analysis, compact context packing, staged structured edits, validation, repair, tool-loop fallback, and save-title generation. See `src/guidelines/tutor-harness.md` — especially **Routing philosophy** for how we prefer small model classifiers over growing regex intent lists.
 
@@ -200,6 +201,7 @@ Recent organization cleanup established:
 - resource panel views in `src/components/lab2/resource-panel/views`
 - shared atoms (`AppButton`, `AppIconButton`, `AppLink`, `AppTextField`/`AppTextArea`, `AppSlider`, `AppTag`, `Tooltip`, `AlertBanner`) in `src/components/ui`
 - AI Chat Lab workspace chrome in `src/components/ide/aichatlab/views`
+- AI Lab workspace chrome in `src/components/ide/ailab/views`
 - icon components in `src/components/ui/icons`
 - dev tools in `src/components/lab2/dev`
 - legacy/deprecated files removed
@@ -217,6 +219,7 @@ Do not reintroduce removed legacy paths or compatibility shims unless there is a
 - **Need Web Lab-specific workspace chrome?** -> `src/components/ide/weblab2/views`
 - **Need Python Lab-specific workspace chrome?** -> `src/components/ide/pythonlab/views`
 - **Need AI Chat Lab-specific workspace chrome?** -> `src/components/ide/aichatlab/views`
+- **Need AI Lab-specific workspace chrome?** -> `src/components/ide/ailab/views`
 - **Need to tune Tutor guidance, prompts, model context, validation, repair, tool fallback, or provider config?** -> `src/lib/tutor` and `src/guidelines/tutor-harness.md`
 - **Need behavior used across many surfaces?** -> hook in `src/hooks` + typed contract in `src/types`
 - **Need new styling values?** -> tokens pipeline first, then semantic aliasing; see `src/guidelines/color-theming.md` for brand themes and sandbox boundaries
@@ -226,4 +229,4 @@ Do not reintroduce removed legacy paths or compatibility shims unless there is a
 ## Versioning
 
 **Last Updated:** May 10, 2026  
-**Status:** Active baseline for Lab2-powered prototypes across Web Lab 2, Python Lab, AI Chat Lab, and assessment level types
+**Status:** Active baseline for Lab2-powered prototypes across Web Lab 2, Python Lab, AI Chat Lab, AI Lab, and assessment level types

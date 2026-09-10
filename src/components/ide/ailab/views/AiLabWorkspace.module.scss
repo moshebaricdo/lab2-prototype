@@ -1,0 +1,414 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.root {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  background: var(--background-neutral-primary);
+}
+
+.header {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  padding: 0 8px;
+  background: var(--background-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.headerLeft,
+.headerRight {
+  display: flex;
+  min-width: 120px;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerRight {
+  justify-content: flex-end;
+}
+
+.headerCenter {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.workspaceLabel {
+  @include panel-header-label;
+}
+
+.tabBar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: stretch;
+  padding: 0 12px;
+  background: var(--background-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+
+  :global([data-cads-tabs]) {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.panel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--background-neutral-primary);
+}
+
+.panelBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.split {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+}
+
+.mainColumn,
+.sideColumn {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.sideColumn {
+  border-left: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.sectionPad {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.statement {
+  @include type-heading-h5-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.muted {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+.algorithmGrid {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.algorithmCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  cursor: pointer;
+}
+
+.algorithmCardSelected {
+  border-color: var(--border-selected-primary);
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 16%,
+    var(--background-neutral-primary)
+  );
+}
+
+.algorithmTitle {
+  @include type-heading-h5-semibold;
+  display: block;
+  color: var(--text-neutral-primary);
+}
+
+.algorithmDescription {
+  @include type-body-3-regular;
+  display: block;
+  margin-top: 4px;
+  color: var(--text-neutral-secondary);
+}
+
+.tableWrap {
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th,
+.td {
+  @include type-body-3-regular;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+}
+
+.th {
+  @include type-label-3;
+  position: sticky;
+  top: 0;
+  background: var(--background-neutral-secondary);
+}
+
+.thButton {
+  @include type-label-3;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.thSelected,
+.tdSelected {
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 18%,
+    var(--background-neutral-primary)
+  );
+}
+
+.rowActive .td {
+  background: var(--background-selected-primary);
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.cardDeck {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}
+
+.cardTitle {
+  @include type-label-2;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+.cardRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardLabel {
+  @include type-label-3;
+  color: var(--text-neutral-tertiary);
+}
+
+.cardValue {
+  @include type-body-3-regular;
+  color: var(--text-neutral-primary);
+}
+
+.inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.inspectorTitle {
+  @include type-heading-h5-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.statList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: minmax(48px, 88px) minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+}
+
+.barTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-tertiary);
+}
+
+.barFill {
+  height: 100%;
+  background: var(--background-selected-primary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.footer {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.testLayout {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.2fr);
+}
+
+.vizPane,
+.formPane {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.vizFill {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  padding: 0 16px 16px;
+}
+
+.formPane {
+  border-left: 1px solid var(--border-neutral-primary);
+}
+
+.predictGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.resultsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resultButton {
+  @include type-body-3-regular;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.resultButtonCorrect {
+  border-color: var(--border-success-primary);
+}
+
+.resultButtonIncorrect {
+  border-color: var(--border-error-primary);
+}
+
+.accuracy {
+  @include type-heading-h4-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.emptyInspector {
+  @include type-body-3-regular;
+  margin: 0;
+  padding: 16px;
+  color: var(--text-neutral-tertiary);
+}

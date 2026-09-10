@@ -11,6 +11,7 @@ Use these docs as handoff context for follow-up threads.
 - [Python Lab](./pythonlab.md)
 - [Sketch Lab](./sketchlab.md)
 - [AI Chat Lab](./aichatlab.md)
+- [AI Lab](./ailab.md)
 - [Multi-choice](./multi-choice.md)
 - [Free response](./free-response.md)
 - [Match](./match.md)
@@ -28,6 +29,7 @@ Use these docs as handoff context for follow-up threads.
 - Level pages generally render inside the Lab2 shell (`TopNavigation` + resource panel + main surface), but the main surface is not always resizable. AI Chat Lab card surfaces intentionally disable sidebar resizing while floating.
 - Assessment-focused levels currently run with AI Tutor visible and Version History hidden.
 - AI Chat Lab hides AI Tutor because its primary workspace is the AI chat stream.
+- AI Lab hides AI Tutor, Version History, and Backpack. Instructions change with the Dataset / Train / Test section (guided studio: Data setup row / Test).
 - Python Lab keeps the sidebar Tutor guidance-only; Web Lab 2 owns the full functional Tutor edit/planning flow.
 - Web Lab 2's functional Tutor harness is documented in `../tutor-harness.md`.
 - All assessment flows are prototype-level and local-only (no backend submission yet).
@@ -39,6 +41,7 @@ Use these docs as handoff context for follow-up threads.
 - `/levels/pythonlab` and `/levels/pythonlab-blank`
 - `/levels/sketchlab` and `/levels/sketchlab-blank`
 - `/levels/aichatlab`, `/levels/aichatlab-setup`, and `/levels/aichatlab-model-card`
+- `/levels/ailab`, `/levels/ailab-pretrained`, and `/levels/ailab-guided`
 - Web Lab 2 core templates: `/levels/weblab2-level`, `/levels/weblab2-demo-project`, and `/levels/weblab2-demo-project-blank`; Web Lab 2 experiments (`/levels/weblab2-tutor-action-card`, `/levels/weblab2-validation-test`, `/levels/weblab2-drawer-improvements`, `/levels/weblab2-drawer-instructions-tab`, `/levels/weblab2-drawer-notification-halo`) and progressions are listed under Sample Progressions on `/levels`
 - Web Lab 2 progression routes: Upload Mechanisms under `/levels/progression-upload-mechanisms-*`, Backpack Filtering under `/levels/progression-backpack-filter-*`, and the validation progression under `/levels/progression-weblab2-validation-*` (including Feature Roulette AIF as the fifth level — see `weblab2.md`)
 - Cross-lab backpack sample: `/levels/progression-backpack-labs` (Web Lab → Python → Sketch → AI Chat) with a shared file-type seed — see each lab doc
