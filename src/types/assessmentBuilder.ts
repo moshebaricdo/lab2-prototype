@@ -38,6 +38,68 @@ export interface RevealConfig {
   explanation?: string;
 }
 
+/**
+ * Author-facing purpose of a quiz. Seeds student settings; snapshot /
+ * reporting still follow purpose even if the author overrides those fields.
+ */
+export type QuizPurpose =
+  | "check_for_understanding"
+  | "practice"
+  | "exam"
+  | "exam_simulation";
+
+export const QUIZ_PURPOSES = [
+  "check_for_understanding",
+  "practice",
+  "exam",
+  "exam_simulation",
+] as const;
+
+/** After-submit reveal. Explanation requires correctness. */
+export interface QuizFeedbackConfig {
+  showCorrectness: boolean;
+  revealAnswerExplanation: boolean;
+}
+
+/** Published state of a unit this quiz is placed in. */
+export type QuizUnitPublishedState =
+  | "in_development"
+  | "pilot"
+  | "beta"
+  | "preview"
+  | "stable"
+  | "sunsetting"
+  | "deprecated";
+
+export interface QuizUnitPlacement {
+  unitName: string;
+  courseName: string;
+  lessonName?: string;
+  publishedState: QuizUnitPublishedState;
+}
+
+export type QuizStatusKind =
+  | "not_in_unit"
+  | "unpublished"
+  | "live"
+  | "sunsetting"
+  | "deprecated";
+
+export interface QuestionUsageRow {
+  quizTitle: string;
+  courseUnit: string;
+  status: QuizStatusKind;
+  isCurrent?: boolean;
+}
+
+export interface QuestionVersionRow {
+  label: string;
+  id: number;
+  usedIn: string;
+  lastEdited: string;
+  isCurrent?: boolean;
+}
+
 export interface MultiChoiceQuestionContent {
   prompt: string;
   description?: string;
@@ -121,11 +183,35 @@ export interface QuestionItem {
   /** @deprecated P0 dropped difficulty; ignored by the P0 builder. */
   difficulty?: QuestionDifficulty;
   reveal: RevealConfig;
+  /** Teacher-only note shown on teacher viewpoints; students never see it. */
+  teacherNote?: string;
   codePanel?: CodePanelConfig;
   /** Point value when scored in a graded assessment. Defaults to 1. */
   points?: number;
   updatedAt: number;
   item: QuestionItemContent;
+  /**
+   * Author-facing integer id for this wording (`quiz_questions.id`).
+   * Always set on seeded bank rows; minted on first Save for new questions.
+   */
+  numericId?: number;
+  /**
+   * Lineage / family UUID (`quiz_questions.key`). Forks keep the parent key.
+   * Always set on seeded bank rows; minted on first Save for new questions.
+   */
+  questionKey?: string;
+  /** 1-based version index within the family. */
+  versionIndex?: number;
+  versionCount?: number;
+  /** When false, omit from the in-quiz bank panel. Default true. */
+  listedInBank?: boolean;
+  /** True until the first Save of a question created in this quiz. */
+  neverSaved?: boolean;
+  attachedToOtherQuizzes?: boolean;
+  usedInPublishedUnit?: boolean;
+  lastEditedLabel?: string;
+  usedInQuizzes?: QuestionUsageRow[];
+  versions?: QuestionVersionRow[];
 }
 
 /** P0 authoring surfaces Checkpoint (CFU) and Exam only. `survey` / `quiz` remain for legacy drafts. */
@@ -137,6 +223,8 @@ export type P0AssessmentMode = (typeof P0_ASSESSMENT_MODES)[number];
 export type AssessmentLayout = "scroll" | "stepped";
 
 export interface AssessmentIntro {
+  /** Optional heading on the student intro. Unset → quiz level name. */
+  title?: string;
   overviewContent: string;
   timeMinutes: number;
   attempts?: number;
@@ -208,6 +296,10 @@ export type QuizPlacement =
 export interface AssessmentArtifact {
   id: string;
   courseId: string;
+  /**
+   * Level name. Always set on the in-lab builder — authors name the Level
+   * in Levelbuilder before this screen. Not authored here.
+   */
   title: string;
   lessonName: string;
   /**
@@ -216,6 +308,11 @@ export interface AssessmentArtifact {
    */
   placement?: QuizPlacement;
   mode: AssessmentMode;
+  /**
+   * Quiz purpose. Missing on a new quiz until the author picks one (chooser).
+   * Legacy drafts omit this and keep using `mode` only.
+   */
+  purpose?: QuizPurpose;
   layout: AssessmentLayout;
   metadata: {
     levelPosition: number;
@@ -234,8 +331,28 @@ export interface AssessmentArtifact {
   shuffle: ShuffleConfig;
   timing?: TimingConfig;
   attempts?: AttemptConfig;
+  /** Independent of `attempts.maxAttempts`. Blank max = unlimited when on. */
+  allowMultipleAttempts?: boolean;
+  /**
+   * Gate: withhold Next level until the answer is correct.
+   * Only applies when `allowMultipleAttempts` is on. Independent of max
+   * attempts. Hidden when attempts are off. Last spent attempt still
+   * shows Next level so the learner is not trapped.
+   */
+  requireCorrectAnswerToContinue?: boolean;
   tutor: TutorPolicy;
   intro?: AssessmentIntro;
+  /** Config toggle. Intro copy still lives on `intro`. */
+  showIntroScreen?: boolean;
+  feedback?: QuizFeedbackConfig;
+  /** Prototype stand-in for script_levels this quiz is placed in. */
+  unitPlacements?: QuizUnitPlacement[];
+  /**
+   * Levelbuilder numeric level id. Always present on the in-lab builder:
+   * authors open this screen after the Level row exists. Distinct from the
+   * draft storage `id`. Optional only on pre-P0 / student-route mocks.
+   */
+  levelId?: number;
   surveyMode?: boolean;
   updatedAt: number;
 }

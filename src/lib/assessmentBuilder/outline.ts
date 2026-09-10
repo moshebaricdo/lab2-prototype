@@ -26,12 +26,12 @@ export function createSectionId(): string {
   return `section-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-/** Display title with `Section N` fallback for untitled sections. */
+/** Author-facing label. Section names are not shown in P0. */
 export function sectionDisplayTitle(
-  section: AssessmentSection,
+  _section: AssessmentSection,
   index: number,
 ): string {
-  return section.title?.trim() || `Section ${index + 1}`;
+  return `Section ${index + 1}`;
 }
 
 /**
@@ -85,6 +85,22 @@ export function addSection(artifact: AssessmentArtifact): AssessmentArtifact {
     ...sections,
     { id: createSectionId(), questionRefs: [] },
   ]);
+}
+
+/** Insert an empty section above or below an existing section. */
+export function insertSection(
+  artifact: AssessmentArtifact,
+  relativeToId: string,
+  position: "above" | "below",
+): AssessmentArtifact {
+  const sections = artifact.sections ?? [];
+  if (sections.length === 0) return addSection(artifact);
+  const index = sections.findIndex((section) => section.id === relativeToId);
+  if (index === -1) return addSection(artifact);
+  const insertAt = position === "above" ? index : index + 1;
+  const next = [...sections];
+  next.splice(insertAt, 0, { id: createSectionId(), questionRefs: [] });
+  return withSections(artifact, next);
 }
 
 /** Set or clear a section's custom title. Empty string removes the title. */
@@ -183,6 +199,27 @@ export function deleteSection(
     return { ...artifact, sections: [], questionRefs: [] };
   }
   return withSections(artifact, next);
+}
+
+/**
+ * Re-insert a deleted section at its old index (toast undo). If the outline
+ * flattened and later gained flat questions, those become their own section.
+ */
+export function insertSectionAt(
+  artifact: AssessmentArtifact,
+  section: AssessmentSection,
+  index: number,
+): AssessmentArtifact {
+  const sections = [...(artifact.sections ?? [])];
+  if (sections.length === 0 && artifact.questionRefs.length > 0) {
+    sections.push({
+      id: createSectionId(),
+      questionRefs: [...artifact.questionRefs],
+    });
+  }
+  const at = Math.max(0, Math.min(index, sections.length));
+  sections.splice(at, 0, structuredClone(section));
+  return withSections(artifact, sections);
 }
 
 /**

@@ -38,13 +38,46 @@ function hydrateQuestion(
   const withTags = tags.some((tag, index) => tag !== question.tags[index])
     ? { ...question, tags }
     : question;
-  if (withTags.unitId) return withTags;
   const fromMock = mock.questions.find((entry) => entry.bankId === question.bankId);
-  if (fromMock?.unitId) return { ...withTags, unitId: fromMock.unitId };
+  let next = withTags;
+  if (fromMock) {
+    const seeded = fromMock.item.content;
+    const current = next.item.content;
+    const stemChanged =
+      current.prompt !== seeded.prompt ||
+      current.description !== seeded.description;
+    next = {
+      ...next,
+      numericId: next.numericId ?? fromMock.numericId,
+      questionKey: next.questionKey ?? fromMock.questionKey,
+      versionIndex: next.versionIndex ?? fromMock.versionIndex,
+      versionCount: next.versionCount ?? fromMock.versionCount,
+      listedInBank: next.listedInBank ?? fromMock.listedInBank,
+      attachedToOtherQuizzes:
+        next.attachedToOtherQuizzes ?? fromMock.attachedToOtherQuizzes,
+      usedInPublishedUnit:
+        next.usedInPublishedUnit ?? fromMock.usedInPublishedUnit,
+      lastEditedLabel: fromMock.lastEditedLabel ?? next.lastEditedLabel,
+      usedInQuizzes: fromMock.usedInQuizzes ?? next.usedInQuizzes,
+      versions: fromMock.versions ?? next.versions,
+      item: stemChanged
+        ? ({
+            ...next.item,
+            content: {
+              ...current,
+              prompt: seeded.prompt,
+              description: seeded.description,
+            },
+          } as QuestionItem["item"])
+        : next.item,
+    };
+  }
+  if (next.unitId) return next;
+  if (fromMock?.unitId) return { ...next, unitId: fromMock.unitId };
   const unit = (mock.units ?? []).find((entry) =>
-    withTags.tags.some((tag) => entry.conceptIds.includes(tag.id)),
+    next.tags.some((tag) => entry.conceptIds.includes(tag.id)),
   );
-  return unit ? { ...withTags, unitId: unit.id } : withTags;
+  return unit ? { ...next, unitId: unit.id } : next;
 }
 
 function hydrateCourseBanks(banks: AssessmentCourseBank[]): AssessmentCourseBank[] {
@@ -101,6 +134,29 @@ function banksNeedPersist(
       return original != null && original.unitId == null && question.unitId != null;
     });
     if (injectedUnit) return true;
+    const stemDrift = next.questions.some((question) => {
+      const original = before.questions.find(
+        (entry) => entry.bankId === question.bankId,
+      );
+      if (original == null) return false;
+      return (
+        original.item.content.prompt !== question.item.content.prompt ||
+        original.item.content.description !== question.item.content.description
+      );
+    });
+    if (stemDrift) return true;
+    const missingIdentity = next.questions.some((question) => {
+      const original = before.questions.find(
+        (entry) => entry.bankId === question.bankId,
+      );
+      if (original == null) return false;
+      return (
+        (original.numericId == null && question.numericId != null) ||
+        (original.questionKey == null && question.questionKey != null) ||
+        (original.lastEditedLabel == null && question.lastEditedLabel != null)
+      );
+    });
+    if (missingIdentity) return true;
     const injectedCode = next.domains.some((domain) => {
       const original = before.domains.find((entry) => entry.id === domain.id);
       return original != null && original.code == null && domain.code != null;
@@ -262,4 +318,8 @@ export function resetCourseBank(courseId: string) {
   if (courseId !== mockAifCourseBank.courseId) return;
   const banks = readBanks().filter((bank) => bank.courseId !== courseId);
   writeBanks([structuredClone(mockAifCourseBank), ...banks]);
+}
+
+export function resetAllCourseBanks() {
+  writeBanks(structuredClone(DEFAULT_COURSE_BANKS));
 }

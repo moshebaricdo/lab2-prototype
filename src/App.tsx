@@ -142,6 +142,90 @@ const AssessmentBuilderP0DraftPage = lazyPage(
   () => import("./pages/assessment-builder/AssessmentBuilderP0DraftPage"),
   "AssessmentBuilderP0DraftPage",
 );
+const CfuPages = () => import("./pages/cfu/CfuPages");
+const CfuMultiPage = lazyPage(CfuPages, "CfuMultiPage");
+const CfuMultiRetryPage = lazyPage(CfuPages, "CfuMultiRetryPage");
+const CfuMultiContinuePage = lazyPage(CfuPages, "CfuMultiContinuePage");
+const CfuMultiRevealPage = lazyPage(CfuPages, "CfuMultiRevealPage");
+const CfuMultiCappedPage = lazyPage(CfuPages, "CfuMultiCappedPage");
+const CfuMultiCheckboxesPage = lazyPage(CfuPages, "CfuMultiCheckboxesPage");
+const CfuMultiCheckboxesContinuePage = lazyPage(
+  CfuPages,
+  "CfuMultiCheckboxesContinuePage",
+);
+const CfuMultiCheckboxesNoRetryPage = lazyPage(
+  CfuPages,
+  "CfuMultiCheckboxesNoRetryPage",
+);
+const CfuMultiCheckboxesRevealPage = lazyPage(
+  CfuPages,
+  "CfuMultiCheckboxesRevealPage",
+);
+const CfuMultiCheckboxesCappedPage = lazyPage(
+  CfuPages,
+  "CfuMultiCheckboxesCappedPage",
+);
+const CfuFreeResponsePage = lazyPage(CfuPages, "CfuFreeResponsePage");
+const CfuFreeResponseRevealPage = lazyPage(
+  CfuPages,
+  "CfuFreeResponseRevealPage",
+);
+const CfuFreeResponseCappedPage = lazyPage(
+  CfuPages,
+  "CfuFreeResponseCappedPage",
+);
+const CfuMatchingPage = lazyPage(CfuPages, "CfuMatchingPage");
+const CfuMatchingRetryPage = lazyPage(CfuPages, "CfuMatchingRetryPage");
+const CfuMatchingReattemptPage = lazyPage(CfuPages, "CfuMatchingReattemptPage");
+const CfuMatchingContinuePage = lazyPage(CfuPages, "CfuMatchingContinuePage");
+const CfuMatchingRevealPage = lazyPage(CfuPages, "CfuMatchingRevealPage");
+const CfuMatchingCappedPage = lazyPage(CfuPages, "CfuMatchingCappedPage");
+const CfuTeacherPage = lazyPage(CfuPages, "CfuTeacherPage");
+const CfuTeacherCheckboxesPage = lazyPage(CfuPages, "CfuTeacherCheckboxesPage");
+const CfuTeacherFreeResponsePage = lazyPage(
+  CfuPages,
+  "CfuTeacherFreeResponsePage",
+);
+const CfuTeacherMatchingPage = lazyPage(CfuPages, "CfuTeacherMatchingPage");
+const CfuTeacherAsStudentPage = lazyPage(CfuPages, "CfuTeacherAsStudentPage");
+const CfuTeacherAsStudentCheckboxesPage = lazyPage(
+  CfuPages,
+  "CfuTeacherAsStudentCheckboxesPage",
+);
+const CfuTeacherAsStudentFreeResponsePage = lazyPage(
+  CfuPages,
+  "CfuTeacherAsStudentFreeResponsePage",
+);
+const CfuTeacherAsStudentMatchingPage = lazyPage(
+  CfuPages,
+  "CfuTeacherAsStudentMatchingPage",
+);
+const CfuTeacherResponsePage = lazyPage(CfuPages, "CfuTeacherResponsePage");
+const CfuTeacherResponseCheckboxesPage = lazyPage(
+  CfuPages,
+  "CfuTeacherResponseCheckboxesPage",
+);
+const CfuTeacherResponseFreeResponsePage = lazyPage(
+  CfuPages,
+  "CfuTeacherResponseFreeResponsePage",
+);
+const CfuTeacherResponseMatchingPage = lazyPage(
+  CfuPages,
+  "CfuTeacherResponseMatchingPage",
+);
+const QuizPages = () => import("./pages/quiz/QuizPages");
+const QuizPracticePage = lazyPage(QuizPages, "QuizPracticePage");
+const QuizExamRetriesPage = lazyPage(QuizPages, "QuizExamRetriesPage");
+const QuizExamFinalPage = lazyPage(QuizPages, "QuizExamFinalPage");
+const QuizExamPage = lazyPage(QuizPages, "QuizExamPage");
+const QuizExamResumePage = lazyPage(QuizPages, "QuizExamResumePage");
+const QuizTeacherPage = lazyPage(QuizPages, "QuizTeacherPage");
+const QuizTeacherAsStudentPage = lazyPage(QuizPages, "QuizTeacherAsStudentPage");
+const QuizTeacherResponsePage = lazyPage(QuizPages, "QuizTeacherResponsePage");
+const QuizTeacherResponseSubmittedPage = lazyPage(
+  QuizPages,
+  "QuizTeacherResponseSubmittedPage",
+);
 const MatchConnectorCodeLevelPage = lazyPage(
   () => import("./pages/match/MatchConnectorCodeLevelPage"),
   "MatchConnectorCodeLevelPage",
@@ -660,6 +744,136 @@ export default function App() {
         <Route
           path="/levels/assessment-builder-p0-draft"
           element={<AssessmentBuilderP0DraftPage />}
+        />
+        <Route path="/levels/cfu-multi" element={<CfuMultiPage />} />
+        <Route path="/levels/cfu-multi-retry" element={<CfuMultiRetryPage />} />
+        <Route
+          path="/levels/cfu-multi-continue"
+          element={<CfuMultiContinuePage />}
+        />
+        <Route path="/levels/cfu-multi-reveal" element={<CfuMultiRevealPage />} />
+        <Route path="/levels/cfu-multi-capped" element={<CfuMultiCappedPage />} />
+        <Route
+          path="/levels/cfu-multi-checkboxes"
+          element={<CfuMultiCheckboxesPage />}
+        />
+        <Route
+          path="/levels/cfu-multi-checkboxes-continue"
+          element={<CfuMultiCheckboxesContinuePage />}
+        />
+        <Route
+          path="/levels/cfu-multi-checkboxes-no-retry"
+          element={<CfuMultiCheckboxesNoRetryPage />}
+        />
+        <Route
+          path="/levels/cfu-multi-checkboxes-reveal"
+          element={<CfuMultiCheckboxesRevealPage />}
+        />
+        <Route
+          path="/levels/cfu-multi-checkboxes-capped"
+          element={<CfuMultiCheckboxesCappedPage />}
+        />
+        <Route
+          path="/levels/cfu-free-response"
+          element={<CfuFreeResponsePage />}
+        />
+        <Route
+          path="/levels/cfu-free-response-reveal"
+          element={<CfuFreeResponseRevealPage />}
+        />
+        <Route
+          path="/levels/cfu-free-response-capped"
+          element={<CfuFreeResponseCappedPage />}
+        />
+        <Route path="/levels/cfu-matching" element={<CfuMatchingPage />} />
+        <Route
+          path="/levels/cfu-matching-retry"
+          element={<CfuMatchingRetryPage />}
+        />
+        <Route
+          path="/levels/cfu-matching-reattempt"
+          element={<CfuMatchingReattemptPage />}
+        />
+        <Route
+          path="/levels/cfu-matching-continue"
+          element={<CfuMatchingContinuePage />}
+        />
+        <Route
+          path="/levels/cfu-matching-reveal"
+          element={<CfuMatchingRevealPage />}
+        />
+        <Route
+          path="/levels/cfu-matching-capped"
+          element={<CfuMatchingCappedPage />}
+        />
+        <Route path="/levels/cfu-teacher" element={<CfuTeacherPage />} />
+        <Route
+          path="/levels/cfu-teacher-checkboxes"
+          element={<CfuTeacherCheckboxesPage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-free-response"
+          element={<CfuTeacherFreeResponsePage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-matching"
+          element={<CfuTeacherMatchingPage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-as-student"
+          element={<CfuTeacherAsStudentPage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-as-student-checkboxes"
+          element={<CfuTeacherAsStudentCheckboxesPage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-as-student-free-response"
+          element={<CfuTeacherAsStudentFreeResponsePage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-as-student-matching"
+          element={<CfuTeacherAsStudentMatchingPage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-response"
+          element={<CfuTeacherResponsePage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-response-checkboxes"
+          element={<CfuTeacherResponseCheckboxesPage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-response-free-response"
+          element={<CfuTeacherResponseFreeResponsePage />}
+        />
+        <Route
+          path="/levels/cfu-teacher-response-matching"
+          element={<CfuTeacherResponseMatchingPage />}
+        />
+        <Route path="/levels/quiz-practice" element={<QuizPracticePage />} />
+        <Route
+          path="/levels/quiz-exam-retries"
+          element={<QuizExamRetriesPage />}
+        />
+        <Route path="/levels/quiz-exam-final" element={<QuizExamFinalPage />} />
+        <Route path="/levels/quiz-exam" element={<QuizExamPage />} />
+        <Route
+          path="/levels/quiz-exam-resume"
+          element={<QuizExamResumePage />}
+        />
+        <Route path="/levels/quiz-teacher" element={<QuizTeacherPage />} />
+        <Route
+          path="/levels/quiz-teacher-as-student"
+          element={<QuizTeacherAsStudentPage />}
+        />
+        <Route
+          path="/levels/quiz-teacher-response"
+          element={<QuizTeacherResponsePage />}
+        />
+        <Route
+          path="/levels/quiz-teacher-response-submitted"
+          element={<QuizTeacherResponseSubmittedPage />}
         />
         <Route
           path="/levels/levelgroup-scroll"

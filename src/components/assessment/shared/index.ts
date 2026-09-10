@@ -15,3 +15,15 @@ export type {
 export { AssessmentStemSection } from "./AssessmentStemSection";
 export type { AssessmentStemSectionProps } from "./AssessmentStemSection";
 export { CodeReferencePanel } from "./CodeReferencePanel";
+export { QuizAttemptChip } from "./QuizAttemptChip";
+export { StudentQuestionCardFooter } from "./StudentQuestionCardFooter";
+export {
+  AnswerNotesBlock,
+  ResponseResultTag,
+  StudentResponsesRow,
+  ViewpointBanner,
+} from "./ViewpointChrome";
+export type {
+  ResponseResultStatus,
+  ViewpointBannerVariant,
+} from "./ViewpointChrome";

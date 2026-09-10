@@ -39,6 +39,7 @@ interface SidebarTabRailProps {
   isTabDisabled: (tab: SidebarTab) => boolean;
   onSelectTab: (tab: SidebarTab) => void;
   onToggleCollapse: () => void;
+  collapseDisabled?: boolean;
   onToggleSettings: () => void;
 }
 
@@ -165,8 +166,15 @@ export function SidebarTabRail({
   isTabDisabled,
   onSelectTab,
   onToggleCollapse,
+  collapseDisabled = false,
   onToggleSettings,
 }: SidebarTabRailProps) {
+  const collapseTooltip = collapseDisabled
+    ? "No panels available"
+    : isCollapsed
+      ? "Expand sidebar"
+      : "Collapse sidebar";
+
   const tabs: SidebarTabConfig[] = [
     {
       tab: "instructions",
@@ -227,8 +235,8 @@ export function SidebarTabRail({
     },
     {
       tab: "builder-settings",
-      tooltip: "Assessment settings",
-      iconName: "wrench",
+      tooltip: "Configuration",
+      iconName: "wrench-simple",
       iconSize: "m",
       visible: showBuilderTab,
     },
@@ -244,24 +252,24 @@ export function SidebarTabRail({
     <div className={sidebarRailClassName({ collapsed: isCollapsed, compact })}>
       <div className={styles.railTopSpacer}>
         {collapsible && (
-          <Tooltip
-            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            placement="right"
-          >
-            <button
-              type="button"
-              className={styles.railCollapseButton}
-              onClick={onToggleCollapse}
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              <FaIcon
-                name={
-                  isCollapsed ? "arrow-right-from-line" : "arrow-left-from-line"
-                }
-                size="s"
-                className={`${styles.tabIcon} ${styles.railCollapseIcon}`}
-              />
-            </button>
+          <Tooltip title={collapseTooltip} placement="right">
+            <span className={styles.railCollapseButtonWrap}>
+              <button
+                type="button"
+                className={styles.railCollapseButton}
+                onClick={onToggleCollapse}
+                disabled={collapseDisabled}
+                aria-label={collapseTooltip}
+              >
+                <FaIcon
+                  name={
+                    isCollapsed ? "arrow-right-from-line" : "arrow-left-from-line"
+                  }
+                  size="s"
+                  className={`${styles.tabIcon} ${styles.railCollapseIcon}`}
+                />
+              </button>
+            </span>
           </Tooltip>
         )}
       </div>

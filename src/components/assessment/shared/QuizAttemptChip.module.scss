@@ -1,0 +1,17 @@
+@use "../../../styles/_mixins.scss" as *;
+
+.chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+  @include type-body-3-semibold;
+  color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

@@ -1,9 +1,166 @@
 @use "../../../../styles/_mixins.scss" as *;
 
+/* CADS Radio/Checkbox have no success/error color props. Override their
+   internal tokens so feedback states beat checked / hover / disabled. */
+@mixin checked-control-feedback-success {
+  .answerControl :global(.Mui-checked) {
+    --cads-radio-bg: var(--background-neutral-primary) !important;
+    --cads-radio-border: var(--border-success-strong) !important;
+    --cads-radio-dot: var(--background-success-primary) !important;
+    --cads-checkbox-bg: var(--background-success-primary) !important;
+    --cads-checkbox-border: var(--background-success-primary) !important;
+    --cads-checkbox-icon: var(--text-neutral-white-fixed) !important;
+  }
+}
+
+/* Revealed key the student did not pick: empty control, success/error ring. */
+@mixin unchecked-control-feedback-success {
+  .answerControl :global(.MuiRadio-root:not(.Mui-checked)),
+  .answerControl :global(.MuiCheckbox-root:not(.Mui-checked)) {
+    --cads-radio-bg: var(--background-neutral-primary) !important;
+    --cads-radio-border: var(--border-success-strong) !important;
+    --cads-checkbox-bg: var(--background-neutral-primary) !important;
+    --cads-checkbox-border: var(--border-success-strong) !important;
+  }
+}
+
+@mixin checked-control-feedback-error {
+  .answerControl :global(.Mui-checked) {
+    --cads-radio-bg: var(--background-neutral-primary) !important;
+    --cads-radio-border: var(--border-error-primary) !important;
+    --cads-radio-dot: var(--background-error-primary) !important;
+    --cads-checkbox-bg: var(--background-error-primary) !important;
+    --cads-checkbox-border: var(--background-error-primary) !important;
+    --cads-checkbox-icon: var(--text-neutral-white-fixed) !important;
+  }
+}
+
+@mixin unchecked-control-feedback-error {
+  .answerControl :global(.MuiRadio-root:not(.Mui-checked)),
+  .answerControl :global(.MuiCheckbox-root:not(.Mui-checked)) {
+    --cads-radio-bg: var(--background-neutral-primary) !important;
+    --cads-radio-border: var(--border-error-primary) !important;
+    --cads-checkbox-bg: var(--background-neutral-primary) !important;
+    --cads-checkbox-border: var(--border-error-primary) !important;
+  }
+}
+
+/* Figma: hovering/pressing anywhere on the option recasts the CADS control. */
+@mixin control-interaction-hover {
+  .answerControl :global(.MuiRadio-root:not(.Mui-checked):not(.Mui-disabled)) {
+    --cads-radio-bg: var(--background-brand-light) !important;
+    --cads-radio-border: var(--border-neutral-solid) !important;
+  }
+
+  .answerControl :global(.MuiCheckbox-root:not(.Mui-checked):not(.Mui-disabled)) {
+    --cads-checkbox-bg: var(--background-brand-light) !important;
+    --cads-checkbox-border: var(--border-neutral-solid) !important;
+  }
+
+  .answerControl :global(.MuiRadio-root.Mui-checked:not(.Mui-disabled)) {
+    --cads-radio-bg: var(--background-neutral-primary) !important;
+    --cads-radio-border: var(--border-selected-strong) !important;
+    --cads-radio-dot: var(--background-selected-strong) !important;
+  }
+
+  .answerControl :global(.MuiCheckbox-root.Mui-checked:not(.Mui-disabled)) {
+    --cads-checkbox-bg: var(--background-selected-strong) !important;
+    --cads-checkbox-border: var(--border-selected-strong) !important;
+  }
+}
+
+@mixin control-interaction-press {
+  .answerControl :global(.MuiRadio-root:not(.Mui-checked):not(.Mui-disabled)) {
+    --cads-radio-bg: var(--background-brand-light) !important;
+    --cads-radio-border: var(--border-selected-primary) !important;
+  }
+
+  .answerControl :global(.MuiCheckbox-root:not(.Mui-checked):not(.Mui-disabled)) {
+    --cads-checkbox-bg: var(--background-brand-light) !important;
+    --cads-checkbox-border: var(--border-selected-primary) !important;
+  }
+
+  .answerControl :global(.MuiRadio-root.Mui-checked:not(.Mui-disabled)) {
+    --cads-radio-bg: var(--background-brand-light) !important;
+    --cads-radio-border: var(--border-selected-primary) !important;
+    --cads-radio-dot: var(--background-selected-primary) !important;
+  }
+
+  .answerControl :global(.MuiCheckbox-root.Mui-checked:not(.Mui-disabled)) {
+    --cads-checkbox-bg: var(--background-selected-strong) !important;
+    --cads-checkbox-border: var(--border-selected-strong) !important;
+  }
+}
+
 .answers {
   border: 0;
   margin: 24px 0 0;
   padding: 0;
+}
+
+.answersStudent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 0;
+
+  > .answerOption {
+    align-items: center;
+    gap: 4px;
+    margin-top: 0;
+    min-height: 46px;
+    padding: 10px 14px 10px 12px;
+  }
+
+  > .answerOption .answerLead {
+    align-items: center;
+    padding-top: 0;
+  }
+
+  > .answerOption .answerControl {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    height: var(--leading-body-md);
+
+    :global(button) {
+      box-sizing: content-box;
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      min-height: 20px;
+      margin: 0;
+      padding: 0;
+    }
+  }
+
+  > .answerOption .answerOptionLetter {
+    @include type-body-2-semibold;
+    display: block;
+    min-width: 0;
+    line-height: var(--leading-body-md);
+  }
+
+  > .answerOption .answerContent {
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  > .answerOption .answerOptionBlocks {
+    align-content: start;
+  }
+
+  > .answerOption .answerTextBlock,
+  > .answerOption .answerText {
+    @include type-body-2-regular;
+    display: block;
+    line-height: var(--leading-body-md);
+  }
+}
+
+.answersStudentSubmitted {
+  pointer-events: none;
 }
 
 .answersGrid {
@@ -33,8 +190,8 @@
 
 .answerOption {
   align-items: start;
-  background: var(--background-neutral-secondary);
-  border: 1px solid var(--border-neutral-secondary);
+  background-color: var(--background-neutral-secondary);
+  border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-sm);
   color: var(--text-neutral-primary);
   cursor: pointer;
@@ -42,33 +199,67 @@
   gap: 12px;
   margin-top: 12px;
   padding: 16px;
-  transition: border-color 0.2s ease;
-}
-
-.answerOption:hover {
-  border-color: var(--border-neutral-primary);
+  /* Transition background-color, not the background shorthand — interpolating
+     two var() shorthands leaves Chrome stuck on the idle gray fill. */
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .answerOption:first-of-type {
   margin-top: 0;
 }
 
-.answerOptionChecked {
-  border-color: var(--border-focused-primary);
-  background: var(--background-brand-light);
+/* Idle option — hover/press deepen the border and recast the control. */
+.answerOption:hover:not(.answerOptionChecked):not(.answerOptionLocked):not(
+    .answerOptionSelectionCapped
+  ):not(.answerOptionRevealedCorrect):not(.answerOptionIncorrect):not(
+    .answerOptionDisabledSurface
+  ) {
+  background-color: var(--background-neutral-secondary);
+  border-color: var(--border-neutral-secondary);
+  @include control-interaction-hover;
 }
 
-.answerOptionChecked:hover {
-  border-color: var(--border-selected-primary);
+.answerOptionChecked:hover:not(.answerOptionLocked):not(
+    .answerOptionRevealedCorrect
+  ):not(.answerOptionIncorrect):not(.answerOptionDisabledSurface) {
+  border-color: var(--border-brand-mid);
+  @include control-interaction-hover;
+}
+
+.answerOption:active:not(.answerOptionChecked):not(.answerOptionLocked):not(
+    .answerOptionSelectionCapped
+  ):not(.answerOptionRevealedCorrect):not(.answerOptionIncorrect):not(
+    .answerOptionDisabledSurface
+  ) {
+  border-color: var(--border-neutral-secondary);
+  @include control-interaction-press;
+}
+
+.answerOptionChecked:active:not(.answerOptionLocked):not(
+    .answerOptionRevealedCorrect
+  ):not(.answerOptionIncorrect):not(.answerOptionDisabledSurface) {
+  border-color: var(--border-brand-mid);
+  @include control-interaction-press;
+}
+
+.answerOptionChecked {
+  background-color: var(--background-brand-light);
+  border-color: var(--border-brand-light);
 }
 
 .answerOptionRevealedCorrect {
-  background: var(--background-success-light);
-  border-color: var(--border-success-primary);
+  background-color: var(--background-success-light);
+  border-color: var(--border-success-mid, var(--border-success-primary));
+
+  /* Figma Multi Answer Option `isCorrect`: recast the CADS control.
+     Selected = success ring/dot or filled check. Unselected = success ring only. */
+  @include checked-control-feedback-success;
+  @include unchecked-control-feedback-success;
 }
 
-.answerOptionRevealedCorrect:hover {
-  border-color: var(--border-success-primary);
+.answerOptionRevealedCorrect:hover,
+.answerOptionRevealedCorrect:active {
+  border-color: var(--border-success-mid, var(--border-success-primary));
 }
 
 @keyframes answerCorrectShimmerSweep {
@@ -130,28 +321,74 @@
   cursor: default;
 }
 
-.answerOptionSelectionCapped {
-  cursor: not-allowed;
-  opacity: 0.55;
+/* Figma disabled (not revealed): white surface, muted type, disabled control. */
+@mixin disabled-option-surface {
+  background-color: var(--background-neutral-primary);
+  border-color: var(--border-neutral-primary);
+  color: var(--text-neutral-tertiary);
+  cursor: default;
+
+  .answerOptionLetter,
+  .answerText,
+  .answerTextBlock {
+    color: var(--text-neutral-tertiary);
+  }
 }
 
-.answerOptionSelectionCapped:hover {
-  border-color: var(--border-neutral-primary);
+@mixin disabled-control-tokens {
+  .answerControl :global(.MuiRadio-root) {
+    --cads-radio-bg: var(--background-neutral-primary) !important;
+    --cads-radio-border: var(--border-disabled-neutral) !important;
+  }
+
+  .answerControl :global(.MuiCheckbox-root:not(.Mui-checked)) {
+    --cads-checkbox-bg: var(--background-neutral-primary) !important;
+    --cads-checkbox-border: var(--border-disabled-neutral) !important;
+  }
+
+  .answerControl :global(.MuiCheckbox-root.Mui-checked) {
+    --cads-checkbox-bg: var(--background-disabled-neutral) !important;
+    --cads-checkbox-border: var(--border-disabled-neutral) !important;
+    --cads-checkbox-icon: var(--text-disabled-neutral-inverse) !important;
+  }
+}
+
+.answerOption.answerOptionDisabledSurface {
+  @include disabled-option-surface;
+  @include disabled-control-tokens;
+}
+
+.answerOption.answerOptionSelectionCapped {
+  @include disabled-option-surface;
+  cursor: not-allowed;
 }
 
 .answerOptionIncorrect {
-  background: var(--background-error-light);
-  border-color: var(--border-error-primary);
+  background-color: var(--background-error-light);
+  border-color: var(--border-error-mid, var(--border-error-primary));
+
+  /* Figma Multi Answer Option `isFalse`: recast the CADS control.
+     Selected = error ring/dot or filled check. Unselected = error ring only. */
+  @include checked-control-feedback-error;
+  @include unchecked-control-feedback-error;
 }
 
-.answerOptionIncorrect:hover {
-  border-color: var(--border-error-primary);
+.answerOptionIncorrect:hover,
+.answerOptionIncorrect:active {
+  border-color: var(--border-error-mid, var(--border-error-primary));
 }
 
 .answerText {
   flex: 1;
   font-size: var(--text-body-md);
   line-height: 1.45;
+}
+
+.answerLead {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
 }
 
 .answerContent {
@@ -224,6 +461,13 @@
 
 .answerOption:has(:focus-visible) {
   @include focus-ring;
+  border-color: var(--border-neutral-primary);
+
+  /* Focus ring lives on the card; suppress the CADS control’s own ring. */
+  .answerControl :global(.Mui-focusVisible),
+  .answerControl :global(.Mui-focusVisible *) {
+    box-shadow: none !important;
+  }
 }
 
 .revealedCheck {
@@ -244,12 +488,3 @@
   height: 22px;
 }
 
-.persistedWrongMark {
-  align-items: center;
-  color: var(--text-neutral-quaternary);
-  display: inline-flex;
-  flex-shrink: 0;
-  font-size: var(--text-body-sm);
-  height: 22px;
-  opacity: 0.85;
-}

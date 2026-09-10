@@ -259,7 +259,9 @@ export function FillInBlankWorkspace({
 
   const eyebrow =
     embeddedInScrollGroup || embeddedInSteppedGroup
-      ? (embeddedStepEyebrow ?? "Fill in the blank")
+      ? (embeddedStepEyebrow !== undefined
+          ? embeddedStepEyebrow
+          : "Fill in the blank")
       : blanks.length > 1
         ? "Fill in the blanks"
         : "Fill in the blank";
@@ -457,6 +459,7 @@ export function FillInBlankWorkspace({
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         compact: resourcePanelCompact,

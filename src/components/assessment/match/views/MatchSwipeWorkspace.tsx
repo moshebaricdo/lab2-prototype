@@ -420,6 +420,7 @@ export function MatchSwipeWorkspace({
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         compact: resourcePanelCompact,

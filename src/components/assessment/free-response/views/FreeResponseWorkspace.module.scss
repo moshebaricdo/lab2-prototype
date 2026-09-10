@@ -1,6 +1,13 @@
 @use "../../../../styles/_mixins.scss" as *;
 
 .inputWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.inputWrapStandalone {
   margin-top: 24px;
 }
 
@@ -26,11 +33,9 @@
 }
 
 .fileRow {
-  align-items: flex-start;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 12px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -40,8 +45,9 @@
   border-radius: var(--shape-sm);
   box-sizing: border-box;
   display: flex;
+  height: 48px;
   justify-content: center;
-  padding: 20px 16px;
+  padding: 8px;
   position: relative;
   width: 100%;
 }
@@ -49,7 +55,15 @@
 .fileDropZoneInner {
   align-items: center;
   display: flex;
+  gap: 8px;
   justify-content: center;
+}
+
+.fileSeparator {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-neutral-quaternary);
 }
 
 .fileInputHidden {

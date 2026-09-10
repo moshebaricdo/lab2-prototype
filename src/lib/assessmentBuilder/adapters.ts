@@ -28,13 +28,22 @@ import type {
 
 const BUILDER_LEVEL_ID_BASE = 90000;
 
+/** Student card: Question title as heading; Description as the markdown stem. */
+function studentStem(content: {
+  prompt: string;
+  description?: string;
+}): { prompt: string; description?: string } {
+  const prompt = content.prompt.trim();
+  const extra = content.description?.trim();
+  return extra ? { prompt, description: extra } : { prompt };
+}
+
 function questionItemToBlock(
   item: QuestionItem,
   blockId: string,
 ): LevelGroupQuestionBlock {
   const base = {
     blockId,
-    ...(item.codePanel ? { codePanel: item.codePanel } : {}),
   };
 
   switch (item.item.kind) {
@@ -42,19 +51,19 @@ function questionItemToBlock(
       return {
         ...base,
         kind: "multi",
-        question: multiContentToLevelGroup(item.item.content, item.bankId),
+        question: multiContentToLevelGroup(item, item.bankId),
       };
     case "freeResponse":
       return {
         ...base,
         kind: "freeResponse",
-        question: freeContentToLevelGroup(item.item.content, item.bankId),
+        question: freeContentToLevelGroup(item, item.bankId),
       };
     case "match":
       return {
         ...base,
         kind: "match",
-        question: matchContentToLevelGroup(item.item.content, item.bankId),
+        question: matchContentToLevelGroup(item, item.bankId),
       };
     case "dragDrop":
       return {
@@ -72,13 +81,18 @@ function questionItemToBlock(
 }
 
 function multiContentToLevelGroup(
-  content: Extract<QuestionItemContent, { kind: "multi" }>["content"],
+  item: QuestionItem,
   id: string,
 ): LevelGroupMultiQuestion {
+  const content = item.item.content as Extract<
+    QuestionItemContent,
+    { kind: "multi" }
+  >["content"];
+  const stem = studentStem(content);
   return {
     id,
-    prompt: content.prompt,
-    ...(content.description ? { description: content.description } : {}),
+    prompt: stem.prompt,
+    ...(stem.description ? { description: stem.description } : {}),
     answers: content.answers,
     ...(content.surveyMode
       ? {}
@@ -89,13 +103,18 @@ function multiContentToLevelGroup(
 }
 
 function freeContentToLevelGroup(
-  content: Extract<QuestionItemContent, { kind: "freeResponse" }>["content"],
+  item: QuestionItem,
   id: string,
 ): LevelGroupFreeResponseQuestion {
+  const content = item.item.content as Extract<
+    QuestionItemContent,
+    { kind: "freeResponse" }
+  >["content"];
+  const stem = studentStem(content);
   return {
     id,
-    prompt: content.prompt,
-    ...(content.description ? { description: content.description } : {}),
+    prompt: stem.prompt,
+    ...(stem.description ? { description: stem.description } : {}),
     placeholder: content.placeholder,
     minCharacters: content.minCharacters,
     revealAnswerEnabled: content.revealAnswerEnabled ?? content.teacherAnswer != null,
@@ -105,13 +124,18 @@ function freeContentToLevelGroup(
 }
 
 function matchContentToLevelGroup(
-  content: Extract<QuestionItemContent, { kind: "match" }>["content"],
+  item: QuestionItem,
   id: string,
 ): LevelGroupMatchQuestion {
+  const content = item.item.content as Extract<
+    QuestionItemContent,
+    { kind: "match" }
+  >["content"];
+  const stem = studentStem(content);
   return {
     id,
-    prompt: content.prompt,
-    ...(content.description ? { description: content.description } : {}),
+    prompt: stem.prompt,
+    ...(stem.description ? { description: stem.description } : {}),
     terms: content.terms,
     prompts: content.prompts,
   };
@@ -174,8 +198,13 @@ export function questionsToFlowBlocks(
   questions: QuestionItem[],
 ): LevelGroupQuestionBlock[] {
   return questions.map((item, index) =>
-    questionItemToBlock(item, `block-${item.bankId}-${index}`),
+    questionItemToBlock(item, flowBlockId(item.bankId, index)),
   );
+}
+
+/** Stable per-attempt block id — also used to key persisted / seeded responses. */
+export function flowBlockId(bankId: string, index: number): string {
+  return `block-${bankId}-${index}`;
 }
 
 export function assessmentToFlowPayloadFromQuestions(

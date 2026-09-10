@@ -5,6 +5,7 @@ import {
   useState,
   type ChangeEvent,
   type DragEvent,
+  type ReactNode,
   type SetStateAction,
 } from "react";
 import { useNavigate } from "react-router-dom";
@@ -52,6 +53,9 @@ interface FreeResponseWorkspaceProps {
   groupTeacherReveal?: boolean;
   /** Hide the dev panel tab in the sidebar. */
   hideDevPanel?: boolean;
+  /** CFU / quiz student card: Figma question-container stem pad. */
+  studentQuestionChrome?: boolean;
+  afterBody?: ReactNode;
 }
 
 const freeResponseDevFields: DevPanelField[] = [
@@ -80,6 +84,8 @@ export function FreeResponseWorkspace({
   embeddedStepEyebrow,
   groupTeacherReveal,
   hideDevPanel = false,
+  studentQuestionChrome = false,
+  afterBody,
 }: FreeResponseWorkspaceProps = {}) {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -234,26 +240,36 @@ export function FreeResponseWorkspace({
     embedded && (embeddedInScrollGroup || embeddedInSteppedGroup);
 
   const stemEyebrow =
-    embeddedFlatInParent && embeddedStepEyebrow
+    embeddedFlatInParent && embeddedStepEyebrow !== undefined
       ? embeddedStepEyebrow
       : embedded && !embeddedFlatInParent
         ? ""
         : "Free response";
 
   const useStepCounterEyebrowStyle =
-    embeddedInScrollGroup && !embeddedInSteppedGroup;
+    studentQuestionChrome ||
+    (embeddedInScrollGroup && !embeddedInSteppedGroup);
 
   const cardContents = (
     <>
           <AssessmentStemSection
             eyebrow={stemEyebrow}
+            layout={studentQuestionChrome ? "questionContainer" : "default"}
             eyebrowClassName={
               useStepCounterEyebrowStyle ? stemStyles.stepCounterEyebrow : undefined
             }
             question={level.stem.question}
             description={level.stem.description}
+            afterBody={afterBody}
           >
-            <div className={styles.inputWrap}>
+            <div
+              className={[
+                styles.inputWrap,
+                studentQuestionChrome ? "" : styles.inputWrapStandalone,
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
               <TextInput
                 multiline
                 color="secondary"
@@ -296,13 +312,26 @@ export function FreeResponseWorkspace({
                     <div className={styles.fileDropZoneInner}>
                       <Button
                         type="button"
-                        variant="outlined" color="secondary"
+                        variant="text"
+                        color="secondary"
                         size="small"
                         startIconName="upload"
                         disabled={fieldLocked}
                         onClick={() => fileInputRef.current?.click()}
                       >
-                        Attach a file
+                        Upload a file
+                      </Button>
+                      <span className={styles.fileSeparator} aria-hidden="true" />
+                      <Button
+                        type="button"
+                        variant="text"
+                        color="secondary"
+                        size="small"
+                        startIconName="microphone"
+                        disabled={fieldLocked}
+                        onClick={() => {}}
+                      >
+                        Record audio
                       </Button>
                     </div>
                   </div>
@@ -318,7 +347,10 @@ export function FreeResponseWorkspace({
             </div>
           </AssessmentStemSection>
 
-          {revealAnswerEnabled && teacherRevealActive && teacherAnswer ? (
+          {revealAnswerEnabled &&
+          teacherRevealActive &&
+          teacherAnswer &&
+          !studentQuestionChrome ? (
             <div
               className={styles.inlineTeacherAnswer}
               aria-label="Teacher answer key"
@@ -477,6 +509,7 @@ export function FreeResponseWorkspace({
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         compact: resourcePanelCompact,

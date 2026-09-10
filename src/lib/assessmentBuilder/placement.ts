@@ -24,9 +24,9 @@ export interface BankFilterScope {
 }
 
 /**
- * Default bank scope from quiz placement. Attached → that family + unit
- * (clearable; parent course shows indeterminate). Floating → empty;
- * name / standard / type still work.
+ * Default bank scope from quiz placement. The P0 bank UI no longer seeds
+ * these on open — filters start at All — but attached quizzes can still
+ * restore this scope if a later surface needs it.
  */
 export function bankFilterDefaults(
   placement: QuizPlacement | undefined,

@@ -1,9 +1,13 @@
 import { SettingsPanel } from "./views/SettingsPanel";
 import { SidebarPanelContent } from "./SidebarPanelContent";
 import { SidebarTabRail } from "./SidebarTabRail";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { defaultMockTutorConfig } from "../../../data/weblab2";
-import { BUILDER_SIDEBAR_TABS, type SidebarProps, type SidebarTab } from "./Sidebar.types";
+import {
+  listVisibleSidebarTabs,
+  type SidebarProps,
+  type SidebarTab,
+} from "./Sidebar.types";
 import styles from "./Sidebar.module.scss";
 
 const OPEN_TUTOR_PANEL_EVENT = "weblab:open-tutor-panel";
@@ -134,6 +138,34 @@ export function Sidebar({
   );
   const effectiveTutorRequestRunning =
     panelTutorRequestRunning || externalTutorRequestRunning;
+  const visibleTabs = useMemo(
+    () =>
+      listVisibleSidebarTabs({
+        showInstructionsTab,
+        showValidationTab,
+        showAiTutorTab,
+        showHistoryTab,
+        showBackpackTab,
+        showTeacherResourcesTab,
+        showRubricTab,
+        showResourcesTab,
+        showBuilderTab,
+        showDevTab,
+      }),
+    [
+      showInstructionsTab,
+      showValidationTab,
+      showAiTutorTab,
+      showHistoryTab,
+      showBackpackTab,
+      showTeacherResourcesTab,
+      showRubricTab,
+      showResourcesTab,
+      showBuilderTab,
+      showDevTab,
+    ],
+  );
+  const hasVisibleTabs = visibleTabs.length > 0;
 
   useEffect(() => {
     if (!collapsible) {
@@ -181,8 +213,16 @@ export function Sidebar({
   onCollapsedChangeRef.current = onCollapsedChange;
 
   useEffect(() => {
-    onCollapsedChangeRef.current?.(Boolean(collapsible && isCollapsed));
-  }, [collapsible, isCollapsed]);
+    onCollapsedChangeRef.current?.(
+      Boolean(collapsible && (isCollapsed || !hasVisibleTabs)),
+    );
+  }, [collapsible, hasVisibleTabs, isCollapsed]);
+
+  useEffect(() => {
+    if (collapsible && !hasVisibleTabs) {
+      setIsCollapsed(true);
+    }
+  }, [collapsible, hasVisibleTabs]);
 
   useEffect(() => {
     if (!hasMountedCollapseStateRef.current) {
@@ -200,36 +240,10 @@ export function Sidebar({
   }, [collapsible, isCollapsed]);
 
   useEffect(() => {
-    const validTabs: SidebarTab[] = [];
-
-    if (showInstructionsTab) validTabs.push("instructions");
-    if (showValidationTab) validTabs.push("checklist");
-    if (showAiTutorTab) validTabs.push("ai-tutor");
-    if (showHistoryTab) validTabs.push("history");
-    if (showBackpackTab) validTabs.push("backpack");
-    if (showTeacherResourcesTab) validTabs.push("classroom");
-    if (showRubricTab) validTabs.push("rubric");
-    if (showResourcesTab) validTabs.push("resources");
-    if (showBuilderTab) validTabs.push(...BUILDER_SIDEBAR_TABS);
-    if (showDevTab) validTabs.push("dev");
-
-    if (!validTabs.includes(activeTab) && validTabs.length > 0) {
-      setActiveTab(validTabs[0]);
+    if (!visibleTabs.includes(activeTab) && visibleTabs.length > 0) {
+      setActiveTab(visibleTabs[0]);
     }
-  }, [
-    activeTab,
-    setActiveTab,
-    showAiTutorTab,
-    showInstructionsTab,
-    showHistoryTab,
-    showBackpackTab,
-    showTeacherResourcesTab,
-    showRubricTab,
-    showValidationTab,
-    showDevTab,
-    showResourcesTab,
-    showBuilderTab,
-  ]);
+  }, [activeTab, setActiveTab, visibleTabs]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -255,7 +269,7 @@ export function Sidebar({
     return () => window.removeEventListener("keydown", handleKey);
   }, [showDevTab, effectiveTutorRequestRunning, activeTab, setActiveTab, showInstructionsTab, showAiTutorTab, showValidationTab, collapsible, isCollapsed]);
 
-  const panelHidden = collapsible && isCollapsed;
+  const panelHidden = collapsible && (isCollapsed || !hasVisibleTabs);
   const railWidth = compact ? 40 : 56;
   const panelContentWidth = Math.max(0, sidebarWidth - railWidth);
 
@@ -273,6 +287,7 @@ export function Sidebar({
   };
 
   const handleToggleCollapse = () => {
+    if (!hasVisibleTabs) return;
     setIsCollapsed((prev) => {
       const next = !prev;
       if (next) {
@@ -333,6 +348,7 @@ export function Sidebar({
         isTabDisabled={isTabDisabled}
         onSelectTab={selectTab}
         onToggleCollapse={handleToggleCollapse}
+        collapseDisabled={!hasVisibleTabs}
         onToggleSettings={handleToggleSettings}
       />
 

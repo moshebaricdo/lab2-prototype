@@ -48,6 +48,33 @@ export function isBuilderTab(tab: SidebarTab): boolean {
   return (BUILDER_SIDEBAR_TABS as readonly string[]).includes(tab);
 }
 
+/** Rail tabs that should render for the current show* flags. */
+export function listVisibleSidebarTabs(options: {
+  showInstructionsTab?: boolean;
+  showValidationTab?: boolean;
+  showAiTutorTab?: boolean;
+  showHistoryTab?: boolean;
+  showBackpackTab?: boolean;
+  showTeacherResourcesTab?: boolean;
+  showRubricTab?: boolean;
+  showResourcesTab?: boolean;
+  showBuilderTab?: boolean;
+  showDevTab?: boolean;
+}): SidebarTab[] {
+  const tabs: SidebarTab[] = [];
+  if (options.showInstructionsTab) tabs.push("instructions");
+  if (options.showValidationTab) tabs.push("checklist");
+  if (options.showAiTutorTab) tabs.push("ai-tutor");
+  if (options.showHistoryTab) tabs.push("history");
+  if (options.showBackpackTab) tabs.push("backpack");
+  if (options.showTeacherResourcesTab) tabs.push("classroom");
+  if (options.showRubricTab) tabs.push("rubric");
+  if (options.showResourcesTab) tabs.push("resources");
+  if (options.showBuilderTab) tabs.push(...BUILDER_SIDEBAR_TABS);
+  if (options.showDevTab) tabs.push("dev");
+  return tabs;
+}
+
 export type DevPanelShareParamsProvider = () => Record<string, string> | null;
 
 export interface SidebarProps {
@@ -88,6 +115,7 @@ export interface SidebarProps {
   validationTests?: ValidationTestDefinition[];
   showAiTutorTab?: boolean;
   showHistoryTab?: boolean;
+  /** Defaults true for IDE labs. Assessment and quiz levels should pass false. */
   showBackpackTab?: boolean;
   backpackImportLab?: BackpackImportLab;
   onImportBackpackItem?: (item: BackpackItem) => true | string | void;
@@ -110,6 +138,7 @@ export interface SidebarProps {
   /**
    * When true, sidebar can be collapsed to a narrow strip.
    * Defaults to disabled for Web Lab 2, enabled by assessment levels, and enabled for AI Chat Lab card mode.
+   * The expand/collapse control is disabled when no rail tabs are visible.
    */
   collapsible?: boolean;
   /**

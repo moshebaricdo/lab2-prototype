@@ -112,8 +112,16 @@ export function standardLabel(tag: DomainTag): string {
   return tag.code ?? tag.label;
 }
 
+/** One-line bank-card peek: stem body when present, otherwise the question title. */
 export function questionStemPreview(question: QuestionItem): string {
-  return question.item.content.prompt.trim();
+  const extra = question.item.content.description?.trim() ?? "";
+  const prompt = question.item.content.prompt.trim();
+  const source = extra || prompt;
+  return source
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/[#>*_`[\]]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**

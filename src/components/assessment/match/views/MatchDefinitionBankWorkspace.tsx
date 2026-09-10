@@ -584,6 +584,7 @@ export function MatchDefinitionBankWorkspace({
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         compact: resourcePanelCompact,

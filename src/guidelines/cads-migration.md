@@ -10,7 +10,7 @@ Related: `.cursor/skills/cads-prototyping/SKILL.md`, `color-theming.md`, `/desig
 
 | Surface | Components | Foundations tokens (SCSS) |
 |---|---|---|
-| `Lab2Shell` → `CadsLabProvider` | Theme bootstrap for all Lab2 routes; flow-complete uses CADS `Dialog` | Loads `variables.css` + icon fonts; `baseline={false}` |
+| `Lab2Shell` → `CadsLabProvider` | Theme bootstrap for all Lab2 routes; flow-complete uses CADS `Dialog` | Loads `variables.css` + icon fonts + `cadsOverlay.css` (Dialog/Modal paper width); `baseline={false}` |
 | Header (`TopNavigation` / `GlobalNavMenu` / `LevelProgressBubbles`) | CADS `Button` / `Dropdown` / `Tooltip` / `FaIcon` — extraSmall outlined/text on-brand; progress indicator matches CADS Global Header **labLevel** (always light); header chrome always dark | Unprefixed Foundations (white-on-brand via `--btn-*` overrides; header `dark` / `data-theme="Dark"`, progress pill `data-theme="Light"`) |
 | AI Chat Lab workspace | CADS primitives + `AiChatMessage` / `AiChatInput` | Unprefixed Foundations |
 | Resource panel (shared) | CADS `Button` / `TextInput` / `Dropdown` / `Tooltip` / `Alert` / `Toast` (backpack save/delete + undo) / `Dialog` (backpack delete confirm) / `Checkbox` / `AiChatMessage` + `AiChatInput` + `AiChatFileChip` (Tutor) / `Tag` (rubric status, backpack Added) | Unprefixed Foundations |
@@ -19,7 +19,7 @@ Related: `.cursor/skills/cads-prototyping/SKILL.md`, `color-theming.md`, `/desig
 | IDE shared chrome (`FileManager`, `CreateFileModal`, `EmptyState`, `VersionBanner`, code-editor chrome) | CADS `Modal` / `Button` / `Dropdown` / `Tooltip` / `TextInput` / `Alert` (`CreateFileModal` and `NameInputModal` wrap `CadsLabProvider` so page-level overlays outside `Lab2Shell` still theme) | Unprefixed Foundations (`--ds-syntax-*` kept in CodeMirror highlight style) |
 | Web Lab 2 workspace + agentic chrome | CADS `Button` / `Dropdown` / `Tooltip` / `SegmentedButton` / `Alert` / `Modal` | Unprefixed Foundations |
 | Python Lab / Sketch Lab workspaces | CADS `Button` / `Dropdown` / `Tooltip` / `Slider` / `TextInput` | Unprefixed Foundations |
-| Assessment workspaces + builder | CADS `Button` / `TextInput` / `Checkbox` / `Radio` / `Dropdown` / `SegmentedButton` / `Tooltip` / `Tag` / `Dialog` / `FaIcon` | Unprefixed Foundations |
+| Assessment workspaces + builder | CADS `Button` / `TextInput` / `Checkbox` / `Radio` / `Dropdown` / `SegmentedButton` / `Tooltip` / `Tag` / `Dialog` / `Toast` (question save, section remove + undo) / `FaIcon` | Unprefixed Foundations |
 | Lab2 dev panel + `/levels` index | CADS `Button` / `Dropdown` / `TextInput` / `Slider` / `Tooltip` | Unprefixed Foundations (`LevelsIndexPage` wraps `CadsLabProvider`) |
 | Local `ui/` atoms (`AppButton`, etc.) | Freeze for new UI; do not extend. Remaining call sites: color sandbox, teacher dashboard | `--ds-*` |
 

@@ -1,8 +1,13 @@
-import type { AssessmentArtifact } from "../../types/assessmentBuilder";
+import type {
+  AssessmentArtifact,
+  AssessmentQuestionRef,
+} from "../../types/assessmentBuilder";
 import {
   mockBlankAssessment,
+  mockP0CfuAssessment,
   mockP0ExamAssessment,
   mockP0FloatingAssessment,
+  mockQuizPracticeAssessment,
   mockSeededAssessment,
 } from "../../data/assessmentBuilder/mockAssessments";
 
@@ -12,7 +17,9 @@ const DEFAULT_DRAFTS: AssessmentArtifact[] = [
   mockBlankAssessment,
   mockSeededAssessment,
   mockP0ExamAssessment,
+  mockP0CfuAssessment,
   mockP0FloatingAssessment,
+  mockQuizPracticeAssessment,
 ];
 
 let cachedRaw: string | null = null;
@@ -20,6 +27,20 @@ let cachedDrafts: AssessmentArtifact[] | null = null;
 
 let draftSnapshotRawKey: string | null = null;
 const artifactSnapshots = new Map<string, AssessmentArtifact | undefined>();
+
+/** Retired P0 seed types (fill-in-blank / ordering) → current MC / Matching ids. */
+const P0_EXAM_BANK_ID_ALIASES: Record<string, string> = {
+  "q-aif-fib-1": "q-aif-multi-features",
+  "q-aif-parsons-1": "q-aif-match-training",
+};
+
+function remapP0ExamBankRef(
+  ref: AssessmentQuestionRef,
+): AssessmentQuestionRef {
+  if (ref.type !== "bank") return ref;
+  const nextId = P0_EXAM_BANK_ID_ALIASES[ref.bankId];
+  return nextId ? { type: "bank", bankId: nextId } : ref;
+}
 
 function mergeMissingDefaultDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
   const existingIds = new Set(drafts.map((draft) => draft.id));
@@ -30,14 +51,68 @@ function mergeMissingDefaultDrafts(drafts: AssessmentArtifact[]): AssessmentArti
 
 /**
  * Upgrade stored drafts that predate sectioned outlines, quiz placement,
- * or named P0 sections. A draft without a `sections` key was written
- * before sections existed; reseed the P0 exam so the outline is demoable.
- * Missing placement / seed titles / lesson name fill from the seed
- * without wiping author edits.
+ * named P0 sections, or the P0-only question-type seed. A draft without a
+ * `sections` key was written before sections existed; reseed the P0 exam so
+ * the outline is demoable. Missing placement / seed titles / lesson name /
+ * level id fill from the seed without wiping author edits. Placeholder
+ * “New quiz” titles on the floating draft upgrade to the Levelbuilder name.
+ * Stale fill-in-blank and
+ * ordering refs remap to the current Multiple Choice / Matching items.
+ * Untouched CFU seeds that still have the old attempts-off default pick up
+ * attempts-on + require-correct (legacy CfU).
  */
 function hydrateDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
   let changed = false;
   const next = drafts.map((draft) => {
+    if (draft.id === mockP0ExamAssessment.id) {
+      if (
+        draft.purpose == null ||
+        draft.title === "AI Foundations Certification Exam"
+      ) {
+        changed = true;
+        return structuredClone(mockP0ExamAssessment);
+      }
+    }
+    if (draft.id === mockP0FloatingAssessment.id) {
+      const placeholderTitle =
+        !draft.title.trim() ||
+        draft.title === "New quiz" ||
+        draft.title === "New checkpoint";
+      if (placeholderTitle) {
+        changed = true;
+        return {
+          ...draft,
+          title: mockP0FloatingAssessment.title,
+          metadata: {
+            ...draft.metadata,
+            assessmentName: mockP0FloatingAssessment.metadata.assessmentName,
+          },
+          levelId: draft.levelId ?? mockP0FloatingAssessment.levelId,
+        };
+      }
+      if (draft.levelId == null && mockP0FloatingAssessment.levelId != null) {
+        changed = true;
+        return { ...draft, levelId: mockP0FloatingAssessment.levelId };
+      }
+    }
+    if (draft.id === mockP0CfuAssessment.id) {
+      const looksLikeOldCfuSeed =
+        draft.allowMultipleAttempts === false &&
+        draft.requireCorrectAnswerToContinue == null &&
+        draft.feedback?.showCorrectness === true &&
+        draft.feedback?.revealAnswerExplanation === false &&
+        draft.tutor.enabled === false &&
+        draft.showIntroScreen === false;
+      if (looksLikeOldCfuSeed) {
+        changed = true;
+        return {
+          ...draft,
+          allowMultipleAttempts: true,
+          requireCorrectAnswerToContinue: true,
+          attempts: undefined,
+        };
+      }
+    }
     if (draft.id !== mockP0ExamAssessment.id) return draft;
     if (!("sections" in draft)) {
       changed = true;
@@ -52,9 +127,26 @@ function hydrateDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
         placement: structuredClone(mockP0ExamAssessment.placement),
       };
     }
-    if (updated.lessonName === "AI Foundations") {
+    if (updated.lessonName === "AI Foundations" || updated.lessonName === "AIF Practice Exam") {
       changed = true;
       updated = { ...updated, lessonName: mockP0ExamAssessment.lessonName };
+    }
+    if (updated.levelId == null && mockP0ExamAssessment.levelId != null) {
+      changed = true;
+      updated = { ...updated, levelId: mockP0ExamAssessment.levelId };
+    }
+    const stalePlacementName = updated.unitPlacements?.[0]?.unitName ?? "";
+    if (
+      (stalePlacementName === "Unit 3 · 2025" ||
+        stalePlacementName.startsWith("Unit 3 ·")) &&
+      mockP0ExamAssessment.unitPlacements
+    ) {
+      changed = true;
+      updated = {
+        ...updated,
+        unitPlacements: structuredClone(mockP0ExamAssessment.unitPlacements),
+        updatedAt: mockP0ExamAssessment.updatedAt,
+      };
     }
 
     const seedById = new Map(
@@ -65,12 +157,32 @@ function hydrateDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
     );
     const sections = (updated.sections ?? []).map((section) => {
       const seedTitle = seedById.get(section.id);
-      if (!seedTitle || section.title?.trim()) return section;
-      changed = true;
-      return { ...section, title: seedTitle };
+      const remappedRefs = section.questionRefs.map(remapP0ExamBankRef);
+      const refsChanged = remappedRefs.some(
+        (ref, index) => ref !== section.questionRefs[index],
+      );
+      if (seedTitle && !section.title?.trim()) {
+        changed = true;
+        return {
+          ...section,
+          title: seedTitle,
+          questionRefs: refsChanged ? remappedRefs : section.questionRefs,
+        };
+      }
+      if (refsChanged) {
+        changed = true;
+        return { ...section, questionRefs: remappedRefs };
+      }
+      return section;
     });
     if (sections !== updated.sections) {
       updated = { ...updated, sections };
+    }
+
+    const remappedFlat = updated.questionRefs.map(remapP0ExamBankRef);
+    if (remappedFlat.some((ref, index) => ref !== updated.questionRefs[index])) {
+      changed = true;
+      updated = { ...updated, questionRefs: remappedFlat };
     }
     return updated;
   });

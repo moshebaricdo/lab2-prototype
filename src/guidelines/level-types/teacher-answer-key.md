@@ -9,6 +9,7 @@ Define a shared teacher-facing answer pattern for assessment levels: clear label
 The standalone **`TeacherAnswerKeyCard`** component is **not** used in the app anymore. Teacher-facing answers are shown **inline** in the assessment card when the user invokes **Reveal answer** / **Hide answer** from the **bottom row** (same general interaction as multi-choice):
 
 - **Multi-choice:** Reveal highlights correct option(s) in the student option list.
+- **Match:** Reveal after an incorrect or partial attempt keeps the student’s matches and adds a **Correct Answer** set below. Peek / teacher key with no attempt still replaces the board with the key.
 - **Free response** (when `revealAnswerEnabled` is true): Reveal shows an inline block with exemplar text and rubric or expected-elements bullets above the footer row.
 
 For free-response levels **without** `revealAnswerEnabled`, there is no teacher answer UI in the student workspace.

@@ -18,7 +18,7 @@ export interface LevelProgressLink {
 }
 
 const ASSESSMENT_PATH_PATTERN =
-  /\/levels\/(?:multi|free-response|match-|drag-drop|fill-in-blank|levelgroup|assessment-builder|progression-free-response|progression-levelgroup)/;
+  /\/levels\/(?:multi|free-response|match-|drag-drop|fill-in-blank|levelgroup|assessment-builder|cfu-|quiz-|progression-free-response|progression-levelgroup)/;
 
 function inferIsAssessment(path: string | undefined): boolean {
   return Boolean(path && ASSESSMENT_PATH_PATTERN.test(path));

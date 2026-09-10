@@ -23,13 +23,6 @@ function scoreMulti(
   const selected = response.multiSelectedIds ?? [];
   if (content.selectionMode === "multiple" && content.correctAnswerIds) {
     if (arraysEqualAsSets(selected, content.correctAnswerIds)) return "correct";
-    const correctSet = new Set(content.correctAnswerIds);
-    const hasAnyCorrect = selected.some((id) => correctSet.has(id));
-    const hasIncorrect = selected.some((id) => !correctSet.has(id));
-    if (hasAnyCorrect && !hasIncorrect && selected.length < content.correctAnswerIds.length) {
-      return "partial";
-    }
-    if (hasAnyCorrect && hasIncorrect) return "partial";
     return "incorrect";
   }
   if (content.correctAnswerId && selected[0] === content.correctAnswerId) {
@@ -49,7 +42,6 @@ function scoreMatch(
     if (assignments[prompt.id] === prompt.correctTermId) correct += 1;
   }
   if (correct === prompts.length) return "correct";
-  if (correct > 0) return "partial";
   return "incorrect";
 }
 

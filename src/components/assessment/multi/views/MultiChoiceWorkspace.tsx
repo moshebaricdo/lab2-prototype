@@ -3,6 +3,7 @@ import {
   useMemo,
   useState,
   type CSSProperties,
+  type ReactNode,
   type SetStateAction,
 } from "react";
 import { useNavigate } from "react-router-dom";
@@ -61,6 +62,19 @@ interface MultiChoiceWorkspaceProps {
   embeddedStepEyebrow?: string;
   /** When set in an embedded level group, parent controls reveal for all blocks. */
   groupTeacherReveal?: boolean;
+  /** CFU / quiz student card: Figma option rows + question-container stem pad. */
+  studentQuestionChrome?: boolean;
+  /** Parent-managed X marks carried across Try again attempts (CFU retry). */
+  persistedWrongAnswerIds?: string[];
+  /** Parent-managed check marks for keyed picks from earlier attempts. */
+  persistedCorrectAnswerIds?: string[];
+  /**
+   * When reveal is active on a locked answer, keep the student's selection
+   * visible and mark the key alongside it instead of replacing the selection.
+   */
+  revealKeyAlongsideSelection?: boolean;
+  /** Explanation / teacher cards inside the question-content stack. */
+  afterBody?: ReactNode;
 }
 
 function arraysEqualAsSets(a: string[], b: string[]): boolean {
@@ -195,6 +209,11 @@ export function MultiChoiceWorkspace({
   embeddedInSteppedGroup = false,
   embeddedStepEyebrow,
   groupTeacherReveal,
+  studentQuestionChrome = false,
+  persistedWrongAnswerIds: persistedWrongAnswerIdsProp,
+  persistedCorrectAnswerIds: persistedCorrectAnswerIdsProp,
+  revealKeyAlongsideSelection = false,
+  afterBody,
 }: MultiChoiceWorkspaceProps) {
   const navigate = useNavigate();
 
@@ -254,12 +273,17 @@ export function MultiChoiceWorkspace({
       setInternalSelectedIds(updater);
     }
   };
-  const [hoveredAnswerId, setHoveredAnswerId] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isTeacherAnswerRevealed, setIsTeacherAnswerRevealed] = useState(false);
-  const [persistedWrongAnswerIds, setPersistedWrongAnswerIds] = useState<
+  const [internalPersistedWrongIds, setInternalPersistedWrongIds] = useState<
     string[]
   >([]);
+  const [internalPersistedCorrectIds, setInternalPersistedCorrectIds] =
+    useState<string[]>([]);
+  const persistedWrongAnswerIds =
+    persistedWrongAnswerIdsProp ?? internalPersistedWrongIds;
+  const persistedCorrectAnswerIds =
+    persistedCorrectAnswerIdsProp ?? internalPersistedCorrectIds;
 
   const teacherRevealActive =
     embedded && groupTeacherReveal !== undefined
@@ -267,7 +291,8 @@ export function MultiChoiceWorkspace({
       : isTeacherAnswerRevealed;
 
   useEffect(() => {
-    setPersistedWrongAnswerIds([]);
+    setInternalPersistedWrongIds([]);
+    setInternalPersistedCorrectIds([]);
   }, [level.id]);
 
   const continuePath = useMemo(() => {
@@ -298,9 +323,17 @@ export function MultiChoiceWorkspace({
     level.correctAnswerIds,
   ]);
 
+  const isAnswerLocked = embedded ? Boolean(groupSubmitted) : isSubmitted;
+
+  /** Key marks shown next to the student's own picks (student reveal / teacher review). */
+  const revealKeyWithSelection = revealKeyAlongsideSelection && isAnswerLocked;
+  const revealReplacesSelection =
+    teacherRevealActive && !revealKeyWithSelection;
+  const revealMarksActive = teacherRevealActive || revealKeyWithSelection;
+
   const displayedIds = isSurveyLevel
     ? selectedIds
-    : teacherRevealActive
+    : revealReplacesSelection
       ? correctIds
       : selectedIds;
 
@@ -343,10 +376,14 @@ export function MultiChoiceWorkspace({
     selectedIds,
   ]);
 
-  const isAnswerLocked = embedded ? Boolean(groupSubmitted) : isSubmitted;
-
   const toggleMulti = (id: string) => {
     if (isAnswerLocked || teacherRevealActive) return;
+    if (
+      persistedCorrectAnswerIds.includes(id) ||
+      persistedWrongAnswerIds.includes(id)
+    ) {
+      return;
+    }
     const max = level.maxSelectionCount;
     setSelectedIds((previous) => {
       if (previous.includes(id)) {
@@ -360,6 +397,13 @@ export function MultiChoiceWorkspace({
   };
 
   const setSingle = (id: string) => {
+    if (isAnswerLocked || teacherRevealActive) return;
+    if (
+      persistedCorrectAnswerIds.includes(id) ||
+      persistedWrongAnswerIds.includes(id)
+    ) {
+      return;
+    }
     setSelectedIds([id]);
   };
 
@@ -370,7 +414,7 @@ export function MultiChoiceWorkspace({
     !isAnswerLocked &&
     !teacherRevealActive;
 
-  const showInlineFeedback = isAnswerLocked && !teacherRevealActive;
+  const showInlineFeedback = isAnswerLocked && !revealReplacesSelection;
   const showWrongSelectionHighlights =
     showInlineFeedback && !isCorrect;
 
@@ -388,20 +432,29 @@ export function MultiChoiceWorkspace({
   };
 
   const resetAfterSubmit = () => {
+    const correctThisAttempt = selectedIds.filter((id) =>
+      correctIds.includes(id),
+    );
     if (isCorrect) {
-      setPersistedWrongAnswerIds([]);
+      setInternalPersistedWrongIds([]);
+      setInternalPersistedCorrectIds([]);
+      setSelectedIds([]);
     } else {
       const wrongThisAttempt = selectedIds.filter(
         (id) => !correctIds.includes(id),
       );
       if (wrongThisAttempt.length > 0) {
-        setPersistedWrongAnswerIds((previous) =>
+        setInternalPersistedWrongIds((previous) =>
           [...new Set([...previous, ...wrongThisAttempt])],
         );
       }
+      if (correctThisAttempt.length > 0) {
+        setInternalPersistedCorrectIds((previous) =>
+          [...new Set([...previous, ...correctThisAttempt])],
+        );
+      }
+      setSelectedIds(correctThisAttempt);
     }
-    setSelectedIds([]);
-    setHoveredAnswerId(null);
     setIsSubmitted(false);
   };
 
@@ -409,7 +462,7 @@ export function MultiChoiceWorkspace({
     embedded && (embeddedInScrollGroup || embeddedInSteppedGroup);
 
   const stemEyebrow =
-    embeddedFlatInParent && embeddedStepEyebrow
+    embeddedFlatInParent && embeddedStepEyebrow !== undefined
       ? embeddedStepEyebrow
       : embedded && !embeddedFlatInParent
         ? ""
@@ -420,24 +473,33 @@ export function MultiChoiceWorkspace({
             : "Multiple choice";
 
   const useStepCounterEyebrowStyle =
-    embeddedInScrollGroup && !embeddedInSteppedGroup;
+    studentQuestionChrome ||
+    (embeddedInScrollGroup && !embeddedInSteppedGroup);
 
   const cardContents = (
     <>
           <AssessmentStemSection
             eyebrow={stemEyebrow}
+            layout={studentQuestionChrome ? "questionContainer" : "default"}
             eyebrowClassName={
               useStepCounterEyebrowStyle ? stemStyles.stepCounterEyebrow : undefined
             }
             question={level.stem.question}
             description={level.stem.description}
+            afterBody={afterBody}
           >
             <fieldset
-              className={
+              className={[
                 level.optionLayout?.type === "grid"
                   ? styles.answersGrid
-                  : styles.answers
-              }
+                  : styles.answers,
+                studentQuestionChrome ? styles.answersStudent : "",
+                studentQuestionChrome && isAnswerLocked
+                  ? styles.answersStudentSubmitted
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               style={
                 level.optionLayout?.type === "grid"
                   ? ({
@@ -451,7 +513,7 @@ export function MultiChoiceWorkspace({
                 const checked = displayedIds.includes(answer.id);
                 const isRevealedCorrect =
                   !isSurveyLevel &&
-                  teacherRevealActive &&
+                  revealMarksActive &&
                   correctIds.includes(answer.id);
                 const selectionCapped =
                   isMultiSelect && atSelectionCap && !checked;
@@ -463,17 +525,38 @@ export function MultiChoiceWorkspace({
                 const isSubmittedCorrectHighlight =
                   !isSurveyLevel &&
                   showInlineFeedback &&
-                  isCorrect &&
                   correctIds.includes(answer.id) &&
                   selectedIds.includes(answer.id);
+                const isRevealedFeedback =
+                  isRevealedCorrect ||
+                  isIncorrectSelection ||
+                  isSubmittedCorrectHighlight;
                 const showPersistentWrongMark =
                   !isSurveyLevel &&
+                  !isAnswerLocked &&
                   persistedWrongAnswerIds.includes(answer.id) &&
                   !isIncorrectSelection;
+                const showPersistentCorrectMark =
+                  !isSurveyLevel &&
+                  !isAnswerLocked &&
+                  persistedCorrectAnswerIds.includes(answer.id) &&
+                  !isRevealedCorrect &&
+                  !isSubmittedCorrectHighlight &&
+                  !isIncorrectSelection;
+                const showDisabledSurface =
+                  !isRevealedFeedback &&
+                  (isAnswerLocked ||
+                    teacherRevealActive ||
+                    showPersistentWrongMark ||
+                    showPersistentCorrectMark);
                 const showCheckedStyle =
-                  checked &&
-                  !isIncorrectSelection &&
-                  !isSubmittedCorrectHighlight;
+                  checked && !isRevealedFeedback && !showDisabledSurface;
+                const optionDisabled =
+                  isAnswerLocked ||
+                  teacherRevealActive ||
+                  selectionCapped ||
+                  showPersistentWrongMark ||
+                  showPersistentCorrectMark;
                 const referenceLetter = optionReferenceLetter(answerIndex);
                 return (
                   <label
@@ -485,48 +568,47 @@ export function MultiChoiceWorkspace({
                       isRevealedCorrect || isSubmittedCorrectHighlight
                         ? styles.answerOptionRevealedCorrect
                         : "",
-                      isAnswerLocked ? styles.answerOptionLocked : "",
+                      isAnswerLocked || teacherRevealActive
+                        ? styles.answerOptionLocked
+                        : "",
                       selectionCapped ? styles.answerOptionSelectionCapped : "",
-                      isSubmittedCorrectHighlight
+                      showDisabledSurface
+                        ? styles.answerOptionDisabledSurface
+                        : "",
+                      isSubmittedCorrectHighlight && isCorrect
                         ? styles.answerOptionCorrectShimmer
                         : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
-                    onMouseEnter={() => setHoveredAnswerId(answer.id)}
-                    onMouseLeave={() =>
-                      setHoveredAnswerId((current) =>
-                        current === answer.id ? null : current,
-                      )
-                    }
                   >
-                    {isMultiSelect ? (
-                      <Checkbox
-                        name={`multi-response-${level.id}`}
-                        value={answer.id}
-                        checked={checked}
-                        disabled={
-                          isAnswerLocked ||
-                          teacherRevealActive ||
-                          selectionCapped
-                        }
-                        tabIndex={0}
-                        onChange={() => toggleMulti(answer.id)}
-                      />
-                    ) : (
-                      <Radio
-                        name={`multi-choice-${level.id}`}
-                        value={answer.id}
-                        checked={checked}
-                        disabled={isAnswerLocked || teacherRevealActive}
-                        tabIndex={0}
-                        onChange={() => setSingle(answer.id)}
-                      />
-                    )}
-                    <div className={styles.answerContent}>
+                    <div className={styles.answerLead}>
+                      <span className={styles.answerControl}>
+                        {isMultiSelect ? (
+                          <Checkbox
+                            name={`multi-response-${level.id}`}
+                            value={answer.id}
+                            checked={checked || showPersistentCorrectMark}
+                            disabled={optionDisabled}
+                            tabIndex={optionDisabled ? -1 : 0}
+                            onChange={() => toggleMulti(answer.id)}
+                          />
+                        ) : (
+                          <Radio
+                            name={`multi-choice-${level.id}`}
+                            value={answer.id}
+                            checked={checked || showPersistentCorrectMark}
+                            disabled={optionDisabled}
+                            tabIndex={optionDisabled ? -1 : 0}
+                            onChange={() => setSingle(answer.id)}
+                          />
+                        )}
+                      </span>
                       <span className={styles.answerOptionLetter}>
                         {referenceLetter}.
                       </span>
+                    </div>
+                    <div className={styles.answerContent}>
                       <div className={styles.answerOptionBlocks}>
                         {renderAnswerContent(answer)}
                       </div>
@@ -541,13 +623,15 @@ export function MultiChoiceWorkspace({
                     )}
                     {showPersistentWrongMark && (
                       <span
-                        className={styles.persistedWrongMark}
+                        className={styles.revealedIncorrect}
                         aria-hidden="true"
                       >
                         <FontAwesomeIcon icon={faXmark} />
                       </span>
                     )}
-                    {(isRevealedCorrect || isSubmittedCorrectHighlight) && (
+                    {(isRevealedCorrect ||
+                      isSubmittedCorrectHighlight ||
+                      showPersistentCorrectMark) && (
                       <span className={styles.revealedCheck} aria-hidden="true">
                         <FontAwesomeIcon icon={faCheck} />
                       </span>
@@ -567,7 +651,6 @@ export function MultiChoiceWorkspace({
                     startIconName={isTeacherAnswerRevealed ? "eye-slash" : "eye"}
                     size="medium"
                     onClick={() => {
-                      setHoveredAnswerId(null);
                       setIsTeacherAnswerRevealed((current) => !current);
                     }}
                   >
@@ -695,6 +778,7 @@ export function MultiChoiceWorkspace({
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         compact: resourcePanelCompact,

@@ -138,7 +138,9 @@ src/
 │       ├── crew/                   # Roster strip, modal, useAgentLevelState
 │       └── mission/                # Mission Control concept widget
 │   └── assessment/                 # Assessment level types
-│       ├── builder/                # In-lab assessment authoring + preview
+│       ├── builder/                # In-lab quiz authoring + preview
+│       ├── cfu/                   # Final student check-for-understanding
+│       ├── quiz/                   # Final student quiz taking
 │       ├── shared/
 │       ├── bubble-choice/
 │       ├── drag-drop/
@@ -161,6 +163,8 @@ src/
 │   ├── free-response/
 │   ├── levelgroup/
 │   ├── assessment-builder/
+│   ├── cfu/
+│   ├── quiz/
 │   ├── match/
 │   ├── multi-choice/
 │   ├── progression/
@@ -193,6 +197,7 @@ Assessment builder is a Lab2 level type with its own workspace chrome under `com
 
 - **`AssessmentBuilderWorkspace`** — `Lab2Shell` composition, `PanelHeader` + Build/Preview toggle, sidebar width defaults, question selection, single-save flow (Done/Save + shared-question prompt)
 - **`AssessmentOutlineCanvas`** (P0 route) — block-based outline: overview header, pinned `OutlineIntroCard`, `OutlineSectionBlock` sections-as-pages, `OutlineQuestionCard` rows, `OutlineAddRow` ghost add rows, dnd-kit drag (questions within/across sections, collapsed-section reorder). `SaveQuestionPrompt` handles the shared-question save decision; `questionKindMeta` centralizes type icons/labels.
+- **`CfuQuestionWorkspace`** — student CFU and teacher viewpoints. Single-question incorrect footer layout, last-page labels, and attempt-chip copy live in `lib/assessmentBuilder/studentFooter.ts` and `StudentQuestionCardFooter`. `QuizAttemptChip` is the sitting-count pill. Matching Try again keeps correct pairs via `lib/assessmentBuilder/matchRetry.ts`.
 - **`AssessmentBuildCanvas`** (legacy routes) — draggable question outline, add zone, type tile grid
 - **`AssessmentBuilderPanel`** — bank + settings. P0 bank UI lives in **`QuestionBankPanel`** (search + filter-popover button, result cards per Figma `169:39016`). Legacy bank: course/domain/difficulty.
 - **`AssessmentArtifactWorkspace`** — embedded preview of the full assessment flow
@@ -220,7 +225,7 @@ Route pages get state and handlers from dedicated hooks:
 
 Python Lab also uses `useFileWorkspaceState`, with route-scoped session storage for file edits and created files. Its blank standalone route starts from a rootless empty tree while the guided route seeds `main.py`, `README.md`, and drawer instructions from `src/data/pythonlab/projects/default`. Python Lab now also uses `useVersionHistoryState` with route-scoped snapshot storage; selecting a saved snapshot maps the open/selected files onto the historical file tree and renders the editor read-only until the student returns to Current Version.
 
-The shared resource panel supports a standalone Instructions tab, a Backpack tab (after Version History) for cross-level saved files, a Resources tab for contextual student-facing materials, optional floating card chrome via `surfaceVariant: "card"`, and a compact rail mode via `compact`. Resources currently render non-functional cards for associated lesson resources, lab documentation, and available walkthroughs based on booleans passed by the level page. Python Lab also enables the Validation tab, which receives the current editable file tree and deterministic test definitions from page/dev-panel configuration.
+The shared resource panel supports a standalone Instructions tab, a Backpack tab (after Version History) for cross-level saved files, a Resources tab for contextual student-facing materials, optional floating card chrome via `surfaceVariant: "card"`, and a compact rail mode via `compact`. Assessment and quiz levels pass `showBackpackTab: false` — Backpack is IDE-lab only. When the sidebar is collapsible and no rail tabs are visible, the expand/collapse control is disabled and the panel stays collapsed so an empty rail cannot open a leftover panel (for example AI Tutor on CFU). Resources currently render non-functional cards for associated lesson resources, lab documentation, and available walkthroughs based on booleans passed by the level page. Python Lab also enables the Validation tab, which receives the current editable file tree and deterministic test definitions from page/dev-panel configuration.
 
 Python code execution is isolated behind `components/ide/pythonlab/runtime/pythonRunner.ts`, which starts a Pyodide web worker, streams stdout/stderr back to `PythonWorkspace`, and blocks on interactive stdin through a shared buffer while the console shows a terminal-style input row.
 

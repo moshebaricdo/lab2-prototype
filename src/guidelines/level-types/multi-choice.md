@@ -91,16 +91,18 @@ Prefer `answer.text` for short plain-text options. Use `contentBlocks` when an o
 
 ## Student UX (submit and feedback)
 
+- **Option interaction** (Figma Multi Answer Option): hover/press/focus anywhere on the card also recasts the radio or checkbox (CADS control tokens). Selected idle uses brand-light fill and `--border-brand-light`; hover/press deepen to `--border-brand-mid`. Correct and incorrect rows have **no** hover/press — they are treated as disabled.
 - **Submit** is enabled when the selection satisfies `requiredSelectionCount` (if set) or at least one choice (single) / required count (multi).
 - **Sounds:** `success-sound.mp3` on a correct submit; `error-sound.mp3` on an incorrect submit.
 - **Correct answer**
-  - Chosen correct option(s) use success (green) styling instead of the default teal “selected” look; a check glyph appears.
+  - Chosen correct option(s) use success (green) styling — including the radio/checkbox — instead of the default selected look; a check glyph appears. A revealed key the student did not pick stays unselected (empty radio/checkbox) with the same green ring.
   - A short shimmer animation runs on those option cards.
   - Bottom bar: **“Nice work!”** and a primary **Continue** button that navigates to the next route in the demo `levelLinks` chain (or `/levels` after the last demo).
 - **Incorrect answer** *(graded levels only; not used when `surveyMode` is true)*
-  - Incorrect selected options show error styling and an ✕ mark; there is **no** separate incorrect message line beside **Try again** (options carry the feedback).
-  - **Try again** clears the attempt and selection; options the learner had wrongly selected keep a **muted ✕** so prior mistakes remain visible across retries (accumulated until they submit correctly or change level).
+  - After submit, judged picks use the **full** success/error option chrome (green/red fill, matching radio/checkbox, check or ✕). A keyed pick that was right still gets the full green row even when the attempt is otherwise wrong. Unused locked options stay on the disabled white surface with no marks.
+  - **Try again** clears the attempt and wrong selections. On the next attempt only, previously correct picks stay selected and disabled with a check, and previously wrong picks keep an ✕, both on the Figma **disabled** surface (white, muted type) — not the full green/red reveal.
   - **Continue** is not shown until they answer correctly.
+- **Disabled / unused after submit:** options that are locked but not in a revealed correct/incorrect state use the disabled surface (`--background-neutral-primary`), not the default gray option fill.
 - **Teacher tools:** **Reveal answer** / **Hide answer** toggles the keyed answer(s) with success styling; it disables submit until hidden again as implemented in the workspace.
 
 ## Option layout

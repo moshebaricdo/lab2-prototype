@@ -76,6 +76,12 @@
   border-bottom: 1px solid var(--border-neutral-primary);
 }
 
+.railCollapseButtonWrap {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
 .railCollapseButton {
   display: flex;
   width: 100%;
@@ -96,6 +102,15 @@
 
 .railCollapseButton:hover {
   color: var(--text-neutral-secondary);
+}
+
+.railCollapseButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.railCollapseButton:disabled:hover {
+  color: var(--text-neutral-quaternary);
 }
 
 .tabButton {
@@ -316,6 +331,14 @@
   flex: 1;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
+}
+
+.builderSlot {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 

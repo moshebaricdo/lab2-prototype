@@ -14,6 +14,8 @@ const ASSESSMENT_PATH_PREFIXES = [
   "/levels/fill-in-blank",
   "/levels/levelgroup",
   "/levels/assessment-builder",
+  "/levels/cfu-",
+  "/levels/quiz-",
   "/levels/bubble-choice",
   "/levels/progression-free-response",
   "/levels/progression-bubble-choice",

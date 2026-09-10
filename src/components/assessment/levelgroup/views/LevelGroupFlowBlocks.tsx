@@ -31,7 +31,7 @@ import flowStyles from "./LevelGroupFlow.module.scss";
 export function getLevelContinueTarget(
   levelLinks: LevelProgressLink[] | undefined,
   currentLevelPath: string | undefined,
-): { path: string; label: "Continue" | "Finish" } {
+): { path: string; label: "Next level" | "Finish" } {
   if (!levelLinks?.length || !currentLevelPath) {
     return { path: "/levels", label: "Finish" };
   }
@@ -43,7 +43,7 @@ export function getLevelContinueTarget(
   if (!nextPath) {
     return { path: "/levels", label: "Finish" };
   }
-  return { path: nextPath, label: "Continue" };
+  return { path: nextPath, label: "Next level" };
 }
 
 export type MatchAssignments = Record<string, string | null>;
@@ -367,6 +367,14 @@ export interface LevelGroupEmbeddedBlockProps {
   layout?: LevelGroupEmbeddedLayout;
   /** Parent-level reveal toggle — shows keys for every block in the group. */
   groupTeacherReveal: boolean;
+  /** Quiz / CFU student card chrome (Figma question container). */
+  studentQuestionChrome?: boolean;
+  /** Multi / match: keep the student's work visible next to the key. */
+  revealKeyAlongsideSelection?: boolean;
+  /** Parent-managed X marks carried across Try again (single-question retry). */
+  persistedWrongAnswerIds?: string[];
+  persistedCorrectAnswerIds?: string[];
+  afterBody?: ReactNode;
 }
 
 function blockEyebrowLabel(block: LevelGroupQuestionBlock): string {
@@ -398,10 +406,20 @@ export function LevelGroupEmbeddedBlock({
   setFillInBlankResponses,
   layout = "default",
   groupTeacherReveal,
+  studentQuestionChrome = false,
+  revealKeyAlongsideSelection = false,
+  persistedWrongAnswerIds,
+  persistedCorrectAnswerIds,
+  afterBody,
 }: LevelGroupEmbeddedBlockProps) {
   const scrollGroup = layout === "scrollGroup";
   const steppedTypeOnly = layout === "stepped";
-  const stepEyebrow = `Question ${stepIndex + 1} of ${totalSteps}`;
+  const stepEyebrow =
+    totalSteps <= 1
+      ? ""
+      : studentQuestionChrome
+        ? `question ${stepIndex + 1} of ${totalSteps}`
+        : `Question ${stepIndex + 1} of ${totalSteps}`;
   const eyebrowDefault = `${stepIndex + 1} / ${totalSteps} · ${blockEyebrowLabel(block)}`;
   const eyebrowWrapper = steppedTypeOnly
     ? blockEyebrowLabel(block)
@@ -433,6 +451,11 @@ export function LevelGroupEmbeddedBlock({
         payload={payload}
         groupSubmitted={isSubmitted}
         groupTeacherReveal={groupTeacherReveal}
+        studentQuestionChrome={studentQuestionChrome}
+        revealKeyAlongsideSelection={revealKeyAlongsideSelection}
+        persistedWrongAnswerIds={persistedWrongAnswerIds}
+        persistedCorrectAnswerIds={persistedCorrectAnswerIds}
+        afterBody={afterBody}
         controlledSelectedIds={selected ? [selected] : []}
         onControlledSelectedIdsChange={(ids) =>
           setSelectedMulti((prev) => ({
@@ -455,6 +478,8 @@ export function LevelGroupEmbeddedBlock({
         payload={payload}
         groupSubmitted={isSubmitted}
         groupTeacherReveal={groupTeacherReveal}
+        studentQuestionChrome={studentQuestionChrome}
+        afterBody={afterBody}
         controlledResponseText={flow.freeText[block.blockId] ?? ""}
         onControlledResponseTextChange={(text) =>
           setFreeText((prev) => ({ ...prev, [block.blockId]: text }))
@@ -555,6 +580,10 @@ export function LevelGroupEmbeddedBlock({
       payload={payload}
       groupSubmitted={isSubmitted}
       groupTeacherReveal={groupTeacherReveal}
+      studentQuestionChrome={studentQuestionChrome}
+      revealKeyAlongsideSelection={revealKeyAlongsideSelection}
+      persistedCorrectPromptIds={persistedCorrectAnswerIds}
+      afterBody={afterBody}
       controlledAssignments={assignments}
       onControlledAssignmentsChange={(next) =>
         setMatchAssignments((prev) => ({ ...prev, [block.blockId]: next }))

@@ -19,12 +19,18 @@ import {
   aiChatLabLevelLinks,
   aiLabIndexLinks,
   bubbleChoiceLevelLinks,
+  cfuIndexGroups,
+  cfuLevelLinks,
+  cfuTeacherIndexGroups,
+  cfuTeacherIndexLinks,
   dragDropLevelLinks,
   fillInBlankLevelLinks,
   freeResponseLevelLinks,
   matchLevelLinks,
   multiChoiceLevelLinks,
   pythonLabLevelLinks,
+  quizTakingLevelLinks,
+  quizTeacherLevelLinks,
   sketchLabLevelLinks,
   sampleProgressionLinks,
   drawerImprovementsExperimentLinks,
@@ -51,10 +57,17 @@ interface LevelPage {
   path: string;
 }
 
+interface LevelTypeGroup {
+  label: string;
+  pages: LevelPage[];
+}
+
 interface LevelTypeEntry {
   levelType: string;
   description: string;
   pages: LevelPage[];
+  /** When set, the card lists every route in each group (not just group entry points). */
+  groups?: LevelTypeGroup[];
 }
 
 interface LevelCategory {
@@ -135,6 +148,37 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
     ],
   },
   {
+    title: "Modernizing assessments",
+    entries: [
+      {
+        levelType: "Check for understanding",
+        description:
+          "Student CFU type and settings demos: no-retry, must-correct, can-continue, and reveal walkthroughs.",
+        pages: cfuLevelLinks,
+        groups: cfuIndexGroups,
+      },
+      {
+        levelType: "Check for understanding (teacher)",
+        description:
+          "Teacher viewpoints for each question type: answer key, as a student, and a student’s response.",
+        pages: cfuTeacherIndexLinks,
+        groups: cfuTeacherIndexGroups,
+      },
+      {
+        levelType: "Quiz taking",
+        description:
+          "Student quiz rows: practice, exam retries, final attempt, no reveal, and resume.",
+        pages: quizTakingLevelLinks,
+      },
+      {
+        levelType: "Quiz taking (teacher)",
+        description:
+          "Teacher viewpoints: view questions, as a student, an in-progress response, and a completed submission.",
+        pages: quizTeacherLevelLinks,
+      },
+    ],
+  },
+  {
     title: "Misc",
     entries: [
       {
@@ -157,6 +201,11 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/drag-drop-parsons": "Drag and drop",
   "/levels/fill-in-blank": "Fill in the blank",
   "/levels/levelgroup-survey-intro": "Assessment sets",
+  "/levels/assessment-builder-p0": "Assessment builder",
+  "/levels/cfu-multi": "Check for understanding",
+  "/levels/quiz-practice": "Quiz taking",
+  "/levels/quiz-exam": "Quiz taking",
+  "/levels/quiz-teacher": "Quiz taking (teacher)",
   "/levels/levelgroup-stepped": "Assessment sets",
   "/levels/levelgroup-demo-quiz": "Assessment sets",
   "/levels/pythonlab": "Python Lab",
@@ -239,6 +288,58 @@ function PromoteDialog({
         </section>
       </div>
     </Dialog>
+  );
+}
+
+function LevelTypeCard({ entry }: { entry: LevelTypeEntry }) {
+  return (
+    <div className={`${styles.card} ${styles.cardWithDescription}`}>
+      <div className={styles.cardHeader}>
+        <h3 className={styles.cardTitle}>{entry.levelType}</h3>
+        <p className={styles.cardDescription}>{entry.description}</p>
+      </div>
+      {entry.groups?.length ? (
+        <div className={styles.cardGroups}>
+          {entry.groups.map((group) => (
+            <div key={group.label} className={styles.cardGroup}>
+              <p className={styles.cardGroupLabel}>{group.label}</p>
+              <IndexBubbleRow pages={group.pages} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <IndexBubbleRow pages={entry.pages} />
+      )}
+    </div>
+  );
+}
+
+function IndexBubbleRow({
+  pages,
+  iconName,
+}: {
+  pages: LevelPage[];
+  iconName?: (path: string) => string | undefined;
+}) {
+  return (
+    <div className={styles.bubbleRow}>
+      {pages.map((page, index) => (
+        <Tooltip
+          key={page.path}
+          title={page.name}
+          placement="top"
+          iconName={iconName?.(page.path)}
+        >
+          <Link
+            to={page.path}
+            aria-label={`Open ${page.name}`}
+            className={styles.bubble}
+          >
+            {index + 1}
+          </Link>
+        </Tooltip>
+      ))}
+    </div>
   );
 }
 
@@ -454,34 +555,7 @@ export function LevelsIndexPage() {
                 <h2 className={styles.sectionHeading}>{category.title}</h2>
                 <div className={styles.entryGrid}>
                   {category.entries.map((entry) => (
-                    <div
-                      key={entry.levelType}
-                      className={`${styles.card} ${styles.cardWithDescription}`}
-                    >
-                      <div className={styles.cardHeader}>
-                        <h3 className={styles.cardTitle}>{entry.levelType}</h3>
-                        <p className={styles.cardDescription}>
-                          {entry.description}
-                        </p>
-                      </div>
-                      <div className={styles.bubbleRow}>
-                        {entry.pages.map((page, index) => (
-                          <Tooltip
-                            key={page.path}
-                            title={page.name}
-                            placement="top"
-                          >
-                            <Link
-                              to={page.path}
-                              aria-label={`Open ${page.name}`}
-                              className={styles.bubble}
-                            >
-                              {index + 1}
-                            </Link>
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </div>
+                    <LevelTypeCard key={entry.levelType} entry={entry} />
                   ))}
                 </div>
               </section>

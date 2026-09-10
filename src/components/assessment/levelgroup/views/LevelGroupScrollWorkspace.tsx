@@ -374,6 +374,7 @@ export function LevelGroupScrollWorkspace({
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         showInstructionsDrawer: false,

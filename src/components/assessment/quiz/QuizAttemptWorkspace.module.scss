@@ -1,0 +1,253 @@
+@use "../../../styles/_mixins.scss" as *;
+
+.shell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background: var(--background-neutral-secondary);
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 64px;
+}
+
+.questionCard,
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  width: min(800px, 100%);
+  height: fit-content;
+  margin-inline: auto;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-lg);
+  background: var(--background-neutral-primary);
+  overflow: hidden;
+}
+
+.scroll > * + * {
+  margin-top: 16px;
+}
+
+/* Question + teacher notes + responses row inside one card. */
+.cardBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.summaryBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+
+.summaryHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overline {
+  margin: 0;
+  @include type-overline-2;
+  color: var(--text-neutral-tertiary);
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  @include type-heading-h4-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.body {
+  margin: 0;
+  @include type-body-2-regular;
+  color: var(--text-neutral-primary);
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.cardFooterStart {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  @include type-body-3-regular;
+  color: var(--text-neutral-tertiary);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.metaSuccess {
+  color: var(--text-success-primary);
+}
+
+.stats {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.stat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 20px;
+  border-right: 1px solid var(--border-neutral-primary);
+  text-align: center;
+
+  &:last-child {
+    border-right: 0;
+  }
+}
+
+.statCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.statValue {
+  margin: 0;
+  @include type-heading-h2-bold;
+  color: var(--text-brand-primary);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.statLabel {
+  margin: 0;
+  @include type-body-2-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.statHelper {
+  margin: 0;
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.pageGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: min(800px, 100%);
+  height: fit-content;
+  margin-inline: auto;
+}
+
+.pageDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(800px, 100%);
+}
+
+.pageDividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-neutral-primary);
+}
+
+.pageDividerLabel {
+  margin: 0;
+  @include type-overline-2;
+  color: var(--text-neutral-tertiary);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  min-height: 47px;
+  padding: 8px;
+  border-top: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+}
+
+.footerLeft,
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footerRight {
+  justify-content: flex-end;
+}
+
+.footerCenter {
+  display: flex;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+  @include type-body-3-semibold;
+  color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.timerTime {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.timer-low {
+  color: var(--text-neutral-primary);
+}
+
+.timer-medium {
+  border-color: var(--border-warning-mid, var(--border-warning-primary));
+  color: var(--text-warning-primary);
+}
+
+.timer-high {
+  border-color: var(--border-error-mid, var(--border-error-primary));
+  color: var(--text-error-primary);
+}
+

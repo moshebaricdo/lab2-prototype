@@ -1,13 +1,25 @@
 export {
+  answerNotesForQuestion,
+  type AnswerNotesContent,
+} from "./answerNotes";
+export {
   assessmentToFlowBlocks,
   assessmentToFlowPayload,
   assessmentToFlowPayloadFromQuestions,
+  flowBlockId,
   questionItemToMultiChoicePayload,
   questionItemToPreviewPayload,
   questionsToFlowBlocks,
   resolveQuestionRef,
   type PreviewPayload,
 } from "./adapters";
+export {
+  clearQuizAttemptSnapshot,
+  loadQuizAttemptSnapshot,
+  saveQuizAttemptSnapshot,
+  type QuizAttemptSnapshot,
+  type QuizAttemptSnapshotResponses,
+} from "./attemptStorage";
 export {
   QUESTION_DIFFICULTIES,
   QUESTION_DIFFICULTY_LABELS,
@@ -18,10 +30,44 @@ export {
   P0_MODE_OPTIONS,
 } from "./p0Mode";
 export {
+  applyQuizPurpose,
+  createDefaultQuizIntro,
+  purposeSeeds,
+  purposeToLegacyMode,
+  quizPurposeLabel,
+  QUIZ_PURPOSE_CARDS,
+  QUIZ_PURPOSE_DROPDOWN_OPTIONS,
+  resolvedAllowRetries,
+  resolvedFeedback,
+  resolvedRequireCorrectToContinue,
+  resolvedShowIntro,
+  settingsDifferFromPurpose,
+} from "./quizPurpose";
+export {
+  primaryQuizPageLabel,
+  quizActionHasArrow,
+  quizAttemptChipCopy,
+  studentIncorrectFooterLayout,
+  type StudentIncorrectFooterLayout,
+} from "./studentFooter";
+export {
+  correctMatchPromptIds,
+  keepCorrectMatchAssignments,
+} from "./matchRetry";
+export {
+  deriveQuizStatus,
+  liveUnitCount,
+  quizStatusMeta,
+  unitPublishedTag,
+  unitStateLabel,
+} from "./quizStatus";
+export {
   addSection,
   appendQuestionRef,
+  insertSection,
   createSectionId,
   deleteSection,
+  insertSectionAt,
   formatOutlineNumber,
   isSectioned,
   moveQuestionRef,
@@ -73,6 +119,7 @@ export {
   getBankQuestionMapSnapshot,
   getCourseBank,
   getCourseBankSnapshot,
+  resetAllCourseBanks,
   resetCourseBank,
   upsertBankQuestion,
 } from "./bankStorage";
@@ -99,3 +146,8 @@ export {
   cloneQuestionItem,
   isQuestionDraftDirty,
 } from "./questionDraft";
+export {
+  forkQuestionItem,
+  newQuestionHeaderLabel,
+  withSavedIdentity,
+} from "./questionIdentity";

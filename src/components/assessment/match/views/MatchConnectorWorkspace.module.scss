@@ -3,9 +3,26 @@
 /* ── Board & SVG overlay ───────────────────────────────────────── */
 
 .board {
-  margin-top: 24px;
   position: relative;
   touch-action: none;
+  width: 100%;
+}
+
+.boardStandalone {
+  margin-top: 24px;
+}
+
+.revealStack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.correctAnswerLabel {
+  margin: 0;
+  @include type-overline-2;
+  color: var(--text-neutral-quaternary);
 }
 
 .svgOverlay {
@@ -21,8 +38,8 @@
 /* ── Columns ───────────────────────────────────────────────────── */
 
 .matchColumns {
-  --match-terms-flex: 0.8;
-  --match-prompts-flex: 1.2;
+  --match-terms-flex: 1;
+  --match-prompts-flex: 1;
   display: flex;
   gap: 56px;
   position: relative;
@@ -56,24 +73,82 @@
   cursor: pointer;
   display: flex;
   flex: 1;
-  min-height: 56px;
+  min-height: 46px;
   position: relative;
   gap: 8px;
   transition:
     border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
+    background 0.2s ease;
 }
 
-.promptCard:hover:not(.cardCorrect):not(.cardIncorrect):not(.cardRevealed),
-.termCard:hover:not(.cardCorrect):not(.cardIncorrect):not(.cardRevealed) {
-  border-color: var(--border-neutral-primary);
+/* Unmatched hover: secondary border + tertiary knob (tile hover drives the knob). */
+.promptCard:hover:not(.promptCardConnected):not(.promptCardSelected):not(
+    .cardCorrect
+  ):not(.cardIncorrect):not(.cardRevealed):not(.cardPress),
+.termCard:hover:not(.termCardConnected):not(.termCardSelected):not(
+    .cardCorrect
+  ):not(.cardIncorrect):not(.cardRevealed):not(.cardPress),
+.cardDragHover:not(.promptCardConnected):not(.termCardConnected):not(
+    .promptCardSelected
+  ):not(.termCardSelected):not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ) {
+  border-color: var(--border-neutral-secondary);
+
+  .connectorDot {
+    background: var(--background-neutral-tertiary);
+    border-color: var(--border-neutral-secondary);
+    transform: translateY(-50%);
+  }
+}
+
+/* Unmatched press: secondary border + brand-light / selected-primary knob. */
+.promptCard:active:not(.promptCardConnected):not(.promptCardSelected):not(
+    .cardCorrect
+  ):not(.cardIncorrect):not(.cardRevealed),
+.termCard:active:not(.termCardConnected):not(.termCardSelected):not(
+    .cardCorrect
+  ):not(.cardIncorrect):not(.cardRevealed),
+.cardPress:not(.promptCardConnected):not(.termCardConnected):not(
+    .promptCardSelected
+  ):not(.termCardSelected):not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ) {
+  border-color: var(--border-neutral-secondary);
+
+  .connectorDot {
+    background: var(--background-brand-light);
+    border-color: var(--border-selected-primary);
+    transform: translateY(-50%);
+  }
 }
 
 .promptCard:focus-visible,
 .termCard:focus-visible {
   @include focus-ring;
   outline: none;
+}
+
+.promptCard:focus-visible:not(.promptCardConnected):not(.promptCardSelected):not(
+    .cardCorrect
+  ):not(.cardIncorrect):not(.cardRevealed),
+.termCard:focus-visible:not(.termCardConnected):not(.termCardSelected):not(
+    .cardCorrect
+  ):not(.cardIncorrect):not(.cardRevealed) {
+  border-color: var(--border-neutral-secondary);
+
+  .connectorDot {
+    background: var(--background-brand-light);
+    border-color: var(--border-selected-primary);
+  }
+}
+
+.promptCard:focus-visible.promptCardConnected .connectorDot,
+.promptCard:focus-visible.promptCardSelected .connectorDot,
+.termCard:focus-visible.termCardConnected .connectorDot,
+.termCard:focus-visible.termCardSelected .connectorDot {
+  background: var(--background-selected-strong);
+  border-color: var(--background-selected-strong);
 }
 
 .promptCard:focus:not(:focus-visible),
@@ -83,12 +158,12 @@
 
 .promptCard {
   align-items: center;
-  padding: 12px 12px 12px 24px;
+  padding: 10px 16px 10px 16px;
 }
 
 .termCard {
   align-items: center;
-  padding: 12px 24px 12px 12px;
+  padding: 10px 16px;
 }
 
 .termCardAlignStart {
@@ -99,49 +174,84 @@
   align-items: center;
 }
 
-/* Selected */
+/* Selected (awaiting a pair) and connected share Figma’s matched chrome. */
 
 .promptCardSelected,
-.termCardSelected {
-  border-color: var(--border-selected-primary);
-  box-shadow: 0 0 0 2px var(--background-brand-light);
-}
-
-/* Connected */
-
+.termCardSelected,
 .promptCardConnected,
 .termCardConnected {
   background: var(--background-brand-light);
   border-color: var(--border-selected-primary);
 }
 
+.promptCardSelected:hover:not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ),
+.termCardSelected:hover:not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ),
+.promptCardConnected:hover:not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ),
+.termCardConnected:hover:not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ) {
+  .connectorDot {
+    background: var(--background-selected-strong);
+    border-color: var(--background-selected-strong);
+    transform: translateY(-50%);
+  }
+}
+
+.promptCardSelected:active:not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ),
+.termCardSelected:active:not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ),
+.promptCardConnected:active:not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ),
+.termCardConnected:active:not(.cardCorrect):not(.cardIncorrect):not(
+    .cardRevealed
+  ),
+.cardPress.promptCardSelected,
+.cardPress.termCardSelected,
+.cardPress.promptCardConnected,
+.cardPress.termCardConnected {
+  .connectorDot {
+    background: var(--background-selected-strong);
+    border-color: var(--background-selected-strong);
+    transform: translateY(-50%);
+  }
+}
+
 /* ── Feedback states ──────────────────────────────────────────── */
 
 .cardCorrect {
   background: var(--background-success-light);
-  border-color: var(--border-success-primary);
+  border-color: var(--border-success-mid);
   cursor: default;
 }
 
 .cardIncorrect {
   background: var(--background-error-light);
-  border-color: var(--border-error-primary);
+  border-color: var(--border-error-mid);
   cursor: default;
 }
 
 .cardRevealed {
   background: var(--background-success-light);
-  border-color: var(--border-success-primary);
+  border-color: var(--border-success-mid);
   cursor: default;
 }
 
 /* ── Card content ─────────────────────────────────────────────── */
 
 .promptText {
+  @include type-body-3-regular;
   color: var(--text-neutral-primary);
   flex: 1;
-  font-size: var(--text-body-sm);
-  line-height: 1.45;
   margin: 0;
   min-width: 0;
   text-align: start;
@@ -152,9 +262,8 @@
 }
 
 .termText {
+  @include type-body-2-semibold;
   flex: 1;
-  font-size: var(--text-body-md);
-  font-weight: var(--font-weight-medium);
   min-width: 0;
   text-align: center;
 }
@@ -268,35 +377,29 @@
 
 .connectorDot {
   background: var(--background-neutral-primary);
-  border: 1.5px solid var(--border-neutral-primary);
-  border-radius: 50%;
+  border: 2px solid var(--border-neutral-secondary);
+  border-radius: var(--shape-round, 999px);
   cursor: crosshair;
   display: inline-block;
   flex-shrink: 0;
-  height: 16px;
+  height: 15px;
   padding: 0;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   transition:
     border-color 0.15s ease,
-    background 0.15s ease,
-    transform 0.15s ease;
-  width: 16px;
+    background 0.15s ease;
+  width: 15px;
   z-index: 3;
 }
 
 .connectorDotRight {
-  right: -8.5px;
+  right: -8px;
 }
 
 .connectorDotLeft {
-  left: -8.5px;
-}
-
-.connectorDot:hover:not(.connectorDotLocked) {
-  border-color: var(--border-selected-primary);
-  transform: translateY(-50%) scale(1.1);
+  left: -8px;
 }
 
 .connectorDotLocked {
@@ -304,34 +407,28 @@
   pointer-events: none;
 }
 
-.connectorDotActive {
-  background: var(--background-selected-primary);
-  border-color: var(--border-selected-primary);
-}
-
+.connectorDotActive,
 .connectorDotSelected {
-  border-color: var(--border-selected-primary);
-  box-shadow: 0 0 0 3px var(--background-brand-light);
+  background: var(--background-selected-primary);
+  border-color: var(--background-selected-primary);
 }
 
-.connectorDotDragHover {
+.connectorDotDragHover:not(.connectorDotActive):not(.connectorDotCorrect):not(
+    .connectorDotIncorrect
+  ):not(.connectorDotRevealed) {
+  background: var(--background-brand-light);
   border-color: var(--border-selected-primary);
-  transform: translateY(-50%) scale(1.2);
 }
 
-.connectorDotCorrect {
-  background: var(--border-success-primary);
-  border-color: var(--border-success-primary);
+.connectorDotCorrect,
+.connectorDotRevealed {
+  background: var(--background-success-primary);
+  border-color: var(--background-success-primary);
 }
 
 .connectorDotIncorrect {
-  background: var(--border-error-primary);
-  border-color: var(--border-error-primary);
-}
-
-.connectorDotRevealed {
-  background: var(--border-success-primary);
-  border-color: var(--border-success-primary);
+  background: var(--background-error-primary);
+  border-color: var(--background-error-primary);
 }
 
 /* ── SVG paths ────────────────────────────────────────────────── */
@@ -391,12 +488,9 @@
     display: none;
   }
 
-  .promptCard {
-    padding-right: 16px;
-  }
-
+  .promptCard,
   .termCard {
-    padding-left: 14px;
+    padding: 10px 16px;
   }
 
   .svgOverlay {

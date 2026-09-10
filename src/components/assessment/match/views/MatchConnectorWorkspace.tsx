@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
   type SetStateAction,
 } from "react";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +33,10 @@ import successSoundUrl from "@/assets/audio/success-sound.mp3";
 import type { DevPanelField } from "../../../lab2/dev";
 import { resourcePanelCompactDevField } from "../../../lab2/dev";
 import { usePropsOverride } from "../../../../hooks/usePropsOverride";
+import {
+  correctMatchPromptIds,
+  keepCorrectMatchAssignments,
+} from "../../../../lib/assessmentBuilder";
 import {
   AssessmentBottomRow,
   AssessmentLevelShell,
@@ -149,6 +154,212 @@ function renderMatchCardBody(
   return null;
 }
 
+function MatchConnectorKeyBoard({
+  terms,
+  prompts,
+  columnFlexVars,
+  cardAlignment,
+}: {
+  terms: MatchLevelPayload["level"]["question"]["terms"];
+  prompts: MatchLevelPayload["level"]["question"]["prompts"];
+  columnFlexVars: CSSProperties;
+  cardAlignment: {
+    terms: MatchCardContentAlign;
+    prompts: MatchCardContentAlign;
+  };
+}) {
+  const boardId = useId();
+  const boardRef = useRef<HTMLDivElement | null>(null);
+  const promptDotRefs = useRef<Record<string, HTMLElement | null>>({});
+  const termDotRefs = useRef<Record<string, HTMLElement | null>>({});
+  const [layoutVersion, setLayoutVersion] = useState(0);
+
+  const assignments = useMemo(
+    () =>
+      prompts.reduce<MatchAssignments>((acc, prompt) => {
+        acc[prompt.id] = prompt.correctTermId;
+        return acc;
+      }, {}),
+    [prompts],
+  );
+
+  const termToPromptId = useMemo(() => {
+    return Object.entries(assignments).reduce<Record<string, string>>(
+      (acc, [promptId, termId]) => {
+        if (termId) acc[termId] = promptId;
+        return acc;
+      },
+      {},
+    );
+  }, [assignments]);
+
+  useEffect(() => {
+    const onResize = () => setLayoutVersion((value) => value + 1);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    const observer = new ResizeObserver(() =>
+      setLayoutVersion((value) => value + 1),
+    );
+    observer.observe(board);
+    return () => observer.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    setLayoutVersion((value) => value + 1);
+  }, [assignments]);
+
+  const getNodeCenter = (el: HTMLElement | null) => {
+    const board = boardRef.current;
+    if (!board || !el) return null;
+    const boardRect = board.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    return {
+      x: elRect.left - boardRect.left + elRect.width / 2,
+      y: elRect.top - boardRect.top + elRect.height / 2,
+    };
+  };
+
+  const connectorSegments = useMemo(() => {
+    return prompts
+      .map((prompt) => {
+        const termId = assignments[prompt.id];
+        if (!termId) return null;
+        const start = getNodeCenter(promptDotRefs.current[prompt.id]);
+        const end = getNodeCenter(termDotRefs.current[termId]);
+        if (!start || !end) return null;
+        return {
+          id: `${prompt.id}-${termId}`,
+          path: buildCurvePath(start, end),
+        };
+      })
+      .filter(Boolean) as Array<{ id: string; path: string }>;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignments, layoutVersion, prompts]);
+
+  return (
+    <div
+      ref={boardRef}
+      id={boardId}
+      className={styles.board}
+      role="group"
+      aria-label="Correct matches"
+    >
+      <svg className={styles.svgOverlay} aria-hidden="true">
+        {connectorSegments.map((seg) => (
+          <path
+            key={seg.id}
+            d={seg.path}
+            className={[styles.connectorPath, styles.connectorPathCorrect].join(
+              " ",
+            )}
+          />
+        ))}
+      </svg>
+      <div className={styles.matchColumns} style={columnFlexVars}>
+        <div className={styles.termsColumn} role="group" aria-label="Terms">
+          {terms.map((term) => (
+            <div
+              key={term.id}
+              className={[
+                styles.termCard,
+                cardAlignment.terms === "start"
+                  ? styles.termCardAlignStart
+                  : "",
+                styles.cardCorrect,
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-label={getMatchCardAccessibilityLabel(term, "Term")}
+            >
+              {renderMatchCardBody(
+                term.text,
+                term.contentBlocks,
+                "term",
+                cardAlignment.terms,
+              )}
+              <span
+                ref={(el) => {
+                  termDotRefs.current[term.id] = el;
+                }}
+                className={[
+                  styles.connectorDot,
+                  styles.connectorDotRight,
+                  styles.connectorDotLocked,
+                  styles.connectorDotCorrect,
+                ].join(" ")}
+                aria-hidden={true}
+              />
+              {termToPromptId[term.id] ? (
+                <span
+                  className={[
+                    styles.feedbackBadge,
+                    styles.feedbackBadgeCorrect,
+                  ].join(" ")}
+                >
+                  <FaIcon name="check" size="s" />
+                </span>
+              ) : null}
+            </div>
+          ))}
+        </div>
+        <div
+          className={styles.promptsColumn}
+          role="group"
+          aria-label="Definitions"
+        >
+          {prompts.map((prompt) => (
+            <div
+              key={prompt.id}
+              className={[
+                styles.promptCard,
+                cardAlignment.prompts === "center"
+                  ? styles.promptCardAlignCenter
+                  : "",
+                styles.cardCorrect,
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-label={getMatchCardAccessibilityLabel(prompt, "Definition")}
+            >
+              <span
+                ref={(el) => {
+                  promptDotRefs.current[prompt.id] = el;
+                }}
+                className={[
+                  styles.connectorDot,
+                  styles.connectorDotLeft,
+                  styles.connectorDotLocked,
+                  styles.connectorDotCorrect,
+                ].join(" ")}
+                aria-hidden={true}
+              />
+              {renderMatchCardBody(
+                prompt.text,
+                prompt.contentBlocks,
+                "prompt",
+                cardAlignment.prompts,
+              )}
+              <span
+                className={[
+                  styles.feedbackBadge,
+                  styles.feedbackBadgeCorrect,
+                ].join(" ")}
+              >
+                <FaIcon name="check" size="s" />
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Component ─────────────────────────────────────────────────── */
 
 interface MatchConnectorWorkspaceProps {
@@ -165,6 +376,16 @@ interface MatchConnectorWorkspaceProps {
   embeddedStepEyebrow?: string;
   /** When set in an embedded level group, parent controls reveal for all blocks. */
   groupTeacherReveal?: boolean;
+  /**
+   * When reveal is active on a locked attempt that is not fully correct, keep
+   * the student’s matches and show the key in a second matching set below.
+   */
+  revealKeyAlongsideSelection?: boolean;
+  /** CFU / quiz student card: Figma question-container stem pad. */
+  studentQuestionChrome?: boolean;
+  /** Prompt ids that stayed correct on Try again — stay matched and marked. */
+  persistedCorrectPromptIds?: string[];
+  afterBody?: ReactNode;
 }
 
 const matchDevFields: DevPanelField[] = [
@@ -189,6 +410,10 @@ export function MatchConnectorWorkspace({
   embeddedInSteppedGroup = false,
   embeddedStepEyebrow,
   groupTeacherReveal,
+  revealKeyAlongsideSelection = false,
+  studentQuestionChrome = false,
+  persistedCorrectPromptIds: persistedCorrectPromptIdsProp,
+  afterBody,
 }: MatchConnectorWorkspaceProps) {
   const navigate = useNavigate();
 
@@ -279,6 +504,11 @@ export function MatchConnectorWorkspace({
   const [dragPoint, setDragPoint] = useState<{ x: number; y: number } | null>(
     null,
   );
+  const [internalKeptCorrectIds, setInternalKeptCorrectIds] = useState<
+    string[]
+  >([]);
+  const persistedCorrectPromptIds =
+    persistedCorrectPromptIdsProp ?? internalKeptCorrectIds;
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isTeacherAnswerRevealed, setIsTeacherAnswerRevealed] = useState(false);
   const teacherRevealActive =
@@ -375,8 +605,8 @@ export function MatchConnectorWorkspace({
   /** Terms left / definitions right — flex-grow weights (set as CSS vars on `.matchColumns`). */
   const columnFlexVars = useMemo(() => {
     const c = level.question.columnFlex;
-    const terms = c?.terms ?? 0.8;
-    const prompts = c?.prompts ?? 1.2;
+    const terms = c?.terms ?? 1;
+    const prompts = c?.prompts ?? 1;
     return {
       "--match-terms-flex": String(terms),
       "--match-prompts-flex": String(prompts),
@@ -390,21 +620,6 @@ export function MatchConnectorWorkspace({
       prompts: a?.prompts ?? "start",
     } satisfies { terms: MatchCardContentAlign; prompts: MatchCardContentAlign };
   }, [level.question.cardAlignment]);
-
-  const displayAssignments = useMemo(() => {
-    if (teacherRevealActive) {
-      return level.question.prompts.reduce<MatchAssignments>((acc, p) => {
-        acc[p.id] = p.correctTermId;
-        return acc;
-      }, {});
-    }
-    return assignments;
-  }, [teacherRevealActive, assignments, level.question.prompts]);
-
-  /** Re-measure connector endpoints after assignments change (refs/layout settle in layout phase). */
-  useLayoutEffect(() => {
-    setLayoutVersion((v) => v + 1);
-  }, [displayAssignments]);
 
   const allAssigned = useMemo(
     () => level.question.prompts.every((p) => Boolean(assignments[p.id])),
@@ -428,10 +643,36 @@ export function MatchConnectorWorkspace({
   const isSubmittedForFeedback = embedded
     ? Boolean(groupSubmitted)
     : isSubmitted;
+  /**
+   * Figma Matching / Answer and explanation revealed: keep the student’s set
+   * and add a Correct Answer set underneath when any pair is wrong.
+   */
+  const showCorrectAnswerBoard =
+    teacherRevealActive &&
+    isSubmittedForFeedback &&
+    !isPerfectMatch &&
+    (revealKeyAlongsideSelection || !embedded);
+  const replaceWithKey =
+    teacherRevealActive && !showCorrectAnswerBoard && !isPerfectMatch;
   const interactionLocked =
     isSubmittedForFeedback || teacherRevealActive;
   const showInlineFeedback =
-    isSubmittedForFeedback && !teacherRevealActive;
+    isSubmittedForFeedback && !replaceWithKey;
+
+  const displayAssignments = useMemo(() => {
+    if (replaceWithKey) {
+      return level.question.prompts.reduce<MatchAssignments>((acc, p) => {
+        acc[p.id] = p.correctTermId;
+        return acc;
+      }, {});
+    }
+    return assignments;
+  }, [replaceWithKey, assignments, level.question.prompts]);
+
+  /** Re-measure connector endpoints after assignments change (refs/layout settle in layout phase). */
+  useLayoutEffect(() => {
+    setLayoutVersion((v) => v + 1);
+  }, [displayAssignments]);
 
   const promptById = useMemo(
     () =>
@@ -453,6 +694,23 @@ export function MatchConnectorWorkspace({
       {},
     );
   }, [displayAssignments]);
+
+  const lockedPromptIds = useMemo(
+    () => new Set(persistedCorrectPromptIds),
+    [persistedCorrectPromptIds],
+  );
+
+  const isCardInteractionLocked = useCallback(
+    (type: "prompt" | "term", id: string) => {
+      if (type === "prompt") return lockedPromptIds.has(id);
+      const promptId = termToPromptId[id];
+      return Boolean(promptId && lockedPromptIds.has(promptId));
+    },
+    [lockedPromptIds, termToPromptId],
+  );
+
+  const isCardLockedRef = useRef(isCardInteractionLocked);
+  isCardLockedRef.current = isCardInteractionLocked;
 
   /* ── Geometry helpers ────────────────────────────────────────── */
 
@@ -478,16 +736,19 @@ export function MatchConnectorWorkspace({
         const end = getNodeCenter(termDotRefs.current[termId]);
         if (!start || !end) return null;
         const isCorrect = termId === prompt.correctTermId;
+        const keptCorrect = lockedPromptIds.has(prompt.id) && isCorrect;
         return {
           id: `${prompt.id}-${termId}`,
           path: buildCurvePath(start, end),
-          state: teacherRevealActive
+          state: replaceWithKey
             ? ("revealed" as const)
             : showInlineFeedback
               ? isCorrect
                 ? ("correct" as const)
                 : ("incorrect" as const)
-              : ("neutral" as const),
+              : keptCorrect
+                ? ("correct" as const)
+                : ("neutral" as const),
         };
       })
       .filter(Boolean) as Array<{
@@ -499,9 +760,10 @@ export function MatchConnectorWorkspace({
   }, [
     displayAssignments,
     getNodeCenter,
-    teacherRevealActive,
+    replaceWithKey,
     layoutVersion,
     level.question.prompts,
+    lockedPromptIds,
     showInlineFeedback,
   ]);
 
@@ -526,16 +788,20 @@ export function MatchConnectorWorkspace({
 
   const assignTermToPrompt = useCallback(
     (promptId: string, termId: string) => {
+      if (lockedPromptIds.has(promptId)) return;
       setAssignments((prev) => {
         const next = { ...prev };
         for (const pid of Object.keys(next)) {
-          if (next[pid] === termId) next[pid] = null;
+          if (next[pid] === termId) {
+            if (lockedPromptIds.has(pid)) return prev;
+            next[pid] = null;
+          }
         }
         next[promptId] = termId;
         return next;
       });
     },
-    [setAssignments],
+    [setAssignments, lockedPromptIds],
   );
 
   const assignTermToPromptRef = useRef(assignTermToPrompt);
@@ -559,6 +825,7 @@ export function MatchConnectorWorkspace({
         cardTarget?.dataset.cardType) as "prompt" | "term" | undefined;
       const targetId = dotTarget?.dataset.dotId ?? cardTarget?.dataset.cardId;
       if (targetType && targetId && targetType !== drag.type) {
+        if (isCardLockedRef.current(targetType, targetId)) return null;
         return { type: targetType, id: targetId };
       }
       return null;
@@ -568,7 +835,7 @@ export function MatchConnectorWorkspace({
 
   const selectOrConnect = useCallback(
     (type: "prompt" | "term", id: string) => {
-      if (interactionLocked) return;
+      if (interactionLocked || isCardInteractionLocked(type, id)) return;
 
       if (!selectedCard) {
         setSelectedCard({ type, id });
@@ -623,19 +890,25 @@ export function MatchConnectorWorkspace({
       setA11yStatus(`Matched ${termSummary} to ${promptSummary}.`);
       setSelectedCard(null);
     },
-    [interactionLocked, selectedCard, assignTermToPrompt, level.question],
+    [
+      interactionLocked,
+      isCardInteractionLocked,
+      selectedCard,
+      assignTermToPrompt,
+      level.question,
+    ],
   );
 
   const handleCardClick = useCallback(
     (type: "prompt" | "term", id: string) => {
-      if (interactionLocked) return;
+      if (interactionLocked || isCardInteractionLocked(type, id)) return;
       if (didDragRef.current) {
         didDragRef.current = false;
         return;
       }
       selectOrConnect(type, id);
     },
-    [interactionLocked, selectOrConnect],
+    [interactionLocked, isCardInteractionLocked, selectOrConnect],
   );
 
   const handleCardKeyDown = useCallback(
@@ -656,7 +929,9 @@ export function MatchConnectorWorkspace({
 
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        selectOrConnect(type, id);
+        if (!isCardInteractionLocked(type, id)) {
+          selectOrConnect(type, id);
+        }
         return;
       }
 
@@ -703,7 +978,7 @@ export function MatchConnectorWorkspace({
         }
       }
     },
-    [interactionLocked, selectOrConnect, level.question],
+    [interactionLocked, isCardInteractionLocked, selectOrConnect, level.question],
   );
 
   /* ── Drag lifecycle (synchronous listener attachment) ────────── */
@@ -750,7 +1025,11 @@ export function MatchConnectorWorkspace({
         const cardId = card?.dataset.cardId;
         const drag = activeDragRef.current;
         const hoverTarget =
-          cardType && cardId && drag && cardType !== drag.type
+          cardType &&
+          cardId &&
+          drag &&
+          cardType !== drag.type &&
+          !isCardLockedRef.current(cardType, cardId)
             ? { type: cardType, id: cardId }
             : null;
         if (
@@ -817,7 +1096,7 @@ export function MatchConnectorWorkspace({
       id: string,
       event: ReactPointerEvent<HTMLDivElement>,
     ) => {
-      if (interactionLocked) return;
+      if (interactionLocked || isCardInteractionLocked(type, id)) return;
       if ((event.target as HTMLElement).closest("[data-connector-dot]"))
         return;
       event.preventDefault();
@@ -834,7 +1113,7 @@ export function MatchConnectorWorkspace({
         event.pointerId,
       );
     },
-    [interactionLocked, getNodeCenter, beginDrag],
+    [interactionLocked, isCardInteractionLocked, getNodeCenter, beginDrag],
   );
 
   const handleDotPointerDown = useCallback(
@@ -843,7 +1122,7 @@ export function MatchConnectorWorkspace({
       id: string,
       event: ReactPointerEvent<HTMLElement>,
     ) => {
-      if (interactionLocked) return;
+      if (interactionLocked || isCardInteractionLocked(type, id)) return;
       event.preventDefault();
       event.stopPropagation();
       const origin = getNodeCenter(event.currentTarget);
@@ -853,7 +1132,7 @@ export function MatchConnectorWorkspace({
         event.pointerId,
       );
     },
-    [interactionLocked, getNodeCenter, beginDrag],
+    [interactionLocked, isCardInteractionLocked, getNodeCenter, beginDrag],
   );
 
   const handleSubmitMatches = () => {
@@ -866,14 +1145,31 @@ export function MatchConnectorWorkspace({
   };
 
   const tryAgain = () => {
-    setAssignments(buildInitialAssignments(promptIds));
+    const kept = correctMatchPromptIds(level.question.prompts, assignments);
+    setInternalKeptCorrectIds((previous) => [
+      ...new Set([...previous, ...kept]),
+    ]);
+    setAssignments(
+      keepCorrectMatchAssignments(level.question.prompts, assignments),
+    );
     setIsSubmitted(false);
   };
 
   const clearAll = () => {
-    setAssignments(buildInitialAssignments(promptIds));
+    setAssignments((previous) =>
+      Object.fromEntries(
+        level.question.prompts.map((prompt) => [
+          prompt.id,
+          lockedPromptIds.has(prompt.id) ? previous[prompt.id] ?? null : null,
+        ]),
+      ),
+    );
     setSelectedCard(null);
-    setA11yStatus("All matches cleared.");
+    setA11yStatus(
+      lockedPromptIds.size > 0
+        ? "Unlocked matches cleared."
+        : "All matches cleared.",
+    );
   };
 
   /* ── Render ──────────────────────────────────────────────────── */
@@ -882,24 +1178,27 @@ export function MatchConnectorWorkspace({
     embedded && (embeddedInScrollGroup || embeddedInSteppedGroup);
 
   const stemEyebrow =
-    embeddedFlatInParent && embeddedStepEyebrow
+    embeddedFlatInParent && embeddedStepEyebrow !== undefined
       ? embeddedStepEyebrow
       : embedded && !embeddedFlatInParent
         ? ""
         : "Match";
 
   const useStepCounterEyebrowStyle =
-    embeddedInScrollGroup && !embeddedInSteppedGroup;
+    studentQuestionChrome ||
+    (embeddedInScrollGroup && !embeddedInSteppedGroup);
 
   const cardContents = (
     <>
           <AssessmentStemSection
             eyebrow={stemEyebrow}
+            layout={studentQuestionChrome ? "questionContainer" : "default"}
             eyebrowClassName={
               useStepCounterEyebrowStyle ? stemStyles.stepCounterEyebrow : undefined
             }
             question={level.stem.question}
             description={level.stem.description}
+            afterBody={afterBody}
           >
             <div
               className={styles.visuallyHidden}
@@ -909,10 +1208,16 @@ export function MatchConnectorWorkspace({
               {a11yStatus}
             </div>
 
+            <div className={styles.revealStack}>
             <div
               ref={boardRef}
               id={matchBoardId}
-              className={styles.board}
+              className={[
+                styles.board,
+                studentQuestionChrome ? "" : styles.boardStandalone,
+              ]
+                .filter(Boolean)
+                .join(" ")}
               role="group"
               aria-label="Match terms to definitions"
             >
@@ -965,55 +1270,67 @@ export function MatchConnectorWorkspace({
                       : null;
                     const isCorrect =
                       Boolean(prompt) && prompt!.correctTermId === term.id;
+                    const pairKeptCorrect =
+                      Boolean(connectedPromptId) &&
+                      lockedPromptIds.has(connectedPromptId!) &&
+                      isCorrect;
+                    const showPairCorrect =
+                      (showInlineFeedback && isConnected && isCorrect) ||
+                      pairKeptCorrect;
+                    const cardLocked = interactionLocked || pairKeptCorrect;
+                    const isDragHover =
+                      !cardLocked &&
+                      dragHoverTarget?.type === "term" &&
+                      dragHoverTarget.id === term.id;
+                    const isDraggingThis =
+                      !cardLocked &&
+                      activeDrag?.type === "term" &&
+                      activeDrag.id === term.id;
 
                     const cardClasses = [
                       styles.termCard,
                       cardAlignment.terms === "start"
                         ? styles.termCardAlignStart
                         : "",
-                      isSelected && !interactionLocked
+                      isSelected && !cardLocked
                         ? styles.termCardSelected
                         : "",
                       isConnected &&
                       !showInlineFeedback &&
-                      !teacherRevealActive
+                      !replaceWithKey &&
+                      !pairKeptCorrect
                         ? styles.termCardConnected
                         : "",
-                      showInlineFeedback && isConnected && isCorrect
-                        ? styles.cardCorrect
-                        : "",
+                      showPairCorrect ? styles.cardCorrect : "",
                       showInlineFeedback && isConnected && !isCorrect
                         ? styles.cardIncorrect
                         : "",
-                      teacherRevealActive ? styles.cardRevealed : "",
+                      replaceWithKey ? styles.cardRevealed : "",
+                      isDraggingThis ? styles.cardPress : "",
+                      isDragHover ? styles.cardDragHover : "",
                     ]
                       .filter(Boolean)
                       .join(" ");
 
-                    const isDragHover =
-                      dragHoverTarget?.type === "term" &&
-                      dragHoverTarget.id === term.id;
-
                     const dotClasses = [
                       styles.connectorDot,
                       styles.connectorDotRight,
-                      interactionLocked ? styles.connectorDotLocked : "",
+                      cardLocked ? styles.connectorDotLocked : "",
                       isConnected &&
                       !showInlineFeedback &&
-                      !teacherRevealActive
+                      !replaceWithKey &&
+                      !pairKeptCorrect
                         ? styles.connectorDotActive
                         : "",
-                      isSelected && !interactionLocked
+                      isSelected && !cardLocked
                         ? styles.connectorDotSelected
                         : "",
                       isDragHover ? styles.connectorDotDragHover : "",
-                      showInlineFeedback && isConnected && isCorrect
-                        ? styles.connectorDotCorrect
-                        : "",
+                      showPairCorrect ? styles.connectorDotCorrect : "",
                       showInlineFeedback && isConnected && !isCorrect
                         ? styles.connectorDotIncorrect
                         : "",
-                      teacherRevealActive
+                      replaceWithKey
                         ? styles.connectorDotRevealed
                         : "",
                     ]
@@ -1031,9 +1348,9 @@ export function MatchConnectorWorkspace({
                         data-card-type="term"
                         data-card-id={term.id}
                         role="button"
-                        tabIndex={interactionLocked ? -1 : 0}
+                        tabIndex={cardLocked ? -1 : 0}
                         aria-pressed={isSelected}
-                        aria-disabled={interactionLocked}
+                        aria-disabled={cardLocked}
                         aria-label={getMatchCardAccessibilityLabel(term, "Term")}
                         onClick={() => handleCardClick("term", term.id)}
                         onKeyDown={(e) => handleCardKeyDown(e, "term", term.id)}
@@ -1058,18 +1375,18 @@ export function MatchConnectorWorkspace({
                           data-dot-id={term.id}
                           aria-hidden={true}
                           onPointerDown={(e) =>
-                            interactionLocked
+                            cardLocked
                               ? undefined
                               : handleDotPointerDown("term", term.id, e)
                           }
                           onClick={(e) => e.stopPropagation()}
                         />
 
-                        {showInlineFeedback && isConnected ? (
+                        {(showInlineFeedback && isConnected) || pairKeptCorrect ? (
                           <span
                             className={[
                               styles.feedbackBadge,
-                              isCorrect
+                              isCorrect || pairKeptCorrect
                                 ? styles.feedbackBadgeCorrect
                                 : styles.feedbackBadgeIncorrect,
                             ].join(" ")}
@@ -1099,55 +1416,65 @@ export function MatchConnectorWorkspace({
                       selectedCard.id === prompt.id;
                     const isCorrect =
                       isConnected && termId === prompt.correctTermId;
+                    const pairKeptCorrect =
+                      lockedPromptIds.has(prompt.id) && isCorrect;
+                    const showPairCorrect =
+                      (showInlineFeedback && isConnected && isCorrect) ||
+                      pairKeptCorrect;
+                    const cardLocked = interactionLocked || pairKeptCorrect;
+                    const isDragHover =
+                      !cardLocked &&
+                      dragHoverTarget?.type === "prompt" &&
+                      dragHoverTarget.id === prompt.id;
+                    const isDraggingThis =
+                      !cardLocked &&
+                      activeDrag?.type === "prompt" &&
+                      activeDrag.id === prompt.id;
 
                     const cardClasses = [
                       styles.promptCard,
                       cardAlignment.prompts === "center"
                         ? styles.promptCardAlignCenter
                         : "",
-                      isSelected && !interactionLocked
+                      isSelected && !cardLocked
                         ? styles.promptCardSelected
                         : "",
                       isConnected &&
                       !showInlineFeedback &&
-                      !teacherRevealActive
+                      !replaceWithKey &&
+                      !pairKeptCorrect
                         ? styles.promptCardConnected
                         : "",
-                      showInlineFeedback && isConnected && isCorrect
-                        ? styles.cardCorrect
-                        : "",
+                      showPairCorrect ? styles.cardCorrect : "",
                       showInlineFeedback && isConnected && !isCorrect
                         ? styles.cardIncorrect
                         : "",
-                      teacherRevealActive ? styles.cardRevealed : "",
+                      replaceWithKey ? styles.cardRevealed : "",
+                      isDraggingThis ? styles.cardPress : "",
+                      isDragHover ? styles.cardDragHover : "",
                     ]
                       .filter(Boolean)
                       .join(" ");
 
-                    const isDragHover =
-                      dragHoverTarget?.type === "prompt" &&
-                      dragHoverTarget.id === prompt.id;
-
                     const dotClasses = [
                       styles.connectorDot,
                       styles.connectorDotLeft,
-                      interactionLocked ? styles.connectorDotLocked : "",
+                      cardLocked ? styles.connectorDotLocked : "",
                       isConnected &&
                       !showInlineFeedback &&
-                      !teacherRevealActive
+                      !replaceWithKey &&
+                      !pairKeptCorrect
                         ? styles.connectorDotActive
                         : "",
-                      isSelected && !interactionLocked
+                      isSelected && !cardLocked
                         ? styles.connectorDotSelected
                         : "",
                       isDragHover ? styles.connectorDotDragHover : "",
-                      showInlineFeedback && isConnected && isCorrect
-                        ? styles.connectorDotCorrect
-                        : "",
+                      showPairCorrect ? styles.connectorDotCorrect : "",
                       showInlineFeedback && isConnected && !isCorrect
                         ? styles.connectorDotIncorrect
                         : "",
-                      teacherRevealActive
+                      replaceWithKey
                         ? styles.connectorDotRevealed
                         : "",
                     ]
@@ -1165,9 +1492,9 @@ export function MatchConnectorWorkspace({
                         data-card-type="prompt"
                         data-card-id={prompt.id}
                         role="button"
-                        tabIndex={interactionLocked ? -1 : 0}
+                        tabIndex={cardLocked ? -1 : 0}
                         aria-pressed={isSelected}
-                        aria-disabled={interactionLocked}
+                        aria-disabled={cardLocked}
                         aria-label={getMatchCardAccessibilityLabel(
                           prompt,
                           "Definition",
@@ -1190,7 +1517,7 @@ export function MatchConnectorWorkspace({
                           data-dot-id={prompt.id}
                           aria-hidden={true}
                           onPointerDown={(e) =>
-                            interactionLocked
+                            cardLocked
                               ? undefined
                               : handleDotPointerDown("prompt", prompt.id, e)
                           }
@@ -1204,11 +1531,11 @@ export function MatchConnectorWorkspace({
                           cardAlignment.prompts,
                         )}
 
-                        {showInlineFeedback && isConnected ? (
+                        {(showInlineFeedback && isConnected) || pairKeptCorrect ? (
                           <span
                             className={[
                               styles.feedbackBadge,
-                              isCorrect
+                              isCorrect || pairKeptCorrect
                                 ? styles.feedbackBadgeCorrect
                                 : styles.feedbackBadgeIncorrect,
                             ].join(" ")}
@@ -1224,6 +1551,18 @@ export function MatchConnectorWorkspace({
                   })}
                 </div>
               </div>
+            </div>
+            {showCorrectAnswerBoard ? (
+              <>
+                <p className={styles.correctAnswerLabel}>Correct Answer</p>
+                <MatchConnectorKeyBoard
+                  terms={level.question.terms}
+                  prompts={level.question.prompts}
+                  columnFlexVars={columnFlexVars}
+                  cardAlignment={cardAlignment}
+                />
+              </>
+            ) : null}
             </div>
           </AssessmentStemSection>
 
@@ -1358,6 +1697,7 @@ export function MatchConnectorWorkspace({
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         compact: resourcePanelCompact,

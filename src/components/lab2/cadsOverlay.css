@@ -1,0 +1,24 @@
+/* CADS Dialog/Modal paper uses width:100% inside a flex portal. That
+ * percentage often resolves as min-content, so titles and actions wrap
+ * in a skinny column. Stretch the paper to the viewport; the surface
+ * still caps at its maxWidth (CADS default 800). */
+.MuiDialog-paper {
+  box-sizing: border-box;
+  width: calc(100vw - 48px) !important;
+}
+
+.MuiDialog-paper > * {
+  align-self: stretch;
+  width: 100%;
+}
+
+[data-cads-component="Dialog"],
+[data-cads-component="Modal"] {
+  width: 100%;
+}
+
+[data-cads-component="Dialog"] [data-cads-component="Button"],
+[data-cads-component="Modal"] [data-cads-component="Button"] {
+  flex-shrink: 0;
+  white-space: nowrap;
+}

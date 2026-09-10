@@ -496,7 +496,6 @@ export function BackpackPanel({
       primaryActionLabel="Delete file"
       secondaryActionLabel="Cancel"
       isDismissable
-      maxWidth={400}
       onPrimaryAction={() => {
         if (!deleteTarget) return;
         const itemId = deleteTarget.id;

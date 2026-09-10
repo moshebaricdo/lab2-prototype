@@ -48,19 +48,22 @@ Rendering rules match multi-choice and free-response (`see multi-choice.md` stem
 ## Student UX (connector)
 
 - Fixed **left column (terms)** and **right column (definitions)**. Learners connect pairs with curved lines (pointer or keyboard).
+- **Tile interaction** (Figma matching item): hover/press/focus anywhere on the tile also drives the connector knob. Unmatched hover uses a secondary border and tertiary knob; press/focus fill the knob with brand-light and a selected-primary ring. Connected tiles use brand-light / selected-primary; hover and press darken the knob to selected-strong. Correct and incorrect pairs have **no** hover/press.
 - **Clear all** and **Submit** follow the same footer rules as other assessment types.
 
 ## Student UX (submit and feedback)
 
 - **Sounds:** `success-sound.mp3` when all matches are correct; `error-sound.mp3` when any are wrong.
 - **All correct** — success styling; bottom bar **“Nice work!”** and **Continue** (next route in `matchLevelLinks` or `/levels` after the last demo).
-- **Any incorrect** — error styling where applicable; **Try again** until all correct; **Continue** only after a fully correct attempt.
+- **Any incorrect** — error styling where applicable; **Try again** until all correct; **Continue** only after a fully correct attempt. On Try again, pairs that were already correct stay matched and locked (success styling, no hover/press); incorrect pairs clear. Submit stays disabled until every remaining pair is filled.
 - **Teacher tools:** **Reveal answer** / **Hide answer** shows the key in the live UI; Submit disabled while revealed (same pattern as multi-choice).
 
 ## Teacher answer key
 
 - **Reveal** is integrated into the student UI (no separate collapsible card below the workspace).
-- The **body** is the live task surface with correct pairings highlighted. See `teacher-answer-key.md` for the shared pattern.
+- **Peek / teacher key (no submitted attempt):** the live board is replaced with the correct pairings.
+- **Reveal after an incorrect or partial attempt** (CFU / quiz `revealKeyAlongsideSelection`, or standalone Reveal after submit): the student’s matches stay on the first board (correct / incorrect), and a **Correct Answer** set with the key appears underneath. A fully correct attempt does not add the second set.
+- See `teacher-answer-key.md` for the shared pattern.
 
 ## Data shape
 

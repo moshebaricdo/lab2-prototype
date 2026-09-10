@@ -27,7 +27,7 @@ Use these docs as handoff context for follow-up threads.
 ## Shared Assumptions
 
 - Level pages generally render inside the Lab2 shell (`TopNavigation` + resource panel + main surface), but the main surface is not always resizable. AI Chat Lab card surfaces intentionally disable sidebar resizing while floating.
-- Assessment-focused levels currently run with AI Tutor visible and Version History hidden.
+- Assessment-focused levels currently run with AI Tutor visible and Version History and Backpack hidden (Backpack is IDE-lab only).
 - AI Chat Lab hides AI Tutor because its primary workspace is the AI chat stream.
 - AI Lab hides AI Tutor, Version History, and Backpack. Instructions change with the Dataset / Train / Test section (guided studio: Data setup row / Test).
 - Python Lab keeps the sidebar Tutor guidance-only; Web Lab 2 owns the full functional Tutor edit/planning flow.
@@ -37,7 +37,7 @@ Use these docs as handoff context for follow-up threads.
 
 ## Routes Snapshot
 
-- `/levels` -> categorized level index
+- `/levels` -> categorized level index (Lab environments, Assessment, Modernizing assessments, Misc)
 - `/levels/pythonlab` and `/levels/pythonlab-blank`
 - `/levels/sketchlab` and `/levels/sketchlab-blank`
 - `/levels/aichatlab`, `/levels/aichatlab-setup`, and `/levels/aichatlab-model-card`
@@ -53,4 +53,6 @@ Use these docs as handoff context for follow-up threads.
 - `/levels/fill-in-blank`, `/levels/fill-in-blank-multi`, `/levels/fill-in-blank-code-ref` (see `fill-in-blank.md`)
 - `/levels/levelgroup-scroll`, `/levels/levelgroup-stepped` (see `levelgroup.md`)
 - `/levels/assessment-builder-new`, `/levels/assessment-builder-seeded`, `/levels/assessment-builder-p0`, and `/levels/assessment-builder-p0-draft` (see `assessment-builder.md`)
+- `/levels/cfu-multi` (plus `-retry`, `-continue`, `-reveal`, `-capped`), `/levels/cfu-multi-checkboxes` (plus `-continue`, `-no-retry`, `-reveal`, `-capped`), `/levels/cfu-free-response` (plus `-reveal`, `-capped`), `/levels/cfu-matching` (plus `-retry`, `-reattempt`, `-continue`, `-reveal`, `-capped`) — `/levels` groups these by question type; teacher card lists every viewpoint × type (`/levels/cfu-teacher`, `-checkboxes`, `-free-response`, `-matching`, and the same suffixes on `-as-student` / `-response`)
+- `/levels/quiz-practice`, `/levels/quiz-exam-retries`, `/levels/quiz-exam-final`, `/levels/quiz-exam`, `/levels/quiz-exam-resume`; teacher viewpoints `/levels/quiz-teacher`, `/levels/quiz-teacher-as-student`, `/levels/quiz-teacher-response`, `/levels/quiz-teacher-response-submitted`
 - `/levels/bubble-choice` and `/levels/bubble-choice-images`

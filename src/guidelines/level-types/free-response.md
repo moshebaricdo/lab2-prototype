@@ -34,7 +34,7 @@ Bubble navigation for these demos is defined in `src/pages/levelTypeLinks.ts` (`
 - **Stem:** `stem.question` (optional plain heading) and/or `stem.description` (markdown). If `question` is omitted, the prompt lives entirely in `description` (see markdown-only demo).
 - **Response:** Textarea with minimum character count; helper line under the field (character count + minimum copy; upload demo explains text-or-file rule).
 - **Submit:** Enabled when the text meets `minCharacters`, or when **`allowFileUpload`** is true and either the minimum is met **or** a file is attached (file-only submit is allowed).
-- **File upload (`allowFileUpload`):** Full-width dashed drop zone with **Attach a file** (`AppButton` secondary, gray, upload icon). Dropping or choosing a file shows an **`UploadedFileChip`** (teal icon rail, filename, extension, remove) below the zone.
+- **File upload (`allowFileUpload`):** Full-width dashed drop zone with **Upload a file** and **Record audio**. Record audio stays enabled as a visual stub (click is a no-op). Dropping or choosing a file shows an **`UploadedFileChip`** below the zone.
 - **Teacher answer (`revealAnswerEnabled`):** **Reveal answer** / **Hide answer** in the **bottom row** (left cluster), same interaction pattern as multi-choice. When revealed, an **inline** “Teacher answer key” block (exemplar + rubric or expected-elements list) appears inside the main card above the footer. Submit and inputs are disabled while revealed.
 - **Submit / submitted:** On submit, textarea and file controls disable. There is **no** “Edit response” path. The bottom row shows a **Submitted** pill (light success background, check icon) and **Continue** (navigates to the next link in `freeResponseLevelLinks` or `/levels`).
 
@@ -78,5 +78,5 @@ When `codePanel` is provided alongside the level payload, the workspace switches
 ## Known Gaps
 
 - No API submission, persistence, or rubric-based scoring.
-- File handling is local UI only (no upload pipeline).
+- File handling is local UI only (no upload pipeline). Record audio does not capture audio.
 - Code reference panel: no editable mode, no line highlighting, no responsive breakpoint (stacked layout on narrow viewports).

@@ -25,9 +25,11 @@ export interface TopNavigationProps {
   disableLogoLink?: boolean;
   hideProgression?: boolean;
   disableProgressionLinks?: boolean;
+  /** Hide the lesson title + subtitle (keep logo, bubbles, and actions). */
+  hideTitle?: boolean;
   /**
-   * Extra actions after the title (e.g. Back / Save). When set, the title
-   * sits in the left group so it can sit next to those buttons.
+   * Extra actions in the left group (e.g. Back / Save). When set with a
+   * title, the title sits next to those buttons instead of the center.
    */
   leadingActions?: ReactNode;
 }
@@ -47,6 +49,7 @@ export function TopNavigation({
   disableLogoLink = false,
   hideProgression = false,
   disableProgressionLinks = false,
+  hideTitle = false,
   leadingActions,
 }: TopNavigationProps) {
   const continueButton = showContinueButton ? (
@@ -59,7 +62,8 @@ export function TopNavigation({
     />
   ) : null;
 
-  const titleBlock = (
+  const showTitle = !hideTitle;
+  const titleBlock = showTitle ? (
     <div
       className={
         leadingActions ? styles.levelHeadingStart : styles.levelHeading
@@ -68,7 +72,7 @@ export function TopNavigation({
       <p className={styles.title}>{title}</p>
       <p className={styles.subtitle}>{subtitle}</p>
     </div>
-  );
+  ) : null;
 
   return (
     <div className={`${styles.root} dark`} data-theme="Dark">
@@ -97,7 +101,7 @@ export function TopNavigation({
       </div>
 
       <div className={styles.centerGroup}>
-        {!hideProgression && !leadingActions ? titleBlock : null}
+        {!hideProgression && !leadingActions && titleBlock}
         {!hideProgression ? (
           <LevelProgressBubbles
             currentLevel={currentLevel}

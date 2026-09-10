@@ -116,7 +116,7 @@ const PANEL_LABEL: Record<SidebarTab, string> = {
   rubric: "RUBRIC",
   resources: "RESOURCES",
   "builder-bank": "QUESTION BANK",
-  "builder-settings": "ASSESSMENT SETTINGS",
+  "builder-settings": "CONFIGURATION",
   dev: "DEV PANEL",
 };
 
@@ -381,7 +381,9 @@ export function SidebarPanelContent({
           onSessionValueReset={onDevPanelSessionValueReset}
         />
       )}
-      {isBuilderTab(activeTab) && builderPanelContent}
+      {isBuilderTab(activeTab) && (
+        <div className={styles.builderSlot}>{builderPanelContent}</div>
+      )}
 
       {showContinueButton && (
         <div className={styles.continueBar}>

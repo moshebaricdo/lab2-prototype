@@ -87,6 +87,10 @@ export function resolveAssessmentQuestions(
 export function shouldSuppressRevealDuringAttempt(
   artifact: AssessmentArtifact,
 ): boolean {
+  if (artifact.feedback) return !artifact.feedback.showCorrectness;
+  if (artifact.purpose === "exam" || artifact.purpose === "exam_simulation") {
+    return true;
+  }
   return artifact.mode === "exam";
 }
 

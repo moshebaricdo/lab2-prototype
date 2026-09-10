@@ -323,6 +323,7 @@ export function LevelGroupSteppedWorkspace({
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         showInstructionsDrawer: false,

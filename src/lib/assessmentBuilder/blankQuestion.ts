@@ -157,6 +157,8 @@ export function createBlankQuestion(
     points: 1,
     updatedAt: now,
     item: blankContent(kind),
+    neverSaved: true,
+    listedInBank: true,
   };
 }
 

@@ -1146,7 +1146,11 @@ export function DragDropWorkspace({
 
   const eyebrow =
     embeddedInScrollGroup || embeddedInSteppedGroup
-      ? (embeddedStepEyebrow ?? (isParsons ? "Parsons problem" : "Categorization"))
+      ? (embeddedStepEyebrow !== undefined
+          ? embeddedStepEyebrow
+          : isParsons
+            ? "Parsons problem"
+            : "Categorization")
       : isParsons
         ? "Parsons problem"
         : "Categorization";
@@ -1600,6 +1604,7 @@ export function DragDropWorkspace({
         showSaveSuccessAlert,
         setShowSaveSuccessAlert,
         showHistoryTab: false,
+        showBackpackTab: false,
         showContinueButton: false,
         collapsible: true,
         compact: resourcePanelCompact,

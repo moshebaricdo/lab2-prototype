@@ -5,6 +5,42 @@
   padding: 16px 24px 0;
 }
 
+.questionContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 0;
+  padding: 24px;
+}
+
+.headerStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.titleStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.questionContainer .eyebrow {
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.questionContainer .question {
+  margin: 0;
+}
+
+.questionContainer .description,
+.questionContainer .descriptionOnly {
+  margin-top: 0;
+}
+
 .eyebrow {
   @include assessment-stem-eyebrow;
 }
@@ -20,12 +56,11 @@
 }
 
 /* description: shown alongside stem.question — boxed supplemental context block */
-.description {
-  margin-top: 16px;
-}
-
-/* descriptionOnly: stem.question is absent — description IS the question, flows as body */
+.description,
 .descriptionOnly {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 16px;
 }
 
@@ -42,20 +77,20 @@
 .descriptionOnly :global(h5),
 .descriptionOnly :global(h6) {
   @include assessment-stem-description-heading;
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 .description :global(p),
 .descriptionOnly :global(p) {
   @include assessment-stem-description-body;
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 .description :global(ul),
 .description :global(ol),
 .descriptionOnly :global(ul),
 .descriptionOnly :global(ol) {
-  margin: 0 0 8px;
+  margin: 0;
   padding-left: 20px;
 }
 
@@ -91,7 +126,7 @@
   border-radius: var(--shape-sm);
   font-family: var(--font-family-mono);
   font-size: var(--text-body-xs);
-  margin: 0 0 8px;
+  margin: 0;
   overflow-x: auto;
   padding: 12px 14px;
 }
@@ -109,6 +144,6 @@
   border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-sm);
   display: block;
-  margin-top: 8px;
+  margin: 0;
   max-width: 100%;
 }

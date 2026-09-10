@@ -138,6 +138,158 @@ export const assessmentSetLevelLinks: LevelProgressLink[] = [
   },
 ];
 
+
+export const cfuMultiLevelLinks: LevelProgressLink[] = [
+  { name: "Multiple choice", path: "/levels/cfu-multi" },
+  { name: "Multiple choice: retry", path: "/levels/cfu-multi-retry" },
+  { name: "Multiple choice: can continue", path: "/levels/cfu-multi-continue" },
+  { name: "Multiple choice: reveal", path: "/levels/cfu-multi-reveal" },
+  { name: "Multiple choice: capped attempts", path: "/levels/cfu-multi-capped" },
+];
+
+export const cfuMultiCheckboxesLevelLinks: LevelProgressLink[] = [
+  {
+    name: "Multiple choice: two correct",
+    path: "/levels/cfu-multi-checkboxes",
+  },
+  {
+    name: "Multiple choice: two correct, can continue",
+    path: "/levels/cfu-multi-checkboxes-continue",
+  },
+  {
+    name: "Multiple choice: two correct, no retry",
+    path: "/levels/cfu-multi-checkboxes-no-retry",
+  },
+  {
+    name: "Multiple choice: two correct, reveal",
+    path: "/levels/cfu-multi-checkboxes-reveal",
+  },
+  {
+    name: "Multiple choice: two correct, capped attempts",
+    path: "/levels/cfu-multi-checkboxes-capped",
+  },
+];
+
+export const cfuFreeResponseLevelLinks: LevelProgressLink[] = [
+  { name: "Free response", path: "/levels/cfu-free-response" },
+  { name: "Free response: reveal", path: "/levels/cfu-free-response-reveal" },
+  {
+    name: "Free response: capped attempts",
+    path: "/levels/cfu-free-response-capped",
+  },
+];
+
+export const cfuMatchingLevelLinks: LevelProgressLink[] = [
+  { name: "Matching", path: "/levels/cfu-matching" },
+  { name: "Matching: retry", path: "/levels/cfu-matching-retry" },
+  { name: "Matching: next attempt", path: "/levels/cfu-matching-reattempt" },
+  { name: "Matching: can continue", path: "/levels/cfu-matching-continue" },
+  { name: "Matching: reveal", path: "/levels/cfu-matching-reveal" },
+  { name: "Matching: capped attempts", path: "/levels/cfu-matching-capped" },
+];
+
+export const cfuLevelLinks: LevelProgressLink[] = [
+  ...cfuMultiLevelLinks,
+  ...cfuMultiCheckboxesLevelLinks,
+  ...cfuFreeResponseLevelLinks,
+  ...cfuMatchingLevelLinks,
+];
+
+export type AssessmentIndexGroup = {
+  label: string;
+  pages: LevelProgressLink[];
+};
+
+/** Flatten viewpoint × type groups so index cards and titles list every route. */
+export function flattenAssessmentIndexGroups(
+  groups: AssessmentIndexGroup[],
+): LevelProgressLink[] {
+  return groups.flatMap((group) =>
+    group.pages.map((page) => ({
+      ...page,
+      name: `${group.label}: ${page.name}`,
+    })),
+  );
+}
+
+export const cfuTeacherTypeLinks: LevelProgressLink[] = [
+  { name: "Multiple choice", path: "/levels/cfu-teacher" },
+  {
+    name: "Multiple choice: two correct",
+    path: "/levels/cfu-teacher-checkboxes",
+  },
+  { name: "Free response", path: "/levels/cfu-teacher-free-response" },
+  { name: "Matching", path: "/levels/cfu-teacher-matching" },
+];
+
+export const cfuTeacherAsStudentTypeLinks: LevelProgressLink[] = [
+  { name: "Multiple choice", path: "/levels/cfu-teacher-as-student" },
+  {
+    name: "Multiple choice: two correct",
+    path: "/levels/cfu-teacher-as-student-checkboxes",
+  },
+  {
+    name: "Free response",
+    path: "/levels/cfu-teacher-as-student-free-response",
+  },
+  { name: "Matching", path: "/levels/cfu-teacher-as-student-matching" },
+];
+
+export const cfuTeacherResponseTypeLinks: LevelProgressLink[] = [
+  { name: "Multiple choice", path: "/levels/cfu-teacher-response" },
+  {
+    name: "Multiple choice: two correct",
+    path: "/levels/cfu-teacher-response-checkboxes",
+  },
+  {
+    name: "Free response",
+    path: "/levels/cfu-teacher-response-free-response",
+  },
+  { name: "Matching", path: "/levels/cfu-teacher-response-matching" },
+];
+
+/** Student CFU settings variants, grouped by question type for the index card. */
+export const cfuIndexGroups: AssessmentIndexGroup[] = [
+  {
+    label: "Multiple choice",
+    pages: [...cfuMultiLevelLinks, ...cfuMultiCheckboxesLevelLinks],
+  },
+  { label: "Free response", pages: cfuFreeResponseLevelLinks },
+  { label: "Matching", pages: cfuMatchingLevelLinks },
+];
+
+/** Every CFU teacher viewpoint × question-type route for the index card. */
+export const cfuTeacherIndexGroups: AssessmentIndexGroup[] = [
+  { label: "Viewing as teacher", pages: cfuTeacherTypeLinks },
+  { label: "Viewing as a student", pages: cfuTeacherAsStudentTypeLinks },
+  { label: "Viewing a student response", pages: cfuTeacherResponseTypeLinks },
+];
+
+export const cfuTeacherIndexLinks = flattenAssessmentIndexGroups(
+  cfuTeacherIndexGroups,
+);
+
+export const quizTakingLevelLinks: LevelProgressLink[] = [
+  { name: "Practice: 3 questions, one page", path: "/levels/quiz-practice" },
+  {
+    name: "Exam: attempts remaining",
+    path: "/levels/quiz-exam-retries",
+  },
+  { name: "Exam: final attempt", path: "/levels/quiz-exam-final" },
+  { name: "Exam: no reveal", path: "/levels/quiz-exam" },
+  { name: "Exam: resume in progress", path: "/levels/quiz-exam-resume" },
+];
+
+export const quizTeacherLevelLinks: LevelProgressLink[] = [
+  { name: "Viewing as teacher", path: "/levels/quiz-teacher" },
+  { name: "Viewing as a student", path: "/levels/quiz-teacher-as-student" },
+  { name: "Viewing a student response", path: "/levels/quiz-teacher-response" },
+  {
+    name: "Viewing a completed submission",
+    path: "/levels/quiz-teacher-response-submitted",
+  },
+];
+
 export const assessmentBuilderLevelLinks: LevelProgressLink[] = [
   {
     name: "New assessment (blank)",
