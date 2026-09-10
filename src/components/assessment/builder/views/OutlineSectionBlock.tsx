@@ -35,7 +35,10 @@ export function SectionHeaderContent({
           onClick={onToggleCollapsed}
         >
           <span className={styles.collapse} aria-hidden>
-            <FaIcon name="arrows-to-line" size="extraSmall" />
+            <FaIcon
+              name={collapsed ? "arrows-from-line" : "arrows-to-line"}
+              size="extraSmall"
+            />
           </span>
           <span className={styles.overline}>Section {sectionNumber}</span>
           <span className={styles.dot} aria-hidden />
