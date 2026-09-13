@@ -32,9 +32,7 @@ export function GuidedTrainingBar({ lab }: GuidedTrainingBarProps) {
   const featureColumns = columns.filter(
     (column) => column.id !== lab.labelColumn,
   );
-  const reservedCount = lab.reservedRowIndexes.length;
-  const correctCount =
-    lab.model?.holdoutResults.filter((result) => result.correct).length ?? 0;
+  const accuracy = lab.model ? Math.round(lab.model.accuracy * 100) : undefined;
 
   const runTrain = () => {
     if (!lab.canTrain || isTraining) return;
@@ -122,8 +120,7 @@ export function GuidedTrainingBar({ lab }: GuidedTrainingBarProps) {
       {lab.model ? (
         <div className={styles.builderResult}>
           <Alert sentiment="success" size="small">
-            Trained. {Math.round(lab.model.accuracy * 100)}% on {reservedCount}{" "}
-            reserved orders ({correctCount} of {reservedCount}).
+            Trained. {accuracy}% accuracy on the current sheet.
           </Alert>
           <Button
             size="small"

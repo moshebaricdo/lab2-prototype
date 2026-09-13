@@ -103,7 +103,7 @@ Dark mode: CADS keys off `.dark` (or `[data-theme='Dark']`) on an **ancestor**. 
 3. **Font files outside allow list** — Local `file:` / symlinked CADS icon fonts may warn under Vite `server.fs.allow`; extend allow list if icons 404 in dev. Published packages do not need this.
 4. **`Button` `fullWidth`** — Fixed upstream in CADS (`--btn-width: 100%`). If Continue/Finish hugs again, confirm you’re on a rebuilt `@moshebaricdo/cads-react`.
 5. **Action `Dropdown` `iconOnly`** — Added upstream for kebab overflow. Needs rebuilt CADS; pass `aria-label` + `startIconName`.
-6. **Checklist `Dropdown` `menuWidth`** — CADS forces checklist menus to hug content, so `menuWidth="trigger"` is ignored. Assessment builder Course (and similar full-width checklists) sync the portaled menu to the trigger on open until CADS respects the prop.
+6. **Checklist `Dropdown` `menuWidth`** — CADS forces checklist menus to hug content, so `menuWidth="trigger"` is ignored. Assessment builder Course (and similar full-width checklists) sync the portaled menu to the trigger on open until CADS respects the prop. New call sites should use the shared `useChecklistMenuWidth` hook (`src/hooks/useChecklistMenuWidth.ts`; AI Lab's **Using:** field is the reference) instead of copying the DOM sync.
 7. **Slider track lag** — MUI track `left`/`width` transitions can lag the thumb; AI Chat Lab kills them in workspace SCSS. Prefer upstreaming into CADS Slider later.
 8. **Do not invent props** — Check `cadsManifest` / docs `/llms.txt`. Tag uses `color` not `tone`; etc.
 9. **Selected vs brand** — Never paint selected chrome with brand fills (see `color-theming.md`).

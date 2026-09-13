@@ -1,0 +1,247 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.root {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: auto;
+  background: var(--background-neutral-primary);
+}
+
+.empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.emptyInner {
+  display: flex;
+  width: min(100%, 360px);
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emptyTitle {
+  @include type-heading-h5-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.emptyCopy {
+  @include type-body-3-regular;
+  margin: 0 0 8px;
+  color: var(--text-neutral-tertiary);
+}
+
+.metrics {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-height: 40px;
+  padding: 0 8px 0 12px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+}
+
+.statement {
+  @include type-label-2;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+/* Figma uses large Tags, then pin them to 24px so they sit in the 40px strip. */
+.statementTag {
+  height: 24px;
+  min-height: 24px;
+  box-sizing: border-box;
+}
+
+.metricCluster {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.metricMeta {
+  @include type-body-4-regular;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.metricDot {
+  width: 4px;
+  height: 4px;
+  border-radius: var(--shape-round);
+  background: var(--text-neutral-quaternary);
+}
+
+.metricActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.canvas {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 410px;
+  flex-direction: column;
+}
+
+/* Input → Output. Two equal-height cards (Train-rail card treatment) with a
+ * connector so the dock reads as a flow, not a form beside a box. */
+.dock {
+  display: grid;
+  flex-shrink: 0;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  grid-template-columns: minmax(0, 1fr) 40px minmax(240px, 30%);
+  border-top: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+}
+
+.ioCard {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+}
+
+.ioHead {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-height: 40px;
+  padding: 6px 8px 6px 10px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.ioTitle {
+  @include type-label-2;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.ioTools {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.inputBody,
+.outputBody {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  padding: 10px 12px 12px;
+}
+
+.inputGrid {
+  display: grid;
+  align-items: end;
+  gap: 8px 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+/* Canvas layout: the input card is a 300px column, so fields stack one per
+ * row at full width and the body scrolls when a model has many features. */
+.inputBodyStacked {
+  min-height: 0;
+  overflow: auto;
+}
+
+.inputGridStacked {
+  align-items: stretch;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.connector {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+}
+
+.connectorBadge {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-tertiary);
+}
+
+.outputBody {
+  gap: 6px;
+}
+
+.outputValue {
+  @include type-heading-h4-semibold;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-neutral-primary);
+}
+
+.outputValuePending {
+  @include type-heading-h5-semibold;
+  color: var(--text-neutral-quaternary);
+}
+
+.outputCopy {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+@media (max-width: 900px) {
+  .dock {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .connector {
+    height: 28px;
+    transform: rotate(90deg);
+  }
+}

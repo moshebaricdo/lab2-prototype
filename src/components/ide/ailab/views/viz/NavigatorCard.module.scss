@@ -1,0 +1,94 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+.card {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 4;
+  display: flex;
+  width: 300px;
+  max-height: calc(100% - 16px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+}
+
+.head {
+  flex-shrink: 0;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.main {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.lede {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.card:not(:has(.body)):not(:has(.footer)) .lede {
+  border-bottom: none;
+}
+
+.body {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 4px 6px;
+}
+
+.statement {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-primary);
+
+  strong {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.empty {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+.detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.detailText {
+  @include type-body-3-regular;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--text-neutral-secondary);
+
+  strong {
+    color: var(--text-neutral-primary);
+  }
+}
+
+.footer {
+  flex-shrink: 0;
+  padding: 8px;
+  border-top: 1px solid var(--border-neutral-primary);
+}

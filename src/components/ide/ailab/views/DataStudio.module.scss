@@ -1,0 +1,811 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.root {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  background: var(--background-neutral-primary);
+}
+
+.empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.emptyInner {
+  display: flex;
+  width: min(100%, 360px);
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emptyTitle {
+  @include type-heading-h5-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.emptyCopy {
+  @include type-body-3-regular;
+  margin: 0 0 8px;
+  color: var(--text-neutral-tertiary);
+}
+
+/* ---------------------------------------------------------------------------
+ * Stage: sheet column + 300px Train rail, with the Category Analysis dock
+ * spanning the full width underneath.
+ * ------------------------------------------------------------------------- */
+
+.stage {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.sheetColumn {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--background-neutral-secondary);
+}
+
+/* Data set header: dataset chip + row count | Add row (table) + view switch */
+
+.dataHeader {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 8px 4px 8px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+}
+
+.setName {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.datasetChip {
+  min-width: 0;
+  max-width: min(280px, 100%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setMeta {
+  @include type-body-4-regular;
+  overflow: hidden;
+  color: var(--text-neutral-quaternary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewType {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Train rail */
+
+.trainRail {
+  display: flex;
+  width: 300px;
+  flex-shrink: 0;
+  min-height: 0;
+  flex-direction: column;
+  border-left: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+}
+
+.railBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px;
+  overflow: auto;
+}
+
+.configCard {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+}
+
+.cardFields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+}
+
+.fieldStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fieldLabel {
+  @include type-label-3;
+  color: var(--text-neutral-primary);
+}
+
+.cardFooter {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.fullWidthButton {
+  display: flex;
+  width: 100%;
+
+  > * {
+    flex: 1;
+  }
+}
+
+.footerActions {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  // Buttons never break mid-label; when the rail is too narrow for all three,
+  // "Test model" drops to its own full-width row instead.
+  > * {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+  }
+}
+
+.metricRow {
+  display: flex;
+  align-items: stretch;
+}
+
+.metric {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 10px 8px;
+}
+
+.metricDivider {
+  border-right: 1px solid var(--border-neutral-primary);
+}
+
+.metricLabel {
+  @include type-label-3;
+  color: var(--text-neutral-quaternary);
+}
+
+.metricValue {
+  @include type-body-1-semibold;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metricValueSuccess {
+  color: var(--text-success-primary);
+}
+
+.cardStage {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+}
+
+/* Virtualized catalog: spacers above/below the grid stand in for the card
+   rows that are scrolled out of view. */
+.cardStack {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-self: flex-start;
+}
+
+.cardGrid {
+  display: grid;
+  align-content: start;
+  width: 100%;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.carousel {
+  display: flex;
+  width: min(100%, 420px);
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}
+
+.cardFeatured {
+  width: 100%;
+}
+
+.cardHeading {
+  @include type-label-2;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.cardRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  /* Single-line rows keep every card the same height, which the virtualized
+     catalog relies on. Full values stay available via `title`. */
+  white-space: nowrap;
+}
+
+.cardLabel {
+  @include type-label-3;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-neutral-tertiary);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-neutral-primary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.cardLabelActive {
+  color: var(--text-neutral-primary);
+  box-shadow: inset 0 -2px 0 var(--border-selected-primary);
+}
+
+.cardValue {
+  @include type-body-3-regular;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-align: right;
+  text-overflow: ellipsis;
+
+  /* Blank cells keep their line so every card row is the same height. */
+  &:empty::before {
+    content: "\00a0";
+  }
+}
+
+.sheet {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--background-neutral-secondary);
+}
+
+.scroll {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overflow-anchor: none;
+  overscroll-behavior: none;
+}
+
+.scrollBody {
+  display: flex;
+  min-width: 100%;
+  flex-direction: column;
+}
+
+.grid {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.colIndex {
+  width: 52px;
+}
+
+.colText {
+  width: 160px;
+}
+
+.colNumber {
+  width: 100px;
+}
+
+.th,
+.td {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  border-right: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
+  background: var(--background-neutral-primary);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.td {
+  @include type-body-4-regular;
+}
+
+.th:last-child,
+.td:last-child {
+  border-right: 0;
+}
+
+/* Virtualization spacers: reserve the height of off-screen rows so the
+   scrollbar reflects the whole sheet. */
+.spacerRow > td {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+tbody tr:hover .td:not(.tdActive):not(.tdIndex) {
+  background: color-mix(
+    in srgb,
+    var(--background-neutral-secondary) 55%,
+    var(--background-neutral-primary)
+  );
+}
+
+tbody tr:hover .td.tdSelectedColumn:not(.tdIndex),
+tbody tr:hover .td.tdActive {
+  background: var(--background-brand-mid);
+}
+
+.th {
+  @include type-label-3;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  border-bottom: 0;
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-secondary);
+  box-shadow: inset 0 -1px 0 var(--border-neutral-primary);
+  backface-visibility: hidden;
+}
+
+.thIndex,
+.tdIndex {
+  position: sticky;
+  left: 0;
+  width: 52px;
+  min-width: 52px;
+  padding: 0 8px;
+  text-align: center;
+  border-right: 1px solid var(--border-neutral-primary);
+}
+
+.thIndex {
+  z-index: 4;
+  color: var(--text-neutral-quaternary);
+  background: var(--background-neutral-secondary);
+}
+
+.tdIndex {
+  z-index: 2;
+  @include type-label-3;
+  color: var(--text-neutral-tertiary);
+  background: var(--background-neutral-secondary);
+  backface-visibility: hidden;
+}
+
+.thButton {
+  @include type-label-3;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: inherit;
+  text-overflow: ellipsis;
+
+  &:hover {
+    color: var(--text-neutral-primary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.th:not(.thIndex):not(.thNumeric),
+.td:not(.tdIndex):not(.tdNumeric) {
+  min-width: 160px;
+}
+
+.thNumeric,
+.tdNumeric {
+  min-width: 100px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Figma "headerActive": solid selected fill with selected foreground. */
+.thSelected {
+  border-right-color: var(--border-selected-primary);
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary);
+  box-shadow: inset 0 -1px 0 var(--border-selected-primary);
+}
+
+.thLabel .thButton,
+.thFeature .thButton {
+  color: var(--text-neutral-primary);
+}
+
+.thSelected .thButton,
+.thSelected .thButton:hover {
+  color: var(--text-selected-primary);
+}
+
+.roleDot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-tertiary);
+}
+
+.roleDotLabel {
+  background: var(--background-success-primary);
+}
+
+.roleDotFeature {
+  background: var(--background-selected-primary);
+}
+
+.tdSelectedColumn {
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 8%,
+    var(--background-neutral-primary)
+  );
+}
+
+.tdSelectedRow {
+  background: color-mix(
+    in srgb,
+    var(--background-neutral-secondary) 80%,
+    var(--background-neutral-primary)
+  );
+}
+
+.tdSelectedRow.tdSelectedColumn {
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 12%,
+    var(--background-neutral-secondary)
+  );
+}
+
+.tdActive {
+  position: relative;
+  z-index: 1;
+  background: var(--background-neutral-primary);
+  box-shadow: inset 0 0 0 2px var(--border-selected-primary);
+}
+
+.cellButton {
+  @include type-body-4-regular;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: cell;
+  text-align: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.cellInput {
+  @include type-body-4-regular;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 2px;
+  border: 0;
+  appearance: none;
+  background: transparent;
+  color: var(--text-neutral-primary);
+  caret-color: var(--text-neutral-primary);
+
+  &:focus {
+    outline: none;
+  }
+
+  &::-webkit-calendar-picker-indicator,
+  &::-webkit-list-button {
+    display: none;
+  }
+}
+
+.tdNumeric .cellInput {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.addRow {
+  @include type-body-4-regular;
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  width: 100%;
+  height: 28px;
+  align-items: center;
+  padding: 0 10px 0 62px;
+  border: 0;
+  background: transparent;
+  color: var(--text-neutral-tertiary);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    color: var(--text-neutral-primary);
+    background: var(--background-neutral-secondary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Category Analysis dock (full width, fixed 211px per design)
+ * ------------------------------------------------------------------------- */
+
+.analysisDock {
+  display: flex;
+  height: 211px;
+  flex-shrink: 0;
+  flex-direction: column;
+  background: var(--background-neutral-primary);
+}
+
+.analysisDock > .analysisHeader {
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.analysisBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: flex-start;
+  overflow: auto;
+}
+
+.analysisSummary,
+.analysisDistribution {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-direction: column;
+}
+
+.analysisIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 10px 0;
+}
+
+.analysisTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.analysisTitle {
+  @include type-heading-h6-semibold;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analysisCopy {
+  @include type-body-4-regular;
+  margin: 0;
+  color: var(--text-neutral-secondary);
+}
+
+.statCards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 10px 10px 0;
+}
+
+.statCard {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 10px 8px;
+  overflow: hidden;
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+
+  dt {
+    @include type-label-3;
+    color: var(--text-neutral-quaternary);
+  }
+
+  dd {
+    @include type-body-1-semibold;
+    margin: 0;
+    overflow: hidden;
+    color: var(--text-neutral-primary);
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.analysisDistribution {
+  gap: 8px;
+  padding: 10px 10px 0;
+}
+
+.distributionLabel {
+  @include type-label-3;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.statList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 10px;
+  list-style: none;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 8px;
+}
+
+.barRowOther .statLabel,
+.barRowOther .statCount {
+  color: var(--text-neutral-tertiary);
+}
+
+.barRowOther .barFill {
+  background: var(--background-neutral-tertiary);
+}
+
+.statLabel {
+  @include type-body-4-regular;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statCount {
+  @include type-label-3;
+  color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.barTrack {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-quaternary);
+}
+
+.barFill {
+  height: 100%;
+  background: var(--background-brand-primary);
+}
+
+@media (max-width: 900px) {
+  .trainRail {
+    width: 260px;
+  }
+
+  .analysisBody {
+    flex-direction: column;
+  }
+
+  .analysisSummary,
+  .analysisDistribution {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}

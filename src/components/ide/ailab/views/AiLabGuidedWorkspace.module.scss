@@ -9,38 +9,56 @@
   background: var(--background-neutral-primary);
 }
 
-.header {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: space-between;
+/* Lab 2 Panel Header with the section Tab Group in the start slot. The
+ * tabs are 40px tall so their baseline sits on the header's own border.
+ * Use inset shadow instead of border-bottom so the active tab underline
+ * isn't clipped; PanelHeader's borderBottom class is overridden here. */
+.root > .header {
   height: 40px;
   max-height: 40px;
-  padding: 0 8px;
-  background: var(--background-neutral-primary);
-  border-bottom: 1px solid var(--border-neutral-primary);
+  padding: 0 8px 0 10px;
+  overflow: visible;
+  border-bottom: none;
+  box-shadow: inset 0 -1px 0 var(--border-neutral-primary);
 }
 
-.headerTabs {
-  display: flex;
-  align-self: flex-end;
-  min-width: 0;
-  // Sit on the PH rule so the selected folder tab opens into the panel.
-  margin-bottom: -1px;
+.root .headerTabs {
+  --tabs-baseline-color: transparent;
 
-  :global([data-cads-tabs]) {
-    // Header border is the full-width rule; hide the Tabs inset baseline.
-    --tabs-baseline-color: transparent;
-    width: max-content;
-    max-width: 100%;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  align-self: stretch;
+}
+
+/* Disabled tabs do not receive pointer events. Stretch a hit target over
+ * the whole tab (icon + label) so the lock tooltip can open. */
+.lockedTabLabel {
+  pointer-events: auto;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
   }
 }
 
 .headerActions {
   display: flex;
-  flex-shrink: 0;
+  min-width: 0;
+  flex-shrink: 1;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+/* Header must never clip: the algorithm chip is the only variable-width
+ * control, so it yields first and ellipsizes. */
+.setupChip {
+  min-width: 0;
+  max-width: min(280px, 100%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .body {
@@ -132,28 +150,15 @@
   color: var(--text-neutral-primary);
 }
 
-.muted {
+.muted,
+.resetCopy {
   @include type-body-3-regular;
   margin: 0;
   color: var(--text-neutral-tertiary);
 }
 
-.picker {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.pickerInner {
-  display: flex;
-  width: min(100%, 720px);
-  flex-direction: column;
-  gap: 16px;
-}
-
-.algorithmGrid {
+.algorithmGrid,
+.datasetGrid {
   display: grid;
   margin: 0;
   padding: 0;
@@ -161,6 +166,17 @@
   min-inline-size: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.datasetGrid {
+  grid-template-columns: 1fr;
+}
+
+.datasetMeta {
+  @include type-label-4;
+  display: block;
+  margin-top: 8px;
+  color: var(--text-neutral-tertiary);
 }
 
 .algorithmCard {
@@ -245,11 +261,6 @@
   justify-self: center;
   width: 16px;
   background: var(--background-selected-primary);
-}
-
-.pickerActions {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .switchModal {
@@ -408,11 +419,6 @@
   color: var(--text-brand-primary);
 }
 
-.rowReserved .td {
-  color: var(--text-neutral-secondary);
-}
-
-.reservedMark,
 .rowNumber {
   @include type-label-4;
   color: var(--text-neutral-tertiary);
@@ -447,10 +453,6 @@
   border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
-}
-
-.cardReserved {
-  background: var(--background-neutral-secondary);
 }
 
 .cardFeatured {
@@ -716,6 +718,7 @@
   .split,
   .testLayout,
   .algorithmGrid,
+  .datasetGrid,
   .axisRow {
     grid-template-columns: 1fr;
   }

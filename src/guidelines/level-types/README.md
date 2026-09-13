@@ -29,7 +29,7 @@ Use these docs as handoff context for follow-up threads.
 - Level pages generally render inside the Lab2 shell (`TopNavigation` + resource panel + main surface), but the main surface is not always resizable. AI Chat Lab card surfaces intentionally disable sidebar resizing while floating.
 - Assessment-focused levels currently run with AI Tutor visible and Version History and Backpack hidden (Backpack is IDE-lab only).
 - AI Chat Lab hides AI Tutor because its primary workspace is the AI chat stream.
-- AI Lab hides AI Tutor, Version History, and Backpack. Instructions change with the Dataset / Train / Test section (guided studio: Data setup row / Test).
+- AI Lab hides AI Tutor, Version History, and Backpack. Instructions change with Data / Test (training lives on the Data toolbar).
 - Python Lab keeps the sidebar Tutor guidance-only; Web Lab 2 owns the full functional Tutor edit/planning flow.
 - Web Lab 2's functional Tutor harness is documented in `../tutor-harness.md`.
 - All assessment flows are prototype-level and local-only (no backend submission yet).

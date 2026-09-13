@@ -1,4 +1,4 @@
-import { Button, SegmentedButton, Tag } from "@moshebaricdo/cads-react";
+import { Button, SegmentedButton } from "@moshebaricdo/cads-react";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import {
@@ -8,7 +8,8 @@ import {
   numericalStats,
 } from "../../../../lib/aiLab";
 import type { AiLabColumn, AiLabDataRow } from "../../../../types/aiLab";
-import { GuidedTrainingBar } from "./GuidedTrainPanel";
+import { DataStudio } from "./DataStudio";
+import type { ModelInspectorTab } from "./ModelInspector";
 import styles from "./AiLabGuidedWorkspace.module.scss";
 
 interface GuidedDatasetPanelProps {
@@ -24,8 +25,6 @@ export function GuidedDatasetPanel({
   const selected = dataset.columns.find(
     (column) => column.id === lab.selectedColumnId,
   );
-  const reservedCount = lab.reservedRowIndexes.length;
-
   return (
     <div className={styles.split}>
       <div className={styles.mainColumn}>
@@ -34,9 +33,7 @@ export function GuidedDatasetPanel({
             <div className={styles.intro}>
               <p className={styles.introTitle}>{dataset.name}</p>
               <p className={styles.muted}>
-                {dataset.rows.length} orders. {reservedCount}{" "}
-                {reservedCount === 1 ? "is" : "are"} reserved for Test so the
-                model cannot memorize them.
+                {dataset.rows.length} taco-truck orders.
               </p>
             </div>
             <div className={styles.viewSwitch}>
@@ -115,7 +112,6 @@ export function GuidedDataTable({
   showRoles = false,
 }: GuidedDatasetPanelProps) {
   const { dataset } = lab.config;
-  const reserved = new Set(lab.reservedRowIndexes);
 
   return (
     <table className={styles.table}>
@@ -150,16 +146,9 @@ export function GuidedDataTable({
       </thead>
       <tbody>
         {dataset.rows.map((row, index) => (
-          <tr
-            key={index}
-            className={reserved.has(index) ? styles.rowReserved : undefined}
-          >
+          <tr key={index}>
             <td className={`${styles.td} ${styles.tdIndex}`}>
-              {reserved.has(index) ? (
-                <span className={styles.reservedMark}>Held</span>
-              ) : (
-                <span className={styles.rowNumber}>{index + 1}</span>
-              )}
+              <span className={styles.rowNumber}>{index + 1}</span>
             </td>
             {dataset.columns.map((column) => (
               <td key={column.id} className={styles.td}>
@@ -175,17 +164,11 @@ export function GuidedDataTable({
 
 function GuidedCardGrid({ lab }: { lab: AiLabController }) {
   const { dataset } = lab.config;
-  const reserved = new Set(lab.reservedRowIndexes);
 
   return (
     <div className={styles.cardGrid}>
       {dataset.rows.map((row, index) => (
-        <OrderCard
-          key={index}
-          lab={lab}
-          index={index}
-          reserved={reserved.has(index)}
-        />
+        <OrderCard key={index} lab={lab} index={index} />
       ))}
     </div>
   );
@@ -193,7 +176,6 @@ function GuidedCardGrid({ lab }: { lab: AiLabController }) {
 
 function GuidedCardCarousel({ lab }: { lab: AiLabController }) {
   const { dataset } = lab.config;
-  const reserved = new Set(lab.reservedRowIndexes);
   const index = Math.min(
     Math.max(0, lab.cardIndex),
     Math.max(0, dataset.rows.length - 1),
@@ -227,12 +209,7 @@ function GuidedCardCarousel({ lab }: { lab: AiLabController }) {
         </Button>
       </div>
       {dataset.rows[index] ? (
-        <OrderCard
-          lab={lab}
-          index={index}
-          reserved={reserved.has(index)}
-          featured
-        />
+        <OrderCard lab={lab} index={index} featured />
       ) : null}
     </div>
   );
@@ -241,12 +218,10 @@ function GuidedCardCarousel({ lab }: { lab: AiLabController }) {
 function OrderCard({
   lab,
   index,
-  reserved,
   featured = false,
 }: {
   lab: AiLabController;
   index: number;
-  reserved: boolean;
   featured?: boolean;
 }) {
   const row = lab.config.dataset.rows[index];
@@ -254,14 +229,11 @@ function OrderCard({
 
   return (
     <article
-      className={`${styles.card} ${reserved ? styles.cardReserved : ""} ${
-        featured ? styles.cardFeatured : ""
-      }`}
+      className={`${styles.card} ${featured ? styles.cardFeatured : ""}`}
       aria-label={`Order ${index + 1}`}
     >
       <div className={styles.cardTitle}>
         <p className={styles.cardHeading}>Order {index + 1}</p>
-        {reserved ? <Tag size="small" color="neutral" label="Reserved" /> : null}
       </div>
       {lab.config.dataset.columns.map((column) => (
         <div key={column.id} className={styles.cardRow}>
@@ -382,16 +354,16 @@ function GuidedColumnInspector({
   );
 }
 
-export function GuidedExplorePanel({ lab }: { lab: AiLabController }) {
+export function GuidedExplorePanel({
+  lab,
+  onOpenModel,
+  onOpenSetup,
+}: {
+  lab: AiLabController;
+  onOpenModel?: (tab: ModelInspectorTab) => void;
+  onOpenSetup?: () => void;
+}) {
   return (
-    <section className={styles.panel}>
-      {lab.trainingSetupOpen && !lab.config.hideTrainTab ? (
-        <GuidedTrainingBar lab={lab} />
-      ) : null}
-      <GuidedDatasetPanel
-        lab={lab}
-        showRoles={lab.trainingSetupOpen}
-      />
-    </section>
+    <DataStudio lab={lab} onOpenModel={onOpenModel} onOpenSetup={onOpenSetup} />
   );
 }

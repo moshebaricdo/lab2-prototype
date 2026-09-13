@@ -33,7 +33,7 @@ src/
     ide/pythonlab/runtime/ # Python execution runtime
     ide/sketchlab/views/   # Sketch Lab whiteboard canvas chrome
     ide/aichatlab/views/   # AI Chat Lab-specific chat/config workspace chrome
-    ide/ailab/views/       # AI Lab dataset / train / test workspace chrome
+    ide/ailab/views/       # AI Lab Data spreadsheet / Test dashboard workspace chrome
     assessment/            # Assessment level types (shared, multi, match, free-response, drag-drop, fill-in-blank, levelgroup, builder, cfu, quiz, bubble-choice)
   pages/                   # Route-level entry points, grouped by level type
   data/                    # Demo project data and assessment fixtures

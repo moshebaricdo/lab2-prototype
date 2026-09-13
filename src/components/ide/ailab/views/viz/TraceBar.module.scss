@@ -1,0 +1,170 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+.root {
+  display: flex;
+  min-height: 44px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 6px 10px 6px 8px;
+}
+
+.rootToolbar {
+  min-height: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+
+  .controls {
+    margin-left: auto;
+  }
+}
+
+.rootColumn {
+  min-height: 0;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 8px;
+  padding: 0;
+
+  .statement {
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .statementText,
+  .emptyText,
+  .detailText {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+}
+
+.controls {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  margin: 0 4px;
+  padding: 0;
+  gap: 6px;
+  list-style: none;
+}
+
+.dotItem {
+  display: flex;
+}
+
+.dot {
+  box-sizing: border-box;
+  display: block;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 1.5px solid var(--border-neutral-secondary);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+
+  &:hover {
+    border-color: var(--border-selected-primary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.dotDone {
+  border-color: var(--border-selected-primary);
+  background: var(--background-selected-primary);
+  opacity: 0.55;
+}
+
+.dotCurrent {
+  border-color: var(--border-selected-primary);
+  background: var(--background-selected-primary);
+  transform: scale(1.25);
+  opacity: 1;
+}
+
+.dotEmpty {
+  border-style: dashed;
+  cursor: default;
+}
+
+.statement {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 240px;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.stepCount {
+  @include type-label-4;
+  flex-shrink: 0;
+  color: var(--text-neutral-quaternary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-overline);
+  font-variant-numeric: tabular-nums;
+}
+
+.statementText {
+  @include type-body-3-semibold;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyText {
+  @include type-body-3-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.detailText {
+  @include type-body-3-regular;
+  display: inline-flex;
+  min-width: 0;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--text-neutral-secondary);
+
+  strong {
+    color: var(--text-neutral-primary);
+  }
+}
+
+.detailClose {
+  align-self: center;
+  margin-left: auto;
+}
+
+.live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

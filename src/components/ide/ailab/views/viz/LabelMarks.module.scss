@@ -1,0 +1,59 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+.swatch {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+  box-shadow: inset 0 0 0 1px var(--background-neutral-alpha-10);
+}
+
+.swatchText {
+  @include type-label-3;
+  overflow: hidden;
+  color: var(--text-neutral-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar {
+  display: flex;
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-quaternary);
+}
+
+.segment {
+  flex-basis: 0;
+  min-width: 2px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  gap: 4px 14px;
+  list-style: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendDetail {
+  @include type-label-4;
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
+}

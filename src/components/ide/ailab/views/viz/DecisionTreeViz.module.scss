@@ -1,0 +1,474 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+/* Scroll container: the stage grows with the tree instead of squashing it,
+ * and a small tree sits centered in the leftover room. */
+.stageWrap {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.scroller {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  scroll-padding: 24px 316px 24px 24px;
+}
+
+/* Canvas layout: the stage is still full-bleed (a wide tree scrolls under
+ * the right-hand cards), but its resting spot is the open strip left of
+ * them, so the root is never born under a card. */
+.scrollerBesideCards {
+  padding: 8px 316px 8px 8px;
+  scroll-padding: 24px 316px 24px 24px;
+}
+
+.stage {
+  position: relative;
+  flex-shrink: 0;
+  margin: auto;
+}
+
+.links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.link {
+  fill: none;
+  stroke: var(--border-neutral-secondary);
+  stroke-width: 1.5;
+  transition: stroke 160ms ease, stroke-width 160ms ease;
+}
+
+.linkTaken {
+  stroke: var(--border-selected-primary);
+  stroke-width: 2.5;
+}
+
+.linkPending {
+  stroke: var(--border-selected-primary);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
+/* Edge labels hug their text and sit on the last stub. A tight canvas-colored
+ * knockout keeps the connector from running through the letters without
+ * covering the T-junction. */
+.edgeLabel {
+  @include type-label-4;
+  position: absolute;
+  box-sizing: border-box;
+  max-width: 72px;
+  padding: 1px 4px;
+  overflow: hidden;
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-tertiary);
+  line-height: 1.2;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-100%, -50%);
+}
+
+/* Vertical tree: the label sits centered on the stub above its node. */
+.edgeLabelVertical {
+  max-width: 120px;
+  text-align: center;
+  transform: translate(-50%, -100%);
+}
+
+.edgeLabelPending,
+.edgeLabelTaken {
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--border-selected-primary);
+  border-radius: var(--shape-round);
+  line-height: 18px;
+}
+
+.edgeLabelPending {
+  background: var(--background-neutral-primary);
+  color: var(--text-brand-primary);
+}
+
+.edgeLabelTaken {
+  background: var(--background-selected-primary);
+  color: var(--text-neutral-white-fixed);
+}
+
+.tree {
+  position: absolute;
+  inset: 0;
+}
+
+.node {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  border: 1.5px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+
+  &:hover {
+    border-color: var(--border-neutral-secondary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+/* Full card: only for nodes on your example's path. */
+.nodeCard {
+  padding: 8px 12px;
+  box-shadow: var(--shadow-sm);
+
+  .nodeTitle {
+    @include type-label-2;
+  }
+}
+
+/* Compact pill: everything the example did not pass through. */
+.nodePill {
+  padding: 0 10px;
+  border-color: var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-secondary);
+
+  .nodeTitle {
+    @include type-label-3;
+    color: var(--text-neutral-secondary);
+  }
+}
+
+.nodeOnPath {
+  border-color: var(--border-selected-primary);
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 7%,
+    var(--background-neutral-primary)
+  );
+}
+
+.nodeCurrent {
+  border-color: var(--border-selected-primary);
+  box-shadow:
+    0 0 0 3px
+      color-mix(in srgb, var(--border-selected-primary) 28%, transparent),
+    var(--shadow-md);
+}
+
+.nodeSelected {
+  border-color: var(--border-neutral-black-fixed);
+
+  &.nodePill {
+    color: var(--text-neutral-primary);
+
+    .nodeTitle {
+      color: var(--text-neutral-primary);
+    }
+  }
+}
+
+.nodeBody {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.nodeTitle {
+  display: block;
+  min-width: 0;
+  flex-shrink: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeStats {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.nodeBar {
+  flex: 1;
+}
+
+.nodeCount {
+  @include type-label-4;
+  flex-shrink: 0;
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Trace statement / footer detail */
+
+.stepArrow {
+  margin: 0 6px;
+  color: var(--text-neutral-quaternary);
+}
+
+.detailLead {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-neutral-primary);
+}
+
+.detailSep {
+  color: var(--text-neutral-quaternary);
+}
+
+.detailBar {
+  flex: 0 0 72px;
+  max-width: 72px;
+  margin-left: 4px;
+}
+
+.detailCounts {
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+/* Canvas-mode prediction card: the full path, one row per question. */
+
+.path {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pathEyebrow {
+  @include type-overline-3;
+  margin: 0;
+  padding: 0 4px;
+  color: var(--text-neutral-quaternary);
+}
+
+.pathList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  gap: 2px;
+  list-style: none;
+}
+
+.pathRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 3px 6px;
+}
+
+.pathIndex {
+  @include type-body-4-bold;
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-tertiary);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+/* Numbers light up as Play walks the trace; the current one is a touch larger. */
+.pathIndexLit {
+  border-color: var(--border-selected-primary);
+  background: var(--background-selected-primary);
+  color: var(--text-neutral-primary-inverse);
+}
+
+.pathIndexCurrent {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px var(--background-neutral-primary),
+    0 0 0 3px var(--border-selected-primary);
+}
+
+.pathText {
+  @include type-body-4-regular;
+  display: inline-flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 4px;
+  color: var(--text-neutral-secondary);
+
+  strong {
+    color: var(--text-neutral-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .stepArrow {
+    margin: 0 2px;
+  }
+}
+
+.pathRowLeaf .pathText {
+  color: var(--text-neutral-primary);
+}
+
+/* Rules view */
+
+.rulesScroller {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.rulesScrollerBesideCards {
+  padding-right: 316px;
+}
+
+.rules {
+  @include type-body-4-regular;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--text-neutral-primary);
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-neutral-primary);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  thead th {
+    @include type-label-4;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--background-neutral-primary);
+    color: var(--text-neutral-tertiary);
+  }
+
+  tbody tr:hover td,
+  tbody tr:hover th {
+    background: var(--background-neutral-primary);
+  }
+}
+
+.rulesIndex {
+  width: 32px;
+  color: var(--text-neutral-quaternary);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rulesRows {
+  width: 132px;
+}
+
+.ruleMatched {
+  th,
+  td {
+    background: color-mix(
+      in srgb,
+      var(--background-selected-primary) 8%,
+      var(--background-neutral-primary)
+    );
+    border-bottom-color: var(--border-selected-primary);
+    box-shadow: inset 0 1px 0 var(--border-selected-primary);
+  }
+}
+
+.ruleConditions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.ruleCondition {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ruleAnd {
+  @include type-body-5-regular;
+  color: var(--text-neutral-quaternary);
+}
+
+.ruleChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+}
+
+.ruleFeature {
+  color: var(--text-neutral-tertiary);
+}
+
+.ruleThen {
+  @include type-label-3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.ruleHere {
+  @include type-label-4;
+  padding: 0 7px;
+  border-radius: var(--shape-round);
+  background: var(--background-selected-primary);
+  color: var(--text-neutral-white-fixed);
+  line-height: 18px;
+}
+
+.ruleRows {
+  @include type-label-4;
+  display: block;
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ruleBar {
+  max-width: 96px;
+  margin-top: 4px;
+}

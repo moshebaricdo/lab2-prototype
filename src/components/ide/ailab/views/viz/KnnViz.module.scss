@@ -1,0 +1,779 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+.stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.canvas {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+/* Leave the floating NavigatorCard's column empty so the target centers
+ * in the leftover canvas (300px card + 8px inset + 8px gap). Table is
+ * full-bleed and does not use this. */
+.canvasBesideCard {
+  padding-right: 316px;
+}
+
+/* Target */
+
+.target {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.targetPannable {
+  cursor: grab;
+}
+
+.targetDragging {
+  cursor: grabbing;
+
+  .dotGroup,
+  .bubbleGroup {
+    pointer-events: none;
+  }
+}
+
+/* Decorative geometry never takes the pointer away from dots and bubbles. */
+.guideRing,
+.guideLabel,
+.wedgeLine,
+.wedgeLabel,
+.spoke,
+.tieBand,
+.kRingLabel,
+.query,
+.queryGhost {
+  pointer-events: none;
+}
+
+.guideRing {
+  fill: none;
+  stroke: var(--border-neutral-primary);
+  stroke-width: 1;
+}
+
+.guideLabel {
+  @include type-body-5-regular;
+  fill: var(--text-neutral-quaternary);
+  font-variant-numeric: tabular-nums;
+  stroke: var(--background-neutral-secondary);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+.wedgeLine {
+  stroke: var(--border-neutral-primary);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.wedgeLabel {
+  @include type-label-3;
+  stroke: var(--background-neutral-secondary);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+  transition: opacity 160ms ease;
+}
+
+.wedgeLabelName {
+  font-weight: var(--font-weight-semibold);
+}
+
+.wedgeLabelCount {
+  fill: var(--text-neutral-tertiary);
+  font-weight: var(--font-weight-normal);
+}
+
+.wedgeLabelWinner .wedgeLabelCount {
+  fill: var(--text-neutral-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* The folded long tail reads as a bucket, not a label. */
+.wedgeLabelOther .wedgeLabelName {
+  font-weight: var(--font-weight-medium);
+}
+
+.spoke {
+  stroke: var(--border-selected-primary);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.tieBand {
+  fill: none;
+  stroke: var(--border-warning-primary);
+  stroke-width: 7;
+  opacity: 0.35;
+}
+
+.dotGroup {
+  cursor: pointer;
+}
+
+.dotHit {
+  fill: transparent;
+}
+
+.dot {
+  stroke: var(--background-neutral-primary);
+  stroke-width: 1;
+  transition:
+    r 160ms ease,
+    opacity 160ms ease;
+}
+
+.dotDim {
+  opacity: 0.35;
+}
+
+.dotTied {
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+
+.dotNeighbor {
+  stroke: var(--border-selected-primary);
+  stroke-width: 2;
+  opacity: 1;
+}
+
+.dotHovered {
+  stroke: var(--border-neutral-black-fixed);
+  stroke-width: 2;
+  opacity: 1;
+}
+
+.dotRank {
+  @include type-label-4;
+  fill: var(--text-neutral-white-fixed);
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--background-neutral-alpha-20);
+  stroke-width: 2;
+}
+
+/* Bubbles: several rows merged into one counted mark at this zoom. */
+
+.bubbleGroup {
+  cursor: zoom-in;
+}
+
+.bubble {
+  stroke: var(--background-neutral-primary);
+  stroke-width: 1.5;
+  opacity: 0.92;
+  transition:
+    r 160ms ease,
+    opacity 160ms ease;
+}
+
+.bubbleDim {
+  opacity: 0.45;
+}
+
+.bubbleTied {
+  opacity: 0.95;
+}
+
+.bubbleNeighbor {
+  stroke: var(--border-selected-primary);
+  stroke-width: 2;
+  opacity: 1;
+}
+
+.bubbleActive {
+  stroke: var(--border-neutral-black-fixed);
+  stroke-width: 2;
+  opacity: 1;
+}
+
+.bubbleCount {
+  @include type-label-4;
+  fill: var(--text-neutral-white-fixed);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.bubbleCountTied {
+  fill: var(--text-neutral-primary);
+}
+
+/* The ring is painted above the dots, so it must not swallow their hover. */
+.kRing {
+  fill: color-mix(in srgb, var(--background-selected-primary) 6%, transparent);
+  stroke: var(--border-selected-primary);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  pointer-events: none;
+}
+
+/* Large k: the disc itself is the neighborhood, so it reads as a solid. */
+.kRingDense {
+  fill: color-mix(in srgb, var(--background-selected-primary) 12%, transparent);
+  stroke-dasharray: none;
+}
+
+/* Invisible wider stroke so a thin arc is still easy to hover. */
+.voteArcHit {
+  fill: none;
+  stroke: transparent;
+  pointer-events: stroke;
+}
+
+/* One arc per wedge outside the k-ring; thickness carries the vote count. */
+.voteArc {
+  fill: none;
+  opacity: 0.8;
+  transition:
+    opacity 160ms ease,
+    stroke-width 160ms ease;
+  pointer-events: none;
+}
+
+.voteArcWinner,
+.voteArcHovered {
+  opacity: 1;
+}
+
+.kRingLabel {
+  @include type-label-4;
+  fill: var(--text-brand-primary);
+  stroke: var(--background-neutral-secondary);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+.queryHalo {
+  fill: var(--background-neutral-primary);
+  stroke: var(--border-selected-primary);
+  stroke-width: 3;
+}
+
+.queryCore {
+  fill: var(--background-selected-primary);
+}
+
+.queryGhost {
+  fill: var(--background-neutral-primary);
+  stroke: var(--border-neutral-secondary);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.hiddenNote {
+  @include type-body-5-regular;
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  margin: 0;
+  color: var(--text-neutral-quaternary);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.zoomTools {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Hover card */
+
+.hoverCard {
+  position: absolute;
+  z-index: 3;
+  transform: translate(14px, -50%);
+  pointer-events: none;
+}
+
+.rowCard {
+  box-sizing: border-box;
+  display: flex;
+  width: 220px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.rowCardTitle {
+  @include type-label-3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.rowCardRank {
+  padding: 0 6px;
+  border-radius: var(--shape-round);
+  background: var(--background-selected-primary);
+  color: var(--text-neutral-white-fixed);
+  line-height: 18px;
+}
+
+.rowCardLabel {
+  margin-left: auto;
+}
+
+.rowCardDistance {
+  @include type-body-4-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rowCardHint {
+  @include type-body-5-regular;
+  margin: 2px 0 0;
+  color: var(--text-neutral-quaternary);
+}
+
+.rowCardList {
+  display: flex;
+  flex-direction: column;
+  margin: 4px 0 0;
+  padding: 0;
+  gap: 2px;
+  list-style: none;
+}
+
+.rowCardItem {
+  @include type-body-4-regular;
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  color: var(--text-neutral-secondary);
+}
+
+.rowCardFeature {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowCardValue {
+  color: var(--text-neutral-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.deltaMark {
+  @include type-label-4;
+  display: inline-flex;
+  min-width: 34px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.deltaMatch {
+  color: var(--text-success-primary);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Rail */
+
+.neighborBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exampleList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.exampleEyebrow {
+  @include type-overline-3;
+  margin: 0;
+  padding: 0 4px;
+  color: var(--text-neutral-quaternary);
+}
+
+.exampleRow {
+  @include type-body-4-regular;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-neutral-primary);
+
+  dt {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  dd {
+    flex-shrink: 0;
+    margin: 0;
+    color: var(--text-neutral-primary);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+}
+
+.exampleLeader {
+  flex: 1 1 auto;
+  min-width: 12px;
+  height: 0;
+  border-bottom: 1px dotted var(--border-neutral-primary);
+}
+
+.railVote {
+  @include type-body-3-regular;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin: 0;
+  color: var(--text-neutral-secondary);
+
+  strong {
+    color: var(--text-neutral-primary);
+  }
+}
+
+.railVoteItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Wide k: one verdict line + a tally instead of a per-neighbor sentence. */
+.railVerdict {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-secondary);
+
+  strong {
+    color: var(--text-neutral-primary);
+  }
+}
+
+.tally {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  gap: 4px;
+  list-style: none;
+}
+
+.tallyRow {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  grid-template-columns: 56px minmax(0, 1fr) 20px;
+  padding: 0;
+}
+
+.tallyRowOther {
+  color: var(--text-neutral-tertiary);
+}
+
+.tallyLabel {
+  @include type-body-4-regular;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tallyTrack {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-quaternary);
+}
+
+.tallyFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--shape-round);
+}
+
+.tallyFillQuiet {
+  background: var(--background-neutral-senary);
+}
+
+.tallyCount {
+  @include type-body-4-semibold;
+  color: var(--text-neutral-primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.railList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  gap: 2px;
+  list-style: none;
+}
+
+.railItem {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--shape-sm);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--background-neutral-secondary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.railItemActive {
+  background: var(--background-neutral-secondary);
+}
+
+.railRank,
+.railRankEmpty {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  border-radius: var(--shape-round);
+}
+
+.railRank {
+  @include type-body-4-bold;
+  background: var(--background-selected-primary);
+  color: var(--text-neutral-primary-inverse);
+}
+
+.railRankEmpty {
+  border: 1px dashed var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+}
+
+.railItemBody {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.railLabel {
+  @include type-body-3-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.railLabelMuted {
+  @include type-body-3-semibold;
+  color: var(--text-neutral-tertiary);
+}
+
+.railMeta {
+  @include type-body-4-regular;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-neutral-quaternary);
+  font-variant-numeric: tabular-nums;
+}
+
+.railDot {
+  width: 3px;
+  height: 3px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+  background: var(--text-neutral-quaternary);
+}
+
+.railSlot {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 6px;
+}
+
+.railSlotMore {
+  @include type-body-5-regular;
+  padding: 2px 8px 0 34px;
+  color: var(--text-neutral-quaternary);
+  font-variant-numeric: tabular-nums;
+}
+
+.railMore {
+  width: 100%;
+  --btn-width: 100%;
+}
+
+/* Table */
+
+.tableEmpty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.tableEmptyText {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+.tableScroller {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 0 12px;
+}
+
+.table {
+  @include type-body-4-regular;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--text-neutral-primary);
+
+  th,
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border-neutral-primary);
+    text-align: left;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  thead th {
+    @include type-label-4;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--background-neutral-primary);
+    color: var(--text-neutral-tertiary);
+  }
+
+  tbody th {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.thRank {
+  width: 36px;
+  color: var(--text-neutral-tertiary);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.queryRow {
+  th,
+  td {
+    background: color-mix(
+      in srgb,
+      var(--background-selected-primary) 8%,
+      var(--background-neutral-primary)
+    );
+    border-bottom-color: var(--border-selected-primary);
+  }
+
+  .thRank {
+    color: var(--text-brand-primary);
+  }
+}
+
+.voterRow th,
+.voterRow td {
+  background: var(--background-neutral-primary);
+}
+
+.voterRow .thRank {
+  color: var(--text-brand-primary);
+}
+
+.otherRow th,
+.otherRow td {
+  color: var(--text-neutral-tertiary);
+  background: var(--background-neutral-secondary);
+}
+
+.tableCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tablePrediction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tablePredictionNote {
+  color: var(--text-neutral-tertiary);
+}
