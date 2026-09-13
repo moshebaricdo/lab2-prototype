@@ -19,6 +19,12 @@ function labelCounts(labels: string[]): Record<string, number> {
   }, {});
 }
 
+function labelCountsMap(labels: string[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const label of labels) counts.set(label, (counts.get(label) ?? 0) + 1);
+  return counts;
+}
+
 function majorityLabel(labels: string[]): string {
   return (
     Object.entries(labelCounts(labels)).sort(
@@ -39,11 +45,26 @@ function gini(labels: string[]): number {
   );
 }
 
-function weightedGini(groups: string[][], total: number): number {
-  return groups.reduce((sum, group) => {
-    if (group.length === 0) return sum;
-    return sum + (group.length / total) * gini(group);
-  }, 0);
+function giniFromCounts(counts: Map<string, number>, total: number): number {
+  if (total === 0) return 0;
+  let sum = 0;
+  for (const count of counts.values()) {
+    const probability = count / total;
+    sum += probability * probability;
+  }
+  return 1 - sum;
+}
+
+function weightedGiniFromCounts(
+  groups: { counts: Map<string, number>; size: number }[],
+  total: number,
+): number {
+  let sum = 0;
+  for (const group of groups) {
+    if (group.size === 0) continue;
+    sum += (group.size / total) * giniFromCounts(group.counts, group.size);
+  }
+  return sum;
 }
 
 function leaf(
@@ -51,11 +72,13 @@ function leaf(
   labelColumn: string,
   pathKey: string,
 ): AiLabTreeNode {
+  const labels = labelsFor(rows, labelColumn);
   return {
     type: "leaf",
     pathKey,
-    prediction: majorityLabel(labelsFor(rows, labelColumn)),
+    prediction: majorityLabel(labels),
     sampleCount: rows.length,
+    labelCounts: labelCounts(labels),
   };
 }
 
@@ -64,18 +87,27 @@ function bestCategoricalSplit(
   feature: string,
   labelColumn: string,
 ): { values: string[]; impurityReduction: number } | null {
-  const values = [...new Set(rows.map((row) => String(row[feature])))];
-  if (values.length < 2) return null;
-  const groups = values.map((value) =>
-    labelsFor(
-      rows.filter((row) => String(row[feature]) === value),
-      labelColumn,
-    ),
-  );
+  // One pass: group label counts by feature value (insertion order keeps the
+  // first-seen order the old `Set` produced).
+  const groups = new Map<string, { counts: Map<string, number>; size: number }>();
+  for (const row of rows) {
+    const value = String(row[feature]);
+    let group = groups.get(value);
+    if (!group) {
+      group = { counts: new Map(), size: 0 };
+      groups.set(value, group);
+    }
+    const label = String(row[labelColumn]);
+    group.counts.set(label, (group.counts.get(label) ?? 0) + 1);
+    group.size += 1;
+  }
+  if (groups.size < 2) return null;
   const impurityReduction =
     gini(labelsFor(rows, labelColumn)) -
-    weightedGini(groups, rows.length);
-  return impurityReduction > 0 ? { values, impurityReduction } : null;
+    weightedGiniFromCounts([...groups.values()], rows.length);
+  return impurityReduction > 0
+    ? { values: [...groups.keys()], impurityReduction }
+    : null;
 }
 
 function bestNumericalSplit(
@@ -87,23 +119,34 @@ function bestNumericalSplit(
     (a, b) => Number(a[feature]) - Number(b[feature]),
   );
   let best: { threshold: number; impurityReduction: number } | null = null;
-  const parent = gini(labelsFor(sorted, labelColumn));
+  const labels = labelsFor(sorted, labelColumn);
+  const total = sorted.length;
+  const rightCounts = labelCountsMap(labels);
+  const parent = giniFromCounts(rightCounts, total);
+  const leftCounts = new Map<string, number>();
 
-  for (let index = 1; index < sorted.length; index += 1) {
+  // Single sweep: move rows from the right group to the left one in sorted
+  // order and evaluate each distinct-value boundary from running counts.
+  for (let index = 1; index < total; index += 1) {
+    const label = labels[index - 1];
+    leftCounts.set(label, (leftCounts.get(label) ?? 0) + 1);
+    const remaining = (rightCounts.get(label) ?? 0) - 1;
+    if (remaining === 0) rightCounts.delete(label);
+    else rightCounts.set(label, remaining);
+
     const previous = Number(sorted[index - 1][feature]);
     const current = Number(sorted[index][feature]);
     if (previous === current) continue;
     const threshold = (previous + current) / 2;
-    const left = labelsFor(
-      sorted.filter((row) => Number(row[feature]) <= threshold),
-      labelColumn,
-    );
-    const right = labelsFor(
-      sorted.filter((row) => Number(row[feature]) > threshold),
-      labelColumn,
-    );
-    if (left.length === 0 || right.length === 0) continue;
-    const impurityReduction = parent - weightedGini([left, right], sorted.length);
+    const impurityReduction =
+      parent -
+      weightedGiniFromCounts(
+        [
+          { counts: leftCounts, size: index },
+          { counts: rightCounts, size: total - index },
+        ],
+        total,
+      );
     if (!best || impurityReduction > best.impurityReduction) {
       best = { threshold, impurityReduction };
     }
@@ -176,6 +219,7 @@ function buildTree(
       splitType: "numerical",
       threshold: numericalThreshold,
       sampleCount: rows.length,
+      labelCounts: labelCounts(labels),
       impurityReduction: bestReduction,
       left: buildTree(
         leftRows,
@@ -203,6 +247,7 @@ function buildTree(
     feature: bestFeature,
     splitType: "categorical",
     sampleCount: rows.length,
+    labelCounts: labelCounts(labels),
     impurityReduction: bestReduction,
     children: Object.fromEntries(
       values.map((value, index) => [
@@ -272,4 +317,72 @@ export function traceDecisionTree(
     pathKeys,
     steps,
   };
+}
+
+export interface AiLabTreeBranch {
+  /** Text on the edge into this child (`chicken`, `≤ 3.5`). */
+  label: string;
+  child: AiLabTreeNode;
+}
+
+/** Ordered outgoing branches of a decision node, with their edge labels. */
+export function treeBranches(node: AiLabTreeNode): AiLabTreeBranch[] {
+  if (node.type === "leaf") return [];
+  if (node.splitType === "numerical") {
+    return [
+      { label: `≤ ${formatNumber(node.threshold)}`, child: node.left },
+      { label: `> ${formatNumber(node.threshold)}`, child: node.right },
+    ];
+  }
+  return Object.entries(node.children).map(([label, child]) => ({
+    label,
+    child,
+  }));
+}
+
+export interface AiLabTreeSummary {
+  decisions: number;
+  leaves: number;
+  /** Number of edges on the longest root-to-leaf path. */
+  depth: number;
+}
+
+export function summarizeTree(root: AiLabTreeNode): AiLabTreeSummary {
+  let decisions = 0;
+  let leaves = 0;
+  let depth = 0;
+  const visit = (node: AiLabTreeNode, level: number) => {
+    depth = Math.max(depth, level);
+    if (node.type === "leaf") {
+      leaves += 1;
+      return;
+    }
+    decisions += 1;
+    treeBranches(node).forEach((branch) => visit(branch.child, level + 1));
+  };
+  visit(root, 0);
+  return { decisions, leaves, depth };
+}
+
+/** Leaves under a node (1 for a leaf). Used by collapsed-subtree summaries. */
+export function countLeaves(node: AiLabTreeNode): number {
+  if (node.type === "leaf") return 1;
+  return treeBranches(node).reduce(
+    (sum, branch) => sum + countLeaves(branch.child),
+    0,
+  );
+}
+
+/** Distinct predictions reachable under a node. */
+export function subtreePredictions(node: AiLabTreeNode): string[] {
+  const seen = new Set<string>();
+  const visit = (current: AiLabTreeNode) => {
+    if (current.type === "leaf") {
+      seen.add(current.prediction);
+      return;
+    }
+    treeBranches(current).forEach((branch) => visit(branch.child));
+  };
+  visit(node);
+  return [...seen];
 }

@@ -5,6 +5,7 @@ import type {
   AiLabTreeTrace,
 } from "../../types/aiLab";
 import { columnById, formatCell, formatNumber } from "./columnStats";
+import { knnVotes } from "./knn";
 
 export function explainTreeTrace(
   columns: AiLabColumn[],
@@ -28,14 +29,16 @@ export function explainKnn(
   prediction: AiLabKnnPrediction,
 ): string {
   const k = prediction.neighbors.length;
-  const votes = prediction.neighbors.map((neighbor) =>
-    String(rows[neighbor.rowIndex][labelColumn]),
-  );
-  const matching = votes.filter((vote) => vote === prediction.prediction).length;
-  if (k === 1) {
-    return `The model predicts ${prediction.prediction} because the single nearest order had that label.`;
+  const tally = knnVotes(rows, labelColumn, prediction.neighbors);
+  const matching =
+    tally.find((vote) => vote.label === prediction.prediction)?.count ?? 0;
+  const rowsWord = k === 1 ? "row" : "rows";
+  const line = `${prediction.prediction} got the most votes among the ${k} nearest ${rowsWord}.`;
+  const tied = tally.filter((vote) => vote.count === matching).length > 1;
+  if (tied) {
+    return `${line} Tied; first to that count wins.`;
   }
-  return `The model predicts ${prediction.prediction} because ${matching} of the ${k} nearest orders voted ${prediction.prediction}.`;
+  return line;
 }
 
 export function formatDistance(distance: number): string {

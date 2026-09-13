@@ -1,7 +1,28 @@
 import type { AiLabColumn, AiLabDataRow } from "../../types/aiLab";
-import { columnType, uniqueValues } from "./columnStats";
+import { columnType } from "./columnStats";
 
 export type FeatureEncodings = Record<string, Record<string, number>>;
+
+/**
+ * Distinct values in sheet order. AI Lab / ml-knn maps each category to
+ * 0, 1, 2… at first sight — not a sorted catalog — so "B" then "A" is
+ * not the same axis as "A" then "B".
+ */
+export function firstSeenValues(
+  rows: AiLabDataRow[],
+  columnId: string,
+): string[] {
+  const seen = new Set<string>();
+  const values: string[] = [];
+  for (const row of rows) {
+    const value = String(row[columnId]);
+    if (!seen.has(value)) {
+      seen.add(value);
+      values.push(value);
+    }
+  }
+  return values;
+}
 
 export function buildEncodings(
   rows: AiLabDataRow[],
@@ -12,7 +33,7 @@ export function buildEncodings(
   features.forEach((feature) => {
     if (columnType(columns, feature) !== "categorical") return;
     encodings[feature] = Object.fromEntries(
-      uniqueValues(rows, feature).map((value, index) => [value, index]),
+      firstSeenValues(rows, feature).map((value, index) => [value, index]),
     );
   });
   return encodings;

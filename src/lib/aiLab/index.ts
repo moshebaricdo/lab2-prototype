@@ -1,3 +1,5 @@
+export * from "./cardinality";
+export * from "./catalog";
 export * from "./columnStats";
 export * from "./decisionTree";
 export * from "./encode";
