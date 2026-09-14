@@ -159,14 +159,23 @@ export interface AiLabLevelConfig {
   lockDataset?: boolean;
   /** Student must pick from the catalog before the sheet opens. */
   requireDatasetChoice?: boolean;
-  /** Scorecard + model inspector after train. */
+  /** Scorecard modal after train. Independent of export. */
   showModelDetails?: boolean;
-  /** Model card save + getPrediction snippet. Implies details. */
+  /** Save-model modal + getPrediction snippet. Independent of the scorecard. */
   showExport?: boolean;
   algorithmLock?: AiLabAlgorithmId;
   hideDatasetTab?: boolean;
+  /** Hide Testing. Dataset-only levels still combine with algorithm, dataset, train, and edit flags. */
+  hideTestTab?: boolean;
   hideTrainTab?: boolean;
   hideLabelSelect?: boolean;
+  /**
+   * Click-to-edit cells and Add row. Defaults on. Curriculum levels can lock
+   * the sheet as a read-only table.
+   */
+  allowDataEdit?: boolean;
+  /** Initial Data Set view. Students can still switch Table / Cards unless the level hides Data. */
+  defaultDataView?: AiLabDataView;
   initialSection?: AiLabSection;
   /** When set, only categorical columns can be the label. */
   classificationOnly?: boolean;

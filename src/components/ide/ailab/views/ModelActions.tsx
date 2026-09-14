@@ -12,7 +12,8 @@ interface ModelActionsProps {
 }
 
 /**
- * Scorecard / Save model entry points. Rendered in the same spot on Data
+ * Scorecard / Save model entry points. Each opens its own modal
+ * (`ScorecardModal` / `ExportModal`). Rendered in the same spot on Data
  * (Results card) and Test (metrics strip) so the controls never move or
  * appear late — they are simply disabled until a model exists.
  */

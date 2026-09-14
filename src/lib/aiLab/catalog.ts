@@ -1,4 +1,14 @@
-import type { AiLabDataset, AiLabLevelConfig } from "../../types/aiLab";
+import type {
+  AiLabAlgorithmId,
+  AiLabDataset,
+  AiLabLevelConfig,
+} from "../../types/aiLab";
+import { categoryCheck } from "./cardinality";
+
+/** Studio testing-only example: small labeled sheet that trains instantly. */
+export const AI_LAB_TESTING_ONLY_DATASET_ID = "iris_species";
+
+export const AI_LAB_STUDENT_CHOICE = "student";
 
 export function catalogDatasets(config: AiLabLevelConfig): AiLabDataset[] {
   if (config.availableDatasets && config.availableDatasets.length > 0) {
@@ -31,4 +41,55 @@ export function slugifyModelName(name: string): string {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || "model"
   );
+}
+
+export function findCatalogDataset(
+  catalog: AiLabDataset[],
+  datasetId: string | undefined,
+): AiLabDataset | undefined {
+  if (!datasetId) return undefined;
+  return catalog.find((dataset) => dataset.id === datasetId);
+}
+
+/** Prefer Iris for the testing-only example; otherwise the first catalog row. */
+export function testingOnlyDataset(
+  catalog: AiLabDataset[],
+  fallback: AiLabDataset,
+): AiLabDataset {
+  return (
+    findCatalogDataset(catalog, AI_LAB_TESTING_ONLY_DATASET_ID) ??
+    catalog[0] ??
+    fallback
+  );
+}
+
+/**
+ * Levelbuilder-style pretrained spec: default label plus the first few
+ * usable feature columns (skip `id` and cardinality-blocked categoricals).
+ */
+export function pretrainedFromDataset(
+  dataset: AiLabDataset,
+  algorithm: AiLabAlgorithmId,
+): NonNullable<AiLabLevelConfig["pretrained"]> {
+  const labelColumn = dataset.defaultLabelColumn;
+  const selectedFeatures = dataset.columns
+    .filter((column) => column.id !== labelColumn)
+    .filter((column) => {
+      if (/^id$/i.test(column.id) || /^id$/i.test(column.name)) return false;
+      return categoryCheck(dataset.rows, dataset.columns, column.id)?.fit !==
+        "blocked";
+    })
+    .slice(0, 3)
+    .map((column) => column.id);
+
+  if (selectedFeatures.length === 0) {
+    const fallback = dataset.columns.find((column) => column.id !== labelColumn);
+    if (fallback) selectedFeatures.push(fallback.id);
+  }
+
+  return {
+    algorithm,
+    labelColumn,
+    selectedFeatures,
+  };
 }

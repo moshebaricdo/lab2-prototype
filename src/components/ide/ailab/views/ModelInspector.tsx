@@ -3,7 +3,6 @@ import {
   Button,
   Modal,
   SegmentedButton,
-  Tabs,
   Tag,
   TextInput,
 } from "@moshebaricdo/cads-react";
@@ -26,23 +25,49 @@ const ALGORITHM_NAMES = {
   decisionTree: "Decision Tree",
 } as const;
 
-interface ModelInspectorProps {
+interface ScorecardModalProps {
   lab: AiLabController;
   open: boolean;
-  tab: ModelInspectorTab;
-  onTabChange: (tab: ModelInspectorTab) => void;
   onClose: () => void;
   onTryRow: (rowIndex: number) => void;
 }
 
+interface ExportModalProps {
+  lab: AiLabController;
+  open: boolean;
+  onClose: () => void;
+}
+
+/**
+ * Scorecard and export used to share one tabbed inspector. They are
+ * separate modals so a level can show one, the other, or both.
+ */
 export function ModelInspector({
   lab,
   open,
   tab,
-  onTabChange,
   onClose,
   onTryRow,
-}: ModelInspectorProps) {
+}: ScorecardModalProps & { tab: ModelInspectorTab }) {
+  if (tab === "card") {
+    return <ExportModal lab={lab} open={open} onClose={onClose} />;
+  }
+  return (
+    <ScorecardModal
+      lab={lab}
+      open={open}
+      onClose={onClose}
+      onTryRow={onTryRow}
+    />
+  );
+}
+
+export function ScorecardModal({
+  lab,
+  open,
+  onClose,
+  onTryRow,
+}: ScorecardModalProps) {
   const model = lab.model;
   if (!model) return null;
 
@@ -54,7 +79,6 @@ export function ModelInspector({
     .filter((column): column is NonNullable<typeof column> => Boolean(column));
   const results = model.holdoutResults;
   const correctCount = results.filter((result) => result.correct).length;
-  const showExport = Boolean(lab.config.showExport);
   const statement = predictionStatement(
     columns,
     model.labelColumn,
@@ -64,7 +88,7 @@ export function ModelInspector({
   return (
     <Modal
       open={open}
-      title="Trained model"
+      title="Scorecard"
       maxWidth={720}
       className={styles.inspectorModal}
       isDismissable
@@ -93,32 +117,41 @@ export function ModelInspector({
             </span>
           </div>
         </header>
-
-        <Tabs
-          type="secondary"
-          size="small"
-          aria-label="Model inspector"
-          value={tab}
-          onChange={(value) => onTabChange(value as ModelInspectorTab)}
-          items={[
-            { value: "scorecard", label: "Scorecard" },
-            {
-              value: "card",
-              label: showExport ? "Model card" : "About this model",
-            },
-          ]}
+        <Scorecard
+          lab={lab}
+          featureColumns={featureColumns}
+          labelName={labelName}
+          onTryRow={onTryRow}
         />
+      </div>
+    </Modal>
+  );
+}
 
-        {tab === "scorecard" ? (
-          <Scorecard
-            lab={lab}
-            featureColumns={featureColumns}
-            labelName={labelName}
-            onTryRow={onTryRow}
-          />
-        ) : (
-          <ModelCard lab={lab} statement={statement} />
-        )}
+export function ExportModal({ lab, open, onClose }: ExportModalProps) {
+  const model = lab.model;
+  if (!model) return null;
+
+  const statement = predictionStatement(
+    lab.config.dataset.columns,
+    model.labelColumn,
+    model.selectedFeatures,
+  );
+
+  return (
+    <Modal
+      open={open}
+      title="Save model"
+      maxWidth={720}
+      className={styles.inspectorModal}
+      isDismissable
+      hasSecondaryAction={false}
+      primaryActionLabel="Close"
+      onPrimaryAction={onClose}
+      onClose={onClose}
+    >
+      <div className={styles.root}>
+        <ModelCard lab={lab} statement={statement} />
       </div>
     </Modal>
   );
@@ -159,7 +192,9 @@ function Scorecard({
     <div className={styles.panel}>
       <div className={styles.scoreToolbar}>
         <p className={styles.panelLead}>
-          How this model scored. Click a row to try those values on Test.
+          {lab.config.hideTestTab
+            ? "How this model scored."
+            : "How this model scored. Click a row to try those values on Test."}
         </p>
         <div className={styles.scoreFilters}>
           <span className={styles.legend}>
@@ -217,17 +252,29 @@ function Scorecard({
                     ))}
                     <td>{result.actual}</td>
                     <td>
-                      <button
-                        type="button"
-                        className={`${styles.predictButton} ${
-                          result.correct
-                            ? styles.predictCorrect
-                            : styles.predictIncorrect
-                        }`}
-                        onClick={() => onTryRow(result.rowIndex)}
-                      >
-                        {result.predicted}
-                      </button>
+                      {lab.config.hideTestTab ? (
+                        <span
+                          className={`${styles.predictButton} ${
+                            result.correct
+                              ? styles.predictCorrect
+                              : styles.predictIncorrect
+                          }`}
+                        >
+                          {result.predicted}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className={`${styles.predictButton} ${
+                            result.correct
+                              ? styles.predictCorrect
+                              : styles.predictIncorrect
+                          }`}
+                          onClick={() => onTryRow(result.rowIndex)}
+                        >
+                          {result.predicted}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -264,7 +311,6 @@ function ModelCard({
   const [name, setName] = useState(() => lab.config.dataset.name);
   const [intendedUse, setIntendedUse] = useState("");
   const [limitations, setLimitations] = useState("");
-  const showExport = Boolean(lab.config.showExport);
   if (!model) return null;
 
   const columns = lab.config.dataset.columns;
@@ -284,9 +330,8 @@ function ModelCard({
   return (
     <div className={styles.panel}>
       <p className={styles.panelLead}>
-        {showExport
-          ? "A short card for handing this model to another lab. Saving keeps it in this session."
-          : "What this trained model is, in one place. Export is off for this level."}
+        A short card for handing this model to another lab. Saving keeps it in
+        this session.
       </p>
       <p className={styles.statement}>{statement}</p>
       <dl className={styles.facts}>
@@ -303,54 +348,52 @@ function ModelCard({
           <dd>{Math.round(model.accuracy * 100)}%</dd>
         </div>
       </dl>
-      {showExport ? (
-        <form
-          className={styles.form}
-          onSubmit={(event) => {
-            event.preventDefault();
-            lab.saveModel({ name, intendedUse, limitations });
-          }}
-        >
-          <TextInput
-            size="small"
-            color="secondary"
-            label="Model name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+      <form
+        className={styles.form}
+        onSubmit={(event) => {
+          event.preventDefault();
+          lab.saveModel({ name, intendedUse, limitations });
+        }}
+      >
+        <TextInput
+          size="small"
+          color="secondary"
+          label="Model name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+        <label className={styles.field}>
+          <span className={styles.fieldLabel}>Intended use</span>
+          <textarea
+            className={styles.textarea}
+            rows={2}
+            value={intendedUse}
+            onChange={(event) => setIntendedUse(event.target.value)}
+            placeholder="What should someone use this prediction for?"
           />
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>Intended use</span>
-            <textarea
-              className={styles.textarea}
-              rows={2}
-              value={intendedUse}
-              onChange={(event) => setIntendedUse(event.target.value)}
-              placeholder="What should someone use this prediction for?"
-            />
-          </label>
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>Limitations</span>
-            <textarea
-              className={styles.textarea}
-              rows={2}
-              value={limitations}
-              onChange={(event) => setLimitations(event.target.value)}
-              placeholder="Where might this model be wrong or unfair?"
-            />
-          </label>
-          <div className={styles.formActions}>
-            <Button
-              size="small"
-              variant="contained"
-              color="primary"
-              type="submit"
-              disabled={!name.trim()}
-            >
-              Save model
-            </Button>
-          </div>
-        </form>
-      ) : null}
+        </label>
+        <label className={styles.field}>
+          <span className={styles.fieldLabel}>Limitations</span>
+          <textarea
+            className={styles.textarea}
+            rows={2}
+            value={limitations}
+            onChange={(event) => setLimitations(event.target.value)}
+            placeholder="Where might this model be wrong or unfair?"
+          />
+        </label>
+        <div className={styles.formActions}>
+          <Button
+            size="small"
+            variant="contained"
+            color="primary"
+            type="submit"
+            disabled={!name.trim()}
+          >
+            Save model
+          </Button>
+        </div>
+      </form>
       <div className={styles.snippetBlock}>
         <p className={styles.fieldLabel}>Use in App Lab</p>
         <pre className={styles.snippet}>{snippet}</pre>

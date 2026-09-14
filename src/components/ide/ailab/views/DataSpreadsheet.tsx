@@ -116,7 +116,8 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   );
 
   const beginEdit = useCallback((cell: CellRef, seed?: string) => {
-    const { rows: all, columns: cols } = latest.current;
+    const { rows: all, columns: cols, lab: controller } = latest.current;
+    if (controller.config.allowDataEdit === false) return;
     const row = all[cell.rowIndex];
     const column = cols.find((entry) => entry.id === cell.columnId);
     if (!row || !column) return;
@@ -232,9 +233,11 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
       );
       focusCell({ rowIndex: target, columnId: active.columnId });
     } else if (event.key === "Enter" || event.key === "F2") {
+      if (lab.config.allowDataEdit === false) return;
       event.preventDefault();
       beginEdit(active);
     } else if (event.key === "Backspace" || event.key === "Delete") {
+      if (lab.config.allowDataEdit === false) return;
       event.preventDefault();
       if (!activeColumn) return;
       lab.updateCell(
@@ -248,6 +251,7 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
       !event.ctrlKey &&
       !event.altKey
     ) {
+      if (lab.config.allowDataEdit === false) return;
       event.preventDefault();
       beginEdit(active, event.key);
     }
@@ -312,6 +316,7 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
             tabIndex={0}
             role="grid"
             aria-label={lab.config.dataset.name}
+            aria-readonly={lab.config.allowDataEdit === false}
             aria-colcount={columns.length + 1}
             aria-rowcount={rows.length + 1}
             onKeyDown={onGridKeyDown}
@@ -353,15 +358,19 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
                         lab.selectColumn(column.id);
                       }}
                     >
-                      {column.name}
-                      {isLabel || isFeature ? (
-                        <span
-                          className={`${styles.roleDot} ${
-                            isLabel ? styles.roleDotLabel : styles.roleDotFeature
-                          }`}
-                          aria-hidden
-                        />
-                      ) : null}
+                      <span className={styles.thLead}>
+                        <span className={styles.thName}>{column.name}</span>
+                        {isLabel || isFeature ? (
+                          <span
+                            className={`${styles.roleDot} ${
+                              isLabel
+                                ? styles.roleDotLabel
+                                : styles.roleDotFeature
+                            }`}
+                            aria-hidden
+                          />
+                        ) : null}
+                      </span>
                     </button>
                   </th>
                 );
@@ -389,9 +398,11 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
               ))}
             </datalist>
           ) : null}
-          <button type="button" className={styles.addRow} onClick={() => lab.addRow()}>
-            Add row
-          </button>
+          {lab.config.allowDataEdit === false ? null : (
+            <button type="button" className={styles.addRow} onClick={() => lab.addRow()}>
+              Add row
+            </button>
+          )}
         </div>
       </div>
     </div>

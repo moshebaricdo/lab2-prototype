@@ -20,8 +20,14 @@ import {
   aiLabStudioSectionInstructions,
   aiLabTrainYourselfConfig,
 } from "../../data/ailab";
+import {
+  aiLabDevDefaults,
+  datasetDevOptions,
+  mergeAiLabDevConfig,
+  uniqueDevCatalog,
+} from "../../lib/aiLab";
 import { aiLabGuidedLevelLinks, aiLabLevelLinks } from "../levelTypeLinks";
-import type { AiLabAlgorithmId, AiLabLevelConfig, AiLabSection } from "../../types/aiLab";
+import type { AiLabLevelConfig, AiLabSection } from "../../types/aiLab";
 
 interface AiLabLevelPageProps {
   currentLevelPath?: string;
@@ -34,155 +40,135 @@ interface AiLabLevelPageProps {
   levelLinks?: LevelProgressLink[];
 }
 
-const AI_LAB_DEV_FIELDS: DevPanelField[] = [
-  {
-    key: "algorithmLock",
-    label: "Lock algorithm",
-    type: "select",
-    group: "AI Lab",
-    options: [
-      { label: "Student chooses", value: "none" },
-      { label: "K-Nearest Neighbors", value: "knn" },
-      { label: "Decision Tree", value: "decisionTree" },
-    ],
-  },
-  {
-    key: "hideDatasetTab",
-    label: "Hide Dataset tab",
-    type: "boolean",
-    group: "AI Lab",
-  },
-  {
-    key: "hideTrainTab",
-    label: "Hide Train tab",
-    type: "boolean",
-    group: "AI Lab",
-  },
-  {
-    key: "studioPreset",
-    label: "Studio preset",
-    type: "select",
-    group: "AI Lab",
-    description: "P0 hides dataset choice, the scorecard, and export. Full is the end-state studio.",
-    options: [
-      { label: "P0 — train and test only", value: "p0" },
-      { label: "Full studio", value: "full" },
-    ],
-  },
-  {
-    key: "testLayout",
-    label: "Testing layout",
-    type: "select",
-    group: "AI Lab",
-    description:
-      "Dock keeps the Input → Output footer. Canvas floats the trace toolbar, input card, and prediction card over the visualization.",
-    options: [
-      { label: "Dock — Input → Output footer", value: "dock" },
-      { label: "Canvas — floating cards", value: "canvas" },
-    ],
-  },
-  {
-    key: "allowDatasetPicker",
-    label: "Allow dataset picker",
-    type: "boolean",
-    group: "AI Lab",
-    visibleWhen: (values) => values.studioPreset === "full",
-  },
-  {
-    key: "showModelDetails",
-    label: "Show model scorecard",
-    type: "boolean",
-    group: "AI Lab",
-    visibleWhen: (values) => values.studioPreset === "full",
-  },
-  {
-    key: "showExport",
-    label: "Show export / model card",
-    type: "boolean",
-    group: "AI Lab",
-    visibleWhen: (values) => values.studioPreset === "full",
-  },
-  {
-    key: "showInstructionsTab",
-    label: "Show instructions tab",
-    type: "boolean",
-    group: "Resource panel",
-  },
-  {
-    key: "showContinueButton",
-    label: "Show continue button",
-    type: "boolean",
-    group: "Resource panel",
-  },
-  {
-    key: "enableSidebarCollapse",
-    label: "Enable sidebar collapse",
-    description:
-      "Show the rail control that collapses or expands the resource panel.",
-    type: "boolean",
-    group: "Resource panel",
-  },
-  {
-    key: "collapseSidebarByDefault",
-    label: "Collapse sidebar by default",
-    description:
-      "Start the resource panel collapsed when sidebar collapse is enabled.",
-    type: "boolean",
-    group: "Resource panel",
-    visibleWhen: (values) => Boolean(values.enableSidebarCollapse),
-  },
-  resourcePanelCompactDevField,
-  { key: "title", label: "Level title", type: "text", group: "Header" },
-];
+function aiLabDevFields(catalog: ReturnType<typeof uniqueDevCatalog>): DevPanelField[] {
+  return [
+    {
+      key: "algorithmLock",
+      label: "Pre-set algorithm",
+      description:
+        "Lock KNN or Decision Tree so the student does not choose. Student chooses keeps the setup picker.",
+      type: "select",
+      group: "AI Lab",
+      options: [
+        { label: "Student chooses", value: "none" },
+        { label: "K-Nearest Neighbors", value: "knn" },
+        { label: "Decision Tree", value: "decisionTree" },
+      ],
+    },
+    {
+      key: "presetDataset",
+      label: "Pre-set dataset",
+      description:
+        "Lock a catalog dataset so the sheet opens with it. Student chooses keeps the setup picker.",
+      type: "select",
+      group: "AI Lab",
+      options: datasetDevOptions(catalog),
+    },
+    {
+      key: "workspaceTabs",
+      label: "Workspace tabs",
+      description:
+        "Testing only loads a trained model (Iris Species unless a dataset is pre-set). Data Set only hides Testing and combines with the other flags.",
+      type: "select",
+      group: "AI Lab",
+      options: [
+        { label: "Data Set and Testing", value: "both" },
+        { label: "Data Set only", value: "dataset" },
+        { label: "Testing only", value: "test" },
+      ],
+    },
+    {
+      key: "showExport",
+      label: "Show export",
+      description: "Save model opens its own export modal (model card + getPrediction snippet).",
+      type: "boolean",
+      group: "AI Lab",
+    },
+    {
+      key: "showTrainPanel",
+      label: "Show train panel",
+      description:
+        "The TRAIN rail on Data Set. When this is off and Testing is available, the level loads a pre-trained model.",
+      type: "boolean",
+      group: "AI Lab",
+      visibleWhen: (values) => values.workspaceTabs !== "test",
+    },
+    {
+      key: "allowDataEdit",
+      label: "Allow editing data",
+      description: "Click a cell to edit and use Add row. Off locks the sheet as read-only.",
+      type: "boolean",
+      group: "AI Lab",
+      visibleWhen: (values) => values.workspaceTabs !== "test",
+    },
+    {
+      key: "defaultDataView",
+      label: "Default dataset view",
+      type: "select",
+      group: "AI Lab",
+      options: [
+        { label: "Table", value: "table" },
+        { label: "Cards", value: "cards" },
+      ],
+      visibleWhen: (values) => values.workspaceTabs !== "test",
+    },
+    {
+      key: "showModelDetails",
+      label: "Show scorecard",
+      description: "Scorecard opens its own modal from Results and Testing.",
+      type: "boolean",
+      group: "AI Lab",
+    },
+    {
+      key: "testLayout",
+      label: "Testing layout",
+      description:
+        "Dock keeps the Input → Output footer. Canvas floats the trace toolbar, input card, and prediction card over the visualization.",
+      type: "select",
+      group: "AI Lab",
+      options: [
+        { label: "Dock — Input → Output footer", value: "dock" },
+        { label: "Canvas — floating cards", value: "canvas" },
+      ],
+      visibleWhen: (values) => values.workspaceTabs !== "dataset",
+    },
+    {
+      key: "showInstructionsTab",
+      label: "Show instructions tab",
+      type: "boolean",
+      group: "Resource panel",
+    },
+    {
+      key: "showContinueButton",
+      label: "Show continue button",
+      type: "boolean",
+      group: "Resource panel",
+    },
+    {
+      key: "enableSidebarCollapse",
+      label: "Enable sidebar collapse",
+      description:
+        "Show the rail control that collapses or expands the resource panel.",
+      type: "boolean",
+      group: "Resource panel",
+    },
+    {
+      key: "collapseSidebarByDefault",
+      label: "Collapse sidebar by default",
+      description:
+        "Start the resource panel collapsed when sidebar collapse is enabled.",
+      type: "boolean",
+      group: "Resource panel",
+      visibleWhen: (values) => Boolean(values.enableSidebarCollapse),
+    },
+    resourcePanelCompactDevField,
+    { key: "title", label: "Level title", type: "text", group: "Header" },
+  ];
+}
 
 function currentLevelIndex(path: string, links: LevelProgressLink[]) {
   const index = links.findIndex((link) => link.path === path);
   return index >= 0 ? index : 0;
-}
-
-function mergeConfig(
-  base: AiLabLevelConfig,
-  resolved: {
-    algorithmLock: string;
-    hideDatasetTab: boolean;
-    hideTrainTab: boolean;
-    studioPreset: string;
-    allowDatasetPicker: boolean;
-    showModelDetails: boolean;
-    showExport: boolean;
-    testLayout: string;
-  },
-): AiLabLevelConfig {
-  const isFull = resolved.studioPreset === "full";
-  const allowPicker = Boolean(resolved.allowDatasetPicker);
-  const showExport = isFull && Boolean(resolved.showExport);
-  const showModelDetails = isFull
-    ? Boolean(resolved.showModelDetails) || showExport
-    : Boolean(base.pretrained);
-
-  return {
-    ...base,
-    algorithmLock:
-      resolved.algorithmLock === "knn" ||
-      resolved.algorithmLock === "decisionTree"
-        ? (resolved.algorithmLock as AiLabAlgorithmId)
-        : resolved.algorithmLock === "none"
-          ? undefined
-          : base.algorithmLock,
-    hideDatasetTab: resolved.hideDatasetTab || Boolean(base.hideDatasetTab),
-    hideTrainTab: resolved.hideTrainTab || Boolean(base.hideTrainTab),
-    lockDataset: isFull ? !allowPicker : true,
-    requireDatasetChoice: isFull && allowPicker,
-    availableDatasets:
-      isFull && allowPicker
-        ? base.availableDatasets?.length
-          ? base.availableDatasets
-          : aiLabStudioCatalog
-        : [base.dataset],
-    showModelDetails,
-    showExport,
-    testLayout: resolved.testLayout === "canvas" ? "canvas" : "dock",
-  };
 }
 
 export function AiLabLevelPage({
@@ -196,6 +182,10 @@ export function AiLabLevelPage({
   levelLinks = aiLabLevelLinks,
 }: AiLabLevelPageProps = {}) {
   const navigate = useNavigate();
+  const catalog = useMemo(
+    () => uniqueDevCatalog(config.dataset, aiLabStudioCatalog),
+    [config.dataset],
+  );
   const {
     activeTab,
     setActiveTab,
@@ -206,16 +196,9 @@ export function AiLabLevelPage({
   } = useLayoutState("instructions");
   const { chatMessages, setChatMessages, chatInput, setChatInput } = useChatState([]);
   const versionHistoryState = useVersionHistoryState();
+  const defaults = aiLabDevDefaults(config);
   const overrideResult = usePropsOverride({
-    algorithmLock: config.algorithmLock ?? "none",
-    hideDatasetTab: Boolean(config.hideDatasetTab),
-    hideTrainTab: Boolean(config.hideTrainTab),
-    studioPreset:
-      !config.lockDataset && config.requireDatasetChoice ? "full" : "p0",
-    allowDatasetPicker: true,
-    showModelDetails: true,
-    showExport: true,
-    testLayout: config.testLayout ?? "dock",
+    ...defaults,
     showInstructionsTab: true,
     showContinueButton: true,
     enableSidebarCollapse: false,
@@ -225,36 +208,44 @@ export function AiLabLevelPage({
   });
   const resolved = overrideResult.props;
   const algorithmLock = String(resolved.algorithmLock);
-  const hideDatasetTab = Boolean(resolved.hideDatasetTab);
-  const hideTrainTab = Boolean(resolved.hideTrainTab);
-  const studioPreset = String(resolved.studioPreset);
-  const allowDatasetPicker = Boolean(resolved.allowDatasetPicker);
+  const presetDataset = String(resolved.presetDataset);
+  const workspaceTabs = String(resolved.workspaceTabs);
+  const showTrainPanel = Boolean(resolved.showTrainPanel);
   const showModelDetails = Boolean(resolved.showModelDetails);
   const showExport = Boolean(resolved.showExport);
+  const allowDataEdit = Boolean(resolved.allowDataEdit);
+  const defaultDataView = String(resolved.defaultDataView);
   const testLayout = String(resolved.testLayout);
   // Keyed on primitives so the config (and everything `useAiLabState`
   // derives from it) keeps its identity across unrelated page re-renders.
   const levelConfig = useMemo(
     () =>
-      mergeConfig(config, {
-        algorithmLock,
-        hideDatasetTab,
-        hideTrainTab,
-        studioPreset,
-        allowDatasetPicker,
-        showModelDetails,
-        showExport,
-        testLayout,
-      }),
+      mergeAiLabDevConfig(
+        config,
+        {
+          algorithmLock,
+          presetDataset,
+          workspaceTabs,
+          showTrainPanel,
+          showModelDetails,
+          showExport,
+          allowDataEdit,
+          defaultDataView,
+          testLayout,
+        },
+        catalog,
+      ),
     [
       config,
+      catalog,
       algorithmLock,
-      hideDatasetTab,
-      hideTrainTab,
-      studioPreset,
-      allowDatasetPicker,
+      presetDataset,
+      workspaceTabs,
+      showTrainPanel,
       showModelDetails,
       showExport,
+      allowDataEdit,
+      defaultDataView,
       testLayout,
     ],
   );
@@ -277,6 +268,7 @@ export function AiLabLevelPage({
             ? aiLabGuidedSectionInstructions.test
             : aiLabGuidedSectionInstructions.dataset
           : aiLabSectionInstructions[lab.section as AiLabSection];
+  const devPanelFields = useMemo(() => aiLabDevFields(catalog), [catalog]);
 
   return (
     <Lab2Shell
@@ -319,7 +311,7 @@ export function AiLabLevelPage({
         onContinue: () => navigate(continueTo ?? "/levels"),
         surfaceVariant: "edge",
         instructionsContent: <MarkdownInstructions markdown={instructions} />,
-        devPanelFields: AI_LAB_DEV_FIELDS,
+        devPanelFields,
         devPanelOverrideResult: overrideResult,
       }}
       onResize={(delta) => {

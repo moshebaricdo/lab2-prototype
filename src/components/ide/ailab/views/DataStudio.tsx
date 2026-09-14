@@ -114,7 +114,9 @@ function DataHeader({
         )}
       </div>
       <div className={styles.viewType}>
-        {lab.dataView === "table" && !lab.needsDataset ? (
+        {lab.dataView === "table" &&
+        !lab.needsDataset &&
+        lab.config.allowDataEdit !== false ? (
           <Button
             variant="outlined"
             color="secondary"
@@ -183,7 +185,10 @@ function TrainRail({
   const correct = model
     ? model.holdoutResults.filter((result) => result.correct).length
     : 0;
-  const canTest = lab.canVisit("test");
+  const canTest = !lab.config.hideTestTab && lab.canVisit("test");
+  const showScorecard = Boolean(lab.config.showModelDetails);
+  const showExport = Boolean(lab.config.showExport);
+  const showResultsFooter = showScorecard || showExport || canTest || Boolean(onOpenModel);
 
   const runTrain = () => {
     if (!lab.canTrain || isTraining) return;
@@ -291,21 +296,25 @@ function TrainRail({
                 </span>
               </div>
             </div>
-            <div className={styles.cardFooter}>
-              <div className={styles.footerActions}>
-                <ModelActions lab={lab} onOpen={onOpenModel} size="small" />
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="primary"
-                  endIconName="arrow-right"
-                  disabled={!canTest}
-                  onClick={() => lab.setSection("test")}
-                >
-                  Test model
-                </Button>
+            {showResultsFooter ? (
+              <div className={styles.cardFooter}>
+                <div className={styles.footerActions}>
+                  <ModelActions lab={lab} onOpen={onOpenModel} size="small" />
+                  {lab.config.hideTestTab ? null : (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="primary"
+                      endIconName="arrow-right"
+                      disabled={!canTest}
+                      onClick={() => lab.setSection("test")}
+                    >
+                      Test model
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : null}
           </section>
         ) : null}
       </div>

@@ -1,4 +1,4 @@
-import { Button, Modal, Tabs, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Modal, SegmentedButton } from "@moshebaricdo/cads-react";
 import { useState } from "react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import type { AiLabSection } from "../../../../types/aiLab";
@@ -24,7 +24,7 @@ const ALGORITHM_ICONS = {
 
 const SECTION_TABS: Record<
   AiLabSection,
-  { label: string; iconName: string }
+  { label: string; iconName: "table" | "sitemap" | "gears" | "flask" }
 > = {
   dataset: { label: "Data Set", iconName: "table" },
   algorithm: { label: "Algorithm", iconName: "sitemap" },
@@ -63,6 +63,8 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
 
   const openInspector = (tab: ModelInspectorTab = "scorecard") => {
     if (!lab.model) return;
+    if (tab === "scorecard" && !lab.config.showModelDetails) return;
+    if (tab === "card" && !lab.config.showExport) return;
     setInspectorTab(tab);
     setInspectorOpen(true);
   };
@@ -81,37 +83,28 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
     <div className={styles.root}>
       <PanelHeader
         label="WORKSPACE"
-        className={styles.header}
         left={
           lab.visibleSections.length > 1 ? (
-            <Tabs
-              type="primary"
-              size="small"
-              className={styles.headerTabs}
+            <SegmentedButton
+              size="extraSmall"
               aria-label="AI Lab sections"
               value={lab.section === "algorithm" ? "dataset" : lab.section}
               onChange={(value) => {
                 const section = value as AiLabSection;
                 if (lab.canVisit(section)) lab.setSection(section);
               }}
-              items={lab.visibleSections.map((section) => {
+              options={lab.visibleSections.map((section) => {
                 const disabled = !lab.canVisit(section);
                 const tab = SECTION_TABS[section];
-                const lockedTest = section === "test" && disabled;
                 return {
                   value: section,
-                  label: lockedTest ? (
-                    <Tooltip
-                      title="Testing unlocks once a model is trained"
-                      placement="bottom"
-                    >
-                      <span className={styles.lockedTabLabel}>{tab.label}</span>
-                    </Tooltip>
-                  ) : (
-                    tab.label
-                  ),
-                  startIconName: tab.iconName,
+                  label: tab.label,
+                  iconName: tab.iconName,
                   disabled,
+                  tooltip:
+                    section === "test" && disabled
+                      ? "Testing unlocks once a model is trained"
+                      : undefined,
                 };
               })}
             />
@@ -175,11 +168,10 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
           lab={lab}
           open={inspectorOpen}
           tab={inspectorTab}
-          onTabChange={setInspectorTab}
           onClose={() => setInspectorOpen(false)}
           onTryRow={(rowIndex) => {
             lab.loadHoldoutRow(rowIndex);
-            lab.setSection("test");
+            if (!lab.config.hideTestTab) lab.setSection("test");
             setInspectorOpen(false);
           }}
         />

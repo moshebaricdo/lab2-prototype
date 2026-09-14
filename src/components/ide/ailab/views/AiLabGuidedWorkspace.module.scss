@@ -9,40 +9,6 @@
   background: var(--background-neutral-primary);
 }
 
-/* Lab 2 Panel Header with the section Tab Group in the start slot. The
- * tabs are 40px tall so their baseline sits on the header's own border.
- * Use inset shadow instead of border-bottom so the active tab underline
- * isn't clipped; PanelHeader's borderBottom class is overridden here. */
-.root > .header {
-  height: 40px;
-  max-height: 40px;
-  padding: 0 8px 0 10px;
-  overflow: visible;
-  border-bottom: none;
-  box-shadow: inset 0 -1px 0 var(--border-neutral-primary);
-}
-
-.root .headerTabs {
-  --tabs-baseline-color: transparent;
-
-  position: relative;
-  z-index: 1;
-  min-width: 0;
-  align-self: stretch;
-}
-
-/* Disabled tabs do not receive pointer events. Stretch a hit target over
- * the whole tab (icon + label) so the lock tooltip can open. */
-.lockedTabLabel {
-  pointer-events: auto;
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-  }
-}
-
 .headerActions {
   display: flex;
   min-width: 0;

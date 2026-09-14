@@ -462,18 +462,15 @@ tbody tr:hover .td.tdActive {
 
 .thButton {
   @include type-label-3;
-  display: flex;
+  display: block;
   width: 100%;
-  align-items: center;
-  gap: 6px;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   border: 0;
   background: transparent;
   color: inherit;
   cursor: pointer;
-  text-align: inherit;
-  text-overflow: ellipsis;
+  text-align: left;
 
   &:hover {
     color: var(--text-neutral-primary);
@@ -484,6 +481,21 @@ tbody tr:hover .td.tdActive {
   }
 }
 
+/* Name hugs the label; the role dot hangs into the 10px cell padding
+   so assigning a feature/label does not widen the column. */
+.thLead {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.thName {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .th:not(.thIndex):not(.thNumeric),
 .td:not(.tdIndex):not(.tdNumeric) {
   min-width: 160px;
@@ -492,8 +504,11 @@ tbody tr:hover .td.tdActive {
 .thNumeric,
 .tdNumeric {
   min-width: 100px;
-  text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.tdNumeric {
+  text-align: right;
 }
 
 /* Figma "headerActive": solid selected fill with selected foreground. */
@@ -515,10 +530,14 @@ tbody tr:hover .td.tdActive {
 }
 
 .roleDot {
-  display: inline-block;
-  flex-shrink: 0;
+  position: absolute;
+  top: 50%;
+  left: 100%;
   width: 6px;
   height: 6px;
+  margin-left: 4px;
+  pointer-events: none;
+  transform: translateY(-50%);
   border-radius: var(--shape-round);
   background: var(--background-neutral-tertiary);
 }

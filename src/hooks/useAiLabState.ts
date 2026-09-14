@@ -54,13 +54,14 @@ function firstVisibleSection(
   if (!algorithm && !config.algorithmLock && !config.trainAsOverlay) {
     return "algorithm";
   }
-  if (config.initialSection === "test") return "test";
+  if (config.initialSection === "test" && !config.hideTestTab) return "test";
   if (config.initialSection === "train" && !config.hideTrainTab) {
     return setupSection(config);
   }
   if (!config.hideDatasetTab) return "dataset";
-  if (!config.hideTrainTab) return "train";
-  return "test";
+  if (!config.hideTrainTab && !config.trainAsOverlay) return "train";
+  if (!config.hideTestTab) return "test";
+  return "dataset";
 }
 
 function emptyTestValues(features: string[]): AiLabDataRow {
@@ -95,7 +96,7 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     section: firstVisibleSection(config, selectedAlgorithm),
     datasetId,
     selectedAlgorithm,
-    dataView: "table",
+    dataView: config.defaultDataView ?? "table",
     cardLayout: "catalog",
     selectedColumnId: undefined,
     cardIndex: 0,
@@ -126,10 +127,9 @@ function configIdentity(config: AiLabLevelConfig): string {
       .join(","),
     config.lockDataset ? "1" : "0",
     config.requireDatasetChoice ? "1" : "0",
-    config.showModelDetails ? "1" : "0",
-    config.showExport ? "1" : "0",
     config.algorithmLock ?? "",
     config.hideDatasetTab ? "1" : "0",
+    config.hideTestTab ? "1" : "0",
     config.hideTrainTab ? "1" : "0",
     config.hideLabelSelect ? "1" : "0",
     config.initialSection ?? "",
@@ -155,6 +155,13 @@ export function useAiLabState(config: AiLabLevelConfig) {
     }));
   }, [config, identity]);
 
+  useEffect(() => {
+    const next = config.defaultDataView ?? "table";
+    setState((current) =>
+      current.dataView === next ? current : { ...current, dataView: next },
+    );
+  }, [config.defaultDataView]);
+
   const availableDatasets = useMemo(
     () => catalogDatasets(config),
     [config],
@@ -172,14 +179,22 @@ export function useAiLabState(config: AiLabLevelConfig) {
     const sections: AiLabSection[] = [];
     if (!config.hideDatasetTab) sections.push("dataset");
     if (!config.hideTrainTab && !config.trainAsOverlay) sections.push("train");
-    sections.push("test");
+    if (!config.hideTestTab) sections.push("test");
     return sections;
-  }, [config.hideDatasetTab, config.hideTrainTab, config.trainAsOverlay]);
+  }, [
+    config.hideDatasetTab,
+    config.hideTestTab,
+    config.hideTrainTab,
+    config.trainAsOverlay,
+  ]);
 
   const canVisit = useCallback(
     (section: AiLabSection) => {
       if (section === "algorithm") return !config.algorithmLock;
-      if (section === "test") return Boolean(state.model);
+      if (section === "test") {
+        if (config.hideTestTab) return false;
+        return Boolean(state.model);
+      }
       if (!state.datasetId) {
         return section === "dataset";
       }
@@ -190,6 +205,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
     },
     [
       config.algorithmLock,
+      config.hideTestTab,
       state.datasetId,
       state.model,
       state.selectedAlgorithm,
@@ -386,6 +402,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
 
   const updateCell = useCallback(
     (rowIndex: number, columnId: string, value: AiLabCellValue) => {
+      if (config.allowDataEdit === false) return;
       setState((current) => {
         const row = current.rows[rowIndex];
         if (!row || row[columnId] === value) return current;
@@ -399,10 +416,11 @@ export function useAiLabState(config: AiLabLevelConfig) {
         };
       });
     },
-    [],
+    [config.allowDataEdit],
   );
 
   const addRow = useCallback(() => {
+    if (config.allowDataEdit === false) return;
     setState((current) => {
       const dataset = resolveDataset(config, current.datasetId);
       if (!dataset) return current;
