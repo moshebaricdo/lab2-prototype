@@ -89,3 +89,24 @@ export const aiLabPretrainedInstructions = [
   "This lesson starts with a model someone else already trained on taco-truck orders.",
   "Read the accuracy, then try new feature values in the dock. The visualization shows *how* the model reached each prediction.",
 ].join("\n\n");
+
+export const aiLabPlaytestLookInstructions = [
+  "# Look at the animals",
+  "Which yes/no columns look like they could tell Bird, Mammal, and Fish apart?",
+  "Open the table. Switch to **Cards** if you want. Click a column header to open the analysis dock.",
+  "Notice that every bird has feathers, fish do not breathe with lungs, and **Lives in water** is mixed (penguin, duck, dolphin, whale).",
+].join("\n\n");
+
+export const aiLabPlaytestTryInstructions = [
+  "# Try a model that already exists",
+  "Walk Hawk, then Bat. Why does the model never ask about water?",
+  "Fill **Hawk**, **Dolphin**, **Salmon**, and **Bat** in the dock. Press **Play** to trace the tree. Flip **Diagram** / **Rules**.",
+  "This tree only uses **Has feathers** and **Breathes with lungs**. Feathers → Bird; otherwise lungs → Mammal or Fish.",
+].join("\n\n");
+
+export const aiLabPlaytestBuildInstructions = [
+  "# Build your own, then bounce",
+  "Train with the two traits from the poster. Then try a worse set of columns and compare the tree.",
+  "Pick **Using** columns, **Train model**, then **Test model**. You can hop back to the sheet.",
+  "Recreate the Level 2 tree (**Has feathers** + **Breathes with lungs**). Optional: add **Lives in water** (the tree should stay the same) or include **Animal** (the tree becomes a name lookup).",
+].join("\n\n");

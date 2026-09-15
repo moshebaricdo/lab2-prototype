@@ -23,6 +23,12 @@ const overrides: Record<
       "Survey of food-delivery customers in Bengaluru. Predict whether a customer would order online again.",
     labelColumn: "Output",
   },
+  bird_mammal_or_fish: {
+    name: "Bird, mammal, or fish",
+    description:
+      "24 animals. Predict Class from yes/no traits. Do not auto-pretrain without a feature list — Animal would become a name lookup.",
+    labelColumn: "Class",
+  },
 };
 
 const files = import.meta.glob("./*.csv", {

@@ -59,17 +59,19 @@ export function GuidedTrainingBar({ lab }: GuidedTrainingBarProps) {
         </Button>
       </div>
       <div className={styles.builderRow}>
-        <Dropdown
-          role="input"
-          size="small"
-          color="secondary"
-          width="auto"
-          label="Predict"
-          placeholder="Choose a label"
-          value={lab.labelColumn ?? ""}
-          options={labelOptions}
-          onChange={(value) => lab.setLabelColumn(String(value))}
-        />
+        {lab.config.hideLabelSelect ? null : (
+          <Dropdown
+            role="input"
+            size="small"
+            color="secondary"
+            width="auto"
+            label="Predict"
+            placeholder="Choose a label"
+            value={lab.labelColumn ?? ""}
+            options={labelOptions}
+            onChange={(value) => lab.setLabelColumn(String(value))}
+          />
+        )}
         <div className={styles.featureBlock}>
           <p className={styles.muted}>Based on</p>
           <div className={styles.featureList}>

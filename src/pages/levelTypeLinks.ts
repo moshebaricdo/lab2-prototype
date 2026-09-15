@@ -398,6 +398,18 @@ export const aiLabGuidedLevelLinks: LevelProgressLink[] = [
   { name: "Train a model (guided)", path: "/levels/ailab-guided" },
 ];
 
+export const aiLabPlaytestLevelLinks: LevelProgressLink[] = [
+  { name: "Look at the animals", path: "/levels/progression-ailab-look" },
+  {
+    name: "Try a model that already exists",
+    path: "/levels/progression-ailab-try",
+  },
+  {
+    name: "Build your own, then bounce",
+    path: "/levels/progression-ailab-build",
+  },
+];
+
 export const aiLabIndexLinks: LevelProgressLink[] = [
   ...aiLabLevelLinks,
   ...aiLabGuidedLevelLinks,

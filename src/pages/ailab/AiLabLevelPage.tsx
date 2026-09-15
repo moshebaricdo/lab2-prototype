@@ -13,6 +13,12 @@ import type { LevelProgressLink } from "../../components/ui/header/LevelProgress
 import {
   aiLabGuidedConfig,
   aiLabGuidedSectionInstructions,
+  aiLabPlaytestBuildConfig,
+  aiLabPlaytestBuildInstructions,
+  aiLabPlaytestLookConfig,
+  aiLabPlaytestLookInstructions,
+  aiLabPlaytestTryConfig,
+  aiLabPlaytestTryInstructions,
   aiLabPretrainedConfig,
   aiLabPretrainedInstructions,
   aiLabSectionInstructions,
@@ -26,7 +32,11 @@ import {
   mergeAiLabDevConfig,
   uniqueDevCatalog,
 } from "../../lib/aiLab";
-import { aiLabGuidedLevelLinks, aiLabLevelLinks } from "../levelTypeLinks";
+import {
+  aiLabGuidedLevelLinks,
+  aiLabLevelLinks,
+  aiLabPlaytestLevelLinks,
+} from "../levelTypeLinks";
 import type { AiLabLevelConfig, AiLabSection } from "../../types/aiLab";
 
 interface AiLabLevelPageProps {
@@ -38,6 +48,10 @@ interface AiLabLevelPageProps {
   continueTo?: string;
   workspace?: "classic" | "guided";
   levelLinks?: LevelProgressLink[];
+  /** When set, replaces the computed section instructions. */
+  instructionsMarkdown?: string;
+  /** Continue is the only door; header bubbles stay display-only. */
+  disableProgressionLinks?: boolean;
 }
 
 function aiLabDevFields(catalog: ReturnType<typeof uniqueDevCatalog>): DevPanelField[] {
@@ -180,6 +194,8 @@ export function AiLabLevelPage({
   continueTo = "/levels/ailab-pretrained",
   workspace = "guided",
   levelLinks = aiLabLevelLinks,
+  instructionsMarkdown,
+  disableProgressionLinks = false,
 }: AiLabLevelPageProps = {}) {
   const navigate = useNavigate();
   const catalog = useMemo(
@@ -257,7 +273,8 @@ export function AiLabLevelPage({
     levelConfig.showExport ||
     levelConfig.requireDatasetChoice;
   const instructions =
-    config.pretrained && lab.section === "test"
+    instructionsMarkdown ??
+    (config.pretrained && lab.section === "test"
       ? aiLabPretrainedInstructions
       : studioInstructions
         ? lab.section === "test"
@@ -267,7 +284,7 @@ export function AiLabLevelPage({
           ? lab.section === "test"
             ? aiLabGuidedSectionInstructions.test
             : aiLabGuidedSectionInstructions.dataset
-          : aiLabSectionInstructions[lab.section as AiLabSection];
+          : aiLabSectionInstructions[lab.section as AiLabSection]);
   const devPanelFields = useMemo(() => aiLabDevFields(catalog), [catalog]);
 
   return (
@@ -280,6 +297,7 @@ export function AiLabLevelPage({
         completedLevels: Array.from({ length: levelIndex }, (_, index) => index + 1),
         levelLinks: progressLinks,
         currentLevelPath,
+        disableProgressionLinks,
       }}
       sidebarProps={{
         activeTab,
@@ -351,6 +369,52 @@ export function AiLabGuidedLevelPage() {
       continueTo="/levels"
       workspace="guided"
       levelLinks={aiLabGuidedLevelLinks}
+    />
+  );
+}
+
+export function AiLabPlaytestLookLevelPage() {
+  return (
+    <AiLabLevelPage
+      currentLevelPath="/levels/progression-ailab-look"
+      title="Look at the animals"
+      subtitle="Bird, mammal, or fish"
+      config={aiLabPlaytestLookConfig}
+      continueTo="/levels/progression-ailab-try"
+      levelLinks={aiLabPlaytestLevelLinks}
+      instructionsMarkdown={aiLabPlaytestLookInstructions}
+      disableProgressionLinks
+    />
+  );
+}
+
+export function AiLabPlaytestTryLevelPage() {
+  return (
+    <AiLabLevelPage
+      currentLevelPath="/levels/progression-ailab-try"
+      title="Try a model that already exists"
+      subtitle="Bird, mammal, or fish"
+      config={aiLabPlaytestTryConfig}
+      continueTo="/levels/progression-ailab-build"
+      levelLinks={aiLabPlaytestLevelLinks}
+      instructionsMarkdown={aiLabPlaytestTryInstructions}
+      disableProgressionLinks
+    />
+  );
+}
+
+export function AiLabPlaytestBuildLevelPage() {
+  return (
+    <AiLabLevelPage
+      currentLevelPath="/levels/progression-ailab-build"
+      title="Build your own, then bounce"
+      subtitle="Bird, mammal, or fish"
+      config={aiLabPlaytestBuildConfig}
+      continueLabel="Finish"
+      continueTo="/levels"
+      levelLinks={aiLabPlaytestLevelLinks}
+      instructionsMarkdown={aiLabPlaytestBuildInstructions}
+      disableProgressionLinks
     />
   );
 }

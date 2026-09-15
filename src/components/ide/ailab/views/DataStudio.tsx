@@ -218,25 +218,27 @@ function TrainRail({
       <div className={styles.railBody}>
         <section className={styles.configCard}>
           <div className={styles.cardFields}>
-            <Dropdown
-              role="input"
-              size="small"
-              color="secondary"
-              width="full"
-              menuWidth="100%"
-              label="Predict:"
-              labelStyle="thick"
-              helperText={
-                lab.labelCardinality?.text ??
-                "The answer your model guesses"
-              }
-              sentiment={lab.labelCardinality?.sentiment ?? "default"}
-              placeholder="Choose a column"
-              value={lab.labelColumn ?? ""}
-              options={labelOptions}
-              onChange={(value) => lab.setLabelColumn(String(value))}
-              aria-label="Column to predict"
-            />
+            {lab.config.hideLabelSelect ? null : (
+              <Dropdown
+                role="input"
+                size="small"
+                color="secondary"
+                width="full"
+                menuWidth="100%"
+                label="Predict:"
+                labelStyle="thick"
+                helperText={
+                  lab.labelCardinality?.text ??
+                  "The answer your model guesses"
+                }
+                sentiment={lab.labelCardinality?.sentiment ?? "default"}
+                placeholder="Choose a column"
+                value={lab.labelColumn ?? ""}
+                options={labelOptions}
+                onChange={(value) => lab.setLabelColumn(String(value))}
+                aria-label="Column to predict"
+              />
+            )}
             <div ref={featuresMenu.ref}>
               <Dropdown
                 role="input"

@@ -19,5 +19,9 @@ describe("getLevelTypeIconConfig", () => {
       family: "solid",
       name: "rectangle-list",
     });
+    expect(getLevelTypeIconConfig("/levels/progression-ailab-look")).toEqual({
+      family: "solid",
+      name: "chart-scatter",
+    });
   });
 });
