@@ -19,6 +19,7 @@ import {
   assessmentBuilderLevelLinks,
   aiChatLabLevelLinks,
   aiLabIndexLinks,
+  aiLabPlaytestLevelLinks,
   bubbleChoiceLevelLinks,
   cfuIndexGroups,
   cfuLevelLinks,
@@ -213,6 +214,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/sketchlab": "Sketch Lab",
   "/levels/aichatlab": "AI Chat Lab",
   "/levels/ailab": "AI Lab",
+  "/levels/progression-ailab": "AI Lab",
   "/levels/weblab2": "Web Lab 2",
   "/levels/levelgroup": "Assessment experiment",
   "/levels/bubble-choice": "Bubble choice",
@@ -569,6 +571,33 @@ export function LevelsIndexPage() {
             onToggle={() => setExperimentsExpanded((current) => !current)}
           >
             <div className={styles.entryGrid}>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>AI Lab playtest</h3>
+                  <p className={styles.cardDescription}>
+                    Three-level stagger on Bird / mammal / fish. Decision Tree
+                    locked. Continue is the only door between stages.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {aiLabPlaytestLevelLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
               <div className={`${styles.card} ${styles.cardWithDescription}`}>
                 <div className={styles.cardHeader}>
                   <h3 className={styles.cardTitle}>

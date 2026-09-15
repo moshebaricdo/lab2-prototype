@@ -324,6 +324,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
   }, []);
 
   const setLabelColumn = useCallback((columnId: string) => {
+    if (config.hideLabelSelect) return;
     setState((current) => ({
       ...current,
       labelColumn: columnId,

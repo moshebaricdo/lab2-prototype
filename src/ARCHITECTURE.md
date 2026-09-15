@@ -168,6 +168,7 @@ src/
 ├── lib/
 │   └── assessmentBuilder/          # Canonical schema adapters, bank/draft storage, scoring
 ├── pages/                          # Route-level entry points grouped by level type
+│   ├── ailab/
 │   ├── aichatlab/
 │   ├── bubble-choice/
 │   ├── design-system/              # Standalone DS tooling routes (not level index entries)
