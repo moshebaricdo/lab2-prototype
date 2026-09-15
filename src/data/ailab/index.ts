@@ -8,16 +8,52 @@ export { tacoTruckDataset } from "./tacoTruck";
 export { tacoTruckGuidedDataset } from "./tacoTruckGuided";
 export {
   aiLabGuidedSectionInstructions,
+  aiLabPlaytestBuildInstructions,
+  aiLabPlaytestLookInstructions,
+  aiLabPlaytestTryInstructions,
   aiLabPretrainedInstructions,
   aiLabSectionInstructions,
   aiLabStudioSectionInstructions,
 } from "./instructions";
 
+function datasetById(id: string) {
+  const dataset = csvDatasets.find((entry) => entry.id === id);
+  if (!dataset) {
+    throw new Error(`Missing AI Lab dataset: ${id}`);
+  }
+  return dataset;
+}
+
+/** Playtest sheet. Do not auto-pretrain without a feature list — Animal would win. */
+export const aiLabPlaytestDataset = datasetById("bird_mammal_or_fish");
+
+export const AI_LAB_PLAYTEST_LABEL_COLUMN = "class";
+export const AI_LAB_PLAYTEST_TREE_FEATURES = [
+  "has_feathers",
+  "breathes_with_lungs",
+] as const;
+
+const aiLabPlaytestShared = {
+  dataset: aiLabPlaytestDataset,
+  lockDataset: true,
+  requireDatasetChoice: false,
+  algorithmLock: "decisionTree" as const,
+  hideLabelSelect: true,
+  allowDataEdit: false,
+  showExport: false,
+  trainAsOverlay: true,
+  defaultDataView: "table" as const,
+};
+
 // Studio picker is every CSV in src/data/ailab/datasets/*.csv (build-time glob).
 export const aiLabStudioCatalog = csvDatasets;
 
+const studioDefaultDataset =
+  csvDatasets.find((dataset) => dataset.id === "catsanddogs_v2") ??
+  csvDatasets[0]!;
+
 export const aiLabTrainYourselfConfig: AiLabLevelConfig = {
-  dataset: csvDatasets[0]!,
+  dataset: studioDefaultDataset,
   availableDatasets: aiLabStudioCatalog,
   lockDataset: false,
   requireDatasetChoice: true,
@@ -51,4 +87,31 @@ export const aiLabGuidedConfig: AiLabLevelConfig = {
   classificationOnly: true,
   defaultKnnK: 3,
   trainAsOverlay: true,
+};
+
+export const aiLabPlaytestLookConfig: AiLabLevelConfig = {
+  ...aiLabPlaytestShared,
+  hideTestTab: true,
+  hideTrainTab: true,
+  showModelDetails: false,
+  initialSection: "dataset",
+};
+
+export const aiLabPlaytestTryConfig: AiLabLevelConfig = {
+  ...aiLabPlaytestShared,
+  hideDatasetTab: true,
+  hideTrainTab: true,
+  showModelDetails: true,
+  initialSection: "test",
+  pretrained: {
+    algorithm: "decisionTree",
+    labelColumn: AI_LAB_PLAYTEST_LABEL_COLUMN,
+    selectedFeatures: [...AI_LAB_PLAYTEST_TREE_FEATURES],
+  },
+};
+
+export const aiLabPlaytestBuildConfig: AiLabLevelConfig = {
+  ...aiLabPlaytestShared,
+  showModelDetails: true,
+  initialSection: "dataset",
 };
