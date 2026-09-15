@@ -1,6 +1,6 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { useState } from "react";
-import { Button, Dropdown } from "@moshebaricdo/cads-react";
+import { Button, Dropdown } from "@moshebari/cads-react";
 import { useTheme, type ThemeMode } from "../../../hooks/useTheme";
 import styles from "./GlobalNavMenu.module.scss";
 import navStyles from "./TopNavigation.module.scss";

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { Dialog } from "../../ui/Dialog";
-import { Button, Checkbox, Dropdown, Slider, TextInput } from "@moshebaricdo/cads-react";
+import { Button, Checkbox, Dropdown, Slider, TextInput } from "@moshebari/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type {
   AgentAccent,

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { Button, TextInput, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, TextInput, Tooltip } from "@moshebari/cads-react";
 import type {
   SketchImageNodeData,
   SketchLineNodeData,

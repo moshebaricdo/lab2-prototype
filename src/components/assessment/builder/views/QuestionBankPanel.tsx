@@ -5,8 +5,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { Button, Dropdown, Tag, TextInput, Tooltip } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Button, Dropdown, Tag, TextInput, Tooltip } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import type {
   AssessmentArtifact,
   AssessmentCourseBank,

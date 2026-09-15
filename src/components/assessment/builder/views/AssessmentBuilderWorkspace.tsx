@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Dialog, SegmentedButton, Toast } from "@moshebaricdo/cads-react";
+import { Button, Dialog, SegmentedButton, Toast } from "@moshebari/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";

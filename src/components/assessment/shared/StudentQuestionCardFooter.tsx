@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import type { StudentIncorrectFooterLayout } from "../../../lib/assessmentBuilder";
 import styles from "./StudentQuestionCardFooter.module.scss";
 

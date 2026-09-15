@@ -12,8 +12,8 @@ import {
   Tabs,
   TextInput,
   Tooltip,
-} from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+} from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type {

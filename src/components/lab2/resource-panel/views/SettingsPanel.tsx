@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Dropdown, TextInput } from "@moshebaricdo/cads-react";
+import { Button, Dropdown, TextInput } from "@moshebari/cads-react";
 import { useTutorApiSettings } from "../../../../hooks/useTutorApiSettings";
 import styles from "./SettingsPanel.module.scss";
 

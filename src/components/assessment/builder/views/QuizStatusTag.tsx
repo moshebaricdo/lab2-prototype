@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Popover, Tag } from "@moshebaricdo/cads-react";
+import { Popover, Tag } from "@moshebari/cads-react";
 import {
   deriveQuizStatus,
   liveUnitCount,

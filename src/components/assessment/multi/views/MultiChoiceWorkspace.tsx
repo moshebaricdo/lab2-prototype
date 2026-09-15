@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { Button, Checkbox, Radio } from "@moshebaricdo/cads-react";
+import { Button, Checkbox, Radio } from "@moshebari/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
 import {

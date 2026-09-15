@@ -1,4 +1,4 @@
-import { AiChatFileChip, type AiChatFileChipType } from "@moshebaricdo/cads-react";
+import { AiChatFileChip, type AiChatFileChipType } from "@moshebari/cads-react";
 import { getFileChipIconProps } from "../../../../ui/fileChipMeta";
 import { UploadProgressRing } from "../../../../ui/UploadProgressRing";
 import type { ChatAttachment } from "../../../../../types/chat";

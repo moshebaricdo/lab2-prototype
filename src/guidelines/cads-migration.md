@@ -1,6 +1,6 @@
 # CADS migration findings (Lab2 sandbox)
 
-Handoff notes for migrating the rest of this prototype from local `App*` / `--ds-*` to packaged CADS (`@moshebaricdo/cads-react` + `@moshebaricdo/cads-variables` from GitHub Packages).
+Handoff notes for migrating the rest of this prototype from local `App*` / `--ds-*` to packaged CADS (`@moshebari/cads-react` + `@moshebari/cads-variables` from public npm).
 
 Related: `.cursor/skills/cads-prototyping/SKILL.md`, `color-theming.md`, `/design-system/cads`. CADS source lives in `moshebaricdo/cads`; this repo consumes published packages, not a sibling checkout.
 
@@ -29,9 +29,9 @@ Parity sandbox: `/design-system/cads`. Spike consumer: `/levels/aichatlab*`.
 
 ## Architecture rules
 
-1. **Do not vendor CADS into this repo.** Import `@moshebaricdo/cads-react` and `@moshebaricdo/cads-variables` from GitHub Packages (`^0.1.2`). CI and fresh clones use `.npmrc` + `NODE_AUTH_TOKEN` (see below). Do not commit a `file:../cads` rewrite.
+1. **Do not vendor CADS into this repo.** Import `@moshebari/cads-react` and `@moshebari/cads-variables` from public npm (`^0.2.0`). Do not commit a `file:../cads` rewrite.
 2. **One provider:** `src/components/lab2/CadsLabProvider.tsx` wraps `Lab2Shell` (`CadsProvider baseline={false}`). Nested providers are unnecessary for Lab2 routes.
-3. **Consumers import CADS, never raw MUI** (`Button` from `@moshebaricdo/cads-react`).
+3. **Consumers import CADS, never raw MUI** (`Button` from `@moshebari/cads-react`).
 4. **New UI on migrated surfaces** uses CADS + Foundations names. Do not add new `--ds-*` or `App*` usage there.
 5. **Migrate by surface**, not big-bang. Prefer: header → IDE shared chrome → per-lab workspace → assessment.
 
@@ -78,7 +78,7 @@ Panel-header icon buttons: always `variant="text" color="tertiary" size="extraSm
 
 ## Foundations token mapping (SCSS)
 
-On CADS-backed surfaces, use **unprefixed** vars from `@moshebaricdo/cads-variables` (already loaded by `CadsLabProvider`).
+On CADS-backed surfaces, use **unprefixed** vars from `@moshebari/cads-variables` (already loaded by `CadsLabProvider`).
 
 | Local / legacy | CADS Foundations |
 |---|---|
@@ -98,10 +98,10 @@ Dark mode: CADS keys off `.dark` (or `[data-theme='Dark']`) on an **ancestor**. 
 
 ## Pitfalls (read before migrating)
 
-1. **Vite must not prebundle CADS** — Published `@moshebaricdo/cads-react` injects styles via `import './button.css'` from `dist`. Vite’s esbuild optimizer drops those imports, so buttons/inputs look like unstyled MUI. `vite.config.ts` **excludes** `@moshebaricdo/cads-*` from `optimizeDeps`, and **includes** CJS transitives (`prop-types`, `react-is`, …) plus the `@mui/material/*` subpaths CADS deep-imports — otherwise MUI ESM does `import PropTypes from 'prop-types'` against raw CJS and the app blanks (`does not provide an export named 'default'`). Linked `file:../cads` skipped prebundling automatically; GitHub Packages does not. After changing that config, `rm -rf node_modules/.vite` and restart Vite.
-2. **Local `file:` iteration (do not commit)** — To test unpublished CADS changes: `npm install ../cads/packages/react ../cads/packages/variables`. After rebuilding CADS, clear `node_modules/.vite` and restart Vite. Stale CSS-module hashes make components look “unstyled” / full-width / broken (seen with `AiChatMessage`). Revert to `^0.1.2` before committing.
+1. **Vite must not prebundle CADS** — Published `@moshebari/cads-react` injects styles via `import './button.css'` from `dist`. Vite’s esbuild optimizer drops those imports, so buttons/inputs look like unstyled MUI. `vite.config.ts` **excludes** `@moshebari/cads-*` from `optimizeDeps`, and **includes** CJS transitives (`prop-types`, `react-is`, …) plus the `@mui/material/*` subpaths CADS deep-imports — otherwise MUI ESM does `import PropTypes from 'prop-types'` against raw CJS and the app blanks (`does not provide an export named 'default'`). Linked `file:../cads` skipped prebundling automatically; published packages do not. After changing that config, `rm -rf node_modules/.vite` and restart Vite.
+2. **Local `file:` iteration (do not commit)** — To test unpublished CADS changes: `npm install ../cads/packages/react ../cads/packages/variables`. After rebuilding CADS, clear `node_modules/.vite` and restart Vite. Stale CSS-module hashes make components look “unstyled” / full-width / broken (seen with `AiChatMessage`). Revert to `^0.2.0` before committing.
 3. **Font files outside allow list** — Local `file:` / symlinked CADS icon fonts may warn under Vite `server.fs.allow`; extend allow list if icons 404 in dev. Published packages do not need this.
-4. **`Button` `fullWidth`** — Fixed upstream in CADS (`--btn-width: 100%`). If Continue/Finish hugs again, confirm you’re on a rebuilt `@moshebaricdo/cads-react`.
+4. **`Button` `fullWidth`** — Fixed upstream in CADS (`--btn-width: 100%`). If Continue/Finish hugs again, confirm you’re on a rebuilt `@moshebari/cads-react`.
 5. **Action `Dropdown` `iconOnly`** — Added upstream for kebab overflow. Needs rebuilt CADS; pass `aria-label` + `startIconName`.
 6. **Checklist `Dropdown` `menuWidth`** — CADS forces checklist menus to hug content, so `menuWidth="trigger"` is ignored. Assessment builder Course (and similar full-width checklists) sync the portaled menu to the trigger on open until CADS respects the prop. New call sites should use the shared `useChecklistMenuWidth` hook (`src/hooks/useChecklistMenuWidth.ts`; AI Lab's **Using:** field is the reference) instead of copying the DOM sync.
 7. **Slider track lag** — MUI track `left`/`width` transitions can lag the thumb; AI Chat Lab kills them in workspace SCSS. Prefer upstreaming into CADS Slider later.
@@ -109,7 +109,7 @@ Dark mode: CADS keys off `.dark` (or `[data-theme='Dark']`) on an **ancestor**. 
 9. **Selected vs brand** — Never paint selected chrome with brand fills (see `color-theming.md`).
 10. **AiChatMessage hug** — Width/hug lives in CADS. Local `.chatMessageList` should not force stretch in a way that fights `align-self` / `fit-content`.
 11. **Header white-on-brand** — CADS Button has no white tone. On the purple header, override `--btn-bg` / `--btn-fg` / `--btn-border` / `--btn-bg-hover` with `!important` so they beat the inline chrome vars.
-12. **Package name** — Consumer imports are `@moshebaricdo/cads-*` (not `@codeai`). Icons: `@moshebaricdo/cads-react/icons`. CSS: `@moshebaricdo/cads-variables/variables.css`.
+12. **Package name** — Consumer imports are `@moshebari/cads-*` (not `@moshebaricdo` or `@codeai`). Icons: `@moshebari/cads-react/icons`. CSS: `@moshebari/cads-variables/variables.css`.
 
 ---
 
@@ -144,13 +144,13 @@ Optional follow-ups for CADS: Slider track transition kill; accept `[data-theme=
 
 ---
 
-## Install (GitHub Packages)
+## Install (public npm)
 
-Packages: [`cads-react`](https://github.com/moshebaricdo/cads/pkgs/npm/cads-react) and [`cads-variables`](https://github.com/moshebaricdo/cads/pkgs/npm/cads-variables). Repo-root `.npmrc` scopes `@moshebaricdo` to `https://npm.pkg.github.com` and reads `NODE_AUTH_TOKEN` (never commit a real token).
+Packages: [`@moshebari/cads-react`](https://www.npmjs.com/package/@moshebari/cads-react) and [`@moshebari/cads-variables`](https://www.npmjs.com/package/@moshebari/cads-variables) `^0.2.0`. No `.npmrc` token.
 
-**Local:** `export NODE_AUTH_TOKEN=ghp_...` (classic PAT with `read:packages`), then `npm ci`.
-
-**CI (GitHub Pages):** repo secret `NODE_AUTH_TOKEN` is passed into `npm ci` in `.github/workflows/deploy-pages.yml`. Until that secret exists, Pages install will 401.
+```bash
+npm install
+```
 
 **Local CADS iteration (temporary, do not commit):**
 
@@ -158,23 +158,16 @@ Packages: [`cads-react`](https://github.com/moshebaricdo/cads/pkgs/npm/cads-reac
 npm install ../cads/packages/react ../cads/packages/variables
 ```
 
-Restore `^0.1.2` in `package.json` / `package-lock.json` before committing.
+Restore `^0.2.0` in `package.json` / `package-lock.json` before committing.
 
 ---
 
 ## Verification checklist
 
 ```bash
-# Fresh clone / CI (GitHub Packages):
-export NODE_AUTH_TOKEN=ghp_...   # read:packages
 npm ci
 npm run typecheck
 npm run build
-
-# After editing a local ../cads checkout (do not commit the file: rewrite):
-pnpm --dir ../cads --filter @moshebaricdo/cads-react build
-rm -rf node_modules/.vite
-npm run dev
 ```
 
 Manual: light/dark via header Username menu; open a `Dropdown` menu in dark mode; AI Chat Lab tabs/slider/chat; resource panel Backpack filters + item kebab; Continue/Finish full width.

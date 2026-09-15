@@ -1,5 +1,5 @@
 import { Panel, useReactFlow } from "@xyflow/react";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import styles from "./SketchCanvasControls.module.scss";
 
 interface SketchCanvasControlsProps {

@@ -1,4 +1,4 @@
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { predictionStatement } from "../../../../lib/aiLab";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import { DatasetViews } from "./DatasetViews";

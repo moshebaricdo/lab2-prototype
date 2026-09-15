@@ -4,7 +4,7 @@ import {
   Button,
   CloseIconButton,
   TextInput,
-} from "@moshebaricdo/cads-react";
+} from "@moshebari/cads-react";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import type {
   Annotation,

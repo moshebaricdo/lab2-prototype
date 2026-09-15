@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Tag } from "@moshebaricdo/cads-react";
+import { Button, Tag } from "@moshebari/cads-react";
 import { ScrollArea } from "../../../ui/scroll-area";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import styles from "./RubricPanel.module.scss";

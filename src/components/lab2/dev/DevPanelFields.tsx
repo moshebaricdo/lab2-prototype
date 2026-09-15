@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button, Dropdown, Slider, TextInput, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Dropdown, Slider, TextInput, Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type { DevPanelField, DevPanelUploadedFile } from "./types";
 import styles from "./DevPanel.module.scss";

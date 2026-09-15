@@ -1,4 +1,4 @@
-import { Button, Dropdown } from "@moshebaricdo/cads-react";
+import { Button, Dropdown } from "@moshebari/cads-react";
 import type { BlankQuestionKind } from "../../../../lib/assessmentBuilder";
 import { CREATE_QUESTION_OPTIONS } from "./questionKindMeta";
 import styles from "./OutlineAddToolbar.module.scss";

@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { Button, Tabs, Tag, Tooltip } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Button, Tabs, Tag, Tooltip } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import type { UnitOption } from "../../../../lib/assessmentBuilder";
 import { newQuestionHeaderLabel } from "../../../../lib/assessmentBuilder";
 import type { QuestionItem } from "../../../../types/assessmentBuilder";

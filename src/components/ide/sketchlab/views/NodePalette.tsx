@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Button, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Tooltip } from "@moshebari/cads-react";
 import type { SketchCanvasTool, SketchShapeKind } from "../../../../types/sketchLab";
 import { SKETCH_ICONS, type SketchIconKey } from "../sketchLabIcons";
 import styles from "./NodePalette.module.scss";

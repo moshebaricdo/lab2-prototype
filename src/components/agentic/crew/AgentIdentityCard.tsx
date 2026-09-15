@@ -1,6 +1,6 @@
 import * as Popover from "@radix-ui/react-popover";
 import { useId, useState, type ReactNode } from "react";
-import { TextInput } from "@moshebaricdo/cads-react";
+import { TextInput } from "@moshebari/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import dropdownStyles from "../../ui/AppDropdown.module.scss";
 import {

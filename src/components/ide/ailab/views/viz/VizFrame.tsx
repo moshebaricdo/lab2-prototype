@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import styles from "./VizFrame.module.scss";
 
 interface VizFrameProps {

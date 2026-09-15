@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Button, Dropdown, FieldWrapper, TextInput } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Button, Dropdown, FieldWrapper, TextInput } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import {
   groupStandardsByFramework,
   type TaxonomyOption,

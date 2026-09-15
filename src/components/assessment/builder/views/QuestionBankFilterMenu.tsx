@@ -5,8 +5,8 @@ import {
   Dropdown,
   FieldWrapper,
   TextInput,
-} from "@moshebaricdo/cads-react";
-import { FaIcon, type FaIconName } from "@moshebaricdo/cads-react/icons";
+} from "@moshebari/cads-react";
+import { FaIcon, type FaIconName } from "@moshebari/cads-react/icons";
 import type {
   AssessmentCourseBank,
   QuestionItemKind,

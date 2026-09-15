@@ -1,4 +1,4 @@
-import { Alert } from "@moshebaricdo/cads-react";
+import { Alert } from "@moshebari/cads-react";
 import styles from "./VersionBanner.module.scss";
 
 interface VersionBannerProps {

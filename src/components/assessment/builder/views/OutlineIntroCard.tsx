@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Button, TextInput } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Button, TextInput } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import type { AssessmentIntro } from "../../../../types/assessmentBuilder";
 import styles from "./OutlineIntroCard.module.scss";
 

@@ -1,4 +1,4 @@
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import type { ModelInspectorTab } from "./ModelInspector";
 

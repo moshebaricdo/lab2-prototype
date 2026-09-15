@@ -16,7 +16,7 @@ import {
   Button,
   Dropdown,
   Tooltip,
-} from "@moshebaricdo/cads-react";
+} from "@moshebari/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import type { ChatAttachment } from "../../../../../types/chat";

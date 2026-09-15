@@ -1,4 +1,4 @@
-import { Button, Dropdown } from "@moshebaricdo/cads-react";
+import { Button, Dropdown } from "@moshebari/cads-react";
 import styles from "./SketchLabHeader.module.scss";
 
 interface SketchLabHeaderProps {

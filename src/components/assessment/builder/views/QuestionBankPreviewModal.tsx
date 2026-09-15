@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button, Dropdown, Modal, Tabs, Tag } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Button, Dropdown, Modal, Tabs, Tag } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import type {
   AssessmentArtifact,
   AssessmentSection,

@@ -6,8 +6,8 @@ import {
   Tag,
   TextInput,
   Tooltip,
-} from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+} from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import type {
   AiLabColumn,

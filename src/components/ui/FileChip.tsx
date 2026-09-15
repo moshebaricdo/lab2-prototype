@@ -1,4 +1,4 @@
-import { Button, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Tooltip } from "@moshebari/cads-react";
 import { FaIcon, type FaIconFamily } from "./icons/FaIcon";
 import type { FaBrandIconName } from "../../icons/faBrandsCodepoints";
 import type { FaIconName } from "../../icons/faProRegularCodepoints";

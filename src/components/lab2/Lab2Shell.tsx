@@ -21,7 +21,7 @@ import {
   isProgressionLevelLinks,
   mapLevelLinksWithShareMode,
 } from "../../lib/levelShareLinks";
-import { Dialog } from "@moshebaricdo/cads-react";
+import { Dialog } from "@moshebari/cads-react";
 import { AnnotationOverlay } from "./dev/AnnotationOverlay";
 import { BackpackProvider } from "../../hooks/BackpackContext";
 import { BackpackSeedEffect } from "./BackpackSeedEffect";

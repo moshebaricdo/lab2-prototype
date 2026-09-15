@@ -11,7 +11,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import { ScrollArea } from "../../../ui/scroll-area";
 import {
   isSectioned,

@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { Button, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Tooltip } from "@moshebari/cads-react";
 import { AiTutorIcon } from "../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type { SidebarProps, SidebarTab } from "./Sidebar.types";

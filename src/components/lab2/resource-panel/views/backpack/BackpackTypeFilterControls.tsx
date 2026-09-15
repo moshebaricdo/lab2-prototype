@@ -1,4 +1,4 @@
-import { Dropdown } from "@moshebaricdo/cads-react";
+import { Dropdown } from "@moshebari/cads-react";
 import {
   BACKPACK_SORT_OPTIONS,
   backpackTypeFilterIconName,

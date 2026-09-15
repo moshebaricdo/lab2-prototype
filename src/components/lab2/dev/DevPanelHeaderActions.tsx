@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Button, Dropdown, TextInput, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Dropdown, TextInput, Tooltip } from "@moshebari/cads-react";
 import { Dialog } from "../../ui/Dialog";
 import { useSavedVariants } from "../../../hooks/useSavedVariants";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";

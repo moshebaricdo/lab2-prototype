@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, TextInput } from "@moshebaricdo/cads-react";
+import { Modal, TextInput } from "@moshebari/cads-react";
 import { CadsLabProvider } from "../../../lab2/CadsLabProvider";
 import styles from "../../shared/CreateFileModal.module.scss";
 

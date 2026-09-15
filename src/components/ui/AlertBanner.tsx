@@ -1,4 +1,4 @@
-import { CloseIconButton, Link } from "@moshebaricdo/cads-react";
+import { CloseIconButton, Link } from "@moshebari/cads-react";
 import {
   type AnchorHTMLAttributes,
   type HTMLAttributes,

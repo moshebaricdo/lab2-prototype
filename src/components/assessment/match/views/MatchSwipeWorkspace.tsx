@@ -6,7 +6,7 @@ import {
   type TouchEvent as ReactTouchEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {

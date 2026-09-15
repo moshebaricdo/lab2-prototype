@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { HexColorPicker } from "react-colorful";
-import { Tooltip } from "@moshebaricdo/cads-react";
+import { Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import styles from "./PreviewColorPicker.module.scss";
 

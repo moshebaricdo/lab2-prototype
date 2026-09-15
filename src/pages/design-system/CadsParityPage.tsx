@@ -10,13 +10,13 @@ import {
   TextField,
   Tooltip,
   cadsManifest,
-} from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+} from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import { useTheme } from "../../hooks/useTheme";
 import styles from "./CadsParityPage.module.scss";
 
 /**
- * Parity sandbox for `@moshebaricdo/cads-*` packages (GitHub Packages).
+ * Parity sandbox for `@moshebari/cads-*` packages (public npm).
  * Local App* components remain the Lab2 prototype atoms — this route is for
  * evaluating packaged CADS components side-by-side, not a big-bang replace.
  */
@@ -69,12 +69,11 @@ export default function CadsParityPage() {
 
       <main className={styles.main}>
         <div className={styles.intro}>
-          <h1 className={styles.title}>@moshebaricdo/cads-react</h1>
+          <h1 className={styles.title}>@moshebari/cads-react</h1>
           <p className={styles.lede}>
-            Packaged MUI-wrapped CADS components from the sibling{" "}
-            <code>cads</code> repo. Lab2 <code>App*</code> atoms are unchanged —
-            use this route to compare fidelity and opt new prototypes into the
-            packages. Manifest v{cadsManifest.version} ·{" "}
+            Packaged MUI-wrapped CADS components from public npm. Lab2{" "}
+            <code>App*</code> atoms are unchanged — use this route to compare
+            fidelity and opt new prototypes into the packages. Manifest v{cadsManifest.version} ·{" "}
             {cadsManifest.components.length} entries.
           </p>
         </div>

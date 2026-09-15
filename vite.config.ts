@@ -117,8 +117,8 @@ export default defineConfig({
       "@mui/material/styles",
     ],
     exclude: [
-      "@moshebaricdo/cads-react",
-      "@moshebaricdo/cads-variables",
+      "@moshebari/cads-react",
+      "@moshebari/cads-variables",
     ],
   },
   server: {

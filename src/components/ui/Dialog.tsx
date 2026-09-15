@@ -1,4 +1,4 @@
-import { CloseIconButton } from "@moshebaricdo/cads-react";
+import { CloseIconButton } from "@moshebari/cads-react";
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "../../hooks/useTheme";

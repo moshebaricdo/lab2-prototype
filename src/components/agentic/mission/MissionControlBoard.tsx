@@ -9,7 +9,7 @@ import type {
   MissionTaskStatus,
 } from "../../../types/agentLab";
 import type { MissionTaskScript } from "../../../data/agentic";
-import { Button, Dropdown } from "@moshebaricdo/cads-react";
+import { Button, Dropdown } from "@moshebari/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import styles from "./MissionControlBoard.module.scss";

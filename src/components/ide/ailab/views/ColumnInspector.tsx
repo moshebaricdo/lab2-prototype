@@ -1,4 +1,4 @@
-import { Button, Tag } from "@moshebaricdo/cads-react";
+import { Button, Tag } from "@moshebari/cads-react";
 import type { AiLabColumn, AiLabDataRow } from "../../../../types/aiLab";
 import {
   frequencies,

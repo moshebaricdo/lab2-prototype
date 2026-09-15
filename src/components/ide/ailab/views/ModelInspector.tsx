@@ -5,7 +5,7 @@ import {
   SegmentedButton,
   Tag,
   TextInput,
-} from "@moshebaricdo/cads-react";
+} from "@moshebari/cads-react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import {
   columnById,

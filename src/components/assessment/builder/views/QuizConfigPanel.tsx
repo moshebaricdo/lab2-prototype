@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Dialog, Dropdown, TextInput, Toggle, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Dialog, Dropdown, TextInput, Toggle, Tooltip } from "@moshebari/cads-react";
 import type { AssessmentArtifact, QuizPurpose } from "../../../../types/assessmentBuilder";
 import {
   applyQuizPurpose,

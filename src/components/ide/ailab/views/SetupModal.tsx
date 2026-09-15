@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, Radio } from "@moshebaricdo/cads-react";
+import { Modal, Radio } from "@moshebari/cads-react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import type { AiLabAlgorithmId } from "../../../../types/aiLab";
 import styles from "./SetupModal.module.scss";

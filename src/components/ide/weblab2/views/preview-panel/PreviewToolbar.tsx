@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { Button, SegmentedButton, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, SegmentedButton, Tooltip } from "@moshebari/cads-react";
 import {
   findPreviewHtmlFile,
   normalizePreviewPath,

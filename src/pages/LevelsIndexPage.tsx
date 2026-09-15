@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Dropdown, Tooltip } from "@moshebari/cads-react";
 import { Dialog } from "../components/ui/Dialog";
 import { CadsLabProvider } from "../components/lab2/CadsLabProvider";
 import { useState, useCallback, type ReactNode } from "react";

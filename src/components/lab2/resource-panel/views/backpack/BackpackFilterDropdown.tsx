@@ -1,4 +1,4 @@
-import { Dropdown } from "@moshebaricdo/cads-react";
+import { Dropdown } from "@moshebari/cads-react";
 import styles from "./BackpackFilterDropdown.module.scss";
 
 interface BackpackFilterDropdownOption<Id extends string> {

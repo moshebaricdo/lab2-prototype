@@ -6,7 +6,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import emptyStateNoFilesOpen from "../../../../assets/empty-states/empty-state-no-files-open.svg";
 import type { FileItem } from "../../../../types/file";
 import { getFileTypeIconConfigForFileItem } from "../../../../lib/fileTypeIcons";
-import { Button, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { EmptyState } from "../EmptyState";
 import { CodeMirrorHost } from "./CodeMirrorHost";

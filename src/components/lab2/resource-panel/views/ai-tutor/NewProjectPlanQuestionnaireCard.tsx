@@ -6,7 +6,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { Button, TextInput } from "@moshebaricdo/cads-react";
+import { Button, TextInput } from "@moshebari/cads-react";
 import { FileChip } from "../../../../ui/FileChip";
 import {
   getFileChipIconProps,

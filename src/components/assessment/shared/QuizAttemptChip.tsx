@@ -1,4 +1,4 @@
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import styles from "./QuizAttemptChip.module.scss";
 
 interface QuizAttemptChipProps {

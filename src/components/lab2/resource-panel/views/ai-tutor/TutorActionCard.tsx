@@ -1,4 +1,4 @@
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { getFileChipIconProps } from "../../../../ui/fileChipMeta";
 import styles from "./TutorActionCard.module.scss";

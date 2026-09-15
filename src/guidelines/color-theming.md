@@ -88,16 +88,16 @@ Route `/design-system/colors`. Single CodeAI document in `localStorage` (`lab2:c
 
 ## Standalone CADS packages
 
-The Lab2 sandbox keeps its local `App*` atoms and committed `codeAiColorSystem.json` for exploration. Packaged CADS is published from **`moshebaricdo/cads`** to GitHub Packages:
+The Lab2 sandbox keeps its local `App*` atoms and committed `codeAiColorSystem.json` for exploration. Packaged CADS is published from **`moshebaricdo/cads`** to public npm:
 
 | Package | Role |
 |---|---|
-| `@moshebaricdo/cads-variables` | Canonical variables document + generated `variables.css` / MUI theme |
-| `@moshebaricdo/cads-react` | MUI-wrapped components + icons (`/icons` subpath) |
+| `@moshebari/cads-variables` | Canonical variables document + generated `variables.css` / MUI theme |
+| `@moshebari/cads-react` | MUI-wrapped components + icons (`/icons` subpath) |
 
-Installed here as `@moshebaricdo/cads-react` / `@moshebaricdo/cads-variables` `^0.1.2` from `https://npm.pkg.github.com`. Parity route: **`/design-system/cads`**. New prototypes may opt into the packages; do not big-bang replace `App*`.
+Installed here as `@moshebari/cads-react` / `@moshebari/cads-variables` `^0.2.0`. Parity route: **`/design-system/cads`**. New prototypes may opt into the packages; do not big-bang replace `App*`.
 
-**Foundations on Lab2 CADS surfaces:** `Lab2Shell` → `CadsLabProvider` loads `@moshebaricdo/cads-variables/variables.css`. Lab2 chrome (header, resource panel, IDE, assessment, dev panel) uses **unprefixed** Foundations names (`--background-neutral-primary`, `--shape-sm`, …). Color sandbox and teacher dashboard may still use generated `--ds-*` from `tokens.css`. Prefer Foundations names on any new CADS-backed surface.
+**Foundations on Lab2 CADS surfaces:** `Lab2Shell` → `CadsLabProvider` loads `@moshebari/cads-variables/variables.css`. Lab2 chrome (header, resource panel, IDE, assessment, dev panel) uses **unprefixed** Foundations names (`--background-neutral-primary`, `--shape-sm`, …). Color sandbox and teacher dashboard may still use generated `--ds-*` from `tokens.css`. Prefer Foundations names on any new CADS-backed surface.
 
 **Dark mode:** `useTheme` sets `document.documentElement` `data-theme` and toggles the `.dark` class. CADS requires `.dark` (or `[data-theme='Dark']`) on an ancestor; portaled Dropdown/Tooltip menus render under `body`, so the html `.dark` class is what themes them.
 

@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
-import { AiChatMessage, Button } from "@moshebaricdo/cads-react";
+import { AiChatMessage, Button } from "@moshebari/cads-react";
 import { ScrollArea } from "../../../../ui/scroll-area";
 import { FileChip } from "../../../../ui/FileChip";
 import { getFileChipIconProps, fileExtensionLabelFromName } from "../../../../ui/fileChipMeta";

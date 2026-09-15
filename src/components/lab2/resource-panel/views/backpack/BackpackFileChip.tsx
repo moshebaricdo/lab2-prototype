@@ -1,4 +1,4 @@
-import { Button, Dropdown, Tag, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Dropdown, Tag, Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import {

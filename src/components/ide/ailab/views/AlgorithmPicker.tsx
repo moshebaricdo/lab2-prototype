@@ -1,4 +1,4 @@
-import { Radio } from "@moshebaricdo/cads-react";
+import { Radio } from "@moshebari/cads-react";
 import { AppText } from "../../../ui/AppText";
 import type { AiLabAlgorithmId } from "../../../../types/aiLab";
 import styles from "./AiLabWorkspace.module.scss";

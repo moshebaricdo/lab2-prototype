@@ -6,7 +6,7 @@ import {
   Dropdown,
   SegmentedButton,
   Tooltip,
-} from "@moshebaricdo/cads-react";
+} from "@moshebari/cads-react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import { predictionStatement } from "../../../../lib/aiLab";
 import styles from "./AiLabGuidedWorkspace.module.scss";

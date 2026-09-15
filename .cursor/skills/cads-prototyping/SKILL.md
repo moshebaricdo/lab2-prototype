@@ -1,6 +1,6 @@
 ---
 name: cads-prototyping
-description: Prototype UI with CADS (@moshebaricdo/cads-react + @moshebaricdo/cads-variables) matching Figma fidelity. Use when building screens from CADS Figma mocks, implementing designer prototypes, or when the user asks for CodeAI design-system components.
+description: Prototype UI with CADS (@moshebari/cads-react + @moshebari/cads-variables) matching Figma fidelity. Use when building screens from CADS Figma mocks, implementing designer prototypes, or when the user asks for CodeAI design-system components.
 ---
 
 # CADS Prototyping
@@ -10,16 +10,16 @@ Build UI with the CodeAI Design System packages — never invent components, pro
 ## Sources of truth
 
 1. **Figma:** `https://www.figma.com/design/DGekOeToRVifvFAhfqpeC1/CodeAI-Design-System--CADS-` (`fileKey: DGekOeToRVifvFAhfqpeC1`)
-2. **Manifest:** `import { cadsManifest } from "@moshebaricdo/cads-react"` (or `@moshebaricdo/cads-react/manifest`)
+2. **Manifest:** `import { cadsManifest } from "@moshebari/cads-react"` (or `@moshebari/cads-react/manifest`)
 3. **Docs / llms.txt:** docs site `/llms.txt` for a text catalog of every component
-4. **Lab2 migration handoff:** `src/guidelines/cads-migration.md` — what’s migrated, App*→CADS mappings, Foundations renames, GitHub Packages install, suggested next surfaces
+4. **Lab2 migration handoff:** `src/guidelines/cads-migration.md` — what’s migrated, App*→CADS mappings, Foundations renames. Packages are on public npm (`@moshebari/cads-*`).
 
 ## Setup (once per app)
 
 ```tsx
-import "@moshebaricdo/cads-variables/variables.css";
-import "@moshebaricdo/cads-react/icons/fonts.css";
-import { CadsProvider, Button } from "@moshebaricdo/cads-react";
+import "@moshebari/cads-variables/variables.css";
+import "@moshebari/cads-react/icons/fonts.css";
+import { CadsProvider, Button } from "@moshebari/cads-react";
 ```
 
 Toggle dark mode by adding/removing `.dark` on an ancestor.
@@ -28,10 +28,10 @@ Toggle dark mode by adding/removing `.dark` on an ancestor.
 
 - Only use components listed in `cadsManifest.components`.
 - Only use props/variants declared on each manifest entry.
-- Style with **CADS Foundations** variables from `@moshebaricdo/cads-variables` (unprefixed `--background-*`, `--text-*`, `--border-*`, `--shape-*`, `--spacing-p-*`, `--font-family-*`, …). **No hex literals.** Do not introduce new `--ds-*` usage on CADS-migrated surfaces.
+- Style with **CADS Foundations** variables from `@moshebari/cads-variables` (unprefixed `--background-*`, `--text-*`, `--border-*`, `--shape-*`, `--spacing-p-*`, `--font-family-*`, …). **No hex literals.** Do not introduce new `--ds-*` usage on CADS-migrated surfaces.
 - Brand = CTAs / links / primary actions. Selected = filled selected chrome. Never paint selected surfaces with brand fills.
 - Control heights via `size`: `l` 48 / `m` 40 / `s` 32 / `xs` 24.
-- Icons: `FaIcon` from `@moshebaricdo/cads-react/icons` with FA Pro names.
+- Icons: `FaIcon` from `@moshebari/cads-react/icons` with FA Pro names.
 
 ## Figma → code mapping (no Enterprise Code Connect)
 

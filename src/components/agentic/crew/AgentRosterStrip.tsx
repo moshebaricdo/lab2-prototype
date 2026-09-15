@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaIcon } from "../../ui/icons/FaIcon";
-import { Tooltip } from "@moshebaricdo/cads-react";
+import { Tooltip } from "@moshebari/cads-react";
 import type { AgentSpecialist } from "../../../types/agentLab";
 import { AgentLibraryMenu } from "./AgentLibraryMenu";
 import styles from "./AgentRosterStrip.module.scss";

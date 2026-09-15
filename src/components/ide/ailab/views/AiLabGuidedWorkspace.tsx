@@ -1,4 +1,4 @@
-import { Button, Modal, SegmentedButton } from "@moshebaricdo/cads-react";
+import { Button, Modal, SegmentedButton } from "@moshebari/cads-react";
 import { useState } from "react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import type { AiLabSection } from "../../../../types/aiLab";

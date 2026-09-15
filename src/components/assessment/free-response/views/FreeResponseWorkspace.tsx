@@ -9,7 +9,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, TextInput } from "@moshebaricdo/cads-react";
+import { Button, TextInput } from "@moshebari/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import {
   mockFreeResponseLevel,

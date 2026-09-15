@@ -1,4 +1,4 @@
-import { Button, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Tooltip } from "@moshebari/cads-react";
 import { PanelHeader } from "../../ui/PanelHeader";
 import { useOptionalBackpack } from "../../../hooks/BackpackContext";
 import { DevPanelContent, DevPanelHeaderActions } from "../dev";

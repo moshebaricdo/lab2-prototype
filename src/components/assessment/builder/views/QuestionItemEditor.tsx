@@ -7,7 +7,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
-import { Button, Checkbox, Dropdown, Radio, SegmentedButton, Tag, TextInput } from "@moshebaricdo/cads-react";
+import { Button, Checkbox, Dropdown, Radio, SegmentedButton, Tag, TextInput } from "@moshebari/cads-react";
 import {
   QUESTION_DIFFICULTIES,
   QUESTION_DIFFICULTY_LABELS,

@@ -8,7 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { Button, CloseIconButton, Dropdown, SegmentedButton, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, CloseIconButton, Dropdown, SegmentedButton, Tooltip } from "@moshebari/cads-react";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import { PreviewColorPicker } from "./PreviewColorPicker";

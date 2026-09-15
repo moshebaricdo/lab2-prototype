@@ -1,6 +1,6 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { type CSSProperties, useMemo, useState } from "react";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import { useBackpack } from "../../../hooks/BackpackContext";
 import { deserializeAgentBackpackItem } from "../../../lib/backpack/agentBackpack";

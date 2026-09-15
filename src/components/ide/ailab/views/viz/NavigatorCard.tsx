@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { TraceBar, type TraceStep } from "./TraceBar";
 import styles from "./NavigatorCard.module.scss";
 

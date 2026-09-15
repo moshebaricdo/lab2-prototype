@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, TextInput, Tooltip } from "@moshebaricdo/cads-react";
+import { Alert, Button, TextInput, Tooltip } from "@moshebari/cads-react";
 import { AiTutorIcon } from "../../../ui/icons/AiTutorIcon";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { Dialog } from "../../../ui/Dialog";

@@ -3,7 +3,7 @@ import type {
   ButtonProps,
   ButtonSize,
   ButtonVariant,
-} from "@moshebaricdo/cads-react";
+} from "@moshebari/cads-react";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 
 export type DevPanelFieldType =

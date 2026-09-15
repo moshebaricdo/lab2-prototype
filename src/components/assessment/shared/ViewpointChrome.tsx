@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Alert, Button } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Alert, Button } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import styles from "./ViewpointChrome.module.scss";
 
 export type ViewpointBannerVariant = "info" | "warning";

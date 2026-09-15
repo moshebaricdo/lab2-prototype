@@ -1,6 +1,6 @@
 import * as Popover from "@radix-ui/react-popover";
 import { useState, type ReactNode } from "react";
-import { Button, Slider, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Slider, Tooltip } from "@moshebari/cads-react";
 import { useTheme } from "../../../../../hooks/useTheme";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../../icons/faProRegularCodepoints";

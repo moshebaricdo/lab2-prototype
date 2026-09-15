@@ -1,4 +1,4 @@
-import { Button, SegmentedButton } from "@moshebaricdo/cads-react";
+import { Button, SegmentedButton } from "@moshebari/cads-react";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import {

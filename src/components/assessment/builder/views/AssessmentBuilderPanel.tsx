@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Button, Checkbox, Dropdown, Tag, TextInput, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Checkbox, Dropdown, Tag, TextInput, Tooltip } from "@moshebari/cads-react";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { SidebarTab } from "../../../lab2/resource-panel/Sidebar.types";
 import {

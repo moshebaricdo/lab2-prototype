@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { ScrollArea } from "../../../ui/scroll-area";
 import styles from "./ResourcesPanel.module.scss";
 

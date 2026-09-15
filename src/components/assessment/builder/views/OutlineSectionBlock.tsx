@@ -1,6 +1,6 @@
 import { useDroppable } from "@dnd-kit/core";
-import { Dropdown, Tooltip } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Dropdown, Tooltip } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import styles from "./OutlineSectionBlock.module.scss";
 
 interface SectionHeaderContentProps {

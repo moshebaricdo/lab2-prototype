@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Dropdown, Modal, TextInput } from "@moshebaricdo/cads-react";
+import { Dropdown, Modal, TextInput } from "@moshebari/cads-react";
 import { CadsLabProvider } from "../../lab2/CadsLabProvider";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";
 import {

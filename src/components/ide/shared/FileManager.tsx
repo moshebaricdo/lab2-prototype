@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
-import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Dropdown, Tooltip } from "@moshebari/cads-react";
 import { ScrollArea } from "../../ui/scroll-area";
 import { FaIcon } from "../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../icons/faProRegularCodepoints";

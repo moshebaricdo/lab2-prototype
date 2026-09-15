@@ -1,5 +1,5 @@
 import { ButtonHTMLAttributes } from "react";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import styles from "./ContinueButton.module.scss";
 
 interface ContinueButtonProps

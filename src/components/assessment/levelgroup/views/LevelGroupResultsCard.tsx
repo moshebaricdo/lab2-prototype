@@ -1,5 +1,5 @@
 import { FaIcon } from "../../../ui/icons/FaIcon";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import type { LevelGroupQuestionBlock } from "../../../../data/assessment/levelGroup";
 import {
   blockMeetsExpectations,

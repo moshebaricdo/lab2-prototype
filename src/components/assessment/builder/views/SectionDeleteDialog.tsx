@@ -1,4 +1,4 @@
-import { Button, Dialog } from "@moshebaricdo/cads-react";
+import { Button, Dialog } from "@moshebari/cads-react";
 import styles from "./SectionDeleteDialog.module.scss";
 
 interface SectionDeleteDialogProps {

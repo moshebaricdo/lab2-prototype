@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Tag, Toggle, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Tag, Toggle, Tooltip } from "@moshebari/cads-react";
 import { quizStatusMeta } from "../../../../lib/assessmentBuilder";
 import type { QuestionItem } from "../../../../types/assessmentBuilder";
 import styles from "./QuestionUsagePanel.module.scss";

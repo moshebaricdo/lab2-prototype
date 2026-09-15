@@ -1,4 +1,4 @@
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import quizEmptyState from "../../../../assets/empty-states/quiz-empty-state.svg";
 import styles from "./QuizPreviewEmptyState.module.scss";
 

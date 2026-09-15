@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { ScrollArea } from "../../ui/scroll-area";
 import type { DevPanelField, DevPanelFieldValues } from "./types";
 import { DevPanelFieldRow } from "./DevPanelFields";

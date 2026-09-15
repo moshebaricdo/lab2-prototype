@@ -11,7 +11,7 @@ import {
   SegmentedButton,
   Tag,
   Tooltip,
-} from "@moshebaricdo/cads-react";
+} from "@moshebari/cads-react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import { useChecklistMenuWidth } from "../../../../hooks/useChecklistMenuWidth";
 import { useVirtualRange } from "../../../../hooks/useVirtualRange";

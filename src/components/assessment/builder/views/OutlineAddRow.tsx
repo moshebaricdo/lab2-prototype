@@ -1,7 +1,7 @@
 import { forwardRef, useId, type ButtonHTMLAttributes } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { Button, Dropdown } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Button, Dropdown } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
 import type { BlankQuestionKind } from "../../../../lib/assessmentBuilder";
 import quizEmptyState from "../../../../assets/empty-states/quiz-empty-state.svg";

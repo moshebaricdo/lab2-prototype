@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import type { InstructionPinnedStep } from "../../../types/tutor";
 import styles from "./InstructionsDrawer.module.scss";
 

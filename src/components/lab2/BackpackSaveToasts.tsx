@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Toast } from "@moshebaricdo/cads-react";
+import { Toast } from "@moshebari/cads-react";
 import { useBackpack } from "../../hooks/BackpackContext";
 
 const TOAST_DISMISS_MS = 2000;

@@ -3,7 +3,7 @@ import { FileManager } from "../../shared/FileManager";
 import { CodeEditor } from "../../shared/code-editor";
 import { VersionBanner } from "../../shared/VersionBanner";
 import { ResizableHandle } from "../../../ui/ResizableHandle";
-import { Button, Tooltip } from "@moshebaricdo/cads-react";
+import { Button, Tooltip } from "@moshebari/cads-react";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { FileItem } from "../../../../types/file";

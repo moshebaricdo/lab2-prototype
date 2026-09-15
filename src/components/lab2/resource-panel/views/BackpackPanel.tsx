@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Dialog } from "@moshebaricdo/cads-react";
+import { Alert, Button, Dialog } from "@moshebari/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { ScrollArea } from "../../../ui/scroll-area";
 import { useBackpack } from "../../../../hooks/BackpackContext";

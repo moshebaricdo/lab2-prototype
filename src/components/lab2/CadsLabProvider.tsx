@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { CadsProvider } from "@moshebaricdo/cads-react";
-import "@moshebaricdo/cads-variables/variables.css";
-import "@moshebaricdo/cads-react/icons/fonts.css";
+import { CadsProvider } from "@moshebari/cads-react";
+import "@moshebari/cads-variables/variables.css";
+import "@moshebari/cads-react/icons/fonts.css";
 import "./cadsOverlay.css";
 
 /**

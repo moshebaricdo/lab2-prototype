@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { Button, Dropdown, Tooltip } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Button, Dropdown, Tooltip } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import {
   findLevelLinkIndex,
   includesLevelPath,

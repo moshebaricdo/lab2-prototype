@@ -4,7 +4,7 @@ import {
   AiChatMessage,
   Button,
   Tooltip,
-} from "@moshebaricdo/cads-react";
+} from "@moshebari/cads-react";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import type { ChatMessage } from "../../../../types/chat";
 import type { MockTutorConfig } from "../../../../types/tutor";

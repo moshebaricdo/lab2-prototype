@@ -8,7 +8,7 @@ import {
 } from "react";
 import emptyStatePreview from "../../../../../assets/empty-states/empty-state-preview.svg";
 import emptyStatePreviewStopped from "../../../../../assets/empty-states/empty-state-preview-stopped.svg";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { ResizableHandle } from "../../../../ui/ResizableHandle";
 import { EmptyState } from "../../../shared/EmptyState";
 import { stampPreviewReloadNonce } from "../buildPreviewSrcDoc";

@@ -3,8 +3,8 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { Button } from "@moshebaricdo/cads-react";
-import { FaIcon, type FaIconProps } from "@moshebaricdo/cads-react/icons";
+import { Button } from "@moshebari/cads-react";
+import { FaIcon, type FaIconProps } from "@moshebari/cads-react/icons";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { ModelConfigState } from "./AiChatLabWorkspace.types";

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Dialog, Pagination } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Button, Dialog, Pagination } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import { Lab2Shell } from "../../lab2/Lab2Shell";
 import type { LevelProgressLink } from "../../ui/header/LevelProgressBubbles";
 import { initialChatMessages } from "../../../data/weblab2";

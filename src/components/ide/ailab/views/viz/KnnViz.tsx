@@ -9,8 +9,8 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
-import { Button, Tooltip } from "@moshebaricdo/cads-react";
-import { FaIcon } from "@moshebaricdo/cads-react/icons";
+import { Button, Tooltip } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import type {
   AiLabColumn,
   AiLabDataRow,

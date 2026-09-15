@@ -101,7 +101,7 @@ Legacy multi / FR / match / levelgroup routes remain under Assessment for compar
 | Builder state hook | `src/hooks/useAssessmentBuilderState.ts` |
 | Bank hook | `src/hooks/useQuestionBank.ts` |
 | Mock bank + drafts | `src/data/assessmentBuilder/` |
-| Tag chip primitive (bank **standards**, canvas “Recommended”) | CADS `Tag` from `@moshebaricdo/cads-react` |
+| Tag chip primitive (bank **standards**, canvas “Recommended”) | CADS `Tag` from `@moshebari/cads-react` |
 
 ## Canonical schema
 

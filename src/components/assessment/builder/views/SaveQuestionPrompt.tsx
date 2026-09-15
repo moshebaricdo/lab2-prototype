@@ -1,4 +1,4 @@
-import { Dialog } from "@moshebaricdo/cads-react";
+import { Dialog } from "@moshebari/cads-react";
 
 export type SaveQuestionPromptKind = "shared-unpublished" | "published";
 

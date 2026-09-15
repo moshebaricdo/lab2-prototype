@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { GlobalNavMenu } from "./GlobalNavMenu";
 import {
   LevelProgressBubbles,

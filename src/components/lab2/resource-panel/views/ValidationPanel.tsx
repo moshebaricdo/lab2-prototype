@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
 import type { FileItem } from "../../../../types/file";

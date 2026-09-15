@@ -17,7 +17,7 @@ Prototype environment for levels where the lab surface is an AI chat stream. Som
 
 - `src/pages/aichatlab/AiChatLabLevelPage.tsx`
 - `src/pages/aichatlab/aiChatLabPageConfig.ts` — default content, sample rubric, and AI Chat Lab dev-panel fields
-- `src/components/lab2/CadsLabProvider.tsx` — Lab2-scoped `@moshebaricdo/cads-*` provider + variables/fonts (`Lab2Shell`)
+- `src/components/lab2/CadsLabProvider.tsx` — Lab2-scoped `@moshebari/cads-*` provider + variables/fonts (`Lab2Shell`)
 - `src/components/ide/aichatlab/views/AiChatLabWorkspace.tsx`
 - `src/components/ide/aichatlab/views/AiChatLabConfigPanel.tsx`
 - `src/components/ide/aichatlab/views/AiChatLabModelCardPanel.tsx`
@@ -30,9 +30,9 @@ Prototype environment for levels where the lab surface is an AI chat stream. Som
 
 ## CADS consumption
 
-AI Chat Lab workspace columns (config, model card, chat) and the shared resource panel both consume packaged CADS (`@moshebaricdo/cads-*` from GitHub Packages) via `Lab2Shell` → `CadsLabProvider`. Local SCSS for those surfaces uses **CADS Foundations** variable names (unprefixed `--background-*` / `--text-*` / `--shape-*`, etc.), not prototype `--ds-*`.
+AI Chat Lab workspace columns (config, model card, chat) and the shared resource panel both consume packaged CADS (`@moshebari/cads-*` from npm) via `Lab2Shell` → `CadsLabProvider`. Local SCSS for those surfaces uses **CADS Foundations** variable names (unprefixed `--background-*` / `--text-*` / `--shape-*`, etc.), not prototype `--ds-*`.
 
-- Bootstrap: `components/lab2/CadsLabProvider.tsx` → `CadsProvider baseline={false}` + `@moshebaricdo/cads-variables/variables.css` + icon fonts.
+- Bootstrap: `components/lab2/CadsLabProvider.tsx` → `CadsProvider baseline={false}` + `@moshebari/cads-variables/variables.css` + icon fonts.
 - Workspace primitives: `Button`, `TextInput`, `Dropdown`, `Slider`, `Tabs`, `Tooltip`, `Alert`, `FaIcon`, plus AI `AiChatMessage` / `AiChatInput`.
 - Layout chrome (`PanelHeader`, panel frames, SCSS modules) stays local but tokens match Foundations.
 

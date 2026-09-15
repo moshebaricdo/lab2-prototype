@@ -1,4 +1,4 @@
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import styles from "./BackpackFilterPills.module.scss";
 
 interface BackpackFilterPillOption<Id extends string> {

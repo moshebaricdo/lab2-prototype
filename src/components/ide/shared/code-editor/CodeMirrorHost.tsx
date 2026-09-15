@@ -9,7 +9,7 @@ import {
 import { EditorState } from "@codemirror/state";
 import { syntaxHighlighting } from "@codemirror/language";
 import { unifiedMergeView } from "@codemirror/merge";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import type { FileKind } from "../../../../types/file";
 import { dsHighlightStyle } from "./highlightStyle";
 import { editorTheme } from "./theme";

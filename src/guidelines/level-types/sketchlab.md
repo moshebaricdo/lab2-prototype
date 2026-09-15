@@ -124,7 +124,7 @@ stylesheet (`@xyflow/react/dist/style.css`) is imported once in
 `SketchLabWorkspace.tsx`; canvas zoom controls live in `SketchCanvasControls.tsx`
 (CADS `Button` text / tertiary / extraSmall / iconOnly). Background dots and
 connection handles are themed in `SketchLabWorkspace.module.scss` /
-`SketchNodes.module.scss`. Workspace chrome uses `@moshebaricdo/cads-react` (`Button`,
+`SketchNodes.module.scss`. Workspace chrome uses `@moshebari/cads-react` (`Button`,
 `Dropdown`, `Tooltip`, `Slider`, `TextInput`). Color/size/rotation property menus
 still use a local `MenuField` (Radix popover + `AppDropdown.module.scss`) because
 CADS `Dropdown` cannot host swatch grids, custom number rows, or in-menu sliders.

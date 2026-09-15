@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import emptyStateNewProject from "../../../../assets/empty-states/empty-state-new-project.svg";
-import { Button } from "@moshebaricdo/cads-react";
+import { Button } from "@moshebari/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { TutorRequestMode, TutorStartOptions } from "../../../../types/tutor";
 import styles from "./NewProjectEmptyState.module.scss";

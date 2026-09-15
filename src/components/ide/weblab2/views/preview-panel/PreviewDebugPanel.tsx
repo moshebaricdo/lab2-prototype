@@ -1,4 +1,4 @@
-import { Alert, Button, CloseIconButton, SegmentedButton, Tooltip } from "@moshebaricdo/cads-react";
+import { Alert, Button, CloseIconButton, SegmentedButton, Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "../../../../ui/icons/FaIcon";
 import type {
   PreviewConsoleMessage,

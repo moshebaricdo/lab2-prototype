@@ -1,4 +1,4 @@
-import { Checkbox } from "@moshebaricdo/cads-react";
+import { Checkbox } from "@moshebari/cads-react";
 import styles from "./BackpackSupportedToggle.module.scss";
 
 interface BackpackSupportedToggleProps {
