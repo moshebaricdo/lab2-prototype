@@ -9,6 +9,19 @@
   background: var(--background-neutral-primary);
 }
 
+/* Sheet scrolls above; analysis dock is pinned to the viewport bottom. */
+.rootWithAnalysis {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.rootWithAnalysis .stage {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .empty {
   display: flex;
   flex: 1;
@@ -37,7 +50,7 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Stage: sheet column + 300px Train rail, with the Category Analysis dock
+ * Stage: sheet column + 300px Train rail, with the Column Analysis dock
  * spanning the full width underneath.
  * ------------------------------------------------------------------------- */
 
@@ -76,7 +89,7 @@
 .setName {
   display: flex;
   min-width: 0;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
 }
 
@@ -84,6 +97,17 @@
   min-width: 0;
   max-width: min(280px, 100%);
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.datasetName {
+  @include type-body-3-semibold;
+  min-width: 0;
+  max-width: min(280px, 100%);
+  padding-left: 4px;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -219,44 +243,49 @@
   color: var(--text-success-primary);
 }
 
-.cardStage {
+/* ---------------------------------------------------------------------------
+ * Cards view: scrolling stage (catalog grid or carousel deck) over a sticky
+ * pager footer.
+ * ------------------------------------------------------------------------- */
+
+.cardsView {
   display: flex;
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
-  padding: 16px;
-}
-
-/* Virtualized catalog: spacers above/below the grid stand in for the card
-   rows that are scrolled out of view. */
-.cardStack {
-  display: flex;
-  width: 100%;
   flex-direction: column;
-  align-self: flex-start;
 }
 
+.cardStage {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+}
+
+/* `--card-columns` is set inline from the measured width, snapped to a
+   divisor of the page size so every page ends on a full row. */
 .cardGrid {
   display: grid;
   align-content: start;
   width: 100%;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-.carousel {
-  display: flex;
-  width: min(100%, 420px);
-  flex-direction: column;
-  gap: 12px;
-}
-
-.cardNav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  grid-template-columns: repeat(var(--card-columns, 1), minmax(0, 1fr));
   gap: 8px;
+}
+
+/* Same box as the resource panel's `.continueBar` (1px border + 8px padding
+   around a small 32px control) so the two footers share a baseline. */
+.cardsFooter {
+  display: flex;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 49px;
+  padding: 8px;
+  border-top: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
 }
 
 .card {
@@ -269,53 +298,38 @@
   background: var(--background-neutral-primary);
 }
 
-.cardFeatured {
-  width: 100%;
-}
-
 .cardHeading {
   @include type-label-2;
   margin: 0;
   color: var(--text-neutral-primary);
 }
 
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
 .cardRow {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  /* Single-line rows keep every card the same height, which the virtualized
-     catalog relies on. Full values stay available via `title`. */
+  /* Single-line rows keep every card in a grid row the same height. Full
+     values stay available via `title`. */
   white-space: nowrap;
 }
 
 .cardLabel {
   @include type-label-3;
   flex-shrink: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
   color: var(--text-neutral-tertiary);
-  cursor: pointer;
-  text-align: left;
-
-  &:hover,
-  &:focus-visible {
-    color: var(--text-neutral-primary);
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-}
-
-.cardLabelActive {
-  color: var(--text-neutral-primary);
-  box-shadow: inset 0 -2px 0 var(--border-selected-primary);
 }
 
 .cardValue {
   @include type-body-3-regular;
   min-width: 0;
+  margin: 0;
   overflow: hidden;
   color: var(--text-neutral-primary);
   text-align: right;
@@ -325,6 +339,129 @@
   &:empty::before {
     content: "\00a0";
   }
+}
+
+/* Carousel: one featured card centered on the stage, with ghost cards fanned
+   up behind it to read as a deck. */
+
+.carouselStage {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  overflow: auto;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+    outline-offset: -4px;
+  }
+}
+
+/* Every slot shares one grid cell; the deck is as tall as its tallest card so
+   nothing reflows while the stack moves. */
+.deck {
+  display: grid;
+  width: min(100%, 520px);
+  margin: auto;
+  align-items: start;
+  /* Headroom for the cards that rise above the active one. */
+  padding-top: 24px;
+}
+
+/* A slot's place in the pile is a pure function of `--deck-depth` (0 = active,
+   1–2 = peeking behind). Because cards keep their keys across a flip, only the
+   depth changes and this one transition moves the whole stack together. */
+.deckSlot {
+  grid-area: 1 / 1;
+  z-index: calc(10 - var(--deck-depth));
+  opacity: calc(1 - var(--deck-depth) * 0.22);
+  transform: translateY(calc(var(--deck-depth) * -12px))
+    scale(calc(1 - var(--deck-depth) * 0.035));
+  transform-origin: top center;
+  transition:
+    transform 280ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 280ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform, opacity;
+
+  &[aria-hidden="true"] {
+    pointer-events: none;
+  }
+}
+
+/* Hidden card waiting at the back of the pile; it fades forward on the next
+   flip instead of popping in. */
+.deckSlotOnDeck {
+  opacity: 0;
+}
+
+/* The card just flipped past: dealt off the top toward the viewer, ready to
+   slide back if the user goes to Previous. */
+.deckSlotDealt {
+  z-index: 11;
+  opacity: 0;
+  transform: translateY(28px) scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deckSlot {
+    transition: none;
+  }
+}
+
+.cardFeatured {
+  width: 100%;
+  gap: 16px;
+  padding: 24px 28px 8px;
+  border-radius: var(--shape-lg);
+  box-shadow: var(--elevation-sm);
+
+  .cardHeading {
+    @include type-heading-h5-semibold;
+  }
+
+  .cardBody {
+    gap: 0;
+  }
+
+  .cardRow {
+    align-items: baseline;
+    padding: 12px 0;
+    border-top: 1px solid var(--border-neutral-primary);
+    white-space: normal;
+  }
+
+  .cardLabel {
+    @include type-label-1;
+    color: var(--text-neutral-secondary);
+  }
+
+  .cardValue {
+    @include type-body-1-regular;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+  }
+}
+
+.pagerNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagerCounter {
+  @include type-body-3-regular;
+  min-width: 112px;
+  color: var(--text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 .sheet {
@@ -353,8 +490,8 @@
 }
 
 .grid {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
+  min-width: max-content;
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
@@ -368,16 +505,9 @@
   }
 }
 
+/* Row # width: longest index digit count × 1ch + 8px side padding each. */
 .colIndex {
-  width: 52px;
-}
-
-.colText {
-  width: 160px;
-}
-
-.colNumber {
-  width: 100px;
+  width: calc(var(--index-col-ch, 2) * 1ch + 16px);
 }
 
 .th,
@@ -418,9 +548,40 @@ tbody tr:hover .td:not(.tdActive):not(.tdIndex) {
   );
 }
 
-tbody tr:hover .td.tdSelectedColumn:not(.tdIndex),
+tbody tr:hover .tdIndex {
+  color: var(--text-neutral-primary);
+}
+
+tbody tr:hover .td.tdSelectedColumn:not(.tdIndex):not(.tdActive) {
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 6%,
+    color-mix(
+      in srgb,
+      var(--background-selected-primary) 8%,
+      var(--background-neutral-primary)
+    )
+  );
+}
+
+tbody tr:hover .td.tdSelectedRow.tdSelectedColumn:not(.tdIndex):not(.tdActive) {
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 6%,
+    color-mix(
+      in srgb,
+      var(--background-selected-primary) 12%,
+      var(--background-neutral-secondary)
+    )
+  );
+}
+
 tbody tr:hover .td.tdActive {
-  background: var(--background-brand-mid);
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 6%,
+    var(--background-neutral-primary)
+  );
 }
 
 .th {
@@ -439,9 +600,12 @@ tbody tr:hover .td.tdActive {
 .tdIndex {
   position: sticky;
   left: 0;
-  width: 52px;
-  min-width: 52px;
+  box-sizing: border-box;
+  width: calc(var(--index-col-ch, 2) * 1ch + 16px);
+  min-width: calc(var(--index-col-ch, 2) * 1ch + 16px);
+  max-width: calc(var(--index-col-ch, 2) * 1ch + 16px);
   padding: 0 8px;
+  font-variant-numeric: tabular-nums;
   text-align: center;
   border-right: 1px solid var(--border-neutral-primary);
 }
@@ -519,6 +683,15 @@ tbody tr:hover .td.tdActive {
   box-shadow: inset 0 -1px 0 var(--border-selected-primary);
 }
 
+.thSelected:last-child {
+  border-right: 1px solid var(--border-selected-primary);
+}
+
+.th:not(.thSelected):has(+ .thSelected),
+.thIndex:has(+ .thSelected) {
+  border-right-color: var(--border-selected-primary);
+}
+
 .thLabel .thButton,
 .thFeature .thButton {
   color: var(--text-neutral-primary);
@@ -551,11 +724,22 @@ tbody tr:hover .td.tdActive {
 }
 
 .tdSelectedColumn {
+  border-right-color: var(--border-brand-light);
+  border-bottom-color: var(--border-brand-light);
   background: color-mix(
     in srgb,
     var(--background-selected-primary) 8%,
     var(--background-neutral-primary)
   );
+}
+
+.tdSelectedColumn:last-child {
+  border-right: 1px solid var(--border-brand-light);
+}
+
+.td:not(.tdSelectedColumn):has(+ .tdSelectedColumn),
+.tdIndex:has(+ .tdSelectedColumn) {
+  border-right-color: var(--border-brand-light);
 }
 
 .tdSelectedRow {
@@ -602,6 +786,20 @@ tbody tr:hover .td.tdActive {
   }
 }
 
+.cellReadOnly {
+  @include type-body-4-regular;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: inherit;
+  cursor: pointer;
+  text-align: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .cellInput {
   @include type-body-4-regular;
   box-sizing: border-box;
@@ -638,7 +836,7 @@ tbody tr:hover .td.tdActive {
   width: 100%;
   height: 28px;
   align-items: center;
-  padding: 0 10px 0 62px;
+  padding: 0 10px 0 calc(var(--index-col-ch, 2) * 1ch + 26px);
   border: 0;
   background: transparent;
   color: var(--text-neutral-tertiary);
@@ -661,13 +859,15 @@ tbody tr:hover .td.tdActive {
 
 .analysisDock {
   display: flex;
-  height: 211px;
+  min-height: 190px;
   flex-shrink: 0;
   flex-direction: column;
+  overflow: hidden;
   background: var(--background-neutral-primary);
 }
 
 .analysisDock > .analysisHeader {
+  flex-shrink: 0;
   border-bottom: 1px solid var(--border-neutral-primary);
 }
 
@@ -675,8 +875,7 @@ tbody tr:hover .td.tdActive {
   display: flex;
   flex: 1;
   min-height: 0;
-  align-items: flex-start;
-  overflow: auto;
+  align-items: stretch;
 }
 
 .analysisSummary,
@@ -687,18 +886,17 @@ tbody tr:hover .td.tdActive {
   flex-direction: column;
 }
 
-.analysisIntro {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 10px 0;
+.analysisSummary {
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-neutral-primary);
 }
 
-.analysisTitleRow {
+.analysisIntro {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 10px 0;
 }
 
 .analysisTitle {
@@ -714,22 +912,27 @@ tbody tr:hover .td.tdActive {
   @include type-body-4-regular;
   margin: 0;
   color: var(--text-neutral-secondary);
+  text-wrap: pretty;
 }
 
 .statCards {
   display: grid;
+  flex-shrink: 0;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin: 0;
-  padding: 10px 10px 0;
+  padding: 10px;
+}
+
+.statCardsCompact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .statCard {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px 10px 8px;
+  padding: 10px 12px 8px 12px;
   overflow: hidden;
   border-radius: var(--shape-sm);
   background: var(--background-neutral-secondary);
@@ -751,66 +954,111 @@ tbody tr:hover .td.tdActive {
 }
 
 .analysisDistribution {
-  gap: 8px;
-  padding: 10px 10px 0;
+  gap: 6px;
+  min-height: 0;
+  padding: 10px;
 }
 
 .distributionLabel {
   @include type-label-3;
+  flex-shrink: 0;
   margin: 0;
   color: var(--text-neutral-primary);
 }
 
-.statList {
+.distributionChart {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0 0 10px;
-  list-style: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
 }
 
-.barRow {
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) 20px;
+.distributionChartStage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.distributionChartSvg {
+  display: block;
+  overflow: visible;
+}
+
+.chartGridLine {
+  stroke: var(--border-neutral-primary);
+  stroke-width: 1;
+}
+
+.chartBarHit {
+  cursor: default;
+}
+
+.chartTooltipAnchor {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 8px));
+}
+
+/* Match Tooltip.module.scss hover-in (120ms fade + 2px lift). */
+.chartTooltip {
+  display: flex;
+  min-width: 112px;
   align-items: center;
   gap: 8px;
-}
-
-.barRowOther .statLabel,
-.barRowOther .statCount {
-  color: var(--text-neutral-tertiary);
-}
-
-.barRowOther .barFill {
-  background: var(--background-neutral-tertiary);
-}
-
-.statLabel {
-  @include type-body-4-regular;
-  overflow: hidden;
-  color: var(--text-neutral-primary);
-  text-overflow: ellipsis;
+  padding: 6px 10px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  box-shadow: var(--elevation-sm);
+  animation: chart-tooltip-fade-in 120ms ease-out;
   white-space: nowrap;
 }
 
-.statCount {
+@keyframes chart-tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chartTooltipSwatch {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-xs);
+}
+
+.chartTooltipLabel {
+  @include type-body-4-regular;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--text-neutral-secondary);
+  text-overflow: ellipsis;
+}
+
+.chartTooltipValue {
   @include type-label-3;
+  flex-shrink: 0;
   color: var(--text-neutral-primary);
   font-variant-numeric: tabular-nums;
-  text-align: right;
 }
 
-.barTrack {
-  height: 6px;
-  overflow: hidden;
-  border-radius: var(--shape-round);
-  background: var(--background-neutral-quaternary);
+.chartAxisLabel {
+  @include type-label-4;
+  fill: var(--text-neutral-secondary);
 }
 
-.barFill {
-  height: 100%;
-  background: var(--background-brand-primary);
+.chartAxisLabelMuted {
+  @include type-label-4;
+  fill: var(--text-neutral-tertiary);
 }
 
 @media (max-width: 900px) {
@@ -826,5 +1074,14 @@ tbody tr:hover .td.tdActive {
   .analysisDistribution {
     flex: 0 0 auto;
     width: 100%;
+  }
+
+  .analysisSummary {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-neutral-primary);
+  }
+
+  .distributionChart {
+    min-height: 120px;
   }
 }

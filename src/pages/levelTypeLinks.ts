@@ -398,17 +398,24 @@ export const aiLabGuidedLevelLinks: LevelProgressLink[] = [
   { name: "Train a model (guided)", path: "/levels/ailab-guided" },
 ];
 
-export const aiLabPlaytestLevelLinks: LevelProgressLink[] = [
-  { name: "Look at the animals", path: "/levels/progression-ailab-look" },
-  {
-    name: "Try a model that already exists",
-    path: "/levels/progression-ailab-try",
-  },
-  {
-    name: "Build your own, then bounce",
-    path: "/levels/progression-ailab-build",
-  },
-];
+import {
+  AI_LAB_PLAYTEST_PATH,
+  aiLabPlaytestLevelLinks,
+  aiLabPlaytestSteps,
+} from "../data/ailab/playtestProgression";
+
+export {
+  AI_LAB_PLAYTEST_PATH,
+  aiLabPlaytestLevelLinks,
+  aiLabPlaytestSteps,
+};
+
+/** Index bubbles: optional `?step=` jump read once, then stripped on load. */
+export const aiLabPlaytestIndexLinks: LevelProgressLink[] =
+  aiLabPlaytestSteps.map((step) => ({
+    name: step.name,
+    path: `${AI_LAB_PLAYTEST_PATH}?step=${step.id}`,
+  }));
 
 export const aiLabIndexLinks: LevelProgressLink[] = [
   ...aiLabLevelLinks,

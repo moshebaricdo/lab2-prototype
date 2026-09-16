@@ -19,7 +19,8 @@ import {
   assessmentBuilderLevelLinks,
   aiChatLabLevelLinks,
   aiLabIndexLinks,
-  aiLabPlaytestLevelLinks,
+  aiLabPlaytestIndexLinks,
+  AI_LAB_PLAYTEST_PATH,
   bubbleChoiceLevelLinks,
   cfuIndexGroups,
   cfuLevelLinks,
@@ -575,12 +576,13 @@ export function LevelsIndexPage() {
                 <div className={styles.cardHeader}>
                   <h3 className={styles.cardTitle}>AI Lab playtest</h3>
                   <p className={styles.cardDescription}>
-                    Three-level stagger on Bird / mammal / fish. Decision Tree
-                    locked. Continue is the only door between stages.
+                    Three-level stagger on Bird / mammal / fish at one URL (
+                    {AI_LAB_PLAYTEST_PATH}). Decision Tree locked. Continue is
+                    the only door between stages.
                   </p>
                 </div>
                 <div className={styles.bubbleRow}>
-                  {aiLabPlaytestLevelLinks.map((page, index) => (
+                  {aiLabPlaytestIndexLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       title={page.name}

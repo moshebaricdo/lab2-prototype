@@ -1,4 +1,4 @@
-import { Button, Modal, SegmentedButton } from "@moshebari/cads-react";
+import { Button, SegmentedButton } from "@moshebari/cads-react";
 import { useState } from "react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import type { AiLabSection } from "../../../../types/aiLab";
@@ -43,7 +43,6 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
   const needsSetup = needsDataset || needsAlgorithm;
   const canChangeSetup = lab.canPickDataset || !lab.config.algorithmLock;
   const [setupOpen, setSetupOpen] = useState(false);
-  const [confirmReset, setConfirmReset] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [inspectorTab, setInspectorTab] =
     useState<ModelInspectorTab>("scorecard");
@@ -113,31 +112,25 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
           )
         }
         right={
-          <div className={styles.headerActions}>
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="extraSmall"
-              className={styles.setupChip}
-              startIconName={algorithmIcon}
-              endIconName={canChangeAlgorithm ? "right-left" : undefined}
-              disabled={!canChangeAlgorithm}
-              aria-haspopup="dialog"
-              aria-expanded={setupModalOpen}
-              onClick={openSetup}
-            >
-              {algorithmLabel}
-            </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="extraSmall"
-              startIconName="arrow-rotate-left"
-              onClick={() => setConfirmReset(true)}
-            >
-              Start over
-            </Button>
-          </div>
+          canChangeAlgorithm ? (
+            <div className={styles.headerActions}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                className={styles.setupChip}
+                startIconName={algorithmIcon}
+                endIconName="right-left"
+                aria-haspopup="dialog"
+                aria-expanded={setupModalOpen}
+                onClick={openSetup}
+              >
+                {algorithmLabel}
+              </Button>
+            </div>
+          ) : (
+            <div />
+          )
         }
       />
 
@@ -177,28 +170,6 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
         />
       ) : null}
 
-      <Modal
-        open={confirmReset}
-        title="Start over?"
-        maxWidth={440}
-        isDismissable
-        primaryActionLabel="Start over"
-        secondaryActionLabel="Cancel"
-        onPrimaryAction={() => {
-          setConfirmReset(false);
-          setSetupOpen(false);
-          setInspectorOpen(false);
-          lab.startOver();
-        }}
-        onSecondaryAction={() => setConfirmReset(false)}
-        onClose={() => setConfirmReset(false)}
-      >
-        <p className={styles.resetCopy}>
-          {lab.canPickDataset && lab.config.requireDatasetChoice
-            ? "You’ll pick a dataset and algorithm again. Saved models stay."
-            : "Training, algorithm, and try-it-out values will reset. The dataset stays the same."}
-        </p>
-      </Modal>
     </div>
   );
 }

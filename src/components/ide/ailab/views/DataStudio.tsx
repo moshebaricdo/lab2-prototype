@@ -3,18 +3,19 @@ import {
   useEffect,
   useRef,
   useState,
-  type ReactElement,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
 } from "react";
 import {
   Button,
   Dropdown,
   SegmentedButton,
-  Tag,
+  TablePagination,
   Tooltip,
 } from "@moshebari/cads-react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import { useChecklistMenuWidth } from "../../../../hooks/useChecklistMenuWidth";
-import { useVirtualRange } from "../../../../hooks/useVirtualRange";
 import {
   capDistribution,
   formatCell,
@@ -22,9 +23,11 @@ import {
   frequencies,
   histogramBins,
   numericalStats,
+  uniqueValues,
 } from "../../../../lib/aiLab";
 import type { AiLabColumn, AiLabDataRow } from "../../../../types/aiLab";
 import { PanelHeader } from "../../../ui/PanelHeader";
+import { ColumnDistributionChart } from "./ColumnDistributionChart";
 import { DataSpreadsheet } from "./DataSpreadsheet";
 import { ModelActions } from "./ModelActions";
 import type { ModelInspectorTab } from "./ModelInspector";
@@ -49,7 +52,9 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
   const showTrain = !lab.config.hideTrainTab && !lab.needsDataset;
 
   return (
-    <section className={styles.root}>
+    <section
+      className={`${styles.root} ${showAnalysis ? styles.rootWithAnalysis : ""}`}
+    >
       <div className={styles.stage}>
         <div className={styles.sheetColumn}>
           <DataHeader lab={lab} onOpenSetup={onOpenSetup} />
@@ -63,7 +68,7 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
               </div>
             </div>
           ) : lab.dataView === "cards" ? (
-            <DataCards lab={lab} />
+            <DataCards key={lab.datasetId} lab={lab} />
           ) : (
             <DataSpreadsheet key={lab.datasetId} lab={lab} />
           )}
@@ -97,18 +102,21 @@ function DataHeader({
   return (
     <div className={styles.dataHeader}>
       <div className={styles.setName}>
-        <Button
-          variant="outlined"
-          color="secondary"
-          size="extraSmall"
-          className={styles.datasetChip}
-          endIconName={canSwap ? "right-left" : undefined}
-          disabled={!canSwap}
-          aria-haspopup={canSwap ? "dialog" : undefined}
-          onClick={canSwap ? onOpenSetup : undefined}
-        >
-          {datasetLabel}
-        </Button>
+        {canSwap ? (
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="extraSmall"
+            className={styles.datasetChip}
+            endIconName="right-left"
+            aria-haspopup="dialog"
+            onClick={onOpenSetup}
+          >
+            {datasetLabel}
+          </Button>
+        ) : (
+          <span className={styles.datasetName}>{datasetLabel}</span>
+        )}
         {lab.needsDataset ? null : (
           <span className={styles.setMeta}>{lab.rows.length} rows</span>
         )}
@@ -143,18 +151,12 @@ function DataHeader({
         ) : null}
         <SegmentedButton
           size="extraSmall"
-          iconOnly
           aria-label="Dataset view"
           value={lab.dataView}
           onChange={(value) => lab.setDataView(value as "table" | "cards")}
           options={[
-            { value: "table", label: "Table", iconName: "list", tooltip: "Table" },
-            {
-              value: "cards",
-              label: "Cards",
-              iconName: "cards-blank",
-              tooltip: "Cards",
-            },
+            { value: "table", label: "Table", iconName: "list" },
+            { value: "cards", label: "Cards", iconName: "cards-blank" },
           ]}
         />
       </div>
@@ -325,30 +327,51 @@ function TrainRail({
 }
 
 function DataCards({ lab }: { lab: AiLabController }) {
-  if (lab.cardLayout === "carousel") {
-    return <CardCarousel lab={lab} />;
-  }
-  return <CardCatalog lab={lab} />;
+  return (
+    <div className={styles.cardsView}>
+      {lab.cardLayout === "carousel" ? (
+        <CardCarousel lab={lab} />
+      ) : (
+        <CardCatalog lab={lab} />
+      )}
+    </div>
+  );
 }
 
 /** Must match `.cardStage` padding and `.cardGrid` gap / min column width. */
-const CARD_STAGE_PADDING = 16;
-const CARD_GAP = 12;
+const CARD_STAGE_PADDING = 8;
+const CARD_GAP = 8;
 const CARD_MIN_WIDTH = 220;
+/**
+ * Page sizes are multiples of 12 and the grid only ever uses a column count
+ * that divides 12, so every page ends on a complete row at any width.
+ */
+const CARD_PAGE_SIZES = [12, 24, 48, 96, 192];
+const CARD_DEFAULT_PAGE_SIZE = 24;
+const CARD_COLUMN_COUNTS = [1, 2, 3, 4, 6, 12];
+
+function snapColumnCount(fit: number) {
+  let best = 1;
+  for (const count of CARD_COLUMN_COUNTS) {
+    if (count <= fit) best = count;
+  }
+  return best;
+}
 
 /**
- * Windowed card grid. Cards in one dataset share a height (same columns), so
- * the grid is virtualized by *card row*: measure one card, count how many fit
- * per row at the current width, and only mount the rows in view.
+ * Paginated card grid: 24 cards per page by default with a rows-per-page
+ * dropdown in the sticky footer. The column count snaps to a divisor of 12
+ * (see `CARD_COLUMN_COUNTS`) so no page ends on a ragged row. Datasets that
+ * fit the smallest page size drop the dropdown for the compact pager.
  */
 function CardCatalog({ lab }: { lab: AiLabController }) {
   const columns = lab.config.dataset.columns;
   const rows = lab.rows;
   const scrollRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
   const [gridWidth, setGridWidth] = useState(0);
-  // Rough guess until the rendered grid reports its row pitch.
-  const [cardHeight, setCardHeight] = useState(48 + columns.length * 24);
+  const [pageSize, setPageSize] = useState(CARD_DEFAULT_PAGE_SIZE);
+  const [page, setPage] = useState(0);
+  const compact = rows.length <= CARD_PAGE_SIZES[0];
 
   useEffect(() => {
     const element = scrollRef.current;
@@ -360,116 +383,232 @@ function CardCatalog({ lab }: { lab: AiLabController }) {
     return () => observer.disconnect();
   }, []);
 
-  const perRow = Math.max(
+  const fit = Math.max(
     1,
     Math.floor((gridWidth + CARD_GAP) / (CARD_MIN_WIDTH + CARD_GAP)),
   );
-  const cardRowCount = Math.ceil(rows.length / perRow);
-  const { start, end, topPad, bottomPad } = useVirtualRange({
-    scrollRef,
-    itemCount: cardRowCount,
-    itemSize: cardHeight + CARD_GAP,
-    leadingOffset: CARD_STAGE_PADDING,
-    overscan: 2,
-  });
+  const perRow = snapColumnCount(fit);
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const firstIndex = currentPage * pageSize;
+  const lastIndex = Math.min(rows.length, firstIndex + pageSize);
 
-  // Derive the row pitch from the rendered grid (grid rows stretch to their
-  // tallest card), so the estimate self-corrects after the first paint.
-  const renderedRows = end - start;
-  useEffect(() => {
-    const grid = gridRef.current;
-    if (!grid || renderedRows === 0) return;
-    const measure = () => {
-      const height = grid.getBoundingClientRect().height;
-      const pitch = (height - (renderedRows - 1) * CARD_GAP) / renderedRows;
-      if (pitch > 0) {
-        setCardHeight((current) =>
-          Math.abs(current - pitch) < 0.5 ? current : pitch,
-        );
-      }
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(grid);
-    return () => observer.disconnect();
-  }, [renderedRows]);
-
-  const firstIndex = start * perRow;
-  const lastIndex = Math.min(rows.length, end * perRow);
-  const cards: ReactElement[] = [];
-  for (let index = firstIndex; index < lastIndex; index += 1) {
-    cards.push(
-      <RowCard
-        key={index}
-        index={index}
-        row={rows[index]}
-        columns={columns}
-        selectedColumnId={lab.selectedColumnId}
-        onSelectColumn={lab.selectColumn}
-      />,
-    );
-  }
+  const goToPage = (next: number) => {
+    setPage(Math.min(Math.max(0, next), pageCount - 1));
+    scrollRef.current?.scrollTo({ top: 0 });
+  };
 
   return (
-    <div ref={scrollRef} className={styles.cardStage}>
-      <div className={styles.cardStack}>
-        {topPad > 0 ? <div aria-hidden style={{ height: topPad }} /> : null}
-        <div ref={gridRef} className={styles.cardGrid}>
-          {cards}
+    <>
+      <div ref={scrollRef} className={styles.cardStage}>
+        <div
+          className={styles.cardGrid}
+          style={{ "--card-columns": perRow } as CSSProperties}
+        >
+          {rows.slice(firstIndex, lastIndex).map((row, offset) => (
+            <RowCard
+              key={firstIndex + offset}
+              index={firstIndex + offset}
+              row={row}
+              columns={columns}
+            />
+          ))}
         </div>
-        {bottomPad > 0 ? <div aria-hidden style={{ height: bottomPad }} /> : null}
       </div>
-    </div>
+      <CardsFooter>
+        {compact ? (
+          <PagerNav
+            label={`${rows.length === 0 ? 0 : firstIndex + 1}–${lastIndex} of ${rows.length}`}
+            previousLabel="Go to previous page"
+            nextLabel="Go to next page"
+            canPrevious={currentPage > 0}
+            canNext={currentPage < pageCount - 1}
+            onPrevious={() => goToPage(currentPage - 1)}
+            onNext={() => goToPage(currentPage + 1)}
+          />
+        ) : (
+          <TablePagination
+            size="small"
+            aria-label="Card pages"
+            count={rows.length}
+            page={currentPage}
+            rowsPerPage={pageSize}
+            rowsPerPageOptions={CARD_PAGE_SIZES}
+            labelRowsPerPage="Cards per page"
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}–${to} of ${count}`
+            }
+            onPageChange={(_event, next) => goToPage(next)}
+            onRowsPerPageChange={(event) => {
+              const next = Number(event.target.value);
+              if (!Number.isFinite(next) || next <= 0) return;
+              // Keep the first visible card in view across the size change.
+              setPageSize(next);
+              setPage(Math.floor(firstIndex / next));
+              scrollRef.current?.scrollTo({ top: 0 });
+            }}
+          />
+        )}
+      </CardsFooter>
+    </>
   );
 }
 
+/** How many cards peek out behind the active one in the carousel deck. */
+const DECK_PEEK = 2;
+/**
+ * Slots rendered around the active card: the previous card (dealt off toward
+ * the viewer, so Previous can slide it back), the active card, `DECK_PEEK`
+ * visible cards behind it, and one hidden on-deck card so a flip always has
+ * a card to fade in at the back.
+ */
+const DECK_WINDOW_BEFORE = 1;
+const DECK_WINDOW_AFTER = DECK_PEEK + 1;
+
+/**
+ * One row at a time, presented as the top card of a deck. Cards are keyed by
+ * row index and positioned purely by their depth relative to the active
+ * card, so a flip is one CSS transition across the whole stack: the top card
+ * is dealt off, every card behind steps forward, and a new one fades in at
+ * the back. The last row has nothing behind it, so it reads as the bottom of
+ * the pile. Arrow keys flip when the stage has focus.
+ */
 function CardCarousel({ lab }: { lab: AiLabController }) {
-  const index = Math.min(
-    Math.max(0, lab.cardIndex),
-    Math.max(0, lab.rows.length - 1),
-  );
-  const row = lab.rows[index];
+  const rows = lab.rows;
+  const total = rows.length;
+  const index = Math.min(Math.max(0, lab.cardIndex), Math.max(0, total - 1));
+  const canPrevious = index > 0;
+  const canNext = index < total - 1;
+  const windowStart = Math.max(0, index - DECK_WINDOW_BEFORE);
+  const windowEnd = Math.min(total, index + DECK_WINDOW_AFTER + 1);
+
+  const go = (next: number) => {
+    lab.setCardIndex(Math.min(Math.max(0, next), Math.max(0, total - 1)));
+  };
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      event.preventDefault();
+      if (canNext) go(index + 1);
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (canPrevious) go(index - 1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      go(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      go(total - 1);
+    }
+  };
 
   return (
-    <div className={styles.cardStage}>
-      <div className={styles.carousel}>
-        <div className={styles.cardNav}>
-          <Button
-            size="small"
-            variant="outlined"
-            color="secondary"
-            startIconName="chevron-left"
-            disabled={index === 0}
-            onClick={() => lab.setCardIndex(index - 1)}
-          >
-            Previous
-          </Button>
-          <span className={styles.setMeta}>
-            Row {index + 1} of {lab.rows.length}
-          </span>
-          <Button
-            size="small"
-            variant="outlined"
-            color="secondary"
-            endIconName="chevron-right"
-            disabled={index >= lab.rows.length - 1}
-            onClick={() => lab.setCardIndex(index + 1)}
-          >
-            Next
-          </Button>
-        </div>
-        {row ? (
-          <RowCard
-            index={index}
-            row={row}
-            columns={lab.config.dataset.columns}
-            selectedColumnId={lab.selectedColumnId}
-            onSelectColumn={lab.selectColumn}
-            featured
-          />
+    <>
+      <div
+        className={styles.carouselStage}
+        role="group"
+        aria-roledescription="carousel"
+        aria-label="Dataset rows, one card at a time"
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+      >
+        {total > 0 ? (
+          <div className={styles.deck}>
+            {rows.slice(windowStart, windowEnd).map((row, offset) => {
+              const rowIndex = windowStart + offset;
+              const depth = rowIndex - index;
+              return (
+                <div
+                  key={rowIndex}
+                  className={`${styles.deckSlot} ${
+                    depth < 0 ? styles.deckSlotDealt : ""
+                  } ${depth > DECK_PEEK ? styles.deckSlotOnDeck : ""}`}
+                  style={{ "--deck-depth": Math.max(0, depth) } as CSSProperties}
+                  aria-hidden={depth !== 0}
+                >
+                  <RowCard
+                    index={rowIndex}
+                    row={row}
+                    columns={lab.config.dataset.columns}
+                    featured
+                  />
+                </div>
+              );
+            })}
+          </div>
         ) : null}
       </div>
-    </div>
+      <CardsFooter>
+        <PagerNav
+          label={`Row ${total === 0 ? 0 : index + 1} of ${total}`}
+          previousLabel="Previous row"
+          nextLabel="Next row"
+          canPrevious={canPrevious}
+          canNext={canNext}
+          onPrevious={() => go(index - 1)}
+          onNext={() => go(index + 1)}
+        />
+      </CardsFooter>
+    </>
+  );
+}
+
+/**
+ * Sticky bar under the cards stage; hosts whichever pager the layout needs.
+ * Matches the resource panel's Continue bar height so the two footers align.
+ */
+function CardsFooter({ children }: { children: ReactNode }) {
+  return <div className={styles.cardsFooter}>{children}</div>;
+}
+
+/**
+ * Compact pager: prev / counter / next, the same cluster `TablePagination`
+ * renders minus the rows-per-page dropdown. Used by the carousel and by the
+ * catalog when the dataset fits on one page.
+ */
+function PagerNav({
+  label,
+  previousLabel,
+  nextLabel,
+  canPrevious,
+  canNext,
+  onPrevious,
+  onNext,
+}: {
+  label: string;
+  previousLabel: string;
+  nextLabel: string;
+  canPrevious: boolean;
+  canNext: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <nav className={styles.pagerNav} aria-label="Card navigation">
+      <Button
+        size="small"
+        variant="outlined"
+        color="secondary"
+        iconOnly
+        startIconName="chevron-left"
+        aria-label={previousLabel}
+        disabled={!canPrevious}
+        onClick={onPrevious}
+      />
+      <span className={styles.pagerCounter} aria-live="polite">
+        {label}
+      </span>
+      <Button
+        size="small"
+        variant="outlined"
+        color="secondary"
+        iconOnly
+        startIconName="chevron-right"
+        aria-label={nextLabel}
+        disabled={!canNext}
+        onClick={onNext}
+      />
+    </nav>
   );
 }
 
@@ -477,15 +616,11 @@ const RowCard = memo(function RowCard({
   index,
   row,
   columns,
-  selectedColumnId,
-  onSelectColumn,
   featured = false,
 }: {
   index: number;
   row: AiLabDataRow;
   columns: AiLabColumn[];
-  selectedColumnId: string | undefined;
-  onSelectColumn: (columnId: string) => void;
   featured?: boolean;
 }) {
   return (
@@ -494,25 +629,63 @@ const RowCard = memo(function RowCard({
       aria-label={`Row ${index + 1}`}
     >
       <p className={styles.cardHeading}>Row {index + 1}</p>
-      {columns.map((column) => (
-        <div key={column.id} className={styles.cardRow}>
-          <button
-            type="button"
-            className={`${styles.cardLabel} ${
-              selectedColumnId === column.id ? styles.cardLabelActive : ""
-            }`}
-            onClick={() => onSelectColumn(column.id)}
-          >
-            {column.name}
-          </button>
-          <span className={styles.cardValue} title={formatCell(row[column.id])}>
-            {formatCell(row[column.id])}
-          </span>
-        </div>
-      ))}
+      <dl className={styles.cardBody}>
+        {columns.map((column) => {
+          const value = formatCell(row[column.id]);
+          return (
+            <div key={column.id} className={styles.cardRow}>
+              <dt className={styles.cardLabel}>{column.name}</dt>
+              <dd className={styles.cardValue} title={featured ? undefined : value}>
+                {value}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
     </article>
   );
 });
+
+function columnStatCards(
+  column: AiLabColumn,
+  freq: { value: string; count: number }[],
+  rowCount: number,
+  numeric: ReturnType<typeof numericalStats> | null,
+): { label: string; value: string }[] {
+  const typeCard = {
+    label: "Type",
+    value: column.type === "categorical" ? "Categorical" : "Numerical",
+  };
+
+  if (column.type === "numerical" && numeric) {
+    return [
+      typeCard,
+      { label: "Minimum", value: formatNumber(numeric.min) },
+      { label: "Maximum", value: formatNumber(numeric.max) },
+      { label: "Median", value: formatNumber(numeric.median) },
+    ];
+  }
+
+  const categoryCount = freq.length;
+  const allUnique =
+    categoryCount > 0 &&
+    categoryCount === rowCount &&
+    freq.every((entry) => entry.count === 1);
+
+  if (allUnique || categoryCount === 1) {
+    return [typeCard, { label: "Categories", value: String(categoryCount) }];
+  }
+
+  return [
+    typeCard,
+    { label: "Categories", value: String(categoryCount) },
+    { label: "Most common", value: freq[0]?.value ?? "—" },
+    {
+      label: "Least common",
+      value: freq[categoryCount - 1]?.value ?? "—",
+    },
+  ];
+}
 
 function ColumnAnalysis({
   lab,
@@ -539,26 +712,12 @@ function ColumnAnalysis({
       : numeric
         ? histogramBins(numeric.values, 5)
         : [];
-  const maxCount = distribution.reduce(
-    (max, entry) => Math.max(max, entry.count),
-    1,
-  );
-  const mostCommon = freq[0];
-  const leastCommon = freq[freq.length - 1];
+  const distributionSummary = distribution
+    .map((entry) => `${entry.label} ${entry.count}`)
+    .join(", ");
 
-  const stats: { label: string; value: string }[] = categorical
-    ? [
-        { label: "Categories", value: String(freq.length) },
-        { label: "Most common", value: mostCommon?.value ?? "—" },
-        { label: "Least common", value: leastCommon?.value ?? "—" },
-        { label: "Rows", value: String(rows.length) },
-      ]
-    : [
-        { label: "Minimum", value: formatNumber(numeric?.min ?? 0) },
-        { label: "Maximum", value: formatNumber(numeric?.max ?? 0) },
-        { label: "Median", value: formatNumber(numeric?.median ?? 0) },
-        { label: "Range", value: formatNumber(numeric?.range ?? 0) },
-      ];
+  const stats = columnStatCards(column, freq, rows.length, numeric);
+  const compactStats = stats.length <= 2;
 
   return (
     <section
@@ -566,23 +725,9 @@ function ColumnAnalysis({
       aria-labelledby="ai-lab-analysis-title"
     >
       <PanelHeader
-        label="CATEGORY ANALYSIS"
+        label="COLUMN ANALYSIS"
         borderTop
         className={styles.analysisHeader}
-        left={
-          <Dropdown
-            role="input"
-            size="extraSmall"
-            color="secondary"
-            aria-label="Column to analyze"
-            value={column.id}
-            options={lab.config.dataset.columns.map((entry) => ({
-              value: entry.id,
-              label: entry.name,
-            }))}
-            onChange={(value) => lab.setSelectedColumnId(String(value))}
-          />
-        }
         right={
           <Button
             size="extraSmall"
@@ -598,20 +743,18 @@ function ColumnAnalysis({
       <div className={styles.analysisBody}>
         <div className={styles.analysisSummary}>
           <div className={styles.analysisIntro}>
-            <div className={styles.analysisTitleRow}>
-              <h3 id="ai-lab-analysis-title" className={styles.analysisTitle}>
-                {column.name}
-              </h3>
-              <Tag
-                color="brand"
-                size="small"
-                label={categorical ? "Categorical" : "Numerical"}
-                startIconName={categorical ? "input-text" : "input-numeric"}
-              />
-            </div>
-            <p className={styles.analysisCopy}>{column.description}</p>
+            <h3 id="ai-lab-analysis-title" className={styles.analysisTitle}>
+              {column.name}
+            </h3>
+            {column.description ? (
+              <p className={styles.analysisCopy}>{column.description}</p>
+            ) : null}
           </div>
-          <dl className={styles.statCards}>
+          <dl
+            className={`${styles.statCards} ${
+              compactStats ? styles.statCardsCompact : ""
+            }`}
+          >
             {stats.map((stat) => (
               <div key={stat.label} className={styles.statCard}>
                 <dt>{stat.label}</dt>
@@ -622,25 +765,13 @@ function ColumnAnalysis({
         </div>
         <div className={styles.analysisDistribution}>
           <p className={styles.distributionLabel}>Distribution</p>
-          <ul className={styles.statList}>
-            {distribution.map((entry) => (
-              <li
-                key={entry.label}
-                className={`${styles.barRow} ${
-                  entry.isOther ? styles.barRowOther : ""
-                }`}
-              >
-                <span className={styles.statLabel}>{entry.label}</span>
-                <div className={styles.barTrack}>
-                  <div
-                    className={styles.barFill}
-                    style={{ width: `${(entry.count / maxCount) * 100}%` }}
-                  />
-                </div>
-                <span className={styles.statCount}>{entry.count}</span>
-              </li>
-            ))}
-          </ul>
+          <ColumnDistributionChart
+            data={distribution}
+            labelOrder={
+              categorical ? uniqueValues(rows, column.id) : undefined
+            }
+            ariaLabel={`Distribution: ${distributionSummary}`}
+          />
         </div>
       </div>
     </section>

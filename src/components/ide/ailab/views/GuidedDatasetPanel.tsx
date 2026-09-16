@@ -364,6 +364,8 @@ export function GuidedExplorePanel({
   onOpenSetup?: () => void;
 }) {
   return (
-    <DataStudio lab={lab} onOpenModel={onOpenModel} onOpenSetup={onOpenSetup} />
+    <div className={styles.exploreRoot}>
+      <DataStudio lab={lab} onOpenModel={onOpenModel} onOpenSetup={onOpenSetup} />
+    </div>
   );
 }

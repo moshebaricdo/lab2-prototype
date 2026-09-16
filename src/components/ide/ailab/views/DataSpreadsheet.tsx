@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactElement,
   type RefObject,
@@ -46,6 +47,10 @@ function datalistId(columnId: string) {
 export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   const columns = lab.config.dataset.columns;
   const rows = lab.rows;
+  const readOnly = lab.config.allowDataEdit === false;
+  /** Drives `--index-col-ch` so the row # column fits the longest index. */
+  const indexColCh = Math.max(1, String(rows.length).length);
+  const gridColumnCount = columns.length + 1;
   const gridRef = useRef<HTMLTableElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -157,8 +162,9 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
 
   const onCellClick = useCallback(
     (cell: CellRef) => {
-      setActive(cell);
       latest.current.lab.setSelectedColumnId(cell.columnId);
+      if (latest.current.lab.config.allowDataEdit === false) return;
+      setActive(cell);
       gridRef.current?.focus();
     },
     [],
@@ -173,6 +179,7 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   );
 
   const onGridKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
+    if (readOnly) return;
     if (editing) return;
 
     if (event.key === "Escape") {
@@ -293,9 +300,10 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
         row={rows[rowIndex]}
         columns={columns}
         selectedColumnId={lab.selectedColumnId}
-        activeColumnId={isActiveRow ? active?.columnId : undefined}
-        editing={isActiveRow && editing}
-        draft={isActiveRow && editing ? draft : ""}
+        activeColumnId={readOnly ? undefined : isActiveRow ? active?.columnId : undefined}
+        editing={!readOnly && isActiveRow && editing}
+        draft={!readOnly && isActiveRow && editing ? draft : ""}
+        readOnly={readOnly}
         inputRef={inputRef}
         onCellClick={onCellClick}
         onCellDoubleClick={onCellDoubleClick}
@@ -309,27 +317,25 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   return (
     <div className={styles.sheet}>
       <div ref={scrollRef} className={styles.scroll}>
-        <div className={styles.scrollBody}>
+        <div
+          className={styles.scrollBody}
+          style={{ "--index-col-ch": indexColCh } as CSSProperties}
+        >
           <table
             ref={gridRef}
             className={styles.grid}
-            tabIndex={0}
+            tabIndex={readOnly ? -1 : 0}
             role="grid"
             aria-label={lab.config.dataset.name}
-            aria-readonly={lab.config.allowDataEdit === false}
-            aria-colcount={columns.length + 1}
+            aria-readonly={readOnly}
+            aria-colcount={gridColumnCount}
             aria-rowcount={rows.length + 1}
             onKeyDown={onGridKeyDown}
           >
           <colgroup>
             <col className={styles.colIndex} />
             {columns.map((column) => (
-              <col
-                key={column.id}
-                className={
-                  column.type === "numerical" ? styles.colNumber : styles.colText
-                }
-              />
+              <col key={column.id} />
             ))}
           </colgroup>
           <thead>
@@ -380,13 +386,13 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
           <tbody>
             {topPad > 0 ? (
               <tr aria-hidden className={styles.spacerRow}>
-                <td colSpan={columns.length + 1} style={{ height: topPad }} />
+                <td colSpan={gridColumnCount} style={{ height: topPad }} />
               </tr>
             ) : null}
             {visibleRows}
             {bottomPad > 0 ? (
               <tr aria-hidden className={styles.spacerRow}>
-                <td colSpan={columns.length + 1} style={{ height: bottomPad }} />
+                <td colSpan={gridColumnCount} style={{ height: bottomPad }} />
               </tr>
             ) : null}
           </tbody>
@@ -418,6 +424,7 @@ interface SheetRowProps {
   activeColumnId: string | undefined;
   editing: boolean;
   draft: string;
+  readOnly: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
   onCellClick: (cell: CellRef) => void;
   onCellDoubleClick: (cell: CellRef) => void;
@@ -434,6 +441,7 @@ const SheetRow = memo(function SheetRow({
   activeColumnId,
   editing,
   draft,
+  readOnly,
   inputRef,
   onCellClick,
   onCellDoubleClick,
@@ -473,6 +481,13 @@ const SheetRow = memo(function SheetRow({
                 onBlur={onEditorBlur}
                 onKeyDown={onEditorKeyDown}
               />
+            ) : readOnly ? (
+              <span
+                className={styles.cellReadOnly}
+                onClick={() => onCellClick({ rowIndex, columnId: column.id })}
+              >
+                {formatCell(row[column.id])}
+              </span>
             ) : (
               <button
                 type="button"

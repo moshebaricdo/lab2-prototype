@@ -13,8 +13,10 @@ How a file is read (`src/lib/aiLab/csvDataset.ts`):
 - Dataset id = file name slug (`Online Food.csv` → `online_food`); display
   name is the humanized slug.
 
-To override the display name, description, or label column for a file, add
-an entry to `overrides` in `index.ts` keyed by that slug.
+To override the display name, description, label column, or per-column
+descriptions (shown in column analysis), add an entry to `overrides` in
+`index.ts` keyed by that slug. Column description keys use the column id
+slug (`Has feathers` → `has_feathers`).
 
 Keep files modest (a few hundred rows). Everything trains in the browser and
 the spreadsheet renders every row.

@@ -32,6 +32,15 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
+  flex-direction: column;
+}
+
+.exploreRoot {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
 }
 
 .panel {

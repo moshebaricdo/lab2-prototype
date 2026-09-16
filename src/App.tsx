@@ -36,17 +36,9 @@ const AiLabPretrainedLevelPage = lazyPage(
   "AiLabPretrainedLevelPage",
 );
 const AiLabGuidedLevelPage = lazyPage(AiLabPages, "AiLabGuidedLevelPage");
-const AiLabPlaytestLookLevelPage = lazyPage(
-  AiLabPages,
-  "AiLabPlaytestLookLevelPage",
-);
-const AiLabPlaytestTryLevelPage = lazyPage(
-  AiLabPages,
-  "AiLabPlaytestTryLevelPage",
-);
-const AiLabPlaytestBuildLevelPage = lazyPage(
-  AiLabPages,
-  "AiLabPlaytestBuildLevelPage",
+const AiLabPlaytestProgressionPage = lazyPage(
+  () => import("./pages/ailab/AiLabPlaytestProgressionPage"),
+  "AiLabPlaytestProgressionPage",
 );
 const SketchLabPages = () => import("./pages/sketchlab/SketchLabLevelPage");
 const SketchLabLevelPage = lazyPage(SketchLabPages, "SketchLabLevelPage");
@@ -522,16 +514,20 @@ export default function App() {
           element={<AiLabGuidedLevelPage />}
         />
         <Route
+          path="/levels/progression-ailab"
+          element={<AiLabPlaytestProgressionPage />}
+        />
+        <Route
           path="/levels/progression-ailab-look"
-          element={<AiLabPlaytestLookLevelPage />}
+          element={<Navigate to="/levels/progression-ailab?step=look" replace />}
         />
         <Route
           path="/levels/progression-ailab-try"
-          element={<AiLabPlaytestTryLevelPage />}
+          element={<Navigate to="/levels/progression-ailab?step=try" replace />}
         />
         <Route
           path="/levels/progression-ailab-build"
-          element={<AiLabPlaytestBuildLevelPage />}
+          element={<Navigate to="/levels/progression-ailab?step=build" replace />}
         />
         <Route path="/levels/sketchlab" element={<SketchLabLevelPage />} />
         <Route

@@ -13,12 +13,6 @@ import type { LevelProgressLink } from "../../components/ui/header/LevelProgress
 import {
   aiLabGuidedConfig,
   aiLabGuidedSectionInstructions,
-  aiLabPlaytestBuildConfig,
-  aiLabPlaytestBuildInstructions,
-  aiLabPlaytestLookConfig,
-  aiLabPlaytestLookInstructions,
-  aiLabPlaytestTryConfig,
-  aiLabPlaytestTryInstructions,
   aiLabPretrainedConfig,
   aiLabPretrainedInstructions,
   aiLabSectionInstructions,
@@ -35,7 +29,6 @@ import {
 import {
   aiLabGuidedLevelLinks,
   aiLabLevelLinks,
-  aiLabPlaytestLevelLinks,
 } from "../levelTypeLinks";
 import type { AiLabLevelConfig, AiLabSection } from "../../types/aiLab";
 
@@ -52,6 +45,10 @@ interface AiLabLevelPageProps {
   instructionsMarkdown?: string;
   /** Continue is the only door; header bubbles stay display-only. */
   disableProgressionLinks?: boolean;
+  /** Override path-based step index (single-route progressions). */
+  progressLevelIndex?: number;
+  /** When set, Continue calls this instead of navigating to `continueTo`. */
+  onContinue?: () => void;
 }
 
 function aiLabDevFields(catalog: ReturnType<typeof uniqueDevCatalog>): DevPanelField[] {
@@ -196,6 +193,8 @@ export function AiLabLevelPage({
   levelLinks = aiLabLevelLinks,
   instructionsMarkdown,
   disableProgressionLinks = false,
+  progressLevelIndex,
+  onContinue,
 }: AiLabLevelPageProps = {}) {
   const navigate = useNavigate();
   const catalog = useMemo(
@@ -266,7 +265,8 @@ export function AiLabLevelPage({
     ],
   );
   const lab = useAiLabState(levelConfig);
-  const levelIndex = currentLevelIndex(currentLevelPath, levelLinks);
+  const levelIndex =
+    progressLevelIndex ?? currentLevelIndex(currentLevelPath, levelLinks);
   const progressLinks = levelLinks;
   const studioInstructions =
     levelConfig.showModelDetails ||
@@ -326,7 +326,7 @@ export function AiLabLevelPage({
           Boolean(resolved.collapseSidebarByDefault),
         compact: Boolean(resolved.resourcePanelCompact),
         continueLabel,
-        onContinue: () => navigate(continueTo ?? "/levels"),
+        onContinue: onContinue ?? (() => navigate(continueTo ?? "/levels")),
         surfaceVariant: "edge",
         instructionsContent: <MarkdownInstructions markdown={instructions} />,
         devPanelFields,
@@ -373,48 +373,3 @@ export function AiLabGuidedLevelPage() {
   );
 }
 
-export function AiLabPlaytestLookLevelPage() {
-  return (
-    <AiLabLevelPage
-      currentLevelPath="/levels/progression-ailab-look"
-      title="Look at the animals"
-      subtitle="Bird, mammal, or fish"
-      config={aiLabPlaytestLookConfig}
-      continueTo="/levels/progression-ailab-try"
-      levelLinks={aiLabPlaytestLevelLinks}
-      instructionsMarkdown={aiLabPlaytestLookInstructions}
-      disableProgressionLinks
-    />
-  );
-}
-
-export function AiLabPlaytestTryLevelPage() {
-  return (
-    <AiLabLevelPage
-      currentLevelPath="/levels/progression-ailab-try"
-      title="Try a model that already exists"
-      subtitle="Bird, mammal, or fish"
-      config={aiLabPlaytestTryConfig}
-      continueTo="/levels/progression-ailab-build"
-      levelLinks={aiLabPlaytestLevelLinks}
-      instructionsMarkdown={aiLabPlaytestTryInstructions}
-      disableProgressionLinks
-    />
-  );
-}
-
-export function AiLabPlaytestBuildLevelPage() {
-  return (
-    <AiLabLevelPage
-      currentLevelPath="/levels/progression-ailab-build"
-      title="Build your own, then bounce"
-      subtitle="Bird, mammal, or fish"
-      config={aiLabPlaytestBuildConfig}
-      continueLabel="Finish"
-      continueTo="/levels"
-      levelLinks={aiLabPlaytestLevelLinks}
-      instructionsMarkdown={aiLabPlaytestBuildInstructions}
-      disableProgressionLinks
-    />
-  );
-}

@@ -19,7 +19,7 @@ describe("getLevelTypeIconConfig", () => {
       family: "solid",
       name: "rectangle-list",
     });
-    expect(getLevelTypeIconConfig("/levels/progression-ailab-look")).toEqual({
+    expect(getLevelTypeIconConfig("/levels/progression-ailab")).toEqual({
       family: "solid",
       name: "chart-scatter",
     });

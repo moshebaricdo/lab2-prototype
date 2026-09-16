@@ -1,0 +1,25 @@
+Animal,Has feathers,Breathes with lungs,Lives in water,Class
+Hawk,Yes,Yes,No,Bird
+Dolphin,No,Yes,Yes,Mammal
+Salmon,No,No,Yes,Fish
+Bat,No,Yes,No,Mammal
+Robin,Yes,Yes,No,Bird
+Goldfish,No,No,Yes,Fish
+Dog,No,Yes,No,Mammal
+Penguin,Yes,Yes,Yes,Bird
+Tuna,No,No,Yes,Fish
+Cat,No,Yes,No,Mammal
+Eagle,Yes,Yes,No,Bird
+Shark,No,No,Yes,Fish
+Whale,No,Yes,Yes,Mammal
+Duck,Yes,Yes,Yes,Bird
+Trout,No,No,Yes,Fish
+Mouse,No,Yes,No,Mammal
+Sparrow,Yes,Yes,No,Bird
+Cod,No,No,Yes,Fish
+Horse,No,Yes,No,Mammal
+Owl,Yes,Yes,No,Bird
+Clownfish,No,No,Yes,Fish
+Bear,No,Yes,No,Mammal
+Crow,Yes,Yes,No,Bird
+Bass,No,No,Yes,Fish
