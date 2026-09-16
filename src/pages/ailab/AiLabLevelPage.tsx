@@ -49,6 +49,10 @@ interface AiLabLevelPageProps {
   progressLevelIndex?: number;
   /** When set, Continue calls this instead of navigating to `continueTo`. */
   onContinue?: () => void;
+  /** Single-route progressions: jump to a step by bubble index. */
+  onProgressLevelSelect?: (index: number) => void;
+  /** Initial resource panel width in px (default 400). */
+  resourcePanelWidth?: number;
 }
 
 function aiLabDevFields(catalog: ReturnType<typeof uniqueDevCatalog>): DevPanelField[] {
@@ -134,14 +138,24 @@ function aiLabDevFields(catalog: ReturnType<typeof uniqueDevCatalog>): DevPanelF
       key: "testLayout",
       label: "Testing layout",
       description:
-        "Dock keeps the Input → Output footer. Canvas floats the trace toolbar, input card, and prediction card over the visualization.",
+        "Canvas floats the trace toolbar, input card, and prediction card over the visualization. Dock keeps the Input → Output footer.",
       type: "select",
       group: "AI Lab",
       options: [
-        { label: "Dock — Input → Output footer", value: "dock" },
         { label: "Canvas — floating cards", value: "canvas" },
+        { label: "Dock — Input → Output footer", value: "dock" },
       ],
       visibleWhen: (values) => values.workspaceTabs !== "dataset",
+    },
+    {
+      key: "bundleWideSplits",
+      label: "Bundle wide tree splits",
+      description:
+        "Experiment: when a decision splits 7+ ways, leaves that predict the same label fold into one bundle per outcome (click to open). Off leaves the wide split as-is.",
+      type: "boolean",
+      group: "AI Lab",
+      visibleWhen: (values) =>
+        values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
     },
     {
       key: "showInstructionsTab",
@@ -195,6 +209,8 @@ export function AiLabLevelPage({
   disableProgressionLinks = false,
   progressLevelIndex,
   onContinue,
+  onProgressLevelSelect,
+  resourcePanelWidth,
 }: AiLabLevelPageProps = {}) {
   const navigate = useNavigate();
   const catalog = useMemo(
@@ -208,7 +224,7 @@ export function AiLabLevelPage({
     setIsSettingsOpen,
     sidebarWidth,
     setSidebarWidth,
-  } = useLayoutState("instructions");
+  } = useLayoutState("instructions", { sidebarWidth: resourcePanelWidth });
   const { chatMessages, setChatMessages, chatInput, setChatInput } = useChatState([]);
   const versionHistoryState = useVersionHistoryState();
   const defaults = aiLabDevDefaults(config);
@@ -231,6 +247,7 @@ export function AiLabLevelPage({
   const allowDataEdit = Boolean(resolved.allowDataEdit);
   const defaultDataView = String(resolved.defaultDataView);
   const testLayout = String(resolved.testLayout);
+  const bundleWideSplits = Boolean(resolved.bundleWideSplits);
   // Keyed on primitives so the config (and everything `useAiLabState`
   // derives from it) keeps its identity across unrelated page re-renders.
   const levelConfig = useMemo(
@@ -247,6 +264,7 @@ export function AiLabLevelPage({
           allowDataEdit,
           defaultDataView,
           testLayout,
+          bundleWideSplits,
         },
         catalog,
       ),
@@ -262,6 +280,7 @@ export function AiLabLevelPage({
       allowDataEdit,
       defaultDataView,
       testLayout,
+      bundleWideSplits,
     ],
   );
   const lab = useAiLabState(levelConfig);
@@ -298,6 +317,7 @@ export function AiLabLevelPage({
         levelLinks: progressLinks,
         currentLevelPath,
         disableProgressionLinks,
+        onProgressLevelSelect,
       }}
       sidebarProps={{
         activeTab,

@@ -13,10 +13,17 @@ export type ResourcePanelTab =
   | "builder-settings"
   | "dev";
 
-export function useLayoutState(initialTab: ResourcePanelTab = "ai-tutor") {
+export interface UseLayoutStateOptions {
+  sidebarWidth?: number;
+}
+
+export function useLayoutState(
+  initialTab: ResourcePanelTab = "ai-tutor",
+  options: UseLayoutStateOptions = {},
+) {
   const [activeTab, setActiveTab] = useState<ResourcePanelTab>(initialTab);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(400);
+  const [sidebarWidth, setSidebarWidth] = useState(options.sidebarWidth ?? 400);
 
   return useMemo(
     () => ({

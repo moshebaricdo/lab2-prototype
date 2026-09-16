@@ -1,4 +1,10 @@
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Button,
   Dropdown,
@@ -33,8 +39,6 @@ import { KnnViz, type KnnView } from "./viz/KnnViz";
 import { ModelActions } from "./ModelActions";
 import type { ModelInspectorTab } from "./ModelInspector";
 import styles from "./TestDashboard.module.scss";
-
-const FEATURE_CHIPS = 2;
 
 function columnName(columns: AiLabColumn[], id: string): string {
   return columnById(columns, id)?.name ?? id;
@@ -86,6 +90,110 @@ function currentQuery(lab: AiLabController): AiLabDataRow {
       column?.type === "numerical" ? Number(raw) : String(raw ?? "");
   });
   return query;
+}
+
+function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
+  const rowRef = useRef<HTMLSpanElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [visibleCount, setVisibleCount] = useState(featureNames.length);
+
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    const measure = measureRef.current;
+    if (!row || !measure) return;
+
+    const run = () => {
+      const available = row.clientWidth;
+      if (available <= 0) return;
+
+      const gap = 6;
+      const chips = Array.from(
+        measure.querySelectorAll<HTMLElement>("[data-measure=feature]"),
+      );
+      const overflowEl = measure.querySelector<HTMLElement>(
+        "[data-measure=overflow]",
+      );
+      const overflowWidth = overflowEl?.offsetWidth ?? 0;
+      const max = featureNames.length;
+
+      let visible = max;
+      while (visible >= 0) {
+        const hidden = featureNames.length - visible;
+        let used = 0;
+        for (let index = 0; index < visible; index += 1) {
+          if (index > 0) used += gap;
+          used += chips[index]?.offsetWidth ?? 0;
+        }
+        if (hidden > 0) used += gap + overflowWidth;
+        if (used <= available) {
+          setVisibleCount(visible);
+          return;
+        }
+        visible -= 1;
+      }
+
+      setVisibleCount(0);
+    };
+
+    run();
+    const observer = new ResizeObserver(run);
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [featureNames]);
+
+  const visibleFeatures = featureNames.slice(0, visibleCount);
+  const overflowFeatures = featureNames.slice(visibleCount);
+
+  const overflowTooltip =
+    visibleCount === 0
+      ? featureNames.join(", ")
+      : overflowFeatures.join(", ");
+
+  return (
+    <span ref={rowRef} className={styles.statementFeatures}>
+      {visibleFeatures.map((name) => (
+        <Tag
+          key={name}
+          size="large"
+          color="success"
+          label={name}
+          className={styles.statementTag}
+        />
+      ))}
+      {overflowFeatures.length > 0 ? (
+        <Tooltip title={overflowTooltip} placement="bottom">
+          <span className={styles.overflowTagWrap}>
+            <Tag
+              size="large"
+              color="success"
+              label={`+${overflowFeatures.length}`}
+              className={styles.statementTag}
+            />
+          </span>
+        </Tooltip>
+      ) : null}
+      <div ref={measureRef} className={styles.tagMeasure} aria-hidden>
+        {featureNames.map((name) => (
+          <span key={name} data-measure="feature">
+            <Tag
+              size="large"
+              color="success"
+              label={name}
+              className={styles.statementTag}
+            />
+          </span>
+        ))}
+        <span data-measure="overflow">
+          <Tag
+            size="large"
+            color="success"
+            label={`+${Math.max(featureNames.length, 9)}`}
+            className={styles.statementTag}
+          />
+        </span>
+      </div>
+    </span>
+  );
 }
 
 interface TestDashboardProps {
@@ -161,8 +269,6 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
   const featureNames = model.selectedFeatures.map((feature) =>
     columnName(lab.config.dataset.columns, feature),
   );
-  const visibleFeatures = featureNames.slice(0, FEATURE_CHIPS);
-  const overflowFeatures = featureNames.slice(FEATURE_CHIPS);
   const canvasLayout = lab.config.testLayout === "canvas";
 
   const pendingValue =
@@ -227,18 +333,16 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
         Try a prediction
       </h3>
       <div className={styles.ioTools}>
-        <Tooltip title="Fill with random values" placement="bottom">
-          <Button
-            size="extraSmall"
-            variant="outlined"
-            color="secondary"
-            iconOnly
-            startIconName="shuffle"
-            aria-label="Fill with random values"
-            onClick={fillRandom}
-          />
-        </Tooltip>
-        {viewToggle}
+        <Button
+          size="extraSmall"
+          variant="contained"
+          color="primary"
+          startIconName="shuffle"
+          onClick={fillRandom}
+        >
+          Random
+        </Button>
+        {lab.config.hideTestViewToggle ? null : viewToggle}
       </div>
     </div>
   );
@@ -289,11 +393,19 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
   // prediction card that folds the Output card into the algorithm summary.
   const canvasChrome: CanvasChrome | undefined = canvasLayout
     ? {
+        // The card shows the answer alone while inputs are missing, and the
+        // tree's path list *is* its explanation, so no sentence repeats it.
         outcome: {
           title: labelName,
-          value: prediction ?? pendingValue,
+          value: prediction,
           pending: !prediction,
-          copy: explanation ?? pendingCopy,
+          copy: prediction
+            ? treeTrace
+              ? undefined
+              : explanation
+            : missing === model.selectedFeatures.length
+              ? "Fill in the inputs above to get a prediction."
+              : `Fill in ${missing} more input${missing === 1 ? "" : "s"} above to get a prediction.`,
         },
         inputCard: (
           <>
@@ -313,47 +425,43 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
       <section className={styles.root}>
         <header className={styles.metrics}>
           <p className={styles.statement}>
-            <span>Predict</span>
-            <Tag
-              size="large"
-              color="brand"
-              label={columnName(lab.config.dataset.columns, model.labelColumn)}
-              className={styles.statementTag}
-            />
-            {visibleFeatures.length > 0 ? <span>based on</span> : null}
-            {visibleFeatures.map((name) => (
+            <span className={styles.statementLeading}>
+              <span>Predict</span>
               <Tag
-                key={name}
                 size="large"
-                color="success"
-                label={name}
+                color="brand"
+                label={columnName(lab.config.dataset.columns, model.labelColumn)}
                 className={styles.statementTag}
               />
-            ))}
-            {overflowFeatures.length > 0 ? (
-              <Tooltip title={overflowFeatures.join(", ")} placement="bottom">
-                <span>
-                  <Tag
-                    size="large"
-                    color="success"
-                    label={`+${overflowFeatures.length}`}
-                    className={styles.statementTag}
-                  />
-                </span>
-              </Tooltip>
+              {featureNames.length > 0 ? <span>based on</span> : null}
+            </span>
+            {featureNames.length > 0 ? (
+              <StatementFeatureTags featureNames={featureNames} />
             ) : null}
           </p>
           <div className={styles.metricCluster}>
             <p className={styles.metricMeta}>
-              <span>{lab.config.dataset.name}</span>
+              <span className={styles.metricDatasetWrap}>
+                <Tooltip
+                  title={lab.config.dataset.name}
+                  placement="bottom"
+                  slotProps={{ popper: { disablePortal: true } }}
+                >
+                  <span className={styles.metricDatasetName}>
+                    {lab.config.dataset.name}
+                  </span>
+                </Tooltip>
+              </span>
               {model.algorithm === "knn" && model.knnK ? (
                 <>
                   <span className={styles.metricDot} aria-hidden />
-                  <span>k={model.knnK}</span>
+                  <span className={styles.metricStat}>k={model.knnK}</span>
                 </>
               ) : null}
               <span className={styles.metricDot} aria-hidden />
-              <span>{Math.round(model.accuracy * 100)}% Accuracy</span>
+              <span className={styles.metricStat}>
+                {Math.round(model.accuracy * 100)}% Accuracy
+              </span>
             </p>
             <div className={styles.metricActions}>
               <ModelActions
@@ -374,6 +482,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
               trace={treeTrace}
               view={treeView}
               canvasChrome={canvasChrome}
+              bundleWideSplits={Boolean(lab.config.bundleWideSplits)}
             />
           ) : (
             <KnnViz

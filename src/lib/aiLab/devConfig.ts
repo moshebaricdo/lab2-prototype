@@ -21,6 +21,7 @@ export interface AiLabDevOverrides {
   allowDataEdit: boolean;
   defaultDataView: string;
   testLayout: string;
+  bundleWideSplits: boolean;
 }
 
 export function aiLabDevDefaults(
@@ -41,7 +42,8 @@ export function aiLabDevDefaults(
     showModelDetails: Boolean(config.showModelDetails),
     allowDataEdit: config.allowDataEdit !== false,
     defaultDataView: config.defaultDataView ?? "table",
-    testLayout: config.testLayout ?? "dock",
+    testLayout: config.testLayout ?? "canvas",
+    bundleWideSplits: Boolean(config.bundleWideSplits),
   };
 }
 
@@ -104,6 +106,7 @@ export function mergeAiLabDevConfig(
       resolved.defaultDataView === "cards" ? "cards" : "table",
     testLayout:
       resolved.testLayout === "canvas" ? "canvas" : ("dock" as AiLabTestLayout),
+    bundleWideSplits: Boolean(resolved.bundleWideSplits),
     pretrained,
     initialSection: hideDatasetTab
       ? "test"

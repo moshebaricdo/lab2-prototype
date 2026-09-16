@@ -38,15 +38,15 @@
 }
 
 .metrics {
-  display: flex;
+  display: grid;
   position: sticky;
   top: 0;
   z-index: 2;
   flex-shrink: 0;
-  flex-wrap: wrap;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
   align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
+  gap: 16px;
+  min-width: 0;
   min-height: 40px;
   padding: 0 8px 0 12px;
   overflow: hidden;
@@ -58,11 +58,53 @@
   @include type-label-2;
   display: flex;
   min-width: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
   margin: 0;
+  overflow: hidden;
   color: var(--text-neutral-primary);
+}
+
+.statementLeading {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.statementFeatures {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.statementFeatures > * {
+  flex-shrink: 0;
+}
+
+.overflowTagWrap {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.tagMeasure {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Figma uses large Tags, then pin them to 24px so they sit in the 40px strip. */
@@ -74,19 +116,53 @@
 
 .metricCluster {
   display: flex;
-  flex-shrink: 0;
+  min-width: 0;
+  max-width: 100%;
   align-items: center;
   gap: 8px;
+  overflow: hidden;
 }
 
 .metricMeta {
   @include type-body-4-regular;
   display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
   margin: 0;
+  overflow: hidden;
   color: var(--text-neutral-tertiary);
   font-variant-numeric: tabular-nums;
+}
+
+.metricDatasetWrap {
+  display: block;
+  min-width: 0;
+  flex: 1 1 0;
+  overflow: hidden;
+
+  /* CADS / MUI Tooltip wraps the trigger in an extra inline box. */
+  > span {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+}
+
+.metricDatasetName {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metricStat {
+  flex-shrink: 0;
 }
 
 .metricDot {
@@ -98,6 +174,7 @@
 
 .metricActions {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 6px;
 

@@ -288,18 +288,20 @@
   background: var(--background-neutral-primary);
 }
 
+/* Figma AI Lab 2 `5383:6634`: 10/12 padding, Body 2 heading, Body 3 rows
+   separated by hairlines on a 6px rhythm. */
 .card {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px;
+  padding: 10px 12px;
   border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
 }
 
 .cardHeading {
-  @include type-label-2;
+  @include type-body-2-semibold;
   margin: 0;
   color: var(--text-neutral-primary);
 }
@@ -307,23 +309,29 @@
 .cardBody {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   margin: 0;
 }
 
 .cardRow {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   /* Single-line rows keep every card in a grid row the same height. Full
      values stay available via `title`. */
   white-space: nowrap;
+
+  & + & {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border-neutral-primary);
+  }
 }
 
 .cardLabel {
-  @include type-label-3;
+  @include type-body-3-semibold;
   flex-shrink: 0;
-  color: var(--text-neutral-tertiary);
+  color: var(--text-neutral-primary);
 }
 
 .cardValue {
@@ -426,11 +434,9 @@
     @include type-heading-h5-semibold;
   }
 
-  .cardBody {
-    gap: 0;
-  }
-
-  .cardRow {
+  .cardRow,
+  .cardRow + .cardRow {
+    margin-top: 0;
     align-items: baseline;
     padding: 12px 0;
     border-top: 1px solid var(--border-neutral-primary);

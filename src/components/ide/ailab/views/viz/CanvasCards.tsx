@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Button } from "@moshebari/cads-react";
 import { TraceBar, type TraceStep } from "./TraceBar";
 import styles from "./CanvasCards.module.scss";
 
@@ -14,11 +13,11 @@ export const CARD_INSET = 316;
 export interface CanvasOutcome {
   /** Label column name — the card title. */
   title: string;
-  /** The predicted label, or the pending text ("2 more inputs"). */
-  value: ReactNode;
+  /** The predicted label; omit while pending to show only `copy`. */
+  value?: ReactNode;
   pending: boolean;
-  /** One-sentence explanation, or the pending hint. */
-  copy: ReactNode;
+  /** One-sentence explanation or the pending hint; omit when the body says it. */
+  copy?: ReactNode;
 }
 
 /** Slots the dashboard hands a viz when the Testing layout is `canvas`. */
@@ -40,13 +39,12 @@ interface CanvasCardsProps extends CanvasChrome {
    * sheet instead of running under them.
    */
   docked?: boolean;
-  /** Selected-node detail (tree); shown above the body with a dismiss. */
-  detail?: ReactNode;
-  onDismissDetail?: () => void;
   /** Sits in the lede under the explanation — vote tally, etc. */
   metrics?: ReactNode;
   /** Body below the lede — neighbor list, decision path. */
   children?: ReactNode;
+  /** Draw the body inside the lede (no divider) — the decision path reads as part of the answer. */
+  inlineBody?: boolean;
   footer?: ReactNode;
 }
 
@@ -65,10 +63,9 @@ export function CanvasCards({
   docked = false,
   outcome,
   inputCard,
-  detail,
-  onDismissDetail,
   metrics,
   children,
+  inlineBody = false,
   footer,
 }: CanvasCardsProps) {
   return (
@@ -98,35 +95,26 @@ export function CanvasCards({
           </div>
           <div className={styles.main}>
             <div className={styles.lede}>
-              <div aria-live="polite">
-                <h4
-                  className={`${styles.value} ${
-                    outcome.pending ? styles.valuePending : ""
-                  }`}
-                >
-                  {outcome.value}
-                </h4>
-                <p className={styles.copy}>{outcome.copy}</p>
+              <div className={styles.answer} aria-live="polite">
+                {outcome.value === undefined ? null : (
+                  <h4
+                    className={`${styles.value} ${
+                      outcome.pending ? styles.valuePending : ""
+                    }`}
+                  >
+                    {outcome.value}
+                  </h4>
+                )}
+                {outcome.copy === undefined ? null : (
+                  <p className={styles.copy}>{outcome.copy}</p>
+                )}
               </div>
               {metrics}
+              {inlineBody && children ? children : null}
             </div>
-            {detail ? (
-              <div className={styles.detail}>
-                <div className={styles.detailText}>{detail}</div>
-                {onDismissDetail ? (
-                  <Button
-                    size="extraSmall"
-                    variant="text"
-                    color="tertiary"
-                    iconOnly
-                    startIconName="xmark"
-                    aria-label="Close node details"
-                    onClick={onDismissDetail}
-                  />
-                ) : null}
-              </div>
+            {!inlineBody && children ? (
+              <div className={styles.body}>{children}</div>
             ) : null}
-            {children ? <div className={styles.body}>{children}</div> : null}
           </div>
           {footer ? <div className={styles.footer}>{footer}</div> : null}
         </aside>

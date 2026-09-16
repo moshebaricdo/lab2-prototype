@@ -91,22 +91,21 @@ export const aiLabPretrainedInstructions = [
 ].join("\n\n");
 
 export const aiLabPlaytestLookInstructions = [
-  "# Look at the animals",
-  "Which yes/no columns look like they could tell Bird, Mammal, and Fish apart?",
-  "Open the table. Switch to **Cards** if you want. Click a column header to open the analysis dock.",
-  "Notice that every bird has feathers, fish do not breathe with lungs, and **Lives in water** is mixed (penguin, duck, dolphin, whale).",
+  "# Explore the Dataset",
+  "AI models learn from data. On the right is a simple dataset about animals, each row is one animal, each column is a property (like **has feathers** or **lives in water?**).",
+  "Look for patterns! Click anywhere on a column to learn more.",
+  "**Try it out:** If the table feels like a lot, try the Cards view.",
 ].join("\n\n");
 
 export const aiLabPlaytestTryInstructions = [
-  "# Try a model that already exists",
-  "Walk Hawk, then Bat. Why does the model never ask about water?",
-  "Fill **Hawk**, **Dolphin**, **Salmon**, and **Bat** in the dock. Press **Play** to trace the tree. Flip **Diagram** / **Rules**.",
-  "This tree only uses **Has feathers** and **Breathes with lungs**. Feathers → Bird; otherwise lungs → Mammal or Fish.",
+  "# Try a Prediction Model",
+  "This model learned from the animal data you just saw. Give it a few facts, and it'll predict if what you put would be a bird, fish, or mammal.",
+  "It uses a **decision tree** which is just the computer asking yes or no questions until it has an answer.",
+  "**Try it out:** Enter some info (or click \"Random\") and make a prediction. Try a few to see how it changes!",
 ].join("\n\n");
 
 export const aiLabPlaytestBuildInstructions = [
-  "# Build your own, then bounce",
-  "Train with the two traits from the poster. Then try a worse set of columns and compare the tree.",
-  "Pick **Using** columns, **Train model**, then **Test model**. You can hop back to the sheet.",
-  "Recreate the Level 2 tree (**Has feathers** + **Breathes with lungs**). Optional: add **Lives in water** (the tree should stay the same) or include **Animal** (the tree becomes a name lookup).",
+  "# Train and Test a Model",
+  "Now build your own model with the same animal data!",
+  "In the **Train** area, pick which columns it should learn from. Watch how the accuracy changes based on what or how many you pick, then test it out with some predictions!",
 ].join("\n\n");

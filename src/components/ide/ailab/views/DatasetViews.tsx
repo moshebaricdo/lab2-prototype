@@ -60,7 +60,9 @@ export function DatasetViews({
               showTrainingActions={trainingActions}
               isLabel={lab.labelColumn === selected.id}
               isFeature={lab.selectedFeatures.includes(selected.id)}
-              canSelectLabel={!lab.config.hideLabelSelect}
+              canSelectLabel={
+                !lab.config.hideLabelSelect && !lab.config.lockLabelColumn
+              }
               onSelectLabel={() => lab.setLabelColumn(selected.id)}
               onToggleFeature={() => lab.toggleFeature(selected.id)}
             />

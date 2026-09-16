@@ -5,6 +5,7 @@ import { FaIcon } from "@moshebari/cads-react/icons";
 import {
   findLevelLinkIndex,
   includesLevelPath,
+  levelLinksHaveDuplicatePaths,
 } from "../../../lib/levelShareLinks";
 import styles from "./LevelProgressBubbles.module.scss";
 
@@ -30,6 +31,7 @@ interface BubbleProps {
   isAssessment: boolean;
   levelNumber: number;
   to?: string;
+  onClick?: () => void;
   label: string;
   readOnly?: boolean;
 }
@@ -54,6 +56,7 @@ function Bubble({
   isAssessment,
   levelNumber,
   to,
+  onClick,
   label,
   readOnly = false,
 }: BubbleProps) {
@@ -66,6 +69,19 @@ function Bubble({
         <Link to={to} className={className} aria-label={label} aria-current={isActive ? "step" : undefined}>
           {children}
         </Link>
+      );
+    }
+    if (onClick) {
+      return (
+        <button
+          type="button"
+          className={className}
+          aria-label={label}
+          aria-current={isActive ? "step" : undefined}
+          onClick={onClick}
+        >
+          {children}
+        </button>
       );
     }
     if (readOnly) {
@@ -110,6 +126,8 @@ interface LevelProgressBubblesProps {
   currentLevelPath?: string;
   completedLevelPaths?: string[];
   readOnly?: boolean;
+  /** Single-route progressions where every link shares the same pathname. */
+  onLevelSelect?: (index: number) => void;
 }
 
 export function LevelProgressBubbles({
@@ -120,6 +138,7 @@ export function LevelProgressBubbles({
   currentLevelPath,
   completedLevelPaths,
   readOnly = false,
+  onLevelSelect,
 }: LevelProgressBubblesProps) {
   const navigate = useNavigate();
   const isLinkMode = Boolean(levelLinks && levelLinks.length > 0);
@@ -127,27 +146,39 @@ export function LevelProgressBubbles({
   const resolvedTotalLevels = isLinkMode
     ? resolvedLevelLinks.length
     : totalLevels;
-  const linkModeCurrentLevel = isLinkMode
+  const useExplicitLevelIndex =
+    isLinkMode && levelLinksHaveDuplicatePaths(resolvedLevelLinks);
+  const linkModeCurrentLevel = isLinkMode && !useExplicitLevelIndex
     ? findLevelLinkIndex(resolvedLevelLinks, currentLevelPath) + 1
     : currentLevel;
   const resolvedCurrentLevel = isLinkMode
-    ? Math.max(1, Math.min(resolvedTotalLevels, linkModeCurrentLevel || currentLevel))
+    ? Math.max(
+        1,
+        Math.min(resolvedTotalLevels, linkModeCurrentLevel || currentLevel),
+      )
     : currentLevel;
 
   const completedLevelsSet = new Set<number>(
     isLinkMode
-      ? resolvedLevelLinks.reduce<number[]>((result, levelLink, index) => {
-          if (includesLevelPath(completedLevelPaths, levelLink.path)) {
-            result.push(index + 1);
+      ? useExplicitLevelIndex
+        ? completedLevels.length > 0
+          ? completedLevels
+          : Array.from(
+              { length: Math.max(0, resolvedCurrentLevel - 1) },
+              (_, index) => index + 1,
+            )
+        : resolvedLevelLinks.reduce<number[]>((result, levelLink, index) => {
+            if (includesLevelPath(completedLevelPaths, levelLink.path)) {
+              result.push(index + 1);
+              return result;
+            }
+
+            if (!completedLevelPaths && index < resolvedCurrentLevel - 1) {
+              result.push(index + 1);
+            }
+
             return result;
-          }
-
-          if (!completedLevelPaths && index < resolvedCurrentLevel - 1) {
-            result.push(index + 1);
-          }
-
-          return result;
-        }, [])
+          }, [])
       : completedLevels,
   );
 
@@ -160,9 +191,12 @@ export function LevelProgressBubbles({
   const getBubbleLabel = (index: number) =>
     isLinkMode ? resolvedLevelLinks[index].name : `Level ${index + 1}`;
 
+  const useLevelSelect =
+    useExplicitLevelIndex && Boolean(onLevelSelect) && !readOnly;
+
   const moreMenuOptions = isLinkMode
-    ? resolvedLevelLinks.map((levelLink) => ({
-        value: levelLink.path,
+    ? resolvedLevelLinks.map((levelLink, index) => ({
+        value: useLevelSelect ? String(index) : levelLink.path,
         label: levelLink.name,
       }))
     : Array.from({ length: resolvedTotalLevels }, (_, index) => ({
@@ -178,10 +212,14 @@ export function LevelProgressBubbles({
           const status = getStatus(index);
           const label = getBubbleLabel(index);
           const link = isLinkMode ? resolvedLevelLinks[index] : undefined;
-          const to = link && !readOnly ? link.path : undefined;
+          const to =
+            link && !readOnly && !useLevelSelect ? link.path : undefined;
           const isAssessment = link?.isAssessment ?? inferIsAssessment(link?.path);
           return (
-            <div key={link?.path ?? index} className={styles.bubbleItem}>
+            <div
+              key={useExplicitLevelIndex ? index : (link?.path ?? index)}
+              className={styles.bubbleItem}
+            >
               <Tooltip
                 title={label}
                 placement="top"
@@ -194,6 +232,9 @@ export function LevelProgressBubbles({
                     isAssessment={isAssessment}
                     levelNumber={index + 1}
                     to={to}
+                    onClick={
+                      useLevelSelect ? () => onLevelSelect?.(index) : undefined
+                    }
                     label={label}
                     readOnly={readOnly}
                   />
@@ -216,7 +257,13 @@ export function LevelProgressBubbles({
             menuPlacement="bottomRight"
             disablePortal
             options={moreMenuOptions}
-            onAction={(value) => navigate(String(value))}
+            onAction={(value) => {
+              if (useLevelSelect) {
+                onLevelSelect?.(Number(value));
+                return;
+              }
+              navigate(String(value));
+            }}
           />
         ) : (
           <Button

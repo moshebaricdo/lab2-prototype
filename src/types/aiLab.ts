@@ -144,15 +144,21 @@ export interface AiLabSavedModel {
 }
 
 /**
- * Testing chrome. `dock` is the Input → Output footer under the viz;
- * `canvas` floats the trace toolbar, input card, and prediction card over
- * a full-bleed viz. Dev-panel flag while the canvas layout is explored.
+ * Testing chrome. `canvas` (default) floats the trace toolbar, input card,
+ * and prediction card over a full-bleed viz; `dock` keeps the Input → Output
+ * footer under the viz. Dev-panel flag on every AI Lab route.
  */
 export type AiLabTestLayout = "dock" | "canvas";
 
 export interface AiLabLevelConfig {
   dataset: AiLabDataset;
   testLayout?: AiLabTestLayout;
+  /**
+   * Decision-tree diagram: fold same-prediction leaves under a wide split
+   * into one bundle per outcome. Experiment flag (dev panel); default off so
+   * a wide split still lands as a wall of pills.
+   */
+  bundleWideSplits?: boolean;
   /** Catalog for student choice. Defaults to `[dataset]` when omitted. */
   availableDatasets?: AiLabDataset[];
   /** Levelbuilder pre-selected the dataset; hide the picker. */
@@ -169,6 +175,8 @@ export interface AiLabLevelConfig {
   hideTestTab?: boolean;
   hideTrainTab?: boolean;
   hideLabelSelect?: boolean;
+  /** Show Predict but lock it to the dataset default (or pretrained label). */
+  lockLabelColumn?: boolean;
   /**
    * Click-to-edit cells and Add row. Defaults on. Curriculum levels can lock
    * the sheet as a read-only table.
@@ -177,6 +185,10 @@ export interface AiLabLevelConfig {
   /** Initial Data Set view. Students can still switch Table / Cards unless the level hides Data. */
   defaultDataView?: AiLabDataView;
   initialSection?: AiLabSection;
+  /** Hide Diagram / Rules (or KNN target / table) toggle on Testing. */
+  hideTestViewToggle?: boolean;
+  /** Feature columns hidden from the Train rail checklist. */
+  excludedFeatureColumns?: string[];
   /** When set, only categorical columns can be the label. */
   classificationOnly?: boolean;
   /** Guided studio: train on the dataset surface instead of a Train tab. */

@@ -42,7 +42,8 @@ export function AiLabPlaytestProgressionPage() {
       continueTo={isLast ? "/levels" : AI_LAB_PLAYTEST_PATH}
       levelLinks={aiLabPlaytestLevelLinks}
       instructionsMarkdown={step.instructionsMarkdown}
-      disableProgressionLinks
+      onProgressLevelSelect={setStepIndex}
+      resourcePanelWidth={380}
       onContinue={
         isLast
           ? undefined

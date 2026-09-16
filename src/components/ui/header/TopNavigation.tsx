@@ -25,6 +25,7 @@ export interface TopNavigationProps {
   disableLogoLink?: boolean;
   hideProgression?: boolean;
   disableProgressionLinks?: boolean;
+  onProgressLevelSelect?: (index: number) => void;
   /** Hide the lesson title + subtitle (keep logo, bubbles, and actions). */
   hideTitle?: boolean;
   /**
@@ -49,6 +50,7 @@ export function TopNavigation({
   disableLogoLink = false,
   hideProgression = false,
   disableProgressionLinks = false,
+  onProgressLevelSelect,
   hideTitle = false,
   leadingActions,
 }: TopNavigationProps) {
@@ -111,6 +113,7 @@ export function TopNavigation({
             currentLevelPath={currentLevelPath}
             completedLevelPaths={completedLevelPaths}
             readOnly={disableProgressionLinks}
+            onLevelSelect={onProgressLevelSelect}
           />
         ) : null}
         {continueButton}

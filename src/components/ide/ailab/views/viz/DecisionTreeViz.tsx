@@ -6,31 +6,35 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
-  type RefObject,
+  type MouseEvent,
+  type PointerEvent,
 } from "react";
+import { Button, Tooltip } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import type {
   AiLabColumn,
   AiLabTreeNode,
   AiLabTreeTrace,
 } from "../../../../../types/aiLab";
-import {
-  columnById,
-  formatCell,
-  treeBranches,
-} from "../../../../../lib/aiLab";
+import { columnById, formatCell } from "../../../../../lib/aiLab";
+import { useElementSize } from "../../../../../hooks/useElementSize";
 import { CanvasCards, CARD_INSET, type CanvasChrome } from "./CanvasCards";
 import { DistributionBar, LabelSwatch, describeCounts } from "./LabelMarks";
-import { labelIndexer } from "./labelPalette";
+import { labelFill, labelIndexer } from "./labelPalette";
 import { NavigatorCard } from "./NavigatorCard";
 import { type TraceStep } from "./TraceBar";
 import {
   elbowPath,
   elbowPathVertical,
   layoutTree,
+  NODE_SIZES,
   TREE_METRICS,
   treeRules,
   type LaidOutNode,
+  type NodeDimensions,
   type NodeSize,
+  type TreeBundle,
+  type TreeBundleOptions,
   type TreeLink,
   type TreeOrientation,
 } from "./treeLayout";
@@ -38,6 +42,9 @@ import { VizFrame } from "./VizFrame";
 import styles from "./DecisionTreeViz.module.scss";
 
 export type TreeView = "diagram" | "rules";
+
+/** A split this wide (or wider) bundles same-prediction leaves when the flag is on. */
+const BUNDLE_MIN_BRANCHES = 7;
 
 interface DecisionTreeVizProps {
   root: AiLabTreeNode;
@@ -51,6 +58,39 @@ interface DecisionTreeVizProps {
    * the dashboard's input card, and an end-state prediction card.
    */
   canvasChrome?: CanvasChrome;
+  /** Fold same-prediction leaves under wide splits into one bundle per outcome. */
+  bundleWideSplits?: boolean;
+}
+
+/** `X is V → branch`, or just `X is V` when the branch *is* the value. */
+function StepStatement({
+  name,
+  value,
+  branchLabel,
+}: {
+  name: string;
+  value: string;
+  branchLabel: string;
+}) {
+  return (
+    <>
+      {name} is <strong>{value}</strong>
+      {branchLabel === value ? null : (
+        <>
+          <StepArrow />
+          <strong>{branchLabel}</strong>
+        </>
+      )}
+    </>
+  );
+}
+
+function StepArrow() {
+  return (
+    <span className={styles.stepArrow} aria-hidden>
+      <FaIcon name="arrow-right" size="small" />
+    </span>
+  );
 }
 
 function featureName(columns: AiLabColumn[], feature: string): string {
@@ -58,13 +98,65 @@ function featureName(columns: AiLabColumn[], feature: string): string {
 }
 
 function rowsText(count: number): string {
-  return `${count} row${count === 1 ? "" : "s"}`;
+  return `${count} Row${count === 1 ? "" : "s"}`;
 }
 
 function purity(node: AiLabTreeNode): number {
   if (node.sampleCount === 0) return 0;
   const top = Math.max(0, ...Object.values(node.labelCounts));
   return Math.round((top / node.sampleCount) * 100);
+}
+
+/** Labels present in the node, palette order — one row each on the detail card. */
+function presentLabels(node: AiLabTreeNode, labels: string[]): string[] {
+  return labels.filter((label) => (node.labelCounts[label] ?? 0) > 0);
+}
+
+/*
+ * Detail card geometry, mirrored by `.nodeDetail` in the stylesheet: the
+ * layout needs the height before the card renders, so it is summed here
+ * rather than measured.
+ */
+const DETAIL_CHROME = 4 + 20; // 2px border ×2 + 10px vertical padding ×2
+const DETAIL_HEAD = 24 + 8; // title row + gap to the rows
+const DETAIL_ROW = 18;
+const DETAIL_ROW_GAP = 4;
+const DETAIL_NOTE_CHROME = 8 + 1 + 8; // gap + rule + padding above the note
+const DETAIL_NOTE_LINE = 18;
+/** Rough body-4 characters per line in the card's 172px content width. */
+const DETAIL_NOTE_CHARS_PER_LINE = 28;
+/** `.nodeNote` clamps to this many lines. */
+const DETAIL_NOTE_MAX_LINES = 3;
+
+function detailDimensions(
+  node: AiLabTreeNode,
+  labels: string[],
+  memberNames: string[],
+): NodeDimensions {
+  const rows = presentLabels(node, labels).length;
+  const rowsHeight = rows * DETAIL_ROW + Math.max(0, rows - 1) * DETAIL_ROW_GAP;
+  const note = leafNote(node, memberNames);
+  const noteLines = note
+    ? Math.min(DETAIL_NOTE_MAX_LINES, Math.ceil(note.length / DETAIL_NOTE_CHARS_PER_LINE))
+    : 0;
+  const noteHeight = note ? DETAIL_NOTE_CHROME + noteLines * DETAIL_NOTE_LINE : 0;
+  return {
+    width: NODE_SIZES.detail.width,
+    height: DETAIL_CHROME + DETAIL_HEAD + rowsHeight + noteHeight,
+  };
+}
+
+/** The short "why" under an opened leaf. */
+function leafNote(node: AiLabTreeNode, memberNames: string[]): string {
+  if (node.type !== "leaf") return "";
+  if (memberNames.length > 0) {
+    return `${memberNames.length} branches (${memberNames.join(", ")}) all predict ${node.prediction}.`;
+  }
+  const top = node.labelCounts[node.prediction] ?? 0;
+  const total = node.sampleCount;
+  return `${top} of ${total} example${total === 1 ? "" : "s"} here ${
+    top === 1 ? "is" : "are"
+  } ${node.prediction}, so this predicts ${node.prediction}.`;
 }
 
 function nodeTitle(node: AiLabTreeNode, columns: AiLabColumn[]): string {
@@ -92,16 +184,22 @@ export function DecisionTreeViz({
   trace,
   view,
   canvasChrome,
+  bundleWideSplits = false,
 }: DecisionTreeVizProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [selectedKey, setSelectedKey] = useState<string | undefined>(undefined);
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [expandedBundles, setExpandedBundles] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
   const indexOf = useMemo(() => labelIndexer(labels), [labels]);
 
   useEffect(() => {
     setSelectedKey(undefined);
   }, [view]);
+  useEffect(() => {
+    setExpandedBundles(new Set());
+  }, [root]);
 
   const steps = useMemo<TraceStep[]>(() => {
     if (!trace) return [];
@@ -112,13 +210,7 @@ export function DecisionTreeViz({
         id: step.pathKey,
         label: `Question ${index + 1}: ${name}`,
         statement: (
-          <>
-            <strong>{name}</strong> is {value}
-            <span className={styles.stepArrow} aria-hidden>
-              →
-            </span>
-            <strong>{step.branchLabel}</strong>
-          </>
+          <StepStatement name={name} value={value} branchLabel={step.branchLabel} />
         ),
         announcement: `Question ${index + 1}. ${name} is ${value}, so follow the ${step.branchLabel} branch.`,
       };
@@ -158,26 +250,64 @@ export function DecisionTreeViz({
   const finalLeafKey = trace?.pathKeys[trace.pathKeys.length - 1];
 
   // Content follows the path: only nodes your example passed through earn
-  // a full card; everything else is a pill.
+  // a full card; everything else is a pill. The node the student opened
+  // grows into a detail card in place.
   const sizeOf = useCallback(
-    (key: string): NodeSize => (revealedSet.has(key) ? "card" : "pill"),
-    [revealedSet],
+    (key: string): NodeSize =>
+      key === selectedKey ? "detail" : revealedSet.has(key) ? "card" : "pill",
+    [revealedSet, selectedKey],
   );
   // Canvas mode reads top→bottom so the tree grows away from the right-hand
   // cards instead of under them.
   const orientation: TreeOrientation = canvasChrome ? "vertical" : "horizontal";
+  // The whole traced path (not just the revealed prefix) opens its bundle, so
+  // stepping never reflows the group mid-trace.
+  const pathKeysText = trace?.pathKeys.join("|") ?? "";
+  const bundling = useMemo<TreeBundleOptions | undefined>(
+    () =>
+      bundleWideSplits
+        ? {
+            minBranches: BUNDLE_MIN_BRANCHES,
+            expanded: expandedBundles,
+            pathKeys: new Set(pathKeysText ? pathKeysText.split("|") : []),
+          }
+        : undefined,
+    [bundleWideSplits, expandedBundles, pathKeysText],
+  );
+  const measure = useCallback(
+    (node: AiLabTreeNode, size: NodeSize, bundle: TreeBundle | undefined): NodeDimensions =>
+      size === "detail"
+        ? detailDimensions(
+            node,
+            labels,
+            bundle?.members.map((member) => member.branchLabel) ?? [],
+          )
+        : NODE_SIZES[size],
+    [labels],
+  );
   const layout = useMemo(
-    () => layoutTree(root, sizeOf, orientation),
-    [orientation, root, sizeOf],
+    () => layoutTree(root, sizeOf, orientation, bundling, measure),
+    [bundling, measure, orientation, root, sizeOf],
   );
 
-  const selected = selectedKey ? layout.byKey.get(selectedKey)?.node : undefined;
-  const detail = selected ? (
-    <NodeDetail node={selected} columns={columns} labels={labels} indexOf={indexOf} />
-  ) : undefined;
   const onStep = (index: number) => {
     setSelectedKey(undefined);
     setStepIndex(index);
+  };
+  const onSelect = (key: string | undefined) =>
+    setSelectedKey((current) => (key === current ? undefined : key));
+  const onToggleBundle = (key: string) =>
+    setExpandedBundles((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  // Clicking the empty canvas clears the selection, or, with nothing
+  // selected, folds every opened bundle back up.
+  const onCanvasClick = () => {
+    if (selectedKey) setSelectedKey(undefined);
+    else if (expandedBundles.size > 0) setExpandedBundles(new Set());
   };
 
   return (
@@ -190,7 +320,7 @@ export function DecisionTreeViz({
       <div className={styles.stageWrap}>
         {view === "diagram" ? (
           <TreeDiagram
-            scrollerRef={scrollerRef}
+            root={root}
             layout={layout}
             columns={columns}
             labels={labels}
@@ -199,7 +329,10 @@ export function DecisionTreeViz({
             currentKey={currentKey}
             nextKey={nextKey}
             selectedKey={selectedKey}
-            onSelect={setSelectedKey}
+            traceKey={pathKeysText}
+            onSelect={onSelect}
+            onToggleBundle={onToggleBundle}
+            onCanvasClick={onCanvasClick}
             orientation={orientation}
             besideCards={Boolean(canvasChrome)}
           />
@@ -222,8 +355,7 @@ export function DecisionTreeViz({
             docked={view === "rules"}
             outcome={canvasChrome.outcome}
             inputCard={canvasChrome.inputCard}
-            detail={detail}
-            onDismissDetail={() => setSelectedKey(undefined)}
+            inlineBody
           >
             {trace ? (
               <TracePath
@@ -240,8 +372,6 @@ export function DecisionTreeViz({
             index={clampedStep}
             onIndexChange={onStep}
             emptyText="Fill in the inputs to trace your example."
-            detail={detail}
-            onDismissDetail={() => setSelectedKey(undefined)}
           />
         )}
       </div>
@@ -264,108 +394,58 @@ function TracePath({
   indexOf: (label: string) => number;
   stepIndex: number;
 }) {
-  const indexClass = (index: number) =>
+  const leafIndex = trace.steps.length;
+  // Badges stay neutral; the step Play is on wears a ring so the list and
+  // the canvas point at the same question.
+  const rowClass = (index: number) =>
     [
-      styles.pathIndex,
-      index <= stepIndex ? styles.pathIndexLit : "",
-      index === stepIndex ? styles.pathIndexCurrent : "",
+      styles.pathRow,
+      index === stepIndex ? styles.pathRowCurrent : "",
+      index === leafIndex ? styles.pathRowLeaf : "",
     ]
       .filter(Boolean)
       .join(" ");
-  const leafIndex = trace.steps.length;
 
   return (
-    <div className={styles.path}>
-      <p className={styles.pathEyebrow}>Path</p>
-      <ol className={styles.pathList}>
-        {trace.steps.map((step, index) => (
-          <li
-            key={step.pathKey}
-            className={styles.pathRow}
-            aria-current={index === stepIndex ? "step" : undefined}
-          >
-            <span className={indexClass(index)} aria-hidden>
-              {index + 1}
-            </span>
-            <span className={styles.pathText}>
-              <strong>{featureName(columns, step.feature)}</strong> is{" "}
-              {formatCell(step.value)}
-              <span className={styles.stepArrow} aria-hidden>
-                →
-              </span>
-              <strong>{step.branchLabel}</strong>
-            </span>
-          </li>
-        ))}
+    <ol className={styles.pathList}>
+      {trace.steps.map((step, index) => (
         <li
-          className={`${styles.pathRow} ${styles.pathRowLeaf}`}
-          aria-current={leafIndex === stepIndex ? "step" : undefined}
+          key={step.pathKey}
+          className={rowClass(index)}
+          aria-current={index === stepIndex ? "step" : undefined}
         >
-          <span className={indexClass(leafIndex)} aria-hidden>
-            {leafIndex + 1}
+          <span className={styles.pathIndex} aria-hidden>
+            {index + 1}
           </span>
           <span className={styles.pathText}>
-            Predicts{" "}
-            <LabelSwatch label={trace.prediction} index={indexOf(trace.prediction)} />
+            <StepStatement
+              name={featureName(columns, step.feature)}
+              value={formatCell(step.value)}
+              branchLabel={step.branchLabel}
+            />
           </span>
         </li>
-      </ol>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------------ */
-/* Footer detail for the selected node                                       */
-/* ------------------------------------------------------------------------ */
-
-function NodeDetail({
-  node,
-  columns,
-  labels,
-  indexOf,
-}: {
-  node: AiLabTreeNode;
-  columns: AiLabColumn[];
-  labels: string[];
-  indexOf: (label: string) => number;
-}) {
-  const counts = describeCounts(node.labelCounts, labels);
-  return (
-    <>
-      {node.type === "leaf" ? (
-        <>
-          <span className={styles.detailLead}>
-            Predicts{" "}
-            <LabelSwatch label={node.prediction} index={indexOf(node.prediction)} />
+      ))}
+      <li
+        className={rowClass(leafIndex)}
+        aria-current={leafIndex === stepIndex ? "step" : undefined}
+      >
+        <span className={`${styles.pathIndex} ${styles.pathIndexFinal}`} aria-hidden>
+          <FaIcon name="flag" fontSize="10px" />
+        </span>
+        <span className={styles.pathText}>
+          AI predicts
+          <span className={styles.pathPrediction}>
+            <span
+              className={styles.pathDot}
+              style={{ background: labelFill(indexOf(trace.prediction)) }}
+              aria-hidden
+            />
+            <strong>{trace.prediction}</strong>
           </span>
-          <span className={styles.detailSep} aria-hidden>
-            ·
-          </span>
-          <span>
-            {purity(node)}% of {rowsText(node.sampleCount)}
-          </span>
-        </>
-      ) : (
-        <>
-          <strong>{nodeTitle(node, columns)}</strong>
-          <span className={styles.detailSep} aria-hidden>
-            ·
-          </span>
-          <span>{rowsText(node.sampleCount)}</span>
-          <span className={styles.detailSep} aria-hidden>
-            ·
-          </span>
-          <span>{treeBranches(node).length} branches</span>
-        </>
-      )}
-      <DistributionBar
-        counts={node.labelCounts}
-        labels={labels}
-        description={counts}
-        className={styles.detailBar}
-      />
-      <span className={styles.detailCounts}>{counts}</span>
-    </>
+        </span>
+      </li>
+    </ol>
   );
 }
 
@@ -373,8 +453,94 @@ function NodeDetail({
 /* Diagram                                                                   */
 /* ------------------------------------------------------------------------ */
 
+const MIN_ZOOM = 0.25;
+const MAX_ZOOM = 2.5;
+/** Fit never enlarges past 1:1 — the 14px node titles are already sized to read. */
+const MAX_FIT_ZOOM = 1;
+/** Below this, a fitted tree is too small to read; recentering frames the path instead. */
+const LEGIBLE_FIT_ZOOM = 0.5;
+/** Pointer travel before a press on the canvas becomes a drag. */
+const CLICK_SLOP = 4;
+/** Breathing room kept around a fitted box. */
+const FIT_PAD = 24;
+/** Edge label pill: 18px line + 2px vertical padding, and its gap from the node. */
+const EDGE_LABEL_HEIGHT = 22;
+const EDGE_LABEL_GAP = 8;
+const clampZoom = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+
+interface Viewport {
+  zoom: number;
+  /** Frame-pixel position of the stage's top-left corner. */
+  x: number;
+  y: number;
+  /** Programmatic moves glide; wheel and drag track the pointer directly. */
+  smooth: boolean;
+}
+
+interface Box {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+interface View {
+  width: number;
+  height: number;
+  /** Right strip covered by the floating cards. */
+  insetRight: number;
+}
+
+const unionBox = (boxes: Box[]): Box => ({
+  left: Math.min(...boxes.map((box) => box.left)),
+  top: Math.min(...boxes.map((box) => box.top)),
+  right: Math.max(...boxes.map((box) => box.right)),
+  bottom: Math.max(...boxes.map((box) => box.bottom)),
+});
+
+/** Scale `box` to fill the open part of the frame (capped at `MAX_FIT_ZOOM`), centered. */
+function fitBox(box: Box, view: View): Viewport {
+  const availWidth = Math.max(1, view.width - view.insetRight - FIT_PAD * 2);
+  const availHeight = Math.max(1, view.height - FIT_PAD * 2);
+  const boxWidth = Math.max(1, box.right - box.left);
+  const boxHeight = Math.max(1, box.bottom - box.top);
+  const zoom = clampZoom(
+    Math.min(MAX_FIT_ZOOM, availWidth / boxWidth, availHeight / boxHeight),
+  );
+  return {
+    zoom,
+    x: FIT_PAD + (availWidth - boxWidth * zoom) / 2 - box.left * zoom,
+    y: FIT_PAD + (availHeight - boxHeight * zoom) / 2 - box.top * zoom,
+    smooth: true,
+  };
+}
+
+/**
+ * Pan `current` just enough that `box` (stage space) sits inside the open
+ * part of the frame; a box taller or wider than the frame aligns its start edge.
+ */
+function panIntoView(current: Viewport, box: Box, view: View): Viewport {
+  const viewWidth = view.width - view.insetRight;
+  const left = current.x + box.left * current.zoom - FIT_PAD;
+  const right = current.x + box.right * current.zoom + FIT_PAD;
+  const top = current.y + box.top * current.zoom - FIT_PAD;
+  const bottom = current.y + box.bottom * current.zoom + FIT_PAD;
+  let dx = 0;
+  let dy = 0;
+  if (left < 0) dx = -left;
+  else if (right > viewWidth) dx = Math.max(viewWidth - right, -left);
+  if (top < 0) dy = -top;
+  else if (bottom > view.height) dy = Math.max(view.height - bottom, -top);
+  if (dx === 0 && dy === 0) return current;
+  return { ...current, x: current.x + dx, y: current.y + dy, smooth: true };
+}
+
+const sameViewport = (a: Viewport, b: Viewport) =>
+  Math.abs(a.zoom - b.zoom) < 0.001 && Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5;
+
 interface TreeDiagramProps {
-  scrollerRef: RefObject<HTMLDivElement | null>;
+  /** Identity of the trained tree; a new tree starts back at Fit. */
+  root: AiLabTreeNode;
   layout: ReturnType<typeof layoutTree>;
   columns: AiLabColumn[];
   labels: string[];
@@ -383,14 +549,18 @@ interface TreeDiagramProps {
   currentKey: string | undefined;
   nextKey: string | undefined;
   selectedKey: string | undefined;
+  /** Identity of the current prediction's path; a change recenters the canvas. */
+  traceKey: string;
   onSelect: (key: string | undefined) => void;
+  onToggleBundle: (key: string) => void;
+  onCanvasClick: () => void;
   orientation: TreeOrientation;
   /** Canvas layout: keep the stage's resting spot clear of the right-hand cards. */
   besideCards: boolean;
 }
 
 function TreeDiagram({
-  scrollerRef,
+  root,
   layout,
   columns,
   labels,
@@ -399,12 +569,15 @@ function TreeDiagram({
   currentKey,
   nextKey,
   selectedKey,
+  traceKey,
   onSelect,
+  onToggleBundle,
+  onCanvasClick,
   orientation,
   besideCards,
 }: TreeDiagramProps) {
   const vertical = orientation === "vertical";
-  const stageRef = useRef<HTMLDivElement>(null);
+  const { ref: frameRef, size } = useElementSize<HTMLDivElement>();
   const nodeRefs = useRef(new Map<string, HTMLDivElement>());
   const [focusedKey, setFocusedKey] = useState<string>(layout.nodes[0]?.key);
   const paintedLinks = useMemo(
@@ -422,59 +595,271 @@ function TreeDiagram({
     setFocusedKey(layout.nodes[0]?.key);
   }, [focusedKey, layout]);
 
-  // Stepping the trace scrolls the current node (and, when it fits, the
+  /* Viewport (zoom + pan) --------------------------------------------- */
+
+  const view = useMemo<View>(
+    () => ({
+      width: size.width,
+      height: size.height,
+      // The floating cards cover the right strip of the frame in canvas mode.
+      insetRight: besideCards ? CARD_INSET : 0,
+    }),
+    [besideCards, size.height, size.width],
+  );
+  const measured = view.width > 0 && view.height > 0;
+
+  // Stage-space box around a node including its incoming edge label, which
+  // sits left of the node (horizontal) or above it (vertical).
+  const nodeBox = useCallback(
+    (node: LaidOutNode): Box => ({
+      left: node.x - (vertical ? 0 : TREE_METRICS.edgeLabelWidth),
+      right: node.x + node.width,
+      top: node.y - (vertical ? EDGE_LABEL_HEIGHT + EDGE_LABEL_GAP : 0),
+      bottom: node.y + node.height,
+    }),
+    [vertical],
+  );
+
+  // What the student sees, not the layout box: the layout carries a trailing
+  // lane gap on one side, so centering it would sit the nodes off-center.
+  const wholeBox = useMemo<Box>(
+    () => unionBox(layout.nodes.map(nodeBox)),
+    [layout.nodes, nodeBox],
+  );
+  const pathBox = useMemo<Box | undefined>(() => {
+    const boxes = layout.nodes.filter((laid) => revealed.has(laid.key)).map(nodeBox);
+    return boxes.length > 0 ? unionBox(boxes) : undefined;
+  }, [layout.nodes, nodeBox, revealed]);
+  // The full path, not the revealed prefix — right after a new prediction the
+  // step index may still be catching up in this render.
+  const fullPathBox = useMemo<Box | undefined>(() => {
+    const keys = new Set(traceKey ? traceKey.split("|") : []);
+    const boxes = layout.nodes.filter((laid) => keys.has(laid.key)).map(nodeBox);
+    return boxes.length > 0 ? unionBox(boxes) : undefined;
+  }, [layout.nodes, nodeBox, traceKey]);
+  const fitAll = useMemo(() => fitBox(wholeBox, view), [view, wholeBox]);
+  const fitPath = useMemo(
+    () => (fullPathBox ? fitBox(fullPathBox, view) : undefined),
+    [fullPathBox, view],
+  );
+
+  const [viewport, setViewport] = useState<Viewport>(fitAll);
+  /**
+   * While set, the view keeps re-applying Fit (or the path frame) as the
+   * frame resizes or the layout reflows, so the tree stays centered through
+   * a sidebar resize, a node opening in place, or a bundle unfolding. Any
+   * manual zoom or pan lets go.
+   */
+  const [follow, setFollow] = useState<"fit" | "path" | null>("fit");
+
+  // A new tree starts at Fit without animating.
+  const fittedFor = useRef<AiLabTreeNode | null>(null);
+  useEffect(() => {
+    if (!measured || fittedFor.current === root) return;
+    fittedFor.current = root;
+    setFollow("fit");
+    setViewport({ ...fitAll, smooth: false });
+  }, [fitAll, measured, root]);
+
+  // A new prediction turns its path into cards (and may open a bundle), which
+  // grows the stage and would leave the tree sitting off-center. Recenter:
+  // Fit when the whole tree stays legible at fit, otherwise frame the path.
+  const recenteredFor = useRef(traceKey);
+  useEffect(() => {
+    if (!measured || recenteredFor.current === traceKey) return;
+    recenteredFor.current = traceKey;
+    setFollow(fitAll.zoom >= LEGIBLE_FIT_ZOOM || !fitPath ? "fit" : "path");
+  }, [fitAll.zoom, fitPath, measured, traceKey]);
+
+  useEffect(() => {
+    if (!measured || !follow) return;
+    const target = follow === "path" && fitPath ? fitPath : fitAll;
+    setViewport((current) => (sameViewport(current, target) ? current : target));
+  }, [fitAll, fitPath, follow, measured]);
+
+  const zoomAt = useCallback(
+    (factor: number, at?: { x: number; y: number }) => {
+      setFollow(null);
+      setViewport((current) => {
+        const next = clampZoom(current.zoom * factor);
+        const ratio = next / current.zoom;
+        // Keep the point under the cursor (or the open area's center) fixed.
+        const ax = at?.x ?? (view.width - view.insetRight) / 2;
+        const ay = at?.y ?? view.height / 2;
+        return {
+          zoom: next,
+          x: ax - (ax - current.x) * ratio,
+          y: ay - (ay - current.y) * ratio,
+          smooth: !at,
+        };
+      });
+    },
+    [view.height, view.insetRight, view.width],
+  );
+  const panBy = (dx: number, dy: number) => {
+    setFollow(null);
+    setViewport((current) => ({ ...current, x: current.x + dx, y: current.y + dy, smooth: true }));
+  };
+  const fit = () => {
+    setFollow("fit");
+    setViewport(fitAll);
+  };
+  const zoomToPath = () => {
+    if (!pathBox) return;
+    // Frames the revealed prefix (what the student can see so far); following
+    // the path keeps the whole route framed as the layout reflows.
+    setFollow("path");
+    setViewport(fitBox(pathBox, view));
+  };
+
+  const ensureVisible = useCallback(
+    (box: Box) => setViewport((current) => panIntoView(current, box, view)),
+    [view],
+  );
+
+  // Stepping the trace pans the current node (and, when both fit, the
   // question it came from) into view without moving focus — the student is
   // still on the trace controls.
   useEffect(() => {
-    const scroller = scrollerRef.current;
     const laid = currentKey ? layout.byKey.get(currentKey) : undefined;
-    if (!scroller || !laid) return;
+    if (!measured || !laid) return;
     const parent = laid.parentKey ? layout.byKey.get(laid.parentKey) : undefined;
-    const { edgeLabelWidth } = TREE_METRICS;
-    const pad = 24;
-    // Node coordinates are stage-relative; the stage itself sits after the
-    // scroller's padding (and centering margin) in scroll space.
-    const offsetX = stageRef.current?.offsetLeft ?? 0;
-    const offsetY = stageRef.current?.offsetTop ?? 0;
-    // The floating cards cover the right strip of the viewport in canvas mode.
-    const viewWidth = scroller.clientWidth - (besideCards ? CARD_INSET : 0);
-    const viewHeight = scroller.clientHeight;
-    // The incoming edge label sits left of a node (horizontal) or above it.
-    const rect = (node: LaidOutNode) => ({
-      left: offsetX + node.x - (vertical ? 0 : edgeLabelWidth) - pad,
-      right: offsetX + node.x + node.width + pad,
-      top: offsetY + node.y - (vertical ? 22 : 0) - pad,
-      bottom: offsetY + node.y + node.height + pad,
+    const own = nodeBox(laid);
+    setViewport((current) => {
+      const pair = parent ? unionBox([own, nodeBox(parent)]) : own;
+      const fits =
+        (pair.right - pair.left) * current.zoom + FIT_PAD * 2 <= view.width - view.insetRight &&
+        (pair.bottom - pair.top) * current.zoom + FIT_PAD * 2 <= view.height;
+      return panIntoView(current, fits ? pair : own, view);
     });
-    const own = rect(laid);
-    const target = parent
-      ? {
-          left: Math.min(own.left, rect(parent).left),
-          right: Math.max(own.right, rect(parent).right),
-          top: Math.min(own.top, rect(parent).top),
-          bottom: Math.max(own.bottom, rect(parent).bottom),
-        }
-      : own;
-    const fits =
-      target.right - target.left <= viewWidth &&
-      target.bottom - target.top <= viewHeight;
-    const box = fits ? target : own;
-    let { scrollLeft, scrollTop } = scroller;
-    if (box.left < scrollLeft) scrollLeft = box.left;
-    else if (box.right > scrollLeft + viewWidth) {
-      scrollLeft = box.right - viewWidth;
+  }, [currentKey, layout, measured, nodeBox, view]);
+
+  // Opening a node in place grows it (and reflows its siblings), so keep the
+  // detail card on screen wherever it lands.
+  useEffect(() => {
+    const laid = selectedKey ? layout.byKey.get(selectedKey) : undefined;
+    if (!measured || !laid) return;
+    setViewport((current) => panIntoView(current, nodeBox(laid), view));
+  }, [layout, measured, nodeBox, selectedKey, view]);
+
+  // React registers wheel listeners as passive, so preventDefault (keeping
+  // the page from scrolling while zooming) needs a native listener.
+  useEffect(() => {
+    const element = frameRef.current;
+    if (!element) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const bounds = element.getBoundingClientRect();
+      zoomAt(event.deltaY < 0 ? 1.18 : 1 / 1.18, {
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
+      });
+    };
+    element.addEventListener("wheel", onWheel, { passive: false });
+    return () => element.removeEventListener("wheel", onWheel);
+  }, [frameRef, zoomAt]);
+
+  // Drag-to-pan. The pointer is only captured once the press travels past
+  // the click slop, so a plain click on a node still reaches the node; a
+  // drag that started on a node ends on the frame and never clicks it.
+  const drag = useRef<{ x: number; y: number; panX: number; panY: number; moved: boolean } | null>(
+    null,
+  );
+  const suppressClick = useRef(false);
+  const [dragging, setDragging] = useState(false);
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    drag.current = {
+      x: event.clientX,
+      y: event.clientY,
+      panX: viewport.x,
+      panY: viewport.y,
+      moved: false,
+    };
+  };
+  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const start = drag.current;
+    if (!start) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (!start.moved && Math.hypot(dx, dy) < CLICK_SLOP) return;
+    if (!start.moved) {
+      start.moved = true;
+      suppressClick.current = true;
+      setDragging(true);
+      setFollow(null);
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // Synthetic or already-released pointers cannot be captured; the
+        // drag still works while the pointer stays over the frame.
+      }
     }
-    if (box.top < scrollTop) scrollTop = box.top;
-    else if (box.bottom > scrollTop + viewHeight) {
-      scrollTop = box.bottom - viewHeight;
+    setViewport((current) => ({
+      ...current,
+      x: start.panX + dx,
+      y: start.panY + dy,
+      smooth: false,
+    }));
+  };
+  const onPointerUp = () => {
+    drag.current = null;
+    setDragging(false);
+  };
+  const onFrameClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (suppressClick.current) {
+      suppressClick.current = false;
+      return;
     }
-    scroller.scrollTo({ left: scrollLeft, top: scrollTop, behavior: "smooth" });
-  }, [besideCards, currentKey, layout, scrollerRef, vertical]);
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target?.closest('[role="treeitem"]')) onCanvasClick();
+  };
+
+  const activate = (laid: LaidOutNode) => {
+    if (laid.bundle) onToggleBundle(laid.bundle.key);
+    else onSelect(laid.key);
+  };
+
+  const onFrameKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const step = 40;
+    switch (event.key) {
+      case "+":
+      case "=":
+        event.preventDefault();
+        zoomAt(1.5);
+        break;
+      case "-":
+      case "_":
+        event.preventDefault();
+        zoomAt(1 / 1.5);
+        break;
+      case "0":
+        event.preventDefault();
+        fit();
+        break;
+      case "ArrowLeft":
+      case "ArrowRight":
+      case "ArrowUp":
+      case "ArrowDown": {
+        // Inside the tree, arrows move between nodes; only the frame itself pans.
+        if (event.target !== event.currentTarget) return;
+        event.preventDefault();
+        if (event.key === "ArrowLeft") panBy(step, 0);
+        else if (event.key === "ArrowRight") panBy(-step, 0);
+        else if (event.key === "ArrowUp") panBy(0, step);
+        else panBy(0, -step);
+        break;
+      }
+      default:
+    }
+  };
 
   const focusKey = (key: string | undefined) => {
     if (!key) return;
     setFocusedKey(key);
-    nodeRefs.current.get(key)?.focus();
+    nodeRefs.current.get(key)?.focus({ preventScroll: true });
+    const laid = layout.byKey.get(key);
+    if (laid) ensureVisible(nodeBox(laid));
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -509,7 +894,7 @@ function TreeDiagram({
       case "Enter":
       case " ":
         event.preventDefault();
-        onSelect(laid.key);
+        activate(laid);
         break;
       case "Escape":
         if (selectedKey) {
@@ -521,21 +906,37 @@ function TreeDiagram({
     }
   };
 
+  const atFit = sameViewport(viewport, fitAll);
+
   return (
     <div
-      ref={scrollerRef}
-      className={`${styles.scroller} ${
-        besideCards ? styles.scrollerBesideCards : ""
-      }`}
-      onClick={(event) => {
-        // Clicking the empty canvas clears the selection.
-        if (event.target === event.currentTarget) onSelect(undefined);
-      }}
+      ref={frameRef}
+      className={[styles.frame, dragging ? styles.frameDragging : ""]
+        .filter(Boolean)
+        .join(" ")}
+      tabIndex={0}
+      role="group"
+      aria-label="Decision tree canvas. Plus and minus zoom, arrow keys pan, 0 fits."
+      onClick={onFrameClick}
+      onKeyDown={onFrameKeyDown}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
     >
+      {/* Pan on the outer element, zoom on the inner: CSS `zoom` re-lays out
+          text and strokes at the new scale (crisp, unlike `scale()`, which
+          upsamples a rasterized layer), and keeping it on its own element
+          means the frame-pixel pan is never multiplied by it. */}
       <div
-        ref={stageRef}
-        className={styles.stage}
-        style={{ width: layout.width, height: layout.height }}
+        className={[styles.stage, viewport.smooth ? styles.stageSmooth : ""]
+          .filter(Boolean)
+          .join(" ")}
+        style={{ transform: `translate(${viewport.x}px, ${viewport.y}px)` }}
+      >
+      <div
+        className={styles.zoomed}
+        style={{ width: layout.width, height: layout.height, zoom: viewport.zoom }}
       >
         <svg
           className={styles.links}
@@ -597,8 +998,8 @@ function TreeDiagram({
                 .join(" ")}
               style={
                 vertical
-                  ? { left: target.cx, top: target.y - 8 }
-                  : { left: target.x - 8, top: target.cy }
+                  ? { left: target.cx, top: target.y - EDGE_LABEL_GAP }
+                  : { left: target.x - EDGE_LABEL_GAP, top: target.cy }
               }
               aria-hidden
             >
@@ -623,7 +1024,7 @@ function TreeDiagram({
               isFocused={laid.key === focusedKey}
               isSelected={laid.key === selectedKey}
               onFocus={() => setFocusedKey(laid.key)}
-              onActivate={() => onSelect(laid.key)}
+              onActivate={() => activate(laid)}
               onPath={revealed.has(laid.key)}
               isCurrent={laid.key === currentKey}
               registerRef={(element) => {
@@ -639,6 +1040,58 @@ function TreeDiagram({
             />
           ))}
         </div>
+      </div>
+      </div>
+
+      <div className={styles.zoomTools} role="group" aria-label="Zoom">
+        <Tooltip title="Zoom in" placement="right">
+          <Button
+            size="extraSmall"
+            variant="text"
+            color="tertiary"
+            iconOnly
+            startIconName="magnifying-glass-plus"
+            aria-label="Zoom in"
+            disabled={viewport.zoom >= MAX_ZOOM}
+            onClick={() => zoomAt(1.5)}
+          />
+        </Tooltip>
+        <Tooltip title="Zoom out" placement="right">
+          <Button
+            size="extraSmall"
+            variant="text"
+            color="tertiary"
+            iconOnly
+            startIconName="magnifying-glass-minus"
+            aria-label="Zoom out"
+            disabled={viewport.zoom <= MIN_ZOOM}
+            onClick={() => zoomAt(1 / 1.5)}
+          />
+        </Tooltip>
+        <Tooltip title="Zoom to your path" placement="right">
+          <Button
+            size="extraSmall"
+            variant="text"
+            color="tertiary"
+            iconOnly
+            startIconName="arrows-to-dot"
+            aria-label="Zoom to your path"
+            disabled={!pathBox}
+            onClick={zoomToPath}
+          />
+        </Tooltip>
+        <Tooltip title="Fit everything" placement="right">
+          <Button
+            size="extraSmall"
+            variant="text"
+            color="tertiary"
+            iconOnly
+            startIconName="expand-wide"
+            aria-label="Fit everything"
+            disabled={atFit}
+            onClick={fit}
+          />
+        </Tooltip>
       </div>
     </div>
   );
@@ -673,20 +1126,28 @@ function DiagramNode({
   registerRef,
   style,
 }: DiagramNodeProps) {
-  const { node } = laid;
+  const { node, bundle } = laid;
   const isDecision = node.type === "decision";
+  const isDetail = laid.size === "detail";
   const isCard = laid.size === "card";
   const title = nodeTitle(node, columns);
   const countsText = describeCounts(node.labelCounts, labels);
+  const memberNames = bundle?.members.map((member) => member.branchLabel) ?? [];
+  const note = isDetail ? leafNote(node, memberNames) : "";
   const name = [
-    laid.branchLabel ? `Branch ${laid.branchLabel}.` : "",
-    isDecision ? `Question: ${title}` : `Prediction: ${title}.`,
+    laid.branchLabel && !bundle ? `Branch ${laid.branchLabel}.` : "",
+    bundle
+      ? `${memberNames.length} branches predict ${title}: ${memberNames.join(", ")}.`
+      : isDecision
+        ? `Question: ${title}`
+        : `Prediction: ${title}.`,
     `${rowsText(node.sampleCount)}, ${countsText}.`,
     isCurrent
       ? "Current step."
       : onPath
         ? "On your example's path."
         : "",
+    bundle ? "Press Enter to open the branches." : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -702,12 +1163,13 @@ function DiagramNode({
       aria-posinset={laid.posInSet}
       aria-current={isCurrent ? "step" : undefined}
       aria-selected={isSelected || undefined}
+      aria-expanded={bundle ? false : undefined}
       className={[
         styles.node,
-        isCard ? styles.nodeCard : styles.nodePill,
+        isCard ? styles.nodeCard : isDetail ? styles.nodeDetail : styles.nodePill,
         isDecision ? styles.nodeDecision : styles.nodeLeaf,
+        bundle ? styles.nodeBundle : "",
         onPath ? styles.nodeOnPath : "",
-        isCurrent ? styles.nodeCurrent : "",
         isSelected ? styles.nodeSelected : "",
       ]
         .filter(Boolean)
@@ -716,30 +1178,53 @@ function DiagramNode({
       onFocus={onFocus}
       onClick={onActivate}
     >
-      <div className={styles.nodeBody}>
+      <div className={styles.nodeHead}>
         <p className={styles.nodeTitle}>
-          {isDecision ? (
-            title
-          ) : (
-            <LabelSwatch label={title} index={indexOf(title)} />
-          )}
-        </p>
-        {isCard ? (
-          <div className={styles.nodeStats}>
-            <DistributionBar
-              counts={node.labelCounts}
-              labels={labels}
-              description={countsText}
-              className={styles.nodeBar}
+          {isDecision ? null : (
+            <span
+              className={styles.nodeDot}
+              style={{ background: labelFill(indexOf(title)) }}
+              aria-hidden
             />
-            <span className={styles.nodeCount}>
-              {isDecision
-                ? rowsText(node.sampleCount)
-                : `${rowsText(node.sampleCount)} · ${purity(node)}%`}
+          )}
+          <span className={styles.nodeTitleText}>{title}</span>
+          {bundle ? (
+            <span className={styles.bundleCount} aria-hidden>
+              ×{memberNames.length}
             </span>
-          </div>
-        ) : null}
+          ) : null}
+        </p>
+        <span className={styles.nodeRows}>{rowsText(node.sampleCount)}</span>
       </div>
+      {isCard ? (
+        <DistributionBar
+          counts={node.labelCounts}
+          labels={labels}
+          description={countsText}
+          className={styles.nodeBar}
+        />
+      ) : null}
+      {isDetail ? (
+        <ul className={styles.nodeCounts} aria-label={countsText}>
+          {presentLabels(node, labels).map((label) => {
+            const count = node.labelCounts[label] ?? 0;
+            const share = node.sampleCount > 0 ? (count / node.sampleCount) * 100 : 0;
+            return (
+              <li key={label} className={styles.nodeCountRow}>
+                <span className={styles.nodeCountLabel}>{label}</span>
+                <span className={styles.nodeTrack}>
+                  <span
+                    className={styles.nodeFill}
+                    style={{ width: `${share}%`, background: labelFill(indexOf(label)) }}
+                  />
+                </span>
+                <span className={styles.nodeCount}>{count}</span>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+      {note ? <p className={styles.nodeNote}>{note}</p> : null}
     </div>
   );
 }

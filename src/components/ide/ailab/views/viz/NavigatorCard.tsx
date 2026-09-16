@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Button } from "@moshebari/cads-react";
 import { TraceBar, type TraceStep } from "./TraceBar";
 import styles from "./NavigatorCard.module.scss";
 
@@ -8,9 +7,6 @@ interface NavigatorCardProps {
   index: number;
   onIndexChange: (index: number) => void;
   emptyText: string;
-  /** Replaces the step statement (tree node detail). */
-  detail?: ReactNode;
-  onDismissDetail?: () => void;
   /** Feature leaders / vote tally — sits with the statement in the lede. */
   metrics?: ReactNode;
   /** Extra body below the lede — neighbor list, etc. */
@@ -31,8 +27,6 @@ export function NavigatorCard({
   index,
   onIndexChange,
   emptyText,
-  detail,
-  onDismissDetail,
   metrics,
   children,
   footer,
@@ -55,26 +49,9 @@ export function NavigatorCard({
       </div>
       <div className={styles.main}>
         <div className={styles.lede}>
-          {detail ? (
-            <div className={styles.detail}>
-              <div className={styles.detailText}>{detail}</div>
-              {onDismissDetail ? (
-                <Button
-                  size="extraSmall"
-                  variant="text"
-                  color="tertiary"
-                  iconOnly
-                  startIconName="xmark"
-                  aria-label="Back to the trace"
-                  onClick={onDismissDetail}
-                />
-              ) : null}
-            </div>
-          ) : (
-            <p className={hasSteps ? styles.statement : styles.empty}>
-              {hasSteps ? current?.statement : emptyText}
-            </p>
-          )}
+          <p className={hasSteps ? styles.statement : styles.empty}>
+            {hasSteps ? current?.statement : emptyText}
+          </p>
           {metrics}
         </div>
         {children ? <div className={styles.body}>{children}</div> : null}

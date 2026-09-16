@@ -69,6 +69,7 @@ export function GuidedTrainingBar({ lab }: GuidedTrainingBarProps) {
             placeholder="Choose a label"
             value={lab.labelColumn ?? ""}
             options={labelOptions}
+            disabled={Boolean(lab.config.lockLabelColumn)}
             onChange={(value) => lab.setLabelColumn(String(value))}
           />
         )}

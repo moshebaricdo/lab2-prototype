@@ -72,13 +72,25 @@ function emptyTestValues(features: string[]): AiLabDataRow {
   return values;
 }
 
+/**
+ * Small sheets open Cards as a carousel — flipping through two dozen rows
+ * reads better than a half-empty grid. Larger sheets open as a catalog.
+ */
+export const CAROUSEL_DEFAULT_MAX_ROWS = 24;
+
+export function defaultCardLayout(rowCount: number): AiLabCardLayout {
+  return rowCount <= CAROUSEL_DEFAULT_MAX_ROWS ? "carousel" : "catalog";
+}
+
 function initialState(config: AiLabLevelConfig): AiLabState {
   const datasetId = initialDatasetId(config);
   const dataset = resolveDataset(config, datasetId);
   const selectedAlgorithm = config.algorithmLock ?? config.pretrained?.algorithm;
   const labelColumn =
     config.pretrained?.labelColumn ??
-    (config.hideLabelSelect ? dataset?.defaultLabelColumn : undefined);
+    (config.hideLabelSelect || config.lockLabelColumn
+      ? dataset?.defaultLabelColumn
+      : undefined);
   const selectedFeatures = config.pretrained?.selectedFeatures ?? [];
   const model =
     config.pretrained && selectedAlgorithm && dataset
@@ -97,7 +109,7 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     datasetId,
     selectedAlgorithm,
     dataView: config.defaultDataView ?? "table",
-    cardLayout: "catalog",
+    cardLayout: defaultCardLayout(dataset?.rows.length ?? 0),
     selectedColumnId: undefined,
     cardIndex: 0,
     labelColumn,
@@ -132,6 +144,7 @@ function configIdentity(config: AiLabLevelConfig): string {
     config.hideTestTab ? "1" : "0",
     config.hideTrainTab ? "1" : "0",
     config.hideLabelSelect ? "1" : "0",
+    config.lockLabelColumn ? "1" : "0",
     config.initialSection ?? "",
     config.classificationOnly ? "1" : "0",
     config.trainAsOverlay ? "1" : "0",
@@ -227,15 +240,17 @@ export function useAiLabState(config: AiLabLevelConfig) {
         if (current.datasetId === datasetId) return current;
         const dataset = resolveDataset(config, datasetId);
         if (!dataset) return current;
-        const labelColumn = config.hideLabelSelect
-          ? dataset.defaultLabelColumn
-          : undefined;
+        const labelColumn =
+          config.hideLabelSelect || config.lockLabelColumn
+            ? dataset.defaultLabelColumn
+            : undefined;
         return {
           ...current,
           datasetId,
           rows: cloneRows(dataset.rows),
           selectedColumnId: undefined,
           cardIndex: 0,
+          cardLayout: defaultCardLayout(dataset.rows.length),
           labelColumn,
           selectedFeatures: [],
           model: undefined,
@@ -300,6 +315,12 @@ export function useAiLabState(config: AiLabLevelConfig) {
     setState((current) => ({
       ...current,
       dataView,
+      // Entering Cards re-picks the layout for the current sheet size; the
+      // student can still flip it with the Catalog / Carousel control.
+      cardLayout:
+        dataView === "cards" && current.dataView !== "cards"
+          ? defaultCardLayout(current.rows.length)
+          : current.cardLayout,
     }));
   }, []);
 
@@ -324,7 +345,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
   }, []);
 
   const setLabelColumn = useCallback((columnId: string) => {
-    if (config.hideLabelSelect) return;
+    if (config.hideLabelSelect || config.lockLabelColumn) return;
     setState((current) => ({
       ...current,
       labelColumn: columnId,

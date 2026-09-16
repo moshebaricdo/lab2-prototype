@@ -1,7 +1,8 @@
 @use "../../../../../styles/_mixins.scss" as *;
 
-/* Scroll container: the stage grows with the tree instead of squashing it,
- * and a small tree sits centered in the leftover room. */
+/* Pannable canvas: the stage is laid out at its natural size and the frame
+ * moves a zoom + pan transform over it, so the tree never squashes and a
+ * small tree starts centered (Fit) in the open room beside the cards. */
 .stageWrap {
   position: relative;
   display: flex;
@@ -10,28 +11,73 @@
   min-height: 0;
 }
 
-.scroller {
+/* `overflow: clip` (not hidden) so focusing an offscreen node cannot scroll
+ * the frame behind the transform's back. */
+.frame {
   position: relative;
-  display: flex;
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
-  scroll-padding: 24px 316px 24px 24px;
+  overflow: clip;
+  cursor: grab;
+  touch-action: none;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
 }
 
-/* Canvas layout: the stage is still full-bleed (a wide tree scrolls under
- * the right-hand cards), but its resting spot is the open strip left of
- * them, so the root is never born under a card. */
-.scrollerBesideCards {
-  padding: 8px 316px 8px 8px;
-  scroll-padding: 24px 316px 24px 24px;
+.frameDragging {
+  cursor: grabbing;
+  user-select: none;
+
+  .node {
+    pointer-events: none;
+  }
 }
 
+/* Pan lives on `.stage` (frame pixels); zoom lives on `.zoomed` as CSS `zoom`
+ * so text and strokes re-render at the new scale instead of upsampling a
+ * rasterized `scale()` layer. */
 .stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.zoomed {
   position: relative;
-  flex-shrink: 0;
-  margin: auto;
+}
+
+/* Programmatic moves (Fit, step into view, buttons) glide; wheel and drag
+ * drop the transition so the stage tracks the pointer. */
+.stageSmooth {
+  transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+
+  .zoomed {
+    transition: zoom 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    .zoomed {
+      transition: none;
+    }
+  }
+}
+
+.zoomTools {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .links {
@@ -60,25 +106,26 @@
   stroke-dasharray: 5 4;
 }
 
-/* Edge labels hug their text and sit on the last stub. A tight canvas-colored
- * knockout keeps the connector from running through the letters without
- * covering the T-junction. */
+/* Edge labels are pills that hug their text and sit on the last stub, hiding
+ * the connector behind them without covering the T-junction. The pill's
+ * 22px height is mirrored by `EDGE_LABEL_HEIGHT` in the component. */
 .edgeLabel {
-  @include type-label-4;
+  @include type-body-4-regular;
   position: absolute;
   box-sizing: border-box;
-  max-width: 72px;
-  padding: 1px 4px;
+  max-width: 80px;
+  padding: 2px 10px;
   overflow: hidden;
-  border-radius: var(--shape-sm);
-  background: var(--background-neutral-primary);
-  color: var(--text-neutral-tertiary);
-  line-height: 1.2;
-  text-align: right;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
   pointer-events: none;
   transform: translate(-100%, -50%);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
 }
 
 /* Vertical tree: the label sits centered on the stub above its node. */
@@ -88,23 +135,15 @@
   transform: translate(-50%, -100%);
 }
 
-.edgeLabelPending,
-.edgeLabelTaken {
-  height: 20px;
-  padding: 0 6px;
-  border: 1px solid var(--border-selected-primary);
-  border-radius: var(--shape-round);
-  line-height: 18px;
-}
-
+/* The branch Play is about to take: still neutral, but outlined. */
 .edgeLabelPending {
-  background: var(--background-neutral-primary);
-  color: var(--text-brand-primary);
+  box-shadow: inset 0 0 0 1px var(--border-selected-primary);
 }
 
 .edgeLabelTaken {
+  @include type-body-4-semibold;
   background: var(--background-selected-primary);
-  color: var(--text-neutral-white-fixed);
+  color: var(--text-selected-primary);
 }
 
 .tree {
@@ -112,16 +151,22 @@
   inset: 0;
 }
 
+/* Every node is the same white card with a 2px border; what the example
+ * passed through turns the border selected, and the amount drawn (pill /
+ * card / detail) is the size the layout gave it. Heights are summed in the
+ * component (`detailDimensions`), so the paddings and gaps here are load-
+ * bearing. */
 .node {
   position: absolute;
   box-sizing: border-box;
   display: flex;
-  align-items: stretch;
-  gap: 6px;
-  border: 1.5px solid var(--border-neutral-primary);
+  flex-direction: column;
+  padding: 8px 12px;
+  border: 2px solid var(--border-neutral-secondary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
   color: var(--text-neutral-primary);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition:
     border-color 160ms ease,
@@ -129,7 +174,12 @@
     background-color 160ms ease;
 
   &:hover {
-    border-color: var(--border-neutral-secondary);
+    box-shadow: var(--shadow-md);
+  }
+
+  &:active {
+    box-shadow: var(--shadow-sm);
+    background: var(--background-neutral-secondary);
   }
 
   &:focus-visible {
@@ -137,200 +187,250 @@
   }
 }
 
-/* Full card: only for nodes on your example's path. */
-.nodeCard {
-  padding: 8px 12px;
-  box-shadow: var(--shadow-sm);
-
-  .nodeTitle {
-    @include type-label-2;
-  }
+/* Compact pill: title + row count, everything the example did not pass through. */
+.nodePill {
+  justify-content: center;
 }
 
-/* Compact pill: everything the example did not pass through. */
-.nodePill {
-  padding: 0 10px;
-  border-color: var(--border-neutral-primary);
-  background: var(--background-neutral-primary);
-  color: var(--text-neutral-secondary);
+/* Card: the pill plus its label mix, for nodes on your example's path. */
+.nodeCard {
+  padding-bottom: 12px;
+  gap: 6px;
+}
 
-  .nodeTitle {
-    @include type-label-3;
-    color: var(--text-neutral-secondary);
-  }
+/* The node the student opened in place: one bar per label, and a leaf adds
+ * the sentence that says why it predicts what it does. */
+.nodeDetail {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+/* Several same-prediction leaves drawn as one: a dashed border says
+ * "there is more inside", the count says how much. */
+.nodeBundle {
+  border-style: dashed;
+}
+
+.bundleCount {
+  @include type-label-4;
+  flex-shrink: 0;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
 }
 
 .nodeOnPath {
   border-color: var(--border-selected-primary);
-  background: color-mix(
-    in srgb,
-    var(--background-selected-primary) 7%,
-    var(--background-neutral-primary)
-  );
-}
-
-.nodeCurrent {
-  border-color: var(--border-selected-primary);
-  box-shadow:
-    0 0 0 3px
-      color-mix(in srgb, var(--border-selected-primary) 28%, transparent),
-    var(--shadow-md);
 }
 
 .nodeSelected {
-  border-color: var(--border-neutral-black-fixed);
+  box-shadow: var(--shadow-md);
 
-  &.nodePill {
-    color: var(--text-neutral-primary);
-
-    .nodeTitle {
-      color: var(--text-neutral-primary);
-    }
+  &:active {
+    box-shadow: var(--shadow-sm);
   }
 }
 
-.nodeBody {
+.nodeHead {
   display: flex;
   min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .nodeTitle {
-  display: block;
+  @include type-body-3-semibold;
+  display: flex;
   min-width: 0;
-  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
   margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.nodeTitleText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeDot {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+}
+
+.nodeRows {
+  @include type-body-4-regular;
+  flex-shrink: 0;
+  color: var(--text-neutral-tertiary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.nodeBar {
+  height: 6px;
+}
+
+/* Detail rows: label | proportion track | count, 18px each. */
+.nodeCounts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nodeCountRow {
+  display: flex;
+  height: 18px;
+  align-items: center;
+  gap: 8px;
+}
+
+.nodeCountLabel {
+  @include type-body-4-regular;
+  width: 56px;
+  flex-shrink: 0;
   overflow: hidden;
   color: var(--text-neutral-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.nodeStats {
+.nodeTrack {
   display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 8px;
+  height: 6px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-quaternary);
 }
 
-.nodeBar {
-  flex: 1;
+.nodeFill {
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
 }
 
 .nodeCount {
-  @include type-label-4;
+  @include type-body-4-semibold;
+  min-width: 20px;
   flex-shrink: 0;
-  color: var(--text-neutral-tertiary);
+  color: var(--text-neutral-primary);
+  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-/* Trace statement / footer detail */
+/* Leaf's "why", under a rule; clamped to the lines the layout reserved. */
+.nodeNote {
+  @include type-body-4-regular;
+  display: -webkit-box;
+  margin: 0;
+  padding-top: 8px;
+  overflow: hidden;
+  border-top: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Trace statement */
 
 .stepArrow {
+  display: inline-flex;
+  align-items: center;
   margin: 0 6px;
   color: var(--text-neutral-quaternary);
 }
 
-.detailLead {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-neutral-primary);
-}
+/* Canvas-mode prediction card: the full path as a vertical stepper — one
+ * row per question, neutral badges joined by a hairline rail, ending in a
+ * flag for the answer. */
 
-.detailSep {
-  color: var(--text-neutral-quaternary);
-}
-
-.detailBar {
-  flex: 0 0 72px;
-  max-width: 72px;
-  margin-left: 4px;
-}
-
-.detailCounts {
-  @include type-body-4-regular;
-  color: var(--text-neutral-tertiary);
-}
-
-/* Canvas-mode prediction card: the full path, one row per question. */
-
-.path {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.pathEyebrow {
-  @include type-overline-3;
-  margin: 0;
-  padding: 0 4px;
-  color: var(--text-neutral-quaternary);
-}
+$path-badge: 18px;
+$path-rail-gap: 6px;
 
 .pathList {
   display: flex;
   flex-direction: column;
   margin: 0;
   padding: 0;
-  gap: 2px;
   list-style: none;
 }
 
 .pathRow {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  padding: 3px 6px;
+  gap: 8px;
+  /* 22px text line with the 18px badge centered on it. */
+  padding-bottom: $path-rail-gap;
+
+  /* Rail segment from this badge down to the next row's badge. */
+  &:not(:last-child)::before {
+    position: absolute;
+    top: calc(2px + #{$path-badge});
+    bottom: 0;
+    left: calc(#{$path-badge} / 2);
+    border-right: 1px solid var(--border-neutral-primary);
+    content: "";
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+  }
 }
 
 .pathIndex {
   @include type-body-4-bold;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
   display: inline-flex;
-  width: 18px;
-  height: 18px;
+  width: $path-badge;
+  height: $path-badge;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  margin-top: 1px;
-  border: 1px solid var(--border-neutral-primary);
+  margin-top: 2px;
   border-radius: var(--shape-round);
-  background: var(--background-neutral-primary);
+  background: var(--background-neutral-secondary);
   color: var(--text-neutral-tertiary);
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
+  line-height: 1;
+  transition: box-shadow 160ms ease;
 }
 
-/* Numbers light up as Play walks the trace; the current one is a touch larger. */
-.pathIndexLit {
-  border-color: var(--border-selected-primary);
+.pathIndexFinal {
   background: var(--background-selected-primary);
-  color: var(--text-neutral-primary-inverse);
+  color: var(--text-selected-primary);
 }
 
-.pathIndexCurrent {
-  transform: scale(1.12);
-  box-shadow: 0 0 0 2px var(--background-neutral-primary),
+/* The question Play is on gets a ring, not a bigger badge, so rows keep
+ * their height; the answer row never does — it is the resting state. */
+.pathRowCurrent:not(.pathRowLeaf) .pathIndex {
+  box-shadow:
+    0 0 0 2px var(--background-neutral-primary),
     0 0 0 3px var(--border-selected-primary);
 }
 
 .pathText {
-  @include type-body-4-regular;
+  @include type-body-3-regular;
   display: inline-flex;
   min-width: 0;
   flex-wrap: wrap;
   align-items: center;
   gap: 0 4px;
-  color: var(--text-neutral-secondary);
+  color: var(--text-neutral-primary);
 
   strong {
-    color: var(--text-neutral-primary);
     font-weight: var(--font-weight-semibold);
   }
 
@@ -340,7 +440,20 @@
 }
 
 .pathRowLeaf .pathText {
-  color: var(--text-neutral-primary);
+  gap: 0 6px;
+}
+
+.pathPrediction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pathDot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
 }
 
 /* Rules view */

@@ -27,7 +27,7 @@ function datasetById(id: string) {
 /** Playtest sheet. Do not auto-pretrain without a feature list — Animal would win. */
 export const aiLabPlaytestDataset = datasetById("bird_mammal_or_fish");
 
-export const AI_LAB_PLAYTEST_LABEL_COLUMN = "class";
+export const AI_LAB_PLAYTEST_LABEL_COLUMN = "type";
 export const AI_LAB_PLAYTEST_TREE_FEATURES = [
   "has_feathers",
   "breathes_with_lungs",
@@ -40,7 +40,9 @@ const aiLabPlaytestShared = {
   algorithmLock: "decisionTree" as const,
   hideLabelSelect: true,
   allowDataEdit: false,
+  showModelDetails: false,
   showExport: false,
+  hideTestViewToggle: true,
   trainAsOverlay: true,
   defaultDataView: "table" as const,
 };
@@ -93,7 +95,6 @@ export const aiLabPlaytestLookConfig: AiLabLevelConfig = {
   ...aiLabPlaytestShared,
   hideTestTab: true,
   hideTrainTab: true,
-  showModelDetails: false,
   initialSection: "dataset",
 };
 
@@ -101,7 +102,6 @@ export const aiLabPlaytestTryConfig: AiLabLevelConfig = {
   ...aiLabPlaytestShared,
   hideDatasetTab: true,
   hideTrainTab: true,
-  showModelDetails: true,
   initialSection: "test",
   pretrained: {
     algorithm: "decisionTree",
@@ -112,6 +112,8 @@ export const aiLabPlaytestTryConfig: AiLabLevelConfig = {
 
 export const aiLabPlaytestBuildConfig: AiLabLevelConfig = {
   ...aiLabPlaytestShared,
-  showModelDetails: true,
+  hideLabelSelect: false,
+  lockLabelColumn: true,
+  excludedFeatureColumns: ["animal"],
   initialSection: "dataset",
 };

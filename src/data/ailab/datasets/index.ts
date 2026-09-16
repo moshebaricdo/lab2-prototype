@@ -31,14 +31,14 @@ const overrides: Record<
   bird_mammal_or_fish: {
     name: "Bird, mammal, or fish",
     description:
-      "24 animals. Predict Class from yes/no traits. Do not auto-pretrain without a feature list — Animal would become a name lookup.",
-    labelColumn: "Class",
+      "24 animals. Predict Type from yes/no traits. Do not auto-pretrain without a feature list — Animal would become a name lookup.",
+    labelColumn: "Type",
     columnDescriptions: {
       animal: "Name of each animal.",
       has_feathers: "Whether it has feathers.",
       breathes_with_lungs: "Whether it uses lungs.",
       lives_in_water: "Whether it lives in water.",
-      class: "Bird, mammal, or fish.",
+      type: "Bird, mammal, or fish.",
     },
   },
 };

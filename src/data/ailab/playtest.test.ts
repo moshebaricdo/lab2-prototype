@@ -12,8 +12,8 @@ describe("AI Lab playtest sheet", () => {
     const { rows } = aiLabPlaytestDataset;
     expect(rows).toHaveLength(24);
 
-    const birds = rows.filter((row) => row.class === "Bird");
-    const fish = rows.filter((row) => row.class === "Fish");
+    const birds = rows.filter((row) => row.type === "Bird");
+    const fish = rows.filter((row) => row.type === "Fish");
     expect(birds.every((row) => row.has_feathers === "yes")).toBe(true);
     expect(fish.every((row) => row.breathes_with_lungs === "no")).toBe(true);
 

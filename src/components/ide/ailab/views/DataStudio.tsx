@@ -179,8 +179,10 @@ function TrainRail({
       lab.config.classificationOnly ? column.type === "categorical" : true,
     )
     .map((column) => ({ value: column.id, label: column.name }));
+  const excludedFeatures = new Set(lab.config.excludedFeatureColumns ?? []);
   const featureOptions = columns
     .filter((column) => column.id !== lab.labelColumn)
+    .filter((column) => !excludedFeatures.has(column.id))
     .map((column) => ({ value: column.id, label: column.name }));
   const model = lab.model;
   const accuracy = model ? Math.round(model.accuracy * 100) : undefined;
@@ -237,6 +239,7 @@ function TrainRail({
                 placeholder="Choose a column"
                 value={lab.labelColumn ?? ""}
                 options={labelOptions}
+                disabled={Boolean(lab.config.lockLabelColumn)}
                 onChange={(value) => lab.setLabelColumn(String(value))}
                 aria-label="Column to predict"
               />

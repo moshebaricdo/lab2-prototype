@@ -4,6 +4,7 @@ import {
   includesLevelPath,
   isProgressionLevelLinks,
   isProgressionLevelPath,
+  levelLinksHaveDuplicatePaths,
   mapLevelLinksWithShareMode,
   resolveShareAwareNavigationPath,
   withLevelShareModePath,
@@ -79,6 +80,22 @@ describe("findLevelLinkIndex", () => {
     expect(
       findLevelLinkIndex(links, "/levels/progression-free-response"),
     ).toBe(1);
+  });
+});
+
+describe("levelLinksHaveDuplicatePaths", () => {
+  it("returns true when multiple links share one pathname", () => {
+    expect(
+      levelLinksHaveDuplicatePaths([
+        { name: "Look", path: "/levels/progression-ailab" },
+        { name: "Try", path: "/levels/progression-ailab" },
+        { name: "Build", path: "/levels/progression-ailab" },
+      ]),
+    ).toBe(true);
+  });
+
+  it("returns false when every link has a distinct pathname", () => {
+    expect(levelLinksHaveDuplicatePaths(sampleProgressionLinks)).toBe(false);
   });
 });
 

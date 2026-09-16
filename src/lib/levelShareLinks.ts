@@ -45,6 +45,16 @@ export function findLevelLinkIndex(
   );
 }
 
+/** True when two or more links share the same pathname (single-route progressions). */
+export function levelLinksHaveDuplicatePaths(
+  levelLinks: LevelShareLink[],
+): boolean {
+  const pathnames = levelLinks.map((link) =>
+    getPathnameFromLevelPath(link.path),
+  );
+  return new Set(pathnames).size !== pathnames.length;
+}
+
 export function isProgressionLevelPath(path: string): boolean {
   const pathname = getPathnameFromLevelPath(path);
   return (

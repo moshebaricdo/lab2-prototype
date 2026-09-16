@@ -78,21 +78,17 @@ $card-width: 300px;
   box-shadow: var(--shadow-sm);
 }
 
-.card {
-  min-height: 132px;
-}
-
 .head {
   display: flex;
-  min-height: 40px;
+  min-height: 38px;
   flex-shrink: 0;
   align-items: center;
-  padding: 8px 8px 8px 10px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--border-neutral-primary);
 }
 
 .title {
-  @include type-label-2;
+  @include type-body-3-semibold;
   min-width: 0;
   margin: 0;
   overflow: hidden;
@@ -114,23 +110,28 @@ $card-width: 300px;
   flex-shrink: 0;
   flex-direction: column;
   gap: 8px;
-  padding: 8px 10px 8px 10px;
+  padding: 8px 10px 10px;
   border-bottom: 1px solid var(--border-neutral-primary);
 }
 
-.card:not(:has(.body)):not(:has(.detail)):not(:has(.footer)) .lede {
+.card:not(:has(.body)):not(:has(.footer)) .lede {
   border-bottom: none;
 }
 
+.answer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .value {
-  @include type-heading-h4-semibold;
-  margin: 0 0 4px;
+  @include type-heading-h6-semibold;
+  margin: 0;
   overflow-wrap: anywhere;
   color: var(--text-neutral-primary);
 }
 
 .valuePending {
-  @include type-heading-h5-semibold;
   color: var(--text-neutral-quaternary);
 }
 
@@ -138,31 +139,6 @@ $card-width: 300px;
   @include type-body-3-regular;
   margin: 0;
   color: var(--text-neutral-tertiary);
-}
-
-.detail {
-  display: flex;
-  flex-shrink: 0;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px 8px 8px 12px;
-  border-bottom: 1px solid var(--border-neutral-primary);
-  background: var(--background-neutral-secondary);
-}
-
-.detailText {
-  @include type-body-3-regular;
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  color: var(--text-neutral-secondary);
-
-  strong {
-    color: var(--text-neutral-primary);
-  }
 }
 
 .body {

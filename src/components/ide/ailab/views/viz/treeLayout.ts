@@ -1,13 +1,54 @@
 import type { AiLabDecisionLeaf, AiLabTreeNode } from "../../../../../types/aiLab";
 import { treeBranches } from "../../../../../lib/aiLab";
 
-/** How much of a node is drawn: a full card or a compact pill. */
-export type NodeSize = "card" | "pill";
+/**
+ * How much of a node is drawn: a compact pill, a full card, or the expanded
+ * detail card the student opened in place.
+ */
+export type NodeSize = "card" | "pill" | "detail";
 
-export const NODE_SIZES: Record<NodeSize, { width: number; height: number }> = {
-  card: { width: 184, height: 64 },
-  pill: { width: 132, height: 30 },
+export interface NodeDimensions {
+  width: number;
+  height: number;
+}
+
+/**
+ * All three share a width so revealing the path or opening a node only
+ * changes heights and nothing slides sideways; the detail card's height
+ * depends on its rows (see `measure`).
+ */
+export const NODE_SIZES: Record<NodeSize, NodeDimensions> = {
+  card: { width: 200, height: 60 },
+  pill: { width: 200, height: 44 },
+  detail: { width: 200, height: 118 },
 };
+
+/**
+ * Several sibling leaves that predict the same label, drawn as one node so
+ * a wide categorical split (a "name lookup") reads as its outcomes instead
+ * of dozens of pills. The traced branch is never folded into a bundle.
+ */
+export interface TreeBundle {
+  key: string;
+  parentKey: string;
+  prediction: string;
+  members: { branchLabel: string; leaf: AiLabDecisionLeaf }[];
+}
+
+export interface TreeBundleOptions {
+  /** Decision nodes with at least this many branches fold their leaf children. */
+  minBranches: number;
+  /** Bundle keys the student opened; their members are drawn individually. */
+  expanded: ReadonlySet<string>;
+  /**
+   * Node keys on the traced path. A bundle holding one of them draws open so
+   * the taken leaf sits among its siblings instead of outside its own group.
+   */
+  pathKeys: ReadonlySet<string>;
+}
+
+export const bundleKey = (parentKey: string, prediction: string) =>
+  `${parentKey}\u0000bundle\u0000${prediction}`;
 
 export const TREE_METRICS = {
   /** Vertical gap between stacked frontier nodes. */
@@ -46,6 +87,8 @@ export interface LaidOutNode {
   setSize: number;
   /** Children in pre-order (empty on a leaf). */
   childKeys: string[];
+  /** Set when this node stands in for several same-prediction leaves. */
+  bundle?: TreeBundle;
 }
 
 export interface TreeLink {
@@ -70,10 +113,91 @@ export interface TreeLayout {
  * largest node. The whole tree is always drawn — a big tree grows the stage
  * (scroll) instead of hiding branches.
  */
+/** A branch as drawn: either a real child or a bundle standing in for several. */
+interface DrawnBranch {
+  label: string;
+  child: AiLabTreeNode;
+  bundle?: TreeBundle;
+}
+
+function bundledLeaf(bundle: TreeBundle): AiLabDecisionLeaf {
+  const labelCounts: Record<string, number> = {};
+  let sampleCount = 0;
+  for (const { leaf } of bundle.members) {
+    sampleCount += leaf.sampleCount;
+    for (const [label, count] of Object.entries(leaf.labelCounts)) {
+      labelCounts[label] = (labelCounts[label] ?? 0) + count;
+    }
+  }
+  return {
+    type: "leaf",
+    pathKey: bundle.key,
+    prediction: bundle.prediction,
+    sampleCount,
+    labelCounts,
+  };
+}
+
+/**
+ * The branches to draw under `node`. With bundling on and enough branches,
+ * leaf children that share a prediction collapse into one bundle per label,
+ * placed where the first member sat so sibling order is kept. A bundle the
+ * traced path runs through (or the student opened) draws its members instead.
+ */
+function drawnBranches(
+  node: AiLabTreeNode,
+  options: TreeBundleOptions | undefined,
+): DrawnBranch[] {
+  const branches = treeBranches(node);
+  if (!options || branches.length < options.minBranches) return branches;
+  const drawn: DrawnBranch[] = [];
+  const bundles = new Map<string, TreeBundle>();
+  for (const branch of branches) {
+    const { child } = branch;
+    if (child.type !== "leaf") {
+      drawn.push(branch);
+      continue;
+    }
+    const key = bundleKey(node.pathKey, child.prediction);
+    let bundle = bundles.get(key);
+    if (!bundle) {
+      bundle = { key, parentKey: node.pathKey, prediction: child.prediction, members: [] };
+      bundles.set(key, bundle);
+      drawn.push({ label: "", child, bundle });
+    }
+    bundle.members.push({ branchLabel: branch.label, leaf: child });
+  }
+  return drawn.flatMap((entry) => {
+    if (!entry.bundle) return [entry];
+    const { bundle } = entry;
+    const open =
+      options.expanded.has(bundle.key) ||
+      bundle.members.some(({ leaf }) => options.pathKeys.has(leaf.pathKey));
+    // A lone leaf or an open bundle draws its members as themselves.
+    if (bundle.members.length < 2 || open) {
+      return bundle.members.map(({ branchLabel, leaf }) => ({ label: branchLabel, child: leaf }));
+    }
+    return [
+      {
+        label: `${bundle.members.length} branches`,
+        child: bundledLeaf(bundle),
+        bundle,
+      },
+    ];
+  });
+}
+
 export function layoutTree(
   root: AiLabTreeNode,
   sizeOf: (key: string) => NodeSize,
   orientation: TreeOrientation = "horizontal",
+  bundling?: TreeBundleOptions,
+  /** Pixel box for a node at a size; defaults to `NODE_SIZES`. */
+  measure: (
+    node: AiLabTreeNode,
+    size: NodeSize,
+    bundle: TreeBundle | undefined,
+  ) => NodeDimensions = (_, size) => NODE_SIZES[size],
 ): TreeLayout {
   const { padding } = TREE_METRICS;
   const vertical = orientation === "vertical";
@@ -95,9 +219,10 @@ export function layoutTree(
     branchLabel: string | undefined,
     posInSet: number,
     setSize: number,
+    bundle: TreeBundle | undefined,
   ): LaidOutNode => {
     const size = sizeOf(node.pathKey);
-    const { width, height } = NODE_SIZES[size];
+    const { width, height } = measure(node, size, bundle);
     levelSizes[depth] = Math.max(levelSizes[depth] ?? 0, levelExtent(width, height));
     const laid: LaidOutNode = {
       key: node.pathKey,
@@ -115,6 +240,7 @@ export function layoutTree(
       posInSet,
       setSize,
       childKeys: [],
+      bundle,
     };
     nodes.push(laid);
 
@@ -124,7 +250,7 @@ export function layoutTree(
       first = last = laneSizes.length;
       laneSizes.push(laneExtent(width, height) + laneGap);
     } else {
-      const branches = treeBranches(node);
+      const branches = drawnBranches(node, bundling);
       first = laneSizes.length;
       branches.forEach((branch, index) => {
         const child = place(
@@ -134,6 +260,7 @@ export function layoutTree(
           branch.label,
           index + 1,
           branches.length,
+          branch.bundle,
         );
         laid.childKeys.push(child.key);
         links.push({
@@ -152,7 +279,7 @@ export function layoutTree(
     return laid;
   };
 
-  place(root, 0, undefined, undefined, 1, 1);
+  place(root, 0, undefined, undefined, 1, 1, undefined);
 
   const laneStarts: number[] = [];
   let laneCursor = padding;
