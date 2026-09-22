@@ -1,0 +1,222 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+/* Frame is the width of the modal body; the stage is the tree at natural
+ * size, scaled down from the top-center to fit. */
+.frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-secondary);
+  transition: height 240ms ease;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: top center;
+}
+
+.links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.link {
+  fill: none;
+  stroke: var(--border-neutral-secondary);
+  stroke-width: 2;
+  opacity: 0;
+  transition: opacity 360ms ease;
+}
+
+.linkOn {
+  opacity: 1;
+}
+
+.slot {
+  display: contents;
+}
+
+.edgeLabel {
+  @include type-body-4-regular;
+  position: absolute;
+  box-sizing: border-box;
+  max-width: 120px;
+  padding: 2px 10px;
+  overflow: hidden;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+  box-shadow: inset 0 0 0 1px var(--border-neutral-secondary);
+  color: var(--text-neutral-primary);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  opacity: 0;
+  transition: opacity 360ms ease 120ms;
+}
+
+.edgeLabelOn {
+  opacity: 1;
+}
+
+/* Same white card as the Testing tree so the two read as one object. */
+.node {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px 12px;
+  border: 2px solid var(--border-neutral-secondary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  transition:
+    opacity 360ms ease,
+    transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.nodeOn {
+  opacity: 1;
+  transform: none;
+}
+
+.nodeLeaf {
+  border-color: var(--border-neutral-secondary);
+}
+
+.nodeHead {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nodeTitle {
+  @include type-body-3-semibold;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.nodeTitleText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeDot {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+}
+
+.nodeRows {
+  @include type-body-4-regular;
+  flex-shrink: 0;
+  color: var(--text-neutral-tertiary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The bar fills left to right as the node lands. */
+.nodeBar {
+  height: 6px;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1) 160ms;
+}
+
+.nodeOn .nodeBar {
+  transform: scaleX(1);
+}
+
+/* Leaf verdicts: hidden until the whole tree is in, then pop. */
+.score {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 280ms ease,
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.scoreOn {
+  opacity: 1;
+  transform: none;
+}
+
+.mark {
+  @include type-label-4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: var(--shape-round);
+  color: var(--text-neutral-white-fixed);
+  font-variant-numeric: tabular-nums;
+}
+
+.markRight {
+  background: var(--background-success-primary);
+}
+
+.markWrong {
+  background: var(--background-error-primary);
+}
+
+/* Replay-from-results and reduced motion: no transitions at all. */
+.frameInstant .link,
+.frameInstant .edgeLabel,
+.frameInstant .node,
+.frameInstant .nodeBar,
+.frameInstant .score {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame,
+  .link,
+  .edgeLabel,
+  .node,
+  .nodeBar,
+  .score {
+    transition: none;
+  }
+}
+
+/* Mini-map on the Results card. */
+.thumbnail {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.thumbLink {
+  fill: none;
+  stroke: var(--border-neutral-secondary);
+  stroke-width: 6;
+}
+
+.thumbNode {
+  fill: var(--background-neutral-primary);
+  stroke: var(--border-neutral-secondary);
+  stroke-width: 4;
+}

@@ -1,0 +1,97 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.story {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.meta {
+  @include type-body-4-regular;
+  margin: 0;
+  color: var(--text-neutral-quaternary);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.heading {
+  @include type-overline-2;
+  margin: 0;
+  color: var(--text-neutral-quaternary);
+}
+
+.copy {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.hint {
+  @include type-body-4-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+  line-height: 22px;
+
+  > * {
+    vertical-align: middle;
+  }
+}
+
+/* One real row as a small card: key on the left, value on the right. */
+.example {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  overflow: hidden;
+}
+
+.exampleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.exampleRowLabel {
+  background: color-mix(
+    in srgb,
+    var(--background-brand-primary) 10%,
+    var(--background-neutral-primary)
+  );
+}
+
+.exampleKey {
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.exampleValue {
+  @include type-body-4-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.exampleHidden {
+  @include type-body-4-semibold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px dashed var(--border-brand-primary);
+  border-radius: var(--shape-round);
+  color: var(--text-brand-primary);
+}

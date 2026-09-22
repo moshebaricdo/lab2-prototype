@@ -1,4 +1,4 @@
-import type { AiLabDataset } from "../../../types/aiLab";
+import type { AiLabDataset, AiLabDatasetStory } from "../../../types/aiLab";
 import {
   datasetIdFromPath,
   parseCsvDataset,
@@ -20,6 +20,7 @@ const overrides: Record<
     description?: string;
     labelColumn?: string;
     columnDescriptions?: Record<string, string>;
+    story?: AiLabDatasetStory;
   }
 > = {
   online_food_delivery_dataset: {
@@ -40,6 +41,35 @@ const overrides: Record<
       lives_in_water: "Whether it lives in water.",
       type: "Bird, mammal, or fish.",
     },
+    story: {
+      rowNoun: "animal",
+      whatIsARow:
+        "Each row is one animal. The columns are things we know about it: whether it has feathers, breathes with lungs, or lives in water.",
+      source:
+        "A class made this sheet by looking up 24 animals in a field guide and writing down yes or no for each trait.",
+      question: "Given an animal's traits, is it a bird, a mammal, or a fish?",
+      whyItMatters:
+        "Scientists sort living things into groups by their traits. A model that learns the pattern can sort an animal it has never seen.",
+    },
+  },
+  catsanddogs_v2: {
+    story: {
+      rowNoun: "pet",
+      whatIsARow:
+        "Each row is one pet and a few measurements about it.",
+      source: "Collected from pet owners who described their animals.",
+      question: "From the measurements alone, is this pet a cat or a dog?",
+    },
+  },
+  iris_species: {
+    story: {
+      rowNoun: "flower",
+      whatIsARow:
+        "Each row is one iris flower with the length and width of its petals and sepals in centimeters.",
+      source:
+        "Measured by botanist Edgar Anderson in 1936 — one of the oldest datasets used to teach machine learning.",
+      question: "From four measurements, which of three iris species is this flower?",
+    },
   },
 };
 
@@ -54,8 +84,9 @@ export const csvDatasets: AiLabDataset[] = Object.entries(files)
   .map(([path, csv]) => {
     const id = datasetIdFromPath(path);
     const override = overrides[id];
-    const dataset = parseCsvDataset(csv, { id, ...override });
-    const columnDescriptions = override?.columnDescriptions;
+    const { columnDescriptions, story, ...parseOptions } = override ?? {};
+    const parsed = parseCsvDataset(csv, { id, ...parseOptions });
+    const dataset: AiLabDataset = story ? { ...parsed, story } : parsed;
     if (!columnDescriptions) return dataset;
     return {
       ...dataset,

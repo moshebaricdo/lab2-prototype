@@ -19,6 +19,30 @@ export interface AiLabColumn {
   description: string;
 }
 
+/**
+ * The story behind a sheet, told in student terms. Every field is a short
+ * sentence or two; the UI (About this data, story-first intro, Setup
+ * preview) lays them out. Datasets without a story fall back to
+ * `description` and inferred text.
+ */
+export interface AiLabDatasetStory {
+  /** What one row is, singular and lowercase: "animal", "customer", "flower". */
+  rowNoun: string;
+  /** "Each row is one animal and what we know about it." */
+  whatIsARow: string;
+  /** Who collected it and how. */
+  source: string;
+  /** The question a model on this sheet answers. */
+  question: string;
+  /** Why anyone would want that answer. Optional. */
+  whyItMatters?: string;
+  /**
+   * Column holding a picture per row (URL). Cards show it when present;
+   * layout never depends on it.
+   */
+  imageColumn?: string;
+}
+
 export interface AiLabDataset {
   id: string;
   name: string;
@@ -26,6 +50,32 @@ export interface AiLabDataset {
   defaultLabelColumn: string;
   columns: AiLabColumn[];
   rows: AiLabDataRow[];
+  story?: AiLabDatasetStory;
+}
+
+/**
+ * What a student does before the aggregate view opens.
+ *
+ * - `info`: the dataset story as a modal; Continue opens the sheet.
+ * - `classify`: a few rows as cards with the label hidden; the student
+ *   guesses the label from the other columns, sees the answer, then the
+ *   deck opens into the sheet. Generic — the label values, the properties,
+ *   and the rows all come from the sheet, never from the level.
+ *
+ * Levels for older students leave this off and land on the sheet.
+ */
+export interface AiLabIntroActivity {
+  mode: "info" | "classify";
+  /** classify: open with the story modal first. Default on. */
+  showStoryFirst?: boolean;
+  /** classify: how many rows to guess. Default 5. */
+  rowCount?: number;
+  /** classify: exact rows to use, in order (overrides `rowCount`). */
+  rowIndexes?: number[];
+  /** classify: columns shown as clues. Default: every column but the label. */
+  visibleColumns?: string[];
+  /** classify: show clues all at once or one per click. Default `all`. */
+  reveal?: "all" | "one-at-a-time";
 }
 
 /** Label → how many training rows reached this node carry that label. */
@@ -144,9 +194,8 @@ export interface AiLabSavedModel {
 }
 
 /**
- * Testing chrome. `canvas` (default) floats the trace toolbar, input card,
- * and prediction card over a full-bleed viz; `dock` keeps the Input → Output
- * footer under the viz. Dev-panel flag on every AI Lab route.
+ * Testing chrome. `canvas` is canonical (Result card + Replay over a
+ * full-bleed viz). `dock` remains as pullback for the Input → Output footer.
  */
 export type AiLabTestLayout = "dock" | "canvas";
 
@@ -175,8 +224,13 @@ export interface AiLabLevelConfig {
   hideTestTab?: boolean;
   hideTrainTab?: boolean;
   hideLabelSelect?: boolean;
-  /** Show Predict but lock it to the dataset default (or pretrained label). */
+  /** Show Predict but lock it to `presetLabelColumn` or the dataset default. */
   lockLabelColumn?: boolean;
+  /**
+   * Column id the Predict field is locked to when `lockLabelColumn` is on.
+   * Levelbuilder "choose a label" — Bird / mammal / fish locks **Type**.
+   */
+  presetLabelColumn?: string;
   /**
    * Click-to-edit cells and Add row. Defaults on. Curriculum levels can lock
    * the sheet as a read-only table.
@@ -184,9 +238,29 @@ export interface AiLabLevelConfig {
   allowDataEdit?: boolean;
   /** Initial Data Set view. Students can still switch Table / Cards unless the level hides Data. */
   defaultDataView?: AiLabDataView;
+  /**
+   * Column whose value titles each Cards card ("Hawk" instead of "Row 1").
+   * The pager still says Row N of N. Omit to keep the row number.
+   */
+  cardTitleColumn?: string;
+  /** Hide Catalog / Carousel; Cards always uses the carousel. */
+  hideCardLayoutToggle?: boolean;
   initialSection?: AiLabSection;
   /** Hide Diagram / Rules (or KNN target / table) toggle on Testing. */
   hideTestViewToggle?: boolean;
+  /**
+   * Walk the decision path from the root on every new prediction (default
+   * on). New inputs wait until the walk ends. Off lands on the answer.
+   */
+  autoPlayTrace?: boolean;
+  /** Story / classify step before the sheet opens. Off by default. */
+  introActivity?: AiLabIntroActivity;
+  /**
+   * Decision tree: Train model opens a modal that grows the tree and marks
+   * each leaf right / wrong before showing accuracy (default on). Off keeps
+   * the inline Results card only. KNN never opens the modal.
+   */
+  trainingModal?: boolean;
   /** Feature columns hidden from the Train rail checklist. */
   excludedFeatureColumns?: string[];
   /** When set, only categorical columns can be the label. */

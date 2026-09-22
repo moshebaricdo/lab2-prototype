@@ -1,0 +1,37 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.root {
+  @include type-label-2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 4px;
+  column-gap: 6px;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.rootLarge {
+  row-gap: 6px;
+  column-gap: 8px;
+}
+
+.word {
+  flex-shrink: 0;
+}
+
+/* Same chip as the Testing strip: CADS large Tag (body-sm / 14px) pinned
+   to 24px so the label matches the sentence and the chip stays compact. */
+.tag {
+  height: 24px;
+  min-height: 24px;
+  box-sizing: border-box;
+}
+
+/* Same Tag geometry (`--shape-sm`, not a capsule). Waiting fill + stroke. */
+.placeholder {
+  border-radius: var(--shape-sm) !important;
+  background: var(--background-neutral-primary) !important;
+  border: 1px dashed var(--border-neutral-secondary) !important;
+  color: var(--text-neutral-quaternary) !important;
+}

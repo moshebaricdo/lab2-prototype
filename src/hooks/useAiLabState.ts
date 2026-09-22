@@ -32,9 +32,17 @@ export interface AiLabState {
   selectedFeatures: string[];
   model: AiLabTrainedModel | undefined;
   testValues: AiLabDataRow;
+  /**
+   * Sheet row the test inputs were loaded from (Random, Scorecard click).
+   * Cleared the moment a field is edited by hand — the example is then made
+   * up and has no ground truth.
+   */
+  testRowIndex: number | undefined;
   lastPrediction: string | undefined;
   knnK: number;
   trainingSetupOpen: boolean;
+  /** `config.introActivity` finished (or absent); the sheet may open. */
+  introComplete: boolean;
   rows: AiLabDataRow[];
   savedModels: AiLabSavedModel[];
 }
@@ -82,12 +90,22 @@ export function defaultCardLayout(rowCount: number): AiLabCardLayout {
   return rowCount <= CAROUSEL_DEFAULT_MAX_ROWS ? "carousel" : "catalog";
 }
 
+function cardLayoutFor(
+  config: AiLabLevelConfig,
+  rowCount: number,
+): AiLabCardLayout {
+  return config.hideCardLayoutToggle
+    ? "carousel"
+    : defaultCardLayout(rowCount);
+}
+
 function initialState(config: AiLabLevelConfig): AiLabState {
   const datasetId = initialDatasetId(config);
   const dataset = resolveDataset(config, datasetId);
   const selectedAlgorithm = config.algorithmLock ?? config.pretrained?.algorithm;
   const labelColumn =
     config.pretrained?.labelColumn ??
+    config.presetLabelColumn ??
     (config.hideLabelSelect || config.lockLabelColumn
       ? dataset?.defaultLabelColumn
       : undefined);
@@ -109,16 +127,18 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     datasetId,
     selectedAlgorithm,
     dataView: config.defaultDataView ?? "table",
-    cardLayout: defaultCardLayout(dataset?.rows.length ?? 0),
+    cardLayout: cardLayoutFor(config, dataset?.rows.length ?? 0),
     selectedColumnId: undefined,
     cardIndex: 0,
     labelColumn,
     selectedFeatures,
     model,
     testValues: emptyTestValues(selectedFeatures),
+    testRowIndex: undefined,
     lastPrediction: undefined,
     knnK: config.defaultKnnK ?? DEFAULT_KNN_K,
     trainingSetupOpen: Boolean(config.trainAsOverlay && config.pretrained),
+    introComplete: !config.introActivity,
     rows: dataset ? cloneRows(dataset.rows) : [],
     savedModels: [],
   };
@@ -145,9 +165,14 @@ function configIdentity(config: AiLabLevelConfig): string {
     config.hideTrainTab ? "1" : "0",
     config.hideLabelSelect ? "1" : "0",
     config.lockLabelColumn ? "1" : "0",
+    config.presetLabelColumn ?? "",
+    config.cardTitleColumn ?? "",
+    config.hideCardLayoutToggle ? "1" : "0",
+    config.hideTestViewToggle ? "1" : "0",
     config.initialSection ?? "",
     config.classificationOnly ? "1" : "0",
     config.trainAsOverlay ? "1" : "0",
+    config.introActivity?.mode ?? "",
     String(config.defaultKnnK ?? ""),
     String(config.holdoutCount ?? ""),
     pretrained,
@@ -250,12 +275,13 @@ export function useAiLabState(config: AiLabLevelConfig) {
           rows: cloneRows(dataset.rows),
           selectedColumnId: undefined,
           cardIndex: 0,
-          cardLayout: defaultCardLayout(dataset.rows.length),
+          cardLayout: cardLayoutFor(config, dataset.rows.length),
           labelColumn,
           selectedFeatures: [],
           model: undefined,
           lastPrediction: undefined,
           testValues: emptyTestValues([]),
+          testRowIndex: undefined,
           section:
             current.section === "test" ? setupSection(config) : current.section,
           trainingSetupOpen: false,
@@ -302,7 +328,9 @@ export function useAiLabState(config: AiLabLevelConfig) {
             : "algorithm",
       }),
       dataView: current.dataView,
-      cardLayout: current.cardLayout,
+      cardLayout: config.hideCardLayoutToggle
+        ? "carousel"
+        : current.cardLayout,
       savedModels: current.savedModels,
     }));
   }, [config]);
@@ -319,10 +347,10 @@ export function useAiLabState(config: AiLabLevelConfig) {
       // student can still flip it with the Catalog / Carousel control.
       cardLayout:
         dataView === "cards" && current.dataView !== "cards"
-          ? defaultCardLayout(current.rows.length)
+          ? cardLayoutFor(config, current.rows.length)
           : current.cardLayout,
     }));
-  }, []);
+  }, [config]);
 
   const setCardLayout = useCallback((cardLayout: AiLabCardLayout) => {
     setState((current) => ({ ...current, cardLayout }));
@@ -375,6 +403,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
         model: undefined,
         lastPrediction: undefined,
         testValues: emptyTestValues(selected),
+        testRowIndex: undefined,
         section: current.section === "test" ? setupSection(config) : current.section,
         trainingSetupOpen:
           current.section === "test" ? true : current.trainingSetupOpen,
@@ -393,6 +422,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
         model: undefined,
         lastPrediction: undefined,
         testValues: emptyTestValues(selected),
+        testRowIndex: undefined,
         section: current.section === "test" ? setupSection(config) : current.section,
         trainingSetupOpen:
           current.section === "test" ? true : current.trainingSetupOpen,
@@ -492,6 +522,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
         knnK: model.knnK ?? current.knnK,
         model,
         testValues: emptyTestValues(current.selectedFeatures),
+        testRowIndex: undefined,
         lastPrediction: undefined,
         trainingSetupOpen: config.trainAsOverlay ? true : current.trainingSetupOpen,
       };
@@ -526,6 +557,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
     setState((current) => ({
       ...current,
       testValues: { ...current.testValues, [feature]: value },
+      testRowIndex: undefined,
       lastPrediction: undefined,
     }));
   }, []);
@@ -550,8 +582,28 @@ export function useAiLabState(config: AiLabLevelConfig) {
       return {
         ...current,
         testValues,
+        testRowIndex: rowIndex,
         lastPrediction: undefined,
       };
+    });
+  }, []);
+
+  /** Random: a real sheet row (never the one already loaded), so every
+   *  example has a true answer to compare against. */
+  const loadRandomRow = useCallback(() => {
+    setState((current) => {
+      if (!current.model || current.rows.length === 0) return current;
+      const count = current.rows.length;
+      let rowIndex = Math.floor(Math.random() * count);
+      if (count > 1 && rowIndex === current.testRowIndex) {
+        rowIndex = (rowIndex + 1 + Math.floor(Math.random() * (count - 1))) % count;
+      }
+      const row = current.rows[rowIndex];
+      const testValues: AiLabDataRow = {};
+      current.model.selectedFeatures.forEach((feature) => {
+        testValues[feature] = row[feature];
+      });
+      return { ...current, testValues, testRowIndex: rowIndex, lastPrediction: undefined };
     });
   }, []);
 
@@ -600,10 +652,17 @@ export function useAiLabState(config: AiLabLevelConfig) {
                 ? featureCardinality.text
                 : undefined;
 
+  const completeIntro = useCallback(() => {
+    setState((current) =>
+      current.introComplete ? current : { ...current, introComplete: true },
+    );
+  }, []);
+
   return {
     ...state,
     config: resolvedConfig,
     availableDatasets,
+    completeIntro,
     canPickDataset: !config.lockDataset,
     needsDataset: !state.datasetId,
     visibleSections,
@@ -632,6 +691,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
     saveModel,
     setTestValue,
     loadHoldoutRow,
+    loadRandomRow,
     setLastPrediction,
   };
 }

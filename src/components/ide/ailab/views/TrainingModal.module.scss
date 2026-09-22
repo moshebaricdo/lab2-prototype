@@ -1,0 +1,88 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+/* Modal's primary action has no endIcon slot — sit the FA arrow next to
+   the label the same way Button endIcon does (6px gap). */
+.testLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Results row keeps its height while hidden so the modal does not jump. */
+.results {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 280ms ease,
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.resultsOn {
+  opacity: 1;
+  transform: none;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metricLabel {
+  @include type-overline-2;
+  color: var(--text-neutral-quaternary);
+}
+
+.metricValue {
+  @include type-heading-h4-semibold;
+  color: var(--text-success-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.metricValueNeutral {
+  @include type-heading-h4-semibold;
+  color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.explain {
+  @include type-body-4-regular;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .results {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .results {
+    grid-template-columns: auto auto;
+  }
+
+  .explain {
+    grid-column: 1 / -1;
+  }
+}

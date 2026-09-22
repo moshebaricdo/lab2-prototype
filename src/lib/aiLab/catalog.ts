@@ -63,15 +63,64 @@ export function testingOnlyDataset(
   );
 }
 
+/** Locked Predict column, or undefined when the student may choose. */
+export function resolvePresetLabelColumn(
+  dataset: AiLabDataset,
+  preset: string | undefined,
+): string | undefined {
+  if (!preset || preset === AI_LAB_STUDENT_CHOICE) return undefined;
+  const match = dataset.columns.find(
+    (column) => column.id === preset || column.name === preset,
+  );
+  return match?.id ?? dataset.defaultLabelColumn;
+}
+
+export function resolveOptionalColumn(
+  dataset: AiLabDataset,
+  preset: string | undefined,
+): string | undefined {
+  if (!preset || preset === AI_LAB_STUDENT_CHOICE) return undefined;
+  return dataset.columns.find(
+    (column) => column.id === preset || column.name === preset,
+  )?.id;
+}
+
+export function labelColumnDevOptions(
+  dataset: AiLabDataset,
+): { label: string; value: string }[] {
+  return [
+    { label: "Student chooses", value: AI_LAB_STUDENT_CHOICE },
+    ...dataset.columns.map((column) => ({
+      label: column.name,
+      value: column.id,
+    })),
+  ];
+}
+
+export function cardTitleColumnDevOptions(
+  dataset: AiLabDataset,
+): { label: string; value: string }[] {
+  return [
+    { label: "Row number", value: AI_LAB_STUDENT_CHOICE },
+    ...dataset.columns.map((column) => ({
+      label: column.name,
+      value: column.id,
+    })),
+  ];
+}
+
 /**
- * Levelbuilder-style pretrained spec: default label plus the first few
- * usable feature columns (skip `id` and cardinality-blocked categoricals).
+ * Levelbuilder-style pretrained spec: chosen or default label plus the
+ * first few usable feature columns (skip `id` and blocked categoricals).
  */
 export function pretrainedFromDataset(
   dataset: AiLabDataset,
   algorithm: AiLabAlgorithmId,
+  labelColumnId?: string,
 ): NonNullable<AiLabLevelConfig["pretrained"]> {
-  const labelColumn = dataset.defaultLabelColumn;
+  const labelColumn =
+    resolvePresetLabelColumn(dataset, labelColumnId) ??
+    dataset.defaultLabelColumn;
   const selectedFeatures = dataset.columns
     .filter((column) => column.id !== labelColumn)
     .filter((column) => {
