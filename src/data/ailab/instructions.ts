@@ -28,6 +28,20 @@ export const aiLabSectionInstructions: Record<AiLabSection, string> = {
   ].join("\n\n"),
 };
 
+export const aiLabP0Instructions: Record<"dataset" | "test", string> = {
+  dataset: [
+    "# Train a model",
+    "Each **row** is one animal. Each **column** is one thing we know about it. The model **predicts Type** — that column is already chosen.",
+    "In **Train**, pick the columns the model may use. The sentence underneath is your model: **Predict Type based on** those columns. Press **Train model** and watch the tree grow from the rows.",
+    "Each box in the tree is a group of animals. A green check means the guess for that group is right; a red X counts the ones it gets wrong. Then **Test model**.",
+  ].join("\n\n"),
+  test: [
+    "# Test the model",
+    "Fill the inputs (or click **Random** to load a real animal) and watch the tree walk the questions. **Replay** in the Result card plays the path again.",
+    "Check whether the model got this animal right, then change an answer and see where the path goes.",
+  ].join("\n\n"),
+};
+
 export const aiLabGuidedSectionInstructions: Record<AiLabSection, string> = {
   algorithm: [
     "# Choose an algorithm",
@@ -108,4 +122,30 @@ export const aiLabPlaytestBuildInstructions = [
   "# Train and Test a Model",
   "Now build your own model with the same animal data!",
   "In the **Train** area, pick which columns it should learn from. Watch how the accuracy changes based on what or how many you pick, then test it out with some predictions!",
+].join("\n\n");
+
+/*
+ * v2 playtest copy. One vocabulary throughout: a **row** is one animal, a
+ * **column** is one thing we know about it, the **Type** column is the
+ * answer, the model **predicts** Type **based on** other columns.
+ */
+export const aiLabPlaytestV2LookInstructions = [
+  "# Meet the Data",
+  "AI models learn from **data**. Before you see all of it, try what the model will do: look at one animal's clues and guess its **Type**.",
+  "Each card is one **row** — one animal. Each line on the card is a **column** — one thing we know about it.",
+  "**Then:** open the data to see all 24 animals at once. Try **Table** to see every row in a grid, and click a column header to see how its values are spread.",
+].join("\n\n");
+
+export const aiLabPlaytestV2TryInstructions = [
+  "# Try a Prediction Model",
+  "This model already learned from the animal data. It **predicts Type based on** two columns: **Has feathers** and **Breathes with lungs**.",
+  "It is a **decision tree**: the computer asks yes/no questions about the columns until it reaches an answer. Watch it walk the questions each time you make a prediction.",
+  "**Try it out:** Click **Random** to load a real animal from the data, then check whether the model got it right. Change an answer by hand and see where the path goes.",
+].join("\n\n");
+
+export const aiLabPlaytestV2BuildInstructions = [
+  "# Train and Test a Model",
+  "Now build your own model from the same animal data.",
+  "In **Train**, choose the columns the model may use. The sentence underneath is your model: **Predict Type based on** the columns you picked. Press **Train model** and watch the tree grow from the rows.",
+  "Each box in the tree is a group of animals. A green check means the model's guess for that group is right; a red X counts the animals it gets wrong. Try one column, then two, and see how the tree and the score change. Then **Test model**.",
 ].join("\n\n");

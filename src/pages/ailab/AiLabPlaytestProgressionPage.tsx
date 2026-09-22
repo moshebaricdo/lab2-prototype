@@ -1,46 +1,50 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  AI_LAB_PLAYTEST_PATH,
-  aiLabPlaytestLevelLinks,
-  aiLabPlaytestSteps,
+  aiLabPlaytestProgression,
+  aiLabPlaytestV2Progression,
   parseAiLabPlaytestStep,
+  type AiLabProgression,
 } from "../../data/ailab/playtestProgression";
 import { AiLabLevelPage } from "./AiLabLevelPage";
 
 /**
- * Three playtest stages on one route so schools can allowlist a single path.
- * Continue advances in memory; the URL stays `/levels/progression-ailab`.
+ * Several playtest stages on one route so schools can allowlist a single
+ * path. Continue advances in memory; the URL stays on `progression.path`.
  *
- * `?step=look|try|build` is read once on load (index bubbles, legacy redirects)
- * then stripped so the address bar stays self-contained.
+ * `?step=<id>` is read once on load (index bubbles, legacy redirects) then
+ * stripped so the address bar stays self-contained.
  */
-export function AiLabPlaytestProgressionPage() {
+export function AiLabProgressionPage({
+  progression,
+}: {
+  progression: AiLabProgression;
+}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [stepIndex, setStepIndex] = useState(() =>
-    parseAiLabPlaytestStep(searchParams.get("step")),
+    parseAiLabPlaytestStep(searchParams.get("step"), progression.steps),
   );
 
   useEffect(() => {
     if (!searchParams.get("step")) return;
-    navigate(AI_LAB_PLAYTEST_PATH, { replace: true });
-  }, [navigate, searchParams]);
+    navigate(progression.path, { replace: true });
+  }, [navigate, progression.path, searchParams]);
 
-  const step = aiLabPlaytestSteps[stepIndex];
-  const isLast = stepIndex >= aiLabPlaytestSteps.length - 1;
+  const step = progression.steps[stepIndex];
+  const isLast = stepIndex >= progression.steps.length - 1;
 
   return (
     <AiLabLevelPage
       key={step.id}
       progressLevelIndex={stepIndex}
-      currentLevelPath={AI_LAB_PLAYTEST_PATH}
+      currentLevelPath={progression.path}
       title={step.title}
       subtitle={step.subtitle}
       config={step.config}
       continueLabel={step.continueLabel ?? "Continue"}
-      continueTo={isLast ? "/levels" : AI_LAB_PLAYTEST_PATH}
-      levelLinks={aiLabPlaytestLevelLinks}
+      continueTo={isLast ? "/levels" : progression.path}
+      levelLinks={progression.levelLinks}
       instructionsMarkdown={step.instructionsMarkdown}
       onProgressLevelSelect={setStepIndex}
       resourcePanelWidth={380}
@@ -51,4 +55,12 @@ export function AiLabPlaytestProgressionPage() {
       }
     />
   );
+}
+
+export function AiLabPlaytestProgressionPage() {
+  return <AiLabProgressionPage progression={aiLabPlaytestProgression} />;
+}
+
+export function AiLabPlaytestV2ProgressionPage() {
+  return <AiLabProgressionPage progression={aiLabPlaytestV2Progression} />;
 }

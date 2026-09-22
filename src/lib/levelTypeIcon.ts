@@ -47,7 +47,11 @@ const AI_CHAT_LAB_PATH_PREFIXES = [
   "/levels/progression-backpack-labs-aichat",
 ];
 
-const AI_LAB_PATH_PREFIXES = ["/levels/ailab", "/levels/progression-ailab"];
+const AI_LAB_PATH_PREFIXES = [
+  "/levels/ailab",
+  "/levels/progression-ailab",
+  "/levels/progression-ailab-v2",
+];
 
 const TEACHER_DASHBOARD_PATH_PREFIXES = ["/levels/teacher-dashboard"];
 

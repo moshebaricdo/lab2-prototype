@@ -41,8 +41,8 @@ Use these docs as handoff context for follow-up threads.
 - `/levels/pythonlab` and `/levels/pythonlab-blank`
 - `/levels/sketchlab` and `/levels/sketchlab-blank`
 - `/levels/aichatlab`, `/levels/aichatlab-setup`, and `/levels/aichatlab-model-card`
-- `/levels/ailab`, `/levels/ailab-pretrained`, and `/levels/ailab-guided`
-- AI Lab playtest: `/levels/progression-ailab` (legacy `/levels/progression-ailab-*` redirect here)
+- `/levels/ailab-p0`, `/levels/ailab`, `/levels/ailab-pretrained`, and `/levels/ailab-guided`
+- AI Lab playtest: `/levels/progression-ailab` (legacy `/levels/progression-ailab-*` redirect here); v2 with the post-playtest work on: `/levels/progression-ailab-v2`
 - Web Lab 2 core templates: `/levels/weblab2-level`, `/levels/weblab2-demo-project`, and `/levels/weblab2-demo-project-blank`; Web Lab 2 experiments (`/levels/weblab2-tutor-action-card`, `/levels/weblab2-validation-test`, `/levels/weblab2-drawer-improvements`, `/levels/weblab2-drawer-instructions-tab`, `/levels/weblab2-drawer-notification-halo`) and progressions are listed under Sample Progressions on `/levels`
 - Web Lab 2 progression routes: Upload Mechanisms under `/levels/progression-upload-mechanisms-*`, Backpack Filtering under `/levels/progression-backpack-filter-*`, and the validation progression under `/levels/progression-weblab2-validation-*` (including Feature Roulette AIF as the fifth level — see `weblab2.md`)
 - Cross-lab backpack sample: `/levels/progression-backpack-labs` (Web Lab → Python → Sketch → AI Chat) with a shared file-type seed — see each lab doc

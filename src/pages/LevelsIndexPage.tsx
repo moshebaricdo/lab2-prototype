@@ -20,7 +20,9 @@ import {
   aiChatLabLevelLinks,
   aiLabIndexLinks,
   aiLabPlaytestIndexLinks,
+  aiLabPlaytestV2IndexLinks,
   AI_LAB_PLAYTEST_PATH,
+  AI_LAB_PLAYTEST_V2_PATH,
   bubbleChoiceLevelLinks,
   cfuIndexGroups,
   cfuLevelLinks,
@@ -216,6 +218,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/aichatlab": "AI Chat Lab",
   "/levels/ailab": "AI Lab",
   "/levels/progression-ailab": "AI Lab",
+  "/levels/progression-ailab-v2": "AI Lab",
   "/levels/weblab2": "Web Lab 2",
   "/levels/levelgroup": "Assessment experiment",
   "/levels/bubble-choice": "Bubble choice",
@@ -583,6 +586,35 @@ export function LevelsIndexPage() {
                 </div>
                 <div className={styles.bubbleRow}>
                   {aiLabPlaytestIndexLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>AI Lab playtest v2</h3>
+                  <p className={styles.cardDescription}>
+                    Same stagger at {AI_LAB_PLAYTEST_V2_PATH} with the
+                    post-playtest work on: story-first classify deck, Cards
+                    default, live statement, training modal, auto-played trace,
+                    real-row Random.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {aiLabPlaytestV2IndexLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       title={page.name}

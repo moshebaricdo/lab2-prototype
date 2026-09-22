@@ -8,9 +8,13 @@ export { tacoTruckDataset } from "./tacoTruck";
 export { tacoTruckGuidedDataset } from "./tacoTruckGuided";
 export {
   aiLabGuidedSectionInstructions,
+  aiLabP0Instructions,
   aiLabPlaytestBuildInstructions,
   aiLabPlaytestLookInstructions,
   aiLabPlaytestTryInstructions,
+  aiLabPlaytestV2BuildInstructions,
+  aiLabPlaytestV2LookInstructions,
+  aiLabPlaytestV2TryInstructions,
   aiLabPretrainedInstructions,
   aiLabSectionInstructions,
   aiLabStudioSectionInstructions,
@@ -91,6 +95,34 @@ export const aiLabGuidedConfig: AiLabLevelConfig = {
   trainAsOverlay: true,
 };
 
+/**
+ * P0 handoff — curriculum-shaped defaults with the current product on
+ * (training modal, auto-play, Cards). Dev panel knobs mirror levelbuilder.
+ */
+export const aiLabP0Config: AiLabLevelConfig = {
+  dataset: aiLabPlaytestDataset,
+  availableDatasets: aiLabStudioCatalog,
+  lockDataset: true,
+  requireDatasetChoice: false,
+  algorithmLock: "decisionTree",
+  hideLabelSelect: false,
+  lockLabelColumn: true,
+  presetLabelColumn: AI_LAB_PLAYTEST_LABEL_COLUMN,
+  excludedFeatureColumns: ["animal"],
+  allowDataEdit: false,
+  showModelDetails: false,
+  showExport: false,
+  trainAsOverlay: true,
+  defaultDataView: "cards",
+  hideCardLayoutToggle: true,
+  cardTitleColumn: "animal",
+  hideTestViewToggle: true,
+  trainingModal: true,
+  autoPlayTrace: true,
+  bundleWideSplits: true,
+  testLayout: "canvas",
+};
+
 export const aiLabPlaytestLookConfig: AiLabLevelConfig = {
   ...aiLabPlaytestShared,
   hideTestTab: true,
@@ -114,6 +146,39 @@ export const aiLabPlaytestBuildConfig: AiLabLevelConfig = {
   ...aiLabPlaytestShared,
   hideLabelSelect: false,
   lockLabelColumn: true,
+  presetLabelColumn: AI_LAB_PLAYTEST_LABEL_COLUMN,
   excludedFeatureColumns: ["animal"],
   initialSection: "dataset",
+};
+
+/*
+ * v2 playtest — same look → try → build shape with the post-playtest work
+ * turned on: story-first classify deck before the sheet, Cards as the
+ * default view, training modal, auto-played trace, real-row Random. The
+ * original three stay as the demo baseline.
+ */
+export const aiLabPlaytestV2LookConfig: AiLabLevelConfig = {
+  ...aiLabPlaytestShared,
+  hideTestTab: true,
+  hideTrainTab: true,
+  initialSection: "dataset",
+  defaultDataView: "cards",
+  introActivity: {
+    mode: "classify",
+    showStoryFirst: true,
+    rowCount: 5,
+    visibleColumns: ["animal", "has_feathers", "breathes_with_lungs", "lives_in_water"],
+    reveal: "all",
+  },
+};
+
+export const aiLabPlaytestV2TryConfig: AiLabLevelConfig = {
+  ...aiLabPlaytestTryConfig,
+  autoPlayTrace: true,
+};
+
+export const aiLabPlaytestV2BuildConfig: AiLabLevelConfig = {
+  ...aiLabPlaytestBuildConfig,
+  autoPlayTrace: true,
+  trainingModal: true,
 };

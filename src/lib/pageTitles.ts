@@ -12,7 +12,9 @@ import {
   aiChatLabLevelLinks,
   aiLabIndexLinks,
   AI_LAB_PLAYTEST_PATH,
+  AI_LAB_PLAYTEST_V2_PATH,
   aiLabPlaytestSteps,
+  aiLabPlaytestV2Steps,
   backpackFilterProgressionLinks,
   bubbleChoiceLevelLinks,
   dragDropLevelLinks,
@@ -50,6 +52,14 @@ const LEVEL_PAGE_GROUPS: LevelPageGroup[] = [
       ...aiLabPlaytestSteps.map((step) => ({
         name: step.name,
         path: `${AI_LAB_PLAYTEST_PATH}?step=${step.id}`,
+      })),
+      {
+        name: "Bird, mammal, or fish (3-step, v2)",
+        path: AI_LAB_PLAYTEST_V2_PATH,
+      },
+      ...aiLabPlaytestV2Steps.map((step) => ({
+        name: `${step.name} (v2)`,
+        path: `${AI_LAB_PLAYTEST_V2_PATH}?step=${step.id}`,
       })),
     ],
   },

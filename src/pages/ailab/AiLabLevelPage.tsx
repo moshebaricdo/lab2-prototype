@@ -13,6 +13,8 @@ import type { LevelProgressLink } from "../../components/ui/header/LevelProgress
 import {
   aiLabGuidedConfig,
   aiLabGuidedSectionInstructions,
+  aiLabP0Config,
+  aiLabP0Instructions,
   aiLabPretrainedConfig,
   aiLabPretrainedInstructions,
   aiLabSectionInstructions,
@@ -22,13 +24,17 @@ import {
 } from "../../data/ailab";
 import {
   aiLabDevDefaults,
+  cardTitleColumnDevOptions,
   datasetDevOptions,
+  findCatalogDataset,
+  labelColumnDevOptions,
   mergeAiLabDevConfig,
   uniqueDevCatalog,
 } from "../../lib/aiLab";
 import {
   aiLabGuidedLevelLinks,
   aiLabLevelLinks,
+  aiLabP0LevelLinks,
 } from "../levelTypeLinks";
 import type { AiLabLevelConfig, AiLabSection } from "../../types/aiLab";
 
@@ -55,7 +61,10 @@ interface AiLabLevelPageProps {
   resourcePanelWidth?: number;
 }
 
-function aiLabDevFields(catalog: ReturnType<typeof uniqueDevCatalog>): DevPanelField[] {
+function aiLabDevFields(
+  catalog: ReturnType<typeof uniqueDevCatalog>,
+  labelDataset: (typeof catalog)[number],
+): DevPanelField[] {
   return [
     {
       key: "algorithmLock",
@@ -80,6 +89,25 @@ function aiLabDevFields(catalog: ReturnType<typeof uniqueDevCatalog>): DevPanelF
       options: datasetDevOptions(catalog),
     },
     {
+      key: "presetLabelColumn",
+      label: "Label column",
+      description:
+        "The column students predict (Predict: in the Train rail). Locking Type on Bird / mammal / fish is the curriculum default.",
+      type: "select",
+      group: "AI Lab",
+      options: labelColumnDevOptions(labelDataset),
+    },
+    {
+      key: "cardTitleColumn",
+      label: "Card title column",
+      description:
+        "Use a column's value as the Cards heading (e.g. Animal → Hawk) instead of Row N. The pager still says Row N of N.",
+      type: "select",
+      group: "AI Lab",
+      options: cardTitleColumnDevOptions(labelDataset),
+      visibleWhen: (values) => values.workspaceTabs !== "test",
+    },
+    {
       key: "workspaceTabs",
       label: "Workspace tabs",
       description:
@@ -93,25 +121,10 @@ function aiLabDevFields(catalog: ReturnType<typeof uniqueDevCatalog>): DevPanelF
       ],
     },
     {
-      key: "showExport",
-      label: "Show export",
-      description: "Save model opens its own export modal (model card + getPrediction snippet).",
-      type: "boolean",
-      group: "AI Lab",
-    },
-    {
-      key: "showTrainPanel",
-      label: "Show train panel",
+      key: "hideTrainPanel",
+      label: "Hide train panel",
       description:
-        "The TRAIN rail on Data Set. When this is off and Testing is available, the level loads a pre-trained model.",
-      type: "boolean",
-      group: "AI Lab",
-      visibleWhen: (values) => values.workspaceTabs !== "test",
-    },
-    {
-      key: "allowDataEdit",
-      label: "Allow editing data",
-      description: "Click a cell to edit and use Add row. Off locks the sheet as read-only.",
+        "Hide the TRAIN rail on Data Set. When this is on and Testing is available, the level loads a pre-trained model.",
       type: "boolean",
       group: "AI Lab",
       visibleWhen: (values) => values.workspaceTabs !== "test",
@@ -128,30 +141,10 @@ function aiLabDevFields(catalog: ReturnType<typeof uniqueDevCatalog>): DevPanelF
       visibleWhen: (values) => values.workspaceTabs !== "test",
     },
     {
-      key: "showModelDetails",
-      label: "Show scorecard",
-      description: "Scorecard opens its own modal from Results and Testing.",
-      type: "boolean",
-      group: "AI Lab",
-    },
-    {
-      key: "testLayout",
-      label: "Testing layout",
-      description:
-        "Canvas floats the trace toolbar, input card, and prediction card over the visualization. Dock keeps the Input → Output footer.",
-      type: "select",
-      group: "AI Lab",
-      options: [
-        { label: "Canvas — floating cards", value: "canvas" },
-        { label: "Dock — Input → Output footer", value: "dock" },
-      ],
-      visibleWhen: (values) => values.workspaceTabs !== "dataset",
-    },
-    {
       key: "bundleWideSplits",
       label: "Bundle wide tree splits",
       description:
-        "Experiment: when a decision splits 7+ ways, leaves that predict the same label fold into one bundle per outcome (click to open). Off leaves the wide split as-is.",
+        "When a decision splits 7+ ways, leaves that predict the same label fold into one bundle per outcome (click to open). Off leaves the wide split as-is.",
       type: "boolean",
       group: "AI Lab",
       visibleWhen: (values) =>
@@ -240,14 +233,14 @@ export function AiLabLevelPage({
   const resolved = overrideResult.props;
   const algorithmLock = String(resolved.algorithmLock);
   const presetDataset = String(resolved.presetDataset);
+  const presetLabelColumn = String(resolved.presetLabelColumn);
+  const cardTitleColumn = String(resolved.cardTitleColumn);
   const workspaceTabs = String(resolved.workspaceTabs);
-  const showTrainPanel = Boolean(resolved.showTrainPanel);
-  const showModelDetails = Boolean(resolved.showModelDetails);
-  const showExport = Boolean(resolved.showExport);
-  const allowDataEdit = Boolean(resolved.allowDataEdit);
+  const hideTrainPanel = Boolean(resolved.hideTrainPanel);
   const defaultDataView = String(resolved.defaultDataView);
-  const testLayout = String(resolved.testLayout);
   const bundleWideSplits = Boolean(resolved.bundleWideSplits);
+  const labelDataset =
+    findCatalogDataset(catalog, presetDataset) ?? config.dataset;
   // Keyed on primitives so the config (and everything `useAiLabState`
   // derives from it) keeps its identity across unrelated page re-renders.
   const levelConfig = useMemo(
@@ -257,13 +250,11 @@ export function AiLabLevelPage({
         {
           algorithmLock,
           presetDataset,
+          presetLabelColumn,
+          cardTitleColumn,
           workspaceTabs,
-          showTrainPanel,
-          showModelDetails,
-          showExport,
-          allowDataEdit,
+          hideTrainPanel,
           defaultDataView,
-          testLayout,
           bundleWideSplits,
         },
         catalog,
@@ -273,13 +264,11 @@ export function AiLabLevelPage({
       catalog,
       algorithmLock,
       presetDataset,
+      presetLabelColumn,
+      cardTitleColumn,
       workspaceTabs,
-      showTrainPanel,
-      showModelDetails,
-      showExport,
-      allowDataEdit,
+      hideTrainPanel,
       defaultDataView,
-      testLayout,
       bundleWideSplits,
     ],
   );
@@ -291,20 +280,28 @@ export function AiLabLevelPage({
     levelConfig.showModelDetails ||
     levelConfig.showExport ||
     levelConfig.requireDatasetChoice;
+  const p0Instructions = config === aiLabP0Config;
   const instructions =
     instructionsMarkdown ??
-    (config.pretrained && lab.section === "test"
-      ? aiLabPretrainedInstructions
-      : studioInstructions
-        ? lab.section === "test"
-          ? aiLabStudioSectionInstructions.test
-          : aiLabStudioSectionInstructions.dataset
-        : workspace === "guided"
+    (p0Instructions
+      ? lab.section === "test"
+        ? aiLabP0Instructions.test
+        : aiLabP0Instructions.dataset
+      : config.pretrained && lab.section === "test"
+        ? aiLabPretrainedInstructions
+        : studioInstructions
           ? lab.section === "test"
-            ? aiLabGuidedSectionInstructions.test
-            : aiLabGuidedSectionInstructions.dataset
-          : aiLabSectionInstructions[lab.section as AiLabSection]);
-  const devPanelFields = useMemo(() => aiLabDevFields(catalog), [catalog]);
+            ? aiLabStudioSectionInstructions.test
+            : aiLabStudioSectionInstructions.dataset
+          : workspace === "guided"
+            ? lab.section === "test"
+              ? aiLabGuidedSectionInstructions.test
+              : aiLabGuidedSectionInstructions.dataset
+            : aiLabSectionInstructions[lab.section as AiLabSection]);
+  const devPanelFields = useMemo(
+    () => aiLabDevFields(catalog, labelDataset),
+    [catalog, labelDataset],
+  );
 
   return (
     <Lab2Shell
@@ -362,6 +359,20 @@ export function AiLabLevelPage({
         <AiLabWorkspace lab={lab} />
       )}
     </Lab2Shell>
+  );
+}
+
+export function AiLabP0LevelPage() {
+  return (
+    <AiLabLevelPage
+      currentLevelPath="/levels/ailab-p0"
+      title="AI Lab: Train a model"
+      subtitle="P0"
+      config={aiLabP0Config}
+      continueLabel="Finish"
+      continueTo="/levels"
+      levelLinks={aiLabP0LevelLinks}
+    />
   );
 }
 
