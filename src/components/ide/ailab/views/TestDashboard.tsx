@@ -33,11 +33,12 @@ import {
   traceDecisionTree,
   uniqueValues,
 } from "../../../../lib/aiLab";
-import type { CanvasChrome } from "./viz/CanvasCards";
+import { ActualVerdict, type CanvasChrome } from "./viz/CanvasCards";
 import { DecisionTreeViz, type TreeView } from "./viz/DecisionTreeViz";
 import { KnnViz, type KnnView } from "./viz/KnnViz";
 import { ModelActions } from "./ModelActions";
 import type { ModelInspectorTab } from "./ModelInspector";
+import statementStyles from "./PredictionStatement.module.scss";
 import styles from "./TestDashboard.module.scss";
 
 function columnName(columns: AiLabColumn[], id: string): string {
@@ -48,48 +49,49 @@ function isFilled(value: unknown): boolean {
   return value !== undefined && String(value).trim() !== "";
 }
 
-function missingInputs(lab: AiLabController): number {
+function missingInputs(lab: AiLabController, values: AiLabDataRow): number {
   if (!lab.model) return 0;
   return lab.model.selectedFeatures.filter(
-    (feature) => !isFilled(lab.testValues[feature]),
+    (feature) => !isFilled(values[feature]),
   ).length;
 }
 
-function queryReady(lab: AiLabController): boolean {
-  return Boolean(lab.model) && missingInputs(lab) === 0;
-}
-
-/** One random in-range value per feature — not a real sheet row. */
-function randomFeatureValue(
-  rows: AiLabDataRow[],
-  columns: AiLabColumn[],
-  feature: string,
-): string {
-  if (columnType(columns, feature) === "categorical") {
-    const values = uniqueValues(rows, feature).filter((value) => value.trim() !== "");
-    if (values.length === 0) return "";
-    return values[Math.floor(Math.random() * values.length)];
-  }
-  const stats = numericalStats(rows, feature);
-  if (stats.values.length === 0) return "";
-  const integers = stats.values.every((value) => Number.isInteger(value));
-  if (integers) {
-    const min = Math.ceil(stats.min);
-    const max = Math.floor(stats.max);
-    return String(min + Math.floor(Math.random() * (max - min + 1)));
-  }
-  return formatNumber(stats.min + Math.random() * (stats.max - stats.min));
-}
-
-function currentQuery(lab: AiLabController): AiLabDataRow {
+function buildQuery(lab: AiLabController, values: AiLabDataRow): AiLabDataRow {
   const query: AiLabDataRow = {};
   lab.model?.selectedFeatures.forEach((feature) => {
     const column = columnById(lab.config.dataset.columns, feature);
-    const raw = lab.testValues[feature];
+    const raw = values[feature];
     query[feature] =
       column?.type === "numerical" ? Number(raw) : String(raw ?? "");
   });
   return query;
+}
+
+/** The inputs the viz is currently showing, plus the sheet row they came from. */
+interface ShownInputs {
+  values: AiLabDataRow;
+  rowIndex: number | undefined;
+}
+
+/**
+ * While the tree is walking a prediction, new inputs wait their turn: the
+ * fields update live, but the query the viz and Result card answer stays put
+ * until the walk ends, then catches up to whatever was typed last.
+ */
+function useDeferredInputs(lab: AiLabController, hold: boolean): ShownInputs {
+  const [shown, setShown] = useState<ShownInputs>({
+    values: lab.testValues,
+    rowIndex: lab.testRowIndex,
+  });
+  useEffect(() => {
+    if (hold) return;
+    setShown((current) =>
+      current.values === lab.testValues && current.rowIndex === lab.testRowIndex
+        ? current
+        : { values: lab.testValues, rowIndex: lab.testRowIndex },
+    );
+  }, [hold, lab.testRowIndex, lab.testValues]);
+  return shown;
 }
 
 function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
@@ -157,7 +159,7 @@ function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
           size="large"
           color="success"
           label={name}
-          className={styles.statementTag}
+          className={statementStyles.tag}
         />
       ))}
       {overflowFeatures.length > 0 ? (
@@ -167,7 +169,7 @@ function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
               size="large"
               color="success"
               label={`+${overflowFeatures.length}`}
-              className={styles.statementTag}
+              className={statementStyles.tag}
             />
           </span>
         </Tooltip>
@@ -179,7 +181,7 @@ function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
               size="large"
               color="success"
               label={name}
-              className={styles.statementTag}
+              className={statementStyles.tag}
             />
           </span>
         ))}
@@ -188,7 +190,7 @@ function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
             size="large"
             color="success"
             label={`+${Math.max(featureNames.length, 9)}`}
-            className={styles.statementTag}
+            className={statementStyles.tag}
           />
         </span>
       </div>
@@ -205,6 +207,8 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
   const model = lab.model;
   const [knnView, setKnnView] = useState<KnnView>("target");
   const [treeView, setTreeView] = useState<TreeView>("diagram");
+  const [vizPlaying, setVizPlaying] = useState(false);
+  const shown = useDeferredInputs(lab, vizPlaying);
 
   if (!model) {
     return (
@@ -231,20 +235,10 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
     );
   }
 
-  const ready = queryReady(lab);
-  const missing = missingInputs(lab);
-  const labelName =
-    columnById(lab.config.dataset.columns, model.labelColumn)?.name ??
-    model.labelColumn;
-  const fillRandom = () => {
-    model.selectedFeatures.forEach((feature) => {
-      lab.setTestValue(
-        feature,
-        randomFeatureValue(lab.rows, lab.config.dataset.columns, feature),
-      );
-    });
-  };
-  const query = ready ? currentQuery(lab) : undefined;
+  const missing = missingInputs(lab, shown.values);
+  const ready = missing === 0;
+  const fillRandom = () => lab.loadRandomRow();
+  const query = ready ? buildQuery(lab, shown.values) : undefined;
   const treeTrace: AiLabTreeTrace | undefined =
     ready && model.tree ? traceDecisionTree(model.tree, query!) : undefined;
   const knnPrediction: AiLabKnnPrediction | undefined =
@@ -260,6 +254,17 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
         )
       : undefined;
   const prediction = treeTrace?.prediction ?? knnPrediction?.prediction;
+  // Ground truth exists only when the inputs are a real row (Random,
+  // Scorecard click) that has not been edited since.
+  const shownRow =
+    shown.rowIndex !== undefined ? lab.rows[shown.rowIndex] : undefined;
+  const actual =
+    prediction !== undefined && shownRow
+      ? {
+          value: String(shownRow[model.labelColumn] ?? ""),
+          correct: String(shownRow[model.labelColumn] ?? "") === prediction,
+        }
+      : undefined;
   const explanation = treeTrace
     ? explainTreeTrace(lab.config.dataset.columns, treeTrace)
     : knnPrediction
@@ -330,7 +335,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
   const inputHead = (
     <div className={styles.ioHead}>
       <h3 id="ai-lab-input-title" className={styles.ioTitle}>
-        Try a prediction
+        Make a prediction
       </h3>
       <div className={styles.ioTools}>
         <Button
@@ -389,16 +394,17 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
     );
   });
 
-  // Canvas layout: the viz floats the trace toolbar, this input card, and a
-  // prediction card that folds the Output card into the algorithm summary.
+  // Canvas layout: the viz floats this input card and a Result card that
+  // holds Replay + the stepper in its footer.
   const canvasChrome: CanvasChrome | undefined = canvasLayout
     ? {
         // The card shows the answer alone while inputs are missing, and the
         // tree's path list *is* its explanation, so no sentence repeats it.
         outcome: {
-          title: labelName,
+          title: "Result",
           value: prediction,
           pending: !prediction,
+          actual,
           copy: prediction
             ? treeTrace
               ? undefined
@@ -431,7 +437,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
                 size="large"
                 color="brand"
                 label={columnName(lab.config.dataset.columns, model.labelColumn)}
-                className={styles.statementTag}
+                className={statementStyles.tag}
               />
               {featureNames.length > 0 ? <span>based on</span> : null}
             </span>
@@ -483,6 +489,9 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
               view={treeView}
               canvasChrome={canvasChrome}
               bundleWideSplits={Boolean(lab.config.bundleWideSplits)}
+              autoPlay={lab.config.autoPlayTrace !== false}
+              onPlayingChange={setVizPlaying}
+              actual={actual}
             />
           ) : (
             <KnnViz
@@ -527,7 +536,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
             >
               <div className={styles.ioHead}>
                 <h3 id="ai-lab-output-title" className={styles.ioTitle}>
-                  {labelName}
+                  Result
                 </h3>
               </div>
               <div className={styles.outputBody}>
@@ -538,6 +547,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
                 >
                   {prediction ?? pendingValue}
                 </h4>
+                {actual ? <ActualVerdict actual={actual} /> : null}
                 <p className={styles.outputCopy}>{explanation ?? pendingCopy}</p>
               </div>
             </section>

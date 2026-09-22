@@ -266,6 +266,27 @@
   border-radius: var(--shape-round);
 }
 
+/* Real-row example: did the answer leaf get it right? Lives in the head row
+ * so it never changes the node's measured height. */
+.verdictBadge {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--shape-round);
+  color: var(--text-neutral-white-fixed);
+}
+
+.verdictCorrect {
+  background: var(--background-success-primary);
+}
+
+.verdictWrong {
+  background: var(--background-error-primary);
+}
+
 .nodeRows {
   @include type-body-4-regular;
   flex-shrink: 0;

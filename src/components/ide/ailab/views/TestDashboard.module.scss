@@ -107,13 +107,6 @@
   pointer-events: none;
 }
 
-/* Figma uses large Tags, then pin them to 24px so they sit in the 40px strip. */
-.statementTag {
-  height: 24px;
-  min-height: 24px;
-  box-sizing: border-box;
-}
-
 .metricCluster {
   display: flex;
   min-width: 0;

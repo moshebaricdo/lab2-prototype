@@ -23,6 +23,7 @@ import { DistributionBar, LabelSwatch, describeCounts } from "./LabelMarks";
 import { labelFill, labelIndexer } from "./labelPalette";
 import { NavigatorCard } from "./NavigatorCard";
 import { type TraceStep } from "./TraceBar";
+import { useStepPlayback } from "./useStepPlayback";
 import {
   elbowPath,
   elbowPathVertical,
@@ -60,6 +61,15 @@ interface DecisionTreeVizProps {
   canvasChrome?: CanvasChrome;
   /** Fold same-prediction leaves under wide splits into one bundle per outcome. */
   bundleWideSplits?: boolean;
+  /**
+   * Walk a new prediction's path from the root instead of landing on the
+   * answer. The toolbar's Play / Skip mirrors the walk.
+   */
+  autoPlay?: boolean;
+  /** Fires as the walk starts / ends so the dashboard can hold new inputs until it is over. */
+  onPlayingChange?: (playing: boolean) => void;
+  /** Ground truth for the traced example, when it came from a real row. */
+  actual?: { value: string; correct: boolean };
 }
 
 /** `X is V → branch`, or just `X is V` when the branch *is* the value. */
@@ -185,9 +195,20 @@ export function DecisionTreeViz({
   view,
   canvasChrome,
   bundleWideSplits = false,
+  autoPlay = false,
+  onPlayingChange,
+  actual,
 }: DecisionTreeVizProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [selectedKey, setSelectedKey] = useState<string | undefined>(undefined);
+  /**
+   * The root and the answer leaf open themselves once the trace reaches
+   * them; a click closes one for this prediction (recorded here) and a
+   * second click selects it back open.
+   */
+  const [dismissedPins, setDismissedPins] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const [expandedBundles, setExpandedBundles] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
@@ -231,13 +252,28 @@ export function DecisionTreeViz({
     ];
   }, [columns, trace]);
 
-  // New prediction: land on the answer and drop any node selection so the
-  // path is what the student sees.
+  const onStep = useCallback((index: number) => {
+    setSelectedKey(undefined);
+    setStepIndex(index);
+  }, []);
+  const playback = useStepPlayback(steps.length, onStep);
+  const { playing, play: startPlayback } = playback;
+  useEffect(() => {
+    onPlayingChange?.(playing);
+  }, [onPlayingChange, playing]);
+
+  // New prediction: drop any node selection so the path is what the student
+  // sees, then either walk it from the root (auto-play) or land on the answer.
   const traceKey = trace?.pathKeys.join(">") ?? "";
   useEffect(() => {
-    setStepIndex(Math.max(0, steps.length - 1));
     setSelectedKey(undefined);
-  }, [steps.length, traceKey]);
+    setDismissedPins(new Set());
+    if (autoPlay && steps.length >= 2) {
+      startPlayback({ reducedMotion: "end" });
+    } else {
+      setStepIndex(Math.max(0, steps.length - 1));
+    }
+  }, [autoPlay, startPlayback, steps.length, traceKey]);
 
   const clampedStep = Math.min(stepIndex, Math.max(0, steps.length - 1));
   const revealedPath = useMemo(
@@ -248,14 +284,29 @@ export function DecisionTreeViz({
   const currentKey = revealedPath[revealedPath.length - 1];
   const nextKey = trace?.pathKeys[clampedStep + 1];
   const finalLeafKey = trace?.pathKeys[trace.pathKeys.length - 1];
+  const rootKey = root.pathKey;
+
+  // The first question and the answer open on their own once revealed — the
+  // two nodes a first-time reader needs to see in full.
+  const isPinnedOpen = useCallback(
+    (key: string) =>
+      (key === rootKey || key === finalLeafKey) &&
+      revealedSet.has(key) &&
+      !dismissedPins.has(key),
+    [dismissedPins, finalLeafKey, revealedSet, rootKey],
+  );
 
   // Content follows the path: only nodes your example passed through earn
   // a full card; everything else is a pill. The node the student opened
-  // grows into a detail card in place.
+  // (or a pinned node) grows into a detail card in place.
   const sizeOf = useCallback(
     (key: string): NodeSize =>
-      key === selectedKey ? "detail" : revealedSet.has(key) ? "card" : "pill",
-    [revealedSet, selectedKey],
+      key === selectedKey || isPinnedOpen(key)
+        ? "detail"
+        : revealedSet.has(key)
+          ? "card"
+          : "pill",
+    [isPinnedOpen, revealedSet, selectedKey],
   );
   // Canvas mode reads top→bottom so the tree grows away from the right-hand
   // cards instead of under them.
@@ -290,12 +341,13 @@ export function DecisionTreeViz({
     [bundling, measure, orientation, root, sizeOf],
   );
 
-  const onStep = (index: number) => {
-    setSelectedKey(undefined);
-    setStepIndex(index);
-  };
-  const onSelect = (key: string | undefined) =>
+  const onSelect = (key: string | undefined) => {
+    if (key && isPinnedOpen(key)) {
+      setDismissedPins((current) => new Set(current).add(key));
+      return;
+    }
     setSelectedKey((current) => (key === current ? undefined : key));
+  };
   const onToggleBundle = (key: string) =>
     setExpandedBundles((current) => {
       const next = new Set(current);
@@ -330,6 +382,12 @@ export function DecisionTreeViz({
             nextKey={nextKey}
             selectedKey={selectedKey}
             traceKey={pathKeysText}
+            verdictKey={
+              actual && finalLeafKey && revealedSet.has(finalLeafKey)
+                ? finalLeafKey
+                : undefined
+            }
+            verdictCorrect={actual?.correct ?? false}
             onSelect={onSelect}
             onToggleBundle={onToggleBundle}
             onCanvasClick={onCanvasClick}
@@ -356,6 +414,7 @@ export function DecisionTreeViz({
             outcome={canvasChrome.outcome}
             inputCard={canvasChrome.inputCard}
             inlineBody
+            playback={playback}
           >
             {trace ? (
               <TracePath
@@ -372,6 +431,7 @@ export function DecisionTreeViz({
             index={clampedStep}
             onIndexChange={onStep}
             emptyText="Fill in the inputs to trace your example."
+            playback={playback}
           />
         )}
       </div>
@@ -551,6 +611,9 @@ interface TreeDiagramProps {
   selectedKey: string | undefined;
   /** Identity of the current prediction's path; a change recenters the canvas. */
   traceKey: string;
+  /** The revealed answer leaf, when the example came from a real row. */
+  verdictKey?: string;
+  verdictCorrect: boolean;
   onSelect: (key: string | undefined) => void;
   onToggleBundle: (key: string) => void;
   onCanvasClick: () => void;
@@ -570,6 +633,8 @@ function TreeDiagram({
   nextKey,
   selectedKey,
   traceKey,
+  verdictKey,
+  verdictCorrect,
   onSelect,
   onToggleBundle,
   onCanvasClick,
@@ -1027,6 +1092,13 @@ function TreeDiagram({
               onActivate={() => activate(laid)}
               onPath={revealed.has(laid.key)}
               isCurrent={laid.key === currentKey}
+              verdict={
+                laid.key === verdictKey
+                  ? verdictCorrect
+                    ? "correct"
+                    : "wrong"
+                  : undefined
+              }
               registerRef={(element) => {
                 if (element) nodeRefs.current.set(laid.key, element);
                 else nodeRefs.current.delete(laid.key);
@@ -1108,6 +1180,8 @@ interface DiagramNodeProps {
   onActivate: () => void;
   onPath: boolean;
   isCurrent: boolean;
+  /** Real-row example: did this leaf's prediction match the row's label? */
+  verdict?: "correct" | "wrong";
   registerRef: (element: HTMLDivElement | null) => void;
   style: CSSProperties;
 }
@@ -1123,6 +1197,7 @@ function DiagramNode({
   onActivate,
   onPath,
   isCurrent,
+  verdict,
   registerRef,
   style,
 }: DiagramNodeProps) {
@@ -1146,6 +1221,11 @@ function DiagramNode({
       ? "Current step."
       : onPath
         ? "On your example's path."
+        : "",
+    verdict === "correct"
+      ? "Correct for this row."
+      : verdict === "wrong"
+        ? "Wrong for this row."
         : "",
     bundle ? "Press Enter to open the branches." : "",
   ]
@@ -1191,6 +1271,19 @@ function DiagramNode({
           {bundle ? (
             <span className={styles.bundleCount} aria-hidden>
               ×{memberNames.length}
+            </span>
+          ) : null}
+          {verdict ? (
+            <span
+              className={`${styles.verdictBadge} ${
+                verdict === "correct" ? styles.verdictCorrect : styles.verdictWrong
+              }`}
+              aria-hidden
+            >
+              <FaIcon
+                name={verdict === "correct" ? "check" : "xmark"}
+                fontSize="10px"
+              />
             </span>
           ) : null}
         </p>

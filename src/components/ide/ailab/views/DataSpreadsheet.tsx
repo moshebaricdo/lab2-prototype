@@ -300,6 +300,8 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
         row={rows[rowIndex]}
         columns={columns}
         selectedColumnId={lab.selectedColumnId}
+        labelColumnId={lab.labelColumn}
+        featureColumnIds={lab.selectedFeatures}
         activeColumnId={readOnly ? undefined : isActiveRow ? active?.columnId : undefined}
         editing={!readOnly && isActiveRow && editing}
         draft={!readOnly && isActiveRow && editing ? draft : ""}
@@ -366,16 +368,6 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
                     >
                       <span className={styles.thLead}>
                         <span className={styles.thName}>{column.name}</span>
-                        {isLabel || isFeature ? (
-                          <span
-                            className={`${styles.roleDot} ${
-                              isLabel
-                                ? styles.roleDotLabel
-                                : styles.roleDotFeature
-                            }`}
-                            aria-hidden
-                          />
-                        ) : null}
                       </span>
                     </button>
                   </th>
@@ -420,6 +412,10 @@ interface SheetRowProps {
   row: AiLabDataRow;
   columns: AiLabColumn[];
   selectedColumnId: string | undefined;
+  /** Predict column — tinted brand so the sheet matches the statement Tags. */
+  labelColumnId: string | undefined;
+  /** Using columns — tinted success. */
+  featureColumnIds: string[];
   /** Set only when this row holds the active cell. */
   activeColumnId: string | undefined;
   editing: boolean;
@@ -438,6 +434,8 @@ const SheetRow = memo(function SheetRow({
   row,
   columns,
   selectedColumnId,
+  labelColumnId,
+  featureColumnIds,
   activeColumnId,
   editing,
   draft,
@@ -456,6 +454,8 @@ const SheetRow = memo(function SheetRow({
       {columns.map((column) => {
         const isActive = activeColumnId === column.id;
         const isColumn = selectedColumnId === column.id;
+        const isLabel = labelColumnId === column.id;
+        const isFeature = featureColumnIds.includes(column.id);
         const isEditing = isActive && editing;
         return (
           <td
@@ -464,7 +464,9 @@ const SheetRow = memo(function SheetRow({
               column.type === "numerical" ? styles.tdNumeric : ""
             } ${isColumn ? styles.tdSelectedColumn : ""} ${
               rowSelected ? styles.tdSelectedRow : ""
-            } ${isActive ? styles.tdActive : ""}`}
+            } ${isActive ? styles.tdActive : ""} ${
+              isLabel ? styles.tdLabel : isFeature ? styles.tdFeature : ""
+            }`}
             aria-selected={isActive}
           >
             {isEditing ? (

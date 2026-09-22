@@ -23,6 +23,11 @@
   }
 }
 
+/* Play / Replay and Skip swap in place; a fixed width keeps the row from jumping. */
+.playButton {
+  min-width: 78px;
+}
+
 .rootColumn {
   min-height: 0;
   flex-direction: column;

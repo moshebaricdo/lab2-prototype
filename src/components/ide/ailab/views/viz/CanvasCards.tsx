@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { FaIcon } from "@moshebari/cads-react/icons";
 import { TraceBar, type TraceStep } from "./TraceBar";
+import type { StepPlayback } from "./useStepPlayback";
 import styles from "./CanvasCards.module.scss";
 
 /**
@@ -11,13 +13,19 @@ export const CARD_INSET = 316;
 
 /** What the prediction card says at the top, before any algorithm detail. */
 export interface CanvasOutcome {
-  /** Label column name — the card title. */
+  /** Fixed card title ("Result"). */
   title: string;
   /** The predicted label; omit while pending to show only `copy`. */
   value?: ReactNode;
   pending: boolean;
   /** One-sentence explanation or the pending hint; omit when the body says it. */
   copy?: ReactNode;
+  /**
+   * When the input came from a real sheet row, the row's real label and
+   * whether the model matched it. Absent for a made-up input — there is no
+   * ground truth to compare against.
+   */
+  actual?: { value: string; correct: boolean };
 }
 
 /** Slots the dashboard hands a viz when the Testing layout is `canvas`. */
@@ -31,7 +39,7 @@ interface CanvasCardsProps extends CanvasChrome {
   steps: TraceStep[];
   index: number;
   onIndexChange: (index: number) => void;
-  /** Table / Rules have nothing to animate, so the toolbar goes away. */
+  /** Table / Rules have nothing to animate, so the Replay row goes away. */
   showStepper: boolean;
   /**
    * Table / Rules: the right-hand cards sit in a train-rail-style column
@@ -46,13 +54,15 @@ interface CanvasCardsProps extends CanvasChrome {
   /** Draw the body inside the lede (no divider) — the decision path reads as part of the answer. */
   inlineBody?: boolean;
   footer?: ReactNode;
+  /** Shared walk timer so the Result footer Replay / Skip mirrors an auto-play. */
+  playback?: StepPlayback;
 }
 
 /**
- * Canvas-mode chrome: nothing is docked and nothing clips the viz. A toolbar
- * card (Play + stepper) floats top-left; a single column on the right stacks
- * the input card over the prediction card so it reads Input → Output. The
- * prediction card always shows the end state; stepping animates the
+ * Canvas-mode chrome: nothing is docked and nothing clips the viz. A single
+ * column on the right stacks the input card over the Result card so it
+ * reads Input → Output. Replay + the stepper live in the Result footer.
+ * The prediction card always shows the end state; stepping animates the
  * visualization underneath (and, for trees, lights up the path numbers).
  */
 export function CanvasCards({
@@ -67,58 +77,92 @@ export function CanvasCards({
   children,
   inlineBody = false,
   footer,
+  playback,
 }: CanvasCardsProps) {
+  const hasFooter = showStepper || Boolean(footer);
+
   return (
-    <>
-      {showStepper ? (
-        <div className={styles.toolbar} aria-label="Trace controls">
-          <TraceBar
-            orientation="toolbar"
-            steps={steps}
-            index={index}
-            onIndexChange={onIndexChange}
-            emptyText=""
-          />
+    <div
+      className={`${styles.column} ${docked ? styles.columnDocked : ""}`}
+    >
+      <section className={styles.inputCard} aria-label="Make a prediction">
+        {inputCard}
+      </section>
+
+      <aside className={styles.card} aria-label="Result">
+        <div className={styles.head}>
+          <h3 className={styles.title}>{outcome.title}</h3>
         </div>
-      ) : null}
-
-      <div
-        className={`${styles.column} ${docked ? styles.columnDocked : ""}`}
-      >
-        <section className={styles.inputCard} aria-label="Try a prediction">
-          {inputCard}
-        </section>
-
-        <aside className={styles.card} aria-label="Prediction">
-          <div className={styles.head}>
-            <h3 className={styles.title}>{outcome.title}</h3>
-          </div>
-          <div className={styles.main}>
-            <div className={styles.lede}>
-              <div className={styles.answer} aria-live="polite">
-                {outcome.value === undefined ? null : (
-                  <h4
-                    className={`${styles.value} ${
-                      outcome.pending ? styles.valuePending : ""
-                    }`}
-                  >
-                    {outcome.value}
-                  </h4>
-                )}
-                {outcome.copy === undefined ? null : (
-                  <p className={styles.copy}>{outcome.copy}</p>
-                )}
-              </div>
-              {metrics}
-              {inlineBody && children ? children : null}
+        <div className={styles.main}>
+          <div className={styles.lede}>
+            <div className={styles.answer} aria-live="polite">
+              {outcome.value === undefined ? null : (
+                <h4
+                  className={`${styles.value} ${
+                    outcome.pending ? styles.valuePending : ""
+                  }`}
+                >
+                  {outcome.value}
+                </h4>
+              )}
+              {outcome.actual && !outcome.pending ? (
+                <ActualVerdict actual={outcome.actual} />
+              ) : null}
+              {outcome.copy === undefined ? null : (
+                <p className={styles.copy}>{outcome.copy}</p>
+              )}
             </div>
-            {!inlineBody && children ? (
-              <div className={styles.body}>{children}</div>
-            ) : null}
+            {metrics}
+            {inlineBody && children ? children : null}
           </div>
-          {footer ? <div className={styles.footer}>{footer}</div> : null}
-        </aside>
-      </div>
-    </>
+          {!inlineBody && children ? (
+            <div className={styles.body}>{children}</div>
+          ) : null}
+        </div>
+        {hasFooter ? (
+          <div className={styles.footer}>
+            {showStepper ? (
+              <TraceBar
+                orientation="toolbar"
+                playLabel="Replay"
+                steps={steps}
+                index={index}
+                onIndexChange={onIndexChange}
+                emptyText=""
+                playback={playback}
+              />
+            ) : null}
+            {footer}
+          </div>
+        ) : null}
+      </aside>
+    </div>
+  );
+}
+
+/** "Actually Bird" with a check or a cross — only when the input was a real row. */
+export function ActualVerdict({
+  actual,
+  className,
+}: {
+  actual: { value: string; correct: boolean };
+  className?: string;
+}) {
+  return (
+    <p
+      className={[
+        styles.verdict,
+        actual.correct ? styles.verdictCorrect : styles.verdictWrong,
+        className ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <FaIcon name={actual.correct ? "circle-check" : "circle-xmark"} size="small" />
+      <span>
+        {actual.correct ? "Correct" : "Wrong"} — this row is really{" "}
+        <strong>{actual.value}</strong>
+      </span>
+    </p>
   );
 }

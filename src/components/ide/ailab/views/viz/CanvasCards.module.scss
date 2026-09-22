@@ -5,20 +5,6 @@
  * is never clipped by it. */
 $card-width: 300px;
 
-.toolbar {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  padding: 6px 8px;
-  border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-md);
-  background: var(--background-neutral-primary);
-  box-shadow: var(--shadow-sm);
-}
-
 /* Input over output. When height is tight both cards shrink and scroll
  * inside; the prediction card keeps enough room to show the answer. */
 .column {
@@ -114,7 +100,7 @@ $card-width: 300px;
   border-bottom: 1px solid var(--border-neutral-primary);
 }
 
-.card:not(:has(.body)):not(:has(.footer)) .lede {
+.card:not(:has(.body)) .lede {
   border-bottom: none;
 }
 
@@ -125,7 +111,7 @@ $card-width: 300px;
 }
 
 .value {
-  @include type-heading-h6-semibold;
+  @include type-heading-h4-semibold;
   margin: 0;
   overflow-wrap: anywhere;
   color: var(--text-neutral-primary);
@@ -133,6 +119,26 @@ $card-width: 300px;
 
 .valuePending {
   color: var(--text-neutral-quaternary);
+}
+
+.verdict {
+  @include type-body-4-regular;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 0;
+
+  strong {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.verdictCorrect {
+  color: var(--text-success-primary);
+}
+
+.verdictWrong {
+  color: var(--text-error-primary);
 }
 
 .copy {
@@ -150,7 +156,10 @@ $card-width: 300px;
 }
 
 .footer {
+  display: flex;
   flex-shrink: 0;
+  flex-direction: column;
+  gap: 8px;
   padding: 8px;
   border-top: 1px solid var(--border-neutral-primary);
 }

@@ -5,6 +5,7 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
+  type ReactElement,
   type ReactNode,
 } from "react";
 import {
@@ -31,10 +32,37 @@ import { ColumnDistributionChart } from "./ColumnDistributionChart";
 import { DataSpreadsheet } from "./DataSpreadsheet";
 import { ModelActions } from "./ModelActions";
 import type { ModelInspectorTab } from "./ModelInspector";
+import { DatasetStoryModal } from "./DatasetStoryModal";
+import { IntroActivity } from "./IntroActivity";
+import { PredictionStatement } from "./PredictionStatement";
+import { TrainingModal } from "./TrainingModal";
+import { TreeThumbnail } from "./viz/TreeGrowth";
 import styles from "./DataStudio.module.scss";
 
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map(String) : [];
+}
+
+function sameIdSet(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  const seen = new Set(left);
+  return right.every((id) => seen.has(id));
+}
+
+/** Locked Predict field: still readable (readOnly), with a hover reason. */
+function LockedLabelTooltip({
+  locked,
+  children,
+}: {
+  locked: boolean;
+  children: ReactElement;
+}) {
+  if (!locked) return children;
+  return (
+    <Tooltip title="You can't change this" placement="top">
+      <span className={styles.fullWidthButton}>{children}</span>
+    </Tooltip>
+  );
 }
 
 interface DataStudioProps {
@@ -47,9 +75,12 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
   const selected = lab.config.dataset.columns.find(
     (column) => column.id === lab.selectedColumnId,
   );
+  // The intro (story / classify deck) stands in for the sheet until done;
+  // the Train rail waits with it so the step reads as "data first".
+  const inIntro = !lab.needsDataset && !lab.introComplete;
   const showAnalysis =
-    !lab.needsDataset && lab.dataView === "table" && Boolean(selected);
-  const showTrain = !lab.config.hideTrainTab && !lab.needsDataset;
+    !lab.needsDataset && !inIntro && lab.dataView === "table" && Boolean(selected);
+  const showTrain = !lab.config.hideTrainTab && !lab.needsDataset && !inIntro;
 
   return (
     <section
@@ -57,8 +88,10 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
     >
       <div className={styles.stage}>
         <div className={styles.sheetColumn}>
-          <DataHeader lab={lab} onOpenSetup={onOpenSetup} />
-          {lab.needsDataset ? (
+          <DataHeader lab={lab} onOpenSetup={onOpenSetup} inIntro={inIntro} />
+          {inIntro ? (
+            <IntroActivity lab={lab} />
+          ) : lab.needsDataset ? (
             <div className={styles.empty}>
               <div className={styles.emptyInner}>
                 <h2 className={styles.emptyTitle}>Waiting for a dataset</h2>
@@ -90,14 +123,17 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
 function DataHeader({
   lab,
   onOpenSetup,
+  inIntro = false,
 }: {
   lab: AiLabController;
   onOpenSetup?: () => void;
+  inIntro?: boolean;
 }) {
   const canSwap = lab.canPickDataset && Boolean(onOpenSetup);
   const datasetLabel = lab.needsDataset
     ? "Choose dataset"
     : lab.config.dataset.name;
+  const [storyOpen, setStoryOpen] = useState(false);
 
   return (
     <div className={styles.dataHeader}>
@@ -118,9 +154,30 @@ function DataHeader({
           <span className={styles.datasetName}>{datasetLabel}</span>
         )}
         {lab.needsDataset ? null : (
-          <span className={styles.setMeta}>{lab.rows.length} rows</span>
+          <>
+            <span className={styles.setMeta}>{lab.rows.length} rows</span>
+            <Tooltip title="About this data" placement="bottom">
+              <Button
+                variant="text"
+                color="tertiary"
+                size="extraSmall"
+                iconOnly
+                startIconName="circle-info"
+                aria-label="About this data"
+                aria-haspopup="dialog"
+                className={styles.aboutButton}
+                onClick={() => setStoryOpen(true)}
+              />
+            </Tooltip>
+            <DatasetStoryModal
+              dataset={lab.config.dataset}
+              open={storyOpen}
+              onClose={() => setStoryOpen(false)}
+            />
+          </>
         )}
       </div>
+      {inIntro ? null : (
       <div className={styles.viewType}>
         {lab.dataView === "table" &&
         !lab.needsDataset &&
@@ -135,7 +192,7 @@ function DataHeader({
             Add row
           </Button>
         ) : null}
-        {lab.dataView === "cards" ? (
+        {lab.dataView === "cards" && !lab.config.hideCardLayoutToggle ? (
           <SegmentedButton
             size="extraSmall"
             aria-label="Cards layout"
@@ -160,6 +217,7 @@ function DataHeader({
           ]}
         />
       </div>
+      )}
     </div>
   );
 }
@@ -193,9 +251,31 @@ function TrainRail({
   const showScorecard = Boolean(lab.config.showModelDetails);
   const showExport = Boolean(lab.config.showExport);
   const showResultsFooter = showScorecard || showExport || canTest || Boolean(onOpenModel);
+  // Decision trees train in a modal that grows the tree; KNN has no tree to
+  // grow and keeps the inline pause. The modal only mounts once `model.tree`
+  // exists, so opening it eagerly here is safe for either algorithm.
+  const useTrainingModal = lab.config.trainingModal !== false;
+  const [trainingOpen, setTrainingOpen] = useState(false);
+  const hasTree = Boolean(model?.tree);
+  // Replay only when the trained tree still matches the dropdowns; a
+  // changed label/feature set needs a real train, not a playback.
+  const modelMatches =
+    Boolean(model) &&
+    model.labelColumn === lab.labelColumn &&
+    sameIdSet(model.selectedFeatures, lab.selectedFeatures);
+  const canReplay = Boolean(useTrainingModal && hasTree && modelMatches);
 
   const runTrain = () => {
+    if (canReplay) {
+      setTrainingOpen(true);
+      return;
+    }
     if (!lab.canTrain || isTraining) return;
+    if (useTrainingModal) {
+      lab.train();
+      setTrainingOpen(true);
+      return;
+    }
     setIsTraining(true);
     window.setTimeout(() => {
       lab.train();
@@ -209,10 +289,16 @@ function TrainRail({
       variant={model ? "outlined" : "contained"}
       color={model ? "secondary" : "primary"}
       startIconName={model ? "arrow-rotate-left" : undefined}
-      disabled={!lab.canTrain || isTraining}
+      disabled={canReplay ? false : !lab.canTrain || isTraining}
       onClick={runTrain}
     >
-      {isTraining ? "Training…" : model ? "Rerun training" : "Train model"}
+      {isTraining
+        ? "Training…"
+        : canReplay
+          ? "Replay training"
+          : model
+            ? "Rerun training"
+            : "Train model"}
     </Button>
   );
 
@@ -223,26 +309,28 @@ function TrainRail({
         <section className={styles.configCard}>
           <div className={styles.cardFields}>
             {lab.config.hideLabelSelect ? null : (
-              <Dropdown
-                role="input"
-                size="small"
-                color="secondary"
-                width="full"
-                menuWidth="100%"
-                label="Predict:"
-                labelStyle="thick"
-                helperText={
-                  lab.labelCardinality?.text ??
-                  "The answer your model guesses"
-                }
-                sentiment={lab.labelCardinality?.sentiment ?? "default"}
-                placeholder="Choose a column"
-                value={lab.labelColumn ?? ""}
-                options={labelOptions}
-                disabled={Boolean(lab.config.lockLabelColumn)}
-                onChange={(value) => lab.setLabelColumn(String(value))}
-                aria-label="Column to predict"
-              />
+              <LockedLabelTooltip locked={Boolean(lab.config.lockLabelColumn)}>
+                <Dropdown
+                  role="input"
+                  size="small"
+                  color="secondary"
+                  width="full"
+                  menuWidth="100%"
+                  label="Predict:"
+                  labelStyle="thick"
+                  helperText={
+                    lab.labelCardinality?.text ??
+                    "What you want your model to predict"
+                  }
+                  sentiment={lab.labelCardinality?.sentiment ?? "default"}
+                  placeholder="Choose a column"
+                  value={lab.labelColumn ?? ""}
+                  options={labelOptions}
+                  readOnly={Boolean(lab.config.lockLabelColumn)}
+                  onChange={(value) => lab.setLabelColumn(String(value))}
+                  aria-label="Column to predict"
+                />
+              </LockedLabelTooltip>
             )}
             <div ref={featuresMenu.ref}>
               <Dropdown
@@ -255,7 +343,7 @@ function TrainRail({
                 labelStyle="thick"
                 helperText={
                   lab.featureCardinality?.text ??
-                  "The info it uses to guess"
+                  "What your model predicts using"
                 }
                 sentiment={lab.featureCardinality?.sentiment ?? "default"}
                 startIconName={
@@ -272,6 +360,16 @@ function TrainRail({
             {/* KNN's k is not a student control. Studio searches k on a
                 10% holdout (AI Lab / ml-knn). Guided levels may lock k. */}
           </div>
+          {/* The sentence the model is built from, filling in as the
+              dropdowns are set. Same Tag colors as the sheet columns and
+              the Testing strip. */}
+          <div className={styles.statementRow}>
+            <PredictionStatement
+              columns={columns}
+              labelColumn={lab.labelColumn}
+              features={lab.selectedFeatures}
+            />
+          </div>
           <div className={styles.cardFooter}>
             {/* Only explain *why* it is disabled; an always-on tooltip would
                 sit over the Results card right after a click. */}
@@ -287,6 +385,15 @@ function TrainRail({
 
         {model ? (
           <section className={styles.configCard} aria-live="polite">
+            {hasTree && model.tree && useTrainingModal ? (
+              <div className={styles.miniMap}>
+                <TreeThumbnail
+                  root={model.tree}
+                  labels={uniqueValues(lab.rows, model.labelColumn)}
+                  className={styles.miniMapSvg}
+                />
+              </div>
+            ) : null}
             <div className={styles.metricRow}>
               <div className={`${styles.metric} ${styles.metricDivider}`}>
                 <span className={styles.metricLabel}>Accuracy</span>
@@ -325,18 +432,27 @@ function TrainRail({
           </section>
         ) : null}
       </div>
+      {useTrainingModal ? (
+        <TrainingModal
+          lab={lab}
+          open={trainingOpen}
+          onClose={() => setTrainingOpen(false)}
+          onTest={() => {
+            setTrainingOpen(false);
+            lab.setSection("test");
+          }}
+        />
+      ) : null}
     </aside>
   );
 }
 
 function DataCards({ lab }: { lab: AiLabController }) {
+  const useCarousel =
+    lab.config.hideCardLayoutToggle || lab.cardLayout === "carousel";
   return (
     <div className={styles.cardsView}>
-      {lab.cardLayout === "carousel" ? (
-        <CardCarousel lab={lab} />
-      ) : (
-        <CardCatalog lab={lab} />
-      )}
+      {useCarousel ? <CardCarousel lab={lab} /> : <CardCatalog lab={lab} />}
     </div>
   );
 }
@@ -414,6 +530,9 @@ function CardCatalog({ lab }: { lab: AiLabController }) {
               index={firstIndex + offset}
               row={row}
               columns={columns}
+              labelColumnId={lab.labelColumn}
+              featureColumnIds={lab.selectedFeatures}
+              titleColumnId={lab.config.cardTitleColumn}
             />
           ))}
         </div>
@@ -533,6 +652,9 @@ function CardCarousel({ lab }: { lab: AiLabController }) {
                     index={rowIndex}
                     row={row}
                     columns={lab.config.dataset.columns}
+                    labelColumnId={lab.labelColumn}
+                    featureColumnIds={lab.selectedFeatures}
+                    titleColumnId={lab.config.cardTitleColumn}
                     featured
                   />
                 </div>
@@ -619,25 +741,48 @@ const RowCard = memo(function RowCard({
   index,
   row,
   columns,
+  labelColumnId,
+  featureColumnIds,
+  titleColumnId,
   featured = false,
 }: {
   index: number;
   row: AiLabDataRow;
   columns: AiLabColumn[];
+  labelColumnId?: string;
+  featureColumnIds?: string[];
+  titleColumnId?: string;
   featured?: boolean;
 }) {
+  const titleValue = titleColumnId
+    ? formatCell(row[titleColumnId])
+    : undefined;
+  const heading = titleValue || `Row ${index + 1}`;
   return (
     <article
       className={`${styles.card} ${featured ? styles.cardFeatured : ""}`}
-      aria-label={`Row ${index + 1}`}
+      aria-label={`Row ${index + 1}${titleValue ? `, ${titleValue}` : ""}`}
     >
-      <p className={styles.cardHeading}>Row {index + 1}</p>
+      <p className={styles.cardHeading}>{heading}</p>
       <dl className={styles.cardBody}>
         {columns.map((column) => {
+          if (column.id === titleColumnId) return null;
           const value = formatCell(row[column.id]);
+          const isLabel = labelColumnId === column.id;
+          const isFeature = featureColumnIds?.includes(column.id);
           return (
             <div key={column.id} className={styles.cardRow}>
-              <dt className={styles.cardLabel}>{column.name}</dt>
+              <dt className={styles.cardLabel}>
+                {column.name}
+                {isLabel || isFeature ? (
+                  <span
+                    className={`${styles.roleDot} ${
+                      isLabel ? styles.roleDotLabel : styles.roleDotFeature
+                    }`}
+                    aria-hidden
+                  />
+                ) : null}
+              </dt>
               <dd className={styles.cardValue} title={featured ? undefined : value}>
                 {value}
               </dd>

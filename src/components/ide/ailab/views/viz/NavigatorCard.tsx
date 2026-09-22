@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { TraceBar, type TraceStep } from "./TraceBar";
+import type { StepPlayback } from "./useStepPlayback";
 import styles from "./NavigatorCard.module.scss";
 
 interface NavigatorCardProps {
@@ -7,6 +8,8 @@ interface NavigatorCardProps {
   index: number;
   onIndexChange: (index: number) => void;
   emptyText: string;
+  /** Shared walk timer (viz-owned auto-play); the bar owns its own when omitted. */
+  playback?: StepPlayback;
   /** Feature leaders / vote tally — sits with the statement in the lede. */
   metrics?: ReactNode;
   /** Extra body below the lede — neighbor list, etc. */
@@ -27,6 +30,7 @@ export function NavigatorCard({
   index,
   onIndexChange,
   emptyText,
+  playback,
   metrics,
   children,
   footer,
@@ -45,6 +49,7 @@ export function NavigatorCard({
           index={index}
           onIndexChange={onIndexChange}
           emptyText={emptyText}
+          playback={playback}
         />
       </div>
       <div className={styles.main}>

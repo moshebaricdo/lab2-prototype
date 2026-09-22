@@ -59,7 +59,22 @@ export function GuidedTrainingBar({ lab }: GuidedTrainingBarProps) {
         </Button>
       </div>
       <div className={styles.builderRow}>
-        {lab.config.hideLabelSelect ? null : (
+        {lab.config.hideLabelSelect ? null : lab.config.lockLabelColumn ? (
+          <Tooltip title="You can't change this" placement="top">
+            <Dropdown
+              role="input"
+              size="small"
+              color="secondary"
+              width="auto"
+              label="Predict"
+              placeholder="Choose a label"
+              value={lab.labelColumn ?? ""}
+              options={labelOptions}
+              readOnly
+              onChange={(value) => lab.setLabelColumn(String(value))}
+            />
+          </Tooltip>
+        ) : (
           <Dropdown
             role="input"
             size="small"
@@ -69,7 +84,6 @@ export function GuidedTrainingBar({ lab }: GuidedTrainingBarProps) {
             placeholder="Choose a label"
             value={lab.labelColumn ?? ""}
             options={labelOptions}
-            disabled={Boolean(lab.config.lockLabelColumn)}
             onChange={(value) => lab.setLabelColumn(String(value))}
           />
         )}

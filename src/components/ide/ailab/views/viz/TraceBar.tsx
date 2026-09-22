@@ -1,13 +1,7 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Button, Tooltip } from "@moshebari/cads-react";
+import { useStepPlayback, type StepPlayback } from "./useStepPlayback";
 import styles from "./TraceBar.module.scss";
-
-/** Time on each step while Play walks the trace. */
-const PLAY_STEP_MS = 1000;
-
-function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 export interface TraceStep {
   id: string;
@@ -38,12 +32,20 @@ interface TraceBarProps {
    * nav only — the statement lives in `NavigatorCard`.
    */
   orientation?: "row" | "column" | "toolbar";
+  /**
+   * Share the walk timer with the viz (which may auto-play a new
+   * prediction). When omitted the bar owns its own.
+   */
+  playback?: StepPlayback;
+  /** Resting Play control copy — Result card uses Replay. */
+  playLabel?: string;
 }
 
 /**
  * Step-through control for "how did the model decide?". Play rewinds to
- * the first step and walks the rest (1s apart). Previous / Next move one
- * at a time; the dots jump. The statement is a polite live region so
+ * the first step and walks the rest (1s apart); while walking, the same
+ * button reads Skip and jumps to the answer. Previous / Next move one at a
+ * time; the dots jump. The statement is a polite live region so
  * screen-reader users hear each move without leaving the buttons.
  */
 export function TraceBar({
@@ -54,49 +56,31 @@ export function TraceBar({
   detail,
   onDismissDetail,
   orientation = "row",
+  playback: externalPlayback,
+  playLabel = "Play",
 }: TraceBarProps) {
   const total = steps.length;
   const hasSteps = total > 0;
   const clamped = Math.min(Math.max(index, 0), Math.max(total - 1, 0));
   const current = steps[clamped];
   const liveRef = useRef<HTMLSpanElement>(null);
-  const playTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const ownPlayback = useStepPlayback(total, onIndexChange);
+  const playback = externalPlayback ?? ownPlayback;
+  const { playing, stop: stopPlay } = playback;
   const stepIds = steps.map((step) => step.id).join("|");
 
-  const stopPlay = useCallback(() => {
-    if (playTimerRef.current !== null) {
-      clearInterval(playTimerRef.current);
-      playTimerRef.current = null;
-    }
-    setPlaying(false);
-  }, []);
-
-  useEffect(() => () => stopPlay(), [stopPlay]);
+  // A new trace cancels a walk the bar itself started; a shared playback
+  // decides for itself (it may be the one starting the new walk).
   useEffect(() => {
-    stopPlay();
-  }, [stepIds, stopPlay]);
+    if (!externalPlayback) stopPlay();
+  }, [externalPlayback, stepIds, stopPlay]);
 
   const goTo = (next: number) => {
     stopPlay();
     onIndexChange(next);
   };
 
-  const playFromStart = () => {
-    stopPlay();
-    onIndexChange(0);
-    if (total < 2 || prefersReducedMotion()) return;
-    setPlaying(true);
-    let next = 1;
-    playTimerRef.current = setInterval(() => {
-      onIndexChange(next);
-      if (next >= total - 1) {
-        stopPlay();
-        return;
-      }
-      next += 1;
-    }, PLAY_STEP_MS);
-  };
+  const playFromStart = () => playback.play({ reducedMotion: "start" });
 
   // Only speak on user-driven step changes, not on every prediction re-render.
   const lastAnnounced = useRef<string | undefined>(undefined);
@@ -187,18 +171,32 @@ export function TraceBar({
     >
       {isToolbar ? (
         <>
-          <Button
-            size="extraSmall"
-            variant="contained"
-            color="primary"
-            startIconName="play"
-            aria-label="Play from the start"
-            aria-pressed={playing}
-            disabled={!hasSteps || total < 2}
-            onClick={playFromStart}
-          >
-            Play
-          </Button>
+          {playing ? (
+            <Button
+              size="extraSmall"
+              variant="outlined"
+              color="secondary"
+              startIconName="forward-step"
+              aria-label="Skip to the answer"
+              className={styles.playButton}
+              onClick={playback.skipToEnd}
+            >
+              Skip
+            </Button>
+          ) : (
+            <Button
+              size="extraSmall"
+              variant="contained"
+              color="primary"
+              startIconName="play"
+              aria-label={`${playLabel} from the start`}
+              className={styles.playButton}
+              disabled={!hasSteps || total < 2}
+              onClick={playFromStart}
+            >
+              {playLabel}
+            </Button>
+          )}
           {nav}
         </>
       ) : (

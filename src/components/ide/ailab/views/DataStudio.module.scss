@@ -89,8 +89,12 @@
 .setName {
   display: flex;
   min-width: 0;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
+}
+
+.aboutButton {
+  flex-shrink: 0;
 }
 
 .datasetChip {
@@ -163,7 +167,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 10px;
+  padding: 8px 10px;
 }
 
 .fieldStack {
@@ -179,6 +183,13 @@
 
 .cardFooter {
   display: flex;
+  padding: 10px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+/* Live statement under the Predict / Using fields — its own band, same
+   10px pad as the footer so the sentence sits between fields and action. */
+.statementRow {
   padding: 10px;
   border-top: 1px solid var(--border-neutral-primary);
 }
@@ -205,6 +216,20 @@
     min-width: 0;
     white-space: nowrap;
   }
+}
+
+/* Mini-map of the trained tree above the metrics: the shape the student
+ * watched grow in the training modal. Replay lives on the Train card. */
+.miniMap {
+  height: 100px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+}
+
+.miniMapSvg {
+  width: 100%;
+  height: 100%;
 }
 
 .metricRow {
@@ -330,7 +355,10 @@
 
 .cardLabel {
   @include type-body-3-semibold;
+  display: inline-flex;
   flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
   color: var(--text-neutral-primary);
 }
 
@@ -437,7 +465,7 @@
   .cardRow,
   .cardRow + .cardRow {
     margin-top: 0;
-    align-items: baseline;
+    align-items: center;
     padding: 12px 0;
     border-top: 1px solid var(--border-neutral-primary);
     white-space: normal;
@@ -558,30 +586,6 @@ tbody tr:hover .tdIndex {
   color: var(--text-neutral-primary);
 }
 
-tbody tr:hover .td.tdSelectedColumn:not(.tdIndex):not(.tdActive) {
-  background: color-mix(
-    in srgb,
-    var(--background-selected-primary) 6%,
-    color-mix(
-      in srgb,
-      var(--background-selected-primary) 8%,
-      var(--background-neutral-primary)
-    )
-  );
-}
-
-tbody tr:hover .td.tdSelectedRow.tdSelectedColumn:not(.tdIndex):not(.tdActive) {
-  background: color-mix(
-    in srgb,
-    var(--background-selected-primary) 6%,
-    color-mix(
-      in srgb,
-      var(--background-selected-primary) 12%,
-      var(--background-neutral-secondary)
-    )
-  );
-}
-
 tbody tr:hover .td.tdActive {
   background: color-mix(
     in srgb,
@@ -651,10 +655,7 @@ tbody tr:hover .td.tdActive {
   }
 }
 
-/* Name hugs the label; the role dot hangs into the 10px cell padding
-   so assigning a feature/label does not widen the column. */
 .thLead {
-  position: relative;
   display: inline-block;
   max-width: 100%;
   vertical-align: middle;
@@ -708,44 +709,114 @@ tbody tr:hover .td.tdActive {
   color: var(--text-selected-primary);
 }
 
+/* Whole-column role tint. Label = brand, features = success — the same
+   pairing as the statement Tags, so the sheet is a picture of the sentence.
+   The inspected column's solid selected header still wins; body cells keep
+   this tint and their light role borders when a header is clicked. */
+.thLabel:not(.thSelected) {
+  border-right-color: var(--border-brand-light);
+  background: var(--background-brand-light);
+  color: var(--text-brand-primary);
+  box-shadow: inset 0 -1px 0 var(--border-brand-light);
+}
+
+.thLabel:last-child:not(.thSelected) {
+  border-right: 1px solid var(--border-brand-light);
+}
+
+.th:not(.thLabel):not(:has(+ .thSelected)):has(+ .thLabel),
+.thIndex:not(:has(+ .thSelected)):has(+ .thLabel) {
+  border-right-color: var(--border-brand-light);
+}
+
+.thFeature:not(.thSelected) {
+  border-right-color: var(--border-success-light);
+  background: var(--background-success-light);
+  color: var(--text-success-primary);
+  box-shadow: inset 0 -1px 0 var(--border-success-light);
+}
+
+.thFeature:last-child:not(.thSelected) {
+  border-right: 1px solid var(--border-success-light);
+}
+
+.th:not(.thFeature):not(:has(+ .thSelected)):has(+ .thFeature),
+.thIndex:not(:has(+ .thSelected)):has(+ .thFeature) {
+  border-right-color: var(--border-success-light);
+}
+
+.thLabel:not(.thSelected) .thButton,
+.thLabel:not(.thSelected) .thButton:hover {
+  color: var(--text-brand-primary);
+}
+
+.thFeature:not(.thSelected) .thButton,
+.thFeature:not(.thSelected) .thButton:hover {
+  color: var(--text-success-primary);
+}
+
+.tdLabel:not(.tdActive) {
+  border-right-color: var(--border-brand-light);
+  border-bottom-color: var(--border-brand-light);
+  background: color-mix(
+    in srgb,
+    var(--background-brand-light) 55%,
+    var(--background-neutral-primary)
+  );
+}
+
+.tdLabel:last-child:not(.tdActive) {
+  border-right: 1px solid var(--border-brand-light);
+}
+
+.td:not(.tdLabel):has(+ .tdLabel),
+.tdIndex:has(+ .tdLabel) {
+  border-right-color: var(--border-brand-light);
+}
+
+.tdFeature:not(.tdActive) {
+  border-right-color: var(--border-success-light);
+  border-bottom-color: var(--border-success-light);
+  background: color-mix(
+    in srgb,
+    var(--background-success-light) 55%,
+    var(--background-neutral-primary)
+  );
+}
+
+.tdFeature:last-child:not(.tdActive) {
+  border-right: 1px solid var(--border-success-light);
+}
+
+.td:not(.tdFeature):has(+ .tdFeature),
+.tdIndex:has(+ .tdFeature) {
+  border-right-color: var(--border-success-light);
+}
+
+tbody tr:hover .td.tdLabel:not(.tdActive) {
+  background: var(--background-brand-light);
+}
+
+tbody tr:hover .td.tdFeature:not(.tdActive) {
+  background: var(--background-success-light);
+}
+
+/* Inline role mark on card labels (table headers use the full-column tint). */
 .roleDot {
-  position: absolute;
-  top: 50%;
-  left: 100%;
+  display: inline-block;
   width: 6px;
   height: 6px;
-  margin-left: 4px;
-  pointer-events: none;
-  transform: translateY(-50%);
+  flex-shrink: 0;
   border-radius: var(--shape-round);
   background: var(--background-neutral-tertiary);
 }
 
 .roleDotLabel {
-  background: var(--background-success-primary);
+  background: var(--background-brand-primary);
 }
 
 .roleDotFeature {
-  background: var(--background-selected-primary);
-}
-
-.tdSelectedColumn {
-  border-right-color: var(--border-brand-light);
-  border-bottom-color: var(--border-brand-light);
-  background: color-mix(
-    in srgb,
-    var(--background-selected-primary) 8%,
-    var(--background-neutral-primary)
-  );
-}
-
-.tdSelectedColumn:last-child {
-  border-right: 1px solid var(--border-brand-light);
-}
-
-.td:not(.tdSelectedColumn):has(+ .tdSelectedColumn),
-.tdIndex:has(+ .tdSelectedColumn) {
-  border-right-color: var(--border-brand-light);
+  background: var(--background-success-primary);
 }
 
 .tdSelectedRow {
@@ -753,14 +824,6 @@ tbody tr:hover .td.tdActive {
     in srgb,
     var(--background-neutral-secondary) 80%,
     var(--background-neutral-primary)
-  );
-}
-
-.tdSelectedRow.tdSelectedColumn {
-  background: color-mix(
-    in srgb,
-    var(--background-selected-primary) 12%,
-    var(--background-neutral-secondary)
   );
 }
 
