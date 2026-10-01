@@ -393,6 +393,10 @@ export const aiLabP0LevelLinks: LevelProgressLink[] = [
   { name: "P0 handoff", path: "/levels/ailab-p0" },
 ];
 
+export const aiLabScaleLevelLinks: LevelProgressLink[] = [
+  { name: "Group a number", path: "/levels/ailab-scale" },
+];
+
 export const aiLabLevelLinks: LevelProgressLink[] = [
   { name: "Train a model", path: "/levels/ailab" },
   { name: "Audit a model", path: "/levels/ailab-pretrained" },
@@ -428,6 +432,7 @@ export const aiLabPlaytestV2IndexLinks: LevelProgressLink[] =
 
 export const aiLabIndexLinks: LevelProgressLink[] = [
   ...aiLabP0LevelLinks,
+  ...aiLabScaleLevelLinks,
   ...aiLabLevelLinks,
   ...aiLabGuidedLevelLinks,
 ];

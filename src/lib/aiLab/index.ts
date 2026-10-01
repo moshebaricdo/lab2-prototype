@@ -6,5 +6,6 @@ export * from "./devConfig";
 export * from "./encode";
 export * from "./explain";
 export * from "./knn";
+export * from "./scale";
 export * from "./statement";
 export * from "./train";

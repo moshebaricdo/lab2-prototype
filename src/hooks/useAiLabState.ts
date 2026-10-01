@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  applyScales,
   catalogDatasets,
+  columnsWithScales,
   DEFAULT_KNN_K,
   featureNotice,
   initialDatasetId,
@@ -16,6 +18,7 @@ import type {
   AiLabDataView,
   AiLabLevelConfig,
   AiLabSavedModel,
+  AiLabScale,
   AiLabSection,
   AiLabTrainedModel,
 } from "../types/aiLab";
@@ -40,6 +43,8 @@ export interface AiLabState {
   testRowIndex: number | undefined;
   lastPrediction: string | undefined;
   knnK: number;
+  /** Named groups derived from a numeric column. Empty unless the level allows it. */
+  scales: AiLabScale[];
   trainingSetupOpen: boolean;
   /** `config.introActivity` finished (or absent); the sheet may open. */
   introComplete: boolean;
@@ -128,7 +133,9 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     selectedAlgorithm,
     dataView: config.defaultDataView ?? "table",
     cardLayout: cardLayoutFor(config, dataset?.rows.length ?? 0),
-    selectedColumnId: undefined,
+    selectedColumnId: config.allowScaleColumns
+      ? dataset?.columns.find((column) => column.type === "numerical")?.id
+      : undefined,
     cardIndex: 0,
     labelColumn,
     selectedFeatures,
@@ -137,6 +144,7 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     testRowIndex: undefined,
     lastPrediction: undefined,
     knnK: config.defaultKnnK ?? DEFAULT_KNN_K,
+    scales: [],
     trainingSetupOpen: Boolean(config.trainAsOverlay && config.pretrained),
     introComplete: !config.introActivity,
     rows: dataset ? cloneRows(dataset.rows) : [],
@@ -172,6 +180,7 @@ function configIdentity(config: AiLabLevelConfig): string {
     config.initialSection ?? "",
     config.classificationOnly ? "1" : "0",
     config.trainAsOverlay ? "1" : "0",
+    config.allowScaleColumns ? "1" : "0",
     config.introActivity?.mode ?? "",
     String(config.defaultKnnK ?? ""),
     String(config.holdoutCount ?? ""),
@@ -273,6 +282,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
           ...current,
           datasetId,
           rows: cloneRows(dataset.rows),
+          scales: [],
           selectedColumnId: undefined,
           cardIndex: 0,
           cardLayout: cardLayoutFor(config, dataset.rows.length),
@@ -508,8 +518,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
       }
       const model = trainModel({
         algorithm: current.selectedAlgorithm,
-        rows: current.rows,
-        columns: dataset.columns,
+        rows: applyScales(current.rows, current.scales),
+        columns: columnsWithScales(dataset.columns, current.scales),
         labelColumn: current.labelColumn,
         selectedFeatures: current.selectedFeatures,
         knnK: config.defaultKnnK != null ? current.knnK : undefined,
@@ -573,7 +583,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
   const loadHoldoutRow = useCallback((rowIndex: number) => {
     setState((current) => {
       if (!current.model) return current;
-      const row = current.rows[rowIndex];
+      const row = applyScales(current.rows, current.scales)[rowIndex];
       if (!row) return current;
       const testValues: AiLabDataRow = {};
       current.model.selectedFeatures.forEach((feature) => {
@@ -598,7 +608,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
       if (count > 1 && rowIndex === current.testRowIndex) {
         rowIndex = (rowIndex + 1 + Math.floor(Math.random() * (count - 1))) % count;
       }
-      const row = current.rows[rowIndex];
+      const row = applyScales(current.rows, current.scales)[rowIndex];
       const testValues: AiLabDataRow = {};
       current.model.selectedFeatures.forEach((feature) => {
         testValues[feature] = row[feature];
@@ -607,7 +617,25 @@ export function useAiLabState(config: AiLabLevelConfig) {
     });
   }, []);
 
-  const columns = resolvedConfig.dataset.columns;
+  const viewRows = useMemo(
+    () => applyScales(state.rows, state.scales),
+    [state.rows, state.scales],
+  );
+  const viewColumns = useMemo(
+    () => columnsWithScales(resolvedConfig.dataset.columns, state.scales),
+    [resolvedConfig.dataset.columns, state.scales],
+  );
+  const viewConfig = useMemo(
+    () =>
+      state.scales.length === 0
+        ? resolvedConfig
+        : {
+            ...resolvedConfig,
+            dataset: { ...resolvedConfig.dataset, columns: viewColumns },
+          },
+    [resolvedConfig, state.scales.length, viewColumns],
+  );
+  const columns = viewColumns;
   const labelIsValid = Boolean(
     state.labelColumn &&
       (!config.classificationOnly ||
@@ -617,9 +645,9 @@ export function useAiLabState(config: AiLabLevelConfig) {
 
   // Too many distinct categories: the model cannot generalize and the viz
   // cannot draw them. Blocked columns stop training; crowded labels only warn.
-  const labelCardinality = labelNotice(state.rows, columns, state.labelColumn);
+  const labelCardinality = labelNotice(viewRows, columns, state.labelColumn);
   const featureCardinality = featureNotice(
-    state.rows,
+    viewRows,
     columns,
     state.selectedFeatures,
   );
@@ -652,6 +680,35 @@ export function useAiLabState(config: AiLabLevelConfig) {
                 ? featureCardinality.text
                 : undefined;
 
+  const saveScale = useCallback((scale: AiLabScale) => {
+    setState((current) => ({
+      ...current,
+      scales: [...current.scales.filter((item) => item.id !== scale.id), scale],
+      model: undefined,
+      lastPrediction: undefined,
+      testValues: emptyTestValues(current.selectedFeatures),
+      testRowIndex: undefined,
+    }));
+  }, []);
+
+  const removeScale = useCallback((scaleId: string) => {
+    setState((current) => ({
+      ...current,
+      scales: current.scales.filter((item) => item.id !== scaleId),
+      selectedFeatures: current.selectedFeatures.filter((id) => id !== scaleId),
+      selectedColumnId:
+        current.selectedColumnId === scaleId
+          ? current.scales.find((item) => item.id === scaleId)?.sourceColumnId
+          : current.selectedColumnId,
+      model: undefined,
+      lastPrediction: undefined,
+      testValues: emptyTestValues(
+        current.selectedFeatures.filter((id) => id !== scaleId),
+      ),
+      testRowIndex: undefined,
+    }));
+  }, []);
+
   const completeIntro = useCallback(() => {
     setState((current) =>
       current.introComplete ? current : { ...current, introComplete: true },
@@ -660,7 +717,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
 
   return {
     ...state,
-    config: resolvedConfig,
+    rows: viewRows,
+    config: viewConfig,
     availableDatasets,
     completeIntro,
     canPickDataset: !config.lockDataset,
@@ -687,6 +745,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
     setKnnK,
     updateCell,
     addRow,
+    saveScale,
+    removeScale,
     train,
     saveModel,
     setTestValue,

@@ -1,14 +1,17 @@
 import type { AiLabLevelConfig } from "../../types/aiLab";
+import { temperatureScaleDataset } from "./temperatureScale";
 import { tacoTruckDataset } from "./tacoTruck";
 import { tacoTruckGuidedDataset } from "./tacoTruckGuided";
 import { csvDatasets } from "./datasets";
 
 export { csvDatasets } from "./datasets";
+export { temperatureScaleDataset } from "./temperatureScale";
 export { tacoTruckDataset } from "./tacoTruck";
 export { tacoTruckGuidedDataset } from "./tacoTruckGuided";
 export {
   aiLabGuidedSectionInstructions,
   aiLabP0Instructions,
+  aiLabScaleInstructions,
   aiLabPlaytestBuildInstructions,
   aiLabPlaytestLookInstructions,
   aiLabPlaytestTryInstructions,
@@ -28,7 +31,7 @@ function datasetById(id: string) {
   return dataset;
 }
 
-/** Playtest sheet. Do not auto-pretrain without a feature list — Animal would win. */
+/** Playtest sheet. Ship an explicit feature list — auto-pretrain would also use Lives in water. Animal is blocked (more than 50 values). */
 export const aiLabPlaytestDataset = datasetById("bird_mammal_or_fish");
 
 export const AI_LAB_PLAYTEST_LABEL_COLUMN = "type";
@@ -97,7 +100,8 @@ export const aiLabGuidedConfig: AiLabLevelConfig = {
 
 /**
  * P0 handoff — curriculum-shaped defaults with the current product on
- * (training modal, auto-play, Cards). Dev panel knobs mirror levelbuilder.
+ * (training modal, auto-play). Opens on the table. Dev panel knobs mirror
+ * levelbuilder.
  */
 export const aiLabP0Config: AiLabLevelConfig = {
   dataset: aiLabPlaytestDataset,
@@ -113,13 +117,37 @@ export const aiLabP0Config: AiLabLevelConfig = {
   showModelDetails: false,
   showExport: false,
   trainAsOverlay: true,
-  defaultDataView: "cards",
+  defaultDataView: "table",
   hideCardLayoutToggle: true,
   cardTitleColumn: "animal",
   hideTestViewToggle: true,
   trainingModal: true,
   autoPlayTrace: true,
   bundleWideSplits: true,
+  testLayout: "canvas",
+};
+
+/**
+ * Demo: group a numeric column into named buckets, then train on those
+ * names. Temperature stays a number; Temperature (scale) is the choice.
+ */
+export const aiLabScaleConfig: AiLabLevelConfig = {
+  dataset: temperatureScaleDataset,
+  lockDataset: true,
+  requireDatasetChoice: false,
+  algorithmLock: "decisionTree",
+  lockLabelColumn: true,
+  presetLabelColumn: "went_outside",
+  excludedFeatureColumns: ["day"],
+  allowDataEdit: false,
+  showModelDetails: false,
+  showExport: false,
+  trainAsOverlay: true,
+  defaultDataView: "table",
+  allowScaleColumns: true,
+  classificationOnly: true,
+  trainingModal: true,
+  autoPlayTrace: true,
   testLayout: "canvas",
 };
 

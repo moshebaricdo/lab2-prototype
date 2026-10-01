@@ -3,17 +3,17 @@ import { columnById } from "../../../../lib/aiLab";
 import type { AiLabColumn } from "../../../../types/aiLab";
 import styles from "./PredictionStatement.module.scss";
 
-/** Label = brand (purple), features = success (green). Every surface that
- *  paints the statement — Tags, sheet columns, cards, the training modal —
- *  uses this same pairing. */
-export const LABEL_TAG_COLOR = "brand" as const;
-export const FEATURE_TAG_COLOR = "success" as const;
+/** Label = accent pink, features = info blue. Every surface that paints the
+ *  statement — Tags, sheet columns, cards, the training modal — uses this
+ *  same pairing. */
+export const LABEL_TAG_COLOR = "pink" as const;
+export const FEATURE_TAG_COLOR = "info" as const;
 
 interface PredictionStatementProps {
   columns: AiLabColumn[];
   labelColumn: string | undefined;
   features: string[];
-  /** `small` fits the 300px Train rail wrap; `large` opens the gap for the modal. */
+  /** `small` fits the 280px Train rail; `large` opens the gap for the modal. */
   size?: "small" | "large";
   className?: string;
 }
@@ -44,8 +44,13 @@ export function PredictionStatement({
     featureNames.length > 0 ? featureNames.join(", ") : "…",
   ].join(" ");
 
+  const tagSize = size === "large" ? "medium" : "small";
+  const tagClass = size === "large" ? styles.tag : styles.tagSmall;
+
+  // A div, not a <p>: CADS Tag renders a <div>, which a <p> can't contain.
   return (
-    <p
+    <div
+      role="group"
       className={[
         styles.root,
         size === "large" ? styles.rootLarge : "",
@@ -58,17 +63,17 @@ export function PredictionStatement({
       <span className={styles.word}>Predict</span>
       {labelName ? (
         <Tag
-          size="large"
+          size={tagSize}
           color={LABEL_TAG_COLOR}
           label={labelName}
-          className={styles.tag}
+          className={tagClass}
         />
       ) : (
         <Tag
-          size="large"
+          size={tagSize}
           color={LABEL_TAG_COLOR}
           label="a column"
-          className={`${styles.tag} ${styles.placeholder}`}
+          className={`${tagClass} ${styles.placeholder}`}
         />
       )}
       <span className={styles.word}>based on</span>
@@ -76,20 +81,20 @@ export function PredictionStatement({
         featureNames.map((name) => (
           <Tag
             key={name}
-            size="large"
+            size={tagSize}
             color={FEATURE_TAG_COLOR}
             label={name}
-            className={styles.tag}
+            className={tagClass}
           />
         ))
       ) : (
         <Tag
-          size="large"
+          size={tagSize}
           color={FEATURE_TAG_COLOR}
           label="one or more columns"
-          className={`${styles.tag} ${styles.placeholder}`}
+          className={`${tagClass} ${styles.placeholder}`}
         />
       )}
-    </p>
+    </div>
   );
 }

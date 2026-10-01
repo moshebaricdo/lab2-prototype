@@ -86,11 +86,11 @@ export function DatasetStory({
         <h3 className={styles.heading}>The question</h3>
         <p className={styles.copy}>{story.question}</p>
         {label ? (
-          <p className={styles.hint}>
+          <div className={styles.hint}>
             The answer for every {story.rowNoun} is already in the{" "}
             <Tag size="small" color={LABEL_TAG_COLOR} label={label.name} /> column.
             A model learns the pattern so it can answer for a new {story.rowNoun}.
-          </p>
+          </div>
         ) : null}
       </section>
 

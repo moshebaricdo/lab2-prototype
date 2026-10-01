@@ -1,0 +1,527 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+$ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+/* Edge to edge inside the modal: a divided side panel (everything that
+   narrates) and the canvas (only the tree and its key). */
+.stage {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+}
+
+.panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border-right: 1px solid var(--border-neutral-primary);
+}
+
+.narration {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 24px 14px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+/* Every face sits in the same cell, so the panel is always as tall as its
+   tallest face and switching faces never moves anything. */
+.faces {
+  display: grid;
+  padding: 16px 24px 20px;
+}
+
+.face {
+  grid-area: 1 / 1;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 160ms ease,
+    visibility 0s linear 160ms;
+}
+
+.faceOn {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 240ms ease 120ms,
+    visibility 0s;
+}
+
+.faceHead {
+  display: flex;
+  height: 18px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.overline {
+  @include type-overline-2;
+  margin: 0;
+  color: var(--text-neutral-quaternary);
+}
+
+/* The one big line: row count, the quiz row's name, or the score. */
+.hero {
+  display: flex;
+  height: 44px;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 6px;
+}
+
+.heroNumber {
+  @include type-heading-h2-semibold;
+  color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroSuccess {
+  color: var(--text-success-primary);
+}
+
+.heroNoun {
+  @include type-body-2-regular;
+  align-self: flex-end;
+  padding-bottom: 7px;
+  color: var(--text-neutral-secondary);
+}
+
+.heroName {
+  @include type-body-1-semibold;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 -8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.row {
+  @include type-body-4-regular;
+  display: flex;
+  min-height: 26px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 8px;
+  border-radius: var(--shape-sm);
+  color: var(--text-neutral-secondary);
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease,
+    color 200ms ease;
+
+  dt {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  dd {
+    @include type-body-4-semibold;
+    flex-shrink: 0;
+    margin: 0;
+    color: var(--text-neutral-primary);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Same purple as the path on the tree: "this is the question being asked". */
+.rowAsked {
+  background: var(--background-brand-light);
+  box-shadow: inset 0 0 0 1.5px var(--border-selected-primary);
+  color: var(--text-neutral-primary);
+}
+
+/* Long labels wrap under the column name instead of truncating it. */
+.rowLabel {
+  flex-wrap: wrap;
+  row-gap: 2px;
+  margin-top: 4px;
+  padding-top: 6px;
+  padding-bottom: 4px;
+  border-top: 1px solid var(--border-neutral-primary);
+  border-radius: 0;
+
+  dt {
+    flex-shrink: 0;
+  }
+
+  dd {
+    margin-left: auto;
+  }
+}
+
+.tick {
+  display: inline-block;
+  animation: pop-in 240ms $ease-out both;
+}
+
+.swap {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  animation: fade-in 220ms ease both;
+}
+
+.tally {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tallyRight {
+  color: var(--text-success-primary);
+}
+
+.tallyWrong {
+  color: var(--text-error-primary);
+}
+
+.board {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  background: var(--background-neutral-secondary);
+}
+
+.steps {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  @include type-body-4-regular;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-neutral-tertiary);
+  transition: color 240ms ease;
+}
+
+.stepMark {
+  @include type-label-4;
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--shape-round);
+  box-shadow: inset 0 0 0 1.5px var(--border-neutral-secondary);
+  color: var(--text-neutral-tertiary);
+  transition:
+    background-color 240ms ease,
+    box-shadow 240ms ease,
+    color 240ms ease;
+}
+
+.stepActive {
+  @include type-body-4-semibold;
+  color: var(--text-neutral-primary);
+
+  .stepMark {
+    background: var(--background-selected-primary);
+    box-shadow: none;
+    color: var(--text-selected-primary);
+  }
+}
+
+.stepDone .stepMark {
+  background: var(--background-success-primary);
+  box-shadow: none;
+  color: var(--text-neutral-white-fixed);
+}
+
+/* Two lines reserved so a longer status never nudges the faces below. */
+.status {
+  @include type-body-3-regular;
+  min-height: 2lh;
+  margin: 0;
+  color: var(--text-neutral-secondary);
+  overflow-wrap: anywhere;
+
+  strong {
+    @include type-body-3-semibold;
+    color: var(--text-neutral-primary);
+  }
+}
+
+.treeArea {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  align-items: center;
+}
+
+.legend {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.legendItems {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  @include type-body-4-regular;
+  display: inline-flex;
+  height: 24px;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border-radius: var(--shape-round);
+  color: var(--text-neutral-primary);
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.legendItemActive {
+  background: var(--background-brand-light);
+  box-shadow: inset 0 0 0 1.5px var(--border-selected-primary);
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+  background: currentColor;
+}
+
+.legendDotNeutral {
+  color: var(--background-neutral-senary);
+}
+
+/* Matches `.dotWrong` on the tree. */
+.legendDotWrong {
+  color: var(--background-neutral-senary);
+  background: var(--background-neutral-primary);
+  box-shadow: inset 0 0 0 2.5px currentColor;
+}
+
+.legendName {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legendCount {
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.legendNote {
+  @include type-body-4-regular;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+.legendNoteItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: pop-in 240ms $ease-out both;
+}
+
+/* Quiz face */
+.token {
+  @include type-label-4;
+  box-sizing: border-box;
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-neutral-white-fixed);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-senary);
+  color: var(--text-neutral-white-fixed);
+  box-shadow: var(--shadow-sm);
+}
+
+.tokenRevealed {
+  animation: token-reveal 420ms $ease-out both;
+}
+
+.hidden {
+  @include type-label-4;
+  display: inline-flex;
+  min-width: 36px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-neutral-secondary);
+  border-radius: var(--shape-round);
+  color: var(--text-neutral-tertiary);
+}
+
+.guess {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: pop-in 280ms $ease-out both;
+}
+
+.guessDot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+}
+
+.verdict {
+  @include type-body-3-semibold;
+  display: flex;
+  height: 28px;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0 10px;
+  border-radius: var(--shape-sm);
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity 240ms ease,
+    transform 240ms $ease-out;
+}
+
+.verdictOn {
+  opacity: 1;
+  transform: none;
+}
+
+.verdictRight {
+  background: var(--background-success-light);
+  color: var(--text-success-primary);
+}
+
+.verdictWrong {
+  background: var(--background-error-light);
+  color: var(--text-error-primary);
+}
+
+.pips {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pip {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border-neutral-secondary);
+  border-radius: var(--shape-round);
+  color: var(--text-neutral-white-fixed);
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.pipCurrent {
+  border-color: var(--border-selected-primary);
+}
+
+.pipRight {
+  border-color: transparent;
+  background: var(--background-success-primary);
+}
+
+.pipWrong {
+  border-color: transparent;
+  background: var(--background-error-primary);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes token-reveal {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.instant *,
+.instant {
+  transition: none !important;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-neutral-primary);
+  }
+}

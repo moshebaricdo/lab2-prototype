@@ -15,6 +15,8 @@ import {
   aiLabGuidedSectionInstructions,
   aiLabP0Config,
   aiLabP0Instructions,
+  aiLabScaleConfig,
+  aiLabScaleInstructions,
   aiLabPretrainedConfig,
   aiLabPretrainedInstructions,
   aiLabSectionInstructions,
@@ -35,6 +37,7 @@ import {
   aiLabGuidedLevelLinks,
   aiLabLevelLinks,
   aiLabP0LevelLinks,
+  aiLabScaleLevelLinks,
 } from "../levelTypeLinks";
 import type { AiLabLevelConfig, AiLabSection } from "../../types/aiLab";
 
@@ -151,6 +154,22 @@ function aiLabDevFields(
         values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
     },
     {
+      key: "trainingAnimation",
+      label: "Training animation",
+      description:
+        "What the Train model modal plays for a decision tree. Tree growth draws the finished tree depth by depth. Sort and quiz shows every row as a dot sorted into piles by the tree's questions (Training), then rolls a few rows down the tree with the label hidden (Testing) before the score.",
+      type: "select",
+      group: "AI Lab",
+      options: [
+        { label: "Tree growth", value: "tree" },
+        { label: "Sort and quiz (training → testing)", value: "rows" },
+      ],
+      visibleWhen: (values) =>
+        values.workspaceTabs !== "test" &&
+        values.algorithmLock !== "knn" &&
+        !values.hideTrainPanel,
+    },
+    {
       key: "showInstructionsTab",
       label: "Show instructions tab",
       type: "boolean",
@@ -239,6 +258,7 @@ export function AiLabLevelPage({
   const hideTrainPanel = Boolean(resolved.hideTrainPanel);
   const defaultDataView = String(resolved.defaultDataView);
   const bundleWideSplits = Boolean(resolved.bundleWideSplits);
+  const trainingAnimation = String(resolved.trainingAnimation);
   const labelDataset =
     findCatalogDataset(catalog, presetDataset) ?? config.dataset;
   // Keyed on primitives so the config (and everything `useAiLabState`
@@ -256,6 +276,7 @@ export function AiLabLevelPage({
           hideTrainPanel,
           defaultDataView,
           bundleWideSplits,
+          trainingAnimation,
         },
         catalog,
       ),
@@ -270,6 +291,7 @@ export function AiLabLevelPage({
       hideTrainPanel,
       defaultDataView,
       bundleWideSplits,
+      trainingAnimation,
     ],
   );
   const lab = useAiLabState(levelConfig);
@@ -281,12 +303,17 @@ export function AiLabLevelPage({
     levelConfig.showExport ||
     levelConfig.requireDatasetChoice;
   const p0Instructions = config === aiLabP0Config;
+  const scaleInstructions = config === aiLabScaleConfig;
   const instructions =
     instructionsMarkdown ??
     (p0Instructions
       ? lab.section === "test"
         ? aiLabP0Instructions.test
         : aiLabP0Instructions.dataset
+      : scaleInstructions
+        ? lab.section === "test"
+          ? aiLabScaleInstructions.test
+          : aiLabScaleInstructions.dataset
       : config.pretrained && lab.section === "test"
         ? aiLabPretrainedInstructions
         : studioInstructions
@@ -359,6 +386,20 @@ export function AiLabLevelPage({
         <AiLabWorkspace lab={lab} />
       )}
     </Lab2Shell>
+  );
+}
+
+export function AiLabScaleLevelPage() {
+  return (
+    <AiLabLevelPage
+      currentLevelPath="/levels/ailab-scale"
+      title="AI Lab: Group a number"
+      subtitle="Scale"
+      config={aiLabScaleConfig}
+      continueLabel="Finish"
+      continueTo="/levels"
+      levelLinks={aiLabScaleLevelLinks}
+    />
   );
 }
 

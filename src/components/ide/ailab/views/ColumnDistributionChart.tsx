@@ -32,7 +32,7 @@ const AXIS_LABEL_OFFSET = 6;
 /** Matches `--leading-body-xxs` on `.chartAxisLabel` (label-4). */
 const AXIS_LABEL_LINE_HEIGHT = 16;
 const MARGIN = {
-  top: 4,
+  top: 0,
   right: 8,
   bottom: AXIS_LABEL_OFFSET + AXIS_LABEL_LINE_HEIGHT,
   left: 24,
@@ -207,8 +207,8 @@ function DistributionChart({
               return (
                 <text
                   x={x}
-                  y={AXIS_LABEL_OFFSET}
-                  dominantBaseline="hanging"
+                  y={MARGIN.bottom}
+                  dominantBaseline="text-after-edge"
                   textAnchor="middle"
                   className={className}
                 >

@@ -1,0 +1,314 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+/* Geometry here must agree with the constants in SortingTree.tsx:
+ * leaves 168–224 (fit the longest label) / decisions 208 wide, 2px border + 8px/10px padding, 18px head, 6px gap,
+ * 18px marble. Dot size and gap arrive as `--dot` / `--dot-gap` on the stage. */
+
+$ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+$ease-move: cubic-bezier(0.55, 0, 0.25, 1);
+
+.frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: top center;
+}
+
+.links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.link {
+  fill: none;
+  stroke: var(--border-neutral-primary);
+  stroke-width: 2;
+  opacity: 0;
+  transition:
+    opacity 320ms ease,
+    stroke 200ms ease;
+}
+
+.linkOn {
+  opacity: 1;
+}
+
+.linkPath {
+  stroke: var(--border-selected-primary);
+  stroke-width: 3;
+}
+
+.slot {
+  display: contents;
+}
+
+.edgeLabel {
+  @include type-body-4-regular;
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  max-width: 132px;
+  align-items: center;
+  padding: 0 10px;
+  overflow: hidden;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+  box-shadow: inset 0 0 0 1px var(--border-neutral-primary);
+  color: var(--text-neutral-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  opacity: 0;
+  transition:
+    opacity 320ms ease 120ms,
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+.edgeLabelOn {
+  opacity: 1;
+}
+
+.edgeLabelPath {
+  @include type-body-4-semibold;
+  background: var(--background-selected-primary);
+  box-shadow: none;
+  color: var(--text-selected-primary);
+}
+
+.node {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 2px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 320ms ease,
+    transform 320ms $ease-out,
+    border-color 200ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.nodeOn {
+  opacity: 1;
+  transform: none;
+}
+
+.nodePath {
+  border-color: var(--border-selected-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.nodeAnswer {
+  background: var(--background-brand-light);
+}
+
+.head {
+  display: flex;
+  height: 18px;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
+  @include type-body-3-semibold;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  animation: title-in 280ms $ease-out both;
+}
+
+.titleText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titleDot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+}
+
+.count {
+  @include type-body-4-regular;
+  flex-shrink: 0;
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  transition: opacity 240ms ease 400ms;
+}
+
+.countOn {
+  opacity: 1;
+}
+
+.scores {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+  animation: title-in 280ms $ease-out both;
+}
+
+.mark {
+  @include type-label-4;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--shape-round);
+  color: var(--text-neutral-white-fixed);
+  font-variant-numeric: tabular-nums;
+}
+
+.markRight {
+  background: var(--background-success-primary);
+}
+
+.markWrong {
+  background: var(--background-error-primary);
+}
+
+/* Faint footprints of the pile a question split, so the parent still
+   reads as "these went down there". */
+.tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dot-gap);
+}
+
+.ghost {
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: var(--shape-round);
+  opacity: 0;
+  transition: opacity 400ms ease 200ms;
+}
+
+.nodeSorted .ghost {
+  opacity: 0.18;
+}
+
+/* Live dots sit on top of the nodes and glide between trays. */
+.dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: var(--shape-round);
+  background: currentColor;
+  transition:
+    transform 560ms $ease-move,
+    opacity 300ms ease,
+    background-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.dotHidden {
+  opacity: 0;
+}
+
+.dotQuiet {
+  opacity: 0.5;
+}
+
+/* A wrong guess keeps its real color but loses its fill: no extra hue to
+   compete with the label palette. */
+.dotWrong {
+  background: var(--background-neutral-primary);
+  box-shadow: inset 0 0 0 max(1.5px, calc(var(--dot) / 4)) currentColor;
+}
+
+.marble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+}
+
+.marbleBody {
+  @include type-label-4;
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-neutral-white-fixed);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-senary);
+  color: var(--text-neutral-white-fixed);
+  box-shadow: var(--shadow-md);
+  animation: marble-in 320ms $ease-out both;
+}
+
+.marbleRevealed {
+  animation: marble-reveal 420ms $ease-out both;
+}
+
+@keyframes title-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+@keyframes marble-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@keyframes marble-reveal {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.instant *,
+.instant *::before {
+  transition: none !important;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

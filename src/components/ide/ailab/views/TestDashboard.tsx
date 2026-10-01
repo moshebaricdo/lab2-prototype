@@ -39,6 +39,10 @@ import { KnnViz, type KnnView } from "./viz/KnnViz";
 import { ModelActions } from "./ModelActions";
 import type { ModelInspectorTab } from "./ModelInspector";
 import statementStyles from "./PredictionStatement.module.scss";
+import {
+  FEATURE_TAG_COLOR,
+  LABEL_TAG_COLOR,
+} from "./PredictionStatement";
 import styles from "./TestDashboard.module.scss";
 
 function columnName(columns: AiLabColumn[], id: string): string {
@@ -157,7 +161,7 @@ function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
         <Tag
           key={name}
           size="large"
-          color="success"
+          color={FEATURE_TAG_COLOR}
           label={name}
           className={statementStyles.tag}
         />
@@ -167,7 +171,7 @@ function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
           <span className={styles.overflowTagWrap}>
             <Tag
               size="large"
-              color="success"
+              color={FEATURE_TAG_COLOR}
               label={`+${overflowFeatures.length}`}
               className={statementStyles.tag}
             />
@@ -179,7 +183,7 @@ function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
           <span key={name} data-measure="feature">
             <Tag
               size="large"
-              color="success"
+              color={FEATURE_TAG_COLOR}
               label={name}
               className={statementStyles.tag}
             />
@@ -188,7 +192,7 @@ function StatementFeatureTags({ featureNames }: { featureNames: string[] }) {
         <span data-measure="overflow">
           <Tag
             size="large"
-            color="success"
+            color={FEATURE_TAG_COLOR}
             label={`+${Math.max(featureNames.length, 9)}`}
             className={statementStyles.tag}
           />
@@ -430,12 +434,12 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
     <LivePredictionSync lab={lab} prediction={prediction}>
       <section className={styles.root}>
         <header className={styles.metrics}>
-          <p className={styles.statement}>
+          <div className={styles.statement}>
             <span className={styles.statementLeading}>
               <span>Predict</span>
               <Tag
                 size="large"
-                color="brand"
+                color={LABEL_TAG_COLOR}
                 label={columnName(lab.config.dataset.columns, model.labelColumn)}
                 className={statementStyles.tag}
               />
@@ -444,7 +448,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
             {featureNames.length > 0 ? (
               <StatementFeatureTags featureNames={featureNames} />
             ) : null}
-          </p>
+          </div>
           <div className={styles.metricCluster}>
             <p className={styles.metricMeta}>
               <span className={styles.metricDatasetWrap}>

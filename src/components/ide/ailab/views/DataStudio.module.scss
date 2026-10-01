@@ -17,6 +17,11 @@
   grid-template-rows: minmax(0, 1fr) auto;
 }
 
+/* Scale editor needs the sheet and the dock on screen together. */
+.rootWithScale {
+  grid-template-rows: minmax(140px, 1fr) minmax(220px, 42%);
+}
+
 .rootWithAnalysis .stage {
   min-height: 0;
   overflow: hidden;
@@ -50,7 +55,7 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Stage: sheet column + 300px Train rail, with the Column Analysis dock
+ * Stage: sheet column + 280px Train rail, with the Column Analysis dock
  * spanning the full width underneath.
  * ------------------------------------------------------------------------- */
 
@@ -135,7 +140,7 @@
 
 .trainRail {
   display: flex;
-  width: 300px;
+  width: 280px;
   flex-shrink: 0;
   min-height: 0;
   flex-direction: column;
@@ -218,10 +223,12 @@
   }
 }
 
-/* Mini-map of the trained tree above the metrics: the shape the student
- * watched grow in the training modal. Replay lives on the Train card. */
+/* Mini-map of the trained tree above the metrics. When the tree still
+   matches the dropdowns, Replay moves off the Train card onto this play
+   button. */
 .miniMap {
-  height: 100px;
+  position: relative;
+  height: 80px;
   padding: 8px;
   border-bottom: 1px solid var(--border-neutral-primary);
   background: var(--background-neutral-secondary);
@@ -230,6 +237,15 @@
 .miniMapSvg {
   width: 100%;
   height: 100%;
+}
+
+/* Wrapper, not the button: CADS sets position: relative on the button root
+   with enough specificity to ignore a class on the button itself. */
+.miniMapReplay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
 }
 
 .metricRow {
@@ -437,6 +453,25 @@
   opacity: 0;
 }
 
+/* Cards behind the active one are empty shells. An absolute child does not
+   give its slot a height, and the deck aligns slots to the start, so these
+   slots stretch to the featured card. The slot transform then peeks that
+   shell above the card. */
+.deckSlot:has(.deckGhost) {
+  position: relative;
+  align-self: stretch;
+}
+
+.deckGhost {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-lg);
+  background: var(--background-neutral-primary);
+  box-shadow: var(--elevation-sm);
+}
+
 /* The card just flipped past: dealt off the top toward the viewer, ready to
    slide back if the user goes to Previous. */
 .deckSlotDealt {
@@ -453,31 +488,44 @@
 
 .cardFeatured {
   width: 100%;
+
   gap: 16px;
-  padding: 24px 28px 8px;
+  padding: 16px 20px 6px;
   border-radius: var(--shape-lg);
   box-shadow: var(--elevation-sm);
 
   .cardHeading {
-    @include type-heading-h5-semibold;
+    @include type-body-1-semibold;
   }
 
   .cardRow,
   .cardRow + .cardRow {
     margin-top: 0;
     align-items: center;
-    padding: 12px 0;
+    padding: 10px 0;
     border-top: 1px solid var(--border-neutral-primary);
     white-space: normal;
   }
 
   .cardLabel {
-    @include type-label-1;
-    color: var(--text-neutral-secondary);
+    @include type-body-2-regular;
+    color: var(--text-neutral-primary);
+  }
+
+  .cardLabelRole {
+    @include type-body-2-semibold;
+  }
+
+  .cardLabelLabel {
+    color: var(--text-accent-pink-primary);
+  }
+
+  .cardLabelFeature {
+    color: var(--text-info-primary);
   }
 
   .cardValue {
-    @include type-body-1-regular;
+    @include type-body-2-semibold;
     overflow: visible;
     overflow-wrap: anywhere;
     text-overflow: clip;
@@ -577,21 +625,13 @@
 tbody tr:hover .td:not(.tdActive):not(.tdIndex) {
   background: color-mix(
     in srgb,
-    var(--background-neutral-secondary) 55%,
+    var(--background-neutral-secondary) 50%,
     var(--background-neutral-primary)
   );
 }
 
 tbody tr:hover .tdIndex {
   color: var(--text-neutral-primary);
-}
-
-tbody tr:hover .td.tdActive {
-  background: color-mix(
-    in srgb,
-    var(--background-selected-primary) 6%,
-    var(--background-neutral-primary)
-  );
 }
 
 .th {
@@ -601,7 +641,7 @@ tbody tr:hover .td.tdActive {
   z-index: 3;
   border-bottom: 0;
   background: var(--background-neutral-secondary);
-  color: var(--text-neutral-secondary);
+  color: var(--text-neutral-tertiary);
   box-shadow: inset 0 -1px 0 var(--border-neutral-primary);
   backface-visibility: hidden;
 }
@@ -622,7 +662,7 @@ tbody tr:hover .td.tdActive {
 
 .thIndex {
   z-index: 4;
-  color: var(--text-neutral-quaternary);
+  color: var(--text-neutral-tertiary);
   background: var(--background-neutral-secondary);
 }
 
@@ -709,120 +749,124 @@ tbody tr:hover .td.tdActive {
   color: var(--text-selected-primary);
 }
 
-/* Whole-column role tint. Label = brand, features = success — the same
+/* Whole-column role tint. Label = accent pink, features = info — the same
    pairing as the statement Tags, so the sheet is a picture of the sentence.
-   The inspected column's solid selected header still wins; body cells keep
-   this tint and their light role borders when a header is clicked. */
+   Headers use the mid fill; body cells dilute the light fill to 50% and
+   go solid on row hover. The inspected column's selected header still
+   wins; body cells keep this tint. */
 .thLabel:not(.thSelected) {
-  border-right-color: var(--border-brand-light);
-  background: var(--background-brand-light);
-  color: var(--text-brand-primary);
-  box-shadow: inset 0 -1px 0 var(--border-brand-light);
+  border-right-color: var(--border-accent-pink-primary);
+  background: var(--background-accent-pink-mid);
+  color: var(--text-neutral-primary);
+  box-shadow: inset 0 -1px 0 var(--border-accent-pink-primary);
 }
 
 .thLabel:last-child:not(.thSelected) {
-  border-right: 1px solid var(--border-brand-light);
+  border-right: 1px solid var(--border-accent-pink-primary);
 }
 
 .th:not(.thLabel):not(:has(+ .thSelected)):has(+ .thLabel),
 .thIndex:not(:has(+ .thSelected)):has(+ .thLabel) {
-  border-right-color: var(--border-brand-light);
+  border-right-color: var(--border-accent-pink-primary);
 }
 
 .thFeature:not(.thSelected) {
-  border-right-color: var(--border-success-light);
-  background: var(--background-success-light);
-  color: var(--text-success-primary);
-  box-shadow: inset 0 -1px 0 var(--border-success-light);
+  border-right-color: var(--border-info-primary);
+  background: var(--background-info-mid);
+  color: var(--text-neutral-primary);
+  box-shadow: inset 0 -1px 0 var(--border-info-primary);
 }
 
 .thFeature:last-child:not(.thSelected) {
-  border-right: 1px solid var(--border-success-light);
+  border-right: 1px solid var(--border-info-primary);
 }
 
 .th:not(.thFeature):not(:has(+ .thSelected)):has(+ .thFeature),
 .thIndex:not(:has(+ .thSelected)):has(+ .thFeature) {
-  border-right-color: var(--border-success-light);
+  border-right-color: var(--border-info-primary);
 }
 
-.thLabel:not(.thSelected) .thButton,
-.thLabel:not(.thSelected) .thButton:hover {
-  color: var(--text-brand-primary);
-}
-
-.thFeature:not(.thSelected) .thButton,
+.thLabel:not(.thSelected) .thButton:hover,
 .thFeature:not(.thSelected) .thButton:hover {
-  color: var(--text-success-primary);
+  color: var(--text-neutral-secondary);
 }
 
-.tdLabel:not(.tdActive) {
-  border-right-color: var(--border-brand-light);
-  border-bottom-color: var(--border-brand-light);
+.tdLabel {
+  border-right-color: var(--border-accent-pink-light);
+  border-bottom-color: var(--border-accent-pink-light);
   background: color-mix(
     in srgb,
-    var(--background-brand-light) 55%,
+    var(--background-accent-pink-light) 50%,
     var(--background-neutral-primary)
   );
 }
 
-.tdLabel:last-child:not(.tdActive) {
-  border-right: 1px solid var(--border-brand-light);
+.tdLabel:last-child {
+  border-right: 1px solid var(--border-accent-pink-light);
 }
 
 .td:not(.tdLabel):has(+ .tdLabel),
 .tdIndex:has(+ .tdLabel) {
-  border-right-color: var(--border-brand-light);
+  border-right-color: var(--border-accent-pink-light);
 }
 
-.tdFeature:not(.tdActive) {
-  border-right-color: var(--border-success-light);
-  border-bottom-color: var(--border-success-light);
+.tdFeature {
+  border-right-color: var(--border-info-light);
+  border-bottom-color: var(--border-info-light);
   background: color-mix(
     in srgb,
-    var(--background-success-light) 55%,
+    var(--background-info-light) 50%,
     var(--background-neutral-primary)
   );
 }
 
-.tdFeature:last-child:not(.tdActive) {
-  border-right: 1px solid var(--border-success-light);
+.tdFeature:last-child {
+  border-right: 1px solid var(--border-info-light);
 }
 
 .td:not(.tdFeature):has(+ .tdFeature),
 .tdIndex:has(+ .tdFeature) {
-  border-right-color: var(--border-success-light);
+  border-right-color: var(--border-info-light);
 }
 
 tbody tr:hover .td.tdLabel:not(.tdActive) {
-  background: var(--background-brand-light);
+  background: var(--background-accent-pink-light);
 }
 
 tbody tr:hover .td.tdFeature:not(.tdActive) {
-  background: var(--background-success-light);
+  background: var(--background-info-light);
+}
+
+.cardLabelLabel {
+  color: var(--text-accent-pink-primary);
+}
+
+.cardLabelFeature {
+  color: var(--text-info-primary);
 }
 
 /* Inline role mark on card labels (table headers use the full-column tint). */
 .roleDot {
   display: inline-block;
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   flex-shrink: 0;
   border-radius: var(--shape-round);
   background: var(--background-neutral-tertiary);
 }
 
 .roleDotLabel {
-  background: var(--background-brand-primary);
+  background: var(--background-accent-pink-primary);
 }
 
 .roleDotFeature {
-  background: var(--background-success-primary);
+  background: var(--background-info-primary);
 }
 
 .tdSelectedRow {
   background: color-mix(
     in srgb,
-    var(--background-neutral-secondary) 80%,
+    var(--background-neutral-secondary) 50%,
     var(--background-neutral-primary)
   );
 }
@@ -830,8 +874,15 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
 .tdActive {
   position: relative;
   z-index: 1;
-  background: var(--background-neutral-primary);
-  box-shadow: inset 0 0 0 2px var(--border-selected-primary);
+  box-shadow: inset 0 0 0 2px var(--border-brand-primary);
+}
+
+.tdLabel.tdActive {
+  box-shadow: inset 0 0 0 2px var(--border-accent-pink-primary);
+}
+
+.tdFeature.tdActive {
+  box-shadow: inset 0 0 0 2px var(--border-info-primary);
 }
 
 .cellButton {
@@ -923,16 +974,23 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
 }
 
 /* ---------------------------------------------------------------------------
- * Category Analysis dock (full width, fixed 211px per design)
+ * Column analysis dock. The left summary sets the height (the ideal Figma
+ * frame is 186px: heading, one-line description, stat cards). A wrapped
+ * description or the cardinality warning grows that column, and the chart
+ * stretches with it.
  * ------------------------------------------------------------------------- */
 
 .analysisDock {
   display: flex;
-  min-height: 190px;
   flex-shrink: 0;
   flex-direction: column;
   overflow: hidden;
   background: var(--background-neutral-primary);
+}
+
+.rootWithScale .analysisDock {
+  min-height: 0;
+  overflow: auto;
 }
 
 .analysisDock > .analysisHeader {
@@ -942,8 +1000,6 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
 
 .analysisBody {
   display: flex;
-  flex: 1;
-  min-height: 0;
   align-items: stretch;
 }
 
@@ -1001,7 +1057,8 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  padding: 10px 12px 8px 12px;
+  gap: 4px;
+  padding: 10px 10px 8px;
   overflow: hidden;
   border-radius: var(--shape-sm);
   background: var(--background-neutral-secondary);
@@ -1012,7 +1069,7 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
   }
 
   dd {
-    @include type-body-1-semibold;
+    @include type-body-2-semibold;
     margin: 0;
     overflow: hidden;
     color: var(--text-neutral-primary);
@@ -1022,10 +1079,51 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
   }
 }
 
+/* CADS Alert is full width. Padding lives on the wrapper so that 100%
+   width stays inside the summary instead of adding to the side margins. */
+.analysisAlert {
+  min-width: 0;
+  padding: 0 10px 10px;
+}
+
 .analysisDistribution {
   gap: 6px;
   min-height: 0;
   padding: 10px;
+}
+
+.distributionEmpty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 16px;
+  text-align: center;
+}
+
+.distributionEmptyIcon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 6px;
+  place-items: center;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-septenary);
+  color: var(--text-neutral-primary-inverse);
+}
+
+.distributionEmptyTitle {
+  @include type-body-3-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.distributionEmptyCopy {
+  @include type-body-4-regular;
+  margin: 0;
+  color: var(--text-neutral-secondary);
 }
 
 .distributionLabel {
@@ -1076,9 +1174,9 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
   min-width: 112px;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 6px 12px 6px 9px;
   border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-md);
+  border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
   box-shadow: var(--elevation-sm);
   animation: chart-tooltip-fade-in 120ms ease-out;
@@ -1098,10 +1196,10 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
 }
 
 .chartTooltipSwatch {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   flex-shrink: 0;
-  border-radius: var(--shape-xs);
+  border-radius: 2px;
 }
 
 .chartTooltipLabel {
@@ -1109,7 +1207,7 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
   min-width: 0;
   flex: 1;
   overflow: hidden;
-  color: var(--text-neutral-secondary);
+  color: var(--text-neutral-primary);
   text-overflow: ellipsis;
 }
 

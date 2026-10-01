@@ -6,8 +6,21 @@
   gap: 12px;
 }
 
+/* Cancels the CADS Modal body's 24px padding so the content meets the
+   header and footer dividers. */
+.bodyFlush {
+  gap: 0;
+  margin: -24px;
+}
+
+.statementRow {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
 .status {
   @include type-body-3-regular;
+  min-height: 1lh;
   margin: 0;
   color: var(--text-neutral-tertiary);
 }

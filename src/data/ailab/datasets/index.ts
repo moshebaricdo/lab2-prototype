@@ -32,7 +32,7 @@ const overrides: Record<
   bird_mammal_or_fish: {
     name: "Bird, mammal, or fish",
     description:
-      "24 animals. Predict Type from yes/no traits. Do not auto-pretrain without a feature list — Animal would become a name lookup.",
+      "52 animals. Predict Type from yes/no traits. Animal has more than 50 values, so it cannot be a feature.",
     labelColumn: "Type",
     columnDescriptions: {
       animal: "Name of each animal.",
@@ -46,7 +46,7 @@ const overrides: Record<
       whatIsARow:
         "Each row is one animal. The columns are things we know about it: whether it has feathers, breathes with lungs, or lives in water.",
       source:
-        "A class made this sheet by looking up 24 animals in a field guide and writing down yes or no for each trait.",
+        "A class made this sheet by looking up 52 animals in a field guide and writing down yes or no for each trait.",
       question: "Given an animal's traits, is it a bird, a mammal, or a fish?",
       whyItMatters:
         "Scientists sort living things into groups by their traits. A model that learns the pattern can sort an animal it has never seen.",

@@ -10,6 +10,20 @@ export type AiLabCardLayout = "catalog" | "carousel";
 
 export type AiLabCellValue = string | number;
 
+/**
+ * Student-authored names for a numeric column. The source numbers stay;
+ * this becomes its own categorical column (`id`) the model can use.
+ * Two cuts make three buckets: below the first, between them, above the second.
+ */
+export interface AiLabScale {
+  id: string;
+  sourceColumnId: string;
+  name: string;
+  /** Ascending boundaries. `labels.length` is `cuts.length + 1`. */
+  cuts: number[];
+  labels: string[];
+}
+
 export type AiLabDataRow = Record<string, AiLabCellValue>;
 
 export interface AiLabColumn {
@@ -199,6 +213,9 @@ export interface AiLabSavedModel {
  */
 export type AiLabTestLayout = "dock" | "canvas";
 
+/** Training modal playback: grow the tree, or walk the rows through it. */
+export type AiLabTrainingAnimation = "tree" | "rows";
+
 export interface AiLabLevelConfig {
   dataset: AiLabDataset;
   testLayout?: AiLabTestLayout;
@@ -261,10 +278,23 @@ export interface AiLabLevelConfig {
    * the inline Results card only. KNN never opens the modal.
    */
   trainingModal?: boolean;
+  /**
+   * What the training modal plays. `tree` (default) grows the finished tree
+   * depth by depth. `rows` is the legacy-inspired sort and quiz: every row
+   * is a dot sorted into piles by the tree's questions (Training), then a
+   * few rows roll down the tree with the label hidden and get guessed
+   * (Testing) before the score. Experiment flag (dev panel).
+   */
+  trainingAnimation?: AiLabTrainingAnimation;
   /** Feature columns hidden from the Train rail checklist. */
   excludedFeatureColumns?: string[];
   /** When set, only categorical columns can be the label. */
   classificationOnly?: boolean;
+  /**
+   * Numeric columns can be grouped into a named scale (COLD / WARM / HOT).
+   * Off everywhere except the scale demo.
+   */
+  allowScaleColumns?: boolean;
   /** Guided studio: train on the dataset surface instead of a Train tab. */
   trainAsOverlay?: boolean;
   defaultKnnK?: number;

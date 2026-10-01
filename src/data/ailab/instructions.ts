@@ -28,6 +28,20 @@ export const aiLabSectionInstructions: Record<AiLabSection, string> = {
   ].join("\n\n"),
 };
 
+export const aiLabScaleInstructions: Record<"dataset" | "test", string> = {
+  dataset: [
+    "# Group a number",
+    "Each **row** is one afternoon. **Temperature** is a number. **Went outside** is yes or no — that column is already chosen.",
+    "The dock under the sheet groups Temperature into names. Drag the lines (or keep **below 60** as COLD and **above 100** as HOT), then **Add column**. The numbers stay. The new column is a choice you made.",
+    "Under **Using**, pick **Temperature (scale)**. **Train model**. The tree asks your names. Try Temperature the number instead, and see how the questions change.",
+  ].join("\n\n"),
+  test: [
+    "# Test the names",
+    "Fill the inputs or click **Random**. If the model used your scale, it asks COLD, WARM, or HOT — not a cutoff it invented.",
+    "Those names were yours. The afternoons did not change.",
+  ].join("\n\n"),
+};
+
 export const aiLabP0Instructions: Record<"dataset" | "test", string> = {
   dataset: [
     "# Train a model",
@@ -133,7 +147,7 @@ export const aiLabPlaytestV2LookInstructions = [
   "# Meet the Data",
   "AI models learn from **data**. Before you see all of it, try what the model will do: look at one animal's clues and guess its **Type**.",
   "Each card is one **row** — one animal. Each line on the card is a **column** — one thing we know about it.",
-  "**Then:** open the data to see all 24 animals at once. Try **Table** to see every row in a grid, and click a column header to see how its values are spread.",
+  "**Then:** open the data to see all 52 animals at once. Try **Table** to see every row in a grid, and click a column header to see how its values are spread.",
 ].join("\n\n");
 
 export const aiLabPlaytestV2TryInstructions = [

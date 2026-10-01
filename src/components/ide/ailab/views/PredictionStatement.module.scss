@@ -1,7 +1,7 @@
 @use "../../../../styles/_mixins.scss" as *;
 
 .root {
-  @include type-label-2;
+  @include type-label-3;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -12,6 +12,7 @@
 }
 
 .rootLarge {
+  @include type-label-2;
   row-gap: 6px;
   column-gap: 8px;
 }
@@ -20,12 +21,18 @@
   flex-shrink: 0;
 }
 
-/* Same chip as the Testing strip: CADS large Tag (body-sm / 14px) pinned
-   to 24px so the label matches the sentence and the chip stays compact. */
+/* Train rail uses the CADS small Tag (20px) at its natural size. The modal
+   and the Testing strip pin a larger chip to 24px. */
 .tag {
   height: 24px;
   min-height: 24px;
   box-sizing: border-box;
+}
+
+/* CADS small Tag type is 10px. The dataset mocks override the label to 12px
+   so it matches the label-3 sentence. */
+.tagSmall[data-cads-component="Tag"] {
+  @include type-label-3;
 }
 
 /* Same Tag geometry (`--shape-sm`, not a capsule). Waiting fill + stroke. */

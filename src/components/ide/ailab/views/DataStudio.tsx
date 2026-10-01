@@ -9,20 +9,22 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Alert,
   Button,
   Dropdown,
   SegmentedButton,
   TablePagination,
   Tooltip,
 } from "@moshebari/cads-react";
+import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import { useChecklistMenuWidth } from "../../../../hooks/useChecklistMenuWidth";
 import {
-  capDistribution,
   formatCell,
   formatNumber,
   frequencies,
   histogramBins,
+  MAX_CATEGORY_VALUES,
   numericalStats,
   uniqueValues,
 } from "../../../../lib/aiLab";
@@ -32,6 +34,7 @@ import { ColumnDistributionChart } from "./ColumnDistributionChart";
 import { DataSpreadsheet } from "./DataSpreadsheet";
 import { ModelActions } from "./ModelActions";
 import type { ModelInspectorTab } from "./ModelInspector";
+import { ScaleGroupEditor } from "./ScaleGroupEditor";
 import { DatasetStoryModal } from "./DatasetStoryModal";
 import { IntroActivity } from "./IntroActivity";
 import { PredictionStatement } from "./PredictionStatement";
@@ -80,11 +83,21 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
   const inIntro = !lab.needsDataset && !lab.introComplete;
   const showAnalysis =
     !lab.needsDataset && !inIntro && lab.dataView === "table" && Boolean(selected);
+  const showScaleDock =
+    showAnalysis &&
+    selected?.type === "numerical" &&
+    Boolean(lab.config.allowScaleColumns);
   const showTrain = !lab.config.hideTrainTab && !lab.needsDataset && !inIntro;
 
   return (
     <section
-      className={`${styles.root} ${showAnalysis ? styles.rootWithAnalysis : ""}`}
+      className={[
+        styles.root,
+        showAnalysis ? styles.rootWithAnalysis : "",
+        showScaleDock ? styles.rootWithScale : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <div className={styles.stage}>
         <div className={styles.sheetColumn}>
@@ -370,17 +383,19 @@ function TrainRail({
               features={lab.selectedFeatures}
             />
           </div>
-          <div className={styles.cardFooter}>
-            {/* Only explain *why* it is disabled; an always-on tooltip would
-                sit over the Results card right after a click. */}
-            {lab.trainBlockedReason ? (
-              <Tooltip title={lab.trainBlockedReason} placement="top">
+          {canReplay ? null : (
+            <div className={styles.cardFooter}>
+              {/* Only explain *why* it is disabled; an always-on tooltip would
+                  sit over the Results card right after a click. */}
+              {lab.trainBlockedReason ? (
+                <Tooltip title={lab.trainBlockedReason} placement="top">
+                  <span className={styles.fullWidthButton}>{trainButton}</span>
+                </Tooltip>
+              ) : (
                 <span className={styles.fullWidthButton}>{trainButton}</span>
-              </Tooltip>
-            ) : (
-              <span className={styles.fullWidthButton}>{trainButton}</span>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </section>
 
         {model ? (
@@ -392,22 +407,35 @@ function TrainRail({
                   labels={uniqueValues(lab.rows, model.labelColumn)}
                   className={styles.miniMapSvg}
                 />
+                {canReplay ? (
+                  <div className={styles.miniMapReplay}>
+                    <Button
+                      size="extraSmall"
+                      variant="outlined"
+                      color="secondary"
+                      iconOnly
+                      startIconName="play"
+                      aria-label="Replay training"
+                      onClick={() => setTrainingOpen(true)}
+                    />
+                  </div>
+                ) : null}
               </div>
             ) : null}
             <div className={styles.metricRow}>
               <div className={`${styles.metric} ${styles.metricDivider}`}>
-                <span className={styles.metricLabel}>Accuracy</span>
                 <span
                   className={`${styles.metricValue} ${styles.metricValueSuccess}`}
                 >
                   {accuracy}%
                 </span>
+                <span className={styles.metricLabel}>Accuracy</span>
               </div>
               <div className={styles.metric}>
-                <span className={styles.metricLabel}>Number correct</span>
                 <span className={styles.metricValue}>
                   {correct}/{model.holdoutResults.length}
                 </span>
+                <span className={styles.metricLabel}>Number correct</span>
               </div>
             </div>
             {showResultsFooter ? (
@@ -648,15 +676,19 @@ function CardCarousel({ lab }: { lab: AiLabController }) {
                   style={{ "--deck-depth": Math.max(0, depth) } as CSSProperties}
                   aria-hidden={depth !== 0}
                 >
-                  <RowCard
-                    index={rowIndex}
-                    row={row}
-                    columns={lab.config.dataset.columns}
-                    labelColumnId={lab.labelColumn}
-                    featureColumnIds={lab.selectedFeatures}
-                    titleColumnId={lab.config.cardTitleColumn}
-                    featured
-                  />
+                  {depth > 0 ? (
+                    <div className={styles.deckGhost} />
+                  ) : (
+                    <RowCard
+                      index={rowIndex}
+                      row={row}
+                      columns={lab.config.dataset.columns}
+                      labelColumnId={lab.labelColumn}
+                      featureColumnIds={lab.selectedFeatures}
+                      titleColumnId={lab.config.cardTitleColumn}
+                      featured
+                    />
+                  )}
                 </div>
               );
             })}
@@ -772,7 +804,16 @@ const RowCard = memo(function RowCard({
           const isFeature = featureColumnIds?.includes(column.id);
           return (
             <div key={column.id} className={styles.cardRow}>
-              <dt className={styles.cardLabel}>
+              <dt
+                className={[
+                  styles.cardLabel,
+                  isLabel || isFeature ? styles.cardLabelRole : "",
+                  isLabel ? styles.cardLabelLabel : "",
+                  isFeature ? styles.cardLabelFeature : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
                 {column.name}
                 {isLabel || isFeature ? (
                   <span
@@ -810,7 +851,7 @@ function columnStatCards(
       typeCard,
       { label: "Minimum", value: formatNumber(numeric.min) },
       { label: "Maximum", value: formatNumber(numeric.max) },
-      { label: "Median", value: formatNumber(numeric.median) },
+      { label: "Range", value: formatNumber(numeric.range) },
     ];
   }
 
@@ -821,19 +862,22 @@ function columnStatCards(
     freq.every((entry) => entry.count === 1);
 
   if (allUnique || categoryCount === 1) {
-    return [typeCard, { label: "Categories", value: String(categoryCount) }];
+    return [typeCard, { label: "Values", value: String(categoryCount) }];
   }
 
   return [
     typeCard,
-    { label: "Categories", value: String(categoryCount) },
-    { label: "Most common", value: freq[0]?.value ?? "—" },
+    { label: "Values", value: String(categoryCount) },
+    { label: "Most Common", value: freq[0]?.value ?? "—" },
     {
-      label: "Least common",
+      label: "Least Common",
       value: freq[categoryCount - 1]?.value ?? "—",
     },
   ];
 }
+
+/** Categorical distributions only draw when every value fits on its own bar. */
+const CATEGORY_CHART_MAX = 5;
 
 function ColumnAnalysis({
   lab,
@@ -849,15 +893,17 @@ function ColumnAnalysis({
   const categorical = column.type === "categorical";
   const freq = categorical ? frequencies(rows, column.id) : [];
   const numeric = categorical ? null : numericalStats(rows, column.id);
-  // Both branches stay within five rows: categories show the top four plus
-  // an "Other" bucket, and the histogram flexes its bin width to fit.
+  const categoryCount = freq.length;
+  const chartCategories =
+    categorical && categoryCount > 0 && categoryCount <= CATEGORY_CHART_MAX;
+  const tooManyCategories = categorical && categoryCount > CATEGORY_CHART_MAX;
+  const blockedCategory = categorical && categoryCount > MAX_CATEGORY_VALUES;
+  // Categorical charts list every value (five or fewer). Numerical columns
+  // keep a histogram even though the mocks leave that pane empty.
   const distribution: { label: string; count: number; isOther?: boolean }[] =
-    categorical
-      ? capDistribution(
-          freq.map((entry) => ({ label: entry.value, count: entry.count })),
-          4,
-        )
-      : numeric
+    chartCategories
+      ? freq.map((entry) => ({ label: entry.value, count: entry.count }))
+      : !categorical && numeric
         ? histogramBins(numeric.values, 5)
         : [];
   const distributionSummary = distribution
@@ -866,6 +912,9 @@ function ColumnAnalysis({
 
   const stats = columnStatCards(column, freq, rows.length, numeric);
   const compactStats = stats.length <= 2;
+  const showScale = Boolean(lab.config.allowScaleColumns && numeric);
+  const showChart = !showScale && distribution.length > 0;
+  const showEmpty = !showScale && tooManyCategories;
 
   return (
     <section
@@ -906,22 +955,56 @@ function ColumnAnalysis({
             {stats.map((stat) => (
               <div key={stat.label} className={styles.statCard}>
                 <dt>{stat.label}</dt>
-                <dd>{stat.value}</dd>
+                <dd title={stat.value}>{stat.value}</dd>
               </div>
             ))}
           </dl>
+          {blockedCategory ? (
+            <div className={styles.analysisAlert}>
+              <Alert sentiment="warning" size="extraSmall">
+                {`Categorical columns with more than ${MAX_CATEGORY_VALUES} unique values cannot be selected as the label or a feature.`}
+              </Alert>
+            </div>
+          ) : null}
         </div>
-        <div className={styles.analysisDistribution}>
-          <p className={styles.distributionLabel}>Distribution</p>
-          <ColumnDistributionChart
-            data={distribution}
-            labelOrder={
-              categorical ? uniqueValues(rows, column.id) : undefined
-            }
-            ariaLabel={`Distribution: ${distributionSummary}`}
-          />
-        </div>
+        {showChart || showEmpty ? (
+          <div className={styles.analysisDistribution}>
+            {showChart ? (
+              <>
+                <p className={styles.distributionLabel}>Distribution</p>
+                <ColumnDistributionChart
+                  data={distribution}
+                  labelOrder={
+                    categorical ? uniqueValues(rows, column.id) : undefined
+                  }
+                  ariaLabel={`Distribution: ${distributionSummary}`}
+                />
+              </>
+            ) : (
+              <div className={styles.distributionEmpty}>
+                <span className={styles.distributionEmptyIcon} aria-hidden>
+                  <FaIcon name="chart-simple" family="solid" size="s" />
+                </span>
+                <p className={styles.distributionEmptyTitle}>Too many values</p>
+                <p className={styles.distributionEmptyCopy}>
+                  {`A graph is shown when there are ${CATEGORY_CHART_MAX} or fewer values.`}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
+      {showScale && numeric ? (
+        <ScaleGroupEditor
+          column={column}
+          rows={rows}
+          min={numeric.min}
+          max={numeric.max}
+          existing={lab.scales.find((scale) => scale.sourceColumnId === column.id)}
+          onSave={lab.saveScale}
+          onRemove={lab.removeScale}
+        />
+      ) : null}
     </section>
   );
 }

@@ -8,9 +8,10 @@ import {
 } from "./index";
 
 describe("AI Lab playtest sheet", () => {
-  it("has 24 rows and mixed water animals", () => {
+  it("has 52 rows and mixed water animals", () => {
     const { rows } = aiLabPlaytestDataset;
-    expect(rows).toHaveLength(24);
+    expect(rows).toHaveLength(52);
+    expect(new Set(rows.map((row) => row.animal)).size).toBe(52);
 
     const birds = rows.filter((row) => row.type === "Bird");
     const fish = rows.filter((row) => row.type === "Fish");
@@ -34,7 +35,11 @@ describe("AI Lab playtest sheet", () => {
     );
 
     const auto = pretrainedFromDataset(aiLabPlaytestDataset, "decisionTree");
-    expect(auto.selectedFeatures).toContain("animal");
+    expect(auto.selectedFeatures).toEqual([
+      "has_feathers",
+      "breathes_with_lungs",
+      "lives_in_water",
+    ]);
     expect(aiLabPlaytestTryConfig.pretrained?.selectedFeatures).not.toContain(
       "animal",
     );
