@@ -207,9 +207,29 @@ export interface AiLabSavedModel {
   model: AiLabTrainedModel;
 }
 
+/** One successful `train()` in the session. Stored oldest-first; the Results modal lists newest first. */
+export interface AiLabTrainingRun {
+  id: string;
+  labelColumn: string;
+  selectedFeatures: string[];
+  /** Same 0–1 fraction the trained model stores. */
+  accuracy: number;
+  createdAt: number;
+}
+
 /**
- * Testing chrome. `canvas` is canonical (Result card + Replay over a
- * full-bleed viz). `dock` remains as pullback for the Input → Output footer.
+ * Inputs the canvas Testing layout last pressed Predict on.
+ * Draft fields can change afterward without clearing this snapshot.
+ */
+export interface AiLabShownTest {
+  values: AiLabDataRow;
+  rowIndex: number | undefined;
+  committedAt: number;
+}
+
+/**
+ * Testing chrome. `canvas` is the statement bar plus a right-hand prediction
+ * rail. `dock` remains as pullback for the Input → Output footer.
  */
 export type AiLabTestLayout = "dock" | "canvas";
 

@@ -23,7 +23,7 @@ import { DistributionBar, LabelSwatch, describeCounts } from "./LabelMarks";
 import { labelFill, labelIndexer } from "./labelPalette";
 import { NavigatorCard } from "./NavigatorCard";
 import { type TraceStep } from "./TraceBar";
-import { useStepPlayback } from "./useStepPlayback";
+import { useStepPlayback, type StepPlayback } from "./useStepPlayback";
 import {
   elbowPath,
   elbowPathVertical,
@@ -47,6 +47,13 @@ export type TreeView = "diagram" | "rules";
 /** A split this wide (or wider) bundles same-prediction leaves when the flag is on. */
 const BUNDLE_MIN_BRANCHES = 7;
 
+/**
+ * Rows-modal pills carry a disagree badge beside the row count; the extra
+ * width keeps a label like "Mammal" from truncating. Nothing grows in place
+ * in this mode, so no detail card needs to share the width.
+ */
+const MODAL_NODE_WIDTH = 224;
+
 interface DecisionTreeVizProps {
   root: AiLabTreeNode;
   columns: AiLabColumn[];
@@ -68,8 +75,33 @@ interface DecisionTreeVizProps {
   autoPlay?: boolean;
   /** Fires as the walk starts / ends so the dashboard can hold new inputs until it is over. */
   onPlayingChange?: (playing: boolean) => void;
-  /** Ground truth for the traced example, when it came from a real row. */
-  actual?: { value: string; correct: boolean };
+  /**
+   * Canvas testing rail lives beside the viz. Hide the floating cards, keep
+   * the tree vertical, and follow the dashboard's step index and playback.
+   */
+  externalRail?: boolean;
+  /**
+   * Pixels the floating prediction rail covers on the right. Fit and
+   * follow-pan stay in the open strip; the canvas is not clipped.
+   */
+  frameInsetRight?: number;
+  controlledStep?: number;
+  onControlledStep?: (index: number) => void;
+  controlledPlayback?: StepPlayback;
+  /**
+   * Rows-modal experiment: a node click calls this instead of growing the
+   * node in place, nothing auto-opens, and mixed leaves carry a disagree
+   * count. Bundles still unfold on click.
+   */
+  onOpenNode?: (key: string) => void;
+  /** Node whose modal is open; drawn selected while it is. */
+  openedKey?: string;
+}
+
+/** Rows that reached a leaf but carry a different label than it predicts. */
+function disagreeCount(node: AiLabTreeNode): number {
+  if (node.type !== "leaf") return 0;
+  return node.sampleCount - (node.labelCounts[node.prediction] ?? 0);
 }
 
 /** `X is V → branch`, or just `X is V` when the branch *is* the value. */
@@ -197,9 +229,17 @@ export function DecisionTreeViz({
   bundleWideSplits = false,
   autoPlay = false,
   onPlayingChange,
-  actual,
+  externalRail = false,
+  frameInsetRight = 0,
+  controlledStep,
+  onControlledStep,
+  controlledPlayback,
+  onOpenNode,
+  openedKey,
 }: DecisionTreeVizProps) {
-  const [stepIndex, setStepIndex] = useState(0);
+  const modalDetail = onOpenNode != null;
+  const [internalStep, setInternalStep] = useState(0);
+  const stepIndex = controlledStep ?? internalStep;
   const [selectedKey, setSelectedKey] = useState<string | undefined>(undefined);
   /**
    * The root and the answer leaf open themselves once the trace reaches
@@ -254,26 +294,36 @@ export function DecisionTreeViz({
 
   const onStep = useCallback((index: number) => {
     setSelectedKey(undefined);
-    setStepIndex(index);
-  }, []);
-  const playback = useStepPlayback(steps.length, onStep);
+    if (onControlledStep) onControlledStep(index);
+    else setInternalStep(index);
+  }, [onControlledStep]);
+  const internalPlayback = useStepPlayback(steps.length, onStep);
+  const playback = controlledPlayback ?? internalPlayback;
   const { playing, play: startPlayback } = playback;
+  const playbackIsExternal = controlledPlayback != null;
   useEffect(() => {
     onPlayingChange?.(playing);
   }, [onPlayingChange, playing]);
 
   // New prediction: drop any node selection so the path is what the student
   // sees, then either walk it from the root (auto-play) or land on the answer.
+  // The canvas rail owns that timer itself.
   const traceKey = trace?.pathKeys.join(">") ?? "";
   useEffect(() => {
     setSelectedKey(undefined);
     setDismissedPins(new Set());
+    if (playbackIsExternal) return;
     if (autoPlay && steps.length >= 2) {
       startPlayback({ reducedMotion: "end" });
     } else {
-      setStepIndex(Math.max(0, steps.length - 1));
+      setInternalStep(Math.max(0, steps.length - 1));
     }
-  }, [autoPlay, startPlayback, steps.length, traceKey]);
+  }, [autoPlay, playbackIsExternal, startPlayback, steps.length, traceKey]);
+
+  useEffect(() => {
+    if (!playbackIsExternal) return;
+    setSelectedKey(undefined);
+  }, [controlledStep, playbackIsExternal]);
 
   const clampedStep = Math.min(stepIndex, Math.max(0, steps.length - 1));
   const revealedPath = useMemo(
@@ -290,10 +340,12 @@ export function DecisionTreeViz({
   // two nodes a first-time reader needs to see in full.
   const isPinnedOpen = useCallback(
     (key: string) =>
+      !externalRail &&
+      !modalDetail &&
       (key === rootKey || key === finalLeafKey) &&
       revealedSet.has(key) &&
       !dismissedPins.has(key),
-    [dismissedPins, finalLeafKey, revealedSet, rootKey],
+    [dismissedPins, externalRail, finalLeafKey, modalDetail, revealedSet, rootKey],
   );
 
   // Content follows the path: only nodes your example passed through earn
@@ -303,14 +355,15 @@ export function DecisionTreeViz({
     (key: string): NodeSize =>
       key === selectedKey || isPinnedOpen(key)
         ? "detail"
-        : revealedSet.has(key)
+        : revealedSet.has(key) && !externalRail
           ? "card"
           : "pill",
-    [isPinnedOpen, revealedSet, selectedKey],
+    [externalRail, isPinnedOpen, revealedSet, selectedKey],
   );
   // Canvas mode reads top→bottom so the tree grows away from the right-hand
   // cards instead of under them.
-  const orientation: TreeOrientation = canvasChrome ? "vertical" : "horizontal";
+  const orientation: TreeOrientation =
+    canvasChrome || externalRail ? "vertical" : "horizontal";
   // The whole traced path (not just the revealed prefix) opens its bundle, so
   // stepping never reflows the group mid-trace.
   const pathKeysText = trace?.pathKeys.join("|") ?? "";
@@ -333,8 +386,10 @@ export function DecisionTreeViz({
             labels,
             bundle?.members.map((member) => member.branchLabel) ?? [],
           )
-        : NODE_SIZES[size],
-    [labels],
+        : modalDetail
+          ? { ...NODE_SIZES[size], width: MODAL_NODE_WIDTH }
+          : NODE_SIZES[size],
+    [labels, modalDetail],
   );
   const layout = useMemo(
     () => layoutTree(root, sizeOf, orientation, bundling, measure),
@@ -342,6 +397,10 @@ export function DecisionTreeViz({
   );
 
   const onSelect = (key: string | undefined) => {
+    if (onOpenNode) {
+      if (key) onOpenNode(key);
+      return;
+    }
     if (key && isPinnedOpen(key)) {
       setDismissedPins((current) => new Set(current).add(key));
       return;
@@ -369,7 +428,9 @@ export function DecisionTreeViz({
       title="Decision tree"
       ariaLabel="Decision tree visualization"
     >
-      <div className={styles.stageWrap}>
+      <div
+        className={`${styles.stageWrap} ${externalRail ? styles.railMode : ""}`}
+      >
         {view === "diagram" ? (
           <TreeDiagram
             root={root}
@@ -380,19 +441,15 @@ export function DecisionTreeViz({
             revealed={revealedSet}
             currentKey={currentKey}
             nextKey={nextKey}
-            selectedKey={selectedKey}
+            selectedKey={modalDetail ? openedKey : selectedKey}
+            showDisagree={modalDetail}
             traceKey={pathKeysText}
-            verdictKey={
-              actual && finalLeafKey && revealedSet.has(finalLeafKey)
-                ? finalLeafKey
-                : undefined
-            }
-            verdictCorrect={actual?.correct ?? false}
             onSelect={onSelect}
             onToggleBundle={onToggleBundle}
             onCanvasClick={onCanvasClick}
             orientation={orientation}
-            besideCards={Boolean(canvasChrome)}
+            besideCards={Boolean(canvasChrome) && !externalRail}
+            frameInsetRight={frameInsetRight}
           />
         ) : (
           <TreeRules
@@ -404,7 +461,7 @@ export function DecisionTreeViz({
             besideCards={false}
           />
         )}
-        {canvasChrome ? (
+        {externalRail ? null : canvasChrome ? (
           <CanvasCards
             steps={steps}
             index={clampedStep}
@@ -609,17 +666,18 @@ interface TreeDiagramProps {
   currentKey: string | undefined;
   nextKey: string | undefined;
   selectedKey: string | undefined;
+  /** Mark mixed leaves with how many of their rows disagree. */
+  showDisagree: boolean;
   /** Identity of the current prediction's path; a change recenters the canvas. */
   traceKey: string;
-  /** The revealed answer leaf, when the example came from a real row. */
-  verdictKey?: string;
-  verdictCorrect: boolean;
   onSelect: (key: string | undefined) => void;
   onToggleBundle: (key: string) => void;
   onCanvasClick: () => void;
   orientation: TreeOrientation;
   /** Canvas layout: keep the stage's resting spot clear of the right-hand cards. */
   besideCards: boolean;
+  /** Extra right inset when the dashboard's rail floats over this frame. */
+  frameInsetRight: number;
 }
 
 function TreeDiagram({
@@ -632,14 +690,14 @@ function TreeDiagram({
   currentKey,
   nextKey,
   selectedKey,
+  showDisagree,
   traceKey,
-  verdictKey,
-  verdictCorrect,
   onSelect,
   onToggleBundle,
   onCanvasClick,
   orientation,
   besideCards,
+  frameInsetRight,
 }: TreeDiagramProps) {
   const vertical = orientation === "vertical";
   const { ref: frameRef, size } = useElementSize<HTMLDivElement>();
@@ -666,10 +724,11 @@ function TreeDiagram({
     () => ({
       width: size.width,
       height: size.height,
-      // The floating cards cover the right strip of the frame in canvas mode.
-      insetRight: besideCards ? CARD_INSET : 0,
+      // Floating cards cover the right strip. Fit stays clear of them; the
+      // frame itself is not clipped, so a pan can still run underneath.
+      insetRight: besideCards ? CARD_INSET : frameInsetRight,
     }),
-    [besideCards, size.height, size.width],
+    [besideCards, frameInsetRight, size.height, size.width],
   );
   const measured = view.width > 0 && view.height > 0;
 
@@ -1088,17 +1147,12 @@ function TreeDiagram({
               indexOf={indexOf}
               isFocused={laid.key === focusedKey}
               isSelected={laid.key === selectedKey}
+              disagree={showDisagree ? disagreeCount(laid.node) : 0}
+              opensModal={showDisagree && !laid.bundle}
               onFocus={() => setFocusedKey(laid.key)}
               onActivate={() => activate(laid)}
               onPath={revealed.has(laid.key)}
               isCurrent={laid.key === currentKey}
-              verdict={
-                laid.key === verdictKey
-                  ? verdictCorrect
-                    ? "correct"
-                    : "wrong"
-                  : undefined
-              }
               registerRef={(element) => {
                 if (element) nodeRefs.current.set(laid.key, element);
                 else nodeRefs.current.delete(laid.key);
@@ -1176,12 +1230,14 @@ interface DiagramNodeProps {
   indexOf: (label: string) => number;
   isFocused: boolean;
   isSelected: boolean;
+  /** Rows on this leaf whose label is not its prediction; 0 hides the badge. */
+  disagree: number;
+  /** Activating opens the rows modal rather than growing the node. */
+  opensModal: boolean;
   onFocus: () => void;
   onActivate: () => void;
   onPath: boolean;
   isCurrent: boolean;
-  /** Real-row example: did this leaf's prediction match the row's label? */
-  verdict?: "correct" | "wrong";
   registerRef: (element: HTMLDivElement | null) => void;
   style: CSSProperties;
 }
@@ -1193,11 +1249,12 @@ function DiagramNode({
   indexOf,
   isFocused,
   isSelected,
+  disagree,
+  opensModal,
   onFocus,
   onActivate,
   onPath,
   isCurrent,
-  verdict,
   registerRef,
   style,
 }: DiagramNodeProps) {
@@ -1217,17 +1274,19 @@ function DiagramNode({
         ? `Question: ${title}`
         : `Prediction: ${title}.`,
     `${rowsText(node.sampleCount)}, ${countsText}.`,
+    disagree > 0
+      ? `${disagree} ${disagree === 1 ? "row is" : "rows are"} not ${title}.`
+      : "",
     isCurrent
       ? "Current step."
       : onPath
         ? "On your example's path."
         : "",
-    verdict === "correct"
-      ? "Correct for this row."
-      : verdict === "wrong"
-        ? "Wrong for this row."
+    bundle
+      ? "Press Enter to open the branches."
+      : opensModal
+        ? "Press Enter to see its rows."
         : "",
-    bundle ? "Press Enter to open the branches." : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -1244,6 +1303,7 @@ function DiagramNode({
       aria-current={isCurrent ? "step" : undefined}
       aria-selected={isSelected || undefined}
       aria-expanded={bundle ? false : undefined}
+      aria-haspopup={opensModal ? "dialog" : undefined}
       className={[
         styles.node,
         isCard ? styles.nodeCard : isDetail ? styles.nodeDetail : styles.nodePill,
@@ -1273,21 +1333,16 @@ function DiagramNode({
               ×{memberNames.length}
             </span>
           ) : null}
-          {verdict ? (
-            <span
-              className={`${styles.verdictBadge} ${
-                verdict === "correct" ? styles.verdictCorrect : styles.verdictWrong
-              }`}
-              aria-hidden
-            >
-              <FaIcon
-                name={verdict === "correct" ? "check" : "xmark"}
-                fontSize="10px"
-              />
+        </p>
+        <span className={styles.nodeMeta}>
+          {disagree > 0 ? (
+            <span className={styles.disagreeBadge} aria-hidden>
+              <FaIcon name="xmark" fontSize="10px" />
+              {disagree}
             </span>
           ) : null}
-        </p>
-        <span className={styles.nodeRows}>{rowsText(node.sampleCount)}</span>
+          <span className={styles.nodeRows}>{rowsText(node.sampleCount)}</span>
+        </span>
       </div>
       {isCard ? (
         <DistributionBar

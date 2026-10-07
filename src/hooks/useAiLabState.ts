@@ -20,7 +20,9 @@ import type {
   AiLabSavedModel,
   AiLabScale,
   AiLabSection,
+  AiLabShownTest,
   AiLabTrainedModel,
+  AiLabTrainingRun,
 } from "../types/aiLab";
 
 export interface AiLabState {
@@ -42,6 +44,14 @@ export interface AiLabState {
    */
   testRowIndex: number | undefined;
   lastPrediction: string | undefined;
+  /**
+   * Canvas Testing: the query Predict last ran. Absent until Predict,
+   * a scorecard row, or cleared by Start over. Draft `testValues` can
+   * diverge without dropping it.
+   */
+  shownTest: AiLabShownTest | undefined;
+  /** Successful trains this session, oldest first, capped at 20. */
+  trainingRuns: AiLabTrainingRun[];
   knnK: number;
   /** Named groups derived from a numeric column. Empty unless the level allows it. */
   scales: AiLabScale[];
@@ -75,6 +85,22 @@ function firstVisibleSection(
   if (!config.hideTrainTab && !config.trainAsOverlay) return "train";
   if (!config.hideTestTab) return "test";
   return "dataset";
+}
+
+const MAX_TRAINING_RUNS = 20;
+
+function appendTrainingRun(
+  runs: AiLabTrainingRun[],
+  model: AiLabTrainedModel,
+): AiLabTrainingRun[] {
+  const run: AiLabTrainingRun = {
+    id: `run-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    labelColumn: model.labelColumn,
+    selectedFeatures: [...model.selectedFeatures],
+    accuracy: model.accuracy,
+    createdAt: Date.now(),
+  };
+  return [...runs, run].slice(-MAX_TRAINING_RUNS);
 }
 
 function emptyTestValues(features: string[]): AiLabDataRow {
@@ -143,6 +169,8 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     testValues: emptyTestValues(selectedFeatures),
     testRowIndex: undefined,
     lastPrediction: undefined,
+    shownTest: undefined,
+    trainingRuns: [],
     knnK: config.defaultKnnK ?? DEFAULT_KNN_K,
     scales: [],
     trainingSetupOpen: Boolean(config.trainAsOverlay && config.pretrained),
@@ -290,6 +318,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
           selectedFeatures: [],
           model: undefined,
           lastPrediction: undefined,
+          shownTest: undefined,
+          trainingRuns: [],
           testValues: emptyTestValues([]),
           testRowIndex: undefined,
           section:
@@ -319,6 +349,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
             ),
       model: undefined,
       lastPrediction: undefined,
+      shownTest: undefined,
       trainingSetupOpen:
         options?.advance === false && current.section === "test"
           ? true
@@ -392,6 +423,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
       ),
       model: undefined,
       lastPrediction: undefined,
+      shownTest: undefined,
       section: current.section === "test" ? setupSection(config) : current.section,
       trainingSetupOpen:
         current.section === "test" ? true : current.trainingSetupOpen,
@@ -412,6 +444,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
         selectedFeatures: selected,
         model: undefined,
         lastPrediction: undefined,
+        shownTest: undefined,
         testValues: emptyTestValues(selected),
         testRowIndex: undefined,
         section: current.section === "test" ? setupSection(config) : current.section,
@@ -431,6 +464,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
         selectedFeatures: selected,
         model: undefined,
         lastPrediction: undefined,
+        shownTest: undefined,
         testValues: emptyTestValues(selected),
         testRowIndex: undefined,
         section: current.section === "test" ? setupSection(config) : current.section,
@@ -446,6 +480,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
       knnK,
       model: undefined,
       lastPrediction: undefined,
+      shownTest: undefined,
       section: current.section === "test" ? setupSection(config) : current.section,
       trainingSetupOpen:
         current.section === "test" ? true : current.trainingSetupOpen,
@@ -475,6 +510,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
           ),
           model: undefined,
           lastPrediction: undefined,
+          shownTest: undefined,
+          trainingRuns: [],
         };
       });
     },
@@ -501,6 +538,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
         rows: [...current.rows, next],
         model: undefined,
         lastPrediction: undefined,
+        shownTest: undefined,
+        trainingRuns: [],
       };
     });
   }, [config]);
@@ -534,6 +573,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
         testValues: emptyTestValues(current.selectedFeatures),
         testRowIndex: undefined,
         lastPrediction: undefined,
+        shownTest: undefined,
+        trainingRuns: appendTrainingRun(current.trainingRuns, model),
         trainingSetupOpen: config.trainAsOverlay ? true : current.trainingSetupOpen,
       };
     });
@@ -572,6 +613,39 @@ export function useAiLabState(config: AiLabLevelConfig) {
     }));
   }, []);
 
+  /** Canvas Testing: run the trace for the current draft inputs. */
+  const commitShownTest = useCallback(() => {
+    setState((current) => {
+      if (!current.model) return current;
+      const ready = current.model.selectedFeatures.every((feature) => {
+        const value = current.testValues[feature];
+        return value !== undefined && String(value).trim() !== "";
+      });
+      if (!ready) return current;
+      return {
+        ...current,
+        shownTest: {
+          values: { ...current.testValues },
+          rowIndex: current.testRowIndex,
+          committedAt: Date.now(),
+        },
+      };
+    });
+  }, []);
+
+  /** Canvas Testing Start over: clear the draft fields and the shown prediction. */
+  const clearTestPrediction = useCallback(() => {
+    setState((current) => ({
+      ...current,
+      testValues: emptyTestValues(
+        current.model?.selectedFeatures ?? current.selectedFeatures,
+      ),
+      testRowIndex: undefined,
+      lastPrediction: undefined,
+      shownTest: undefined,
+    }));
+  }, []);
+
   const setLastPrediction = useCallback((prediction: string | undefined) => {
     setState((current) =>
       current.lastPrediction === prediction
@@ -594,12 +668,18 @@ export function useAiLabState(config: AiLabLevelConfig) {
         testValues,
         testRowIndex: rowIndex,
         lastPrediction: undefined,
+        shownTest: {
+          values: testValues,
+          rowIndex,
+          committedAt: Date.now(),
+        },
       };
     });
   }, []);
 
   /** Random: a real sheet row (never the one already loaded), so every
-   *  example has a true answer to compare against. */
+   *  example has a true answer to compare against. Commits it the same way
+   *  Predict does, so the canvas trace runs without a second click. */
   const loadRandomRow = useCallback(() => {
     setState((current) => {
       if (!current.model || current.rows.length === 0) return current;
@@ -613,7 +693,19 @@ export function useAiLabState(config: AiLabLevelConfig) {
       current.model.selectedFeatures.forEach((feature) => {
         testValues[feature] = row[feature];
       });
-      return { ...current, testValues, testRowIndex: rowIndex, lastPrediction: undefined };
+      const ready = current.model.selectedFeatures.every((feature) => {
+        const value = testValues[feature];
+        return value !== undefined && String(value).trim() !== "";
+      });
+      return {
+        ...current,
+        testValues,
+        testRowIndex: rowIndex,
+        lastPrediction: undefined,
+        shownTest: ready
+          ? { values: testValues, rowIndex, committedAt: Date.now() }
+          : current.shownTest,
+      };
     });
   }, []);
 
@@ -687,6 +779,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
       scales: [...current.scales.filter((item) => item.id !== scale.id), scale],
       model: undefined,
       lastPrediction: undefined,
+      shownTest: undefined,
+      trainingRuns: [],
       testValues: emptyTestValues(current.selectedFeatures),
       testRowIndex: undefined,
     }));
@@ -703,6 +797,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
           : current.selectedColumnId,
       model: undefined,
       lastPrediction: undefined,
+      shownTest: undefined,
+      trainingRuns: [],
       testValues: emptyTestValues(
         current.selectedFeatures.filter((id) => id !== scaleId),
       ),
@@ -751,6 +847,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
     train,
     saveModel,
     setTestValue,
+    commitShownTest,
+    clearTestPrediction,
     loadHoldoutRow,
     loadRandomRow,
     setLastPrediction,

@@ -112,8 +112,21 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
           )
         }
         right={
-          canChangeAlgorithm ? (
-            <div className={styles.headerActions}>
+          <div className={styles.headerActions}>
+            {lab.section === "test" &&
+            lab.config.testLayout === "canvas" &&
+            lab.shownTest ? (
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                startIconName="arrow-rotate-left"
+                onClick={() => lab.clearTestPrediction()}
+              >
+                Start over
+              </Button>
+            ) : null}
+            {canChangeAlgorithm ? (
               <Button
                 variant="outlined"
                 color="secondary"
@@ -127,10 +140,8 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
               >
                 {algorithmLabel}
               </Button>
-            </div>
-          ) : (
-            <div />
-          )
+            ) : null}
+          </div>
         }
       />
 

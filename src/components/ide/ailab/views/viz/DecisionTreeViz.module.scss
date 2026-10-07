@@ -151,6 +151,26 @@
   inset: 0;
 }
 
+/* Testing canvas beside the prediction rail: every node is the compact
+ * card (title + rows) and the rail carries the step-by-step story. */
+.railMode {
+  .node {
+    border-color: var(--ds-background-neutral-septenary);
+  }
+
+  .nodeOnPath {
+    border-color: var(--ds-border-selected-primary);
+  }
+
+  .nodeTitle {
+    @include type-body-2-semibold;
+  }
+
+  .edgeLabel {
+    @include type-body-4-semibold;
+  }
+}
+
 /* Every node is the same white card with a 2px border; what the example
  * passed through turns the border selected, and the amount drawn (pill /
  * card / detail) is the size the layout gave it. Heights are summed in the
@@ -266,25 +286,26 @@
   border-radius: var(--shape-round);
 }
 
-/* Real-row example: did the answer leaf get it right? Lives in the head row
- * so it never changes the node's measured height. */
-.verdictBadge {
+.nodeMeta {
   display: inline-flex;
-  width: 16px;
-  height: 16px;
   flex-shrink: 0;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+}
+
+/* Rows-modal experiment: how many rows on a mixed leaf carry another label.
+ * The count is the "which leaf is more wrong" signal without opening it. */
+.disagreeBadge {
+  @include type-label-4;
+  display: inline-flex;
+  height: 18px;
+  align-items: center;
+  gap: 2px;
+  padding: 0 5px;
   border-radius: var(--shape-round);
-  color: var(--text-neutral-white-fixed);
-}
-
-.verdictCorrect {
-  background: var(--background-success-primary);
-}
-
-.verdictWrong {
-  background: var(--background-error-primary);
+  background: var(--ds-background-error-light);
+  color: var(--ds-text-error-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .nodeRows {

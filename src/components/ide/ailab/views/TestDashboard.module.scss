@@ -73,40 +73,6 @@
   gap: 6px;
 }
 
-.statementFeatures {
-  position: relative;
-  display: flex;
-  min-width: 0;
-  flex: 1 1 0;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 6px;
-  overflow: hidden;
-}
-
-.statementFeatures > * {
-  flex-shrink: 0;
-}
-
-.overflowTagWrap {
-  display: inline-flex;
-  align-items: center;
-  line-height: 0;
-}
-
-.tagMeasure {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 6px;
-  width: max-content;
-  visibility: hidden;
-  pointer-events: none;
-}
-
 .metricCluster {
   display: flex;
   min-width: 0;
@@ -183,6 +149,259 @@
   min-width: 0;
   min-height: 410px;
   flex-direction: column;
+}
+
+.statementBar {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 4px 8px 4px 12px;
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
+  background: var(--ds-background-neutral-primary);
+
+  .statement {
+    flex: 1 1 auto;
+  }
+}
+
+.statementActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Icon cell + gray readout joined in one bordered control. */
+.accuracyChip {
+  display: inline-flex;
+  height: 24px;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--ds-border-neutral-secondary);
+  border-radius: var(--shape-sm);
+  background: var(--ds-background-neutral-primary);
+  color: var(--ds-text-neutral-primary);
+  cursor: pointer;
+
+  &:hover .accuracyIcon {
+    background: var(--ds-background-neutral-secondary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.accuracyIcon {
+  display: inline-flex;
+  width: 22px;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-text-neutral-secondary);
+}
+
+.accuracyValue {
+  @include type-body-4-semibold;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  border-left: 1px solid var(--ds-border-neutral-secondary);
+  background: var(--ds-background-neutral-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage {
+  display: flex;
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  background: var(--ds-background-neutral-secondary);
+}
+
+.stage .canvas {
+  min-height: 0;
+}
+
+/* Diagram / target: the rail leaves the flex row so the viz is full-bleed.
+ * Cards keep their 271px width and 8px edge; the viz insets Fit by
+ * 271 + 8 = 279 (`PREDICTION_RAIL_INSET`) but is never clipped by them. */
+.stageFloat .rail {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  /* `--shadow-sm` is a 7px blur. The rail scrolls, so without this gutter
+   * the left edge of that shadow is cut off at the scrollport. Width stays
+   * border-box, so the 12px is added on top of the 271px cards. */
+  width: 283px;
+  padding: 0 0 0 12px;
+  background: transparent;
+  /* Gaps between cards stay the canvas — pan and zoom pass through. */
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+.rail {
+  display: flex;
+  width: 271px;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 8px 8px 8px 0;
+  overflow: auto;
+}
+
+.railCard {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--ds-border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--ds-background-neutral-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.railHead {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 35px;
+  padding: 8px;
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
+}
+
+.railTitle {
+  @include type-body-4-semibold;
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+}
+
+.verdictHead {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ds-border-neutral-primary);
+}
+
+.verdictTitle {
+  @include type-body-1-regular;
+  margin: 0;
+  color: var(--ds-text-neutral-quaternary);
+
+  strong {
+    @include type-body-1-semibold;
+    color: var(--ds-text-neutral-primary);
+  }
+}
+
+.railFields {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+}
+
+.railActions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 8px;
+  border-top: 1px solid var(--ds-border-neutral-primary);
+
+  > * {
+    flex: 1 1 0;
+  }
+}
+
+.stepList {
+  @include type-body-3-regular;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 10px 10px;
+  list-style: none;
+  color: var(--ds-text-neutral-primary);
+
+  strong {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.stepList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.stepIndex {
+  @include type-body-4-bold;
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  border-radius: var(--shape-round);
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-tertiary);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.stepCurrent .stepIndex {
+  background: var(--ds-background-neutral-septenary);
+  color: var(--ds-text-neutral-primary-inverse);
+}
+
+.predictionValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: top;
+}
+
+.successDot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+  background: var(--ds-background-success-primary);
+}
+
+.railCopy {
+  @include type-body-3-regular;
+  margin: 0;
+  padding: 8px 10px 10px;
+  color: var(--ds-text-neutral-secondary);
+}
+
+.railPlayback {
+  padding: 8px;
+  border-top: 1px solid var(--ds-border-neutral-primary);
 }
 
 /* Input → Output. Two equal-height cards (Train-rail card treatment) with a

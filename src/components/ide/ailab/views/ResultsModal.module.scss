@@ -1,0 +1,155 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.modal {
+  width: min(800px, calc(100vw - 48px));
+  max-width: min(800px, calc(100vw - 48px));
+  min-width: 0;
+}
+
+/* Bleeds past the Modal body's 24px padding so the tab strip runs edge to
+ * edge under the title, like the Figma Tab Group. */
+.root {
+  display: flex;
+  width: calc(100% + 48px);
+  min-width: 0;
+  height: min(62vh, 454px);
+  flex-direction: column;
+  margin: -24px;
+  overflow: hidden;
+}
+
+/* Figma Tab Group (secondary): gray strip with a bottom hairline. The
+ * selected tab's white fill runs over the hairline so it joins the content. */
+.tabStrip {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-end;
+  padding: 10px 14px 0;
+  background: var(--ds-background-neutral-secondary);
+  box-shadow: inset 0 -1px 0 var(--ds-border-neutral-primary);
+}
+
+.content {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 24px 24px;
+}
+
+.scoreHead {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-width: 0;
+}
+
+.sentence {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.accuracyText {
+  @include type-body-3-semibold;
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.headDivider {
+  width: 1px;
+  height: 16px;
+  background: var(--ds-border-neutral-primary);
+}
+
+/* Same sheet as the Data view (DataStudio.module.scss), with a group
+ * header row above the column names. */
+.tableWrap {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--ds-border-neutral-primary);
+
+  th {
+    text-align: left;
+  }
+
+  /* The wrapper draws the outer edge; the sheet's last-column and last-row
+   * cell borders would double it. Doubled class beats the sheet's
+   * `.thLabel:last-child:not(.thSelected)`. */
+  &#{&} tr > :last-child {
+    border-right: 0;
+  }
+
+  &#{&} tbody tr:last-child > td {
+    border-bottom: 0;
+  }
+}
+
+.nameTh {
+  top: 28px;
+}
+
+.emptyCell {
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.tryRow {
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-border-focused-primary);
+    outline-offset: -2px;
+  }
+}
+
+.showMore {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  border-top: 1px solid var(--ds-border-neutral-primary);
+  background: var(--ds-background-neutral-primary);
+}
+
+.emptyLine {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.logHead {
+  @include type-label-4;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 0 8px;
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.logList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+
+.logRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--ds-border-neutral-primary);
+}
+
+.logAccuracy {
+  @include type-label-2;
+  flex-shrink: 0;
+  min-width: 52px;
+  color: var(--ds-text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+}

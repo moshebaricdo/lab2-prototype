@@ -39,6 +39,8 @@ interface TraceBarProps {
   playback?: StepPlayback;
   /** Resting Play control copy — Result card uses Replay. */
   playLabel?: string;
+  /** Toolbar mode can drop the step dots (Play, previous, next only). */
+  showDots?: boolean;
 }
 
 /**
@@ -58,6 +60,7 @@ export function TraceBar({
   orientation = "row",
   playback: externalPlayback,
   playLabel = "Play",
+  showDots = true,
 }: TraceBarProps) {
   const total = steps.length;
   const hasSteps = total > 0;
@@ -149,7 +152,7 @@ export function TraceBar({
         disabled={!hasSteps || clamped === 0}
         onClick={() => goTo(Math.max(0, clamped - 1))}
       />
-      {dots}
+      {showDots ? dots : null}
       <Button
         size="extraSmall"
         variant="outlined"

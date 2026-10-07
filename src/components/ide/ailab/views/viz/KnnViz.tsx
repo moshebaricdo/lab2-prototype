@@ -58,6 +58,9 @@ const TABLE_ROWS = 100;
 /** Vote rows the rail tally shows before folding the rest into "others". */
 const TALLY_ROWS = 6;
 
+/** Steps in a KNN trace: place, measure, vote. */
+export const KNN_TRACE_STEP_COUNT = 3;
+
 interface KnnVizProps {
   rows: AiLabDataRow[];
   columns: AiLabColumn[];
@@ -77,6 +80,18 @@ interface KnnVizProps {
    * the dashboard's input card, and an end-state prediction card.
    */
   canvasChrome?: CanvasChrome;
+  /**
+   * Canvas testing rail lives beside the viz. Hide the floating neighbor
+   * card and follow the dashboard's step index.
+   */
+  externalRail?: boolean;
+  /**
+   * Pixels the floating prediction rail covers on the right. The resting
+   * view stays in the open strip; the canvas is not clipped.
+   */
+  frameInsetRight?: number;
+  controlledStep?: number;
+  onControlledStep?: (index: number) => void;
 }
 
 interface Placed {
@@ -104,8 +119,13 @@ export function KnnViz({
   view,
   onViewChange,
   canvasChrome,
+  externalRail = false,
+  frameInsetRight = 0,
+  controlledStep,
+  onControlledStep,
 }: KnnVizProps) {
-  const [stepIndex, setStepIndex] = useState(0);
+  const [internalStep, setInternalStep] = useState(0);
+  const stepIndex = controlledStep ?? internalStep;
   const [hoveredRow, setHoveredRow] = useState<number | undefined>(undefined);
 
   const labelName = featureName(columns, labelColumn);
@@ -212,9 +232,10 @@ export function KnnViz({
   }, [k, prediction, votes, winnerCount]);
 
   useEffect(() => {
-    setStepIndex(Math.max(0, steps.length - 1));
     setHoveredRow(undefined);
-  }, [queryKey, steps.length]);
+    if (onControlledStep) return;
+    setInternalStep(Math.max(0, steps.length - 1));
+  }, [onControlledStep, queryKey, steps.length]);
 
   const clampedStep = Math.min(stepIndex, Math.max(0, steps.length - 1));
   const reveal = {
@@ -238,7 +259,9 @@ export function KnnViz({
       <div className={styles.stage}>
         <div
           className={`${styles.canvas} ${
-            !canvasChrome && view !== "table" ? styles.canvasBesideCard : ""
+            !externalRail && !canvasChrome && view !== "table"
+              ? styles.canvasBesideCard
+              : ""
           }`}
         >
           {view === "table" ? (
@@ -274,11 +297,11 @@ export function KnnViz({
               hiddenCount={hiddenCount}
               detailFor={detailFor}
               columns={columns}
-              insetRight={canvasChrome ? CARD_INSET : 0}
+              insetRight={canvasChrome ? CARD_INSET : frameInsetRight}
             />
           )}
         </div>
-        {view === "table" && !canvasChrome ? null : (
+        {externalRail || (view === "table" && !canvasChrome) ? null : (
           <NeighborRail
             rows={rows}
             columns={columns}
@@ -296,7 +319,7 @@ export function KnnViz({
             detailFor={detailFor}
             steps={steps}
             stepIndex={clampedStep}
-            onStepIndexChange={setStepIndex}
+            onStepIndexChange={onControlledStep ?? setInternalStep}
             view={view}
             onViewChange={onViewChange}
             canvasChrome={canvasChrome}
