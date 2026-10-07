@@ -1,61 +1,22 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { FaIcon } from "@moshebari/cads-react/icons";
-import { columnById, formatCell, traceDecisionTree } from "../../../../lib/aiLab";
-import type { AiLabHoldoutResult } from "../../../../types/aiLab";
-import { TrainingModalShell, type TrainingRowWalkProps } from "./TrainingModalShell";
-import { labelFill, labelIndexer } from "./viz/labelPalette";
-import { SortingTree, useSortingModel, type SortingTreeState } from "./viz/SortingTree";
-import { treeScore } from "./viz/TreeGrowth";
-import { prefersReducedMotion } from "./viz/useStepPlayback";
+import { columnById, formatCell } from "../../../../lib/aiLab";
+import type { TrainingRowWalkProps } from "./TrainingModalShell";
+import {
+  type QuizRow,
+  type TrainingStageProps,
+  type TrainingWalk,
+  type WalkState,
+} from "./trainingWalk";
+import { labelFill } from "./viz/labelPalette";
+import { SortingTree } from "./viz/SortingTree";
 import styles from "./TrainingRowWalk.module.scss";
 
-/** Rows that roll through the tree one at a time during Testing. */
-const QUIZ_SIZE = 3;
-/** Each quiz row plays faster than the last; the idea lands on the first. */
-const QUIZ_PACE = [1, 0.7, 0.5];
-
-type Act = "training" | "testing" | "checking" | "done";
-
-interface WalkState extends SortingTreeState {
-  act: Act;
-  /** Quiz row on the card (−1 before Testing). */
-  quiz: number;
-  /** Marble position along the quiz row's path; −1 hides it. */
-  step: number;
-  /** The leaf the marble landed in has announced its guess. */
-  guessed: boolean;
-  /** Quiz rows whose real label has been shown. */
-  revealed: number;
-  travelMs: number;
-}
-
-const INITIAL: WalkState = {
-  act: "training",
-  read: false,
-  splitsShown: 0,
-  childrenShown: 0,
-  splitsDone: 0,
-  named: false,
-  quiet: false,
-  checked: false,
-  quiz: -1,
-  step: -1,
-  guessed: false,
-  revealed: 0,
-  travelMs: 600,
-};
-
-interface Beat {
-  wait: number;
-  patch: Partial<WalkState>;
-}
-
-interface QuizRow {
-  result: AiLabHoldoutResult;
-  pathKeys: string[];
-}
-
 /**
+ * The first sort-and-quiz layout: a narrated left panel beside the tree.
+ * The lab now plays `TreeTableRow`; this stage stays as the training
+ * sandbox's **Baseline** variant.
+ *
  * The tree as a sorting machine, one moving thing at a time.
  *
  * **Training:** every row is a dot in its real label's color. The dots
@@ -68,84 +29,9 @@ interface QuizRow {
  * guess goes hollow — that's the score. The stage is sized from the
  * finished tree, so the modal never changes height while it plays.
  */
-export function TrainingRowWalk({
-  open,
-  onClose,
-  onTest,
-  tree,
-  columns,
-  labelColumn,
-  features,
-  labels,
-  rowNoun,
-  canTest,
-  rows,
-  results,
-  titleColumn,
-}: TrainingRowWalkProps) {
-  const model = useSortingModel(tree, rows, labelColumn, labels);
-  const score = useMemo(() => treeScore(tree), [tree]);
-  const indexOf = useMemo(() => labelIndexer(labels), [labels]);
-  const quiz = useMemo<QuizRow[]>(
-    () =>
-      orderQuiz(pickSample(results, QUIZ_SIZE)).map((result) => ({
-        result,
-        pathKeys: rows[result.rowIndex]
-          ? traceDecisionTree(tree, rows[result.rowIndex]!).pathKeys
-          : ["root"],
-      })),
-    [results, rows, tree],
-  );
-
-  const tally = useMemo(() => {
-    const counts = new Map<string, number>();
-    rows.forEach((row) => {
-      const label = String(row[labelColumn]);
-      counts.set(label, (counts.get(label) ?? 0) + 1);
-    });
-    return labels.map((label) => ({ label, fill: labelFill(indexOf(label)), count: counts.get(label) ?? 0 }));
-  }, [rows, labelColumn, labels, indexOf]);
-
-  const splitCount = model.splits.length;
-  const { beats, final } = useMemo(() => buildBeats(splitCount, quiz), [splitCount, quiz]);
-  const [state, setState] = useState<WalkState>(INITIAL);
-  const [instant, setInstant] = useState(false);
-  const stopRef = useRef<() => void>(() => {});
-
-  // Every open replays from the empty pile; reduced motion lands on the end.
-  useEffect(() => {
-    if (!open) return;
-    if (prefersReducedMotion()) {
-      setInstant(true);
-      setState(final);
-      return;
-    }
-    setInstant(false);
-    setState(INITIAL);
-    let index = 0;
-    let timer: ReturnType<typeof setTimeout>;
-    const next = () => {
-      const beat = beats[index];
-      if (!beat) return;
-      index += 1;
-      timer = setTimeout(() => {
-        setState((current) => ({ ...current, ...beat.patch }));
-        next();
-      }, beat.wait);
-    };
-    next();
-    const stop = () => clearTimeout(timer);
-    stopRef.current = stop;
-    return stop;
-  }, [open, beats, final]);
-
-  const skip = () => {
-    stopRef.current();
-    setInstant(true);
-    setState(final);
-  };
-
-  const labelName = columnById(columns, labelColumn)?.name ?? labelColumn;
+export function TrainingRowWalkStage({ data, walk, state, instant }: TrainingStageProps) {
+  const { columns, features, labels, rowNoun, rows, titleColumn } = data;
+  const { model, score, indexOf, quiz, tally, labelName } = walk;
   const count = `${rows.length} ${rowNoun}${rows.length === 1 ? "" : "s"}`;
   const current = state.quiz >= 0 ? quiz[state.quiz] : undefined;
   const currentSplit =
@@ -189,68 +75,55 @@ export function TrainingRowWalk({
   }
 
   return (
-    <TrainingModalShell
-      open={open}
-      onClose={onClose}
-      onTest={onTest}
-      columns={columns}
-      labelColumn={labelColumn}
-      features={features}
-      canTest={canTest}
-      done={state.act === "done"}
-      onSkip={skip}
-      maxWidth={880}
-      flush
-    >
-      <div className={`${styles.stage} ${instant ? styles.instant : ""}`}>
-        <aside className={styles.panel}>
-          <div className={styles.narration}>
-            <ol className={styles.steps} aria-label="Steps">
-              <Step
-                index={1}
-                label="Training"
-                active={state.act === "training"}
-                complete={state.act !== "training"}
-              />
-              <Step
-                index={2}
-                label="Testing"
-                active={state.act !== "training" && state.act !== "done"}
-                complete={state.act === "done"}
-              />
-            </ol>
-            <p className={styles.status} aria-live="polite">
-              {status}
-            </p>
-          </div>
-          <div className={styles.faces}>
-            <DataKey
-              on={face === "key"}
-              count={rows.length}
-              rowNoun={rowNoun}
-              questions={state.splitsShown}
-              groups={groups}
+    <div className={`${styles.stage} ${instant ? styles.instant : ""}`}>
+      <aside className={styles.panel}>
+        <div className={styles.narration}>
+          <ol className={styles.steps} aria-label="Steps">
+            <Step
+              index={1}
+              label="Training"
+              active={state.act === "training"}
+              complete={state.act !== "training"}
             />
-            <QuizCard
-              on={face === "quiz"}
-              quiz={quiz}
-              index={Math.max(0, state.quiz)}
-              state={state}
-              model={model}
-              rows={rows}
-              columns={columns}
-              features={features}
-              labelName={labelName}
-              titleColumn={titleColumn}
-              rowNoun={rowNoun}
-              indexOf={indexOf}
+            <Step
+              index={2}
+              label="Testing"
+              active={state.act !== "training" && state.act !== "done"}
+              complete={state.act === "done"}
             />
-            <ScoreCard on={face === "score"} right={score.right} total={score.total} />
-          </div>
-        </aside>
-        <div className={styles.board}>
-          <div className={styles.treeArea}>
-            <SortingTree
+          </ol>
+          <p className={styles.status} aria-live="polite">
+            {status}
+          </p>
+        </div>
+        <div className={styles.faces}>
+          <DataKey
+            on={face === "key"}
+            count={rows.length}
+            rowNoun={rowNoun}
+            questions={state.splitsShown}
+            groups={groups}
+          />
+          <QuizCard
+            on={face === "quiz"}
+            quiz={quiz}
+            index={Math.max(0, state.quiz)}
+            state={state}
+            model={model}
+            rows={rows}
+            columns={columns}
+            features={features}
+            labelName={labelName}
+            titleColumn={titleColumn}
+            rowNoun={rowNoun}
+            indexOf={indexOf}
+          />
+          <ScoreCard on={face === "score"} right={score.right} total={score.total} />
+        </div>
+      </aside>
+      <div className={styles.board}>
+        <div className={styles.treeArea}>
+          <SortingTree
             model={model}
             columns={columns}
             labels={labels}
@@ -271,71 +144,18 @@ export function TrainingRowWalk({
             instant={instant}
             maxHeight={300}
             ariaLabel={`Decision tree sorting ${count} into groups by ${labelName}`}
-            />
-          </div>
-          <Legend
-            labelName={labelName}
-            tally={tally}
-            rowsPerDot={model.rowsPerDot}
-            active={activeLabels}
-            showWrong={state.checked && score.right < score.total}
           />
         </div>
+        <Legend
+          labelName={labelName}
+          tally={tally}
+          rowsPerDot={model.rowsPerDot}
+          active={activeLabels}
+          showWrong={state.checked && score.right < score.total}
+        />
       </div>
-    </TrainingModalShell>
+    </div>
   );
-}
-
-function buildBeats(splitCount: number, quiz: QuizRow[]): { beats: Beat[]; final: WalkState } {
-  const f = Math.min(1, Math.max(0.45, 3 / Math.max(1, splitCount)));
-  const beats: Beat[] = [{ wait: 350, patch: { read: true } }];
-  for (let i = 0; i < splitCount; i += 1) {
-    beats.push(
-      { wait: i === 0 ? 1300 : 1000 * f, patch: { splitsShown: i + 1 } },
-      { wait: 550 * f, patch: { childrenShown: i + 1 } },
-      { wait: 450 * f, patch: { splitsDone: i + 1 } },
-    );
-  }
-  beats.push(
-    { wait: splitCount ? 1100 * f : 900, patch: { named: true } },
-    { wait: 1700, patch: { act: "testing", quiet: true } },
-  );
-  quiz.forEach((row, index) => {
-    const pace = QUIZ_PACE[index] ?? QUIZ_PACE[QUIZ_PACE.length - 1]!;
-    const travelMs = Math.round(620 * pace);
-    beats.push({
-      wait: index === 0 ? 700 : 900 * pace,
-      patch: { quiz: index, step: 0, guessed: false, travelMs },
-    });
-    for (let step = 1; step < row.pathKeys.length; step += 1) {
-      beats.push({ wait: step === 1 ? 800 * pace : travelMs + 300 * pace, patch: { step } });
-    }
-    beats.push(
-      {
-        wait: row.pathKeys.length > 1 ? travelMs + 200 * pace : 600 * pace,
-        patch: { guessed: true },
-      },
-      { wait: 700 * pace, patch: { revealed: index + 1 } },
-    );
-  });
-  beats.push(
-    { wait: 1100, patch: { act: "checking", step: -1, quiet: false, checked: true } },
-    { wait: 1500, patch: { act: "done" } },
-  );
-  const final: WalkState = {
-    ...INITIAL,
-    act: "done",
-    read: true,
-    splitsShown: splitCount,
-    childrenShown: splitCount,
-    splitsDone: splitCount,
-    named: true,
-    checked: true,
-    quiz: quiz.length - 1,
-    guessed: true,
-    revealed: quiz.length,
-  };
-  return { beats, final };
 }
 
 function Step({
@@ -453,7 +273,7 @@ function DataKey({
  * the real answer while a quiz row plays; adds the hollow "wrong" mark
  * once the piles are checked.
  */
-function Legend({
+export function Legend({
   labelName,
   tally,
   rowsPerDot,
@@ -516,7 +336,7 @@ function QuizCard({
   quiz: QuizRow[];
   index: number;
   state: WalkState;
-  model: ReturnType<typeof useSortingModel>;
+  model: TrainingWalk["model"];
   rows: TrainingRowWalkProps["rows"];
   columns: TrainingRowWalkProps["columns"];
   features: string[];
@@ -666,34 +486,6 @@ function ScoreCard({ on, right, total }: { on: boolean; right: number; total: nu
       </dl>
     </Face>
   );
-}
-
-/** Right guesses first, the miss last: the idea lands before the twist. */
-function orderQuiz(sample: AiLabHoldoutResult[]): AiLabHoldoutResult[] {
-  return sample.slice().sort((a, b) => Number(!a.correct) - Number(!b.correct));
-}
-
-/**
- * Evenly spaced rows across the sheet, in sheet order, with at least one
- * miss when the model has any — a perfect-looking sample would hide the
- * point of Testing.
- */
-function pickSample(results: AiLabHoldoutResult[], size: number): AiLabHoldoutResult[] {
-  const n = results.length;
-  if (n <= size) return results.slice();
-  const picks = Array.from({ length: size }, (_, i) =>
-    Math.min(n - 1, Math.floor(((i + 0.5) * n) / size)),
-  );
-  const picked = picks.map((index) => results[index]!);
-  if (!picked.some((result) => !result.correct)) {
-    const firstWrong = results.findIndex((result) => !result.correct);
-    if (firstWrong >= 0) {
-      const slot = picks.findIndex((index) => index >= firstWrong);
-      picked[slot >= 0 ? slot : size - 1] = results[firstWrong]!;
-      picked.sort((a, b) => a.rowIndex - b.rowIndex);
-    }
-  }
-  return picked;
 }
 
 function capitalize(word: string): string {

@@ -1,0 +1,218 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 24px 16px;
+}
+
+/* Fixed height so the tree never jumps when the sheet, card, or score swaps. */
+.band {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 88px;
+  align-items: center;
+  height: 112px;
+  margin: 0 -24px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.phase {
+  @include type-body-2-semibold;
+  margin: 0;
+}
+
+.bandMain {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.sheetWrap {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sheet {
+  border-collapse: collapse;
+
+  th,
+  td {
+    @include type-body-4-regular;
+    max-width: 200px;
+    padding: 1px 8px;
+    overflow: hidden;
+    color: var(--text-neutral-secondary);
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  thead th {
+    @include type-overline-3;
+    color: var(--text-neutral-quaternary);
+  }
+
+  tbody th {
+    @include type-body-4-semibold;
+    color: var(--text-neutral-primary);
+  }
+}
+
+.more {
+  @include type-body-5-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.card {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+}
+
+.cardName {
+  @include type-body-3-semibold;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+
+.cell {
+  display: inline-flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 8px;
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+}
+
+.cellName {
+  @include type-overline-3;
+  color: var(--text-neutral-quaternary);
+}
+
+.cellValue {
+  @include type-body-4-semibold;
+  color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The value has left the card; the clone is flying. */
+.cellFlying .cellValue {
+  opacity: 0;
+}
+
+.cellSpent {
+  opacity: 0.4;
+}
+
+/* Same selected fill as the branch it matches. */
+.cellHot {
+  background: var(--background-selected-primary);
+
+  .cellName,
+  .cellValue {
+    color: var(--text-selected-primary);
+  }
+}
+
+.labelCell {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+}
+
+.token {
+  @include type-label-4;
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-neutral-white-fixed);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-senary);
+  color: var(--text-neutral-white-fixed);
+  box-shadow: var(--shadow-sm);
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+}
+
+.actual {
+  @include type-body-4-semibold;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.labelRight {
+  color: var(--text-success-primary);
+}
+
+.labelWrong {
+  color: var(--text-error-primary);
+}
+
+.labelWrong .actual,
+.labelRight .actual {
+  color: var(--text-neutral-primary);
+}
+
+.score {
+  @include type-body-2-semibold;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Parked on the connector the row took. Invisible until the flight lands,
+   but always laid out so the flight can measure it. */
+.landed {
+  @include type-body-4-semibold;
+  position: absolute;
+  z-index: 4;
+  padding: 1px 7px;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+  box-shadow: inset 0 0 0 1.5px var(--border-selected-primary);
+  color: var(--text-brand-primary);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.landedOn {
+  opacity: 1;
+}
+
+.flyer {
+  @include type-body-4-semibold;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--shape-sm);
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}

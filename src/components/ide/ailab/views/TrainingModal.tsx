@@ -7,7 +7,7 @@ import {
   listNames,
   type TrainingBodyProps,
 } from "./TrainingModalShell";
-import { TrainingRowWalk } from "./TrainingRowWalk";
+import { TrainingTableRow } from "./TreeTableRow";
 import { TreeGrowth, treeScore, useGrowthLayout } from "./viz/TreeGrowth";
 import { prefersReducedMotion } from "./viz/useStepPlayback";
 
@@ -28,12 +28,12 @@ interface TrainingModalProps {
 }
 
 /**
- * The training step for a decision tree. Opens right after Train model
- * with a fixed "Training your model" title and the statement above the
- * stage. What plays underneath is the level's `trainingAnimation`: the
- * tree growing top-down (default) or sort-and-quiz (rows as dots sorted
- * into piles, then a few rows guessed with the label hidden). Both end on
- * the same score. Replay training reopens it.
+ * The training step for a decision tree. Opens right after Train model;
+ * what plays is the level's `trainingAnimation`: sort and quiz (default —
+ * `TrainingTableRow`: rows as dots sorted into piles, then a few test rows
+ * rise in from the sheet and get guessed) or the tree growing top-down
+ * (`tree`, kept as a fallback). Both end on the same score. Replay
+ * training reopens it.
  */
 export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps) {
   const model = lab.model;
@@ -53,23 +53,24 @@ export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps
     canTest: !lab.config.hideTestTab && lab.canVisit("test"),
   };
   const key = `${model.labelColumn}|${model.selectedFeatures.join(",")}|${lab.rows.length}`;
-  if (lab.config.trainingAnimation === "rows") {
-    return (
-      <TrainingRowWalk
-        key={key}
-        {...shared}
-        rows={lab.rows}
-        results={model.holdoutResults}
-        titleColumn={lab.config.cardTitleColumn}
-      />
-    );
+  if (lab.config.trainingAnimation === "tree") {
+    return <TreeGrowthBody key={key} {...shared} />;
   }
-  return <TreeGrowthBody key={key} {...shared} />;
+  return (
+    <TrainingTableRow
+      key={key}
+      {...shared}
+      rows={lab.rows}
+      results={model.holdoutResults}
+      titleColumn={lab.config.cardTitleColumn}
+    />
+  );
 }
 
 /**
- * Default playback: the finished tree grows top-down one node at a time,
- * then every leaf is marked right / wrong before the score.
+ * Fallback playback (`trainingAnimation: "tree"`): the finished tree grows
+ * top-down one node at a time, then every leaf is marked right / wrong
+ * before the score.
  */
 function TreeGrowthBody({
   open,

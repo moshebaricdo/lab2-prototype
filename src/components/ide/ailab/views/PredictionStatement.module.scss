@@ -17,8 +17,52 @@
   column-gap: 8px;
 }
 
+/* Fills its row so the feature run measures the real space, not its own
+   content (which would ratchet the "+N" fold and never let it grow back). */
+.rootFit {
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+}
+
 .word {
   flex-shrink: 0;
+}
+
+/* One-line feature run (`StatementFeatureTags`): fills what's left of the
+   row and clips; the "+N" Tag stands in for whatever doesn't fit. */
+.features {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  column-gap: inherit;
+  overflow: hidden;
+}
+
+.features > * {
+  flex-shrink: 0;
+}
+
+.overflowWrap {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  column-gap: inherit;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Train rail uses the CADS small Tag (20px) at its natural size. The modal
@@ -29,10 +73,18 @@
   box-sizing: border-box;
 }
 
-/* CADS small Tag type is 10px. The dataset mocks override the label to 12px
-   so it matches the label-3 sentence. */
+/* Tag labels take the sentence's type size and weight instead of the CADS
+   Tag scale, so a chip reads as a word in the sentence. Leading stays the
+   Tag's so the label stays centered in the pinned chip height. */
+.tag[data-cads-component="Tag"],
 .tagSmall[data-cads-component="Tag"] {
-  @include type-label-3;
+  &,
+  * {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+  }
 }
 
 /* Same Tag geometry (`--shape-sm`, not a capsule). Waiting fill + stroke. */

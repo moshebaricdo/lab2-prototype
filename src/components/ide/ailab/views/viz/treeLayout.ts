@@ -198,11 +198,13 @@ export function layoutTree(
     size: NodeSize,
     bundle: TreeBundle | undefined,
   ) => NodeDimensions = (_, size) => NODE_SIZES[size],
+  /** Vertical orientation only: override the gap between depths. */
+  verticalLevelGap: number = TREE_METRICS.levelGap,
 ): TreeLayout {
   const { padding } = TREE_METRICS;
   const vertical = orientation === "vertical";
   const laneGap = vertical ? TREE_METRICS.laneGap : TREE_METRICS.rowGap;
-  const levelGap = vertical ? TREE_METRICS.levelGap : TREE_METRICS.columnGap;
+  const levelGap = vertical ? verticalLevelGap : TREE_METRICS.columnGap;
   // Lane axis is where leaves stack; level axis is depth.
   const laneExtent = (width: number, height: number) => (vertical ? width : height);
   const levelExtent = (width: number, height: number) => (vertical ? height : width);
@@ -389,8 +391,10 @@ export function elbowPathVertical(
   tx: number,
   ty: number,
   radius = 8,
+  /** Where the horizontal run sits, as a share of the parent → child gap. */
+  bend = 0.45,
 ): string {
-  const midY = sy + (ty - sy) * 0.45;
+  const midY = sy + (ty - sy) * bend;
   if (Math.abs(tx - sx) < 1) return `M${sx},${sy} V${ty}`;
   const dir = tx > sx ? 1 : -1;
   const r = Math.min(radius, Math.abs(tx - sx) / 2, Math.abs(midY - sy));

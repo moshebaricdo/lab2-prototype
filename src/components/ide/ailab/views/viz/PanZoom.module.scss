@@ -1,0 +1,61 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+/* Same feel as the Testing diagram's frame (`DecisionTreeViz.module.scss`). */
+.frame {
+  overflow: clip;
+  cursor: grab;
+  touch-action: none;
+
+  &:focus-visible {
+    @include focus-ring;
+    outline-offset: -2px;
+  }
+}
+
+.frameDragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.content {
+  transform-origin: 0 0;
+}
+
+/* Beats a stage's own `.instant *` (Skip lands there), which would
+   otherwise snap the buttons' zoom. */
+.contentSmooth.contentSmooth {
+  transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+/* The Testing canvas's zoom card, arriving once the run is over. */
+.tools {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  box-shadow: var(--shadow-sm);
+  animation: tools-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes tools-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contentSmooth.contentSmooth {
+    transition: none !important;
+  }
+
+  .tools {
+    animation: none;
+  }
+}

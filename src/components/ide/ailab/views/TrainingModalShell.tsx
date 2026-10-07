@@ -51,6 +51,17 @@ interface ShellProps
    * statement becomes a divided row and `children` fill the rest.
    */
   flush?: boolean;
+  /** Defaults to "Training your model". */
+  title?: ReactNode;
+  /** Render inline on a static scrim instead of a portal (sandbox fixtures). */
+  surfaceOnly?: boolean;
+  /** Drop the Predict … based on … sentence; the body carries the columns itself. */
+  hideStatement?: boolean;
+  /**
+   * Figma footer: **Back to dataset** and the close button are there the
+   * whole time; the primary reads **Skip →**, then **Continue →**.
+   */
+  persistentBack?: boolean;
   children: ReactNode;
 }
 
@@ -72,41 +83,51 @@ export function TrainingModalShell({
   status,
   maxWidth = 760,
   flush = false,
+  title = "Training your model",
+  surfaceOnly = false,
+  hideStatement = false,
+  persistentBack = false,
   children,
 }: ShellProps) {
-  const primaryLabel =
-    done && canTest ? (
-      <span className={styles.testLabel}>
-        Test model
-        <FaIcon name="arrow-right" fontSize="18px" />
-      </span>
-    ) : done ? (
-      "Back to data"
-    ) : (
-      "Skip"
-    );
+  const arrowLabel = (text: string) => (
+    <span className={styles.testLabel}>
+      {text}
+      <FaIcon name="arrow-right" fontSize="18px" />
+    </span>
+  );
+  const primaryLabel = persistentBack
+    ? arrowLabel(done ? "Continue" : "Skip")
+    : done && canTest
+      ? arrowLabel("Test model")
+      : done
+        ? "Back to data"
+        : "Skip";
 
   return (
     <Modal
       open={open}
-      title="Training your model"
+      surfaceOnly={surfaceOnly}
+      title={title}
       maxWidth={maxWidth}
-      isDismissable={done}
-      hasSecondaryAction={done}
+      isDismissable={done || persistentBack}
+      hasSecondaryAction={done || persistentBack}
       primaryActionLabel={primaryLabel}
-      secondaryActionLabel="Back to data"
+      secondaryActionLabel={persistentBack ? "Back to dataset" : "Back to data"}
       onPrimaryAction={done ? (canTest ? onTest : onClose) : onSkip}
-      onSecondaryAction={done ? onClose : undefined}
-      onClose={done ? onClose : undefined}
+      onSecondaryAction={done || persistentBack ? onClose : undefined}
+      onClose={done || persistentBack ? onClose : undefined}
     >
       <div className={`${styles.body} ${flush ? styles.bodyFlush : ""}`}>
-        <PredictionStatement
-          columns={columns}
-          labelColumn={labelColumn}
-          features={features}
-          size="large"
-          className={flush ? styles.statementRow : undefined}
-        />
+        {hideStatement ? null : (
+          <PredictionStatement
+            columns={columns}
+            labelColumn={labelColumn}
+            features={features}
+            size="large"
+            fit
+            className={flush ? styles.statementRow : undefined}
+          />
+        )}
         {status !== undefined ? (
           <p className={styles.status} aria-live="polite">
             {status}

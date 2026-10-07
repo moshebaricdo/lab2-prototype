@@ -213,7 +213,7 @@ export interface AiLabSavedModel {
  */
 export type AiLabTestLayout = "dock" | "canvas";
 
-/** Training modal playback: grow the tree, or walk the rows through it. */
+/** Training modal playback: walk the rows through the tree (default), or grow it. */
 export type AiLabTrainingAnimation = "tree" | "rows";
 
 export interface AiLabLevelConfig {
@@ -279,11 +279,11 @@ export interface AiLabLevelConfig {
    */
   trainingModal?: boolean;
   /**
-   * What the training modal plays. `tree` (default) grows the finished tree
-   * depth by depth. `rows` is the legacy-inspired sort and quiz: every row
-   * is a dot sorted into piles by the tree's questions (Training), then a
-   * few rows roll down the tree with the label hidden and get guessed
-   * (Testing) before the score. Experiment flag (dev panel).
+   * What the training modal plays. `rows` (default) is the sort and quiz
+   * (`TrainingTableRow`): every row is a dot sorted into piles by the
+   * tree's questions (Training), then a few rows from the sheet trace down
+   * the tree and get guessed (Testing) before the score. `tree` is the
+   * fallback that grows the finished tree depth by depth. Dev panel knob.
    */
   trainingAnimation?: AiLabTrainingAnimation;
   /** Feature columns hidden from the Train rail checklist. */

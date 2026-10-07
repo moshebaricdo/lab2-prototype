@@ -42,7 +42,7 @@ export function aiLabDevDefaults(
     hideTrainPanel: Boolean(config.hideTrainTab) && !config.hideDatasetTab,
     defaultDataView: config.defaultDataView ?? "table",
     bundleWideSplits: Boolean(config.bundleWideSplits),
-    trainingAnimation: config.trainingAnimation ?? "tree",
+    trainingAnimation: config.trainingAnimation ?? "rows",
   };
 }
 
@@ -123,7 +123,7 @@ export function mergeAiLabDevConfig(
       resolved.defaultDataView === "cards" ? "cards" : "table",
     testLayout: "canvas",
     bundleWideSplits: Boolean(resolved.bundleWideSplits),
-    trainingAnimation: resolved.trainingAnimation === "rows" ? "rows" : "tree",
+    trainingAnimation: resolved.trainingAnimation === "tree" ? "tree" : "rows",
     pretrained,
     initialSection: hideDatasetTab
       ? "test"

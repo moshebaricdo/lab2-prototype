@@ -47,6 +47,26 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   stroke-width: 3;
 }
 
+/* `marbleStyle="trace"`: the taken connector draws itself from the parent
+   down to the child instead of lighting up all at once. */
+.linkTrace {
+  fill: none;
+  stroke: var(--border-selected-primary);
+  stroke-width: 3;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+.linkTraceDraw {
+  animation: trace-draw var(--trace-ms, 500ms) cubic-bezier(0.45, 0, 0.25, 1) both;
+}
+
+@keyframes trace-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
 .slot {
   display: contents;
 }
@@ -117,8 +137,18 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   box-shadow: var(--shadow-sm);
 }
 
+/* The leaf the row landed in names its guess with a small bounce; the
+   strip's guess cell waits for it (`GUESS_DELAY_MS` in trainingWalk.ts).
+   `scale` (not `transform`) so it composes with the dots' inline translate;
+   its dots share the bounce through `.dotAnswer`. */
 .nodeAnswer {
-  background: var(--background-brand-light);
+  animation: answer-bounce 250ms $ease-out;
+}
+
+@keyframes answer-bounce {
+  50% {
+    scale: 1.06;
+  }
 }
 
 .head {
@@ -162,39 +192,41 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   transition: opacity 240ms ease 400ms;
 }
 
+/* After the slowest dot has landed (pop / move stagger + 560ms glide). */
+.countLate {
+  transition-delay: 1100ms;
+}
+
 .countOn {
   opacity: 1;
 }
 
+/* Same type as the row count it replaces, colored by outcome. */
 .scores {
   display: flex;
   flex-shrink: 0;
-  gap: 4px;
+  gap: 8px;
   animation: title-in 280ms $ease-out both;
 }
 
 .mark {
-  @include type-label-4;
+  @include type-body-4-regular;
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  height: 18px;
-  padding: 0 6px;
-  border-radius: var(--shape-round);
-  color: var(--text-neutral-white-fixed);
   font-variant-numeric: tabular-nums;
 }
 
 .markRight {
-  background: var(--background-success-primary);
+  color: var(--text-success-primary);
 }
 
 .markWrong {
-  background: var(--background-error-primary);
+  color: var(--text-error-primary);
 }
 
-/* Faint footprints of the pile a question split, so the parent still
-   reads as "these went down there". */
+/* Footprints of the pile a question split, so the parent still reads as
+   "these went down there". */
 .tray {
   display: flex;
   flex-wrap: wrap;
@@ -210,7 +242,7 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
 }
 
 .nodeSorted .ghost {
-  opacity: 0.18;
+  opacity: 1;
 }
 
 /* Live dots sit on top of the nodes and glide between trays. */
@@ -234,8 +266,10 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   opacity: 0;
 }
 
-.dotQuiet {
-  opacity: 0.5;
+/* Rides the leaf's bounce: the inline `transform-origin` is the leaf's
+   center, so `scale` grows the pile with the card rather than each dot. */
+.dotAnswer {
+  animation: answer-bounce 250ms $ease-out;
 }
 
 /* A wrong guess keeps its real color but loses its fill: no extra hue to
@@ -270,6 +304,14 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   animation: marble-in 320ms $ease-out both;
 }
 
+/* `rider`: no "?" — a grey dot that takes its leaf's color on the last line. */
+.marblePlain {
+  width: 14px;
+  height: 14px;
+  margin: 2px;
+  transition: background-color 200ms ease;
+}
+
 .marbleRevealed {
   animation: marble-reveal 420ms $ease-out both;
 }
@@ -300,13 +342,77 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   }
 }
 
+/* Figma refinement (AI Lab 2, Training/Testing Modal). Geometry must agree
+   with `LOOKS.compact` in SortingTree.tsx: 1.5px border + 6/8/8px padding,
+   4px head gap. */
+.compact {
+  .link {
+    stroke: var(--background-neutral-septenary);
+    stroke-width: 1.5;
+  }
+
+  .linkPath,
+  .linkTrace {
+    stroke: var(--border-selected-primary);
+    stroke-width: 2;
+  }
+
+  /* Plain words on the canvas until the marble takes that branch. */
+  .edgeLabel {
+    @include type-body-4-semibold;
+    padding: 1px 10px;
+    background: var(--background-neutral-secondary);
+    box-shadow: none;
+    color: var(--text-neutral-primary);
+  }
+
+  .edgeLabelPath {
+    background: var(--background-selected-primary);
+    color: var(--text-selected-primary);
+  }
+
+  .node {
+    gap: 4px;
+    padding: 6px 8px 8px;
+    border-width: 1.5px;
+    border-color: var(--background-neutral-septenary);
+    border-radius: var(--shape-sm);
+    /* A zero ring in the same slot as `.nodePath`'s, so lighting a node only
+       grows the ring. Without it the shadow lists differ in length and the
+       soft shadow morphs into the ring, which reads as a flash. */
+    box-shadow:
+      0 0 0 0 var(--border-selected-primary),
+      var(--shadow-sm);
+  }
+
+  /* Same box as the 1.5px border so the dots don't shift; the ring adds the rest. */
+  .nodePath {
+    border-color: var(--border-selected-primary);
+    box-shadow:
+      0 0 0 0.5px var(--border-selected-primary),
+      var(--shadow-sm);
+  }
+
+  .title {
+    @include type-body-4-semibold;
+  }
+
+  .count {
+    @include type-body-4-regular;
+  }
+}
+
+/* Zero the time rather than `animation: none`: dropping `none` on the next
+   beat would restart every title's entrance animation. */
 .instant *,
 .instant *::before {
   transition: none !important;
-  animation: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .frame,
   .frame * {
     transition: none !important;
     animation: none !important;

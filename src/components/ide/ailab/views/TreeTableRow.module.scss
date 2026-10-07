@@ -1,0 +1,387 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+/* AI Lab 2 Figma, Training/Testing Modal (5715:16800). */
+
+.board {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The guess on its way from the leaf to the label cell (`useGuessFlight`);
+   placed at the cell, animated back from the leaf. */
+.flyer {
+  @include type-body-4-semibold;
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 6px;
+  margin-left: -6px;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+  box-shadow: var(--shadow-md);
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+  pointer-events: none;
+  transform-origin: left center;
+  opacity: 0;
+}
+
+.flyerDot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+}
+
+/* Canvas plus dock: a fixed height (`CANVAS_HEIGHT`), so the modal never
+   resizes while the tree gives the dock's room back and forth. */
+.field {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Over the canvas bottom (two 28px rows plus the top rule, `DOCK_HEIGHT`);
+   the tree only makes room for it while the row is up. */
+.dock {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 57px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Rises up under the leaves for testing, drops back down for the score. */
+.sheetLayer {
+  position: absolute;
+  inset: 0;
+  border-top: 1px solid var(--border-neutral-primary);
+  transform: translateY(100%);
+  transition: transform 185ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.sheetLayer tbody > tr > * {
+  border-bottom: 0;
+}
+
+.sheetLayerOn {
+  transform: none;
+  transition: transform 285ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.statement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.accuracy {
+  @include type-body-3-semibold;
+  flex-shrink: 0;
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+  animation: accuracy-in 240ms 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Where the accuracy lands; swaps in on each phase change (keyed by act). */
+.phase {
+  @include type-body-3-semibold;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-neutral-secondary);
+  white-space: nowrap;
+  animation: accuracy-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Eight dots, so step the turn and each dot lands where the last one was. */
+.spinner {
+  display: inline-block;
+  animation: spinner-turn 1s steps(8) infinite;
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Zero the time rather than `animation: none`, which would replay these
+   entrances on the beat after a jump. */
+.instant * {
+  transition: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+.sheet {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  background: var(--background-neutral-primary);
+}
+
+.th,
+.td,
+.thIndex,
+.tdIndex {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  border-left: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
+  text-align: left;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.th,
+.thIndex,
+.tdIndex {
+  @include type-body-4-semibold;
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-tertiary);
+}
+
+.td {
+  @include type-body-4-regular;
+}
+
+.thIndex,
+.tdIndex {
+  width: 36px;
+  border-left: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Column roles, same pairing as the statement Tags and the sheet. */
+.thFeature {
+  border-color: var(--border-info-primary);
+  background: var(--background-info-mid);
+  color: var(--text-neutral-primary);
+}
+
+/* Body tints are the Data Set sheet's resting cells (`DataStudio.module.scss`),
+   not its full-strength hover fill. */
+/* Bold flips when the tree's edge label lights (inline `transition-delay`
+   in trace mode) and drops straight back when the row moves on. */
+.tdAsked {
+  font-weight: var(--font-weight-semibold);
+}
+
+.tdFeature {
+  transition: font-weight 0s;
+  border-color: var(--border-info-light);
+  background: color-mix(
+    in srgb,
+    var(--background-info-light) 50%,
+    var(--background-neutral-primary)
+  );
+}
+
+.thLabel {
+  border-color: var(--border-accent-pink-primary);
+  background: var(--background-accent-pink-mid);
+  color: var(--text-neutral-primary);
+}
+
+.tdLabel {
+  border-color: var(--border-accent-pink-light);
+  background: color-mix(
+    in srgb,
+    var(--background-accent-pink-light) 50%,
+    var(--background-neutral-primary)
+  );
+}
+
+/* The guess lands in the blank cell, then the reveal grades it. */
+.guess {
+  @include type-body-4-semibold;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Waits out the leaf's bounce (`GUESS_DELAY_MS` in trainingWalk.ts); while
+   the guess flies, an inline delay holds it until the landing. */
+.guessEnter {
+  animation: guess-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1) 250ms both;
+}
+
+/* Matches the Testing canvas surface. */
+/* The tree's frame is only as tall as the scaled tree, so center it: a wide
+   tree that scales down by width would otherwise hug the top. Vertical
+   padding is `CANVAS_PAD_Y`; the sides keep the outermost leaves off the
+   modal edge. */
+.canvas {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 100%;
+  padding: 12px 16px;
+  background: var(--background-neutral-secondary);
+  transition: padding-bottom 185ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* The tree's center rises with the sheet (same timing as `.sheetLayerOn`). */
+.canvasDocked {
+  padding-bottom: calc(12px + 57px);
+  transition: padding-bottom 285ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px 0;
+  background: var(--background-neutral-secondary);
+}
+
+/* Slides in on the first beat, same entrance as the tree's nodes. The
+   items move, not the row, so the canvas color never shifts. */
+.legend > * {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 320ms ease,
+    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.legendOn > * {
+  opacity: 1;
+  transform: none;
+}
+
+.legendItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One line; what doesn't fit folds into "+N more" (`LegendKeys`). */
+.legendKeys {
+  position: relative;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-wrap: nowrap;
+  /* Room for the "+N more" focus ring inside the clip. */
+  margin: -4px;
+  padding: 4px;
+  overflow: hidden;
+}
+
+.legendKeys > * {
+  flex-shrink: 0;
+}
+
+.legendScale {
+  flex-shrink: 0;
+}
+
+/* Invisible copy of every key, so the fit is measured, not guessed. */
+.legendMeasure {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  column-gap: inherit;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.legendItem {
+  @include type-body-4-regular;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+}
+
+/* The folded rest ("+N more"); its tooltip names them. */
+.legendMore {
+  cursor: default;
+  text-decoration: underline dotted var(--border-neutral-primary);
+  text-underline-offset: 3px;
+}
+
+.legendMore:focus-visible {
+  outline: 2px solid var(--border-selected-primary);
+  outline-offset: 2px;
+  border-radius: var(--shape-sm);
+}
+
+.legendDotNeutral {
+  background: var(--background-neutral-septenary);
+}
+
+.legendDotWrong {
+  background: var(--background-neutral-primary);
+  box-shadow: inset 0 0 0 2px var(--background-neutral-septenary);
+}
+
+@keyframes guess-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes accuracy-in {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flyer {
+    display: none;
+  }
+
+  .guessEnter,
+  .accuracy,
+  .phase {
+    animation: none;
+  }
+
+  .sheetLayer,
+  .sheetLayerOn,
+  .canvas,
+  .canvasDocked,
+  .legend > * {
+    transition: none;
+  }
+}

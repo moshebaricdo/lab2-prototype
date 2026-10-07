@@ -136,6 +136,10 @@ const CadsParityPage = lazyPage(
   () => import("./pages/design-system/CadsParityPage"),
   "default",
 );
+const AiLabTrainingLabPage = lazyPage(
+  () => import("./pages/ailab/AiLabTrainingLabPage"),
+  "AiLabTrainingLabPage",
+);
 const AssessmentBuilderNewPage = lazyPage(
   () => import("./pages/assessment-builder/AssessmentBuilderNewPage"),
   "AssessmentBuilderNewPage",
@@ -501,6 +505,10 @@ export default function App() {
           element={<TypographySandboxPage />}
         />
         <Route path="/design-system/cads" element={<CadsParityPage />} />
+        <Route
+          path="/experiments/ailab-training"
+          element={<AiLabTrainingLabPage />}
+        />
         <Route path="/levels/aichatlab" element={<AiChatLabLevelPage />} />
         <Route
           path="/levels/aichatlab-setup"

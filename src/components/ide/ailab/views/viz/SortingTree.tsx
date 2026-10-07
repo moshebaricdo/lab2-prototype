@@ -1,34 +1,99 @@
-import { useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useLayoutEffect, useMemo, useRef, type CSSProperties, type ReactNode } from "react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import { useElementSize } from "../../../../../hooks/useElementSize";
 import { columnById, traceDecisionTree, treeBranches } from "../../../../../lib/aiLab";
 import type { AiLabColumn, AiLabDataRow, AiLabTreeNode } from "../../../../../types/aiLab";
-import { labelFill, labelIndexer } from "./labelPalette";
-import { elbowPathVertical, layoutTree, type LaidOutNode, type TreeLayout } from "./treeLayout";
+import { groupLabels, type LabelGrouping } from "./labelGroups";
+import { labelFill } from "./labelPalette";
+import {
+  elbowPathVertical,
+  layoutTree,
+  TREE_METRICS,
+  type LaidOutNode,
+  type TreeLayout,
+} from "./treeLayout";
 import { leafScore } from "./TreeGrowth";
 import styles from "./SortingTree.module.scss";
 
-/* Geometry. `.node` / `.tray` in the SCSS must agree; dot size and gap
- * reach the SCSS as `--dot` / `--dot-gap`. */
-const LEAF_MIN_WIDTH = 168;
-const LEAF_MAX_WIDTH = 224;
-/** Questions run longer than labels; decisions span 2+ leaf lanes, so they fit. */
-const DECISION_WIDTH = 208;
+/**
+ * `default` is the lab's tree; `compact` is the Figma refinement (160px
+ * cards, 12px type, 6.5px dots, plain edge labels, a higher elbow).
+ */
+export type SortingLook = "default" | "compact";
+
+/* Geometry. `.node` / `.tray` (and `.compact` overrides) in the SCSS must
+ * agree; dot size and gap reach the SCSS as `--dot` / `--dot-gap`. */
+interface LookGeometry {
+  leafMin: number;
+  leafMax: number;
+  /** Questions run longer than labels; decisions span 2+ leaf lanes, so they fit. */
+  decision: number;
+  /** Rough glyph width of a leaf label, for `leafWidth`. */
+  glyph: number;
+  /** Room for the ✓ / ✗ pills beside a leaf label. */
+  pills: number;
+  /** Border + padding from the node edge to its content box. */
+  insetX: number;
+  insetTop: number;
+  insetBottom: number;
+  headHeight: number;
+  headGap: number;
+  levelGap: number;
+  /** Elbow run, as a share of the parent → child gap. */
+  bend: number;
+  dots: [DotGeometry, DotGeometry, DotGeometry];
+}
+
+const LOOKS: Record<SortingLook, LookGeometry> = {
+  default: {
+    leafMin: 168,
+    leafMax: 224,
+    decision: 208,
+    glyph: 7.6,
+    pills: 108,
+    insetX: 12,
+    insetTop: 10,
+    insetBottom: 10,
+    headHeight: 18,
+    headGap: 6,
+    levelGap: TREE_METRICS.levelGap,
+    bend: 0.45,
+    dots: [
+      { dot: 10, gap: 4 },
+      { dot: 8, gap: 3 },
+      { dot: 6, gap: 3 },
+    ],
+  },
+  compact: {
+    leafMin: 160,
+    leafMax: 200,
+    decision: 160,
+    glyph: 6.6,
+    pills: 84,
+    insetX: 9.5,
+    insetTop: 7.5,
+    insetBottom: 9.5,
+    headHeight: 18,
+    headGap: 4,
+    levelGap: 55,
+    bend: 16 / 55,
+    dots: [
+      { dot: 6.5, gap: 3 },
+      { dot: 5.5, gap: 2.5 },
+      { dot: 4.5, gap: 2 },
+    ],
+  },
+};
 
 /**
  * Wide enough for the longest label beside the ✓ / ✗ pills (rough glyph
- * estimate at body-3 semibold), so `Iris-versicolor` isn't `Iris-v…`.
+ * estimate at the title size), so `Iris-versicolor` isn't `Iris-v…`.
  */
-function leafWidth(labels: string[]): number {
+function leafWidth(labels: string[], look: LookGeometry): number {
   const longest = Math.max(0, ...labels.map((label) => label.length));
-  const estimate = INSET_X * 2 + 16 + longest * 7.6 + 92;
-  return Math.round(Math.min(LEAF_MAX_WIDTH, Math.max(LEAF_MIN_WIDTH, estimate)));
+  const estimate = look.insetX * 2 + longest * look.glyph + look.pills;
+  return Math.round(Math.min(look.leafMax, Math.max(look.leafMin, estimate)));
 }
-/** Border + padding from the node edge to its content box. */
-const INSET_X = 12;
-const INSET_Y = 10;
-const HEAD_HEIGHT = 18;
-const HEAD_GAP = 6;
 
 /** Past this, one dot stands for several rows so a pile stays readable. */
 const MAX_DOTS = 240;
@@ -40,15 +105,15 @@ interface DotGeometry {
 }
 
 /** Every row stays a dot as long as it can; bigger sheets get smaller dots. */
-function dotGeometry(count: number): DotGeometry {
-  if (count <= 60) return { dot: 10, gap: 4 };
-  if (count <= 120) return { dot: 8, gap: 3 };
-  return { dot: 6, gap: 3 };
+function dotGeometry(count: number, look: LookGeometry): DotGeometry {
+  if (count <= 60) return look.dots[0];
+  if (count <= 120) return look.dots[1];
+  return look.dots[2];
 }
 
 /** Dots per tray row; matches how the flex-wrap tray wraps at this width. */
-function perRow(width: number, { dot, gap }: DotGeometry): number {
-  return Math.floor((width - INSET_X * 2 + gap) / (dot + gap));
+function perRow(width: number, { dot, gap }: DotGeometry, look: LookGeometry): number {
+  return Math.floor((width - look.insetX * 2 + gap) / (dot + gap));
 }
 
 /**
@@ -93,6 +158,7 @@ export interface SortDot {
 }
 
 export interface SortingModel {
+  look: SortingLook;
   layout: TreeLayout;
   /** Decision nodes in the order their questions are asked (depth, then left to right). */
   splits: LaidOutNode[];
@@ -103,10 +169,20 @@ export interface SortingModel {
   geometry: DotGeometry;
   /** Node key → dot ids in slot order. */
   members: Map<string, number[]>;
+  /**
+   * Label → color. Past the palette, the labels the tree predicts most keep
+   * a color and the rest fold into one neutral Other (`groupLabels`).
+   */
+  grouping: LabelGrouping;
 }
 
-function trayHeight(count: number, width: number, geometry: DotGeometry): number {
-  const rows = Math.max(1, Math.ceil(count / perRow(width, geometry)));
+function trayHeight(
+  count: number,
+  width: number,
+  geometry: DotGeometry,
+  look: LookGeometry,
+): number {
+  const rows = Math.max(1, Math.ceil(count / perRow(width, geometry, look)));
   return rows * geometry.dot + (rows - 1) * geometry.gap;
 }
 
@@ -123,9 +199,10 @@ export function useSortingModel(
   rows: AiLabDataRow[],
   labelColumn: string,
   labels: string[],
+  lookName: SortingLook = "default",
 ): SortingModel {
   return useMemo(() => {
-    const indexOf = labelIndexer(labels);
+    const look = LOOKS[lookName];
     const leafOrder = new Map<string, number>();
     const walk = (node: AiLabTreeNode) => {
       if (node.type === "leaf") leafOrder.set(node.pathKey, leafOrder.size);
@@ -133,20 +210,40 @@ export function useSortingModel(
     };
     walk(tree);
 
+    const routed = rows.map((row) => traceDecisionTree(tree, row));
+    const totals = new Map<string, number>();
+    const predicted = new Map<string, number>();
+    rows.forEach((row, rowIndex) => {
+      const label = String(row[labelColumn]);
+      totals.set(label, (totals.get(label) ?? 0) + 1);
+      const guess = routed[rowIndex]!.prediction;
+      predicted.set(guess, (predicted.get(guess) ?? 0) + 1);
+    });
+    const grouping = groupLabels(
+      labels,
+      [...predicted].map(([label, count]) => ({ label, count })),
+      totals,
+    );
+    /* Folded labels share Other's neutral, so they sort after the named colors. */
+    const rankOf = (label: string) => {
+      const index = grouping.indexOf(label);
+      return index < 0 ? labels.length : index;
+    };
+
     const traced = rows.map((row, rowIndex) => {
-      const trace = traceDecisionTree(tree, row);
+      const trace = routed[rowIndex]!;
       const label = String(row[labelColumn]);
       return {
         rowIndex,
         label,
         pathKeys: trace.pathKeys,
         leaf: leafOrder.get(trace.pathKeys[trace.pathKeys.length - 1]!) ?? 0,
-        rank: label === trace.prediction ? -1 : indexOf(label),
+        rank: label === trace.prediction ? -1 : rankOf(label),
       };
     });
     traced.sort((a, b) => a.leaf - b.leaf || a.rank - b.rank || a.rowIndex - b.rowIndex);
     const picked = condense(traced, MAX_DOTS);
-    const geometry = dotGeometry(picked.length);
+    const geometry = dotGeometry(picked.length, look);
     const dots = picked.map((entry, id) => ({
       id,
       label: entry.label,
@@ -162,23 +259,32 @@ export function useSortingModel(
       }
     }
 
-    const leaf = leafWidth(labels);
-    const layout = layoutTree(tree, () => "card", "vertical", undefined, (node) => {
-      const width = node.type === "leaf" ? leaf : DECISION_WIDTH;
-      return {
-        width,
-        height:
-          INSET_Y * 2 +
-          HEAD_HEIGHT +
-          HEAD_GAP +
-          trayHeight(members.get(node.pathKey)?.length ?? 0, width, geometry),
-      };
-    });
+    const leaf = leafWidth(labels, look);
+    const layout = layoutTree(
+      tree,
+      () => "card",
+      "vertical",
+      undefined,
+      (node) => {
+        const width = node.type === "leaf" ? leaf : look.decision;
+        return {
+          width,
+          height:
+            look.insetTop +
+            look.insetBottom +
+            look.headHeight +
+            look.headGap +
+            trayHeight(members.get(node.pathKey)?.length ?? 0, width, geometry, look),
+        };
+      },
+      look.levelGap,
+    );
     const splits = layout.nodes
       .filter((laid) => laid.node.type === "decision")
       .sort((a, b) => a.depth - b.depth || a.x - b.x);
 
     return {
+      look: lookName,
       layout,
       splits,
       splitIndex: new Map(splits.map((laid, index) => [laid.key, index])),
@@ -186,8 +292,9 @@ export function useSortingModel(
       rowsPerDot: rows.length / Math.max(1, dots.length),
       geometry,
       members,
+      grouping,
     };
-  }, [tree, rows, labelColumn, labels]);
+  }, [tree, rows, labelColumn, labels, lookName]);
 }
 
 /** Where a dot rests after `splitsDone` questions have sorted the piles. */
@@ -205,17 +312,25 @@ function slotPosition(
   node: LaidOutNode,
   slot: number,
   geometry: DotGeometry,
+  look: LookGeometry,
 ): { x: number; y: number } {
-  const columns = perRow(node.width, geometry);
+  const columns = perRow(node.width, geometry, look);
   const pitch = geometry.dot + geometry.gap;
   return {
-    x: node.x + INSET_X + (slot % columns) * pitch,
-    y: node.y + INSET_Y + HEAD_HEIGHT + HEAD_GAP + Math.floor(slot / columns) * pitch,
+    x: node.x + look.insetX + (slot % columns) * pitch,
+    y:
+      node.y +
+      look.insetTop +
+      look.headHeight +
+      look.headGap +
+      Math.floor(slot / columns) * pitch,
   };
 }
 
 /** Everything the sorting tree draws, as plain flags the caller steps through. */
 export interface SortingTreeState {
+  /** The root node has slid in (empty until `read`); treated as true when omitted. */
+  rootShown?: boolean;
   /** Dots have popped into the root pile. */
   read: boolean;
   /** Questions visible: `splits[i]` shows its feature when `i < splitsShown`. */
@@ -226,7 +341,7 @@ export interface SortingTreeState {
   splitsDone: number;
   /** Leaves show the label they guess. */
   named: boolean;
-  /** Piles step back so the quiz marble reads. */
+  /** Testing: dots hold still (no move stagger) while the quiz row runs. */
   quiet: boolean;
   /** Odd-colored dots in each leaf go hollow; leaves show ✓ / ✗ counts. */
   checked: boolean;
@@ -254,9 +369,49 @@ interface SortingTreeProps {
   marble?: SortingMarble;
   /** No transitions (Skip, reduced motion). */
   instant?: boolean;
+  /**
+   * Drawn inside the scaled stage, in layout pixels — a variant can park
+   * labels on the connectors without knowing the stage's scale.
+   */
+  overlay?: ReactNode;
+  /** Edge into this node lights up before the marble has taken it. */
+  hotEdgeKey?: string;
   /** Pixel height cap; the stage scales down to fit width and this height. */
   maxHeight?: number;
+  /** Largest scale the stage may grow to when there's room (1 = never past layout size). */
+  maxScale?: number;
+  /**
+   * CSS timing (`duration easing`) for scale changes, e.g. when `maxHeight`
+   * moves with a panel sliding in. Unset, the stage snaps to its new size.
+   */
+  resizeTransition?: string;
+  /**
+   * A question (or a leaf's label) shows as soon as its node appears,
+   * before its dots arrive, and the row count waits for the dots to land:
+   * title, dots, count.
+   */
+  askOnArrival?: boolean;
+  /** Color dot beside each leaf's label (the dots and key already carry it). */
+  labelSwatch?: boolean;
+  /**
+   * `marble` rolls the grey "?" dot down the connectors. `trace` drops the
+   * dot: each taken connector draws itself parent → child, and the node and
+   * edge label it reaches light up when the line arrives (`traceMs`).
+   * `rider` is `trace` with a plain grey marble riding the line's tip; it
+   * takes the landing leaf's color as it starts the last connector.
+   */
+  marbleStyle?: SortingMarbleStyle;
   ariaLabel: string;
+}
+
+export type SortingMarbleStyle = "marble" | "trace" | "rider";
+
+/** Extra draw time on each taken connector in `trace` mode, on top of its share of the step. */
+const TRACE_EXTRA_MS = 50;
+
+/** How long a taken connector takes to draw in `trace` mode. */
+export function traceMs(travelMs: number): number {
+  return Math.round(travelMs * CONNECTOR_SHARE) + TRACE_EXTRA_MS;
 }
 
 /**
@@ -264,7 +419,8 @@ interface SortingTreeProps {
  * real label's color; each question splits a pile into smaller piles until
  * each leaf is mostly one color and names itself after it. During testing a
  * grey marble (answer unknown) rolls down the connectors into a leaf. All
- * sizes come from the finished tree, so the stage never changes size.
+ * sizes come from the finished tree, so the stage only rescales when its
+ * `maxHeight` or width changes.
  */
 export function SortingTree({
   model,
@@ -274,16 +430,35 @@ export function SortingTree({
   marble,
   instant = false,
   maxHeight = 340,
+  maxScale = 1,
+  resizeTransition,
+  overlay,
+  hotEdgeKey,
+  askOnArrival = false,
+  labelSwatch = true,
+  marbleStyle = "marble",
   ariaLabel,
 }: SortingTreeProps) {
+  const trace = marbleStyle !== "marble";
+  const rider = marbleStyle === "rider";
   const { layout, splits, splitIndex, dots, members, geometry } = model;
-  const indexOf = useMemo(() => labelIndexer(labels), [labels]);
+  const look = LOOKS[model.look];
+  const compact = model.look === "compact";
+  const indexOf = model.grouping.indexOf;
   const { ref, size } = useElementSize<HTMLDivElement>();
   const scale = Math.min(
-    1,
+    maxScale,
     maxHeight / layout.height,
-    size.width ? size.width / layout.width : 1,
+    size.width ? size.width / layout.width : maxScale,
   );
+  /* Center on the nodes, not the layout box, which can carry a lane gap on
+     one side and would sit the tree off-center. */
+  const centerShift = useMemo(() => {
+    if (layout.nodes.length === 0) return 0;
+    const left = Math.min(...layout.nodes.map((laid) => laid.x));
+    const right = Math.max(...layout.nodes.map((laid) => laid.x + laid.width));
+    return layout.width / 2 - (left + right) / 2;
+  }, [layout]);
 
   const slotOf = useMemo(() => {
     const map = new Map<string, Map<number, number>>();
@@ -292,7 +467,9 @@ export function SortingTree({
   }, [members]);
 
   const visible = (laid: LaidOutNode) =>
-    !laid.parentKey || (splitIndex.get(laid.parentKey) ?? Infinity) < state.childrenShown;
+    laid.parentKey
+      ? (splitIndex.get(laid.parentKey) ?? Infinity) < state.childrenShown
+      : state.rootShown !== false;
   const asked = (laid: LaidOutNode) =>
     (splitIndex.get(laid.key) ?? Infinity) < state.splitsShown;
   const sorted = (laid: LaidOutNode) =>
@@ -313,6 +490,24 @@ export function SortingTree({
   );
   const landedKey =
     marble && marble.step === marble.pathKeys.length - 1 ? marble.pathKeys[marble.step] : undefined;
+  /** In `trace` mode, the node the line is still drawing toward. */
+  const arrivingKey =
+    trace && marble && marble.step > 0 ? marble.pathKeys[marble.step] : undefined;
+  const arriveDelay = (key: string): CSSProperties | undefined =>
+    key === arrivingKey && !instant ? { transitionDelay: `${traceMs(marble!.travelMs)}ms` } : undefined;
+  const linkPathD = (sourceKey: string, targetKey: string) => {
+    const source = layout.byKey.get(sourceKey);
+    const target = layout.byKey.get(targetKey);
+    if (!source || !target) return undefined;
+    return elbowPathVertical(
+      source.cx,
+      source.y + source.height,
+      target.cx,
+      target.y,
+      8,
+      look.bend,
+    );
+  };
 
   const lastSplit = state.splitsDone > 0 ? splits[state.splitsDone - 1] : undefined;
   const popStep = Math.min(28, 700 / Math.max(1, dots.length));
@@ -322,8 +517,13 @@ export function SortingTree({
   return (
     <div
       ref={ref}
-      className={`${styles.frame} ${instant ? styles.instant : ""}`}
-      style={{ height: Math.ceil(layout.height * scale) }}
+      className={[styles.frame, compact ? styles.compact : "", instant ? styles.instant : ""]
+        .filter(Boolean)
+        .join(" ")}
+      style={{
+        height: Math.ceil(layout.height * scale),
+        transition: resizeTransition && !instant ? `height ${resizeTransition}` : undefined,
+      }}
       role="img"
       aria-label={ariaLabel}
     >
@@ -333,7 +533,8 @@ export function SortingTree({
           {
             width: layout.width,
             height: layout.height,
-            transform: `translateX(-50%) scale(${scale})`,
+            transform: `translateX(calc(-50% + ${centerShift * scale}px)) scale(${scale})`,
+            transition: resizeTransition && !instant ? `transform ${resizeTransition}` : undefined,
             "--dot": `${geometry.dot}px`,
             "--dot-gap": `${geometry.gap}px`,
           } as CSSProperties
@@ -341,32 +542,50 @@ export function SortingTree({
       >
         <svg className={styles.links} width={layout.width} height={layout.height} aria-hidden>
           {links.map((link) => {
-            const source = layout.byKey.get(link.sourceKey);
             const target = layout.byKey.get(link.targetKey);
-            if (!source || !target) return null;
-            const onPath = onMarblePath(link.sourceKey, link.targetKey);
+            const d = linkPathD(link.sourceKey, link.targetKey);
+            if (!target || !d) return null;
+            const onPath = !trace && onMarblePath(link.sourceKey, link.targetKey);
+            const hot = hotEdgeKey === link.targetKey;
             return (
               <path
                 key={`${link.sourceKey}→${link.targetKey}`}
                 className={[
                   styles.link,
                   visible(target) ? styles.linkOn : "",
-                  onPath ? styles.linkPath : "",
+                  onPath || hot ? styles.linkPath : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                d={elbowPathVertical(source.cx, source.y + source.height, target.cx, target.y)}
+                d={d}
               />
             );
           })}
+          {trace && marble
+            ? marble.pathKeys.slice(1, marble.step + 1).map((targetKey, index) => {
+                const sourceKey = marble.pathKeys[index]!;
+                const d = linkPathD(sourceKey, targetKey);
+                if (!d) return null;
+                return (
+                  <path
+                    key={`${marble.id}:${targetKey}`}
+                    className={`${styles.linkTrace} ${targetKey === arrivingKey ? styles.linkTraceDraw : ""}`}
+                    style={{ "--trace-ms": `${traceMs(marble.travelMs)}ms` } as CSSProperties}
+                    pathLength={1}
+                    d={d}
+                  />
+                );
+              })
+            : null}
         </svg>
 
         {layout.nodes.map((laid) => {
           const { node } = laid;
           const isLeaf = node.type === "leaf";
           const on = visible(laid);
-          const decided = isLeaf ? state.named : asked(laid);
+          const decided = askOnArrival ? on : isLeaf ? state.named : asked(laid);
           const onPath = marbleKeys.has(laid.key);
+          const hot = hotEdgeKey === laid.key;
           const score = isLeaf && state.checked ? leafScore(node) : undefined;
           const ids = members.get(laid.key) ?? [];
           return (
@@ -376,11 +595,16 @@ export function SortingTree({
                   className={[
                     styles.edgeLabel,
                     on ? styles.edgeLabelOn : "",
-                    onPath ? styles.edgeLabelPath : "",
+                    onPath || hot ? styles.edgeLabelPath : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}
-                  style={{ left: laid.cx, top: laid.y - EDGE_LABEL_GAP, height: EDGE_LABEL_HEIGHT }}
+                  style={{
+                    left: laid.cx,
+                    top: laid.y - EDGE_LABEL_GAP,
+                    height: compact ? 20 : EDGE_LABEL_HEIGHT,
+                    ...arriveDelay(laid.key),
+                  }}
                 >
                   {laid.branchLabel}
                 </span>
@@ -395,12 +619,19 @@ export function SortingTree({
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                style={{ left: laid.x, top: laid.y, width: laid.width, height: laid.height }}
+                style={{
+                  left: laid.x,
+                  top: laid.y,
+                  width: laid.width,
+                  height: laid.height,
+                  ...arriveDelay(laid.key),
+                }}
+                data-node-key={laid.key}
               >
                 <div className={styles.head}>
                   {decided ? (
-                    <p className={styles.title}>
-                      {isLeaf ? (
+                    <p className={styles.title} data-node-title>
+                      {isLeaf && labelSwatch ? (
                         <span
                           className={styles.titleDot}
                           style={{ background: labelFill(indexOf(node.prediction)) }}
@@ -410,7 +641,7 @@ export function SortingTree({
                       <span className={styles.titleText}>
                         {isLeaf
                           ? node.prediction
-                          : `${columnById(columns, node.feature)?.name ?? node.feature}?`}
+                          : `${columnById(columns, node.feature)?.name ?? node.feature}${compact ? "" : "?"}`}
                       </span>
                     </p>
                   ) : (
@@ -419,18 +650,26 @@ export function SortingTree({
                   {score ? (
                     <span className={styles.scores}>
                       <span className={`${styles.mark} ${styles.markRight}`}>
-                        <FaIcon name="check" fontSize="9px" />
+                        <FaIcon name="circle-check" fontSize="10px" />
                         {score.right}
                       </span>
                       {score.wrong > 0 ? (
                         <span className={`${styles.mark} ${styles.markWrong}`}>
-                          <FaIcon name="xmark" fontSize="9px" />
+                          <FaIcon name="circle-xmark" fontSize="10px" />
                           {score.wrong}
                         </span>
                       ) : null}
                     </span>
                   ) : (
-                    <span className={`${styles.count} ${filled(laid) ? styles.countOn : ""}`}>
+                    <span
+                      className={[
+                        styles.count,
+                        askOnArrival ? styles.countLate : "",
+                        filled(laid) ? styles.countOn : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
                       {node.sampleCount}
                     </span>
                   )}
@@ -455,7 +694,7 @@ export function SortingTree({
           const key = restingKey(model, dot, state.splitsDone);
           const laid = layout.byKey.get(key);
           if (!laid) return null;
-          const { x, y } = slotPosition(laid, slotOf.get(key)?.get(dot.id) ?? 0, geometry);
+          const { x, y } = slotPosition(laid, slotOf.get(key)?.get(dot.id) ?? 0, geometry, look);
           const moving = movingSlots?.get(dot.id);
           const delay =
             state.splitsShown === 0
@@ -467,14 +706,15 @@ export function SortingTree({
             state.checked &&
             laid.node.type === "leaf" &&
             laid.node.prediction !== dot.label;
+          const answering = key === landedKey && marble?.answering === true;
           return (
             <span
               key={dot.id}
               className={[
                 styles.dot,
                 state.read ? "" : styles.dotHidden,
-                state.quiet ? styles.dotQuiet : "",
                 wrong ? styles.dotWrong : "",
+                answering ? styles.dotAnswer : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -482,16 +722,35 @@ export function SortingTree({
                 color: labelFill(indexOf(dot.label)),
                 transform: `translate(${x}px, ${y}px) scale(${state.read ? 1 : 0.2})`,
                 transitionDelay: `${delay}ms`,
+                transformOrigin: answering
+                  ? `${laid.x + laid.width / 2}px ${laid.y + laid.height / 2}px`
+                  : undefined,
               }}
               aria-hidden
             />
           );
         })}
 
-        {marble && marble.step >= 0 ? (
+        {overlay}
+        {marble && marble.step >= 0 && rider ? (
+          <RiderMarble
+            key={marble.id}
+            layout={layout}
+            marble={marble}
+            pathOf={linkPathD}
+            color={
+              marble.step > 0 && marble.step === marble.pathKeys.length - 1
+                ? leafFill(layout.byKey.get(marble.pathKeys[marble.step]!), indexOf)
+                : undefined
+            }
+            instant={instant}
+          />
+        ) : null}
+        {marble && marble.step >= 0 && !trace ? (
           <Marble
             key={marble.id}
             layout={layout}
+            bend={look.bend}
             marble={marble}
             color={
               marble.revealedLabel !== undefined
@@ -534,11 +793,13 @@ const CONNECTOR_SHARE = 0.8;
  */
 function Marble({
   layout,
+  bend,
   marble,
   color,
   instant,
 }: {
   layout: TreeLayout;
+  bend: number;
   marble: SortingMarble;
   color: string | undefined;
   instant: boolean;
@@ -556,7 +817,7 @@ function Marble({
     const child = layout.byKey.get(marble.pathKeys[marble.step]!);
     if (!parent || !child) return;
     const bottom = parent.y + parent.height;
-    const midY = bottom + (child.y - bottom) * 0.45;
+    const midY = bottom + (child.y - bottom) * bend;
     const points = [
       bottomCenter(parent),
       { x: parent.cx, y: midY },
@@ -588,18 +849,118 @@ function Marble({
       duration: marble.travelMs,
       easing: "cubic-bezier(0.45, 0, 0.25, 1)",
     });
+  }, [layout, bend, marble.pathKeys, marble.step, marble.travelMs, instant]);
+
+  if (!at) return null;
+  return (
+    <span ref={ref} className={styles.marble} style={{ transform: placeAt(restPoint(at)) }} aria-hidden>
+      <MarbleBody color={color} />
+    </span>
+  );
+}
+
+function leafFill(
+  laid: LaidOutNode | undefined,
+  indexOf: (label: string) => number,
+): string | undefined {
+  return laid?.node.type === "leaf" ? labelFill(indexOf(laid.node.prediction)) : undefined;
+}
+
+/** `.linkTraceDraw`'s easing, so the marble stays on the line's tip. */
+const TRACE_EASE = "cubic-bezier(0.45, 0, 0.25, 1)";
+/** The marble popping back out under a question to wait for the next line. */
+const MARBLE_DROP_MS = 180;
+
+/**
+ * `rider` mode's marble: a plain grey dot carried along the connector the
+ * trace is drawing — the same SVG path (`offset-path`), duration (`traceMs`)
+ * and easing — then dropped out of the bottom of a question to wait for the
+ * next one. It takes on its leaf's color (`color`) for the last connector.
+ */
+function RiderMarble({
+  layout,
+  marble,
+  pathOf,
+  color,
+  instant,
+}: {
+  layout: TreeLayout;
+  marble: SortingMarble;
+  pathOf: (sourceKey: string, targetKey: string) => string | undefined;
+  color: string | undefined;
+  instant: boolean;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const shown = useRef(marble.step);
+  /* A fresh function each render; reading it through a ref keeps a
+     re-render from cancelling the ride mid-line. */
+  const pathRef = useRef(pathOf);
+  pathRef.current = pathOf;
+  const at = layout.byKey.get(marble.pathKeys[marble.step]!);
+
+  useLayoutEffect(() => {
+    const from = shown.current;
+    shown.current = marble.step;
+    const el = ref.current;
+    if (!el || instant || marble.step !== from + 1) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const sourceKey = marble.pathKeys[from]!;
+    const child = layout.byKey.get(marble.pathKeys[marble.step]!);
+    const d = pathRef.current(sourceKey, marble.pathKeys[marble.step]!);
+    if (!child || !d) return;
+    /* The path lives only in the keyframes: an `offset-path` left on the
+       element would stack on its resting `transform`. A question's exit
+       drop-in rides the same timeline. */
+    const path = `path("${d}")`;
+    const rideMs = traceMs(marble.travelMs);
+    const ride: Keyframe[] = [
+      { offsetPath: path, offsetRotate: "0deg", offsetDistance: "0%", transform: "none", easing: TRACE_EASE },
+      { offsetPath: path, offsetRotate: "0deg", offsetDistance: "100%", transform: "none" },
+    ];
+    if (child.node.type !== "decision") {
+      const anim = el.animate(ride, { duration: rideMs });
+      return () => anim.cancel();
+    }
+    const total = rideMs + MARBLE_DROP_MS;
+    const at = rideMs / total;
+    const exit = placeAt(bottomCenter(child));
+    ride[1]!.offset = at;
+    const anim = el.animate(
+      [
+        ...ride,
+        {
+          offset: Math.min(1, at + 0.001),
+          offsetPath: "none",
+          transform: `${exit} scale(0.4)`,
+          opacity: 0,
+          easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        },
+        { offsetPath: "none", transform: exit, opacity: 1 },
+      ],
+      { duration: total },
+    );
+    return () => anim.cancel();
   }, [layout, marble.pathKeys, marble.step, marble.travelMs, instant]);
 
   if (!at) return null;
   return (
     <span ref={ref} className={styles.marble} style={{ transform: placeAt(restPoint(at)) }} aria-hidden>
       <span
-        key={color ? "revealed" : "hidden"}
-        className={`${styles.marbleBody} ${color ? styles.marbleRevealed : ""}`}
+        className={`${styles.marbleBody} ${styles.marblePlain}`}
         style={color ? { background: color } : undefined}
-      >
-        {color ? null : "?"}
-      </span>
+      />
+    </span>
+  );
+}
+
+function MarbleBody({ color }: { color: string | undefined }) {
+  return (
+    <span
+      key={color ? "revealed" : "hidden"}
+      className={`${styles.marbleBody} ${color ? styles.marbleRevealed : ""}`}
+      style={color ? { background: color } : undefined}
+    >
+      {color ? null : "?"}
     </span>
   );
 }
