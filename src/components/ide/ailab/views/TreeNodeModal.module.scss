@@ -1,0 +1,112 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.root {
+  display: flex;
+  min-width: 0;
+  height: min(62vh, 454px);
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* The path on the left, the Correct | Incorrect filter on the right. */
+.head {
+  display: flex;
+  min-height: 24px;
+  flex-shrink: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Same numbered steps as the Result card, laid out in a row. */
+.path {
+  @include type-body-3-regular;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ds-text-neutral-primary);
+
+  strong {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.pathStep {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.pathSeparator {
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.pathIndex {
+  @include type-body-4-bold;
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--shape-round);
+  background: var(--ds-background-neutral-secondary);
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.pathStepCurrent .pathIndex {
+  background: var(--ds-background-neutral-septenary);
+  color: var(--ds-text-neutral-primary-inverse);
+}
+
+.tableWrap {
+  flex: 1 1 auto;
+  overscroll-behavior: none;
+}
+
+.exampleValue {
+  @include type-body-4-bold;
+  color: var(--ds-text-neutral-primary);
+}
+
+/* Your example stays in view under the header while the rows scroll. */
+.exampleRow > td {
+  position: sticky;
+  top: 28px;
+  z-index: 2;
+}
+
+.exampleRow > td:first-child {
+  z-index: 3;
+}
+
+/* White, untinted cells set the example apart from the sheet rows. */
+tbody tr.exampleRow:hover > td:not(:first-child),
+.exampleRow > td:not(:first-child) {
+  background: var(--ds-background-neutral-primary);
+}
+
+/* Fills the index cell so the whole cell triggers the tooltip. */
+.examplePin {
+  display: flex;
+  height: 28px;
+  margin: 0 -8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.examplePlaceholder {
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.labelCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

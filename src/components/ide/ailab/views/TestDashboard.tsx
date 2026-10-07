@@ -44,6 +44,7 @@ import {
   ResultsModal,
   type ResultsTab,
 } from "./ResultsModal";
+import { TreeNodeModal } from "./TreeNodeModal";
 import statementStyles from "./PredictionStatement.module.scss";
 import {
   LABEL_TAG_COLOR,
@@ -174,6 +175,8 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
   const [resultsOpen, setResultsOpen] = useState(false);
   const [resultsEntry, setResultsEntry] = useState<ResultsTab>("scorecard");
   const [resultsSession, setResultsSession] = useState(0);
+  const [openNodeKey, setOpenNodeKey] = useState<string | undefined>(undefined);
+  const nodeModal = lab.config.treeNodeDetail === "modal";
   const [stepIndex, setStepIndex] = useState(0);
   const setTraceStep = useCallback((index: number) => {
     setStepIndex(index);
@@ -455,6 +458,8 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
         controlledStep={canvasLayout ? stepIndex : undefined}
         onControlledStep={canvasLayout ? setTraceStep : undefined}
         controlledPlayback={canvasLayout ? playback : undefined}
+        onOpenNode={nodeModal ? setOpenNodeKey : undefined}
+        openedKey={nodeModal ? openNodeKey : undefined}
       />
     ) : (
       <KnnViz
@@ -727,6 +732,22 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
               lab.loadHoldoutRow(rowIndex);
               setResultsOpen(false);
             }}
+          />
+        ) : null}
+        {nodeModal && model.algorithm === "decisionTree" ? (
+          <TreeNodeModal
+            lab={lab}
+            nodeKey={openNodeKey}
+            example={
+              treeTrace && query
+                ? {
+                    values: query,
+                    rowIndex: sourceRowIndex,
+                    pathKeys: treeTrace.pathKeys,
+                  }
+                : undefined
+            }
+            onClose={() => setOpenNodeKey(undefined)}
           />
         ) : null}
       </section>

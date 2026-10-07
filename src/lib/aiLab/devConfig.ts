@@ -19,6 +19,7 @@ export interface AiLabDevOverrides {
   defaultDataView: string;
   bundleWideSplits: boolean;
   trainingAnimation: string;
+  treeNodeDetail: string;
 }
 
 export function aiLabDevDefaults(
@@ -43,6 +44,7 @@ export function aiLabDevDefaults(
     defaultDataView: config.defaultDataView ?? "table",
     bundleWideSplits: Boolean(config.bundleWideSplits),
     trainingAnimation: config.trainingAnimation ?? "rows",
+    treeNodeDetail: config.treeNodeDetail ?? "inline",
   };
 }
 
@@ -124,6 +126,7 @@ export function mergeAiLabDevConfig(
     testLayout: "canvas",
     bundleWideSplits: Boolean(resolved.bundleWideSplits),
     trainingAnimation: resolved.trainingAnimation === "tree" ? "tree" : "rows",
+    treeNodeDetail: resolved.treeNodeDetail === "modal" ? "modal" : "inline",
     pretrained,
     initialSection: hideDatasetTab
       ? "test"

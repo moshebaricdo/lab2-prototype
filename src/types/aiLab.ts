@@ -236,6 +236,9 @@ export type AiLabTestLayout = "dock" | "canvas";
 /** Training modal playback: walk the rows through the tree (default), or grow it. */
 export type AiLabTrainingAnimation = "tree" | "rows";
 
+/** What clicking a decision-tree node does: grow it in place, or open its rows. */
+export type AiLabTreeNodeDetail = "inline" | "modal";
+
 export interface AiLabLevelConfig {
   dataset: AiLabDataset;
   testLayout?: AiLabTestLayout;
@@ -306,6 +309,13 @@ export interface AiLabLevelConfig {
    * fallback that grows the finished tree depth by depth. Dev panel knob.
    */
   trainingAnimation?: AiLabTrainingAnimation;
+  /**
+   * Testing diagram node click. `inline` (default) grows the node into a
+   * detail card. `modal` keeps every node compact, marks mixed leaves with
+   * a disagree count, and opens a modal listing the sheet rows that reached
+   * the node. Experiment flag (dev panel).
+   */
+  treeNodeDetail?: AiLabTreeNodeDetail;
   /** Feature columns hidden from the Train rail checklist. */
   excludedFeatureColumns?: string[];
   /** When set, only categorical columns can be the label. */

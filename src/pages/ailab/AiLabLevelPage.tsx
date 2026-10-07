@@ -154,6 +154,20 @@ function aiLabDevFields(
         values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
     },
     {
+      key: "treeNodeDetail",
+      label: "Tree node details",
+      description:
+        "What clicking a node on the Testing diagram does. Expand in place grows the node into a detail card. Rows modal keeps nodes compact, marks mixed leaves with how many rows disagree, and opens a modal listing the sheet rows that reached the node.",
+      type: "select",
+      group: "AI Lab",
+      options: [
+        { label: "Expand in place", value: "inline" },
+        { label: "Rows modal (experiment)", value: "modal" },
+      ],
+      visibleWhen: (values) =>
+        values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
+    },
+    {
       key: "trainingAnimation",
       label: "Training animation",
       description:
@@ -259,6 +273,7 @@ export function AiLabLevelPage({
   const defaultDataView = String(resolved.defaultDataView);
   const bundleWideSplits = Boolean(resolved.bundleWideSplits);
   const trainingAnimation = String(resolved.trainingAnimation);
+  const treeNodeDetail = String(resolved.treeNodeDetail);
   const labelDataset =
     findCatalogDataset(catalog, presetDataset) ?? config.dataset;
   // Keyed on primitives so the config (and everything `useAiLabState`
@@ -277,6 +292,7 @@ export function AiLabLevelPage({
           defaultDataView,
           bundleWideSplits,
           trainingAnimation,
+          treeNodeDetail,
         },
         catalog,
       ),
@@ -292,6 +308,7 @@ export function AiLabLevelPage({
       defaultDataView,
       bundleWideSplits,
       trainingAnimation,
+      treeNodeDetail,
     ],
   );
   const lab = useAiLabState(levelConfig);

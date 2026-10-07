@@ -340,6 +340,53 @@ export function treeBranches(node: AiLabTreeNode): AiLabTreeBranch[] {
   }));
 }
 
+/**
+ * Sheet row indexes per node key: each row is listed on every node of its
+ * path, so a decision node holds the union of its children.
+ */
+export function rowsByNode(
+  root: AiLabTreeNode,
+  rows: AiLabDataRow[],
+): Map<string, number[]> {
+  const byNode = new Map<string, number[]>();
+  rows.forEach((row, rowIndex) => {
+    traceDecisionTree(root, row).pathKeys.forEach((key) => {
+      const list = byNode.get(key);
+      if (list) list.push(rowIndex);
+      else byNode.set(key, [rowIndex]);
+    });
+  });
+  return byNode;
+}
+
+export interface AiLabTreeCondition {
+  feature: string;
+  branchLabel: string;
+}
+
+/** The node at `key` and the branch taken at each question above it. */
+export function findTreeNode(
+  root: AiLabTreeNode,
+  key: string,
+): { node: AiLabTreeNode; conditions: AiLabTreeCondition[] } | undefined {
+  const visit = (
+    node: AiLabTreeNode,
+    conditions: AiLabTreeCondition[],
+  ): { node: AiLabTreeNode; conditions: AiLabTreeCondition[] } | undefined => {
+    if (node.pathKey === key) return { node, conditions };
+    if (node.type === "leaf") return undefined;
+    for (const branch of treeBranches(node)) {
+      const found = visit(branch.child, [
+        ...conditions,
+        { feature: node.feature, branchLabel: branch.label },
+      ]);
+      if (found) return found;
+    }
+    return undefined;
+  };
+  return visit(root, []);
+}
+
 export interface AiLabTreeSummary {
   decisions: number;
   leaves: number;
