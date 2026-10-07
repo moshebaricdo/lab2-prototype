@@ -12,6 +12,7 @@ import {
   Alert,
   Button,
   Dropdown,
+  IconTooltip,
   SegmentedButton,
   TablePagination,
   Tooltip,
@@ -20,6 +21,7 @@ import { FaIcon } from "../../../ui/icons/FaIcon";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import { useChecklistMenuWidth } from "../../../../hooks/useChecklistMenuWidth";
 import {
+  columnUsable,
   formatCell,
   formatNumber,
   frequencies,
@@ -50,6 +52,16 @@ function sameIdSet(left: string[], right: string[]): boolean {
   if (left.length !== right.length) return false;
   const seen = new Set(left);
   return right.every((id) => seen.has(id));
+}
+
+/** Instructional copy that used to sit under the field, now on the label. */
+function TrainFieldLabel({ label, tip }: { label: string; tip: string }) {
+  return (
+    <div className={styles.fieldLabelRow}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <IconTooltip title={tip} size="extraSmall" color="tertiary" placement="top" />
+    </div>
+  );
 }
 
 /** Locked Predict field: still readable (readOnly), with a hover reason. */
@@ -243,17 +255,40 @@ function TrainRail({
   onOpenModel?: (tab: ModelInspectorTab) => void;
 }) {
   const [isTraining, setIsTraining] = useState(false);
+  const labelMenu = useChecklistMenuWidth();
   const featuresMenu = useChecklistMenuWidth();
   const columns = lab.config.dataset.columns;
+  const usable = (columnId: string) =>
+    columnUsable(lab.rows, columns, columnId);
+  // A blocked column can't be trained on. Drop it from a choice the student
+  // can still change so the field doesn't sit on an error they must undo.
+  useEffect(() => {
+    if (
+      !lab.config.lockLabelColumn &&
+      !lab.config.hideLabelSelect &&
+      lab.labelColumn &&
+      !usable(lab.labelColumn)
+    ) {
+      lab.setLabelColumn("");
+    }
+    const nextFeatures = lab.selectedFeatures.filter(
+      (id) => id !== lab.labelColumn && usable(id),
+    );
+    if (nextFeatures.length !== lab.selectedFeatures.length) {
+      lab.setFeatures(nextFeatures);
+    }
+  }, [lab, columns]);
   const labelOptions = columns
     .filter((column) =>
       lab.config.classificationOnly ? column.type === "categorical" : true,
     )
+    .filter((column) => usable(column.id))
     .map((column) => ({ value: column.id, label: column.name }));
   const excludedFeatures = new Set(lab.config.excludedFeatureColumns ?? []);
   const featureOptions = columns
     .filter((column) => column.id !== lab.labelColumn)
     .filter((column) => !excludedFeatures.has(column.id))
+    .filter((column) => usable(column.id))
     .map((column) => ({ value: column.id, label: column.name }));
   const model = lab.model;
   const accuracy = model ? Math.round(model.accuracy * 100) : undefined;
@@ -322,53 +357,60 @@ function TrainRail({
         <section className={styles.configCard}>
           <div className={styles.cardFields}>
             {lab.config.hideLabelSelect ? null : (
-              <LockedLabelTooltip locked={Boolean(lab.config.lockLabelColumn)}>
+              <div className={styles.fieldStack}>
+                <TrainFieldLabel
+                  label="Predict"
+                  tip="What you want your model to predict"
+                />
+                <LockedLabelTooltip locked={Boolean(lab.config.lockLabelColumn)}>
+                  <div ref={labelMenu.ref}>
+                    <Dropdown
+                      role="input"
+                      size="small"
+                      color="secondary"
+                      width="full"
+                      menuWidth="100%"
+                      helperText={lab.labelCardinality?.text}
+                      sentiment={lab.labelCardinality?.sentiment ?? "default"}
+                      placeholder="Choose a column"
+                      value={lab.labelColumn ?? ""}
+                      options={labelOptions}
+                      readOnly={Boolean(lab.config.lockLabelColumn)}
+                      onChange={(value) => lab.setLabelColumn(String(value))}
+                      onOpenChange={labelMenu.onOpenChange}
+                      aria-label="Column to predict"
+                    />
+                  </div>
+                </LockedLabelTooltip>
+              </div>
+            )}
+            <div className={styles.fieldStack}>
+              <TrainFieldLabel
+                label="Using"
+                tip="What your model predicts using"
+              />
+              {/* Ref stays on the control: the label's info button is also a
+                  button, and the menu-width hook takes the first one. */}
+              <div ref={featuresMenu.ref}>
                 <Dropdown
                   role="input"
+                  menuType="checklist"
                   size="small"
                   color="secondary"
                   width="full"
-                  menuWidth="100%"
-                  label="Predict:"
-                  labelStyle="thick"
-                  helperText={
-                    lab.labelCardinality?.text ??
-                    "What you want your model to predict"
+                  helperText={lab.featureCardinality?.text}
+                  sentiment={lab.featureCardinality?.sentiment ?? "default"}
+                  startIconName={
+                    lab.selectedFeatures.length > 0 ? "circle-check" : undefined
                   }
-                  sentiment={lab.labelCardinality?.sentiment ?? "default"}
-                  placeholder="Choose a column"
-                  value={lab.labelColumn ?? ""}
-                  options={labelOptions}
-                  readOnly={Boolean(lab.config.lockLabelColumn)}
-                  onChange={(value) => lab.setLabelColumn(String(value))}
-                  aria-label="Column to predict"
+                  placeholder="Choose one or more columns"
+                  value={lab.selectedFeatures}
+                  options={featureOptions}
+                  onChange={(value) => lab.setFeatures(asStringArray(value))}
+                  onOpenChange={featuresMenu.onOpenChange}
+                  aria-label="Feature columns"
                 />
-              </LockedLabelTooltip>
-            )}
-            <div ref={featuresMenu.ref}>
-              <Dropdown
-                role="input"
-                menuType="checklist"
-                size="small"
-                color="secondary"
-                width="full"
-                label="Using:"
-                labelStyle="thick"
-                helperText={
-                  lab.featureCardinality?.text ??
-                  "What your model predicts using"
-                }
-                sentiment={lab.featureCardinality?.sentiment ?? "default"}
-                startIconName={
-                  lab.selectedFeatures.length > 0 ? "circle-check" : undefined
-                }
-                placeholder="Choose one or more columns"
-                value={lab.selectedFeatures}
-                options={featureOptions}
-                onChange={(value) => lab.setFeatures(asStringArray(value))}
-                onOpenChange={featuresMenu.onOpenChange}
-                aria-label="Feature columns"
-              />
+              </div>
             </div>
             {/* KNN's k is not a student control. Studio searches k on a
                 10% holdout (AI Lab / ml-knn). Guided levels may lock k. */}
@@ -424,11 +466,7 @@ function TrainRail({
             ) : null}
             <div className={styles.metricRow}>
               <div className={`${styles.metric} ${styles.metricDivider}`}>
-                <span
-                  className={`${styles.metricValue} ${styles.metricValueSuccess}`}
-                >
-                  {accuracy}%
-                </span>
+                <span className={styles.metricValue}>{accuracy}%</span>
                 <span className={styles.metricLabel}>Accuracy</span>
               </div>
               <div className={styles.metric}>

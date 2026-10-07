@@ -181,6 +181,12 @@
   gap: 2px;
 }
 
+.fieldLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .fieldLabel {
   @include type-label-3;
   color: var(--text-neutral-primary);
@@ -258,8 +264,7 @@
   min-width: 0;
   flex: 1 1 0;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px 10px 8px;
+  padding: 8px 10px;
 }
 
 .metricDivider {
@@ -267,21 +272,17 @@
 }
 
 .metricLabel {
-  @include type-label-3;
+  @include type-body-4-regular;
   color: var(--text-neutral-quaternary);
 }
 
 .metricValue {
-  @include type-body-1-semibold;
+  @include type-body-2-semibold;
   overflow: hidden;
   color: var(--text-neutral-primary);
   font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.metricValueSuccess {
-  color: var(--text-success-primary);
 }
 
 /* ---------------------------------------------------------------------------

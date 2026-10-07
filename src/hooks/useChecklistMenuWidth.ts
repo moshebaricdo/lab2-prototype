@@ -33,6 +33,21 @@ export function useChecklistMenuWidth<T extends HTMLElement = HTMLDivElement>() 
         menu.style.minWidth = width;
         menu.style.setProperty("--dd-panel-width", width);
         menu.style.setProperty("--dd-panel-min-width", width);
+        // The panel hugs its rows, so a long list grows the page. Cap the
+        // option list and let that list scroll; a checklist's Select all
+        // row stays pinned under it.
+        const list = menu.firstElementChild;
+        if (list instanceof HTMLElement) {
+          const top = menu.getBoundingClientRect().top;
+          const available = window.innerHeight - top - 8;
+          const action = list.nextElementSibling;
+          const actionHeight =
+            action instanceof HTMLElement ? action.offsetHeight : 0;
+          const max = Math.min(320, Math.max(available - actionHeight, 120));
+          list.style.maxHeight = `${Math.round(max)}px`;
+          list.style.overflowY = "auto";
+          list.style.overscrollBehavior = "contain";
+        }
       });
     });
   }, []);

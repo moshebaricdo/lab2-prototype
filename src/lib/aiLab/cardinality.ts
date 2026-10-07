@@ -22,6 +22,18 @@ export interface CategoryCheck {
   fit: CategoryFit;
 }
 
+/**
+ * A column the student can train on. Numerical columns always qualify.
+ * A categorical with more than `MAX_CATEGORY_VALUES` does not.
+ */
+export function columnUsable(
+  rows: AiLabDataRow[],
+  columns: AiLabColumn[],
+  columnId: string,
+): boolean {
+  return categoryCheck(rows, columns, columnId)?.fit !== "blocked";
+}
+
 /** `undefined` for numerical columns — the rule only applies to categories. */
 export function categoryCheck(
   rows: AiLabDataRow[],
@@ -54,17 +66,11 @@ export function labelNotice(
 ): SetupNotice | undefined {
   if (!labelColumn) return undefined;
   const check = categoryCheck(rows, columns, labelColumn);
-  if (!check || check.fit === "ok") return undefined;
+  if (check?.fit !== "blocked") return undefined;
   const name = columnById(columns, labelColumn)?.name ?? labelColumn;
-  if (check.fit === "blocked") {
-    return {
-      sentiment: "error",
-      text: `${name} has ${check.count} different values. Pick a column with ${MAX_CATEGORY_VALUES} or fewer to predict.`,
-    };
-  }
   return {
-    sentiment: "warning",
-    text: `${name} has ${check.count} values, so the chart shows the most common ones and folds the rest into Other.`,
+    sentiment: "error",
+    text: `${name} has ${check.count} different values. Pick a column with ${MAX_CATEGORY_VALUES} or fewer to predict.`,
   };
 }
 

@@ -643,8 +643,9 @@ export function useAiLabState(config: AiLabLevelConfig) {
           "categorical"),
   );
 
-  // Too many distinct categories: the model cannot generalize and the viz
-  // cannot draw them. Blocked columns stop training; crowded labels only warn.
+  // Too many distinct categories: the model cannot generalize. Blocked
+  // columns stop training. The train menus omit them; this still catches a
+  // locked label that is already blocked. Crowded labels still train.
   const labelCardinality = labelNotice(viewRows, columns, state.labelColumn);
   const featureCardinality = featureNotice(
     viewRows,
