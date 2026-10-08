@@ -44,7 +44,7 @@ export function aiLabDevDefaults(
     defaultDataView: config.defaultDataView ?? "table",
     bundleWideSplits: Boolean(config.bundleWideSplits),
     trainingAnimation: config.trainingAnimation ?? "rows",
-    treeNodeDetail: config.treeNodeDetail ?? "inline",
+    treeNodeDetail: config.treeNodeDetail ?? "modal",
   };
 }
 
@@ -126,7 +126,7 @@ export function mergeAiLabDevConfig(
     testLayout: "canvas",
     bundleWideSplits: Boolean(resolved.bundleWideSplits),
     trainingAnimation: resolved.trainingAnimation === "tree" ? "tree" : "rows",
-    treeNodeDetail: resolved.treeNodeDetail === "modal" ? "modal" : "inline",
+    treeNodeDetail: resolved.treeNodeDetail === "inline" ? "inline" : "modal",
     pretrained,
     initialSection: hideDatasetTab
       ? "test"

@@ -157,12 +157,12 @@ function aiLabDevFields(
       key: "treeNodeDetail",
       label: "Tree node details",
       description:
-        "What clicking a node on the Testing diagram does. Expand in place grows the node into a detail card. Rows modal keeps nodes compact, marks mixed leaves with how many rows disagree, and opens a modal listing the sheet rows that reached the node.",
+        "What clicking a node on the Testing diagram does. Rows modal (default) keeps nodes compact, counts correct and incorrect rows on each leaf, and opens a modal of the sheet rows that reached the node. Expand in place grows the node into a detail card.",
       type: "select",
       group: "AI Lab",
       options: [
+        { label: "Rows modal", value: "modal" },
         { label: "Expand in place", value: "inline" },
-        { label: "Rows modal (experiment)", value: "modal" },
       ],
       visibleWhen: (values) =>
         values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",

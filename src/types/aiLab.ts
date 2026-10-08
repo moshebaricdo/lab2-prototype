@@ -310,10 +310,10 @@ export interface AiLabLevelConfig {
    */
   trainingAnimation?: AiLabTrainingAnimation;
   /**
-   * Testing diagram node click. `inline` (default) grows the node into a
-   * detail card. `modal` keeps every node compact, marks mixed leaves with
-   * a disagree count, and opens a modal listing the sheet rows that reached
-   * the node. Experiment flag (dev panel).
+   * Testing diagram node click. `modal` (default) keeps every node a compact
+   * pill, counts matching and other rows on each leaf, and opens a modal
+   * listing the sheet rows that reached the node. `inline` grows the node
+   * into a detail card (kept as a pullback). Dev panel knob.
    */
   treeNodeDetail?: AiLabTreeNodeDetail;
   /** Feature columns hidden from the Train rail checklist. */
