@@ -1051,12 +1051,15 @@ function TreeDiagram({
       {/* Pan on the outer element, zoom on the inner: CSS `zoom` re-lays out
           text and strokes at the new scale (crisp, unlike `scale()`, which
           upsamples a rasterized layer), and keeping it on its own element
-          means the frame-pixel pan is never multiplied by it. */}
+          means the frame-pixel pan is never multiplied by it. The pan is
+          left/top, not a transform: Chromium hit-tests `zoom` content under a
+          transformed ancestor at the wrong spot, so :hover and clicks land
+          off the drawn nodes. */}
       <div
         className={[styles.stage, viewport.smooth ? styles.stageSmooth : ""]
           .filter(Boolean)
           .join(" ")}
-        style={{ transform: `translate(${viewport.x}px, ${viewport.y}px)` }}
+        style={{ left: viewport.x, top: viewport.y }}
       >
       <div
         className={styles.zoomed}

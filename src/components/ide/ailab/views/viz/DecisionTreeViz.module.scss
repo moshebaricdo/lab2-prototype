@@ -52,7 +52,9 @@
 /* Programmatic moves (Fit, step into view, buttons) glide; wheel and drag
  * drop the transition so the stage tracks the pointer. */
 .stageSmooth {
-  transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  transition:
+    left 240ms cubic-bezier(0.32, 0.72, 0, 1),
+    top 240ms cubic-bezier(0.32, 0.72, 0, 1);
 
   .zoomed {
     transition: zoom 240ms cubic-bezier(0.32, 0.72, 0, 1);
