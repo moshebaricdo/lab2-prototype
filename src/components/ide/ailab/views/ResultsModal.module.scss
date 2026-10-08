@@ -35,7 +35,7 @@
   flex: 1 1 auto;
   flex-direction: column;
   gap: 16px;
-  padding: 16px 24px 24px;
+  padding: 20px 24px 24px;
 }
 
 .scoreHead {
@@ -94,7 +94,10 @@
   top: 28px;
 }
 
-.emptyCell {
+.emptySheet {
+  @include type-body-4-regular;
+  margin: 0;
+  padding: 10px;
   color: var(--ds-text-neutral-tertiary);
 }
 
@@ -121,20 +124,64 @@
   color: var(--ds-text-neutral-tertiary);
 }
 
+.log {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.runGroup {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.previousGroup {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .logHead {
-  @include type-label-4;
+  @include type-overline-2;
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 0 8px;
-  color: var(--ds-text-neutral-tertiary);
+  color: var(--ds-text-neutral-quaternary);
+}
+
+.accuracySlot {
+  flex-shrink: 0;
+  width: 80px;
+}
+
+.rule {
+  height: 1px;
+  background: var(--ds-border-neutral-primary);
 }
 
 .logList {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
   overflow: auto;
+}
+
+.logItem {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .logRow {
@@ -142,14 +189,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 0;
-  border-top: 1px solid var(--ds-border-neutral-primary);
 }
 
 .logAccuracy {
   @include type-label-2;
-  flex-shrink: 0;
-  min-width: 52px;
   color: var(--ds-text-neutral-primary);
   font-variant-numeric: tabular-nums;
 }

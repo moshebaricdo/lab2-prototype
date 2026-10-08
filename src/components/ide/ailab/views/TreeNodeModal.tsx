@@ -316,7 +316,7 @@ function NodeDetail({
             {showExample ? renderRow(exampleRowIndex, true) : null}
             {visibleRows.length === 0 ? (
               <tr>
-                <td className={`${sheet.td} ${results.emptyCell}`} colSpan={columnCount}>
+                <td className={`${sheet.td} ${results.emptySheet}`} colSpan={columnCount}>
                   No rows in this filter.
                 </td>
               </tr>

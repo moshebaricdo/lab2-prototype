@@ -1,8 +1,12 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { Button, Modal, SegmentedButton, Tabs } from "@moshebari/cads-react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import { columnById, formatCell } from "../../../../lib/aiLab";
-import type { AiLabColumn, AiLabTrainingRun } from "../../../../types/aiLab";
+import type {
+  AiLabColumn,
+  AiLabTrainedModel,
+  AiLabTrainingRun,
+} from "../../../../types/aiLab";
 import { PredictionStatement } from "./PredictionStatement";
 import sheet from "./DataStudio.module.scss";
 import styles from "./ResultsModal.module.scss";
@@ -73,6 +77,7 @@ export function ResultsModal({
           ) : (
             <PreviousTab
               columns={lab.config.dataset.columns}
+              model={model}
               runs={lab.trainingRuns}
             />
           )}
@@ -102,6 +107,14 @@ function ScorecardTab({
   const labelName = model
     ? columnById(columns, model.labelColumn)?.name ?? model.labelColumn
     : "";
+  const titleColumnId = lab.config.cardTitleColumn;
+  const titleColumn =
+    titleColumnId &&
+    model &&
+    titleColumnId !== model.labelColumn &&
+    !model.selectedFeatures.includes(titleColumnId)
+      ? columnById(columns, titleColumnId)
+      : undefined;
   const results = useMemo(() => {
     const rows = model?.holdoutResults ?? [];
     return rows.filter((result) =>
@@ -111,6 +124,10 @@ function ScorecardTab({
   const visibleResults = results.slice(0, pageCount * SCORECARD_PAGE_SIZE);
   const hiddenCount = results.length - visibleResults.length;
   const canTry = !lab.config.hideTestTab;
+  const lastRowNumber = Math.max(
+    1,
+    ...results.map((result) => result.rowIndex + 1),
+  );
 
   if (!model) return null;
 
@@ -144,9 +161,19 @@ function ScorecardTab({
         />
       </div>
       <div className={styles.tableWrap}>
-        <table className={sheet.grid} aria-label="Scorecard">
+        <table
+          className={sheet.grid}
+          aria-label="Scorecard"
+          style={
+            {
+              "--index-col-ch": String(lastRowNumber).length,
+            } as CSSProperties
+          }
+        >
           <thead>
             <tr>
+              <th className={`${sheet.th} ${sheet.thIndex}`} aria-label="Row" />
+              {titleColumn ? <th className={sheet.th} /> : null}
               <th className={sheet.th} colSpan={featureColumns.length}>
                 Feature
               </th>
@@ -154,6 +181,15 @@ function ScorecardTab({
               <th className={sheet.th}>AI Prediction</th>
             </tr>
             <tr>
+              <th
+                className={`${sheet.th} ${sheet.thIndex} ${styles.nameTh}`}
+                aria-hidden
+              />
+              {titleColumn ? (
+                <th className={`${sheet.th} ${styles.nameTh}`}>
+                  {titleColumn.name}
+                </th>
+              ) : null}
               {featureColumns.map((column) => (
                 <th
                   key={column.id}
@@ -170,18 +206,9 @@ function ScorecardTab({
               </th>
             </tr>
           </thead>
+          {results.length > 0 ? (
           <tbody>
-            {results.length === 0 ? (
-              <tr>
-                <td
-                  className={`${sheet.td} ${styles.emptyCell}`}
-                  colSpan={featureColumns.length + 2}
-                >
-                  No rows in this filter.
-                </td>
-              </tr>
-            ) : (
-              visibleResults.map((result) => {
+            {visibleResults.map((result) => {
                 const row = lab.rows[result.rowIndex];
                 return (
                   <tr
@@ -202,6 +229,14 @@ function ScorecardTab({
                         : undefined
                     }
                   >
+                    <td className={`${sheet.td} ${sheet.tdIndex}`}>
+                      {result.rowIndex + 1}
+                    </td>
+                    {titleColumn ? (
+                      <td className={sheet.td}>
+                        {row ? formatCell(row[titleColumn.id]) : "—"}
+                      </td>
+                    ) : null}
                     {featureColumns.map((column) => (
                       <td
                         key={column.id}
@@ -220,10 +255,13 @@ function ScorecardTab({
                     </td>
                   </tr>
                 );
-              })
-            )}
+              })}
           </tbody>
+          ) : null}
         </table>
+        {results.length === 0 ? (
+          <p className={styles.emptySheet}>No rows matched this filter</p>
+        ) : null}
         {hiddenCount > 0 ? (
           <div className={styles.showMore}>
             <Button
@@ -244,39 +282,90 @@ function ScorecardTab({
 
 function PreviousTab({
   columns,
+  model,
   runs,
 }: {
   columns: AiLabColumn[];
+  model: AiLabTrainedModel;
   runs: AiLabTrainingRun[];
 }) {
   const newestFirst = [...runs].reverse();
-  if (newestFirst.length === 0) {
-    return <p className={styles.emptyLine}>No previous results yet.</p>;
-  }
+  // The newest run is the model just trained. Current is that model on its
+  // own; everything older stays in Previous. A pretrained model has no runs.
+  const previousRuns = newestFirst.slice(1);
 
   return (
     <div className={styles.log}>
-      <div className={styles.logHead}>
-        <span>MODEL</span>
-        <span>ACCURACY</span>
-      </div>
-      <ul className={styles.logList}>
-        {newestFirst.map((run) => (
-          <li key={run.id} className={styles.logRow}>
-            <PredictionStatement
-              columns={columns}
-              labelColumn={run.labelColumn}
-              features={run.selectedFeatures}
-              size="large"
-              fit
-              className={styles.sentence}
-            />
-            <span className={styles.logAccuracy}>
-              {formatAccuracyPercent(run.accuracy)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <section className={styles.runGroup} aria-label="Current">
+        <RunHeading label="Current" />
+        <div className={styles.rule} aria-hidden />
+        <ResultRow
+          columns={columns}
+          labelColumn={model.labelColumn}
+          features={model.selectedFeatures}
+          accuracy={model.accuracy}
+        />
+      </section>
+      <section className={styles.previousGroup} aria-label="Previous">
+        <div className={styles.runGroup}>
+          <RunHeading label="Previous" />
+          <div className={styles.rule} aria-hidden />
+        </div>
+        {previousRuns.length === 0 ? (
+          <p className={styles.emptyLine}>No previous results yet.</p>
+        ) : (
+          <ul className={styles.logList}>
+            {previousRuns.map((run, index) => (
+              <li key={run.id} className={styles.logItem}>
+                {index > 0 ? <div className={styles.rule} aria-hidden /> : null}
+                <ResultRow
+                  columns={columns}
+                  labelColumn={run.labelColumn}
+                  features={run.selectedFeatures}
+                  accuracy={run.accuracy}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function RunHeading({ label }: { label: string }) {
+  return (
+    <div className={styles.logHead}>
+      <span>{label}</span>
+      <span className={styles.accuracySlot}>Accuracy</span>
+    </div>
+  );
+}
+
+function ResultRow({
+  columns,
+  labelColumn,
+  features,
+  accuracy,
+}: {
+  columns: AiLabColumn[];
+  labelColumn: string;
+  features: string[];
+  accuracy: number;
+}) {
+  return (
+    <div className={styles.logRow}>
+      <PredictionStatement
+        columns={columns}
+        labelColumn={labelColumn}
+        features={features}
+        size="large"
+        fit
+        className={styles.sentence}
+      />
+      <span className={`${styles.logAccuracy} ${styles.accuracySlot}`}>
+        {formatAccuracyPercent(accuracy)}
+      </span>
     </div>
   );
 }
