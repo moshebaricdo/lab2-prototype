@@ -52,7 +52,7 @@ const BUNDLE_MIN_BRANCHES = 7;
  * width keeps a label like "Mammal" from truncating. Nothing grows in place
  * in this mode, so no detail card needs to share the width.
  */
-const MODAL_NODE_WIDTH = 224;
+const MODAL_NODE_WIDTH = 260;
 
 interface DecisionTreeVizProps {
   root: AiLabTreeNode;
@@ -159,7 +159,7 @@ function presentLabels(node: AiLabTreeNode, labels: string[]): string[] {
  * layout needs the height before the card renders, so it is summed here
  * rather than measured.
  */
-const DETAIL_CHROME = 4 + 20; // 2px border ×2 + 10px vertical padding ×2
+const DETAIL_CHROME = 4 + 20; // border box reserved at 2px ×2 (drawn stroke is 1.5px) + 10px vertical padding ×2
 const DETAIL_HEAD = 24 + 8; // title row + gap to the rows
 const DETAIL_ROW = 18;
 const DETAIL_ROW_GAP = 4;
@@ -351,14 +351,17 @@ export function DecisionTreeViz({
   // Content follows the path: only nodes your example passed through earn
   // a full card; everything else is a pill. The node the student opened
   // (or a pinned node) grows into a detail card in place.
+  // Under the rows modal every node stays a pill: the modal holds the detail.
   const sizeOf = useCallback(
     (key: string): NodeSize =>
-      key === selectedKey || isPinnedOpen(key)
-        ? "detail"
-        : revealedSet.has(key) && !externalRail
-          ? "card"
-          : "pill",
-    [externalRail, isPinnedOpen, revealedSet, selectedKey],
+      modalDetail
+        ? "pill"
+        : key === selectedKey || isPinnedOpen(key)
+          ? "detail"
+          : revealedSet.has(key) && !externalRail
+            ? "card"
+            : "pill",
+    [externalRail, isPinnedOpen, modalDetail, revealedSet, selectedKey],
   );
   // Canvas mode reads top→bottom so the tree grows away from the right-hand
   // cards instead of under them.
@@ -442,7 +445,7 @@ export function DecisionTreeViz({
             currentKey={currentKey}
             nextKey={nextKey}
             selectedKey={modalDetail ? openedKey : selectedKey}
-            showDisagree={modalDetail}
+            canonNodes={modalDetail}
             traceKey={pathKeysText}
             onSelect={onSelect}
             onToggleBundle={onToggleBundle}
@@ -666,8 +669,8 @@ interface TreeDiagramProps {
   currentKey: string | undefined;
   nextKey: string | undefined;
   selectedKey: string | undefined;
-  /** Mark mixed leaves with how many of their rows disagree. */
-  showDisagree: boolean;
+  /** Draw the rows-modal node: fixed pills, ✓ / ✕ counts on leaves. */
+  canonNodes: boolean;
   /** Identity of the current prediction's path; a change recenters the canvas. */
   traceKey: string;
   onSelect: (key: string | undefined) => void;
@@ -690,7 +693,7 @@ function TreeDiagram({
   currentKey,
   nextKey,
   selectedKey,
-  showDisagree,
+  canonNodes,
   traceKey,
   onSelect,
   onToggleBundle,
@@ -1150,8 +1153,8 @@ function TreeDiagram({
               indexOf={indexOf}
               isFocused={laid.key === focusedKey}
               isSelected={laid.key === selectedKey}
-              disagree={showDisagree ? disagreeCount(laid.node) : 0}
-              opensModal={showDisagree && !laid.bundle}
+              canon={canonNodes}
+              opensModal={canonNodes && !laid.bundle}
               onFocus={() => setFocusedKey(laid.key)}
               onActivate={() => activate(laid)}
               onPath={revealed.has(laid.key)}
@@ -1233,8 +1236,11 @@ interface DiagramNodeProps {
   indexOf: (label: string) => number;
   isFocused: boolean;
   isSelected: boolean;
-  /** Rows on this leaf whose label is not its prediction; 0 hides the badge. */
-  disagree: number;
+  /**
+   * Rows-modal node (Figma treeNode): a fixed pill whose leaves count rows
+   * that match (✓) and don't match (✕) the prediction instead of "N Rows".
+   */
+  canon: boolean;
   /** Activating opens the rows modal rather than growing the node. */
   opensModal: boolean;
   onFocus: () => void;
@@ -1252,7 +1258,7 @@ function DiagramNode({
   indexOf,
   isFocused,
   isSelected,
-  disagree,
+  canon,
   opensModal,
   onFocus,
   onActivate,
@@ -1269,6 +1275,9 @@ function DiagramNode({
   const countsText = describeCounts(node.labelCounts, labels);
   const memberNames = bundle?.members.map((member) => member.branchLabel) ?? [];
   const note = isDetail ? leafNote(node, memberNames) : "";
+  const showResults = canon && node.type === "leaf";
+  const disagree = node.type === "leaf" ? disagreeCount(node) : 0;
+  const agree = node.sampleCount - disagree;
   const name = [
     laid.branchLabel && !bundle ? `Branch ${laid.branchLabel}.` : "",
     bundle
@@ -1276,10 +1285,9 @@ function DiagramNode({
       : isDecision
         ? `Question: ${title}`
         : `Prediction: ${title}.`,
-    `${rowsText(node.sampleCount)}, ${countsText}.`,
-    disagree > 0
-      ? `${disagree} ${disagree === 1 ? "row is" : "rows are"} not ${title}.`
-      : "",
+    showResults
+      ? `${rowsText(node.sampleCount)}: ${agree} ${agree === 1 ? "is" : "are"} ${title}, ${disagree} ${disagree === 1 ? "is" : "are"} not.`
+      : `${rowsText(node.sampleCount)}, ${countsText}.`,
     isCurrent
       ? "Current step."
       : onPath
@@ -1312,8 +1320,9 @@ function DiagramNode({
         isCard ? styles.nodeCard : isDetail ? styles.nodeDetail : styles.nodePill,
         isDecision ? styles.nodeDecision : styles.nodeLeaf,
         bundle ? styles.nodeBundle : "",
+        canon ? styles.nodeCanon : "",
         onPath ? styles.nodeOnPath : "",
-        isSelected ? styles.nodeSelected : "",
+        isSelected && !canon ? styles.nodeSelected : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -1337,15 +1346,24 @@ function DiagramNode({
             </span>
           ) : null}
         </p>
-        <span className={styles.nodeMeta}>
-          {disagree > 0 ? (
-            <span className={styles.disagreeBadge} aria-hidden>
-              <FaIcon name="xmark" fontSize="10px" />
-              {disagree}
-            </span>
-          ) : null}
+        {showResults ? (
+          <span className={styles.nodeResults} aria-hidden>
+            {agree > 0 ? (
+              <span className={styles.nodeAgree}>
+                <FaIcon name="circle-check" fontSize="11px" />
+                {agree}
+              </span>
+            ) : null}
+            {disagree > 0 ? (
+              <span className={styles.nodeDisagree}>
+                <FaIcon name="circle-xmark" fontSize="11px" />
+                {disagree}
+              </span>
+            ) : null}
+          </span>
+        ) : (
           <span className={styles.nodeRows}>{rowsText(node.sampleCount)}</span>
-        </span>
+        )}
       </div>
       {isCard ? (
         <DistributionBar

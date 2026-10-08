@@ -90,16 +90,19 @@
   pointer-events: none;
 }
 
+/* Same active / idle weights as the compact training tree (SortingTree
+ * `.compact`): idle connectors are a thin septenary stroke; the taken
+ * branch thickens to 2px in the selected color. */
 .link {
   fill: none;
-  stroke: var(--border-neutral-secondary);
+  stroke: var(--background-neutral-septenary);
   stroke-width: 1.5;
   transition: stroke 160ms ease, stroke-width 160ms ease;
 }
 
 .linkTaken {
   stroke: var(--border-selected-primary);
-  stroke-width: 2.5;
+  stroke-width: 2;
 }
 
 .linkPending {
@@ -156,14 +159,6 @@
 /* Testing canvas beside the prediction rail: every node is the compact
  * card (title + rows) and the rail carries the step-by-step story. */
 .railMode {
-  .node {
-    border-color: var(--ds-background-neutral-septenary);
-  }
-
-  .nodeOnPath {
-    border-color: var(--ds-border-selected-primary);
-  }
-
   .nodeTitle {
     @include type-body-2-semibold;
   }
@@ -173,35 +168,50 @@
   }
 }
 
-/* Every node is the same white card with a 2px border; what the example
- * passed through turns the border selected, and the amount drawn (pill /
- * card / detail) is the size the layout gave it. Heights are summed in the
- * component (`detailDimensions`), so the paddings and gaps here are load-
- * bearing. */
+/* Every node is the same white card. Idle borders match the compact
+ * training tree: 1.5px septenary. The path keeps that box and adds a 0.5px
+ * selected ring so it reads 2px without shifting the card. The zero ring
+ * on the idle shadow is the same slot, so lighting a node only grows the
+ * ring. Heights are summed in the component (`detailDimensions`), so the
+ * paddings and gaps here are load-bearing. */
 .node {
   position: absolute;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   padding: 8px 12px;
-  border: 2px solid var(--border-neutral-secondary);
+  border: 1.5px solid var(--background-neutral-septenary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-primary);
   color: var(--text-neutral-primary);
-  box-shadow: var(--shadow-sm);
+  box-shadow:
+    0 0 0 0 var(--border-selected-primary),
+    var(--shadow-sm);
   cursor: pointer;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
-    background-color 160ms ease;
+    background-color 160ms ease,
+    scale 120ms ease-out;
 
   &:hover {
-    box-shadow: var(--shadow-md);
+    box-shadow:
+      0 0 0 0 var(--border-selected-primary),
+      var(--shadow-md);
   }
 
   &:active {
-    box-shadow: var(--shadow-sm);
+    scale: 0.98;
+    box-shadow:
+      0 0 0 0 var(--border-selected-primary),
+      var(--shadow-sm);
     background: var(--background-neutral-secondary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:active {
+      scale: 1;
+    }
   }
 
   &:focus-visible {
@@ -246,13 +256,85 @@
 
 .nodeOnPath {
   border-color: var(--border-selected-primary);
+  box-shadow:
+    0 0 0 0.5px var(--border-selected-primary),
+    var(--shadow-sm);
+
+  &:hover,
+  &.nodeSelected {
+    box-shadow:
+      0 0 0 0.5px var(--border-selected-primary),
+      var(--shadow-md);
+  }
+
+  &:active,
+  &.nodeSelected:active {
+    box-shadow:
+      0 0 0 0.5px var(--border-selected-primary),
+      var(--shadow-sm);
+  }
 }
 
 .nodeSelected {
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    0 0 0 0 var(--border-selected-primary),
+    var(--shadow-md);
+
+  &:active {
+    box-shadow:
+      0 0 0 0 var(--border-selected-primary),
+      var(--shadow-sm);
+  }
+}
+
+/* Rows-modal node (Figma AI Lab 2 "treeNode", 5454:13622). Inactive keeps the
+ * 1.5px septenary box; active (on your example's path) is a 2px selected
+ * border with selected-ink text. Hover fills (gray / brand-light) and lifts;
+ * press keeps that fill and drops the shadow back to rest; focus is the
+ * shared ring. Every shadow here is the same two-layer list: mixing in
+ * `.node`'s three-layer ring slot makes the transition tween a purple layer
+ * into the drop shadow. */
+.nodeCanon {
+  box-shadow: var(--shadow-sm);
+
+  &:hover,
+  &:active {
+    background: var(--ds-background-neutral-secondary);
+  }
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
 
   &:active {
     box-shadow: var(--shadow-sm);
+  }
+
+  &.nodeOnPath {
+    border-width: 2px;
+    border-color: var(--ds-border-selected-primary);
+    box-shadow: var(--shadow-sm);
+
+    .nodeTitle {
+      color: var(--ds-text-selected-primary-inverse);
+    }
+
+    .nodeRows {
+      color: var(--ds-text-brand-secondary);
+    }
+
+    &:hover,
+    &:active {
+      background: var(--ds-background-brand-light);
+    }
+
+    &:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    &:active {
+      box-shadow: var(--shadow-sm);
+    }
   }
 }
 
@@ -288,26 +370,31 @@
   border-radius: var(--shape-round);
 }
 
-.nodeMeta {
+/* Leaf counts on the rows-modal node: rows that carry the prediction (✓)
+ * and rows that don't (✕) — the modal's Correct / Incorrect, at a glance. */
+.nodeResults {
+  @include type-body-4-semibold;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Rows-modal experiment: how many rows on a mixed leaf carry another label.
- * The count is the "which leaf is more wrong" signal without opening it. */
-.disagreeBadge {
-  @include type-label-4;
+.nodeAgree,
+.nodeDisagree {
   display: inline-flex;
-  height: 18px;
   align-items: center;
-  gap: 2px;
-  padding: 0 5px;
-  border-radius: var(--shape-round);
-  background: var(--ds-background-error-light);
+  gap: 3px;
+}
+
+.nodeAgree {
+  color: var(--ds-text-success-primary);
+}
+
+.nodeDisagree {
   color: var(--ds-text-error-primary);
-  font-variant-numeric: tabular-nums;
 }
 
 .nodeRows {
