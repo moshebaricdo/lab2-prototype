@@ -1,34 +1,50 @@
 @use "../../../../styles/_mixins.scss" as *;
 
+/* Bleeds past the Modal body's 24px padding so the path strip runs edge to
+ * edge under the title, like the Results modal's tab strip. */
 .root {
   display: flex;
+  width: calc(100% + 48px);
   min-width: 0;
-  height: min(62vh, 454px);
+  height: min(70vh, 560px);
   flex-direction: column;
-  gap: 16px;
+  margin: -24px;
+  overflow: hidden;
 }
 
-/* The path on the left, the Correct | Incorrect filter on the right. */
+.content {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 24px;
+}
+
+/* Caption (or the fallback path) on the left, the filter on the right. */
 .head {
   display: flex;
   min-height: 24px;
   flex-shrink: 0;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-/* Same numbered steps as the Result card, laid out in a row. */
+/* Same numbered steps as the Result card, in a gray strip under the title. */
 .path {
   @include type-body-3-regular;
   display: flex;
   min-width: 0;
+  flex-shrink: 0;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
+  gap: 4px 12px;
   margin: 0;
-  padding: 0;
+  padding: 8px 24px;
   list-style: none;
+  background: var(--ds-background-neutral-secondary);
+  box-shadow: inset 0 -1px 0 var(--ds-border-neutral-primary);
   color: var(--ds-text-neutral-primary);
 
   strong {
@@ -44,7 +60,8 @@
 }
 
 .pathSeparator {
-  color: var(--ds-text-neutral-tertiary);
+  margin-right: 4px;
+  color: var(--ds-text-neutral-quaternary);
 }
 
 .pathIndex {
@@ -55,12 +72,15 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  border: 1px solid var(--ds-border-neutral-primary);
   border-radius: var(--shape-round);
-  background: var(--ds-background-neutral-secondary);
+  background: var(--ds-background-neutral-primary);
   color: var(--ds-text-neutral-tertiary);
 }
 
 .pathStepCurrent .pathIndex {
+  border-color: var(--ds-background-neutral-septenary);
   background: var(--ds-background-neutral-septenary);
   color: var(--ds-text-neutral-primary-inverse);
 }
@@ -70,39 +90,81 @@
   overscroll-behavior: none;
 }
 
-.exampleValue {
-  @include type-body-4-bold;
+.section {
+  display: flex;
+  min-height: 0;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dataSection {
+  flex: 1 1 auto;
+}
+
+.caption {
+  @include type-body-3-regular;
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--ds-text-neutral-tertiary);
+  white-space: nowrap;
+}
+
+.captionTitle {
+  @include type-body-3-semibold;
+  flex-shrink: 0;
   color: var(--ds-text-neutral-primary);
 }
 
-/* Your example stays in view under the header while the rows scroll. */
+.captionDot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+  background: var(--ds-text-neutral-quaternary);
+}
+
+.exampleWrap {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* Equal columns, no index: one row of answers, not a sheet. */
+.exampleGrid {
+  min-width: 0;
+
+  th,
+  td {
+    position: static;
+    min-width: 0;
+  }
+}
+
+/* "Your answers" spans the feature columns; "AI predicts" sits over the label. */
+.groupTh {
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.groupTh + .groupTh {
+  border-left: 1px solid var(--ds-border-neutral-primary);
+}
+
 .exampleRow > td {
-  position: sticky;
-  top: 28px;
-  z-index: 2;
-}
-
-.exampleRow > td:first-child {
-  z-index: 3;
-}
-
-/* White, untinted cells set the example apart from the sheet rows. */
-tbody tr.exampleRow:hover > td:not(:first-child),
-.exampleRow > td:not(:first-child) {
+  border-bottom: 0;
   background: var(--ds-background-neutral-primary);
 }
 
-/* Fills the index cell so the whole cell triggers the tooltip. */
-.examplePin {
-  display: flex;
-  height: 28px;
-  margin: 0 -8px;
-  align-items: center;
-  justify-content: center;
+.exampleGuess {
+  @include type-body-4-semibold;
 }
 
-.examplePlaceholder {
-  color: var(--ds-text-neutral-tertiary);
+tbody tr.exampleRow:hover > td {
+  background: var(--ds-background-neutral-primary);
 }
 
 .labelCell {

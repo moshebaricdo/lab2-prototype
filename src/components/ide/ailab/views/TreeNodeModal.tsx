@@ -1,5 +1,11 @@
-import { Fragment, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { Button, Modal, SegmentedButton, Tag, Tooltip } from "@moshebari/cads-react";
+import {
+  Fragment,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import { Button, Modal, SegmentedButton, Tag } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import {
@@ -46,7 +52,12 @@ interface TreeNodeModalProps {
  * carry the leaf's answer, Incorrect rows do not. A question lists its rows
  * in branch order. Remounted per node (via `key`) so the filter resets.
  */
-export function TreeNodeModal({ lab, nodeKey, example, onClose }: TreeNodeModalProps) {
+export function TreeNodeModal({
+  lab,
+  nodeKey,
+  example,
+  onClose,
+}: TreeNodeModalProps) {
   const model = lab.model;
   const tree = model?.tree;
   const columns = lab.config.dataset.columns;
@@ -109,6 +120,30 @@ interface NodeDetailProps {
   featureName: (feature: string) => string;
 }
 
+function rowCountLabel(count: number): string {
+  return `${count} ${count === 1 ? "Row" : "Rows"}`;
+}
+
+function RowCaption({
+  title,
+  detail,
+  titleId,
+}: {
+  title: string;
+  detail: string;
+  titleId?: string;
+}) {
+  return (
+    <p className={styles.caption}>
+      <span id={titleId} className={styles.captionTitle}>
+        {title}
+      </span>
+      <span className={styles.captionDot} aria-hidden />
+      {detail}
+    </p>
+  );
+}
+
 function NodeDetail({
   lab,
   model,
@@ -134,8 +169,10 @@ function NodeDetail({
   // as sorted runs; a leaf keeps sheet order.
   const nodeRows =
     node.type === "decision"
-      ? treeBranches(node).flatMap((branch) => membership.get(branch.child.pathKey) ?? [])
-      : membership.get(nodeKey) ?? [];
+      ? treeBranches(node).flatMap(
+          (branch) => membership.get(branch.child.pathKey) ?? [],
+        )
+      : (membership.get(nodeKey) ?? []);
   const isCorrect = (rowIndex: number) =>
     String(lab.rows[rowIndex]?.[labelColumn] ?? "") === prediction;
   const filteredRows = isLeaf
@@ -146,21 +183,22 @@ function NodeDetail({
       )
     : nodeRows;
 
-  // Only the features asked on the way here (and the question's own), in
-  // path order — the rest played no part in reaching this node.
-  const featureColumns = [
-    ...new Set([
-      ...conditions.map((condition) => condition.feature),
-      ...(node.type === "decision" ? [node.feature] : []),
-    ]),
-  ]
+  // Every node shows the same columns: the card title, every feature the
+  // model was trained on, and the label.
+  const featureColumns = model.selectedFeatures
     .map((feature) => columnById(columns, feature))
     .filter((column): column is AiLabColumn => Boolean(column));
+  // The example only fills a feature once the trace has answered it.
+  const askedFeatures = new Set([
+    ...conditions.map((condition) => condition.feature),
+    ...(node.type === "decision" ? [node.feature] : []),
+  ]);
 
   const pathSteps: ReactNode[] = [
     ...conditions.map((condition, index) => (
       <Fragment key={index}>
-        {featureName(condition.feature)} is <strong>{condition.branchLabel}</strong>
+        {featureName(condition.feature)} is{" "}
+        <strong>{condition.branchLabel}</strong>
       </Fragment>
     )),
     node.type === "leaf" ? (
@@ -179,164 +217,237 @@ function NodeDetail({
     !model.selectedFeatures.includes(titleColumnId)
       ? columnById(columns, titleColumnId)
       : undefined;
-  const rowNoun = lab.config.dataset.story?.rowNoun ?? "example";
-  const columnCount = 2 + featureColumns.length + (titleColumn ? 1 : 0);
-
-  // The example leads the table in bold. A real row moves to the top (when it
-  // belongs to the current filter); a typed one is added there, with the
-  // leaf's prediction as its label.
+  // The example gets its own table above the sheet, so it never reads as one
+  // of the rows the filter sorts into correct / incorrect.
   const exampleHere = example?.pathKeys.includes(nodeKey) ? example : undefined;
-  const exampleRowIndex = exampleHere?.rowIndex;
-  const showExample =
-    Boolean(exampleHere) &&
-    (exampleRowIndex === undefined || filteredRows.includes(exampleRowIndex));
-  const otherRows = filteredRows.filter((rowIndex) => rowIndex !== exampleRowIndex);
-  const visibleRows = otherRows.slice(0, pageCount * PAGE_SIZE);
-  const hiddenCount = otherRows.length - visibleRows.length;
+  const visibleRows = filteredRows.slice(0, pageCount * PAGE_SIZE);
+  const hiddenCount = filteredRows.length - visibleRows.length;
   const lastRowNumber = Math.max(1, ...nodeRows.map((index) => index + 1));
 
-  const renderRow = (rowIndex: number | undefined, isExample: boolean) => {
-    const row = rowIndex === undefined ? exampleHere?.values : lab.rows[rowIndex];
-    const cell = (value: string | number | undefined, shown = true) =>
-      shown && value !== undefined && value !== "" ? (
-        isExample ? (
-          <strong className={styles.exampleValue}>{formatCell(value)}</strong>
-        ) : (
-          formatCell(value)
-        )
-      ) : null;
-    return (
-      <tr key={isExample ? "example" : rowIndex} className={isExample ? styles.exampleRow : undefined}>
-        <td className={`${sheet.td} ${sheet.tdIndex}`}>
-          {isExample ? (
-            <Tooltip title="Your example" placement="top">
-              <span className={styles.examplePin} role="img" aria-label="Your example">
-                <FaIcon name="location-dot" fontSize="11px" />
-              </span>
-            </Tooltip>
-          ) : (
-            (rowIndex ?? 0) + 1
-          )}
-        </td>
-        {titleColumn ? (
-          <td className={sheet.td}>
-            {rowIndex === undefined ? (
-              <span className={styles.examplePlaceholder}>Your {rowNoun}</span>
-            ) : (
-              cell(row?.[titleColumn.id])
-            )}
-          </td>
-        ) : null}
-        {featureColumns.map((column) => (
-          <td
-            key={column.id}
-            className={`${sheet.td} ${sheet.tdFeature} ${
-              column.type === "numerical" ? sheet.tdNumeric : ""
-            }`}
-          >
-            {cell(row?.[column.id])}
-          </td>
-        ))}
-        <td className={`${sheet.td} ${sheet.tdLabel}`}>
-          <span className={styles.labelCell}>
-            {cell(rowIndex === undefined ? prediction : row?.[labelColumn])}
-            {rowIndex !== undefined && heldOut.has(rowIndex) ? (
-              <Tag size="small" color="neutral" label="Held out" />
-            ) : null}
-          </span>
-        </td>
-      </tr>
-    );
-  };
+  const dataCaption = !isLeaf
+    ? "Rows from your dataset that reached this question."
+    : filter === "correct"
+      ? "Rows from your dataset where the AI's prediction is correct."
+      : "Rows from your dataset where the AI's prediction is incorrect.";
+
+  const filterControl = isLeaf ? (
+    <SegmentedButton
+      size="extraSmall"
+      aria-label="Filter rows"
+      value={filter}
+      onChange={(value) => {
+        setFilter(value as RowFilter);
+        setPageCount(1);
+      }}
+      options={[
+        { value: "correct", label: "Correct" },
+        { value: "incorrect", label: "Incorrect" },
+      ]}
+    />
+  ) : null;
 
   return (
     <div className={styles.root}>
-      <div className={styles.head}>
-        <ol className={styles.path} aria-label="Path to this node">
-          {pathSteps.map((step, index) => {
-            const isCurrent = index === pathSteps.length - 1;
-            return (
-              <li
-                key={index}
-                className={`${styles.pathStep} ${isCurrent ? styles.pathStepCurrent : ""}`}
-                aria-current={isCurrent ? "step" : undefined}
-              >
-                {index > 0 ? (
-                  <FaIcon name="caret-right" fontSize="10px" className={styles.pathSeparator} />
-                ) : null}
-                <span className={styles.pathIndex} aria-hidden>
-                  {index + 1}
-                </span>
-                <span>{step}</span>
-              </li>
-            );
-          })}
-        </ol>
-        {isLeaf ? (
-          <SegmentedButton
-              size="extraSmall"
-              aria-label="Filter rows"
-              value={filter}
-              onChange={(value) => {
-                setFilter(value as RowFilter);
-                setPageCount(1);
-              }}
-              options={[
-                { value: "correct", label: "Correct" },
-                { value: "incorrect", label: "Incorrect" },
-              ]}
-            />
-        ) : null}
-      </div>
-
-      <div className={`${results.tableWrap} ${styles.tableWrap}`}>
-        <table
-          className={sheet.grid}
-          aria-label={`Rows at ${title}`}
-          style={{ "--index-col-ch": String(lastRowNumber).length } as CSSProperties}
-        >
-          <thead>
-            <tr>
-              <th className={`${sheet.th} ${sheet.thIndex}`} aria-label="Row" />
-              {titleColumn ? <th className={sheet.th}>{titleColumn.name}</th> : null}
-              {featureColumns.map((column) => (
-                <th
-                  key={column.id}
-                  className={`${sheet.th} ${sheet.thFeature} ${
-                    column.type === "numerical" ? sheet.thNumeric : ""
-                  }`}
-                >
-                  {column.name}
-                </th>
-              ))}
-              <th className={`${sheet.th} ${sheet.thLabel}`}>{labelName}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {showExample ? renderRow(exampleRowIndex, true) : null}
-            {visibleRows.length === 0 ? (
-              <tr>
-                <td className={`${sheet.td} ${results.emptySheet}`} colSpan={columnCount}>
-                  No rows in this filter.
-                </td>
-              </tr>
-            ) : (
-              visibleRows.map((rowIndex) => renderRow(rowIndex, false))
-            )}
-          </tbody>
-        </table>
-        {hiddenCount > 0 ? (
-          <div className={results.showMore}>
-            <Button
-              size="small"
-              variant="outlined"
-              color="secondary"
-              onClick={() => setPageCount((count) => count + 1)}
+      {conditions.length > 0 ? (
+      <ol className={styles.path} aria-label="Path to this node">
+        {pathSteps.map((step, index) => {
+          const isCurrent = index === pathSteps.length - 1;
+          return (
+            <li
+              key={index}
+              className={`${styles.pathStep} ${isCurrent ? styles.pathStepCurrent : ""}`}
+              aria-current={isCurrent ? "step" : undefined}
             >
-              Show {Math.min(hiddenCount, PAGE_SIZE)} more rows ({hiddenCount} remaining)
-            </Button>
-          </div>
+              {index > 0 ? (
+                <FaIcon
+                  name="caret-right"
+                  fontSize="12px"
+                  className={styles.pathSeparator}
+                />
+              ) : null}
+              <span className={styles.pathIndex} aria-hidden>
+                {index + 1}
+              </span>
+              <span>{step}</span>
+            </li>
+          );
+        })}
+      </ol>
+      ) : null}
+
+      <div className={styles.content}>
+        {exampleHere ? (
+          <section
+            className={styles.section}
+            aria-labelledby="tree-node-example"
+          >
+            <RowCaption
+              titleId="tree-node-example"
+              title="Your example"
+              detail={
+                isLeaf
+                  ? "This is the prediction you made"
+                  : "These are the answers you gave"
+              }
+            />
+            <div className={`${results.tableWrap} ${styles.exampleWrap}`}>
+              <table className={`${sheet.grid} ${styles.exampleGrid}`}>
+                <thead>
+                  <tr>
+                    <th
+                      className={`${sheet.th} ${styles.groupTh}`}
+                      colSpan={featureColumns.length}
+                    >
+                      Your answers
+                    </th>
+                    <th className={`${sheet.th} ${styles.groupTh}`}>
+                      AI predicts
+                    </th>
+                  </tr>
+                  <tr>
+                    {featureColumns.map((column) => (
+                      <th
+                        key={column.id}
+                        className={`${sheet.th} ${sheet.thFeature}`}
+                      >
+                        {column.name}
+                      </th>
+                    ))}
+                    <th className={`${sheet.th} ${sheet.thLabel}`}>
+                      {labelName}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className={styles.exampleRow}>
+                    {featureColumns.map((column) => (
+                      <td
+                        key={column.id}
+                        className={`${sheet.td} ${sheet.tdFeature}`}
+                      >
+                        {askedFeatures.has(column.id)
+                          ? formatCell(exampleHere.values[column.id] ?? "")
+                          : ""}
+                      </td>
+                    ))}
+                    <td
+                      className={`${sheet.td} ${sheet.tdLabel} ${styles.exampleGuess}`}
+                    >
+                      {isLeaf ? prediction : ""}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
         ) : null}
+
+        <section
+          className={`${styles.section} ${styles.dataSection}`}
+          aria-labelledby="tree-node-data"
+        >
+          <div className={styles.head}>
+            <RowCaption
+              titleId="tree-node-data"
+              title={rowCountLabel(filteredRows.length)}
+              detail={dataCaption}
+            />
+            {filterControl}
+          </div>
+          <div className={`${results.tableWrap} ${styles.tableWrap}`}>
+            <table
+              className={sheet.grid}
+              aria-label={`Rows at ${title}`}
+              style={
+                {
+                  "--index-col-ch": String(lastRowNumber).length,
+                } as CSSProperties
+              }
+            >
+              <thead>
+                <tr>
+                  <th
+                    className={`${sheet.th} ${sheet.thIndex}`}
+                    aria-label="Row"
+                  />
+                  {titleColumn ? (
+                    <th className={sheet.th}>{titleColumn.name}</th>
+                  ) : null}
+                  {featureColumns.map((column) => (
+                    <th
+                      key={column.id}
+                      className={`${sheet.th} ${sheet.thFeature} ${
+                        column.type === "numerical" ? sheet.thNumeric : ""
+                      }`}
+                    >
+                      {column.name}
+                    </th>
+                  ))}
+                  <th className={`${sheet.th} ${sheet.thLabel}`}>
+                    {labelName}
+                  </th>
+                </tr>
+              </thead>
+              {visibleRows.length > 0 ? (
+              <tbody>
+                {visibleRows.map((rowIndex) => {
+                    const row = lab.rows[rowIndex];
+                    return (
+                      <tr key={rowIndex}>
+                        <td className={`${sheet.td} ${sheet.tdIndex}`}>
+                          {rowIndex + 1}
+                        </td>
+                        {titleColumn ? (
+                          <td className={sheet.td}>
+                            {formatCell(row?.[titleColumn.id] ?? "")}
+                          </td>
+                        ) : null}
+                        {featureColumns.map((column) => (
+                          <td
+                            key={column.id}
+                            className={`${sheet.td} ${sheet.tdFeature} ${
+                              column.type === "numerical" ? sheet.tdNumeric : ""
+                            }`}
+                          >
+                            {formatCell(row?.[column.id] ?? "")}
+                          </td>
+                        ))}
+                        <td className={`${sheet.td} ${sheet.tdLabel}`}>
+                          <span className={styles.labelCell}>
+                            {formatCell(row?.[labelColumn] ?? "")}
+                            {heldOut.has(rowIndex) ? (
+                              <Tag
+                                size="small"
+                                color="neutral"
+                                label="Held out"
+                              />
+                            ) : null}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+              ) : null}
+            </table>
+            {visibleRows.length === 0 ? (
+              <p className={results.emptySheet}>No rows matched this filter</p>
+            ) : null}
+            {hiddenCount > 0 ? (
+              <div className={results.showMore}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="secondary"
+                  onClick={() => setPageCount((count) => count + 1)}
+                >
+                  Show {Math.min(hiddenCount, PAGE_SIZE)} more rows (
+                  {hiddenCount} remaining)
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        </section>
       </div>
     </div>
   );
