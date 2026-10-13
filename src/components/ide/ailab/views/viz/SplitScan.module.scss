@@ -1,0 +1,182 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+$ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+/* Width and gap mirror `PANEL_WIDTH` / `PANEL_GAP` in SplitScan.tsx. */
+.panel {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  border: 1.5px dashed var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  pointer-events: none;
+  animation: panel-in 240ms $ease-out both;
+  transition: border-color 200ms ease;
+}
+
+.panelPicked {
+  border-style: solid;
+  border-color: var(--border-success-primary);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.head {
+  display: flex;
+  min-height: 18px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.question {
+  @include type-body-4-semibold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: swap-in 180ms $ease-out both;
+}
+
+.more {
+  @include type-body-4-regular;
+  flex-shrink: 0;
+  color: var(--text-neutral-tertiary);
+}
+
+.best {
+  @include type-body-4-semibold;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-success-primary);
+  animation: swap-in 180ms $ease-out both;
+}
+
+.piles {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  animation: swap-in 200ms $ease-out both;
+}
+
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+.pile {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pileDots {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-end;
+  gap: 2px;
+  min-height: 6px;
+  padding: 5px;
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--shape-round);
+}
+
+.pileLabel {
+  @include type-body-4-regular;
+  overflow: hidden;
+  color: var(--text-neutral-secondary);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pileMore {
+  @include type-body-4-regular;
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--text-neutral-tertiary);
+}
+
+.meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meterLabel {
+  @include type-body-4-regular;
+  flex-shrink: 0;
+  color: var(--text-neutral-secondary);
+}
+
+.bar {
+  position: relative;
+  height: 8px;
+  flex: 1;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-tertiary);
+}
+
+.fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: inherit;
+  background: var(--background-neutral-senary);
+  transition:
+    width 320ms $ease-out,
+    background-color 200ms ease;
+
+  .panelPicked & {
+    background: var(--background-success-primary);
+  }
+}
+
+/* The best try so far. */
+.tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text-neutral-primary);
+  transition: left 320ms $ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .question,
+  .best,
+  .piles {
+    animation: none;
+  }
+
+  .fill,
+  .tick {
+    transition: none;
+  }
+}

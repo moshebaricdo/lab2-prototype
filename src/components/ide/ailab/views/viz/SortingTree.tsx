@@ -153,6 +153,8 @@ const EDGE_LABEL_GAP = 8;
 export interface SortDot {
   id: number;
   label: string;
+  /** Sheet row this dot stands for (the one shown while it joins, in `grow`). */
+  rowIndex: number;
   /** Root → leaf keys this row falls through. */
   pathKeys: string[];
 }
@@ -174,6 +176,40 @@ export interface SortingModel {
    * a color and the rest fold into one neutral Other (`groupLabels`).
    */
   grouping: LabelGrouping;
+  /**
+   * Dot id → the order it arrives in, for stages where rows come in one at
+   * a time (`SortingTreeState.dotsShown`). Unset, every dot pops in at `read`.
+   */
+  arrival?: number[];
+  /**
+   * Arrivals below this rank are handed off by something flying in on top
+   * of them (`TreeTableRow`'s row morph): they appear at once, no fade.
+   */
+  handoff?: number;
+}
+
+/**
+ * The same tree with its questions asked in `order` (split keys) instead of
+ * depth-then-left, and optionally dots arriving in `arrival` order. A key
+ * must come after its parent's.
+ */
+export function withSplitOrder(
+  model: SortingModel,
+  order: string[],
+  arrival?: number[],
+  handoff?: number,
+): SortingModel {
+  const byKey = new Map(model.splits.map((laid) => [laid.key, laid]));
+  const splits = order
+    .map((key) => byKey.get(key))
+    .filter((laid): laid is LaidOutNode => laid !== undefined);
+  return {
+    ...model,
+    splits,
+    splitIndex: new Map(splits.map((laid, index) => [laid.key, index])),
+    arrival,
+    handoff,
+  };
 }
 
 function trayHeight(
@@ -247,6 +283,7 @@ export function useSortingModel(
     const dots = picked.map((entry, id) => ({
       id,
       label: entry.label,
+      rowIndex: entry.rowIndex,
       pathKeys: entry.pathKeys,
     }));
 
@@ -333,6 +370,11 @@ export interface SortingTreeState {
   rootShown?: boolean;
   /** Dots have popped into the root pile. */
   read: boolean;
+  /**
+   * With `model.arrival`, only the first N arrivals are drawn and each
+   * node counts the rows it holds so far. Unset, every dot is in.
+   */
+  dotsShown?: number;
   /** Questions visible: `splits[i]` shows its feature when `i < splitsShown`. */
   splitsShown: number;
   /** Child piles, connectors, and edge labels visible under the first N splits. */
@@ -388,9 +430,20 @@ interface SortingTreeProps {
   /**
    * A question (or a leaf's label) shows as soon as its node appears,
    * before its dots arrive, and the row count waits for the dots to land:
-   * title, dots, count.
+   * title, dots, count. `"leaves"` does this for leaves only: a question
+   * stays blank until it's asked (`splitsShown`).
    */
-  askOnArrival?: boolean;
+  askOnArrival?: boolean | "leaves";
+  /**
+   * Arrival mode: the arrival rank on its way in (the row in `grow`'s
+   * dock). Branches it will take sprout before its dot lands.
+   */
+  incoming?: number;
+  /**
+   * Arrival mode: a split's branches sprout together when it's asked, empty
+   * ones included (count 0), instead of each waiting for its first row.
+   */
+  pairedBranches?: boolean;
   /** Color dot beside each leaf's label (the dots and key already carry it). */
   labelSwatch?: boolean;
   /**
@@ -435,6 +488,8 @@ export function SortingTree({
   overlay,
   hotEdgeKey,
   askOnArrival = false,
+  incoming,
+  pairedBranches = false,
   labelSwatch = true,
   marbleStyle = "marble",
   ariaLabel,
@@ -466,9 +521,22 @@ export function SortingTree({
     return map;
   }, [members]);
 
+  /* Arrival mode: a branch only sprouts once a row goes down it — the
+     `incoming` one counts, so its card is up before its dot gets there. */
+  const reached = (key: string) => {
+    if (pairedBranches || !model.arrival || state.dotsShown === undefined) return true;
+    const ids = model.members.get(key) ?? [];
+    return ids.length === 0
+      ? state.dotsShown >= model.dots.length
+      : ids.some((id) => {
+          const rank = model.arrival![id] ?? Infinity;
+          return rank < state.dotsShown! || rank === incoming;
+        });
+  };
   const visible = (laid: LaidOutNode) =>
     laid.parentKey
-      ? (splitIndex.get(laid.parentKey) ?? Infinity) < state.childrenShown
+      ? (splitIndex.get(laid.parentKey) ?? Infinity) < state.childrenShown &&
+        reached(laid.key)
       : state.rootShown !== false;
   const asked = (laid: LaidOutNode) =>
     (splitIndex.get(laid.key) ?? Infinity) < state.splitsShown;
@@ -508,6 +576,40 @@ export function SortingTree({
       look.bend,
     );
   };
+
+  const { arrival } = model;
+  const arrived =
+    arrival && state.dotsShown !== undefined
+      ? (id: number) => (arrival[id] ?? 0) < state.dotsShown!
+      : undefined;
+  const liveCount = (ids: number[]) =>
+    Math.round(ids.filter((id) => arrived!(id)).length * model.rowsPerDot);
+  /* Rows still arriving pack into the front of each pile, keeping its color order. */
+  const packedSlots = useMemo(() => {
+    if (!arrival || state.dotsShown === undefined) return undefined;
+    const limit = state.dotsShown;
+    const map = new Map<string, Map<number, number>>();
+    members.forEach((ids, key) => {
+      const slots = new Map<number, number>();
+      ids.forEach((id) => {
+        if ((arrival[id] ?? 0) < limit) slots.set(id, slots.size);
+      });
+      /* The row in flight (the next arrival) sits where it will land, so the
+         marble can aim at it, without shifting the dots already in the pile. */
+      const incoming = ids.find((id) => (arrival[id] ?? 0) === limit);
+      if (incoming !== undefined) {
+        let slot = 0;
+        for (const id of ids) {
+          if (id === incoming) break;
+          if ((arrival[id] ?? 0) < limit) slot += 1;
+        }
+        slots.set(incoming, slot);
+      }
+      map.set(key, slots);
+    });
+    return map;
+  }, [arrival, members, state.dotsShown]);
+  const slotsAt = packedSlots ?? slotOf;
 
   const lastSplit = state.splitsDone > 0 ? splits[state.splitsDone - 1] : undefined;
   const popStep = Math.min(28, 700 / Math.max(1, dots.length));
@@ -583,7 +685,13 @@ export function SortingTree({
           const { node } = laid;
           const isLeaf = node.type === "leaf";
           const on = visible(laid);
-          const decided = askOnArrival ? on : isLeaf ? state.named : asked(laid);
+          const decided = isLeaf
+            ? askOnArrival
+              ? on
+              : state.named
+            : askOnArrival === true
+              ? on
+              : asked(laid);
           const onPath = marbleKeys.has(laid.key);
           const hot = hotEdgeKey === laid.key;
           const score = isLeaf && state.checked ? leafScore(node) : undefined;
@@ -670,13 +778,13 @@ export function SortingTree({
                         .filter(Boolean)
                         .join(" ")}
                     >
-                      {node.sampleCount}
+                      {arrived ? liveCount(ids) : node.sampleCount}
                     </span>
                   )}
                 </div>
                 {isLeaf ? null : (
                   <div className={styles.tray} aria-hidden>
-                    {ids.map((id) => (
+                    {(arrived ? ids.filter(arrived) : ids).map((id) => (
                       <span
                         key={id}
                         className={styles.ghost}
@@ -694,10 +802,12 @@ export function SortingTree({
           const key = restingKey(model, dot, state.splitsDone);
           const laid = layout.byKey.get(key);
           if (!laid) return null;
-          const { x, y } = slotPosition(laid, slotOf.get(key)?.get(dot.id) ?? 0, geometry, look);
+          const { x, y } = slotPosition(laid, slotsAt.get(key)?.get(dot.id) ?? 0, geometry, look);
           const moving = movingSlots?.get(dot.id);
-          const delay =
-            state.splitsShown === 0
+          const shown = state.read && (!arrived || arrived(dot.id));
+          const delay = arrival
+            ? 0
+            : state.splitsShown === 0
               ? Math.min(dot.id * popStep, 700)
               : !state.quiet && moving !== undefined
                 ? moving * moveStep
@@ -712,7 +822,10 @@ export function SortingTree({
               key={dot.id}
               className={[
                 styles.dot,
-                state.read ? "" : styles.dotHidden,
+                shown ? "" : styles.dotHidden,
+                arrival && (arrival[dot.id] ?? 0) < (model.handoff ?? 0)
+                  ? styles.dotHandoff
+                  : "",
                 wrong ? styles.dotWrong : "",
                 answering ? styles.dotAnswer : "",
               ]
@@ -720,12 +833,13 @@ export function SortingTree({
                 .join(" ")}
               style={{
                 color: labelFill(indexOf(dot.label)),
-                transform: `translate(${x}px, ${y}px) scale(${state.read ? 1 : 0.2})`,
+                transform: `translate(${x}px, ${y}px) scale(${shown || arrival ? 1 : 0.2})`,
                 transitionDelay: `${delay}ms`,
                 transformOrigin: answering
                   ? `${laid.x + laid.width / 2}px ${laid.y + laid.height / 2}px`
                   : undefined,
               }}
+              data-dot-id={dot.id}
               aria-hidden
             />
           );

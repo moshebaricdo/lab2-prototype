@@ -7,7 +7,9 @@ import {
   tableRowTitle,
 } from "../../components/ide/ailab/views/TreeTableRow";
 import type {
+  GrowthMode,
   TrainingStageProps,
+  TrainingStory,
   WalkState,
 } from "../../components/ide/ailab/views/trainingWalk";
 
@@ -33,7 +35,20 @@ export interface TrainingVariant {
   persistentBack?: boolean;
   /** Modal width; defaults to 880. */
   maxWidth?: number;
+  /** How Training is told (`useTrainingWalk`); defaults to `sort`. */
+  story?: TrainingStory;
+  /** `grow` only: open on the data table narrowing and scrolling. */
+  intro?: boolean;
+  /** `grow` only: how the tree takes shape; defaults to `organic`. */
+  growth?: GrowthMode;
 }
+
+const TABLE_ROW_CHROME = {
+  hideStatement: TABLE_ROW_SHELL.hideStatement,
+  persistentBack: TABLE_ROW_SHELL.persistentBack,
+  maxWidth: TABLE_ROW_SHELL.maxWidth,
+  title: tableRowTitle,
+} satisfies Partial<TrainingVariant>;
 
 export const TRAINING_VARIANTS: TrainingVariant[] = [
   {
@@ -59,9 +74,59 @@ export const TRAINING_VARIANTS: TrainingVariant[] = [
     name: "Row from the table",
     note: "Canonical — what the lab plays. Test rows rise in from the sheet under the tree; the guess fills the blank label cell.",
     Stage: TreeTableRow,
-    hideStatement: TABLE_ROW_SHELL.hideStatement,
-    persistentBack: TABLE_ROW_SHELL.persistentBack,
-    maxWidth: TABLE_ROW_SHELL.maxWidth,
-    title: tableRowTitle,
+    ...TABLE_ROW_CHROME,
+  },
+  {
+    id: "scan",
+    name: "Scan for the best question",
+    note: "How our trainer really works: each pile tries every column's question (ghost piles + how well it sorts), keeps the best, then splits.",
+    Stage: TreeTableRow,
+    story: "scan",
+    ...TABLE_ROW_CHROME,
+  },
+  {
+    id: "scan-plain",
+    name: "Scan (no meter)",
+    note: "Scan for the best question without the bar: students judge each try by its piles' colors.",
+    Stage: (props) => <TreeTableRow {...props} scanMeter={false} />,
+    story: "scan",
+    ...TABLE_ROW_CHROME,
+  },
+  {
+    id: "grow",
+    name: "Rows grow the tree",
+    note: "The first 6 rows drop into a dock over the tree, get scanned, and their label's dot drops into the tree; then the rest pour in, faster each batch. Not how our trainer works; ends on the real tree so Testing matches.",
+    Stage: TreeTableRow,
+    story: "grow",
+    ...TABLE_ROW_CHROME,
+  },
+  {
+    id: "table-to-tree",
+    name: "Table to tree",
+    note: "Rows grow the tree, opened by the data: the whole table appears, narrows to the chosen columns (label on the right), spins like a lotto wheel while it closes down to one row, and stops on the first training row as the tree appears.",
+    Stage: TreeTableRow,
+    story: "grow",
+    intro: true,
+    ...TABLE_ROW_CHROME,
+  },
+  {
+    id: "table-to-tree-paired",
+    name: "Table to tree (paired branches)",
+    note: "Table to tree, closer to a real split: when a question appears both its branches sprout at once (empty ones at 0), and the first rows are picked to cover both sides early.",
+    Stage: TreeTableRow,
+    story: "grow",
+    intro: true,
+    growth: "paired",
+    ...TABLE_ROW_CHROME,
+  },
+  {
+    id: "table-to-tree-batch",
+    name: "Table to tree (whole table first)",
+    note: "How our trainer really builds it: after the table, the whole tree builds from all the rows while the first row waits in the dock; the rows then sort into it.",
+    Stage: TreeTableRow,
+    story: "grow",
+    intro: true,
+    growth: "batch",
+    ...TABLE_ROW_CHROME,
   },
 ];

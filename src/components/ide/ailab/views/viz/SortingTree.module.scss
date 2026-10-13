@@ -264,6 +264,22 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
 
 .dotHidden {
   opacity: 0;
+  /* Parked on its landing slot with no slide, so a marble can fly to it. */
+  transition: none;
+}
+
+/* Something landed exactly on top of it: take over at once, then move like any dot. */
+.dotHandoff {
+  transition:
+    transform 560ms $ease-move,
+    opacity 0s,
+    background-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+/* Until then it jumps, never slides, so it's where the morph was aimed. */
+.dotHidden.dotHandoff {
+  transition: none;
 }
 
 /* Rides the leaf's bounce: the inline `transform-origin` is the leaf's

@@ -71,14 +71,21 @@ export function AiLabTrainingLabPage() {
             </select>
           </label>
         </header>
-        <Player key={fixture.id} data={fixture.data} variant={variant} />
+        <Player
+          key={`${fixture.id}:${variant.story ?? "sort"}:${variant.intro ? "intro" : ""}:${variant.growth ?? ""}`}
+          data={fixture.data}
+          variant={variant}
+        />
       </div>
     </CadsLabProvider>
   );
 }
 
 function Player({ data, variant }: { data: TrainingWalkData; variant: TrainingVariant }) {
-  const walk = useTrainingWalk(data);
+  const walk = useTrainingWalk(data, variant.story, {
+    intro: variant.intro,
+    growth: variant.growth,
+  });
   const { beats } = walk;
   const times = useMemo(() => beatTimes(beats), [beats]);
   const total = (times[times.length - 1] ?? 0) + END_HOLD_MS;
@@ -287,6 +294,8 @@ function Player({ data, variant }: { data: TrainingWalkData; variant: TrainingVa
           instant={instant}
           onSkip={toEnd}
           onRestart={restart}
+          playing={playing}
+          onTogglePlay={togglePlay}
         />
       </main>
     </>
@@ -301,6 +310,8 @@ const VariantFrame = memo(function VariantFrame({
   instant,
   onSkip,
   onRestart,
+  playing,
+  onTogglePlay,
 }: {
   variant: TrainingVariant;
   data: TrainingWalkData;
@@ -309,6 +320,8 @@ const VariantFrame = memo(function VariantFrame({
   instant: boolean;
   onSkip: () => void;
   onRestart: () => void;
+  playing: boolean;
+  onTogglePlay: () => void;
 }) {
   const { Stage } = variant;
   return (
@@ -333,6 +346,11 @@ const VariantFrame = memo(function VariantFrame({
         flush
         hideStatement={variant.hideStatement}
         persistentBack={variant.persistentBack}
+        playback={
+          variant.persistentBack
+            ? { paused: !playing, onTogglePause: onTogglePlay, onRestart }
+            : undefined
+        }
       >
         <Stage data={data} walk={walk} state={state} instant={instant} />
       </TrainingModalShell>
@@ -365,6 +383,20 @@ function describeBeat(beat: Beat, state: WalkState): string {
   if (patch.act === "testing") return "Testing starts";
   if (patch.act === "checking") return "Checking every row";
   if (patch.act === "done") return "Done";
+  if (patch.picked) return `Pile ${state.scan + 1} keeps its best question`;
+  if (patch.scan !== undefined && patch.scan >= 0) return `Pile ${patch.scan + 1} starts trying questions`;
+  if (patch.candidate !== undefined && patch.candidate >= 0) return `Pile ${state.scan + 1} tries another question`;
+  if (patch.intro === 0) return "The data table appears";
+  if (patch.intro === 1) return "It narrows to the chosen columns";
+  if (patch.intro === 2) return "The rows scroll by";
+  if (patch.intro === 3) return "The wheel stops on the first row; the tree appears";
+  if (patch.intro === -1) return "The dock takes over the row";
+  if (patch.intake !== undefined && patch.intake >= 0) return `Training row ${patch.intake + 1} drops in`;
+  if (patch.intake === -1) return "The rest pour in";
+  if (patch.dotsShown !== undefined && patch.dotsShown > 0 && patch.dotsShown <= 6 && patch.intake === undefined) {
+    return `Training row ${patch.dotsShown} lands in the tree`;
+  }
+  if (patch.dotsShown !== undefined) return patch.dotsShown === 0 ? "Empty tree" : `${patch.dotsShown} rows in`;
   if (patch.read) return "Rows pour into the top pile";
   if (patch.splitsShown !== undefined) return `Question ${patch.splitsShown} appears`;
   if (patch.childrenShown !== undefined) return `Question ${patch.childrenShown} branches`;

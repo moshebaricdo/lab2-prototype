@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
-import { Modal } from "@moshebari/cads-react";
+import { useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { Button, Modal } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import { columnById } from "../../../../lib/aiLab";
 import type {
@@ -62,7 +63,15 @@ interface ShellProps
    * whole time; the primary reads **Skip →**, then **Continue →**.
    */
   persistentBack?: boolean;
+  /** Restart and pause on the footer's left (pause hides once it's done). */
+  playback?: TrainingPlayback;
   children: ReactNode;
+}
+
+export interface TrainingPlayback {
+  paused: boolean;
+  onTogglePause: () => void;
+  onRestart: () => void;
 }
 
 /**
@@ -87,8 +96,12 @@ export function TrainingModalShell({
   surfaceOnly = false,
   hideStatement = false,
   persistentBack = false,
+  playback,
   children,
 }: ShellProps) {
+  /* CADS Modal has no footer slot; its footer is the surface's last child. */
+  const [surface, setSurface] = useState<HTMLDivElement | null>(null);
+  const footer = surface?.lastElementChild ?? null;
   const arrowLabel = (text: string) => (
     <span className={styles.testLabel}>
       {text}
@@ -105,6 +118,7 @@ export function TrainingModalShell({
 
   return (
     <Modal
+      ref={setSurface}
       open={open}
       surfaceOnly={surfaceOnly}
       title={title}
@@ -112,7 +126,7 @@ export function TrainingModalShell({
       isDismissable={done || persistentBack}
       hasSecondaryAction={done || persistentBack}
       primaryActionLabel={primaryLabel}
-      secondaryActionLabel={persistentBack ? "Back to dataset" : "Back to data"}
+      secondaryActionLabel={persistentBack ? "Cancel" : "Back to data"}
       onPrimaryAction={done ? (canTest ? onTest : onClose) : onSkip}
       onSecondaryAction={done || persistentBack ? onClose : undefined}
       onClose={done || persistentBack ? onClose : undefined}
@@ -135,6 +149,33 @@ export function TrainingModalShell({
         ) : null}
         {children}
       </div>
+      {playback && footer
+        ? createPortal(
+            <div className={styles.playback}>
+              <Button
+                size="medium"
+                variant="outlined"
+                color="secondary"
+                iconOnly
+                startIconName="rotate-left"
+                aria-label="Replay"
+                onClick={playback.onRestart}
+              />
+              {done ? null : (
+                <Button
+                  size="medium"
+                  variant="contained"
+                  color="primary"
+                  iconOnly
+                  startIconName={playback.paused ? "play" : "pause"}
+                  aria-label={playback.paused ? "Play" : "Pause"}
+                  onClick={playback.onTogglePause}
+                />
+              )}
+            </div>,
+            footer,
+          )
+        : null}
     </Modal>
   );
 }

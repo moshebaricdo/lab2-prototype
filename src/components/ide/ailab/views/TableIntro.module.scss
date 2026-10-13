@@ -1,0 +1,176 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+/* Over the canvas and the legend, down to the statement row (56px). */
+.intro {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 56px;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: introIn 320ms ease-out both;
+}
+
+@keyframes introIn {
+  from {
+    opacity: 0;
+  }
+}
+
+.row {
+  display: flex;
+  flex-shrink: 0;
+}
+
+/* Closes down to one row as the wheel slows (inline, `TableIntro`); the
+   canvas shows below it. */
+.window {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--background-neutral-primary);
+}
+
+.body {
+  will-change: transform;
+}
+
+.th,
+.td,
+.thIndex,
+.tdIndex {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  border-left: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Columns share the width; dropped ones squeeze to nothing. */
+.th,
+.td {
+  flex: 1 1 0;
+  min-width: 0;
+  transition:
+    flex-grow var(--intro-filter) cubic-bezier(0.4, 0, 0.2, 1),
+    padding var(--intro-filter) cubic-bezier(0.4, 0, 0.2, 1),
+    border-width var(--intro-filter) cubic-bezier(0.4, 0, 0.2, 1),
+    opacity calc(var(--intro-filter) * 0.5) ease,
+    background-color var(--intro-filter) ease,
+    border-color var(--intro-filter) ease;
+}
+
+.th,
+.thIndex,
+.tdIndex {
+  @include type-body-4-semibold;
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-tertiary);
+}
+
+.td {
+  @include type-body-4-regular;
+  background: var(--background-neutral-primary);
+}
+
+/* After the type mixins (which set their own line-height): one centered
+   line in a 28px cell with a 1px bottom rule. */
+.th,
+.td,
+.thIndex,
+.tdIndex {
+  line-height: 27px;
+}
+
+/* Reel rows: a 28px face plus the rule, so the window clips the rule. */
+.reelRow > span {
+  height: 29px;
+  line-height: 28px;
+  transition: none;
+}
+
+.thIndex,
+.tdIndex {
+  flex: 0 0 36px;
+  padding: 0;
+  border-left: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+.gone {
+  flex-grow: 0;
+  padding: 0;
+  border-left-width: 0;
+  opacity: 0;
+}
+
+/* Same role tints as the dock's sheet (`TreeTableRow.module.scss`). */
+.thFeature {
+  border-color: var(--border-info-primary);
+  background: var(--background-info-mid);
+  color: var(--text-neutral-primary);
+}
+
+.tdFeature {
+  border-color: var(--border-info-light);
+  background: color-mix(
+    in srgb,
+    var(--background-info-light) 50%,
+    var(--background-neutral-primary)
+  );
+}
+
+.thLabel {
+  border-color: var(--border-accent-pink-primary);
+  background: var(--background-accent-pink-mid);
+  color: var(--text-neutral-primary);
+}
+
+.tdLabel {
+  border-color: var(--border-accent-pink-light);
+  background: color-mix(
+    in srgb,
+    var(--background-accent-pink-light) 50%,
+    var(--background-neutral-primary)
+  );
+}
+
+/* Every label keeps the dot's room so the landed row's text doesn't shift
+   when its dot appears; matches `.intakeDot` in the dock. */
+.labelDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: var(--shape-round);
+  vertical-align: -1px;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.labelDotOn {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    animation: none;
+  }
+
+  .th,
+  .td {
+    transition: none;
+  }
+}

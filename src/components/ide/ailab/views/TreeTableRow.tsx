@@ -1,8 +1,11 @@
 import {
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
+  type ReactNode,
   type RefObject,
 } from "react";
 import { Tooltip } from "@moshebari/cads-react";
@@ -17,8 +20,11 @@ import {
 import {
   GUESS_DELAY_MS,
   GUESS_FLY_MS,
+  GROW_SLOW,
+  intakeTiming,
   useTrainingWalk,
   useWalkPlayback,
+  type IntakeTiming,
   type TallyEntry,
   type TrainingStageProps,
   type WalkState,
@@ -29,8 +35,11 @@ import {
   SortingTree,
   traceMs,
   useSortingModel,
+  withSplitOrder,
   type SortingMarbleStyle,
 } from "./viz/SortingTree";
+import { SplitScan } from "./viz/SplitScan";
+import { ReelRow, TableIntro } from "./TableIntro";
 import styles from "./TreeTableRow.module.scss";
 
 /**
@@ -99,7 +108,8 @@ export function TrainingTableRow(props: TrainingRowWalkProps) {
   const { open, onClose, onTest, columns, labelColumn, features, canTest } =
     props;
   const walk = useTrainingWalk(props);
-  const { state, instant, skip } = useWalkPlayback(open, walk);
+  const { state, instant, skip, paused, togglePause, restart } =
+    useWalkPlayback(open, walk);
   return (
     <TrainingModalShell
       {...TABLE_ROW_SHELL}
@@ -113,6 +123,7 @@ export function TrainingTableRow(props: TrainingRowWalkProps) {
       canTest={canTest}
       done={state.act === "done"}
       onSkip={skip}
+      playback={{ paused, onTogglePause: togglePause, onRestart: restart }}
     >
       <TreeTableRow data={props} walk={walk} state={state} instant={instant} />
     </TrainingModalShell>
@@ -132,7 +143,11 @@ export function TreeTableRow({
   walk,
   state,
   instant,
-}: TrainingStageProps) {
+  scanMeter = true,
+}: TrainingStageProps & {
+  /** `scan` story: show the "how well it sorts" bar under each try. */
+  scanMeter?: boolean;
+}) {
   const {
     tree,
     columns,
@@ -143,14 +158,57 @@ export function TreeTableRow({
     rows,
     titleColumn,
   } = data;
-  const { score, quiz, tally, labelName } = walk;
-  const model = useSortingModel(tree, rows, labelColumn, labels, "compact");
+  const { score, quiz, tally, labelName, story, scanPlan, growPlan } = walk;
+  const baseModel = useSortingModel(tree, rows, labelColumn, labels, "compact");
+  const slowCount = growPlan ? Math.min(GROW_SLOW, growPlan.arrivals.length) : 0;
+  /* `grow` asks its questions in the order rows first mixed their piles; the
+     slow rows' dots are handed off by the row morphing onto them. */
+  const model = useMemo(
+    () =>
+      growPlan
+        ? withSplitOrder(baseModel, growPlan.order, growPlan.arrival, slowCount)
+        : baseModel,
+    [baseModel, growPlan, slowCount],
+  );
   const current = state.quiz >= 0 ? quiz[state.quiz] : undefined;
   const row = current ? rows[current.result.rowIndex] : undefined;
+  const scanning = scanPlan && state.scan >= 0 ? scanPlan[state.scan] : undefined;
+  const growing = growPlan !== undefined && state.act === "training";
+  const intakeRank = growing && state.intake >= 0 ? state.intake : -1;
+  /* The top dock keeps its last row mounted so it can slide back up at the pour. */
+  const dockRank =
+    intakeRank >= 0
+      ? intakeRank
+      : growing && (state.dotsShown ?? 0) > 0
+        ? slowCount - 1
+        : -1;
+  const dockDot =
+    growPlan && dockRank >= 0
+      ? model.dots[growPlan.arrivals[dockRank]!]
+      : undefined;
+  const dockRecord = dockDot ? rows[dockDot.rowIndex] : undefined;
+  /* The intro's wheel lands on this row, exactly where the dock shows it. */
+  const firstDot = growPlan ? model.dots[growPlan.arrivals[0]!] : undefined;
+  const topOn = intakeRank >= 0 && dockRecord !== undefined;
+  const baseTiming = intakeTiming(Math.max(0, dockRank), walk.intro);
+  const timing =
+    dockRank === 0 && growPlan?.hold
+      ? { ...baseTiming, settle: baseTiming.settle + growPlan.hold }
+      : baseTiming;
+  const intakeFill = dockDot
+    ? labelFill(model.grouping.indexOf(dockDot.label))
+    : NEUTRAL_FILL;
+  const rowsIn =
+    growPlan &&
+    state.act === "training" &&
+    state.dotsShown !== undefined &&
+    state.dotsShown > 0
+      ? Math.min(rows.length, Math.round(state.dotsShown * model.rowsPerDot))
+      : undefined;
 
   const treeFeatures = useMemo(() => {
     const seen: string[] = [];
-    model.splits.forEach((split) => {
+    baseModel.splits.forEach((split) => {
       if (
         split.node.type === "decision" &&
         !seen.includes(split.node.feature)
@@ -159,7 +217,7 @@ export function TreeTableRow({
       }
     });
     return seen.slice(0, MAX_FEATURES);
-  }, [model.splits]);
+  }, [baseModel.splits]);
 
   const revealed = current !== undefined && state.revealed > state.quiz;
   /** The cell grades itself the moment the guess lands, not at the reveal beat. */
@@ -200,9 +258,10 @@ export function TreeTableRow({
       : undefined;
   /* The sheet stays mounted from the first test row on so it can slide back
      down out of the dock at the score step. */
-  const hasRow =
+  const hasTest =
     state.act !== "training" && current !== undefined && row !== undefined;
-  const sheetOn = hasRow && !state.checked;
+  const sheetOn = hasTest && !state.checked;
+  const docked = sheetOn || topOn;
   const headerName = (id: string) => columnById(columns, id)?.name ?? id;
   const noun = (count: number) => `${rowNoun}${count === 1 ? "" : "s"}`;
   const perDot = Math.round(model.rowsPerDot);
@@ -225,6 +284,69 @@ export function TreeTableRow({
       ? labelFill(model.grouping.indexOf(current.result.predicted))
       : NEUTRAL_FILL,
   });
+  /** One cut of the Data Set sheet: header plus a single row. */
+  const sheet = (
+    record: Record<string, string | number>,
+    index: number,
+    ariaLabel: string,
+    sheetFeatures: string[],
+    rowProps: {
+      key?: string | number;
+      className?: string;
+      style?: CSSProperties;
+      featureClass?: (feature: string) => string;
+      featureStyle?: (feature: string) => CSSProperties | undefined;
+      labelRef?: RefObject<HTMLTableCellElement | null>;
+      label: ReactNode;
+    },
+  ) => (
+    <table className={styles.sheet} aria-label={ariaLabel}>
+      <thead>
+        <tr>
+          <th className={styles.thIndex} />
+          {titleColumn ? (
+            <th className={styles.th}>{headerName(titleColumn)}</th>
+          ) : null}
+          {sheetFeatures.map((feature) => (
+            <th
+              key={feature}
+              className={`${styles.th} ${styles.thFeature} ${isNumeric(columns, feature) ? styles.numeric : ""}`}
+            >
+              {headerName(feature)}
+            </th>
+          ))}
+          <th className={`${styles.th} ${styles.thLabel}`}>{labelName}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr key={rowProps.key} className={rowProps.className} style={rowProps.style}>
+          <td className={styles.tdIndex}>{index + 1}</td>
+          {titleColumn ? (
+            <td className={styles.td}>{cellText(record[titleColumn])}</td>
+          ) : null}
+          {sheetFeatures.map((feature) => (
+            <td
+              key={feature}
+              className={[
+                styles.td,
+                styles.tdFeature,
+                isNumeric(columns, feature) ? styles.numeric : "",
+                rowProps.featureClass?.(feature) ?? "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              style={rowProps.featureStyle?.(feature)}
+            >
+              {cellText(record[feature])}
+            </td>
+          ))}
+          <td ref={rowProps.labelRef} className={`${styles.td} ${styles.tdLabel}`}>
+            {rowProps.label}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
 
   return (
     <div
@@ -232,27 +354,209 @@ export function TreeTableRow({
       className={`${styles.board} ${instant ? styles.instant : ""}`}
     >
       {flight}
-      <div className={styles.statement}>
-        <PredictionStatement
-          columns={columns}
-          labelColumn={labelColumn}
-          features={features}
-          size="large"
-          fit
+      {growPlan && intakeRank >= 0 && dockDot && !instant ? (
+        <IntakeDrop
+          key={intakeRank}
+          boardRef={boardRef}
+          dotId={dockDot.id}
+          fill={intakeFill}
+          timing={timing}
+          landed={(state.dotsShown ?? 0) > intakeRank}
         />
-        {state.checked ? (
-          <span className={styles.accuracy}>
-            {score.total > 0
-              ? Math.round((score.right / score.total) * 100)
-              : 0}
-            % Accuracy
-          </span>
-        ) : (
-          <span key={state.act} className={styles.phase} role="status">
-            {state.act === "training" ? "Training" : "Testing"}
-            <FaIcon name="spinner" fontSize="14px" className={styles.spinner} />
-          </span>
-        )}
+      ) : null}
+      {walk.intro && state.intro >= 0 ? (
+        <TableIntro
+          columns={columns}
+          rows={rows}
+          titleColumn={titleColumn}
+          features={features}
+          labelColumn={labelColumn}
+          target={firstDot?.rowIndex ?? 0}
+          fill={
+            firstDot
+              ? labelFill(model.grouping.indexOf(firstDot.label))
+              : NEUTRAL_FILL
+          }
+          phase={state.intro}
+          instant={instant}
+        />
+      ) : null}
+      <div
+        {...panZoom.frameProps}
+        className={`${styles.field} ${panZoom.frameProps.className}`}
+        style={{ height: CANVAS_HEIGHT }}
+      >
+        <PanZoomTools panZoom={panZoom} />
+        <div
+          className={[
+            styles.canvas,
+            sheetOn ? styles.canvasDocked : "",
+            topOn ? styles.canvasDockedTop : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <div {...panZoom.contentProps}>
+            <SortingTree
+              model={model}
+              columns={columns}
+              labels={labels}
+              state={state}
+              marble={
+                current && state.step >= 0
+                  ? {
+                      id: current.result.rowIndex,
+                      pathKeys: current.pathKeys,
+                      step: state.step,
+                      revealedLabel: revealed
+                        ? current.result.actual
+                        : undefined,
+                      answering: state.guessed,
+                      travelMs: state.travelMs,
+                    }
+                  : undefined
+              }
+              instant={instant}
+              maxHeight={
+                CANVAS_HEIGHT - CANVAS_PAD_Y * 2 - (docked ? DOCK_HEIGHT : 0)
+              }
+              maxScale={MAX_TREE_SCALE}
+              resizeTransition={docked ? SHEET_IN : SHEET_OUT}
+              askOnArrival={story === "scan" ? "leaves" : true}
+              incoming={intakeRank >= 0 ? intakeRank : undefined}
+              pairedBranches={growPlan !== undefined && growPlan.growth !== "organic"}
+              overlay={
+                scanning ? (
+                  <SplitScan
+                    model={model}
+                    plan={scanning}
+                    candidate={state.candidate}
+                    picked={state.picked}
+                    meter={scanMeter}
+                    columns={columns}
+                  />
+                ) : undefined
+              }
+              labelSwatch={false}
+              marbleStyle={MARBLE_STYLE}
+              ariaLabel={`Decision tree sorting ${rows.length.toLocaleString()} ${noun(rows.length)} into groups by ${headerName(labelColumn)}`}
+            />
+          </div>
+        </div>
+        {growPlan ? (
+          <div className={`${styles.dock} ${styles.dockTop}`}>
+            <div
+              className={`${styles.sheetLayer} ${styles.sheetLayerTop} ${topOn ? styles.sheetLayerOn : ""}`}
+              aria-hidden={!topOn || undefined}
+            >
+              {dockRecord && dockDot
+                ? sheet(
+                    dockRecord,
+                    dockDot.rowIndex,
+                    `Row ${dockDot.rowIndex + 1} joining the tree`,
+                    features,
+                    {
+                      key: dockRank,
+                      label: (
+                        <>
+                          <span
+                            className={styles.intakeDot}
+                            style={{ background: intakeFill }}
+                            data-intake-dot
+                          />
+                          {dockDot.label}
+                        </>
+                      ),
+                    },
+                  )
+                : null}
+              {topOn && dockRank > 0 && dockDot && growPlan && !instant ? (
+                <DockReel
+                  key={dockRank}
+                  strip={reelStrip(
+                    model.dots[growPlan.arrivals[dockRank - 1]!]!.rowIndex,
+                    dockDot.rowIndex,
+                    rows.length,
+                  )}
+                  durationMs={timing.settle}
+                  renderRow={(rowIndex, position, last) => (
+                    <ReelRow
+                      key={position}
+                      columns={columns}
+                      record={rows[rowIndex]!}
+                      rowIndex={rowIndex}
+                      titleColumn={titleColumn}
+                      features={features}
+                      labelColumn={labelColumn}
+                      dotFill={
+                        position === 0
+                          ? labelFill(
+                              model.grouping.indexOf(
+                                model.dots[growPlan.arrivals[dockRank - 1]!]!.label,
+                              ),
+                            )
+                          : last
+                            ? intakeFill
+                            : undefined
+                      }
+                    />
+                  )}
+                />
+              ) : null}
+              {topOn ? (
+                <div key={dockRank} className={styles.sweep} aria-hidden>
+                  <span
+                    className={styles.sweepBand}
+                    style={{
+                      animationDelay: `${timing.settle}ms`,
+                      animationDuration: `${timing.scan}ms`,
+                    }}
+                  />
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+        <div className={styles.dock}>
+          <div
+            className={`${styles.sheetLayer} ${sheetOn ? styles.sheetLayerOn : ""}`}
+            aria-hidden={!sheetOn || undefined}
+          >
+            {hasTest && row && current
+              ? sheet(
+                  row,
+                  current.result.rowIndex,
+                  `Row ${current.result.rowIndex + 1} from the table`,
+                  treeFeatures,
+                  {
+                    featureClass: (feature) =>
+                      feature === activeFeature ? styles.tdAsked : "",
+                    featureStyle: (feature) =>
+                      feature === activeFeature || feature === previousFeature
+                        ? boldDelay
+                        : undefined,
+                    labelRef: labelCellRef,
+                    label: state.guessed ? (
+                      <span
+                        className={`${styles.guess} ${styles.guessEnter}`}
+                        style={
+                          instant
+                            ? undefined
+                            : { animationDelay: `${GUESS_LAND_MS}ms` }
+                        }
+                      >
+                        <FaIcon
+                          name={wrong ? "circle-xmark" : "circle-check"}
+                          fontSize="12px"
+                        />
+                        {current.result.predicted}
+                      </span>
+                    ) : null,
+                  },
+                )
+              : null}
+          </div>
+        </div>
       </div>
       <div
         className={`${styles.legend} ${state.legend ? styles.legendOn : ""}`}
@@ -283,139 +587,33 @@ export function TreeTableRow({
           </li>
         </ul>
       </div>
-      <div
-        {...panZoom.frameProps}
-        className={`${styles.field} ${panZoom.frameProps.className}`}
-        style={{ height: CANVAS_HEIGHT }}
-      >
-        <PanZoomTools panZoom={panZoom} />
-        <div
-          className={`${styles.canvas} ${sheetOn ? styles.canvasDocked : ""}`}
-        >
-          <div {...panZoom.contentProps}>
-            <SortingTree
-              model={model}
-              columns={columns}
-              labels={labels}
-              state={state}
-              marble={
-                current && state.step >= 0
-                  ? {
-                      id: current.result.rowIndex,
-                      pathKeys: current.pathKeys,
-                      step: state.step,
-                      revealedLabel: revealed
-                        ? current.result.actual
-                        : undefined,
-                      answering: state.guessed,
-                      travelMs: state.travelMs,
-                    }
-                  : undefined
-              }
-              instant={instant}
-              maxHeight={
-                CANVAS_HEIGHT - CANVAS_PAD_Y * 2 - (sheetOn ? DOCK_HEIGHT : 0)
-              }
-              maxScale={MAX_TREE_SCALE}
-              resizeTransition={sheetOn ? SHEET_IN : SHEET_OUT}
-              askOnArrival
-              labelSwatch={false}
-              marbleStyle={MARBLE_STYLE}
-              ariaLabel={`Decision tree sorting ${rows.length.toLocaleString()} ${noun(rows.length)} into groups by ${headerName(labelColumn)}`}
-            />
-          </div>
-        </div>
-        <div className={styles.dock}>
-          <div
-            className={`${styles.sheetLayer} ${sheetOn ? styles.sheetLayerOn : ""}`}
-            aria-hidden={!sheetOn || undefined}
-          >
-            {hasRow && current && row ? (
-              <table
-                className={styles.sheet}
-                aria-label={`Row ${current.result.rowIndex + 1} from the table`}
-              >
-                <thead>
-                  <tr>
-                    <th className={styles.thIndex} />
-                    {titleColumn ? (
-                      <th className={styles.th}>{headerName(titleColumn)}</th>
-                    ) : null}
-                    {treeFeatures.map((feature) => (
-                      <th
-                        key={feature}
-                        className={`${styles.th} ${styles.thFeature} ${isNumeric(columns, feature) ? styles.numeric : ""}`}
-                      >
-                        {headerName(feature)}
-                      </th>
-                    ))}
-                    <th className={`${styles.th} ${styles.thLabel}`}>
-                      {labelName}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className={styles.tdIndex}>
-                      {current.result.rowIndex + 1}
-                    </td>
-                    {titleColumn ? (
-                      <td className={styles.td}>
-                        {row[titleColumn] === undefined
-                          ? "—"
-                          : formatCell(row[titleColumn]!)}
-                      </td>
-                    ) : null}
-                    {treeFeatures.map((feature) => (
-                      <td
-                        key={feature}
-                        className={[
-                          styles.td,
-                          styles.tdFeature,
-                          isNumeric(columns, feature) ? styles.numeric : "",
-                          feature === activeFeature ? styles.tdAsked : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        style={
-                          feature === activeFeature ||
-                          feature === previousFeature
-                            ? boldDelay
-                            : undefined
-                        }
-                      >
-                        {row[feature] === undefined
-                          ? "—"
-                          : formatCell(row[feature]!)}
-                      </td>
-                    ))}
-                    <td
-                      ref={labelCellRef}
-                      className={`${styles.td} ${styles.tdLabel}`}
-                    >
-                      {state.guessed ? (
-                        <span
-                          className={`${styles.guess} ${styles.guessEnter}`}
-                          style={
-                            instant
-                              ? undefined
-                              : { animationDelay: `${GUESS_LAND_MS}ms` }
-                          }
-                        >
-                          <FaIcon
-                            name={wrong ? "circle-xmark" : "circle-check"}
-                            fontSize="12px"
-                          />
-                          {current.result.predicted}
-                        </span>
-                      ) : null}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+      <div className={styles.statement}>
+        <PredictionStatement
+          columns={columns}
+          labelColumn={labelColumn}
+          features={features}
+          size="large"
+          fit
+        />
+        {state.checked ? (
+          <span className={styles.accuracy}>
+            {score.total > 0
+              ? Math.round((score.right / score.total) * 100)
+              : 0}
+            % Accuracy
+          </span>
+        ) : (
+          <span key={state.act} className={styles.phase} role="status">
+            {state.act === "training" ? "Training" : "Testing"}
+            {rowsIn !== undefined ? (
+              <span className={styles.phaseCount}>
+                {rowsIn.toLocaleString()} of {rows.length.toLocaleString()}{" "}
+                {noun(rows.length)}
+              </span>
             ) : null}
-          </div>
-        </div>
+            <FaIcon name="spinner" fontSize="14px" className={styles.spinner} />
+          </span>
+        )}
       </div>
     </div>
   );
@@ -534,6 +732,166 @@ function useGuessFlight({
       <span data-flyer-text>{flight.label}</span>
     </span>
   );
+}
+
+/**
+ * `grow`: once the scanner is done, a copy of the label cell's dot drops
+ * into the tree (the cell keeps its own), curving out sideways and then
+ * down onto its pile. The target is
+ * re-read every frame, so it ends on the dot's exact box even if the tree
+ * rescales mid-flight, and it keeps tracking until the real dot takes over
+ * with no fade (`model.handoff`).
+ */
+function IntakeDrop({
+  boardRef,
+  dotId,
+  fill,
+  timing,
+  landed,
+}: {
+  boardRef: RefObject<HTMLDivElement | null>;
+  dotId: number;
+  fill: string;
+  timing: IntakeTiming;
+  landed: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    let frame = 0;
+    const timer = window.setTimeout(() => {
+      const board = boardRef.current;
+      const el = ref.current;
+      const source = board?.querySelector("[data-intake-dot]");
+      if (!board || !el || !source) {
+        setDone(true);
+        return;
+      }
+      const from = source.getBoundingClientRect();
+      const start = performance.now();
+      let finished = false;
+      const tick = (now: number) => {
+        const dot = board.querySelector(`[data-dot-id="${dotId}"]`);
+        if (!dot) return;
+        const b = board.getBoundingClientRect();
+        const d = dot.getBoundingClientRect();
+        const t = Math.min(1, (now - start) / timing.fly);
+        const u = easeInOutCubic(t);
+        /* Quadratic curve with its corner level with the cell, over the
+           pile: out sideways first, then down. */
+        const x0 = from.left + from.width / 2;
+        const y0 = from.top + from.height / 2;
+        const x2 = d.left + d.width / 2;
+        const y2 = d.top + d.height / 2;
+        const x = (1 - u) ** 2 * x0 + 2 * (1 - u) * u * x2 + u * u * x2;
+        const y = (1 - u) ** 2 * y0 + 2 * (1 - u) * u * y0 + u * u * y2;
+        const size = from.width + (d.width - from.width) * u;
+        el.style.opacity = "1";
+        el.style.left = `${x - size / 2 - b.left}px`;
+        el.style.top = `${y - size / 2 - b.top}px`;
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
+        if (t >= 1 && !finished) {
+          finished = true;
+          setDone(true);
+        }
+        frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    }, timing.settle + timing.scan);
+    return () => {
+      window.clearTimeout(timer);
+      cancelAnimationFrame(frame);
+    };
+    /* Measured once per row, when it lifts off. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (done && landed) return null;
+  return (
+    <div
+      ref={ref}
+      className={styles.drop}
+      style={{ background: fill }}
+      aria-hidden
+    />
+  );
+}
+
+/** Rows flicking past between one dock row and the next. */
+const REEL_FILLERS = 5;
+/** Mirrors `.reelRow` in `TableIntro.module.scss` (28px face + 1px rule). */
+const REEL_PITCH = 29;
+/** How far the reel coasts past the new row before settling back. */
+const REEL_OVERSHOOT = 5;
+
+/** The old row, a few others, then the new one (row indexes). */
+function reelStrip(from: number, to: number, rowCount: number): number[] {
+  const fillers = Array.from(
+    { length: REEL_FILLERS },
+    (_, index) => (to + 7 * (index + 1) + 3) % Math.max(1, rowCount),
+  );
+  return [from, ...fillers, to];
+}
+
+/**
+ * `grow`: between slow rows the dock spins like the intro's lotto wheel:
+ * the old row slides up, a few rows flick by, and it slows onto the new
+ * one. Covers the dock's data row while it spins; its last frame is that
+ * row, so it simply goes.
+ */
+function DockReel({
+  strip,
+  durationMs,
+  renderRow,
+}: {
+  strip: number[];
+  durationMs: number;
+  renderRow: (rowIndex: number, position: number, last: boolean) => ReactNode;
+}) {
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [done, setDone] = useState(false);
+  const land = -(strip.length - 1) * REEL_PITCH;
+
+  useLayoutEffect(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    const spin = el.animate(
+      [
+        { transform: "translateY(0)", easing: "cubic-bezier(0.25, 0.6, 0.3, 1)" },
+        {
+          offset: 0.86,
+          transform: `translateY(${land - REEL_OVERSHOOT}px)`,
+          easing: "cubic-bezier(0.3, 0, 0.3, 1)",
+        },
+        { transform: `translateY(${land}px)` },
+      ],
+      { duration: durationMs, fill: "forwards" },
+    );
+    spin.onfinish = () => setDone(true);
+    return () => spin.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (done) return null;
+  return (
+    <div className={styles.reel} aria-hidden>
+      <div ref={stripRef}>
+        {strip.map((rowIndex, position) =>
+          renderRow(rowIndex, position, position === strip.length - 1),
+        )}
+      </div>
+    </div>
+  );
+}
+
+function easeInOutCubic(u: number): number {
+  return u < 0.5 ? 4 * u * u * u : 1 - (-2 * u + 2) ** 3 / 2;
+}
+
+function cellText(value: string | number | undefined): string {
+  return value === undefined ? "—" : formatCell(value);
 }
 
 /** A blank cell is still a label; give it a name the key can show. */

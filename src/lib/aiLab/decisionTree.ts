@@ -274,6 +274,105 @@ export function trainDecisionTree(
   return buildTree(rows, columns, features, labelColumn, 0, "root");
 }
 
+/** One question the trainer tried at a node, scored the way `buildTree` scores it. */
+export interface AiLabSplitCandidate {
+  feature: string;
+  splitType: "numerical" | "categorical";
+  threshold?: number;
+  /** The piles it would make, in the order the tree would draw them. */
+  branches: { label: string; counts: Record<string, number>; size: number }[];
+  impurityReduction: number;
+  /** Share of the pile's mix it removes: 0 = no help, 1 = every pile one label. */
+  sortedShare: number;
+}
+
+export interface AiLabNodeCandidates {
+  /** Questions that split the pile at all, in feature order. */
+  candidates: AiLabSplitCandidate[];
+  /** Index into `candidates` of the question the node asks. */
+  best: number;
+  /** Features the trainer looked at here (some may not split this pile). */
+  checked: number;
+}
+
+function scoreCandidate(
+  rows: AiLabDataRow[],
+  columns: AiLabColumn[],
+  feature: string,
+  labelColumn: string,
+  parentGini: number,
+): AiLabSplitCandidate | null {
+  const share = (reduction: number) => (parentGini > 0 ? reduction / parentGini : 0);
+  if (columnType(columns, feature) === "numerical") {
+    const split = bestNumericalSplit(rows, feature, labelColumn);
+    if (!split) return null;
+    const left = rows.filter((row) => Number(row[feature]) <= split.threshold);
+    const right = rows.filter((row) => Number(row[feature]) > split.threshold);
+    return {
+      feature,
+      splitType: "numerical",
+      threshold: split.threshold,
+      branches: [
+        { label: `≤ ${formatNumber(split.threshold)}`, counts: labelCounts(labelsFor(left, labelColumn)), size: left.length },
+        { label: `> ${formatNumber(split.threshold)}`, counts: labelCounts(labelsFor(right, labelColumn)), size: right.length },
+      ],
+      impurityReduction: split.impurityReduction,
+      sortedShare: share(split.impurityReduction),
+    };
+  }
+  const split = bestCategoricalSplit(rows, feature, labelColumn);
+  if (!split) return null;
+  return {
+    feature,
+    splitType: "categorical",
+    branches: split.values.map((value) => {
+      const group = rows.filter((row) => String(row[feature]) === value);
+      return { label: value, counts: labelCounts(labelsFor(group, labelColumn)), size: group.length };
+    }),
+    impurityReduction: split.impurityReduction,
+    sortedShare: share(split.impurityReduction),
+  };
+}
+
+/**
+ * Every question the trainer tried at each decision node of `tree` (keyed
+ * by `pathKey`), replaying `buildTree`'s search: the same rows reach each
+ * node, a feature used above isn't tried again, and the node's own feature
+ * is the best. Lets a viz show the search instead of just its winner.
+ */
+export function treeSplitCandidates(
+  tree: AiLabTreeNode,
+  rows: AiLabDataRow[],
+  columns: AiLabColumn[],
+  features: string[],
+  labelColumn: string,
+): Map<string, AiLabNodeCandidates> {
+  const byNode = new Map<string, AiLabNodeCandidates>();
+  const visit = (node: AiLabTreeNode, nodeRows: AiLabDataRow[], available: string[]) => {
+    if (node.type === "leaf") return;
+    const parentGini = gini(labelsFor(nodeRows, labelColumn));
+    const candidates = available
+      .map((feature) => scoreCandidate(nodeRows, columns, feature, labelColumn, parentGini))
+      .filter((candidate): candidate is AiLabSplitCandidate => candidate !== null);
+    byNode.set(node.pathKey, {
+      candidates,
+      best: Math.max(0, candidates.findIndex((candidate) => candidate.feature === node.feature)),
+      checked: available.length,
+    });
+    const remaining = available.filter((feature) => feature !== node.feature);
+    if (node.splitType === "numerical") {
+      visit(node.left, nodeRows.filter((row) => Number(row[node.feature]) <= node.threshold), remaining);
+      visit(node.right, nodeRows.filter((row) => Number(row[node.feature]) > node.threshold), remaining);
+      return;
+    }
+    Object.entries(node.children).forEach(([value, child]) =>
+      visit(child, nodeRows.filter((row) => String(row[node.feature]) === value), remaining),
+    );
+  };
+  visit(tree, rows, features);
+  return byNode;
+}
+
 export function traceDecisionTree(
   root: AiLabTreeNode,
   row: AiLabDataRow,

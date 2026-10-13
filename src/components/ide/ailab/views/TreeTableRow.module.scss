@@ -73,6 +73,98 @@
   transition: transform 285ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* `grow`: the training row docks over the canvas top instead, since the
+   tree forms top down. Drops in from above, lifts back out at the pour. */
+.dockTop {
+  top: 0;
+  bottom: auto;
+}
+
+.sheetLayerTop {
+  border-top: 0;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  transform: translateY(-100%);
+}
+
+.sheetLayerTop.sheetLayerOn {
+  transform: none;
+}
+
+/* Between slow rows the reel (`DockReel`) spins over the data row: the
+   bottom 28px of the sheet, clipping each reel row's bottom rule. */
+.reel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  height: 28px;
+  overflow: hidden;
+  background: var(--background-neutral-primary);
+  pointer-events: none;
+}
+
+/* The label's dot; a copy of it drops into the tree (`IntakeDrop`) and this
+   one stays. Matches `.labelDot` in `TableIntro.module.scss` so the intro
+   hands off without a shift. */
+.intakeDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: var(--shape-round);
+  vertical-align: -1px;
+}
+
+/* A soft diagonal scanner over the data row, one pass left to right;
+   timing comes inline from `intakeTiming`. */
+.sweep {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 28px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sweepBand {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    color-mix(in srgb, var(--border-selected-primary) 6%, transparent) 30%,
+    color-mix(in srgb, var(--border-selected-primary) 18%, transparent) 50%,
+    color-mix(in srgb, var(--border-selected-primary) 6%, transparent) 70%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation-name: scan;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-fill-mode: both;
+}
+
+/* The band is 40% of the row: −100% to 250% of its width clears both ends. */
+@keyframes scan {
+  to {
+    transform: translateX(250%);
+  }
+}
+
+/* The label's dot on its way into the tree (`IntakeDrop`); placed inline
+   every frame, ending exactly on the tree's dot. */
+.drop {
+  position: absolute;
+  z-index: 3;
+  border-radius: var(--shape-round);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .statement {
   display: flex;
   align-items: center;
@@ -81,7 +173,9 @@
   box-sizing: border-box;
   height: 56px;
   padding: 0 24px;
-  border-bottom: 1px solid var(--border-neutral-primary);
+  /* Sits right above the footer, so the final accuracy is read on the way
+     to Continue. */
+  border-top: 1px solid var(--border-neutral-primary);
 }
 
 .accuracy {
@@ -102,6 +196,13 @@
   color: var(--text-neutral-secondary);
   white-space: nowrap;
   animation: accuracy-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* `grow` story: rows read so far. */
+.phaseCount {
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Eight dots, so step the turn and each dot lands where the last one was. */
@@ -240,7 +341,9 @@
   height: 100%;
   padding: 12px 16px;
   background: var(--background-neutral-secondary);
-  transition: padding-bottom 185ms cubic-bezier(0.4, 0, 1, 1);
+  transition:
+    padding-top 185ms cubic-bezier(0.4, 0, 1, 1),
+    padding-bottom 185ms cubic-bezier(0.4, 0, 1, 1);
 }
 
 /* The tree's center rises with the sheet (same timing as `.sheetLayerOn`). */
@@ -249,20 +352,25 @@
   transition: padding-bottom 285ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.canvasDockedTop {
+  padding-top: calc(12px + 57px);
+  transition: padding-top 285ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 .legend {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px 0;
+  padding: 10px 24px 16px;
   background: var(--background-neutral-secondary);
 }
 
-/* Slides in on the first beat, same entrance as the tree's nodes. The
+/* Rises in on the first beat, same entrance as the tree's nodes. The
    items move, not the row, so the canvas color never shifts. */
 .legend > * {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(6px);
   transition:
     opacity 320ms ease,
     transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -367,7 +475,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flyer {
+  .flyer,
+  .sweep {
     display: none;
   }
 
@@ -381,6 +490,7 @@
   .sheetLayerOn,
   .canvas,
   .canvasDocked,
+  .canvasDockedTop,
   .legend > * {
     transition: none;
   }

@@ -27,6 +27,14 @@
 
 /* Modal's primary action has no endIcon slot — sit the FA arrow next to
    the label the same way Button endIcon does (6px gap). */
+/* Portaled into the CADS footer (flex, end-justified): pinned to its left. */
+.playback {
+  display: flex;
+  gap: 8px;
+  order: -1;
+  margin-right: auto;
+}
+
 .testLabel {
   display: inline-flex;
   align-items: center;
