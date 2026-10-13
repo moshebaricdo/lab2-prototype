@@ -29,7 +29,7 @@ Parity sandbox: `/design-system/cads`. Spike consumer: `/levels/aichatlab*`.
 
 ## Architecture rules
 
-1. **Do not vendor CADS into this repo.** Import `@moshebari/cads-react` and `@moshebari/cads-variables` from public npm (`^0.2.0`). Do not commit a `file:../cads` rewrite.
+1. **Do not vendor CADS into this repo.** Import `@moshebari/cads-react` and `@moshebari/cads-variables` from public npm (`cads-react` `^0.2.1`, `cads-variables` `^0.2.0`). Do not commit a `file:../cads` rewrite.
 2. **One provider:** `src/components/lab2/CadsLabProvider.tsx` wraps `Lab2Shell` (`CadsProvider baseline={false}`). Nested providers are unnecessary for Lab2 routes.
 3. **Consumers import CADS, never raw MUI** (`Button` from `@moshebari/cads-react`).
 4. **New UI on migrated surfaces** uses CADS + Foundations names. Do not add new `--ds-*` or `App*` usage there.
@@ -99,7 +99,7 @@ Dark mode: CADS keys off `.dark` (or `[data-theme='Dark']`) on an **ancestor**. 
 ## Pitfalls (read before migrating)
 
 1. **Vite must not prebundle CADS** — Published `@moshebari/cads-react` injects styles via `import './button.css'` from `dist`. Vite’s esbuild optimizer drops those imports, so buttons/inputs look like unstyled MUI. `vite.config.ts` **excludes** `@moshebari/cads-*` from `optimizeDeps`, and **includes** CJS transitives (`prop-types`, `react-is`, …) plus the `@mui/material/*` subpaths CADS deep-imports — otherwise MUI ESM does `import PropTypes from 'prop-types'` against raw CJS and the app blanks (`does not provide an export named 'default'`). Linked `file:../cads` skipped prebundling automatically; published packages do not. After changing that config, `rm -rf node_modules/.vite` and restart Vite.
-2. **Local `file:` iteration (do not commit)** — To test unpublished CADS changes: `npm install ../cads/packages/react ../cads/packages/variables`. After rebuilding CADS, clear `node_modules/.vite` and restart Vite. Stale CSS-module hashes make components look “unstyled” / full-width / broken (seen with `AiChatMessage`). Revert to `^0.2.0` before committing.
+2. **Local `file:` iteration (do not commit)** — To test unpublished CADS changes: `npm install ../cads/packages/react ../cads/packages/variables`. After rebuilding CADS, clear `node_modules/.vite` and restart Vite. Stale CSS-module hashes make components look “unstyled” / full-width / broken (seen with `AiChatMessage`). Revert to the published npm versions before committing.
 3. **Font files outside allow list** — Local `file:` / symlinked CADS icon fonts may warn under Vite `server.fs.allow`; extend allow list if icons 404 in dev. Published packages do not need this.
 4. **`Button` `fullWidth`** — Fixed upstream in CADS (`--btn-width: 100%`). If Continue/Finish hugs again, confirm you’re on a rebuilt `@moshebari/cads-react`.
 5. **Action `Dropdown` `iconOnly`** — Added upstream for kebab overflow. Needs rebuilt CADS; pass `aria-label` + `startIconName`.
@@ -146,7 +146,7 @@ Optional follow-ups for CADS: Slider track transition kill; accept `[data-theme=
 
 ## Install (public npm)
 
-Packages: [`@moshebari/cads-react`](https://www.npmjs.com/package/@moshebari/cads-react) and [`@moshebari/cads-variables`](https://www.npmjs.com/package/@moshebari/cads-variables) `^0.2.0`. No `.npmrc` token.
+Packages: [`@moshebari/cads-react`](https://www.npmjs.com/package/@moshebari/cads-react) and [`@moshebari/cads-variables`](https://www.npmjs.com/package/@moshebari/cads-variables) (`cads-react` `^0.2.1`, `cads-variables` `^0.2.0`). No `.npmrc` token.
 
 ```bash
 npm install
@@ -158,7 +158,7 @@ npm install
 npm install ../cads/packages/react ../cads/packages/variables
 ```
 
-Restore `^0.2.0` in `package.json` / `package-lock.json` before committing.
+Restore the published npm versions (`cads-react` `^0.2.1`, `cads-variables` `^0.2.0`) in `package.json` / `package-lock.json` before committing.
 
 ---
 

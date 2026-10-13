@@ -20,7 +20,7 @@
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.0",
-    "@moshebari/cads-react": "^0.2.0",
+    "@moshebari/cads-react": "^0.2.1",
     "@moshebari/cads-variables": "^0.2.0",
     "@mui/material": "^9.2.0",
     "@radix-ui/react-popover": "^1.1.6",
