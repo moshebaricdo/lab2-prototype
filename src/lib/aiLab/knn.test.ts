@@ -7,6 +7,7 @@ import {
   predictKnn,
   regressionKnnK,
 } from "./knn";
+import { nodeVisits, rowsByNode } from "./decisionTree";
 import { holdoutIndexes, isPredictionCorrect, trainModel } from "./train";
 
 const columns: AiLabColumn[] = [
@@ -130,5 +131,37 @@ describe("trainModel knn", () => {
     expect(model.knnK).toBe(1);
     expect(model.holdoutRowIndexes).toEqual([]);
     expect(model.holdoutResults).toHaveLength(3);
+  });
+});
+
+describe("trainModel decision tree", () => {
+  it("trains on the sheet minus the reserved rows, and the tree counts only those", () => {
+    const rows: AiLabDataRow[] = [];
+    for (let index = 0; index < 20; index += 1) {
+      rows.push(row(index < 10 ? 0 : 10, 0, index < 10 ? "A" : "B"));
+    }
+    const model = trainModel({
+      algorithm: "decisionTree",
+      rows,
+      columns,
+      labelColumn: "label",
+      selectedFeatures: ["x"],
+    });
+    expect(model.holdoutRowIndexes).toEqual(holdoutIndexes(20));
+    expect(model.tree?.sampleCount).toBe(rows.length - model.holdoutRowIndexes.length);
+    expect(model.holdoutResults).toHaveLength(rows.length);
+
+    const tree = model.tree!;
+    const visits = nodeVisits(tree, rows, model.holdoutRowIndexes, "label");
+    const root = visits.get(tree.pathKey);
+    expect(root?.total).toBe(model.holdoutRowIndexes.length);
+    const listed = rowsByNode(tree, rows, model.holdoutRowIndexes);
+    expect(listed.get(tree.pathKey)).toEqual(model.holdoutRowIndexes);
+    const trainedIndexes = rows
+      .map((_, index) => index)
+      .filter((index) => !model.holdoutRowIndexes.includes(index));
+    expect(rowsByNode(tree, rows, trainedIndexes).get(tree.pathKey)).toEqual(
+      trainedIndexes,
+    );
   });
 });

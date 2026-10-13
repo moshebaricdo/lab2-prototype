@@ -37,9 +37,9 @@
   display: flex;
   min-width: 0;
   flex-shrink: 0;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 4px 12px;
+  gap: 12px;
+  overflow: hidden;
   margin: 0;
   padding: 8px 24px;
   list-style: none;
@@ -57,6 +57,43 @@
   align-items: center;
   gap: 8px;
   white-space: nowrap;
+}
+
+/* The current step gives way last: its text truncates once it is alone. */
+.pathStepCurrent {
+  min-width: 0;
+}
+
+.pathText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Off-screen copy of every step, read for widths. */
+.path.pathMeasure {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* A collapsed step: the badge alone, its step in a tooltip. */
+.pathIndexButton {
+  padding: 0;
+  cursor: default;
+
+  &:hover {
+    border-color: var(--ds-border-neutral-secondary);
+    color: var(--ds-text-neutral-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-border-info-primary);
+    outline-offset: 1px;
+  }
 }
 
 .pathSeparator {
@@ -114,6 +151,45 @@
   white-space: nowrap;
 }
 
+/* Tabs, caption, and sheet sit closer together than the sections above. */
+.rowsBlock {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Underline tabs. The control's own baseline only spans its labels, so the
+ * wrapper carries the hairline across the sheet. */
+.populationTabs {
+  display: flex;
+  width: 100%;
+  flex-shrink: 0;
+  box-shadow: inset 0 -1px 0 var(--ds-border-neutral-primary);
+}
+
+.sentence {
+  @include type-body-3-regular;
+  min-width: 0;
+  flex: 1 1 auto;
+  margin: 0;
+  color: var(--ds-text-neutral-primary);
+}
+
+.headEnd {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.count {
+  @include type-body-3-semibold;
+  flex-shrink: 0;
+  color: var(--ds-text-neutral-primary);
+}
+
 .captionTitle {
   @include type-body-3-semibold;
   flex-shrink: 0;
@@ -121,11 +197,11 @@
 }
 
 .captionDot {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   flex-shrink: 0;
   border-radius: var(--shape-round);
-  background: var(--ds-text-neutral-quaternary);
+  background: var(--background-neutral-quaternary);
 }
 
 .exampleWrap {
@@ -156,19 +232,9 @@
 
 .exampleRow > td {
   border-bottom: 0;
-  background: var(--ds-background-neutral-primary);
 }
 
-.exampleGuess {
+/* The column the node decides on: its question's feature, or a leaf's label. */
+.focusCell {
   @include type-body-4-semibold;
-}
-
-tbody tr.exampleRow:hover > td {
-  background: var(--ds-background-neutral-primary);
-}
-
-.labelCell {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }

@@ -19,7 +19,7 @@ export interface NodeDimensions {
  */
 export const NODE_SIZES: Record<NodeSize, NodeDimensions> = {
   card: { width: 200, height: 60 },
-  pill: { width: 200, height: 44 },
+  pill: { width: 200, height: 42 },
   detail: { width: 200, height: 118 },
 };
 

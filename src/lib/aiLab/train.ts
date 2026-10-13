@@ -220,14 +220,11 @@ export function trainModel(options: {
   holdoutCount?: number;
   holdoutRowIndexes?: number[];
 }): AiLabTrainedModel {
+  // Both algorithms reserve the last 10% (`holdoutCount` overrides; 0 opts
+  // out). The tree is trained on the rest. KNN also picks k on this split.
   const holdoutRowIndexes =
     options.holdoutRowIndexes ??
-    holdoutIndexes(
-      options.rows.length,
-      options.algorithm === "knn"
-        ? options.holdoutCount
-        : (options.holdoutCount ?? 0),
-    );
+    holdoutIndexes(options.rows.length, options.holdoutCount);
   const trainSet =
     holdoutRowIndexes.length > 0
       ? trainingRows(options.rows, holdoutRowIndexes)

@@ -1,11 +1,18 @@
 import {
-  Fragment,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { Button, Modal, SegmentedButton, Tag } from "@moshebari/cads-react";
+import {
+  Button,
+  Modal,
+  SegmentedButton,
+  Tabs,
+  Tooltip,
+} from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import {
@@ -29,6 +36,9 @@ import styles from "./TreeNodeModal.module.scss";
 const PAGE_SIZE = 200;
 
 type RowFilter = "correct" | "incorrect";
+type RowPopulation = "test" | "trained";
+
+const EMPTY_ROWS = new Map<string, number[]>();
 
 /** The example on Testing, so the modal can show it on nodes it passed through. */
 export interface TreeNodeExample {
@@ -36,6 +46,8 @@ export interface TreeNodeExample {
   /** Sheet row the inputs came from, when they are a real row. */
   rowIndex: number | undefined;
   pathKeys: string[];
+  /** The leaf the example lands on, shown on every node of its path. */
+  prediction: string;
 }
 
 interface TreeNodeModalProps {
@@ -47,10 +59,12 @@ interface TreeNodeModalProps {
 }
 
 /**
- * Rows-modal experiment: the sheet rows a decision-tree node sorted while
- * the model learned. A leaf splits them like the Scorecard — Correct rows
- * carry the leaf's answer, Incorrect rows do not. A question lists its rows
- * in branch order. Remounted per node (via `key`) so the filter resets.
+ * Rows that reached a decision-tree node. When the model reserved a test
+ * set, the sheet has two tabs: Test rows (those reserved rows; a leaf can
+ * split them Correct / Incorrect) and Trained rows (the rows the tree
+ * learned from). The pills on the diagram stay on the test set. A level
+ * with no holdout shows the whole sheet and no tabs.
+ * Remounted per node (via `key`) so the tab and filter reset.
  */
 export function TreeNodeModal({
   lab,
@@ -66,10 +80,24 @@ export function TreeNodeModal({
     () => (tree && nodeKey ? findTreeNode(tree, nodeKey) : undefined),
     [nodeKey, tree],
   );
-  const membership = useMemo(
-    () => (tree ? rowsByNode(tree, lab.rows) : new Map<string, number[]>()),
-    [lab.rows, tree],
+  const reserved = model?.holdoutRowIndexes ?? [];
+  const hasSplit = reserved.length > 0;
+  const testMembership = useMemo(
+    () =>
+      tree
+        ? rowsByNode(tree, lab.rows, hasSplit ? reserved : undefined)
+        : EMPTY_ROWS,
+    [hasSplit, lab.rows, reserved, tree],
   );
+  const trainedMembership = useMemo(() => {
+    if (!tree || !hasSplit) return EMPTY_ROWS;
+    const held = new Set(reserved);
+    const indexes: number[] = [];
+    for (let index = 0; index < lab.rows.length; index += 1) {
+      if (!held.has(index)) indexes.push(index);
+    }
+    return rowsByNode(tree, lab.rows, indexes);
+  }, [hasSplit, lab.rows, reserved, tree]);
 
   if (!model || !found || !nodeKey) return null;
 
@@ -99,7 +127,9 @@ export function TreeNodeModal({
         nodeKey={nodeKey}
         node={found.node}
         conditions={found.conditions}
-        membership={membership}
+        hasSplit={hasSplit}
+        testMembership={testMembership}
+        trainedMembership={trainedMembership}
         example={example}
         title={title}
         featureName={featureName}
@@ -114,7 +144,9 @@ interface NodeDetailProps {
   nodeKey: string;
   node: AiLabTreeNode;
   conditions: AiLabTreeCondition[];
-  membership: Map<string, number[]>;
+  hasSplit: boolean;
+  testMembership: Map<string, number[]>;
+  trainedMembership: Map<string, number[]>;
   example: TreeNodeExample | undefined;
   title: string;
   featureName: (feature: string) => string;
@@ -122,6 +154,167 @@ interface NodeDetailProps {
 
 function rowCountLabel(count: number): string {
   return `${count} ${count === 1 ? "Row" : "Rows"}`;
+}
+
+/** A question lists its rows branch by branch; a leaf keeps sheet order. */
+function rowsAtNode(
+  node: AiLabTreeNode,
+  nodeKey: string,
+  membership: Map<string, number[]>,
+): number[] {
+  return node.type === "decision"
+    ? treeBranches(node).flatMap(
+        (branch) => membership.get(branch.child.pathKey) ?? [],
+      )
+    : (membership.get(nodeKey) ?? []);
+}
+
+interface PathStepItem {
+  content: ReactNode;
+  /** Plain text for a collapsed step's accessible name. */
+  text: string;
+}
+
+function PathStepContent({
+  step,
+  index,
+  isCurrent,
+  collapsed,
+  measuring = false,
+}: {
+  step: PathStepItem;
+  index: number;
+  isCurrent: boolean;
+  /** Just the number badge; the step reads in its tooltip. */
+  collapsed: boolean;
+  /** Off-screen copy: no focusable button or tooltip. */
+  measuring?: boolean;
+}) {
+  return (
+    <>
+      {index > 0 ? (
+        <FaIcon
+          name="caret-right"
+          fontSize="12px"
+          className={styles.pathSeparator}
+        />
+      ) : null}
+      {collapsed && measuring ? (
+        <span className={styles.pathIndex}>{index + 1}</span>
+      ) : collapsed ? (
+        <Tooltip title={step.content} placement="bottom">
+          <button
+            type="button"
+            className={`${styles.pathIndex} ${styles.pathIndexButton}`}
+            aria-label={`${index + 1}. ${step.text}`}
+          >
+            {index + 1}
+          </button>
+        </Tooltip>
+      ) : (
+        <>
+          <span className={styles.pathIndex} aria-hidden>
+            {index + 1}
+          </span>
+          <span className={isCurrent ? styles.pathText : undefined}>
+            {step.content}
+          </span>
+        </>
+      )}
+    </>
+  );
+}
+
+/**
+ * One line of numbered steps. When they don't fit, the earliest steps
+ * collapse to their number badges (tooltip on hover / focus); the current
+ * step always keeps its text.
+ */
+function PathStrip({ steps }: { steps: PathStepItem[] }) {
+  const listRef = useRef<HTMLOListElement>(null);
+  const measureRef = useRef<HTMLOListElement>(null);
+  const [collapsedCount, setCollapsedCount] = useState(0);
+  const signature = steps.map((step) => step.text).join("\n");
+
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const measure = measureRef.current;
+    if (!list || !measure) return;
+    const fit = () => {
+      // The measure list holds every step in full, then every step collapsed.
+      const items = [...measure.children] as HTMLElement[];
+      const full = items.slice(0, steps.length).map((item) => item.offsetWidth);
+      const compact = items.slice(steps.length).map((item) => item.offsetWidth);
+      const style = getComputedStyle(list);
+      const gap = parseFloat(style.columnGap) || 0;
+      const available =
+        list.clientWidth -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight);
+      const widthWith = (count: number) =>
+        full.reduce(
+          (sum, width, index) =>
+            sum + (index < count ? compact[index] : width) + gap,
+          -gap,
+        );
+      let count = 0;
+      while (count < full.length - 1 && widthWith(count) > available) {
+        count += 1;
+      }
+      setCollapsedCount(count);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(list);
+    return () => observer.disconnect();
+    // `signature` stands in for `steps`, which is rebuilt every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature]);
+
+  const lastIndex = steps.length - 1;
+
+  return (
+    <>
+      <ol ref={listRef} className={styles.path} aria-label="Path to this node">
+        {steps.map((step, index) => {
+          const isCurrent = index === lastIndex;
+          return (
+            <li
+              key={index}
+              className={`${styles.pathStep} ${isCurrent ? styles.pathStepCurrent : ""}`}
+              aria-current={isCurrent ? "step" : undefined}
+            >
+              <PathStepContent
+                step={step}
+                index={index}
+                isCurrent={isCurrent}
+                collapsed={index < collapsedCount}
+              />
+            </li>
+          );
+        })}
+      </ol>
+      <ol
+        ref={measureRef}
+        className={`${styles.path} ${styles.pathMeasure}`}
+        aria-hidden
+      >
+        {[false, true].map((collapsed) =>
+          steps.map((step, index) => (
+            <li key={`${collapsed}-${index}`} className={styles.pathStep}>
+              <PathStepContent
+                step={step}
+                index={index}
+                isCurrent={false}
+                collapsed={collapsed}
+                measuring
+              />
+            </li>
+          )),
+        )}
+      </ol>
+    </>
+  );
 }
 
 function RowCaption({
@@ -150,36 +343,43 @@ function NodeDetail({
   nodeKey,
   node,
   conditions,
-  membership,
+  hasSplit,
+  testMembership,
+  trainedMembership,
   example,
   title,
   featureName,
 }: NodeDetailProps) {
-  const [filter, setFilter] = useState<RowFilter>("correct");
-  const [pageCount, setPageCount] = useState(1);
-
   const columns = lab.config.dataset.columns;
   const isLeaf = node.type === "leaf";
   const prediction = node.type === "leaf" ? node.prediction : "";
   const labelColumn = model.labelColumn;
   const labelName = columnById(columns, labelColumn)?.name ?? labelColumn;
-  const heldOut = new Set(model.holdoutRowIndexes);
-
-  // A question lists its rows branch by branch, so the column it asks reads
-  // as sorted runs; a leaf keeps sheet order.
-  const nodeRows =
-    node.type === "decision"
-      ? treeBranches(node).flatMap(
-          (branch) => membership.get(branch.child.pathKey) ?? [],
-        )
-      : (membership.get(nodeKey) ?? []);
+  const testNodeRows = rowsAtNode(node, nodeKey, testMembership);
+  const trainedNodeRows = rowsAtNode(node, nodeKey, trainedMembership);
+  // Test rows match the pill. An empty test sheet opens on the rows that
+  // taught the node instead.
+  const exampleHere = example?.pathKeys.includes(nodeKey) ? example : undefined;
+  const [population, setPopulation] = useState<RowPopulation>(() =>
+    testNodeRows.length === 0 ? "trained" : "test",
+  );
+  const [filter, setFilter] = useState<RowFilter>("correct");
+  const [pageCount, setPageCount] = useState(1);
+  const showingTest = !hasSplit || population === "test";
+  const nodeRows = showingTest ? testNodeRows : trainedNodeRows;
   const isCorrect = (rowIndex: number) =>
     String(lab.rows[rowIndex]?.[labelColumn] ?? "") === prediction;
-  const filteredRows = isLeaf
+  // Correct / Incorrect is only a fair split of rows the tree did not train on.
+  const canFilter = isLeaf && showingTest;
+  // Incorrect rows set the real answer beside the AI's, like the Scorecard.
+  const showMisses = canFilter && filter === "incorrect";
+  const nameTh = showMisses ? results.nameTh : "";
+  const correctCount = canFilter
+    ? nodeRows.filter((rowIndex) => isCorrect(rowIndex)).length
+    : 0;
+  const filteredRows = canFilter
     ? nodeRows.filter((rowIndex) =>
-        filter === "correct"
-          ? heldOut.has(rowIndex) || isCorrect(rowIndex)
-          : !heldOut.has(rowIndex) && !isCorrect(rowIndex),
+        filter === "correct" ? isCorrect(rowIndex) : !isCorrect(rowIndex),
       )
     : nodeRows;
 
@@ -188,26 +388,32 @@ function NodeDetail({
   const featureColumns = model.selectedFeatures
     .map((feature) => columnById(columns, feature))
     .filter((column): column is AiLabColumn => Boolean(column));
-  // The example only fills a feature once the trace has answered it.
-  const askedFeatures = new Set([
-    ...conditions.map((condition) => condition.feature),
-    ...(node.type === "decision" ? [node.feature] : []),
-  ]);
+  // The column this node decides on reads bold: the question's feature, or
+  // the label on a leaf.
+  const focusColumn = node.type === "decision" ? node.feature : labelColumn;
+  const emphasis = (columnId: string) =>
+    columnId === focusColumn ? styles.focusCell : "";
 
-  const pathSteps: ReactNode[] = [
-    ...conditions.map((condition, index) => (
-      <Fragment key={index}>
-        {featureName(condition.feature)} is{" "}
-        <strong>{condition.branchLabel}</strong>
-      </Fragment>
-    )),
-    node.type === "leaf" ? (
-      <>
-        AI predicts <strong>{node.prediction}</strong>
-      </>
-    ) : (
-      title
-    ),
+  const pathSteps: PathStepItem[] = [
+    ...conditions.map((condition) => ({
+      content: (
+        <>
+          {featureName(condition.feature)} is{" "}
+          <strong>{condition.branchLabel}</strong>
+        </>
+      ),
+      text: `${featureName(condition.feature)} is ${condition.branchLabel}`,
+    })),
+    node.type === "leaf"
+      ? {
+          content: (
+            <>
+              AI predicts <strong>{node.prediction}</strong>
+            </>
+          ),
+          text: `AI predicts ${node.prediction}`,
+        }
+      : { content: title, text: title },
   ];
 
   const titleColumnId = lab.config.cardTitleColumn;
@@ -217,9 +423,6 @@ function NodeDetail({
     !model.selectedFeatures.includes(titleColumnId)
       ? columnById(columns, titleColumnId)
       : undefined;
-  // The example gets its own table above the sheet, so it never reads as one
-  // of the rows the filter sorts into correct / incorrect.
-  const exampleHere = example?.pathKeys.includes(nodeKey) ? example : undefined;
   const visibleRows = filteredRows.slice(0, pageCount * PAGE_SIZE);
   const hiddenCount = filteredRows.length - visibleRows.length;
   const lastRowNumber = Math.max(1, ...nodeRows.map((index) => index + 1));
@@ -229,8 +432,12 @@ function NodeDetail({
     : filter === "correct"
       ? "Rows from your dataset where the AI's prediction is correct."
       : "Rows from your dataset where the AI's prediction is incorrect.";
+  const populationSentence =
+    population === "test"
+      ? "These are the rows AI tested on that reached this step."
+      : "These are the rows AI trained on that reached this step.";
 
-  const filterControl = isLeaf ? (
+  const filterControl = canFilter ? (
     <SegmentedButton
       size="extraSmall"
       aria-label="Filter rows"
@@ -240,40 +447,18 @@ function NodeDetail({
         setPageCount(1);
       }}
       options={[
-        { value: "correct", label: "Correct" },
-        { value: "incorrect", label: "Incorrect" },
+        { value: "correct", label: `Correct (${correctCount})` },
+        {
+          value: "incorrect",
+          label: `Incorrect (${nodeRows.length - correctCount})`,
+        },
       ]}
     />
   ) : null;
 
   return (
     <div className={styles.root}>
-      {conditions.length > 0 ? (
-      <ol className={styles.path} aria-label="Path to this node">
-        {pathSteps.map((step, index) => {
-          const isCurrent = index === pathSteps.length - 1;
-          return (
-            <li
-              key={index}
-              className={`${styles.pathStep} ${isCurrent ? styles.pathStepCurrent : ""}`}
-              aria-current={isCurrent ? "step" : undefined}
-            >
-              {index > 0 ? (
-                <FaIcon
-                  name="caret-right"
-                  fontSize="12px"
-                  className={styles.pathSeparator}
-                />
-              ) : null}
-              <span className={styles.pathIndex} aria-hidden>
-                {index + 1}
-              </span>
-              <span>{step}</span>
-            </li>
-          );
-        })}
-      </ol>
-      ) : null}
+      {conditions.length > 0 ? <PathStrip steps={pathSteps} /> : null}
 
       <div className={styles.content}>
         {exampleHere ? (
@@ -284,11 +469,7 @@ function NodeDetail({
             <RowCaption
               titleId="tree-node-example"
               title="Your example"
-              detail={
-                isLeaf
-                  ? "This is the prediction you made"
-                  : "These are the answers you gave"
-              }
+              detail="This is the prediction AI made based on your answers."
             />
             <div className={`${results.tableWrap} ${styles.exampleWrap}`}>
               <table className={`${sheet.grid} ${styles.exampleGrid}`}>
@@ -323,17 +504,15 @@ function NodeDetail({
                     {featureColumns.map((column) => (
                       <td
                         key={column.id}
-                        className={`${sheet.td} ${sheet.tdFeature}`}
+                        className={`${sheet.td} ${sheet.tdFeature} ${emphasis(column.id)}`}
                       >
-                        {askedFeatures.has(column.id)
-                          ? formatCell(exampleHere.values[column.id] ?? "")
-                          : ""}
+                        {formatCell(exampleHere.values[column.id] ?? "")}
                       </td>
                     ))}
                     <td
-                      className={`${sheet.td} ${sheet.tdLabel} ${styles.exampleGuess}`}
+                      className={`${sheet.td} ${sheet.tdLabel} ${emphasis(labelColumn)}`}
                     >
-                      {isLeaf ? prediction : ""}
+                      {exampleHere.prediction}
                     </td>
                   </tr>
                 </tbody>
@@ -342,22 +521,60 @@ function NodeDetail({
           </section>
         ) : null}
 
+        <div className={styles.rowsBlock}>
+        {hasSplit ? (
+          <div className={styles.populationTabs}>
+            <Tabs
+              type="primary"
+              size="small"
+              aria-label="Which rows"
+              value={population}
+              onChange={(value) => {
+                setPopulation(value as RowPopulation);
+                setPageCount(1);
+              }}
+              items={[
+                { value: "test", label: "Test rows" },
+                { value: "trained", label: "Trained rows" },
+              ]}
+            />
+          </div>
+        ) : null}
+
         <section
           className={`${styles.section} ${styles.dataSection}`}
           aria-labelledby="tree-node-data"
         >
           <div className={styles.head}>
-            <RowCaption
-              titleId="tree-node-data"
-              title={rowCountLabel(filteredRows.length)}
-              detail={dataCaption}
-            />
-            {filterControl}
+            {hasSplit ? (
+              <>
+                <p id="tree-node-data" className={styles.sentence}>
+                  {populationSentence}
+                </p>
+                <div className={styles.headEnd}>
+                  {filterControl}
+                  {canFilter ? null : (
+                    <span className={styles.count}>
+                      {rowCountLabel(nodeRows.length)}
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <RowCaption
+                  titleId="tree-node-data"
+                  title={rowCountLabel(filteredRows.length)}
+                  detail={dataCaption}
+                />
+                {filterControl}
+              </>
+            )}
           </div>
           <div className={`${results.tableWrap} ${styles.tableWrap}`}>
             <table
               className={sheet.grid}
-              aria-label={`Rows at ${title}`}
+              aria-label={`${hasSplit ? (showingTest ? "Test rows" : "Trained rows") : "Rows"} at ${title}`}
               style={
                 {
                   "--index-col-ch": String(lastRowNumber).length,
@@ -365,27 +582,49 @@ function NodeDetail({
               }
             >
               <thead>
+                {showMisses ? (
+                  <tr>
+                    <th
+                      className={`${sheet.th} ${sheet.thIndex}`}
+                      aria-label="Row"
+                    />
+                    {titleColumn ? <th className={sheet.th} /> : null}
+                    <th className={sheet.th} colSpan={featureColumns.length}>
+                      Feature
+                    </th>
+                    <th className={sheet.th}>Actual</th>
+                    <th className={sheet.th}>AI Prediction</th>
+                  </tr>
+                ) : null}
                 <tr>
                   <th
-                    className={`${sheet.th} ${sheet.thIndex}`}
-                    aria-label="Row"
+                    className={`${sheet.th} ${sheet.thIndex} ${nameTh}`}
+                    aria-label={showMisses ? undefined : "Row"}
+                    aria-hidden={showMisses || undefined}
                   />
                   {titleColumn ? (
-                    <th className={sheet.th}>{titleColumn.name}</th>
+                    <th className={`${sheet.th} ${nameTh}`}>
+                      {titleColumn.name}
+                    </th>
                   ) : null}
                   {featureColumns.map((column) => (
                     <th
                       key={column.id}
                       className={`${sheet.th} ${sheet.thFeature} ${
                         column.type === "numerical" ? sheet.thNumeric : ""
-                      }`}
+                      } ${nameTh}`}
                     >
                       {column.name}
                     </th>
                   ))}
-                  <th className={`${sheet.th} ${sheet.thLabel}`}>
+                  <th className={`${sheet.th} ${sheet.thLabel} ${nameTh}`}>
                     {labelName}
                   </th>
+                  {showMisses ? (
+                    <th className={`${sheet.th} ${sheet.thLabel} ${nameTh}`}>
+                      {labelName}
+                    </th>
+                  ) : null}
                 </tr>
               </thead>
               {visibleRows.length > 0 ? (
@@ -407,23 +646,23 @@ function NodeDetail({
                             key={column.id}
                             className={`${sheet.td} ${sheet.tdFeature} ${
                               column.type === "numerical" ? sheet.tdNumeric : ""
-                            }`}
+                            } ${emphasis(column.id)}`}
                           >
                             {formatCell(row?.[column.id] ?? "")}
                           </td>
                         ))}
-                        <td className={`${sheet.td} ${sheet.tdLabel}`}>
-                          <span className={styles.labelCell}>
-                            {formatCell(row?.[labelColumn] ?? "")}
-                            {heldOut.has(rowIndex) ? (
-                              <Tag
-                                size="small"
-                                color="neutral"
-                                label="Held out"
-                              />
-                            ) : null}
-                          </span>
+                        <td
+                          className={`${sheet.td} ${sheet.tdLabel} ${emphasis(labelColumn)}`}
+                        >
+                          {formatCell(row?.[labelColumn] ?? "")}
                         </td>
+                        {showMisses ? (
+                          <td
+                            className={`${sheet.td} ${sheet.tdLabel} ${emphasis(labelColumn)}`}
+                          >
+                            {prediction}
+                          </td>
+                        ) : null}
                       </tr>
                     );
                   })}
@@ -448,6 +687,7 @@ function NodeDetail({
             ) : null}
           </div>
         </section>
+        </div>
       </div>
     </div>
   );

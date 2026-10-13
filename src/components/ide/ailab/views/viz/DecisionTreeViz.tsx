@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -13,10 +14,16 @@ import { Button, Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type {
   AiLabColumn,
+  AiLabDataRow,
   AiLabTreeNode,
   AiLabTreeTrace,
 } from "../../../../../types/aiLab";
-import { columnById, formatCell } from "../../../../../lib/aiLab";
+import {
+  columnById,
+  formatCell,
+  nodeVisits,
+  type AiLabNodeVisits,
+} from "../../../../../lib/aiLab";
 import { useElementSize } from "../../../../../hooks/useElementSize";
 import { CanvasCards, CARD_INSET, type CanvasChrome } from "./CanvasCards";
 import { DistributionBar, LabelSwatch, describeCounts } from "./LabelMarks";
@@ -53,6 +60,11 @@ const BUNDLE_MIN_BRANCHES = 7;
  * in this mode, so no detail card needs to share the width.
  */
 const MODAL_NODE_WIDTH = 260;
+
+/** A node never grows past this; a longer title truncates instead. */
+const HUG_MAX_WIDTH = 280;
+/** The on-path border is 0.5px thicker per side than the measured idle copy. */
+const HUG_SLACK = 2;
 
 interface DecisionTreeVizProps {
   root: AiLabTreeNode;
@@ -96,6 +108,15 @@ interface DecisionTreeVizProps {
   onOpenNode?: (key: string) => void;
   /** Node whose modal is open; drawn selected while it is. */
   openedKey?: string;
+  /**
+   * Sheet the reserved rows come from. With `reservedRowIndexes`, the
+   * rows-modal pills count those rows instead of the rows the tree trained on.
+   */
+  rows?: AiLabDataRow[];
+  /** Label column, so a reserved row at a leaf can be marked correct. */
+  labelColumn?: string;
+  /** Rows kept out of training. Empty leaves the pills on the training counts. */
+  reservedRowIndexes?: number[];
 }
 
 /** Rows that reached a leaf but carry a different label than it predicts. */
@@ -236,6 +257,9 @@ export function DecisionTreeViz({
   controlledPlayback,
   onOpenNode,
   openedKey,
+  rows,
+  labelColumn,
+  reservedRowIndexes,
 }: DecisionTreeVizProps) {
   const modalDetail = onOpenNode != null;
   const [internalStep, setInternalStep] = useState(0);
@@ -254,6 +278,15 @@ export function DecisionTreeViz({
   );
 
   const indexOf = useMemo(() => labelIndexer(labels), [labels]);
+  // The testing tree counts the reserved rows, the same set every node's
+  // modal lists. Training counts stay on the node for the training animation.
+  const reservedVisits = useMemo(
+    () =>
+      onOpenNode && rows && labelColumn && reservedRowIndexes && reservedRowIndexes.length > 0
+        ? nodeVisits(root, rows, reservedRowIndexes, labelColumn)
+        : undefined,
+    [labelColumn, onOpenNode, reservedRowIndexes, root, rows],
+  );
 
   useEffect(() => {
     setSelectedKey(undefined);
@@ -381,23 +414,77 @@ export function DecisionTreeViz({
         : undefined,
     [bundleWideSplits, expandedBundles, pathKeysText],
   );
+  // Hug mode: each node's head measured off-screen (`hugRef`), keyed by path.
+  const [hugWidths, setHugWidths] = useState<ReadonlyMap<string, number>>(
+    () => new Map(),
+  );
   const measure = useCallback(
-    (node: AiLabTreeNode, size: NodeSize, bundle: TreeBundle | undefined): NodeDimensions =>
-      size === "detail"
-        ? detailDimensions(
-            node,
-            labels,
-            bundle?.members.map((member) => member.branchLabel) ?? [],
-          )
-        : modalDetail
-          ? { ...NODE_SIZES[size], width: MODAL_NODE_WIDTH }
-          : NODE_SIZES[size],
-    [labels, modalDetail],
+    (node: AiLabTreeNode, size: NodeSize, bundle: TreeBundle | undefined): NodeDimensions => {
+      if (size === "detail") {
+        return detailDimensions(
+          node,
+          labels,
+          bundle?.members.map((member) => member.branchLabel) ?? [],
+        );
+      }
+      const base = modalDetail
+        ? { ...NODE_SIZES[size], width: MODAL_NODE_WIDTH }
+        : NODE_SIZES[size];
+      const hug = hugWidths.get(node.pathKey);
+      if (hug === undefined) return base;
+      // A card keeps room for its bar; only the pill shrinks below the fixed width.
+      return { ...base, width: size === "pill" ? hug : Math.max(base.width, hug) };
+    },
+    [hugWidths, labels, modalDetail],
   );
   const layout = useMemo(
     () => layoutTree(root, sizeOf, orientation, bundling, measure),
     [bundling, measure, orientation, root, sizeOf],
   );
+  const hugRef = useRef<HTMLDivElement>(null);
+  const hugSignature = layout.nodes
+    .map((laid) => {
+      const facts = nodeHeadFacts(
+        laid,
+        columns,
+        modalDetail,
+        visitsFor(laid, reservedVisits),
+      );
+      return `${laid.key}:${facts.title}:${facts.displayTotal}:${facts.agree}:${facts.showResults}:${facts.bundleSize}`;
+    })
+    .join("|");
+  useLayoutEffect(() => {
+    if (!hugSignature) return;
+    let cancelled = false;
+    const read = () => {
+      const host = hugRef.current;
+      if (!host || cancelled) return;
+      const next = new Map<string, number>();
+      for (const element of host.children) {
+        const key = (element as HTMLElement).dataset.key;
+        if (!key) continue;
+        next.set(
+          key,
+          Math.min(
+            HUG_MAX_WIDTH,
+            Math.ceil(element.getBoundingClientRect().width) + HUG_SLACK,
+          ),
+        );
+      }
+      setHugWidths((current) =>
+        current.size === next.size &&
+        [...next].every(([key, width]) => current.get(key) === width)
+          ? current
+          : next,
+      );
+    };
+    read();
+    // Web fonts can land after the first read and change every width.
+    void document.fonts?.ready.then(read);
+    return () => {
+      cancelled = true;
+    };
+  }, [hugSignature]);
 
   const onSelect = (key: string | undefined) => {
     if (onOpenNode) {
@@ -434,6 +521,26 @@ export function DecisionTreeViz({
       <div
         className={`${styles.stageWrap} ${externalRail ? styles.railMode : ""}`}
       >
+        {/* Inside the stage so rail-mode type sizes apply to the copies too. */}
+        <div ref={hugRef} className={styles.hugMeasure} aria-hidden>
+            {layout.nodes.map((laid) => (
+              <div
+                key={laid.key}
+                data-key={laid.key}
+                className={`${styles.node} ${styles.nodePill}`}
+              >
+                <NodeHead
+                  facts={nodeHeadFacts(
+                    laid,
+                    columns,
+                    modalDetail,
+                    visitsFor(laid, reservedVisits),
+                  )}
+                  indexOf={indexOf}
+                />
+              </div>
+            ))}
+          </div>
         {view === "diagram" ? (
           <TreeDiagram
             root={root}
@@ -446,6 +553,7 @@ export function DecisionTreeViz({
             nextKey={nextKey}
             selectedKey={modalDetail ? openedKey : selectedKey}
             canonNodes={modalDetail}
+            reservedVisits={reservedVisits}
             traceKey={pathKeysText}
             onSelect={onSelect}
             onToggleBundle={onToggleBundle}
@@ -671,6 +779,8 @@ interface TreeDiagramProps {
   selectedKey: string | undefined;
   /** Draw the rows-modal node: fixed pills, ✓ / ✕ counts on leaves. */
   canonNodes: boolean;
+  /** Reserved-row visits per real node key. Absent keeps the training counts. */
+  reservedVisits?: Map<string, AiLabNodeVisits>;
   /** Identity of the current prediction's path; a change recenters the canvas. */
   traceKey: string;
   onSelect: (key: string | undefined) => void;
@@ -694,6 +804,7 @@ function TreeDiagram({
   nextKey,
   selectedKey,
   canonNodes,
+  reservedVisits,
   traceKey,
   onSelect,
   onToggleBundle,
@@ -1154,6 +1265,7 @@ function TreeDiagram({
               isFocused={laid.key === focusedKey}
               isSelected={laid.key === selectedKey}
               canon={canonNodes}
+              visits={visitsFor(laid, reservedVisits)}
               opensModal={canonNodes && !laid.bundle}
               onFocus={() => setFocusedKey(laid.key)}
               onActivate={() => activate(laid)}
@@ -1229,6 +1341,109 @@ function TreeDiagram({
   );
 }
 
+/** A bundle sums its members; a real node reads its own key. Missing key is zero. */
+function visitsFor(
+  laid: LaidOutNode,
+  visits: Map<string, AiLabNodeVisits> | undefined,
+): AiLabNodeVisits | undefined {
+  if (!visits) return undefined;
+  if (!laid.bundle) return visits.get(laid.key) ?? { total: 0, correct: 0 };
+  return laid.bundle.members.reduce<AiLabNodeVisits>(
+    (sum, member) => {
+      const visit = visits.get(member.leaf.pathKey);
+      return {
+        total: sum.total + (visit?.total ?? 0),
+        correct: sum.correct + (visit?.correct ?? 0),
+      };
+    },
+    { total: 0, correct: 0 },
+  );
+}
+
+interface NodeHeadFacts {
+  title: string;
+  isDecision: boolean;
+  bundleSize: number;
+  displayTotal: number;
+  showResults: boolean;
+  agree: number;
+  disagree: number;
+}
+
+function nodeHeadFacts(
+  laid: LaidOutNode,
+  columns: AiLabColumn[],
+  canon: boolean,
+  visits: AiLabNodeVisits | undefined,
+): NodeHeadFacts {
+  const { node, bundle } = laid;
+  const displayTotal = visits ? visits.total : node.sampleCount;
+  const agree = visits
+    ? visits.correct
+    : node.type === "leaf"
+      ? node.sampleCount - disagreeCount(node)
+      : 0;
+  return {
+    title: nodeTitle(node, columns),
+    isDecision: node.type === "decision",
+    bundleSize: bundle?.members.length ?? 0,
+    displayTotal,
+    // A leaf the reserved rows never reached stays "0 Rows" rather than a blank ✓ 0.
+    showResults: canon && node.type === "leaf" && displayTotal > 0,
+    agree,
+    disagree: displayTotal - agree,
+  };
+}
+
+/** Title (dot, name, bundle count) and the row count or ✓ / ✕ tally. */
+function NodeHead({
+  facts,
+  indexOf,
+}: {
+  facts: NodeHeadFacts;
+  indexOf: (label: string) => number;
+}) {
+  const { title, isDecision, bundleSize, displayTotal, showResults, agree, disagree } =
+    facts;
+  return (
+    <div className={styles.nodeHead}>
+      <p className={styles.nodeTitle}>
+        {isDecision ? null : (
+          <span
+            className={styles.nodeDot}
+            style={{ background: labelFill(indexOf(title)) }}
+            aria-hidden
+          />
+        )}
+        <span className={styles.nodeTitleText}>{title}</span>
+        {bundleSize > 0 ? (
+          <span className={styles.bundleCount} aria-hidden>
+            ×{bundleSize}
+          </span>
+        ) : null}
+      </p>
+      {showResults ? (
+        <span className={styles.nodeResults} aria-hidden>
+          {agree > 0 ? (
+            <span className={styles.nodeAgree}>
+              <FaIcon name="circle-check" fontSize="11px" />
+              {agree}
+            </span>
+          ) : null}
+          {disagree > 0 ? (
+            <span className={styles.nodeDisagree}>
+              <FaIcon name="circle-xmark" fontSize="11px" />
+              {disagree}
+            </span>
+          ) : null}
+        </span>
+      ) : (
+        <span className={styles.nodeRows}>{rowsText(displayTotal)}</span>
+      )}
+    </div>
+  );
+}
+
 interface DiagramNodeProps {
   laid: LaidOutNode;
   columns: AiLabColumn[];
@@ -1241,6 +1456,8 @@ interface DiagramNodeProps {
    * that match (✓) and don't match (✕) the prediction instead of "N Rows".
    */
   canon: boolean;
+  /** Reserved-row tally. Absent keeps the training `sampleCount`. */
+  visits?: AiLabNodeVisits;
   /** Activating opens the rows modal rather than growing the node. */
   opensModal: boolean;
   onFocus: () => void;
@@ -1259,6 +1476,7 @@ function DiagramNode({
   isFocused,
   isSelected,
   canon,
+  visits,
   opensModal,
   onFocus,
   onActivate,
@@ -1271,13 +1489,11 @@ function DiagramNode({
   const isDecision = node.type === "decision";
   const isDetail = laid.size === "detail";
   const isCard = laid.size === "card";
-  const title = nodeTitle(node, columns);
   const countsText = describeCounts(node.labelCounts, labels);
   const memberNames = bundle?.members.map((member) => member.branchLabel) ?? [];
   const note = isDetail ? leafNote(node, memberNames) : "";
-  const showResults = canon && node.type === "leaf";
-  const disagree = node.type === "leaf" ? disagreeCount(node) : 0;
-  const agree = node.sampleCount - disagree;
+  const head = nodeHeadFacts(laid, columns, canon, visits);
+  const { title, displayTotal, showResults, agree, disagree } = head;
   const name = [
     laid.branchLabel && !bundle ? `Branch ${laid.branchLabel}.` : "",
     bundle
@@ -1286,8 +1502,10 @@ function DiagramNode({
         ? `Question: ${title}`
         : `Prediction: ${title}.`,
     showResults
-      ? `${rowsText(node.sampleCount)}: ${agree} ${agree === 1 ? "is" : "are"} ${title}, ${disagree} ${disagree === 1 ? "is" : "are"} not.`
-      : `${rowsText(node.sampleCount)}, ${countsText}.`,
+      ? `${rowsText(displayTotal)}: ${agree} ${agree === 1 ? "is" : "are"} ${title}, ${disagree} ${disagree === 1 ? "is" : "are"} not.`
+      : visits
+        ? `${rowsText(displayTotal)}.`
+        : `${rowsText(node.sampleCount)}, ${countsText}.`,
     isCurrent
       ? "Current step."
       : onPath
@@ -1330,41 +1548,7 @@ function DiagramNode({
       onFocus={onFocus}
       onClick={onActivate}
     >
-      <div className={styles.nodeHead}>
-        <p className={styles.nodeTitle}>
-          {isDecision ? null : (
-            <span
-              className={styles.nodeDot}
-              style={{ background: labelFill(indexOf(title)) }}
-              aria-hidden
-            />
-          )}
-          <span className={styles.nodeTitleText}>{title}</span>
-          {bundle ? (
-            <span className={styles.bundleCount} aria-hidden>
-              ×{memberNames.length}
-            </span>
-          ) : null}
-        </p>
-        {showResults ? (
-          <span className={styles.nodeResults} aria-hidden>
-            {agree > 0 ? (
-              <span className={styles.nodeAgree}>
-                <FaIcon name="circle-check" fontSize="11px" />
-                {agree}
-              </span>
-            ) : null}
-            {disagree > 0 ? (
-              <span className={styles.nodeDisagree}>
-                <FaIcon name="circle-xmark" fontSize="11px" />
-                {disagree}
-              </span>
-            ) : null}
-          </span>
-        ) : (
-          <span className={styles.nodeRows}>{rowsText(node.sampleCount)}</span>
-        )}
-      </div>
+      <NodeHead facts={head} indexOf={indexOf} />
       {isCard ? (
         <DistributionBar
           counts={node.labelCounts}

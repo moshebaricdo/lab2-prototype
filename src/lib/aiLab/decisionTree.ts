@@ -342,21 +342,62 @@ export function treeBranches(node: AiLabTreeNode): AiLabTreeBranch[] {
 
 /**
  * Sheet row indexes per node key: each row is listed on every node of its
- * path, so a decision node holds the union of its children.
+ * path, so a decision node holds the union of its children. Pass
+ * `rowIndexes` to count a subset (the reserved test rows) instead of the
+ * whole sheet.
  */
 export function rowsByNode(
   root: AiLabTreeNode,
   rows: AiLabDataRow[],
+  rowIndexes?: number[],
 ): Map<string, number[]> {
   const byNode = new Map<string, number[]>();
-  rows.forEach((row, rowIndex) => {
+  const indexes = rowIndexes ?? rows.map((_, index) => index);
+  for (const rowIndex of indexes) {
+    const row = rows[rowIndex];
+    if (!row) continue;
     traceDecisionTree(root, row).pathKeys.forEach((key) => {
       const list = byNode.get(key);
       if (list) list.push(rowIndex);
       else byNode.set(key, [rowIndex]);
     });
-  });
+  }
   return byNode;
+}
+
+/** How many of a chosen set of rows reached a node, and how many a leaf got right. */
+export interface AiLabNodeVisits {
+  total: number;
+  /** Rows at a leaf whose label matches its prediction. Always 0 on a question. */
+  correct: number;
+}
+
+/**
+ * Trace `rowIndexes` through the tree. Every node on a row's path counts
+ * it; only the leaf it lands on can count it correct.
+ */
+export function nodeVisits(
+  root: AiLabTreeNode,
+  rows: AiLabDataRow[],
+  rowIndexes: number[],
+  labelColumn: string,
+): Map<string, AiLabNodeVisits> {
+  const visits = new Map<string, AiLabNodeVisits>();
+  const add = (key: string, correct: boolean) => {
+    const current = visits.get(key) ?? { total: 0, correct: 0 };
+    current.total += 1;
+    if (correct) current.correct += 1;
+    visits.set(key, current);
+  };
+  for (const rowIndex of rowIndexes) {
+    const row = rows[rowIndex];
+    if (!row) continue;
+    const trace = traceDecisionTree(root, row);
+    const leafKey = trace.pathKeys[trace.pathKeys.length - 1];
+    const correct = String(row[labelColumn] ?? "") === trace.prediction;
+    for (const key of trace.pathKeys) add(key, key === leafKey && correct);
+  }
+  return visits;
 }
 
 export interface AiLabTreeCondition {

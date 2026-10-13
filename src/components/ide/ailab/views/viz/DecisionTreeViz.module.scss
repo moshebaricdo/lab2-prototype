@@ -159,10 +159,6 @@
 /* Testing canvas beside the prediction rail: every node is the compact
  * card (title + rows) and the rail carries the step-by-step story. */
 .railMode {
-  .nodeTitle {
-    @include type-body-2-semibold;
-  }
-
   .edgeLabel {
     @include type-body-4-semibold;
   }
@@ -221,7 +217,21 @@
 
 /* Compact pill: title + row count, everything the example did not pass through. */
 .nodePill {
+  max-height: 42px;
   justify-content: center;
+}
+
+/* Off-screen copies of each pill, read for hug widths. */
+.hugMeasure {
+  position: fixed;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  .node {
+    width: max-content;
+  }
 }
 
 /* Card: the pill plus its label mix, for nodes on your example's path. */

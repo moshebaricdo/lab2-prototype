@@ -185,10 +185,16 @@ export interface AiLabTrainedModel {
   algorithm: AiLabAlgorithmId;
   labelColumn: string;
   selectedFeatures: string[];
+  /**
+   * Rows kept out of training: the last 10% of the sheet, unless a level
+   * sets `holdoutCount` (0 opts out). The testing tree and each node's
+   * rows modal count these. Empty when a level opts out.
+   */
   holdoutRowIndexes: number[];
   /**
-   * Scored rows used for reported accuracy. KNN: the 10% holdout that
-   * also selected k. Decision tree: every current sheet row.
+   * Scored rows used for reported accuracy. KNN: the reserved rows that
+   * also selected k. Decision tree: every current sheet row — the reserved
+   * rows are held out of training, and the scorecard still lists the sheet.
    */
   holdoutResults: AiLabHoldoutResult[];
   accuracy: number;

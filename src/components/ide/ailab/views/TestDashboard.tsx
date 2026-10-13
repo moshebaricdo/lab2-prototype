@@ -460,6 +460,9 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
         controlledPlayback={canvasLayout ? playback : undefined}
         onOpenNode={nodeModal ? setOpenNodeKey : undefined}
         openedKey={nodeModal ? openNodeKey : undefined}
+        rows={lab.rows}
+        labelColumn={model.labelColumn}
+        reservedRowIndexes={model.holdoutRowIndexes}
       />
     ) : (
       <KnnViz
@@ -744,6 +747,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
                     values: query,
                     rowIndex: sourceRowIndex,
                     pathKeys: treeTrace.pathKeys,
+                    prediction: treeTrace.prediction,
                   }
                 : undefined
             }
