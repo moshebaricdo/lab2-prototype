@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@moshebari/cads-react";
-import { GlobalNavMenu } from "./GlobalNavMenu";
 import {
   LevelProgressBubbles,
   type LevelProgressLink,
@@ -139,7 +138,6 @@ export function TopNavigation({
             className={`${styles.rightIconButton} ${styles.helpButton}`}
             aria-label="Help"
           />
-          <GlobalNavMenu />
         </div>
       </div>
     </div>

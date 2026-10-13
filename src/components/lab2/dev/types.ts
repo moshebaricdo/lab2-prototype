@@ -41,6 +41,8 @@ export interface DevPanelFieldBase {
 
 export interface DevPanelTextField extends DevPanelFieldBase {
   type: "text";
+  /** Mask the value. Use for session secrets such as the tutor API key. */
+  sensitive?: boolean;
 }
 
 export interface DevPanelTextareaField extends DevPanelFieldBase {

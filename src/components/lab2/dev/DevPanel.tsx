@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
 import type { PropsOverrideResult } from "../../../hooks/usePropsOverride";
+import {
+  TUTOR_API_KEY_DEV_FIELD_KEY,
+  useTutorApiSettings,
+} from "../../../hooks/useTutorApiSettings";
 import { Button } from "@moshebari/cads-react";
 import { ScrollArea } from "../../ui/scroll-area";
 import type { DevPanelField, DevPanelFieldValues } from "./types";
@@ -21,6 +25,7 @@ export function DevPanelContent<T extends Record<string, unknown>>({
   onSessionValueChange,
   onSessionValueReset,
 }: DevPanelContentProps<T>) {
+  const { apiKey: tutorApiKey, setApiKey: setTutorApiKey } = useTutorApiSettings();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const overriddenKeys = useMemo(
     () => flattenKeys(overrideResult.overrides),
@@ -30,8 +35,9 @@ export function DevPanelContent<T extends Record<string, unknown>>({
     () => ({
       ...(overrideResult.props as Record<string, unknown>),
       ...(sessionValues ?? {}),
+      [TUTOR_API_KEY_DEV_FIELD_KEY]: tutorApiKey,
     }),
-    [overrideResult.props, sessionValues],
+    [overrideResult.props, sessionValues, tutorApiKey],
   );
   const visibleFields = useMemo(
     () => fields.filter((field) => field.visibleWhen?.(fieldValues) ?? true),
@@ -59,10 +65,13 @@ export function DevPanelContent<T extends Record<string, unknown>>({
       };
     }
 
-    const isSessionField = field.storage === "session";
-    const currentValue = isSessionField
-      ? sessionValues?.[field.key]
-      : overrideResult.getValue(field.key);
+    const isTutorApiKey = field.key === TUTOR_API_KEY_DEV_FIELD_KEY;
+    const isSessionField = field.storage === "session" || isTutorApiKey;
+    const currentValue = isTutorApiKey
+      ? tutorApiKey
+      : isSessionField
+        ? sessionValues?.[field.key]
+        : overrideResult.getValue(field.key);
     const isOverridden = isSessionField
       ? Boolean(
           typeof currentValue === "string"
@@ -75,6 +84,11 @@ export function DevPanelContent<T extends Record<string, unknown>>({
   };
   const resetField = (field: DevPanelField) => {
     if (field.type === "action") return;
+
+    if (field.key === TUTOR_API_KEY_DEV_FIELD_KEY) {
+      setTutorApiKey("");
+      return;
+    }
 
     if (field.storage === "session") {
       onSessionValueReset?.(field.key);
@@ -149,6 +163,10 @@ export function DevPanelContent<T extends Record<string, unknown>>({
                             contractValue={contractValue}
                             isContractOverridden={isContractOverridden}
                             onChange={(value) => {
+                              if (field.key === TUTOR_API_KEY_DEV_FIELD_KEY) {
+                                setTutorApiKey(typeof value === "string" ? value : "");
+                                return;
+                              }
                               if (isSessionField) {
                                 onSessionValueChange?.(field.key, value);
                               } else {

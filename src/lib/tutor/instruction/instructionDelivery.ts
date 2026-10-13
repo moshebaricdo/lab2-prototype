@@ -2,11 +2,11 @@ import type { ChatMessage } from "../../../types/chat";
 import type { InstructionPinnedStep } from "../../../types/tutor";
 
 export const TUTOR_INSTRUCTION_API_KEY_OPENING =
-  "Add a Tutor API key in Lab Settings to load a personalized opening and coaching plan for this level.";
+  "Add a Tutor API key in the dev panel to load a personalized opening and coaching plan for this level.";
 
 export const TUTOR_INSTRUCTION_API_KEY_PINNED_STEP = {
   positionLabel: "API key required",
-  summary: "Add a Tutor API key in Lab Settings to load coaching steps.",
+  summary: "Add a Tutor API key in the dev panel to load coaching steps.",
 } satisfies InstructionPinnedStep;
 
 export const TUTOR_INSTRUCTION_LOADING_PINNED_STEP = {

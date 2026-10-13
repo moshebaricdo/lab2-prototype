@@ -362,8 +362,6 @@ export function Sidebar({
         >
           <SidebarPanelContent
             activeTab={activeTab}
-            isSettingsOpen={panelHidden ? false : isSettingsOpen}
-            setIsSettingsOpen={setIsSettingsOpen}
             chatMessages={chatMessages}
             setChatMessages={setChatMessages}
             chatInput={chatInput}
@@ -452,15 +450,10 @@ export function Sidebar({
         </div>
       </div>
 
-      {panelHidden && isSettingsOpen && (
-        <div className={styles.settingsFloatingWrap}>
-          <SettingsPanel
-            isOpen={isSettingsOpen}
-            variant="floating"
-            onClose={() => setIsSettingsOpen(false)}
-          />
-        </div>
-      )}
+      <SettingsPanel
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 }

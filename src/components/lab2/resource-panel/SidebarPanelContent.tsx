@@ -3,7 +3,6 @@ import { PanelHeader } from "../../ui/PanelHeader";
 import { useOptionalBackpack } from "../../../hooks/BackpackContext";
 import { DevPanelContent, DevPanelHeaderActions } from "../dev";
 import { ContinueButton } from "./ContinueButton";
-import { SettingsPanel } from "./views/SettingsPanel";
 import { ValidationPanel } from "./views/ValidationPanel";
 import { VersionHistory } from "./views/VersionHistory";
 import { InstructionsPanel } from "./views/InstructionsPanel";
@@ -18,8 +17,6 @@ import styles from "./Sidebar.module.scss";
 
 interface SidebarPanelContentProps {
   activeTab: SidebarTab;
-  isSettingsOpen: SidebarProps["isSettingsOpen"];
-  setIsSettingsOpen: SidebarProps["setIsSettingsOpen"];
   chatMessages: SidebarProps["chatMessages"];
   setChatMessages: SidebarProps["setChatMessages"];
   chatInput: SidebarProps["chatInput"];
@@ -122,8 +119,6 @@ const PANEL_LABEL: Record<SidebarTab, string> = {
 
 export function SidebarPanelContent({
   activeTab,
-  isSettingsOpen,
-  setIsSettingsOpen,
   chatMessages,
   setChatMessages,
   chatInput,
@@ -390,11 +385,6 @@ export function SidebarPanelContent({
           <ContinueButton onClick={onContinue} label={continueLabel} />
         </div>
       )}
-
-      <SettingsPanel
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
     </div>
   );
 }

@@ -105,7 +105,7 @@ The dev server starts at **http://localhost:3000** and redirects `/` → `/level
 Most Web Lab 2 and validation demos need a model to show their full behavior:
 
 1. Open any Web Lab 2 or Python Lab level
-2. Open **Lab Settings** in the resource panel
+2. Open the **Dev** tab in the resource panel and expand **AI Tutor**
 3. Paste an OpenAI API key (stored in `sessionStorage` only — never committed)
 4. Optionally pick a code-generation model tier
 
@@ -263,7 +263,7 @@ Keep these in mind when evaluating behavior or planning integrations:
 |------------|--------|
 | **No backend** | Assessment submit, auth, and persistence are mocked or client-only |
 | **Session storage** | Accepted workspace, chat history, version snapshots, and API keys persist in `sessionStorage` per route — a hard refresh keeps work; clearing site data resets it |
-| **API keys** | Entered in Lab Settings; never stored in repo or env files for production use |
+| **API keys** | Entered in the dev panel AI Tutor group; never stored in repo or env files for production use |
 | **AI proposals** | Pending Tutor edits are ephemeral until accepted; reload marks them rejected |
 | **Pyodide** | Python Lab needs cross-origin isolation headers (set in Vite dev/preview config) |
 | **Sketch export** | Sketch Lab exports images client-side; Backpack saves downscaled JPGs to fit localStorage quota |

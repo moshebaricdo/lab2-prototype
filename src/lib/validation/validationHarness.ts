@@ -161,7 +161,7 @@ function buildNoKeyAiGoalItem(
     id: `requirement-${goalIndex}`,
     label,
     status: "warn",
-    detail: "Add a Tutor API key in Lab Settings to evaluate this requirement.",
+    detail: "Add a Tutor API key in the dev panel to evaluate this requirement.",
   };
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "weblab:tutor-api-key";
+export const TUTOR_API_KEY_DEV_FIELD_KEY = "tutorApiKey";
 const CODE_MODEL_STORAGE_KEY = "weblab:tutor-code-model";
 const SETTINGS_EVENT = "weblab:tutor-api-settings-changed";
 export const DEFAULT_TUTOR_CODE_MODEL = "gpt-4.1";

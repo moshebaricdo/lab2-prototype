@@ -1,4 +1,5 @@
 import type { DevPanelField } from "../../components/lab2/dev";
+import { tutorApiKeyDevField } from "../../components/lab2/dev/tutorApiKeyDevField";
 import {
   globalEditorDevFields,
   resourcePanelCompactDevField,
@@ -267,6 +268,7 @@ export const webLab2ResourcesTabDevFields: DevPanelField[] = [
 ];
 
 const webLab2TutorDevFields: DevPanelField[] = [
+  tutorApiKeyDevField,
   {
     key: "tutorModeKind",
     label: "AI tutor mode",

@@ -8,6 +8,10 @@ import { PanelHeader } from "../../../ui/PanelHeader";
 import { ScrollArea } from "../../../ui/scroll-area";
 import type { FileItem } from "../../../../types/file";
 import { startPythonRun, type PythonRunSession } from "../runtime/pythonRunner";
+import {
+  usePythonConsoleLayout,
+  type PythonConsoleLayout,
+} from "../../../../hooks/usePythonConsoleLayout";
 import styles from "./PythonWorkspace.module.scss";
 
 const DEFAULT_FILE_MANAGER_WIDTH = 158;
@@ -17,7 +21,6 @@ const FILE_MANAGER_ANIMATION_MS = 220;
 const DEFAULT_CONSOLE_HEIGHT_RATIO = 0.4;
 
 type ConsoleLineTone = "output" | "error" | "meta" | "input";
-type ConsoleLayout = "horizontal" | "vertical";
 
 interface ConsoleLine {
   text: string;
@@ -83,7 +86,10 @@ export function PythonWorkspace({
   const [isAwaitingInput, setIsAwaitingInput] = useState(false);
   const [consoleInput, setConsoleInput] = useState("");
   const [consoleOnly, setConsoleOnly] = useState(false);
-  const [consoleLayout, setConsoleLayout] = useState<ConsoleLayout>("horizontal");
+  const sharedConsoleLayout = usePythonConsoleLayout();
+  const [localConsoleLayout, setLocalConsoleLayout] = useState<PythonConsoleLayout>("horizontal");
+  const consoleLayout = sharedConsoleLayout?.layout ?? localConsoleLayout;
+  const setConsoleLayout = sharedConsoleLayout?.setLayout ?? setLocalConsoleLayout;
   const [consoleHeight, setConsoleHeight] = useState<number | null>(null);
   const [consoleWidth, setConsoleWidth] = useState<number | null>(null);
   const [fileManagerWidth, setFileManagerWidth] = useState(DEFAULT_FILE_MANAGER_WIDTH);

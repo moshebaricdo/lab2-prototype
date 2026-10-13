@@ -33,19 +33,6 @@
   min-width: 0;
 }
 
-/* Collapsed sidebar: fixed card aligned to rail + 16px gap; 16px from viewport bottom */
-.settingsFloatingWrap {
-  position: fixed;
-  z-index: 50;
-  bottom: 16px;
-  left: calc(56px + 16px);
-  pointer-events: auto;
-}
-
-.rootCompact .settingsFloatingWrap {
-  left: calc(40px + 16px);
-}
-
 .tabRail {
   display: flex;
   width: 56px;

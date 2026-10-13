@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Lab2Shell } from "../../components/lab2/Lab2Shell";
+import { PythonConsoleLayoutProvider } from "../../hooks/usePythonConsoleLayout";
 import { PythonWorkspace } from "../../components/ide/pythonlab/views";
 import { CreateFileModal } from "../../components/ide/shared";
 import {
@@ -15,6 +16,7 @@ import { useFileWorkspaceState } from "../../hooks/useFileWorkspaceState";
 import { useVersionHistoryState } from "../../hooks/useVersionHistoryState";
 import { usePropsOverride } from "../../hooks/usePropsOverride";
 import type { DevPanelField } from "../../components/lab2/dev";
+import { tutorApiKeyDevField } from "../../components/lab2/dev/tutorApiKeyDevField";
 import {
   globalEditorDevFields,
   resourcePanelCompactDevField,
@@ -202,6 +204,7 @@ const pythonLabDevFields: DevPanelField[] = [
     group: "Validation",
     visibleWhen: (values) => Boolean(values.showValidationTab),
   },
+  tutorApiKeyDevField,
   {
     key: "tutorModeKind",
     label: "AI tutor mode",
@@ -467,7 +470,7 @@ export function PythonLabLevelPage({
   }, [currentFileStructure]);
 
   return (
-    <>
+    <PythonConsoleLayoutProvider>
       <Lab2Shell
         topNavigationProps={{
           title: resolved.title as string,
@@ -566,6 +569,6 @@ export function PythonLabLevelPage({
         defaultFileType="PY"
         fileTypes={["PY", "TXT", "CSV", "MD"]}
       />
-    </>
+    </PythonConsoleLayoutProvider>
   );
 }

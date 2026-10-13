@@ -35,7 +35,7 @@ Python Lab is a Lab2-powered coding environment for Python. It shares the same s
 └──────────────────────────────────────────────┘
 ```
 
-The console header includes controls to run code, clear output, and toggle between the default bottom console and a vertical right-side console. The editor/console divider remains resizable in both orientations.
+The console header includes controls to run code, clear output, and toggle between the default bottom console and a vertical right-side console. That toggle and the settings Layout dropdown share one value: Horizontal is the console below the editor, Vertical is the console on the right. The editor/console divider remains resizable in both orientations.
 
 ## Routes
 

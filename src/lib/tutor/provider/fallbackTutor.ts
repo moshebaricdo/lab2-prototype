@@ -2,7 +2,7 @@ import type { FileItem } from "../../../types/file";
 import type { TutorEditResult } from "../types";
 
 export const MISSING_TUTOR_API_KEY_MESSAGE =
-  "Add a Tutor API key in Lab Settings first, then try again.";
+  "Add a Tutor API key in the dev panel first, then try again.";
 
 function flattenFileItems(files: FileItem[]): FileItem[] {
   return files.flatMap((item) =>

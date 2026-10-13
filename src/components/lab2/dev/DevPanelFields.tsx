@@ -20,13 +20,15 @@ interface FieldProps {
 }
 
 function TextField({ field, value, controlId, onChange }: FieldProps) {
+  const sensitive = field.type === "text" && field.sensitive;
   return (
     <TextInput
       id={controlId}
-      type="text"
+      type={sensitive ? "password" : "text"}
       value={(value as string) ?? ""}
       onChange={(e) => onChange(e.target.value)}
       placeholder={field.label}
+      autoComplete={sensitive ? "off" : undefined}
       size="small"
       color="secondary"
     />

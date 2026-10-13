@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { AppButton } from "../../components/ui/AppButton";
-import { GlobalNavMenu } from "../../components/ui/header/GlobalNavMenu";
 import { Logo } from "../../components/ui/icons/Logo";
 import { NAV_LINKS, TEACHER_NAME } from "./teacherDashboardData";
 import styles from "./TeacherDashboardNav.module.scss";
@@ -51,7 +50,6 @@ export function TeacherDashboardNav() {
             className={`${styles.iconButton} ${styles.helpButton}`}
             aria-label="Help"
           />
-          <GlobalNavMenu />
         </div>
       </div>
     </header>
