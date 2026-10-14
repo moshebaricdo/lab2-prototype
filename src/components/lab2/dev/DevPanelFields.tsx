@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button, Dropdown, Slider, TextInput, Tooltip } from "@moshebari/cads-react";
+import { AiChatFileChip, Button, Dropdown, Slider, TextInput, Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "../../ui/icons/FaIcon";
+import { getFileChipIconProps } from "../../ui/fileChipMeta";
 import type { DevPanelField, DevPanelUploadedFile } from "./types";
 import styles from "./DevPanel.module.scss";
 
@@ -227,8 +228,33 @@ function SelectField({ field, value, onChange }: FieldProps) {
   );
 }
 
+function fileMatchesAccept(file: File, accept?: string): boolean {
+  if (!accept) return true;
+  const rules = accept.split(",").map((rule) => rule.trim().toLowerCase()).filter(Boolean);
+  if (rules.length === 0) return true;
+  const name = file.name.toLowerCase();
+  const type = file.type.toLowerCase();
+  return rules.some((rule) => {
+    if (rule.startsWith(".")) return name.endsWith(rule);
+    if (rule.endsWith("/*")) return type.startsWith(rule.slice(0, -1));
+    return type === rule;
+  });
+}
+
+function downloadTextFile(fileName: string, content: string) {
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 async function readUploadedFiles(
-  fileList: FileList,
+  fileList: ArrayLike<File>,
   options: { maxFiles?: number; maxTotalSizeBytes?: number } = {},
 ): Promise<DevPanelUploadedFile[]> {
   const files = Array.from(fileList);
@@ -250,17 +276,158 @@ async function readUploadedFiles(
   })));
 }
 
+function uploadedFilesFrom(value: unknown): DevPanelUploadedFile[] {
+  const files = (value as { files?: unknown } | undefined)?.files;
+  return Array.isArray(files) ? (files as DevPanelUploadedFile[]) : [];
+}
+
+function removeUploadedFile(
+  files: DevPanelUploadedFile[],
+  path: string,
+  onChange: (value: unknown) => void,
+) {
+  onChange({
+    files: files.filter((item) => item.path !== path),
+    uploadedAt: new Date().toISOString(),
+    source: "remove",
+  });
+}
+
 function FileUploadField({ field, value, controlId, onChange }: FieldProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const dragDepth = useRef(0);
   const [isReading, setIsReading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   if (field.type !== "file") return null;
-  const uploadedFiles = Array.isArray((value as { files?: unknown[] } | undefined)?.files)
-    ? ((value as { files: DevPanelUploadedFile[] }).files)
-    : [];
+  const uploadedFiles = uploadedFilesFrom(value);
   const directoryProps = field.directory
     ? ({ webkitdirectory: "", directory: "" } as Record<string, string>)
     : {};
+
+  const ingestFiles = (files: ArrayLike<File> | null) => {
+    if (!files || files.length === 0) return;
+    const list = Array.from(files);
+    if (list.some((file) => !fileMatchesAccept(file, field.accept))) {
+      setUploadError(field.accept?.includes("csv")
+        ? "Upload CSV files."
+        : "That file type is not accepted.");
+      return;
+    }
+    setIsReading(true);
+    setUploadError(null);
+    void readUploadedFiles(list, {
+      maxFiles: field.maxFiles,
+      maxTotalSizeBytes: field.maxTotalSizeBytes,
+    })
+      .then((uploaded) => {
+        try {
+          onChange({
+            files: uploaded,
+            uploadedAt: new Date().toISOString(),
+          });
+        } catch (error) {
+          console.error("[DevPanel] File upload failed", error);
+          setUploadError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load those files.",
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("[DevPanel] Starter file read failed", error);
+        setUploadError(error instanceof Error
+          ? error.message
+          : "Unable to read those files. Try uploading text files only.");
+      })
+      .finally(() => setIsReading(false));
+  };
+
+  const onDragEnter = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    dragDepth.current += 1;
+    setIsDragOver(true);
+  };
+  const onDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  };
+  const onDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setIsDragOver(false);
+  };
+  const onDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    dragDepth.current = 0;
+    setIsDragOver(false);
+    ingestFiles(event.dataTransfer.files);
+  };
+
+  const fileInput = (
+    <input
+      ref={inputRef}
+      id={controlId}
+      type="file"
+      accept={field.accept}
+      multiple={field.multiple ?? field.directory ?? false}
+      className={styles.fileUploadInput}
+      tabIndex={-1}
+      onChange={(event) => {
+        ingestFiles(event.currentTarget.files);
+        event.currentTarget.value = "";
+      }}
+      {...directoryProps}
+    />
+  );
+
+  if (field.dropzone) {
+    return (
+      <div className={styles.fileDropzoneWrap}>
+        <div
+          className={`${styles.fileDropzone} ${isDragOver ? styles.fileDropzoneActive : ""}`}
+          onDragEnter={onDragEnter}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+        >
+          {fileInput}
+          <p className={styles.fileDropzoneHint}>Drag files here to upload</p>
+          <div className={styles.fileDropzoneActions}>
+            <Button
+              variant="contained"
+              color="secondary"
+              size="extraSmall"
+              startIconName="upload"
+              onClick={() => inputRef.current?.click()}
+            >
+              {field.buttonLabel ?? "Browse"}
+            </Button>
+            {field.template ? (
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                startIconName="download"
+                onClick={() => downloadTextFile(field.template!.fileName, field.template!.content)}
+              >
+                {field.template.label}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+        {isReading ? (
+          <p className={styles.fileUploadSummary}>Loading files...</p>
+        ) : null}
+        {uploadError ? (
+          <p className={styles.fileUploadError} role="alert">
+            {uploadError}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className={styles.fileUploadWrap}>
@@ -274,45 +441,7 @@ function FileUploadField({ field, value, controlId, onChange }: FieldProps) {
         onClick={() => inputRef.current?.click()}
         aria-label={field.buttonLabel ?? field.label}
       />
-      <input
-        ref={inputRef}
-        id={controlId}
-        type="file"
-        accept={field.accept}
-        multiple={field.multiple ?? field.directory ?? false}
-        className={styles.fileUploadInput}
-        tabIndex={-1}
-        onChange={(event) => {
-          const files = event.currentTarget.files;
-          if (!files || files.length === 0) return;
-          setIsReading(true);
-          setUploadError(null);
-          void readUploadedFiles(files, {
-            maxFiles: field.maxFiles,
-            maxTotalSizeBytes: field.maxTotalSizeBytes,
-          })
-            .then((uploaded) => {
-              try {
-                onChange({
-                  files: uploaded,
-                  uploadedAt: new Date().toISOString(),
-                });
-              } catch (error) {
-                console.error("[DevPanel] Starter file upload failed", error);
-                setUploadError("Unable to load those starter files. Try a smaller text-only project.");
-              }
-            })
-            .catch((error) => {
-              console.error("[DevPanel] Starter file read failed", error);
-              setUploadError(error instanceof Error
-                ? error.message
-                : "Unable to read those files. Try uploading text files only.");
-            })
-            .finally(() => setIsReading(false));
-          event.currentTarget.value = "";
-        }}
-        {...directoryProps}
-      />
+      {fileInput}
       {isReading ? (
         <p className={styles.fileUploadSummary}>Loading starter files...</p>
       ) : null}
@@ -321,7 +450,7 @@ function FileUploadField({ field, value, controlId, onChange }: FieldProps) {
           {uploadError}
         </p>
       ) : null}
-      {uploadedFiles.length > 0 ? (
+      {uploadedFiles.length > 0 && !field.removable ? (
         <p className={styles.fileUploadSummary}>
           Loaded {uploadedFiles.length} file{uploadedFiles.length === 1 ? "" : "s"}:{" "}
           {uploadedFiles.slice(0, 5).map((file) => file.path).join(", ")}
@@ -383,10 +512,11 @@ export function DevPanelFieldRow({
   const [isContractExpanded, setIsContractExpanded] = useState(() => Boolean(contractText.trim()));
   const showContractEditor = hasContractEditor && (isContractExpanded || Boolean(contractText.trim()));
   if (!Component) return null;
+  const isDropzone = field.type === "file" && Boolean(field.dropzone);
   const isInlineControl =
     field.type === "boolean" ||
     field.type === "action" ||
-    field.type === "file" ||
+    (field.type === "file" && !field.dropzone) ||
     field.controlLayout === "inline";
   const renderedControl = (
     <Component
@@ -403,7 +533,7 @@ export function DevPanelFieldRow({
     />
   );
   return (
-    <div className={`${styles.fieldRow} ${isInlineControl ? styles.fieldRowInline : ""}`}>
+    <div className={`${styles.fieldRow} ${isInlineControl ? styles.fieldRowInline : ""} ${isDropzone ? styles.fieldRowDropzone : ""}`}>
       <div className={styles.fieldHeader}>
         <div className={styles.fieldTitle}>
           <label className={styles.fieldLabel} htmlFor={controlId}>
@@ -416,7 +546,7 @@ export function DevPanelFieldRow({
                 className={styles.infoButton}
                 aria-label={`${field.label}: ${field.description}`}
               >
-                <FaIcon name="circle-info" size="xs" />
+                <FaIcon name="circle-info" family={isDropzone ? "solid" : undefined} size="xs" />
               </button>
             </Tooltip>
           ) : null}
@@ -425,7 +555,7 @@ export function DevPanelFieldRow({
           ) : null}
         </div>
         <div className={styles.fieldActions}>
-          {isOverridden && field.type !== "action" && (
+          {isOverridden && field.type !== "action" && !(field.type === "file" && field.removable) && (
             <Button
               variant="text"
               color="tertiary"
@@ -490,6 +620,37 @@ export function DevPanelFieldRow({
         </div>
       ) : null}
       {isInlineControl ? null : renderedControl}
+      {field.type === "file" && field.removable ? (
+        <FileUploadChips
+          files={uploadedFilesFrom(value)}
+          onRemove={(path) => removeUploadedFile(uploadedFilesFrom(value), path, onChange)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function FileUploadChips({
+  files,
+  onRemove,
+}: {
+  files: DevPanelUploadedFile[];
+  onRemove: (path: string) => void;
+}) {
+  if (files.length === 0) return null;
+  return (
+    <div className={styles.fileChipRow}>
+      {files.map((file) => (
+        <AiChatFileChip
+          key={file.path}
+          type="file"
+          useCase="inputField"
+          fileName={file.name}
+          title={file.name}
+          iconName={getFileChipIconProps(file.name).iconName}
+          onRemove={() => onRemove(file.path)}
+        />
+      ))}
     </div>
   );
 }

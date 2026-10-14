@@ -32,6 +32,7 @@ const AiChatLabModelCardLevelPage = lazyPage(
 const AiLabPages = () => import("./pages/ailab/AiLabLevelPage");
 const AiLabLevelPage = lazyPage(AiLabPages, "AiLabLevelPage");
 const AiLabP0LevelPage = lazyPage(AiLabPages, "AiLabP0LevelPage");
+const AiLabUploadLevelPage = lazyPage(AiLabPages, "AiLabUploadLevelPage");
 const AiLabScaleLevelPage = lazyPage(AiLabPages, "AiLabScaleLevelPage");
 const AiLabPretrainedLevelPage = lazyPage(
   AiLabPages,
@@ -520,6 +521,7 @@ export default function App() {
         />
         <Route path="/levels/ailab" element={<AiLabLevelPage />} />
         <Route path="/levels/ailab-p0" element={<AiLabP0LevelPage />} />
+        <Route path="/levels/ailab-upload" element={<AiLabUploadLevelPage />} />
         <Route path="/levels/ailab-scale" element={<AiLabScaleLevelPage />} />
         <Route
           path="/levels/ailab-pretrained"

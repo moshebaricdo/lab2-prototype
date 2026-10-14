@@ -194,6 +194,7 @@ function configIdentity(config: AiLabLevelConfig): string {
     : "";
   return [
     config.dataset.id,
+    config.datasetRevision ?? "",
     catalogDatasets(config)
       .map((dataset) => dataset.id)
       .join(","),

@@ -41,6 +41,76 @@
   gap: 6px;
 }
 
+/* Same slot as the sort-and-quiz canvas, with the sentence row under it. */
+.quiet {
+  display: flex;
+  flex-direction: column;
+}
+
+.quietCanvas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 437px;
+  padding: 24px;
+  background: var(--background-neutral-secondary);
+}
+
+.quietCard {
+  display: flex;
+  max-width: 280px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.quietIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-septenary);
+  color: var(--text-neutral-primary-inverse);
+}
+
+.quietGlyph {
+  font-size: var(--text-heading-md);
+}
+
+.quietTitle {
+  @include type-body-2-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.quietText {
+  @include type-body-4-regular;
+  margin-top: 4px;
+  color: var(--text-neutral-secondary);
+}
+
+.quietStatement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+  height: 56px;
+  padding: 0 24px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.quietAccuracy {
+  @include type-body-3-semibold;
+  flex-shrink: 0;
+  color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Results row keeps its height while hidden so the modal does not jump. */
 .results {
   display: grid;

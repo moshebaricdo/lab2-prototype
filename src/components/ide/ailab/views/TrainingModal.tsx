@@ -7,9 +7,12 @@ import {
   listNames,
   type TrainingBodyProps,
 } from "./TrainingModalShell";
-import { TrainingTableRow } from "./TreeTableRow";
+import { FaIcon } from "@moshebari/cads-react/icons";
+import { PredictionStatement } from "./PredictionStatement";
+import { TABLE_ROW_SHELL, TrainingTableRow } from "./TreeTableRow";
 import { TreeGrowth, treeScore, useGrowthLayout } from "./viz/TreeGrowth";
 import { prefersReducedMotion } from "./viz/useStepPlayback";
+import styles from "./TrainingModal.module.scss";
 
 /** Time each node takes to land while the tree grows. */
 const NODE_MS = 650;
@@ -53,6 +56,9 @@ export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps
     canTest: !lab.config.hideTestTab && lab.canVisit("test"),
   };
   const key = `${model.labelColumn}|${model.selectedFeatures.join(",")}|${lab.rows.length}`;
+  if (lab.config.skipTrainingWalk) {
+    return <TrainingQuietModal key={key} {...shared} accuracy={model.accuracy} />;
+  }
   if (lab.config.trainingAnimation === "tree") {
     return <TreeGrowthBody key={key} {...shared} />;
   }
@@ -64,6 +70,62 @@ export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps
       results={model.holdoutResults}
       titleColumn={lab.config.cardTitleColumn}
     />
+  );
+}
+
+/**
+ * Upload level: the same training modal, already finished, with an empty
+ * stage where the walk would play. Continue and Back to dataset are immediate.
+ */
+function TrainingQuietModal({
+  open,
+  onClose,
+  onTest,
+  columns,
+  labelColumn,
+  features,
+  canTest,
+  accuracy,
+}: TrainingBodyProps & { accuracy: number }) {
+  const percent = Math.round(accuracy * 100);
+  return (
+    <TrainingModalShell
+      {...TABLE_ROW_SHELL}
+      open={open}
+      title="Training your model"
+      onClose={onClose}
+      onTest={onTest}
+      columns={columns}
+      labelColumn={labelColumn}
+      features={features}
+      canTest={canTest}
+      done
+      onSkip={() => {}}
+    >
+      <div className={styles.quiet}>
+        <div className={styles.quietCanvas}>
+          <div className={styles.quietCard}>
+            <span className={styles.quietIcon} aria-hidden>
+              <FaIcon name="empty-set" className={styles.quietGlyph} />
+            </span>
+            <h2 className={styles.quietTitle}>Model trained and tested</h2>
+            <p className={styles.quietText}>
+              Your model is ready. This is just a placeholder for the training and testing animation.
+            </p>
+          </div>
+        </div>
+        <div className={styles.quietStatement}>
+          <PredictionStatement
+            columns={columns}
+            labelColumn={labelColumn}
+            features={features}
+            size="large"
+            fit
+          />
+          <span className={styles.quietAccuracy}>{percent}% Accuracy</span>
+        </div>
+      </div>
+    </TrainingModalShell>
   );
 }
 

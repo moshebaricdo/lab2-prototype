@@ -99,6 +99,16 @@ export interface DevPanelFileField extends DevPanelFieldBase {
   buttonLabel?: string;
   maxFiles?: number;
   maxTotalSizeBytes?: number;
+  /** Show a remove control for each loaded file. */
+  removable?: boolean;
+  /** Full-width drop target under the label. Click still opens the file picker. */
+  dropzone?: boolean;
+  /** Downloadable starter file shown inside a dropzone. */
+  template?: {
+    fileName: string;
+    content: string;
+    label: string;
+  };
 }
 
 export interface DevPanelActionField extends DevPanelFieldBase {

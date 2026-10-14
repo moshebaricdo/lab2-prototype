@@ -41,12 +41,14 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
   const needsAlgorithm =
     !lab.selectedAlgorithm && !lab.config.algorithmLock;
   const needsSetup = needsDataset || needsAlgorithm;
-  const canChangeSetup = lab.canPickDataset || !lab.config.algorithmLock;
+  const awaitingUpload = Boolean(lab.config.emptyDataset) && needsDataset;
+  const canChangeSetup =
+    !awaitingUpload && (lab.canPickDataset || !lab.config.algorithmLock);
   const [setupOpen, setSetupOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [inspectorTab, setInspectorTab] =
     useState<ModelInspectorTab>("scorecard");
-  const setupModalOpen = needsSetup || setupOpen;
+  const setupModalOpen = !awaitingUpload && (needsSetup || setupOpen);
   const canInspect = Boolean(
     lab.config.showModelDetails || lab.config.showExport,
   );

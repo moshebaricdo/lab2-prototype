@@ -260,6 +260,21 @@ export interface AiLabLevelConfig {
   lockDataset?: boolean;
   /** Student must pick from the catalog before the sheet opens. */
   requireDatasetChoice?: boolean;
+  /**
+   * Shown in place of the sheet when no dataset is selected. The setup
+   * modal stays closed so the empty state can point at an upload.
+   */
+  emptyDataset?: {
+    title: string;
+    copy: string;
+  };
+  /** Catalog comes from CSV files kept in session storage, not the drop folder. */
+  sessionDatasets?: boolean;
+  /**
+   * Bumps when the active sheet's bytes change so a re-upload remounts
+   * the lab even if the dataset id stays the same.
+   */
+  datasetRevision?: string;
   /** Scorecard modal after train. Independent of export. */
   showModelDetails?: boolean;
   /** Save-model modal + getPrediction snippet. Independent of the scorecard. */
@@ -323,6 +338,11 @@ export interface AiLabLevelConfig {
    * fallback that grows the finished tree depth by depth. Dev panel knob.
    */
   trainingAnimation?: AiLabTrainingAnimation;
+  /**
+   * Open the training modal on an empty stage instead of the walk. The
+   * footer is already **Continue** and **Back to dataset**. Upload level.
+   */
+  skipTrainingWalk?: boolean;
   /**
    * Testing diagram node click. `modal` (default) keeps every node a compact
    * pill, counts matching and other rows on each leaf, and opens a modal

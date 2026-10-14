@@ -9,3 +9,4 @@ export * from "./knn";
 export * from "./scale";
 export * from "./statement";
 export * from "./train";
+export * from "./uploadedDatasets";

@@ -520,6 +520,74 @@
   width: fit-content;
 }
 
+.fieldRowDropzone {
+  .fieldLabel {
+    font-size: var(--text-body-sm);
+    font-weight: var(--font-weight-semi-bold);
+  }
+
+  .infoButton {
+    width: 18px;
+    height: 18px;
+    color: var(--text-neutral-tertiary);
+  }
+
+  .storageBadge {
+    display: none;
+  }
+
+  .fileChipRow {
+    padding: 6px 6px 0 0;
+  }
+}
+
+.fileDropzoneWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 8px;
+
+  .fileUploadSummary,
+  .fileUploadError {
+    max-width: none;
+    text-align: center;
+  }
+}
+
+.fileDropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px 12px;
+  border: 1px dashed var(--border-neutral-secondary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+}
+
+.fileDropzoneActive {
+  border-color: var(--border-selected-primary);
+  background: color-mix(in srgb, var(--border-selected-primary) 8%, var(--background-neutral-primary));
+}
+
+.fileDropzoneHint {
+  margin: 0;
+  color: var(--text-neutral-tertiary);
+  font-family: var(--font-family-main);
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
+  text-align: center;
+}
+
+.fileDropzoneActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
 .fileUploadInput {
   position: absolute;
   width: 1px;
@@ -528,6 +596,14 @@
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+.fileChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .fileUploadSummary {

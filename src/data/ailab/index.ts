@@ -1,4 +1,4 @@
-import type { AiLabLevelConfig } from "../../types/aiLab";
+import type { AiLabDataset, AiLabLevelConfig } from "../../types/aiLab";
 import { temperatureScaleDataset } from "./temperatureScale";
 import { tacoTruckDataset } from "./tacoTruck";
 import { tacoTruckGuidedDataset } from "./tacoTruckGuided";
@@ -11,6 +11,7 @@ export { tacoTruckGuidedDataset } from "./tacoTruckGuided";
 export {
   aiLabGuidedSectionInstructions,
   aiLabP0Instructions,
+  aiLabUploadInstructions,
   aiLabScaleInstructions,
   aiLabPlaytestBuildInstructions,
   aiLabPlaytestLookInstructions,
@@ -124,6 +125,43 @@ export const aiLabP0Config: AiLabLevelConfig = {
   trainingModal: true,
   autoPlayTrace: true,
   bundleWideSplits: true,
+  testLayout: "canvas",
+};
+
+/**
+ * P0 chrome with no bundled sheets. CSV files uploaded from the Dev panel
+ * are the only catalog, and they live in session storage for this tab.
+ */
+export const aiLabUploadPlaceholder: AiLabDataset = {
+  id: "upload_pending",
+  name: "No dataset",
+  description: "Upload a CSV from the Dev panel.",
+  defaultLabelColumn: "",
+  columns: [],
+  rows: [],
+};
+
+export const aiLabUploadConfig: AiLabLevelConfig = {
+  dataset: aiLabUploadPlaceholder,
+  availableDatasets: [],
+  lockDataset: false,
+  requireDatasetChoice: true,
+  sessionDatasets: true,
+  emptyDataset: {
+    title: "No data to show",
+    copy: "Upload or select a dataset (via the Dev Panel) to populate this view.",
+  },
+  algorithmLock: "decisionTree",
+  allowDataEdit: false,
+  showModelDetails: false,
+  showExport: false,
+  trainAsOverlay: true,
+  defaultDataView: "table",
+  hideCardLayoutToggle: true,
+  hideTestViewToggle: true,
+  trainingModal: true,
+  skipTrainingWalk: true,
+  autoPlayTrace: true,
   testLayout: "canvas",
 };
 

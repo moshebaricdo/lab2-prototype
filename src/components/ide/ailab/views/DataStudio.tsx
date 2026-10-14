@@ -1,6 +1,7 @@
 import {
   memo,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -100,6 +101,7 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
     selected?.type === "numerical" &&
     Boolean(lab.config.allowScaleColumns);
   const showTrain = !lab.config.hideTrainTab && !lab.needsDataset && !inIntro;
+  const awaitingUpload = Boolean(lab.config.emptyDataset) && lab.needsDataset;
 
   return (
     <section
@@ -113,9 +115,19 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
     >
       <div className={styles.stage}>
         <div className={styles.sheetColumn}>
-          <DataHeader lab={lab} onOpenSetup={onOpenSetup} inIntro={inIntro} />
+          {awaitingUpload ? null : (
+            <DataHeader lab={lab} onOpenSetup={onOpenSetup} inIntro={inIntro} />
+          )}
           {inIntro ? (
             <IntroActivity lab={lab} />
+          ) : awaitingUpload ? (
+            <EmptyDatasetSheet
+              title={lab.config.emptyDataset?.title ?? "No data to show"}
+              copy={
+                lab.config.emptyDataset?.copy ??
+                "Upload or select a dataset (via the Dev Panel) to populate this view."
+              }
+            />
           ) : lab.needsDataset ? (
             <div className={styles.empty}>
               <div className={styles.emptyInner}>
@@ -142,6 +154,97 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
         />
       ) : null}
     </section>
+  );
+}
+
+/** Same row height as `.th` / `.td`. The card spans whole cells so its edges are grid lines. */
+const EMPTY_SHEET_ROW_HEIGHT = 28;
+const EMPTY_SHEET_COLUMNS = 5;
+const EMPTY_SHEET_CARD_COLUMNS = 3;
+const EMPTY_SHEET_CARD_ROWS = 9;
+
+function EmptyDatasetSheet({ title, copy }: { title: string; copy: string }) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [rows, setRows] = useState({ rendered: 12, full: 12 });
+
+  useLayoutEffect(() => {
+    const el = sheetRef.current;
+    if (!el) return;
+    const measure = () => {
+      const height = el.clientHeight;
+      const rendered = Math.max(2, Math.ceil(height / EMPTY_SHEET_ROW_HEIGHT));
+      const full = Math.max(2, Math.floor(height / EMPTY_SHEET_ROW_HEIGHT));
+      setRows((current) =>
+        current.rendered === rendered && current.full === full
+          ? current
+          : { rendered, full },
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const bodyRows = Math.max(rows.full - 1, 1);
+  const cardRows = Math.max(
+    1,
+    Math.min(EMPTY_SHEET_CARD_ROWS, bodyRows >= 3 ? bodyRows - 2 : bodyRows),
+  );
+  const rowOffset = Math.floor((bodyRows - cardRows) / 2);
+  const gridRowStart = 2 + rowOffset;
+  const gridColStart =
+    2 + Math.floor((EMPTY_SHEET_COLUMNS - EMPTY_SHEET_CARD_COLUMNS) / 2);
+
+  const cells: ReactElement[] = [];
+  for (let row = 0; row < rows.rendered; row += 1) {
+    for (let col = 0; col < EMPTY_SHEET_COLUMNS + 1; col += 1) {
+      const muted = row === 0 || col === 0;
+      const edge = col === EMPTY_SHEET_COLUMNS;
+      cells.push(
+        <div
+          key={`${row}-${col}`}
+          className={[
+            styles.emptyCell,
+            muted ? styles.emptyCellMuted : "",
+            edge ? styles.emptyCellEdge : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          style={{ gridRow: row + 1, gridColumn: col + 1 }}
+        />,
+      );
+    }
+  }
+
+  return (
+    <div className={styles.emptySheet} ref={sheetRef}>
+      <div
+        className={styles.emptyGrid}
+        style={{
+          gridTemplateRows: `repeat(${rows.rendered}, ${EMPTY_SHEET_ROW_HEIGHT}px)`,
+        }}
+      >
+        {cells}
+        <div
+          className={styles.emptyCard}
+          style={{
+            gridColumn: `${gridColStart} / ${gridColStart + EMPTY_SHEET_CARD_COLUMNS}`,
+            gridRow: `${gridRowStart} / ${gridRowStart + cardRows}`,
+          }}
+        >
+          <div className={styles.emptyCardBody}>
+            <span className={styles.emptyIcon} aria-hidden>
+              <FaIcon name="empty-set" className={styles.emptyGlyph} />
+            </span>
+            <div className={styles.emptyCardCopy}>
+              <h2 className={styles.emptyCardTitle}>{title}</h2>
+              <p className={styles.emptyCardText}>{copy}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -180,6 +283,7 @@ function DataHeader({
         )}
         {lab.needsDataset ? null : (
           <>
+            <span className={styles.setDot} aria-hidden />
             <span className={styles.setMeta}>{lab.rows.length} rows</span>
             <Tooltip title="About this data" placement="bottom">
               <Button
@@ -271,18 +375,25 @@ function TrainRail({
     ) {
       lab.setLabelColumn("");
     }
-    const nextFeatures = lab.selectedFeatures.filter(
-      (id) => id !== lab.labelColumn && usable(id),
-    );
-    if (nextFeatures.length !== lab.selectedFeatures.length) {
-      lab.setFeatures(nextFeatures);
+    if (!lab.config.lockFeatures) {
+      const nextFeatures = lab.selectedFeatures.filter(
+        (id) => id !== lab.labelColumn && usable(id),
+      );
+      if (nextFeatures.length !== lab.selectedFeatures.length) {
+        lab.setFeatures(nextFeatures);
+      }
     }
   }, [lab, columns]);
+  const featuresLocked = Boolean(lab.config.lockFeatures);
+  const lockedFeatureIds = new Set(
+    featuresLocked ? lab.selectedFeatures : [],
+  );
   const labelOptions = columns
     .filter((column) =>
       lab.config.classificationOnly ? column.type === "categorical" : true,
     )
     .filter((column) => usable(column.id))
+    .filter((column) => !lockedFeatureIds.has(column.id))
     .map((column) => ({ value: column.id, label: column.name }));
   const excludedFeatures = new Set(lab.config.excludedFeatureColumns ?? []);
   const featureOptions = columns
@@ -391,26 +502,29 @@ function TrainRail({
               />
               {/* Ref stays on the control: the label's info button is also a
                   button, and the menu-width hook takes the first one. */}
-              <div ref={featuresMenu.ref}>
-                <Dropdown
-                  role="input"
-                  menuType="checklist"
-                  size="small"
-                  color="secondary"
-                  width="full"
-                  helperText={lab.featureCardinality?.text}
-                  sentiment={lab.featureCardinality?.sentiment ?? "default"}
-                  startIconName={
-                    lab.selectedFeatures.length > 0 ? "circle-check" : undefined
-                  }
-                  placeholder="Choose one or more columns"
-                  value={lab.selectedFeatures}
-                  options={featureOptions}
-                  onChange={(value) => lab.setFeatures(asStringArray(value))}
-                  onOpenChange={featuresMenu.onOpenChange}
-                  aria-label="Feature columns"
-                />
-              </div>
+              <LockedLabelTooltip locked={featuresLocked}>
+                <div ref={featuresMenu.ref}>
+                  <Dropdown
+                    role="input"
+                    menuType="checklist"
+                    size="small"
+                    color="secondary"
+                    width="full"
+                    helperText={lab.featureCardinality?.text}
+                    sentiment={lab.featureCardinality?.sentiment ?? "default"}
+                    startIconName={
+                      lab.selectedFeatures.length > 0 ? "circle-check" : undefined
+                    }
+                    placeholder="Choose one or more columns"
+                    value={lab.selectedFeatures}
+                    options={featureOptions}
+                    readOnly={featuresLocked}
+                    onChange={(value) => lab.setFeatures(asStringArray(value))}
+                    onOpenChange={featuresMenu.onOpenChange}
+                    aria-label="Feature columns"
+                  />
+                </div>
+              </LockedLabelTooltip>
             </div>
             {/* KNN's k is not a student control. Studio searches k on a
                 10% holdout (AI Lab / ml-knn). Guided levels may lock k. */}

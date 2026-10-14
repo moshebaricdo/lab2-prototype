@@ -54,6 +54,98 @@
   color: var(--text-neutral-tertiary);
 }
 
+/* Upload empty state: a blank sheet, with the message card snapped to cell edges. */
+.emptySheet {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--background-neutral-primary);
+}
+
+.emptyGrid {
+  display: grid;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  align-content: start;
+  grid-template-columns:
+    calc(var(--index-col-ch, 2) * 1ch + 16px)
+    repeat(5, minmax(0, 1fr));
+}
+
+.emptyCell {
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  border-right: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+}
+
+.emptyCellMuted {
+  background: var(--background-neutral-secondary);
+}
+
+.emptyCellEdge {
+  border-right: 0;
+}
+
+.emptyCard {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-right: 1px solid var(--border-neutral-primary);
+  border-bottom: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+}
+
+.emptyCardBody {
+  display: flex;
+  width: min(239px, 100%);
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  text-align: center;
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-septenary);
+  color: var(--text-neutral-primary-inverse);
+}
+
+.emptyGlyph {
+  font-size: var(--text-heading-md);
+}
+
+.emptyCardCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.emptyCardTitle {
+  @include type-body-2-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.emptyCardText {
+  @include type-body-4-regular;
+  margin: 0;
+  color: var(--text-neutral-secondary);
+}
+
 /* ---------------------------------------------------------------------------
  * Stage: sheet column + 280px Train rail, with the Column Analysis dock
  * spanning the full width underneath.
@@ -119,6 +211,14 @@
   color: var(--text-neutral-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.setDot {
+  width: 4px;
+  height: 4px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+  background: var(--text-neutral-quaternary);
 }
 
 .setMeta {

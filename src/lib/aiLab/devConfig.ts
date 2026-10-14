@@ -91,7 +91,9 @@ export function mergeAiLabDevConfig(
     presetLabelColumn,
   );
   const chosenAlgorithm = asAlgorithm(resolved.algorithmLock);
-  const needsPretrained = hideDatasetTab || (hideTrainTab && !hideTestTab);
+  const sheetReady = dataset.rows.length > 0 && dataset.columns.length >= 2;
+  const needsPretrained =
+    sheetReady && (hideDatasetTab || (hideTrainTab && !hideTestTab));
   const pretrainedAlgorithm =
     chosenAlgorithm ??
     (needsPretrained ? (base.pretrained?.algorithm ?? "decisionTree") : undefined);
@@ -120,10 +122,10 @@ export function mergeAiLabDevConfig(
     ...base,
     dataset,
     availableDatasets: catalog,
-    lockDataset,
-    requireDatasetChoice: !lockDataset,
+    lockDataset: sheetReady && lockDataset,
+    requireDatasetChoice: !(sheetReady && lockDataset),
     algorithmLock: pretrainedAlgorithm,
-    hideDatasetTab,
+    hideDatasetTab: sheetReady && hideDatasetTab,
     hideTestTab,
     hideTrainTab,
     hideLabelSelect: presetLabelColumn ? false : base.hideLabelSelect,
@@ -142,11 +144,13 @@ export function mergeAiLabDevConfig(
     trainingAnimation: resolved.trainingAnimation === "tree" ? "tree" : "rows",
     treeNodeDetail: resolved.treeNodeDetail === "inline" ? "inline" : "modal",
     pretrained,
-    initialSection: hideDatasetTab
-      ? "test"
-      : hideTestTab
-        ? "dataset"
-        : base.initialSection,
+    initialSection: !sheetReady
+      ? "dataset"
+      : hideDatasetTab
+        ? "test"
+        : hideTestTab
+          ? "dataset"
+          : base.initialSection,
   };
 }
 

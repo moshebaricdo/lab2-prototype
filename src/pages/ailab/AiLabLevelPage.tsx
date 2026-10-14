@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import datasetTemplateCsv from "../../data/ailab/dataset-template.csv?raw";
 import { useNavigate } from "react-router-dom";
 import { Lab2Shell } from "../../components/lab2/Lab2Shell";
 import { MarkdownInstructions } from "../../components/lab2/resource-panel/MarkdownInstructions";
@@ -15,6 +16,8 @@ import {
   aiLabGuidedSectionInstructions,
   aiLabP0Config,
   aiLabP0Instructions,
+  aiLabUploadConfig,
+  aiLabUploadInstructions,
   aiLabScaleConfig,
   aiLabScaleInstructions,
   aiLabPretrainedConfig,
@@ -28,18 +31,26 @@ import {
   AI_LAB_STUDENT_CHOICE,
   aiLabDevDefaults,
   cardTitleColumnDevOptions,
+  clearUploadedSheets,
   datasetDevOptions,
   featureColumnDevOptions,
   findCatalogDataset,
   labelColumnDevOptions,
   mergeAiLabDevConfig,
+  mergeUploadedSheets,
+  readUploadedSheets,
+  retainUploadedSheets,
+  sheetsToDatasets,
   uniqueDevCatalog,
+  writeUploadedSheets,
+  type UploadedSheet,
 } from "../../lib/aiLab";
 import {
   aiLabGuidedLevelLinks,
   aiLabLevelLinks,
   aiLabP0LevelLinks,
   aiLabScaleLevelLinks,
+  aiLabUploadLevelLinks,
 } from "../levelTypeLinks";
 import type { AiLabLevelConfig, AiLabSection } from "../../types/aiLab";
 
@@ -73,10 +84,13 @@ function aiLabControl<T extends DevPanelField>(field: T): T {
 function aiLabDevFields(
   catalog: ReturnType<typeof uniqueDevCatalog>,
   labelDataset: (typeof catalog)[number],
-  labelColumnId?: string,
+  options: { fixedDecisionTree?: boolean; labelColumnId?: string } = {},
 ): DevPanelField[] {
-  const featureOptions = featureColumnDevOptions(labelDataset, labelColumnId);
-  return [
+  const featureOptions = featureColumnDevOptions(
+    labelDataset,
+    options.labelColumnId,
+  );
+  const fields: DevPanelField[] = [
     aiLabControl({
       key: "presetDataset",
       label: "Pre-set dataset",
@@ -149,59 +163,67 @@ function aiLabDevFields(
       group: "Workspace",
       visibleWhen: (values) => values.workspaceTabs !== "test",
     }),
-    aiLabControl({
-      key: "algorithmLock",
-      label: "Pre-set algorithm",
-      description:
-        "Lock KNN or Decision Tree. User chooses keeps the setup picker.",
-      type: "select",
-      group: "Train",
-      options: [
-        { label: "User chooses", value: "none" },
-        { label: "K-Nearest Neighbors", value: "knn" },
-        { label: "Decision Tree", value: "decisionTree" },
-      ],
-    }),
-    aiLabControl({
-      key: "trainingAnimation",
-      label: "Training animation",
-      description:
-        "What the Train model modal plays for a decision tree. Sort and quiz (default) shows every row as a dot sorted into piles by the tree's questions (Training), then a few rows from the sheet trace down the tree and get guessed (Testing) before the score. Tree growth is the older fallback: the finished tree drawn depth by depth.",
-      type: "select",
-      group: "Train",
-      options: [
-        { label: "Sort and quiz (training → testing)", value: "rows" },
-        { label: "Tree growth (fallback)", value: "tree" },
-      ],
-      visibleWhen: (values) =>
-        values.workspaceTabs !== "test" &&
-        values.algorithmLock !== "knn" &&
-        !values.hideTrainPanel,
-    }),
-    aiLabControl({
-      key: "bundleWideSplits",
-      label: "Bundle wide tree splits",
-      description:
-        "When a decision splits 7+ ways, leaves that predict the same label fold into one bundle per outcome (click to open). Off leaves the wide split as-is.",
-      type: "boolean",
-      group: "Testing",
-      visibleWhen: (values) =>
-        values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
-    }),
-    aiLabControl({
-      key: "treeNodeDetail",
-      label: "Tree node details",
-      description:
-        "What clicking a node on the Testing diagram does. Rows modal (default) keeps nodes compact, counts correct and incorrect rows on each leaf, and opens a modal of the sheet rows that reached the node. Expand in place grows the node into a detail card.",
-      type: "select",
-      group: "Testing",
-      options: [
-        { label: "Rows modal", value: "modal" },
-        { label: "Expand in place", value: "inline" },
-      ],
-      visibleWhen: (values) =>
-        values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
-    }),
+  ];
+
+  if (!options.fixedDecisionTree) {
+    fields.push(
+      aiLabControl({
+        key: "algorithmLock",
+        label: "Pre-set algorithm",
+        description:
+          "Lock KNN or Decision Tree. User chooses keeps the setup picker.",
+        type: "select",
+        group: "Train",
+        options: [
+          { label: "User chooses", value: "none" },
+          { label: "K-Nearest Neighbors", value: "knn" },
+          { label: "Decision Tree", value: "decisionTree" },
+        ],
+      }),
+      aiLabControl({
+        key: "trainingAnimation",
+        label: "Training animation",
+        description:
+          "What the Train model modal plays for a decision tree. Sort and quiz (default) shows every row as a dot sorted into piles by the tree's questions (Training), then a few rows from the sheet trace down the tree and get guessed (Testing) before the score. Tree growth is the older fallback: the finished tree drawn depth by depth.",
+        type: "select",
+        group: "Train",
+        options: [
+          { label: "Sort and quiz (training → testing)", value: "rows" },
+          { label: "Tree growth (fallback)", value: "tree" },
+        ],
+        visibleWhen: (values) =>
+          values.workspaceTabs !== "test" &&
+          values.algorithmLock !== "knn" &&
+          !values.hideTrainPanel,
+      }),
+      aiLabControl({
+        key: "bundleWideSplits",
+        label: "Bundle wide tree splits",
+        description:
+          "When a decision splits 7+ ways, leaves that predict the same label fold into one bundle per outcome (click to open). Off leaves the wide split as-is.",
+        type: "boolean",
+        group: "Testing",
+        visibleWhen: (values) =>
+          values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
+      }),
+      aiLabControl({
+        key: "treeNodeDetail",
+        label: "Tree node details",
+        description:
+          "What clicking a node on the Testing diagram does. Rows modal (default) keeps nodes compact, counts correct and incorrect rows on each leaf, and opens a modal of the sheet rows that reached the node. Expand in place grows the node into a detail card.",
+        type: "select",
+        group: "Testing",
+        options: [
+          { label: "Rows modal", value: "modal" },
+          { label: "Expand in place", value: "inline" },
+        ],
+        visibleWhen: (values) =>
+          values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
+      }),
+    );
+  }
+
+  fields.push(
     {
       key: "showInstructionsTab",
       label: "Show instructions tab",
@@ -233,8 +255,34 @@ function aiLabDevFields(
     },
     resourcePanelCompactDevField,
     { key: "title", label: "Level title", type: "text", group: "Header" },
-  ];
+  );
+  return fields;
 }
+
+const UPLOADED_DATASETS_DEV_KEY = "uploadedDatasets";
+
+const uploadDatasetsDevField: DevPanelField = {
+  key: UPLOADED_DATASETS_DEV_KEY,
+  label: "Add a dataset",
+  description:
+    "Dataset(s) you upload are stored in session storage. Use the template to ensure CSVs are formatted properly. Try to keep sets to a few hundred rows or less.",
+  type: "file",
+  accept: ".csv,text/csv",
+  multiple: true,
+  storage: "session",
+  group: "Data",
+  lockedShare: true,
+  buttonLabel: "Browse",
+  maxFiles: 20,
+  maxTotalSizeBytes: 1_500_000,
+  removable: true,
+  dropzone: true,
+  template: {
+    fileName: "ai-lab-dataset-template.csv",
+    content: datasetTemplateCsv,
+    label: "Download template",
+  },
+};
 
 function currentLevelIndex(path: string, links: LevelProgressLink[]) {
   const index = links.findIndex((link) => link.path === path);
@@ -258,10 +306,22 @@ export function AiLabLevelPage({
   resourcePanelWidth,
 }: AiLabLevelPageProps = {}) {
   const navigate = useNavigate();
-  const catalog = useMemo(
-    () => uniqueDevCatalog(config.dataset, aiLabStudioCatalog),
-    [config.dataset],
+  const sessionDatasets = Boolean(config.sessionDatasets);
+  const [uploadedSheets, setUploadedSheets] = useState<UploadedSheet[]>(() =>
+    config.sessionDatasets ? readUploadedSheets() : [],
   );
+  const uploadedDatasets = useMemo(
+    () => sheetsToDatasets(uploadedSheets),
+    [uploadedSheets],
+  );
+  const catalog = useMemo(
+    () =>
+      sessionDatasets
+        ? uploadedDatasets
+        : uniqueDevCatalog(config.dataset, aiLabStudioCatalog),
+    [sessionDatasets, uploadedDatasets, config.dataset],
+  );
+  const latestUploaded = uploadedDatasets[uploadedDatasets.length - 1];
   const {
     activeTab,
     setActiveTab,
@@ -269,15 +329,18 @@ export function AiLabLevelPage({
     setIsSettingsOpen,
     sidebarWidth,
     setSidebarWidth,
-  } = useLayoutState("instructions", { sidebarWidth: resourcePanelWidth });
+  } = useLayoutState(sessionDatasets ? "dev" : "instructions", { sidebarWidth: resourcePanelWidth });
   const { chatMessages, setChatMessages, chatInput, setChatInput } = useChatState([]);
   const versionHistoryState = useVersionHistoryState();
   const defaults = aiLabDevDefaults(config);
   const overrideResult = usePropsOverride({
     ...defaults,
-    showInstructionsTab: true,
+    ...(sessionDatasets
+      ? { presetDataset: latestUploaded?.id ?? AI_LAB_STUDENT_CHOICE }
+      : {}),
+    showInstructionsTab: !sessionDatasets,
     showContinueButton: true,
-    enableSidebarCollapse: false,
+    enableSidebarCollapse: sessionDatasets,
     collapseSidebarByDefault: false,
     resourcePanelCompact: false,
     title,
@@ -287,43 +350,74 @@ export function AiLabLevelPage({
   const presetDataset = String(resolved.presetDataset);
   const presetLabelColumn = String(resolved.presetLabelColumn);
   const cardTitleColumn = String(resolved.cardTitleColumn);
-  const presetFeatures = Array.isArray(resolved.presetFeatures)
-    ? resolved.presetFeatures.map(String)
-    : [];
   const workspaceTabs = String(resolved.workspaceTabs);
   const hideTrainPanel = Boolean(resolved.hideTrainPanel);
   const defaultDataView = String(resolved.defaultDataView);
   const bundleWideSplits = Boolean(resolved.bundleWideSplits);
   const trainingAnimation = String(resolved.trainingAnimation);
   const treeNodeDetail = String(resolved.treeNodeDetail);
-  const labelDataset =
-    findCatalogDataset(catalog, presetDataset) ?? config.dataset;
+  const presetFeatures = Array.isArray(resolved.presetFeatures)
+    ? resolved.presetFeatures.map(String)
+    : [];
+  const presetMatches = Boolean(findCatalogDataset(catalog, presetDataset));
+  const effectivePreset =
+    presetMatches || presetDataset === AI_LAB_STUDENT_CHOICE
+      ? presetDataset
+      : sessionDatasets && latestUploaded
+        ? latestUploaded.id
+        : presetDataset;
+  const selectedUpload = findCatalogDataset(catalog, effectivePreset);
+  const labelDataset = selectedUpload ?? config.dataset;
+  const datasetRevision =
+    uploadedSheets.find((sheet) => sheet.id === selectedUpload?.id)?.updatedAt ??
+    "";
+  useEffect(() => {
+    if (!sessionDatasets) return;
+    if (presetDataset === AI_LAB_STUDENT_CHOICE || presetMatches) return;
+    overrideResult.resetKey("presetDataset");
+  }, [
+    sessionDatasets,
+    presetDataset,
+    presetMatches,
+    overrideResult.resetKey,
+  ]);
   // Keyed on primitives so the config (and everything `useAiLabState`
   // derives from it) keeps its identity across unrelated page re-renders.
   const levelConfig = useMemo(
     () =>
       mergeAiLabDevConfig(
-        config,
+        sessionDatasets
+          ? {
+              ...config,
+              dataset: selectedUpload ?? config.dataset,
+              availableDatasets: catalog,
+              datasetRevision,
+              emptyDataset: catalog.length === 0 ? config.emptyDataset : undefined,
+            }
+          : config,
         {
-          algorithmLock,
-          presetDataset,
+          algorithmLock: sessionDatasets ? "decisionTree" : algorithmLock,
+          presetDataset: effectivePreset,
           presetLabelColumn,
           presetFeatures,
           cardTitleColumn,
           workspaceTabs,
           hideTrainPanel,
           defaultDataView,
-          bundleWideSplits,
-          trainingAnimation,
-          treeNodeDetail,
+          bundleWideSplits: sessionDatasets ? false : bundleWideSplits,
+          trainingAnimation: sessionDatasets ? "rows" : trainingAnimation,
+          treeNodeDetail: sessionDatasets ? "modal" : treeNodeDetail,
         },
         catalog,
       ),
     [
+      sessionDatasets,
       config,
+      selectedUpload,
       catalog,
+      datasetRevision,
       algorithmLock,
-      presetDataset,
+      effectivePreset,
       presetLabelColumn,
       presetFeatures,
       cardTitleColumn,
@@ -344,10 +438,15 @@ export function AiLabLevelPage({
     levelConfig.showExport ||
     levelConfig.requireDatasetChoice;
   const p0Instructions = config === aiLabP0Config;
+  const uploadInstructions = Boolean(config.sessionDatasets);
   const scaleInstructions = config === aiLabScaleConfig;
   const instructions =
     instructionsMarkdown ??
-    (p0Instructions
+    (uploadInstructions
+      ? lab.section === "test"
+        ? aiLabUploadInstructions.test
+        : aiLabUploadInstructions.dataset
+      : p0Instructions
       ? lab.section === "test"
         ? aiLabP0Instructions.test
         : aiLabP0Instructions.dataset
@@ -366,15 +465,27 @@ export function AiLabLevelPage({
               ? aiLabGuidedSectionInstructions.test
               : aiLabGuidedSectionInstructions.dataset
             : aiLabSectionInstructions[lab.section as AiLabSection]);
-  const devPanelFields = useMemo(
-    () =>
-      aiLabDevFields(
-        catalog,
-        labelDataset,
-        presetLabelColumn !== AI_LAB_STUDENT_CHOICE ? presetLabelColumn : undefined,
-      ),
-    [catalog, labelDataset, presetLabelColumn],
-  );
+  const devPanelFields = useMemo(() => {
+    const labelColumnId =
+      presetLabelColumn !== AI_LAB_STUDENT_CHOICE ? presetLabelColumn : undefined;
+    const fields = aiLabDevFields(catalog, labelDataset, {
+      fixedDecisionTree: sessionDatasets,
+      labelColumnId,
+    });
+    return sessionDatasets ? [uploadDatasetsDevField, ...fields] : fields;
+  }, [sessionDatasets, catalog, labelDataset, presetLabelColumn]);
+  const uploadedDatasetFieldValue = uploadedSheets.length
+    ? {
+        files: uploadedSheets.map((sheet) => ({
+          name: sheet.fileName,
+          path: sheet.fileName,
+          type: "text/csv",
+          size: sheet.csv.length,
+          content: sheet.csv,
+        })),
+        uploadedAt: uploadedSheets[uploadedSheets.length - 1]?.updatedAt,
+      }
+    : undefined;
 
   return (
     <Lab2Shell
@@ -421,6 +532,57 @@ export function AiLabLevelPage({
         instructionsContent: <MarkdownInstructions markdown={instructions} />,
         devPanelFields,
         devPanelOverrideResult: overrideResult,
+        devPanelSessionValues: sessionDatasets
+          ? { [UPLOADED_DATASETS_DEV_KEY]: uploadedDatasetFieldValue }
+          : undefined,
+        onDevPanelSessionValueChange: sessionDatasets
+          ? (key, value) => {
+              if (key !== UPLOADED_DATASETS_DEV_KEY) return;
+              const payload = value as {
+                files?: { name: string; content: string }[];
+                source?: string;
+              } | undefined;
+              const files = payload?.files ?? [];
+              if (payload?.source === "remove") {
+                const next = retainUploadedSheets(
+                  uploadedSheets,
+                  files.map((file) => file.name),
+                );
+                if (next.length === 0) {
+                  clearUploadedSheets();
+                } else {
+                  writeUploadedSheets(next);
+                }
+                setUploadedSheets(next);
+                const activeId = String(overrideResult.getValue("presetDataset"));
+                if (!next.some((sheet) => sheet.id === activeId)) {
+                  overrideResult.resetKey("presetDataset");
+                }
+                return;
+              }
+              if (files.length === 0) return;
+              const result = mergeUploadedSheets(uploadedSheets, files);
+              const unchanged = result.sheets === uploadedSheets;
+              if (unchanged) {
+                if (result.error) throw new Error(result.error);
+                return;
+              }
+              writeUploadedSheets(result.sheets);
+              setUploadedSheets(result.sheets);
+              if (result.focusId) {
+                overrideResult.setValue("presetDataset", result.focusId);
+              }
+              if (result.error) throw new Error(result.error);
+            }
+          : undefined,
+        onDevPanelSessionValueReset: sessionDatasets
+          ? (key) => {
+              if (key !== UPLOADED_DATASETS_DEV_KEY) return;
+              clearUploadedSheets();
+              setUploadedSheets([]);
+              overrideResult.resetKey("presetDataset");
+            }
+          : undefined,
       }}
       onResize={(delta) => {
         setSidebarWidth((prev) => Math.max(280, Math.min(520, prev + delta)));
@@ -445,6 +607,20 @@ export function AiLabScaleLevelPage() {
       continueLabel="Finish"
       continueTo="/levels"
       levelLinks={aiLabScaleLevelLinks}
+    />
+  );
+}
+
+export function AiLabUploadLevelPage() {
+  return (
+    <AiLabLevelPage
+      currentLevelPath="/levels/ailab-upload"
+      title="AI Lab: Train a model"
+      subtitle="Your data"
+      config={aiLabUploadConfig}
+      continueLabel="Finish"
+      continueTo="/levels"
+      levelLinks={aiLabUploadLevelLinks}
     />
   );
 }

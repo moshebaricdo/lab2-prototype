@@ -20,3 +20,7 @@ slug (`Has feathers` → `has_feathers`).
 
 Keep files modest (a few hundred rows). Everything trains in the browser and
 the spreadsheet renders every row.
+
+The starter file offered on **Add a dataset** lives one folder up
+(`../dataset-template.csv`). Keep it out of this folder so it does not join
+the studio catalog.
