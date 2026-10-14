@@ -16,6 +16,8 @@ interface DevPanelContentProps<T extends Record<string, unknown>> {
   sessionValues?: Record<string, unknown>;
   onSessionValueChange?: (key: string, value: unknown) => void;
   onSessionValueReset?: (key: string) => void;
+  /** Open every group card. Locked-level shares start this way. */
+  expandGroups?: boolean;
 }
 
 export function DevPanelContent<T extends Record<string, unknown>>({
@@ -24,6 +26,7 @@ export function DevPanelContent<T extends Record<string, unknown>>({
   sessionValues,
   onSessionValueChange,
   onSessionValueReset,
+  expandGroups = false,
 }: DevPanelContentProps<T>) {
   const { apiKey: tutorApiKey, setApiKey: setTutorApiKey } = useTutorApiSettings();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -110,7 +113,7 @@ export function DevPanelContent<T extends Record<string, unknown>>({
         <div className={styles.panelInner}>
           <div className={styles.fieldGroups}>
             {groups.map((group) => {
-              const isExpanded = expandedGroups[group.name] ?? false;
+              const isExpanded = expandedGroups[group.name] ?? expandGroups;
               const groupFieldsId = `dev-panel-group-${group.name.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
               return (

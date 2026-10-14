@@ -154,7 +154,7 @@ export function datasetDevOptions(
   catalog: AiLabDataset[],
 ): { label: string; value: string }[] {
   return [
-    { label: "Student chooses", value: AI_LAB_STUDENT_CHOICE },
+    { label: "User chooses", value: AI_LAB_STUDENT_CHOICE },
     ...catalog.map((dataset) => ({
       label: dataset.name,
       value: dataset.id,

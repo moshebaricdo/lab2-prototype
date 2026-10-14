@@ -37,6 +37,11 @@ export interface DevPanelFieldBase {
   storage?: "url" | "session";
   /** Hide fields that only apply when another control is enabled. */
   visibleWhen?: (values: DevPanelFieldValues) => boolean;
+  /**
+   * Keep this control on a locked-level share. Author-only chrome
+   * (header, resource panel) stays off the shared panel.
+   */
+  lockedShare?: boolean;
 }
 
 export interface DevPanelTextField extends DevPanelFieldBase {

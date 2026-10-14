@@ -216,6 +216,10 @@ export interface SidebarProps {
   devPanelShareParams?: DevPanelShareParamsProvider;
   onDevPanelSessionValueChange?: (key: string, value: unknown) => void;
   onDevPanelSessionValueReset?: (key: string) => void;
+  /** Share, save, and reset in the Dev tab header. Off on a locked-level share. */
+  devPanelHeaderActions?: boolean;
+  /** Open Dev group cards on first paint. Locked-level shares do this. */
+  devPanelExpandGroups?: boolean;
   /** Annotation mode state — passed down from Lab2Shell. */
   annotations?: UseAnnotationsResult;
   /** Assessment builder tab — in-lab authoring surface. */

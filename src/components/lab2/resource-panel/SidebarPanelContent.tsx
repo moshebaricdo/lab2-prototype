@@ -95,6 +95,8 @@ interface SidebarPanelContentProps {
   devPanelShareParams: SidebarProps["devPanelShareParams"];
   onDevPanelSessionValueChange: SidebarProps["onDevPanelSessionValueChange"];
   onDevPanelSessionValueReset: SidebarProps["onDevPanelSessionValueReset"];
+  devPanelHeaderActions: NonNullable<SidebarProps["devPanelHeaderActions"]>;
+  devPanelExpandGroups: NonNullable<SidebarProps["devPanelExpandGroups"]>;
   builderPanelContent: SidebarProps["builderPanelContent"];
   hasComposerContent: boolean;
   isTutorRequestRunning: boolean;
@@ -197,6 +199,8 @@ export function SidebarPanelContent({
   devPanelShareParams,
   onDevPanelSessionValueChange,
   onDevPanelSessionValueReset,
+  devPanelHeaderActions,
+  devPanelExpandGroups,
   builderPanelContent,
   hasComposerContent,
   isTutorRequestRunning,
@@ -260,7 +264,9 @@ export function SidebarPanelContent({
                 />
               </span>
             </Tooltip>
-          ) : activeTab === "dev" && devPanelOverrideResult ? (
+          ) : activeTab === "dev" &&
+            devPanelOverrideResult &&
+            devPanelHeaderActions ? (
             <DevPanelHeaderActions
               hasShareParams={devPanelHasShareParams}
               devPanelShareParams={devPanelShareParams}
@@ -374,6 +380,7 @@ export function SidebarPanelContent({
           sessionValues={devPanelSessionValues}
           onSessionValueChange={onDevPanelSessionValueChange}
           onSessionValueReset={onDevPanelSessionValueReset}
+          expandGroups={devPanelExpandGroups}
         />
       )}
       {isBuilderTab(activeTab) && (

@@ -23,6 +23,7 @@ import {
 } from "../../lib/levelShareLinks";
 import { Dialog } from "@moshebari/cads-react";
 import { AnnotationOverlay } from "./dev/AnnotationOverlay";
+import { lockedShareDevFields } from "./dev/lockedShareDevFields";
 import { BackpackProvider } from "../../hooks/BackpackContext";
 import { BackpackSeedEffect } from "./BackpackSeedEffect";
 import { BackpackSaveToasts } from "./BackpackSaveToasts";
@@ -154,6 +155,10 @@ export function Lab2Shell(props: Lab2ShellProps) {
   }
 
   const { onResize } = props;
+  const lockedLevelFields =
+    shareMode === "locked-level"
+      ? lockedShareDevFields(props.sidebarProps.devPanelFields)
+      : undefined;
   const sidebarProps = isShareMode
     ? {
         ...props.sidebarProps,
@@ -161,11 +166,21 @@ export function Lab2Shell(props: Lab2ShellProps) {
           ? false
           : props.sidebarProps.showContinueButton,
         onContinue: resolveFlowContinueHandler(props.sidebarProps.onContinue),
-        devPanelFields: undefined,
-        devPanelOverrideResult: undefined,
-        devPanelSessionValues: undefined,
-        onDevPanelSessionValueChange: undefined,
-        onDevPanelSessionValueReset: undefined,
+        devPanelFields: lockedLevelFields,
+        devPanelOverrideResult: lockedLevelFields
+          ? props.sidebarProps.devPanelOverrideResult
+          : undefined,
+        devPanelSessionValues: lockedLevelFields
+          ? props.sidebarProps.devPanelSessionValues
+          : undefined,
+        onDevPanelSessionValueChange: lockedLevelFields
+          ? props.sidebarProps.onDevPanelSessionValueChange
+          : undefined,
+        onDevPanelSessionValueReset: lockedLevelFields
+          ? props.sidebarProps.onDevPanelSessionValueReset
+          : undefined,
+        devPanelExpandGroups: Boolean(lockedLevelFields),
+        devPanelHeaderActions: false,
       }
     : props.sidebarProps;
   const resizeDisabled =

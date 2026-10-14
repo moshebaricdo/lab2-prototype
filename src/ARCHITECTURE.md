@@ -201,7 +201,7 @@ src/
 `App.tsx` composes route-level pages. Each page generally composes:
 
 1. `TopNavigation` from `components/ui/header` (CADS Global Header **labLevel** chrome: extraSmall outlined/text controls, lesson title + bubble progress indicator)
-2. `Lab2Shell` from `components/lab2`
+2. `Lab2Shell` from `components/lab2`. A locked-level share (`?share=locked-level`) keeps Dev fields marked `lockedShare` (AI Lab's Data, Workspace, Train, and Testing cards) and hides the rest of the Dev tab. Flow and other locked shares still hide the tab.
 3. `Sidebar` from `components/lab2/resource-panel`
 4. A level-specific workspace, such as `components/ide/weblab2/views/Workspace`, `components/ide/pythonlab/views/PythonWorkspace`, `components/ide/sketchlab/views/SketchLabWorkspace`, `components/ide/aichatlab/views/AiChatLabWorkspace`, `components/ide/ailab/views/AiLabWorkspace`, or an assessment workspace under `components/assessment/<type>/views`
 

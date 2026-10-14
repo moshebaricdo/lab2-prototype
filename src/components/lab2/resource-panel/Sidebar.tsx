@@ -116,6 +116,8 @@ export function Sidebar({
   devPanelShareParams,
   onDevPanelSessionValueChange,
   onDevPanelSessionValueReset,
+  devPanelHeaderActions = true,
+  devPanelExpandGroups = false,
   annotations,
   showBuilderTab = false,
   builderPanelContent,
@@ -440,6 +442,8 @@ export function Sidebar({
             devPanelShareParams={devPanelShareParams}
             onDevPanelSessionValueChange={onDevPanelSessionValueChange}
             onDevPanelSessionValueReset={onDevPanelSessionValueReset}
+            devPanelHeaderActions={devPanelHeaderActions}
+            devPanelExpandGroups={devPanelExpandGroups}
             builderPanelContent={builderPanelContent}
             hasComposerContent={hasComposerContent}
             isTutorRequestRunning={effectiveTutorRequestRunning}

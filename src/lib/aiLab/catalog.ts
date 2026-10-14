@@ -89,7 +89,7 @@ export function labelColumnDevOptions(
   dataset: AiLabDataset,
 ): { label: string; value: string }[] {
   return [
-    { label: "Student chooses", value: AI_LAB_STUDENT_CHOICE },
+    { label: "User chooses", value: AI_LAB_STUDENT_CHOICE },
     ...dataset.columns.map((column) => ({
       label: column.name,
       value: column.id,
