@@ -14,6 +14,8 @@ interface ColumnInspectorProps {
   isLabel?: boolean;
   isFeature?: boolean;
   canSelectLabel?: boolean;
+  /** Hide Add / Remove feature when the author locked the feature set. */
+  canToggleFeature?: boolean;
   onSelectLabel?: () => void;
   onToggleFeature?: () => void;
 }
@@ -25,6 +27,7 @@ export function ColumnInspector({
   isLabel = false,
   isFeature = false,
   canSelectLabel = true,
+  canToggleFeature = true,
   onSelectLabel,
   onToggleFeature,
 }: ColumnInspectorProps) {
@@ -109,15 +112,17 @@ export function ColumnInspector({
               {isLabel ? "Label selected" : "Select label"}
             </Button>
           ) : null}
-          <Button
-            size="small"
-            variant={isFeature ? "contained" : "outlined"}
-            color={isFeature ? "primary" : "secondary"}
-            disabled={isLabel}
-            onClick={onToggleFeature}
-          >
-            {isFeature ? "Remove feature" : "Add feature"}
-          </Button>
+          {canToggleFeature ? (
+            <Button
+              size="small"
+              variant={isFeature ? "contained" : "outlined"}
+              color={isFeature ? "primary" : "secondary"}
+              disabled={isLabel}
+              onClick={onToggleFeature}
+            >
+              {isFeature ? "Remove feature" : "Add feature"}
+            </Button>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -140,7 +140,11 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     (config.hideLabelSelect || config.lockLabelColumn
       ? dataset?.defaultLabelColumn
       : undefined);
-  const selectedFeatures = config.pretrained?.selectedFeatures ?? [];
+  const selectedFeatures = (
+    config.presetFeatures?.length
+      ? config.presetFeatures
+      : config.pretrained?.selectedFeatures ?? []
+  ).filter((id) => id !== labelColumn);
   const model =
     config.pretrained && selectedAlgorithm && dataset
       ? trainModel({
@@ -148,7 +152,7 @@ function initialState(config: AiLabLevelConfig): AiLabState {
           rows: dataset.rows,
           columns: dataset.columns,
           labelColumn: config.pretrained.labelColumn,
-          selectedFeatures: config.pretrained.selectedFeatures,
+          selectedFeatures,
           knnK: config.defaultKnnK,
         })
       : undefined;
@@ -201,7 +205,9 @@ function configIdentity(config: AiLabLevelConfig): string {
     config.hideTrainTab ? "1" : "0",
     config.hideLabelSelect ? "1" : "0",
     config.lockLabelColumn ? "1" : "0",
+    config.lockFeatures ? "1" : "0",
     config.presetLabelColumn ?? "",
+    (config.presetFeatures ?? []).join(","),
     config.cardTitleColumn ?? "",
     config.hideCardLayoutToggle ? "1" : "0",
     config.hideTestViewToggle ? "1" : "0",
@@ -418,9 +424,9 @@ export function useAiLabState(config: AiLabLevelConfig) {
     setState((current) => ({
       ...current,
       labelColumn: columnId,
-      selectedFeatures: current.selectedFeatures.filter(
-        (feature) => feature !== columnId,
-      ),
+      selectedFeatures: config.lockFeatures
+        ? current.selectedFeatures
+        : current.selectedFeatures.filter((feature) => feature !== columnId),
       model: undefined,
       lastPrediction: undefined,
       shownTest: undefined,
@@ -431,6 +437,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
   }, [config]);
 
   const setFeatures = useCallback((featureIds: string[]) => {
+    if (config.lockFeatures) return;
     setState((current) => {
       const selected = featureIds.filter(
         (feature) => feature !== current.labelColumn,
@@ -455,6 +462,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
   }, [config]);
 
   const toggleFeature = useCallback((columnId: string) => {
+    if (config.lockFeatures) return;
     setState((current) => {
       const selected = current.selectedFeatures.includes(columnId)
         ? current.selectedFeatures.filter((feature) => feature !== columnId)

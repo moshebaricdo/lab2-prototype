@@ -87,6 +87,8 @@ export interface DevPanelSelectField extends DevPanelFieldBase {
   options: { label: string; value: string }[];
   /** When "number", the selected string value is coerced to a number before writing. */
   valueType?: "string" | "number";
+  /** Checklist. The stored value is a string array. */
+  multiple?: boolean;
 }
 
 export interface DevPanelFileField extends DevPanelFieldBase {

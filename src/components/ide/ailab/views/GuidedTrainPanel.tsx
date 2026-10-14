@@ -87,21 +87,27 @@ export function GuidedTrainingBar({ lab }: GuidedTrainingBarProps) {
             onChange={(value) => lab.setLabelColumn(String(value))}
           />
         )}
-        <div className={styles.featureBlock}>
-          <p className={styles.muted}>Based on</p>
-          <div className={styles.featureList}>
-            {featureColumns.map((column) => (
-              <label key={column.id} className={styles.featureItem}>
-                <Checkbox
-                  size="small"
-                  checked={lab.selectedFeatures.includes(column.id)}
-                  onChange={() => lab.toggleFeature(column.id)}
-                />
-                <span>{column.name}</span>
-              </label>
-            ))}
+        <Tooltip
+          title={lab.config.lockFeatures ? "You can't change this" : ""}
+          placement="top"
+        >
+          <div className={styles.featureBlock}>
+            <p className={styles.muted}>Based on</p>
+            <div className={styles.featureList}>
+              {featureColumns.map((column) => (
+                <label key={column.id} className={styles.featureItem}>
+                  <Checkbox
+                    size="small"
+                    checked={lab.selectedFeatures.includes(column.id)}
+                    disabled={Boolean(lab.config.lockFeatures)}
+                    onChange={() => lab.toggleFeature(column.id)}
+                  />
+                  <span>{column.name}</span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        </Tooltip>
         {lab.selectedAlgorithm === "knn" ? (
           <SegmentedButton
             size="extraSmall"

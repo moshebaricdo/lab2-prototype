@@ -185,6 +185,30 @@ function BooleanField({ value, controlId, onChange }: FieldProps) {
 
 function SelectField({ field, value, onChange }: FieldProps) {
   if (field.type !== "select") return null;
+  const options = field.options.map((option) => ({
+    value: option.value,
+    label: option.label,
+  }));
+  if (field.multiple) {
+    const selected = Array.isArray(value) ? value.map(String) : [];
+    return (
+      <Dropdown
+        role="input"
+        menuType="checklist"
+        aria-label={field.label}
+        value={selected}
+        onChange={(raw) => {
+          const next = Array.isArray(raw) ? raw.map(String) : [];
+          onChange(next);
+        }}
+        options={options}
+        placeholder="User chooses"
+        size="small"
+        color="secondary"
+        width="full"
+      />
+    );
+  }
   return (
     <Dropdown
       role="input"
@@ -194,10 +218,7 @@ function SelectField({ field, value, onChange }: FieldProps) {
         const next = Array.isArray(raw) ? raw[0] ?? "" : raw;
         onChange(field.valueType === "number" ? Number(next) : next);
       }}
-      options={field.options.map((option) => ({
-        value: option.value,
-        label: option.label,
-      }))}
+      options={options}
       placeholder=""
       size="small"
       color="secondary"

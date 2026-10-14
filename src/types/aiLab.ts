@@ -278,6 +278,14 @@ export interface AiLabLevelConfig {
    */
   presetLabelColumn?: string;
   /**
+   * Feature column ids checked under Using when the sheet opens.
+   * Empty leaves that choice to the user, unless a pretrained model
+   * already picked features. A non-empty list also sets `lockFeatures`.
+   */
+  presetFeatures?: string[];
+  /** Show Using but lock it to `presetFeatures`. Hover says "You can't change this". */
+  lockFeatures?: boolean;
+  /**
    * Click-to-edit cells and Add row. Defaults on. Curriculum levels can lock
    * the sheet as a read-only table.
    */

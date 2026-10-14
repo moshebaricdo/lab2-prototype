@@ -25,9 +25,11 @@ import {
   aiLabTrainYourselfConfig,
 } from "../../data/ailab";
 import {
+  AI_LAB_STUDENT_CHOICE,
   aiLabDevDefaults,
   cardTitleColumnDevOptions,
   datasetDevOptions,
+  featureColumnDevOptions,
   findCatalogDataset,
   labelColumnDevOptions,
   mergeAiLabDevConfig,
@@ -71,7 +73,9 @@ function aiLabControl<T extends DevPanelField>(field: T): T {
 function aiLabDevFields(
   catalog: ReturnType<typeof uniqueDevCatalog>,
   labelDataset: (typeof catalog)[number],
+  labelColumnId?: string,
 ): DevPanelField[] {
+  const featureOptions = featureColumnDevOptions(labelDataset, labelColumnId);
   return [
     aiLabControl({
       key: "presetDataset",
@@ -90,6 +94,17 @@ function aiLabDevFields(
       type: "select",
       group: "Data",
       options: labelColumnDevOptions(labelDataset),
+    }),
+    aiLabControl({
+      key: "presetFeatures",
+      label: "Feature columns",
+      description:
+        "Columns checked under Using when the sheet opens. Leave this empty and the user chooses.",
+      type: "select",
+      multiple: true,
+      group: "Data",
+      options: featureOptions,
+      visibleWhen: () => featureOptions.length > 0,
     }),
     aiLabControl({
       key: "cardTitleColumn",
@@ -272,6 +287,9 @@ export function AiLabLevelPage({
   const presetDataset = String(resolved.presetDataset);
   const presetLabelColumn = String(resolved.presetLabelColumn);
   const cardTitleColumn = String(resolved.cardTitleColumn);
+  const presetFeatures = Array.isArray(resolved.presetFeatures)
+    ? resolved.presetFeatures.map(String)
+    : [];
   const workspaceTabs = String(resolved.workspaceTabs);
   const hideTrainPanel = Boolean(resolved.hideTrainPanel);
   const defaultDataView = String(resolved.defaultDataView);
@@ -290,6 +308,7 @@ export function AiLabLevelPage({
           algorithmLock,
           presetDataset,
           presetLabelColumn,
+          presetFeatures,
           cardTitleColumn,
           workspaceTabs,
           hideTrainPanel,
@@ -306,6 +325,7 @@ export function AiLabLevelPage({
       algorithmLock,
       presetDataset,
       presetLabelColumn,
+      presetFeatures,
       cardTitleColumn,
       workspaceTabs,
       hideTrainPanel,
@@ -347,8 +367,13 @@ export function AiLabLevelPage({
               : aiLabGuidedSectionInstructions.dataset
             : aiLabSectionInstructions[lab.section as AiLabSection]);
   const devPanelFields = useMemo(
-    () => aiLabDevFields(catalog, labelDataset),
-    [catalog, labelDataset],
+    () =>
+      aiLabDevFields(
+        catalog,
+        labelDataset,
+        presetLabelColumn !== AI_LAB_STUDENT_CHOICE ? presetLabelColumn : undefined,
+      ),
+    [catalog, labelDataset, presetLabelColumn],
   );
 
   return (

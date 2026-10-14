@@ -3,7 +3,7 @@ import type {
   AiLabDataset,
   AiLabLevelConfig,
 } from "../../types/aiLab";
-import { categoryCheck } from "./cardinality";
+import { categoryCheck, columnUsable } from "./cardinality";
 
 /** Studio testing-only example: small labeled sheet that trains instantly. */
 export const AI_LAB_TESTING_ONLY_DATASET_ID = "iris_species";
@@ -97,6 +97,29 @@ export function labelColumnDevOptions(
   ];
 }
 
+export function featureColumnDevOptions(
+  dataset: AiLabDataset,
+  labelColumnId?: string,
+): { label: string; value: string }[] {
+  return dataset.columns
+    .filter((column) => column.id !== labelColumnId)
+    .filter((column) => columnUsable(dataset.rows, dataset.columns, column.id))
+    .map((column) => ({ label: column.name, value: column.id }));
+}
+
+/** Column ids from a feature checklist that still exist on this sheet. */
+export function resolvePresetFeatures(
+  dataset: AiLabDataset,
+  preset: unknown,
+  labelColumnId?: string,
+): string[] {
+  if (!Array.isArray(preset)) return [];
+  const allowed = new Set(
+    featureColumnDevOptions(dataset, labelColumnId).map((option) => option.value),
+  );
+  return preset.filter((id): id is string => typeof id === "string" && allowed.has(id));
+}
+
 export function cardTitleColumnDevOptions(
   dataset: AiLabDataset,
 ): { label: string; value: string }[] {
@@ -117,11 +140,15 @@ export function pretrainedFromDataset(
   dataset: AiLabDataset,
   algorithm: AiLabAlgorithmId,
   labelColumnId?: string,
+  featureIds?: string[],
 ): NonNullable<AiLabLevelConfig["pretrained"]> {
   const labelColumn =
     resolvePresetLabelColumn(dataset, labelColumnId) ??
     dataset.defaultLabelColumn;
-  const selectedFeatures = dataset.columns
+  const chosen = resolvePresetFeatures(dataset, featureIds, labelColumn);
+  const selectedFeatures = chosen.length
+    ? chosen
+    : dataset.columns
     .filter((column) => column.id !== labelColumn)
     .filter((column) => {
       if (/^id$/i.test(column.id) || /^id$/i.test(column.name)) return false;

@@ -4,6 +4,7 @@ import {
   findCatalogDataset,
   pretrainedFromDataset,
   resolveOptionalColumn,
+  resolvePresetFeatures,
   resolvePresetLabelColumn,
   testingOnlyDataset,
 } from "./catalog";
@@ -14,6 +15,7 @@ export interface AiLabDevOverrides {
   presetDataset: string;
   presetLabelColumn: string;
   cardTitleColumn: string;
+  presetFeatures: string[];
   workspaceTabs: string;
   hideTrainPanel: boolean;
   defaultDataView: string;
@@ -35,6 +37,7 @@ export function aiLabDevDefaults(
       : AI_LAB_STUDENT_CHOICE,
     presetLabelColumn: lockedLabel ?? AI_LAB_STUDENT_CHOICE,
     cardTitleColumn: config.cardTitleColumn ?? AI_LAB_STUDENT_CHOICE,
+    presetFeatures: config.presetFeatures ?? [],
     workspaceTabs: config.hideDatasetTab
       ? "test"
       : config.hideTestTab
@@ -82,6 +85,11 @@ export function mergeAiLabDevConfig(
     dataset,
     resolved.cardTitleColumn,
   );
+  const presetFeatures = resolvePresetFeatures(
+    dataset,
+    resolved.presetFeatures,
+    presetLabelColumn,
+  );
   const chosenAlgorithm = asAlgorithm(resolved.algorithmLock);
   const needsPretrained = hideDatasetTab || (hideTrainTab && !hideTestTab);
   const pretrainedAlgorithm =
@@ -94,11 +102,15 @@ export function mergeAiLabDevConfig(
           ...base.pretrained,
           algorithm: pretrainedAlgorithm ?? base.pretrained.algorithm,
           labelColumn: presetLabelColumn ?? base.pretrained.labelColumn,
+          selectedFeatures: presetFeatures.length
+            ? presetFeatures
+            : base.pretrained.selectedFeatures,
         }
       : pretrainedFromDataset(
           dataset,
           pretrainedAlgorithm ?? "decisionTree",
           presetLabelColumn,
+          presetFeatures,
         )
     : sameDatasetAsBase
       ? base.pretrained
@@ -117,6 +129,8 @@ export function mergeAiLabDevConfig(
     hideLabelSelect: presetLabelColumn ? false : base.hideLabelSelect,
     lockLabelColumn: Boolean(presetLabelColumn),
     presetLabelColumn,
+    presetFeatures,
+    lockFeatures: presetFeatures.length > 0,
     cardTitleColumn,
     showExport: Boolean(base.showExport),
     showModelDetails: Boolean(base.showModelDetails),

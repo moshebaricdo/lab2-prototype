@@ -63,6 +63,7 @@ export function DatasetViews({
               canSelectLabel={
                 !lab.config.hideLabelSelect && !lab.config.lockLabelColumn
               }
+              canToggleFeature={!lab.config.lockFeatures}
               onSelectLabel={() => lab.setLabelColumn(selected.id)}
               onToggleFeature={() => lab.toggleFeature(selected.id)}
             />
