@@ -59,8 +59,8 @@ interface ShellProps
   /** Drop the Predict … based on … sentence; the body carries the columns itself. */
   hideStatement?: boolean;
   /**
-   * Figma footer: **Back to dataset** and the close button are there the
-   * whole time; the primary reads **Skip →**, then **Continue →**.
+   * Sort-and-quiz footer: **Cancel** while the walk is running, then
+   * **Back to dataset**. The primary reads **Skip →**, then **Continue →**.
    */
   persistentBack?: boolean;
   /** Restart and pause on the footer's left (pause hides once it's done). */
@@ -76,8 +76,8 @@ export interface TrainingPlayback {
 
 /**
  * The CADS Modal chrome both training animations share: fixed title, the
- * statement sentence, a live status line, and the Skip → Back to data /
- * Test model footer.
+ * statement sentence, a live status line, and the Skip → Continue footer.
+ * The side button is Cancel while a walk is running, then Back to dataset.
  */
 export function TrainingModalShell({
   open,
@@ -126,7 +126,7 @@ export function TrainingModalShell({
       isDismissable={done || persistentBack}
       hasSecondaryAction={done || persistentBack}
       primaryActionLabel={primaryLabel}
-      secondaryActionLabel={persistentBack ? "Cancel" : "Back to data"}
+      secondaryActionLabel={done ? "Back to dataset" : "Cancel"}
       onPrimaryAction={done ? (canTest ? onTest : onClose) : onSkip}
       onSecondaryAction={done || persistentBack ? onClose : undefined}
       onClose={done || persistentBack ? onClose : undefined}

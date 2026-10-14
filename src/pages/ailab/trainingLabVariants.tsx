@@ -31,7 +31,7 @@ export interface TrainingVariant {
   title?: (state: WalkState) => ReactNode;
   /** Drop the Predict … based on … row under the modal header. */
   hideStatement?: boolean;
-  /** Back to dataset always shown; Skip → / Continue → (see `TrainingModalShell`). */
+  /** Cancel while the walk runs, then Back to dataset; Skip → / Continue →. */
   persistentBack?: boolean;
   /** Modal width; defaults to 880. */
   maxWidth?: number;
