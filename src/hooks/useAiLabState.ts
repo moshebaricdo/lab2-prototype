@@ -154,6 +154,8 @@ function initialState(config: AiLabLevelConfig): AiLabState {
           labelColumn: config.pretrained.labelColumn,
           selectedFeatures,
           knnK: config.defaultKnnK,
+          holdoutCount: config.holdoutCount,
+          randomizeTestData: config.randomizeTestData,
         })
       : undefined;
 
@@ -219,6 +221,7 @@ function configIdentity(config: AiLabLevelConfig): string {
     config.introActivity?.mode ?? "",
     String(config.defaultKnnK ?? ""),
     String(config.holdoutCount ?? ""),
+    config.randomizeTestData ? "1" : "0",
     pretrained,
   ].join("|");
 }
@@ -574,6 +577,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
         holdoutCount:
           config.holdoutCount ??
           (config.defaultKnnK != null ? 0 : undefined),
+        randomizeTestData: config.randomizeTestData,
       });
       return {
         ...current,

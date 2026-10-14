@@ -98,39 +98,36 @@ export type AiLabLabelCounts = Record<string, number>;
 export interface AiLabDecisionLeaf {
   type: "leaf";
   pathKey: string;
+  /** Class name, or the regression mean rounded the way the production tree draws it. */
   prediction: string;
+  /** Exact regression mean. Classification leaves omit it. */
+  rawPrediction?: number;
   sampleCount: number;
   labelCounts: AiLabLabelCounts;
 }
 
-export interface AiLabCategoricalSplit {
+/**
+ * One CART question. A row goes left when its encoded value is strictly
+ * below `threshold`, and right otherwise. Categorical columns are first-seen
+ * codes; `leftValues` / `rightValues` are the categories on each side.
+ */
+export interface AiLabDecisionSplit {
   type: "decision";
   pathKey: string;
   feature: string;
-  splitType: "categorical";
-  sampleCount: number;
-  labelCounts: AiLabLabelCounts;
-  impurityReduction: number;
-  children: Record<string, AiLabTreeNode>;
-}
-
-export interface AiLabNumericalSplit {
-  type: "decision";
-  pathKey: string;
-  feature: string;
-  splitType: "numerical";
+  splitType: "numerical" | "categorical";
   threshold: number;
+  leftValues?: string[];
+  rightValues?: string[];
   sampleCount: number;
   labelCounts: AiLabLabelCounts;
+  /** Gini gain for classification, sum of squared errors for regression. */
   impurityReduction: number;
   left: AiLabTreeNode;
   right: AiLabTreeNode;
 }
 
-export type AiLabTreeNode =
-  | AiLabDecisionLeaf
-  | AiLabCategoricalSplit
-  | AiLabNumericalSplit;
+export type AiLabTreeNode = AiLabDecisionLeaf | AiLabDecisionSplit;
 
 export interface AiLabTreeTraceStep {
   pathKey: string;
@@ -141,6 +138,8 @@ export interface AiLabTreeTraceStep {
 
 export interface AiLabTreeTrace {
   prediction: string;
+  /** Exact regression mean, when the leaf has one. */
+  rawPrediction?: number;
   pathKeys: string[];
   steps: AiLabTreeTraceStep[];
 }
@@ -186,19 +185,26 @@ export interface AiLabTrainedModel {
   labelColumn: string;
   selectedFeatures: string[];
   /**
-   * Rows kept out of training: the last 10% of the sheet, unless a level
-   * sets `holdoutCount` (0 opts out). The testing tree and each node's
-   * rows modal count these. Empty when a level opts out.
+   * Rows kept out of training: `Math.ceil(10%)`, from the end of the sheet
+   * unless the level drew them at random. `holdoutCount` overrides the
+   * count (0 opts out). The testing tree and each node's rows modal count
+   * these. Empty when a level opts out.
    */
   holdoutRowIndexes: number[];
   /**
    * Scored rows used for reported accuracy. KNN: the reserved rows that
-   * also selected k. Decision tree: every current sheet row — the reserved
-   * rows are held out of training, and the scorecard still lists the sheet.
+   * also selected k. Decision tree: the rows the tree was trained on.
+   * The reserved rows still choose the depth, and the diagram counts them
+   * separately.
    */
   holdoutResults: AiLabHoldoutResult[];
   accuracy: number;
   tree?: AiLabTreeNode;
+  /**
+   * Depth the decision-tree sweep kept. Production tries 1, 2, 3, 5, and 8,
+   * and keeps the shallowest tree tied for best holdout accuracy.
+   */
+  maxDepth?: number;
   knnK?: number;
 }
 
@@ -363,6 +369,12 @@ export interface AiLabLevelConfig {
   trainAsOverlay?: boolean;
   defaultKnnK?: number;
   holdoutCount?: number;
+  /**
+   * Reserve a random 10% for testing instead of the last rows. Production's
+   * `randomizeTestData`. Off everywhere unless a level (or the upload
+   * level's Dev panel) turns it on.
+   */
+  randomizeTestData?: boolean;
   pretrained?: {
     algorithm: AiLabAlgorithmId;
     labelColumn: string;

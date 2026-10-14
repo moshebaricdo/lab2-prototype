@@ -4,9 +4,16 @@ import type {
   AiLabDataRow,
   AiLabHoldoutResult,
   AiLabTrainedModel,
+  AiLabTreeNode,
 } from "../../types/aiLab";
 import { columnType, numericalStats } from "./columnStats";
-import { trainDecisionTree, traceDecisionTree } from "./decisionTree";
+import {
+  CART_MAX_DEPTHS,
+  cartPredictionCorrect,
+  cartRegressionTolerance,
+  traceDecisionTree,
+  trainDecisionTree,
+} from "./decisionTree";
 import {
   classificationKCandidates,
   DEFAULT_KNN_K,
@@ -16,21 +23,55 @@ import {
   regressionKnnK,
 } from "./knn";
 
-/** Last 10% of the sheet, matching AI Lab's reserved test split (end). */
+/**
+ * Last 10% of the sheet, matching AI Lab's reserved test split (end).
+ * Production uses `Math.ceil`, so 14 rows reserve 2 and 52 reserve 6.
+ * A one-row sheet reserves nothing, so training is never empty.
+ */
 export const HOLDOUT_FRACTION = 0.1;
+
+function reservedCount(rowCount: number, holdoutCount?: number): number {
+  if (rowCount <= 1) return 0;
+  const count =
+    holdoutCount === undefined
+      ? Math.ceil(rowCount * HOLDOUT_FRACTION)
+      : holdoutCount;
+  if (count <= 0) return 0;
+  return Math.min(count, rowCount - 1);
+}
 
 export function holdoutIndexes(
   rowCount: number,
   holdoutCount?: number,
 ): number[] {
-  if (rowCount <= 1) return [];
-  const count =
-    holdoutCount === undefined
-      ? Math.max(1, Math.round(rowCount * HOLDOUT_FRACTION))
-      : holdoutCount;
-  if (count <= 0) return [];
-  const take = Math.min(count, rowCount - 1);
+  const take = reservedCount(rowCount, holdoutCount);
+  if (take === 0) return [];
   return Array.from({ length: take }, (_, index) => rowCount - take + index);
+}
+
+/**
+ * Production's random reserve (`randomizeTestData`). Same count as the
+ * end split. The draw matches `getRandomInt(length - 1)`, which never
+ * selects the current last index, so the sheet's last row stays in
+ * training. Returned indexes are in sheet order.
+ */
+export function randomHoldoutIndexes(
+  rowCount: number,
+  holdoutCount?: number,
+  random: () => number = Math.random,
+): number[] {
+  const take = reservedCount(rowCount, holdoutCount);
+  if (take === 0) return [];
+  const pool = Array.from({ length: rowCount }, (_, index) => index);
+  const reserved: number[] = [];
+  while (reserved.length < take) {
+    const index = Math.floor(random() * Math.floor(pool.length - 1));
+    const picked = pool.splice(index, 1)[0];
+    if (picked === undefined) break;
+    reserved.push(picked);
+  }
+  reserved.sort((left, right) => left - right);
+  return reserved;
 }
 
 export function trainingRows(
@@ -190,6 +231,84 @@ export function chooseKnnK(options: {
   return bestK;
 }
 
+function scoreTreeRow(
+  rows: AiLabDataRow[],
+  columns: AiLabColumn[],
+  labelColumn: string,
+  rowIndex: number,
+  tree: AiLabTreeNode,
+  tolerance: number,
+): AiLabHoldoutResult {
+  const row = rows[rowIndex]!;
+  const trace = traceDecisionTree(tree, row);
+  return {
+    rowIndex,
+    actual: String(row[labelColumn] ?? ""),
+    predicted: trace.prediction,
+    correct: cartPredictionCorrect(tree, row, labelColumn, columns, tolerance),
+  };
+}
+
+/**
+ * Train one tree per candidate depth and keep the one production would
+ * keep: highest holdout accuracy, shallowest depth on a tie. With nothing
+ * held out, only depth 1 is trained.
+ */
+function selectDecisionTree(options: {
+  rows: AiLabDataRow[];
+  trainSet: AiLabDataRow[];
+  columns: AiLabColumn[];
+  features: string[];
+  labelColumn: string;
+  holdoutRowIndexes: number[];
+  tolerance: number;
+}): { tree: AiLabTreeNode; maxDepth: number } {
+  const depths =
+    options.holdoutRowIndexes.length === 0 ? [1] : [...CART_MAX_DEPTHS];
+  let bestTree: AiLabTreeNode | undefined;
+  let bestDepth = depths[0]!;
+  let bestAccuracy = -1;
+  for (const maxDepth of depths) {
+    const tree = trainDecisionTree(
+      options.trainSet,
+      options.columns,
+      options.features,
+      options.labelColumn,
+      { maxDepth, encodingRows: options.rows },
+    );
+    if (!bestTree) {
+      bestTree = tree;
+      bestDepth = maxDepth;
+    }
+    if (options.holdoutRowIndexes.length === 0) break;
+    let correct = 0;
+    for (const rowIndex of options.holdoutRowIndexes) {
+      const row = options.rows[rowIndex];
+      if (
+        row &&
+        cartPredictionCorrect(
+          tree,
+          row,
+          options.labelColumn,
+          options.columns,
+          options.tolerance,
+        )
+      ) {
+        correct += 1;
+      }
+    }
+    const accuracy = parseFloat(
+      ((correct / options.holdoutRowIndexes.length) * 100).toFixed(2),
+    );
+    if (accuracy > bestAccuracy) {
+      bestAccuracy = accuracy;
+      bestTree = tree;
+      bestDepth = maxDepth;
+    }
+  }
+  return { tree: bestTree!, maxDepth: bestDepth };
+}
+
 export function predictRow(
   model: AiLabTrainedModel,
   row: AiLabDataRow,
@@ -218,26 +337,40 @@ export function trainModel(options: {
   selectedFeatures: string[];
   knnK?: number;
   holdoutCount?: number;
+  /** Draw the reserved rows at random. Off keeps the last 10%. */
+  randomizeTestData?: boolean;
   holdoutRowIndexes?: number[];
 }): AiLabTrainedModel {
-  // Both algorithms reserve the last 10% (`holdoutCount` overrides; 0 opts
-  // out). The tree is trained on the rest. KNN also picks k on this split.
+  // Both algorithms reserve 10% (`holdoutCount` overrides; 0 opts out).
+  // The default is the last rows. `randomizeTestData` draws them at random.
+  // The tree is trained on the rest. KNN also picks k on this split.
   const holdoutRowIndexes =
     options.holdoutRowIndexes ??
-    holdoutIndexes(options.rows.length, options.holdoutCount);
+    (options.randomizeTestData
+      ? randomHoldoutIndexes(options.rows.length, options.holdoutCount)
+      : holdoutIndexes(options.rows.length, options.holdoutCount));
   const trainSet =
     holdoutRowIndexes.length > 0
       ? trainingRows(options.rows, holdoutRowIndexes)
       : options.rows;
-  const tree =
+  const treeTolerance =
+    options.algorithm === "decisionTree" &&
+    columnType(options.columns, options.labelColumn) === "numerical"
+      ? cartRegressionTolerance(options.rows, options.labelColumn)
+      : 0;
+  const treeSelection =
     options.algorithm === "decisionTree"
-      ? trainDecisionTree(
+      ? selectDecisionTree({
+          rows: options.rows,
           trainSet,
-          options.columns,
-          options.selectedFeatures,
-          options.labelColumn,
-        )
+          columns: options.columns,
+          features: options.selectedFeatures,
+          labelColumn: options.labelColumn,
+          holdoutRowIndexes,
+          tolerance: treeTolerance,
+        })
       : undefined;
+  const tree = treeSelection?.tree;
 
   const knnRankings =
     options.algorithm === "knn" && holdoutRowIndexes.length > 0
@@ -269,44 +402,58 @@ export function trainModel(options: {
     holdoutResults: [],
     accuracy: 0,
     tree,
+    maxDepth: treeSelection?.maxDepth,
     knnK,
   };
 
+  const reserved = new Set(holdoutRowIndexes);
+  const trainedRowIndexes = options.rows
+    .map((_, index) => index)
+    .filter((index) => !reserved.has(index));
   const scored =
-    options.algorithm === "knn" && knnRankings && knnK != null
-      ? holdoutRowIndexes.map((rowIndex, index) =>
-          scorePrediction(
+    options.algorithm === "decisionTree" && tree
+      ? trainedRowIndexes.map((rowIndex) =>
+          scoreTreeRow(
             options.rows,
             options.columns,
             options.labelColumn,
             rowIndex,
-            voteFromRanking(
-              options.rows,
-              options.labelColumn,
-              knnRankings[index]!,
-              knnK,
-            ),
+            tree,
+            treeTolerance,
           ),
         )
-      : options.rows.map((row, rowIndex) =>
-          scorePrediction(
-            options.rows,
-            options.columns,
-            options.labelColumn,
-            rowIndex,
-            options.algorithm === "knn"
-              ? predictKnn(
-                  options.rows,
-                  row,
-                  options.selectedFeatures,
-                  options.labelColumn,
-                  options.columns,
-                  knnK,
-                  [rowIndex],
-                ).prediction
-              : predictRow(draft, row, options.rows, options.columns),
-          ),
-        );
+      : options.algorithm === "knn" && knnRankings && knnK != null
+        ? holdoutRowIndexes.map((rowIndex, index) =>
+            scorePrediction(
+              options.rows,
+              options.columns,
+              options.labelColumn,
+              rowIndex,
+              voteFromRanking(
+                options.rows,
+                options.labelColumn,
+                knnRankings[index]!,
+                knnK,
+              ),
+            ),
+          )
+        : options.rows.map((row, rowIndex) =>
+            scorePrediction(
+              options.rows,
+              options.columns,
+              options.labelColumn,
+              rowIndex,
+              predictKnn(
+                options.rows,
+                row,
+                options.selectedFeatures,
+                options.labelColumn,
+                options.columns,
+                knnK,
+                [rowIndex],
+              ).prediction,
+            ),
+          );
   const correctCount = scored.filter((result) => result.correct).length;
 
   return {

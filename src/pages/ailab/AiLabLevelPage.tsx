@@ -165,6 +165,19 @@ function aiLabDevFields(
     }),
   ];
 
+  if (options.fixedDecisionTree) {
+    fields.push(
+      aiLabControl({
+        key: "randomizeTestData",
+        label: "Random test rows",
+        description:
+          "Reserve random rows for testing instead of the last rows. Off keeps the last 10% of the sheet.",
+        type: "boolean",
+        group: "Data",
+      }),
+    );
+  }
+
   if (!options.fixedDecisionTree) {
     fields.push(
       aiLabControl({
@@ -356,6 +369,7 @@ export function AiLabLevelPage({
   const bundleWideSplits = Boolean(resolved.bundleWideSplits);
   const trainingAnimation = String(resolved.trainingAnimation);
   const treeNodeDetail = String(resolved.treeNodeDetail);
+  const randomizeTestData = Boolean(resolved.randomizeTestData);
   const presetFeatures = Array.isArray(resolved.presetFeatures)
     ? resolved.presetFeatures.map(String)
     : [];
@@ -407,6 +421,7 @@ export function AiLabLevelPage({
           bundleWideSplits: sessionDatasets ? false : bundleWideSplits,
           trainingAnimation: sessionDatasets ? "rows" : trainingAnimation,
           treeNodeDetail: sessionDatasets ? "modal" : treeNodeDetail,
+          randomizeTestData,
         },
         catalog,
       ),
@@ -427,6 +442,7 @@ export function AiLabLevelPage({
       bundleWideSplits,
       trainingAnimation,
       treeNodeDetail,
+      randomizeTestData,
     ],
   );
   const lab = useAiLabState(levelConfig);

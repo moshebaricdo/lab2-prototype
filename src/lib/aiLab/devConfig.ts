@@ -22,6 +22,7 @@ export interface AiLabDevOverrides {
   bundleWideSplits: boolean;
   trainingAnimation: string;
   treeNodeDetail: string;
+  randomizeTestData: boolean;
 }
 
 export function aiLabDevDefaults(
@@ -48,6 +49,7 @@ export function aiLabDevDefaults(
     bundleWideSplits: Boolean(config.bundleWideSplits),
     trainingAnimation: config.trainingAnimation ?? "rows",
     treeNodeDetail: config.treeNodeDetail ?? "modal",
+    randomizeTestData: Boolean(config.randomizeTestData),
   };
 }
 
@@ -143,6 +145,7 @@ export function mergeAiLabDevConfig(
     bundleWideSplits: Boolean(resolved.bundleWideSplits),
     trainingAnimation: resolved.trainingAnimation === "tree" ? "tree" : "rows",
     treeNodeDetail: resolved.treeNodeDetail === "inline" ? "inline" : "modal",
+    randomizeTestData: Boolean(resolved.randomizeTestData),
     pretrained,
     initialSection: !sheetReady
       ? "dataset"

@@ -8,7 +8,12 @@ import {
   regressionKnnK,
 } from "./knn";
 import { nodeVisits, rowsByNode } from "./decisionTree";
-import { holdoutIndexes, isPredictionCorrect, trainModel } from "./train";
+import {
+  holdoutIndexes,
+  isPredictionCorrect,
+  randomHoldoutIndexes,
+  trainModel,
+} from "./train";
 
 const columns: AiLabColumn[] = [
   { id: "x", name: "x", type: "numerical", description: "" },
@@ -53,10 +58,20 @@ describe("holdoutIndexes", () => {
     expect(holdoutIndexes(1000)).toEqual(
       Array.from({ length: 100 }, (_, index) => 900 + index),
     );
+    expect(holdoutIndexes(14)).toHaveLength(2);
+    expect(holdoutIndexes(52)).toHaveLength(6);
   });
 
   it("returns no holdout when count is 0", () => {
     expect(holdoutIndexes(100, 0)).toEqual([]);
+  });
+
+  it("draws the same count at random and never the last row", () => {
+    const drawn = randomHoldoutIndexes(20, undefined, () => 0);
+    expect(drawn).toEqual([0, 1]);
+    expect(randomHoldoutIndexes(52)).toHaveLength(6);
+    expect(randomHoldoutIndexes(52)).not.toContain(51);
+    expect(randomHoldoutIndexes(14, 0)).toEqual([]);
   });
 });
 
@@ -149,7 +164,10 @@ describe("trainModel decision tree", () => {
     });
     expect(model.holdoutRowIndexes).toEqual(holdoutIndexes(20));
     expect(model.tree?.sampleCount).toBe(rows.length - model.holdoutRowIndexes.length);
-    expect(model.holdoutResults).toHaveLength(rows.length);
+    const trainedIndexes = rows
+      .map((_, index) => index)
+      .filter((index) => !model.holdoutRowIndexes.includes(index));
+    expect(model.holdoutResults.map((result) => result.rowIndex)).toEqual(trainedIndexes);
 
     const tree = model.tree!;
     const visits = nodeVisits(tree, rows, model.holdoutRowIndexes, "label");
@@ -157,10 +175,31 @@ describe("trainModel decision tree", () => {
     expect(root?.total).toBe(model.holdoutRowIndexes.length);
     const listed = rowsByNode(tree, rows, model.holdoutRowIndexes);
     expect(listed.get(tree.pathKey)).toEqual(model.holdoutRowIndexes);
+    expect(rowsByNode(tree, rows, trainedIndexes).get(tree.pathKey)).toEqual(
+      trainedIndexes,
+    );
+  });
+
+  it("scores the trained rows when the reserved rows are random", () => {
+    const rows: AiLabDataRow[] = [];
+    for (let index = 0; index < 20; index += 1) {
+      rows.push(row(index < 10 ? 0 : 10, 0, index < 10 ? "A" : "B"));
+    }
+    const model = trainModel({
+      algorithm: "decisionTree",
+      rows,
+      columns,
+      labelColumn: "label",
+      selectedFeatures: ["x"],
+      randomizeTestData: true,
+    });
+    expect(model.holdoutRowIndexes).toHaveLength(2);
+    expect(model.holdoutRowIndexes).not.toContain(19);
+    expect(model.holdoutRowIndexes).not.toEqual(holdoutIndexes(20));
     const trainedIndexes = rows
       .map((_, index) => index)
       .filter((index) => !model.holdoutRowIndexes.includes(index));
-    expect(rowsByNode(tree, rows, trainedIndexes).get(tree.pathKey)).toEqual(
+    expect(model.holdoutResults.map((result) => result.rowIndex)).toEqual(
       trainedIndexes,
     );
   });

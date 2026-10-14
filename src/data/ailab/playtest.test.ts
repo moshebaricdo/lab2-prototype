@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { pretrainedFromDataset, trainDecisionTree } from "../../lib/aiLab";
+import { pretrainedFromDataset, trainDecisionTree, trainModel } from "../../lib/aiLab";
+import type { AiLabTreeNode } from "../../types/aiLab";
 import {
   AI_LAB_PLAYTEST_LABEL_COLUMN,
   AI_LAB_PLAYTEST_TREE_FEATURES,
@@ -46,34 +47,48 @@ describe("AI Lab playtest sheet", () => {
   });
 
   it("trains the curriculum tree: feathers → Bird; else lungs → Mammal / Fish", () => {
-    const tree = trainDecisionTree(
+    const trained = trainDecisionTree(
       aiLabPlaytestDataset.rows,
       aiLabPlaytestDataset.columns,
       [...AI_LAB_PLAYTEST_TREE_FEATURES],
       AI_LAB_PLAYTEST_LABEL_COLUMN,
     );
+    expect(curriculumTree(trained)).toEqual({
+      feature: "has_feathers",
+      yes: "Bird",
+      no: {
+        feature: "breathes_with_lungs",
+        yes: "Mammal",
+        no: "Fish",
+      },
+    });
 
-    expect(tree.type).toBe("decision");
-    if (tree.type !== "decision" || tree.splitType !== "categorical") {
-      throw new Error("expected a categorical root");
-    }
-    expect(tree.feature).toBe("has_feathers");
-    expect(tree.children.yes?.type).toBe("leaf");
-    if (tree.children.yes?.type === "leaf") {
-      expect(tree.children.yes.prediction).toBe("Bird");
-    }
-
-    const lungs = tree.children.no;
-    expect(lungs?.type).toBe("decision");
-    if (lungs?.type !== "decision" || lungs.splitType !== "categorical") {
-      throw new Error("expected a lungs split");
-    }
-    expect(lungs.feature).toBe("breathes_with_lungs");
-    if (lungs.children.yes?.type === "leaf") {
-      expect(lungs.children.yes.prediction).toBe("Mammal");
-    }
-    if (lungs.children.no?.type === "leaf") {
-      expect(lungs.children.no.prediction).toBe("Fish");
-    }
+    const model = trainModel({
+      algorithm: "decisionTree",
+      rows: aiLabPlaytestDataset.rows,
+      columns: aiLabPlaytestDataset.columns,
+      labelColumn: AI_LAB_PLAYTEST_LABEL_COLUMN,
+      selectedFeatures: [...AI_LAB_PLAYTEST_TREE_FEATURES],
+    });
+    expect(curriculumTree(model.tree!)).toEqual(curriculumTree(trained));
   });
 });
+
+function side(
+  node: AiLabTreeNode,
+  value: string,
+): AiLabTreeNode | undefined {
+  if (node.type !== "decision") return undefined;
+  if (node.leftValues?.includes(value)) return node.left;
+  if (node.rightValues?.includes(value)) return node.right;
+  return undefined;
+}
+
+function curriculumTree(node: AiLabTreeNode): unknown {
+  if (node.type !== "decision") return node.prediction;
+  return {
+    feature: node.feature,
+    yes: curriculumTree(side(node, "yes")!),
+    no: curriculumTree(side(node, "no")!),
+  };
+}

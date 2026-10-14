@@ -1,15 +1,112 @@
+import { DecisionTreeClassifier, DecisionTreeRegression } from "ml-cart";
+import type { CartNode } from "ml-cart";
 import type {
   AiLabColumn,
   AiLabDataRow,
   AiLabTreeNode,
   AiLabTreeTrace,
 } from "../../types/aiLab";
-import { columnType, formatNumber } from "./columnStats";
+import { columnType } from "./columnStats";
 
-const MAX_DEPTH = 3;
+/**
+ * Production AI Lab trains with `ml-cart` 2.1.1 (`DecisionTreeTrainer`).
+ * The lab never grows a tree past these depths; a tie on the held-out rows
+ * keeps the shallowest one, and an empty holdout trains only depth 1.
+ */
+export const CART_MAX_DEPTHS = [1, 2, 3, 5, 8] as const;
 
-function labelsFor(rows: AiLabDataRow[], labelColumn: string): string[] {
-  return rows.map((row) => String(row[labelColumn]));
+/** Deepest depth the lab will consider. Direct `trainDecisionTree` calls use it. */
+const DEFAULT_MAX_DEPTH = CART_MAX_DEPTHS[CART_MAX_DEPTHS.length - 1]!;
+
+const orList = new Intl.ListFormat("en", { type: "disjunction" });
+
+interface CategoryCodes {
+  [columnId: string]: Record<string, number>;
+}
+
+interface EncodedSheet {
+  regression: boolean;
+  codes: CategoryCodes;
+  labelByCode: string[];
+  matrix: number[][];
+  labels: number[];
+}
+
+export interface TrainDecisionTreeOptions {
+  /** CART `maxDepth`. Defaults to 8, the deepest depth production tries. */
+  maxDepth?: number;
+  /**
+   * Rows the category codes are taken from. Production numbers categories
+   * on the whole sheet, then fits the tree on the rows that remain after
+   * the holdout is removed. Defaults to `rows`.
+   */
+  encodingRows?: AiLabDataRow[];
+}
+
+function categoryCodes(rows: AiLabDataRow[], columnId: string): Record<string, number> {
+  const seen: (string | number)[] = [];
+  const included = new Set<string | number>();
+  for (const row of rows) {
+    const option = row[columnId];
+    if (option === undefined || option === "") continue;
+    if (included.has(option)) continue;
+    included.add(option);
+    seen.push(option);
+  }
+  const codes: Record<string, number> = {};
+  seen.forEach((option) => {
+    codes[String(option)] = seen.indexOf(option);
+  });
+  return codes;
+}
+
+function encodeCell(
+  value: string | number | undefined,
+  columnId: string,
+  columns: AiLabColumn[],
+  codes: CategoryCodes,
+): number {
+  if (columnType(columns, columnId) === "numerical") {
+    return parseFloat(String(value));
+  }
+  const code = codes[columnId]?.[String(value)];
+  return code === undefined ? Number.NaN : code;
+}
+
+function encodeSheet(
+  rows: AiLabDataRow[],
+  columns: AiLabColumn[],
+  features: string[],
+  labelColumn: string,
+  encodingRows: AiLabDataRow[],
+): EncodedSheet {
+  const regression = columnType(columns, labelColumn) === "numerical";
+  const codes: CategoryCodes = {};
+  const categorical = regression ? features : [...features, labelColumn];
+  for (const columnId of categorical) {
+    if (columnType(columns, columnId) === "categorical") {
+      codes[columnId] = categoryCodes(encodingRows, columnId);
+    }
+  }
+  const labelByCode: string[] = [];
+  if (!regression) {
+    for (const [label, code] of Object.entries(codes[labelColumn] ?? {})) {
+      labelByCode[code] = label;
+    }
+  }
+  return {
+    regression,
+    codes,
+    labelByCode,
+    matrix: rows.map((row) =>
+      features.map((feature) => encodeCell(row[feature], feature, columns, codes)),
+    ),
+    labels: rows.map((row) =>
+      regression
+        ? parseFloat(String(row[labelColumn]))
+        : encodeCell(row[labelColumn], labelColumn, columns, codes),
+    ),
+  };
 }
 
 function labelCounts(labels: string[]): Record<string, number> {
@@ -19,248 +116,181 @@ function labelCounts(labels: string[]): Record<string, number> {
   }, {});
 }
 
-function labelCountsMap(labels: string[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const label of labels) counts.set(label, (counts.get(label) ?? 0) + 1);
-  return counts;
+function countsFor(rows: AiLabDataRow[], labelColumn: string): Record<string, number> {
+  return labelCounts(rows.map((row) => String(row[labelColumn] ?? "")));
 }
 
-function majorityLabel(labels: string[]): string {
-  return (
-    Object.entries(labelCounts(labels)).sort(
-      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-    )[0]?.[0] ?? ""
-  );
+/** Same rounding the production tree uses on a regression leaf. */
+export function formatRegressionPrediction(value: number): string {
+  return String(Number(value.toFixed(2)));
 }
 
-function gini(labels: string[]): number {
-  const total = labels.length;
-  if (total === 0) return 0;
-  return (
-    1 -
-    Object.values(labelCounts(labels)).reduce((sum, count) => {
-      const probability = count / total;
-      return sum + probability * probability;
-    }, 0)
-  );
+/** Unrounded, so the threshold stays on the correct side of a student's input. */
+export function thresholdText(threshold: number): string {
+  return String(Number(threshold.toPrecision(12)));
 }
 
-function giniFromCounts(counts: Map<string, number>, total: number): number {
-  if (total === 0) return 0;
-  let sum = 0;
-  for (const count of counts.values()) {
-    const probability = count / total;
-    sum += probability * probability;
+function valueList(values: string[]): string {
+  return values.length === 0 ? "" : orList.format(values);
+}
+
+function sortValues(values: string[]): string[] {
+  return [...values].sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
+}
+
+function classIndex(distribution: { getRow(row: number): number[] }): number {
+  const probabilities = distribution.getRow(0);
+  let best = 0;
+  for (let index = 1; index < probabilities.length; index += 1) {
+    if (probabilities[index]! > probabilities[best]!) best = index;
   }
-  return 1 - sum;
+  return best;
 }
 
-function weightedGiniFromCounts(
-  groups: { counts: Map<string, number>; size: number }[],
-  total: number,
-): number {
-  let sum = 0;
-  for (const group of groups) {
-    if (group.size === 0) continue;
-    sum += (group.size / total) * giniFromCounts(group.counts, group.size);
-  }
-  return sum;
-}
-
-function leaf(
+function leafFromModel(
+  node: CartNode,
   rows: AiLabDataRow[],
   labelColumn: string,
+  labelByCode: string[],
+  regression: boolean,
   pathKey: string,
 ): AiLabTreeNode {
-  const labels = labelsFor(rows, labelColumn);
+  const counts = countsFor(rows, labelColumn);
+  if (regression) {
+    const mean = typeof node.distribution === "number" ? node.distribution : 0;
+    return {
+      type: "leaf",
+      pathKey,
+      prediction: formatRegressionPrediction(mean),
+      rawPrediction: mean,
+      sampleCount: rows.length,
+      labelCounts: counts,
+    };
+  }
+  const distribution = node.distribution;
+  const index =
+    distribution && typeof distribution === "object" ? classIndex(distribution) : 0;
   return {
     type: "leaf",
     pathKey,
-    prediction: majorityLabel(labels),
+    prediction: labelByCode[index] ?? String(index),
     sampleCount: rows.length,
-    labelCounts: labelCounts(labels),
+    labelCounts: counts,
   };
 }
 
-function bestCategoricalSplit(
-  rows: AiLabDataRow[],
-  feature: string,
-  labelColumn: string,
-): { values: string[]; impurityReduction: number } | null {
-  // One pass: group label counts by feature value (insertion order keeps the
-  // first-seen order the old `Set` produced).
-  const groups = new Map<string, { counts: Map<string, number>; size: number }>();
-  for (const row of rows) {
-    const value = String(row[feature]);
-    let group = groups.get(value);
-    if (!group) {
-      group = { counts: new Map(), size: 0 };
-      groups.set(value, group);
-    }
-    const label = String(row[labelColumn]);
-    group.counts.set(label, (group.counts.get(label) ?? 0) + 1);
-    group.size += 1;
-  }
-  if (groups.size < 2) return null;
-  const impurityReduction =
-    gini(labelsFor(rows, labelColumn)) -
-    weightedGiniFromCounts([...groups.values()], rows.length);
-  return impurityReduction > 0
-    ? { values: [...groups.keys()], impurityReduction }
-    : null;
+function emptyLeaf(pathKey: string): AiLabTreeNode {
+  return {
+    type: "leaf",
+    pathKey,
+    prediction: "",
+    sampleCount: 0,
+    labelCounts: {},
+  };
 }
 
-function bestNumericalSplit(
-  rows: AiLabDataRow[],
-  feature: string,
-  labelColumn: string,
-): { threshold: number; impurityReduction: number } | null {
-  const sorted = [...rows].sort(
-    (a, b) => Number(a[feature]) - Number(b[feature]),
+function valuesOnSide(
+  values: string[],
+  codes: Record<string, number>,
+  threshold: number,
+  side: "left" | "right",
+): string[] {
+  return sortValues(
+    values.filter((value) => {
+      const code = codes[value];
+      if (code === undefined) return false;
+      return side === "left" ? code < threshold : code >= threshold;
+    }),
   );
-  let best: { threshold: number; impurityReduction: number } | null = null;
-  const labels = labelsFor(sorted, labelColumn);
-  const total = sorted.length;
-  const rightCounts = labelCountsMap(labels);
-  const parent = giniFromCounts(rightCounts, total);
-  const leftCounts = new Map<string, number>();
-
-  // Single sweep: move rows from the right group to the left one in sorted
-  // order and evaluate each distinct-value boundary from running counts.
-  for (let index = 1; index < total; index += 1) {
-    const label = labels[index - 1];
-    leftCounts.set(label, (leftCounts.get(label) ?? 0) + 1);
-    const remaining = (rightCounts.get(label) ?? 0) - 1;
-    if (remaining === 0) rightCounts.delete(label);
-    else rightCounts.set(label, remaining);
-
-    const previous = Number(sorted[index - 1][feature]);
-    const current = Number(sorted[index][feature]);
-    if (previous === current) continue;
-    const threshold = (previous + current) / 2;
-    const impurityReduction =
-      parent -
-      weightedGiniFromCounts(
-        [
-          { counts: leftCounts, size: index },
-          { counts: rightCounts, size: total - index },
-        ],
-        total,
-      );
-    if (!best || impurityReduction > best.impurityReduction) {
-      best = { threshold, impurityReduction };
-    }
-  }
-
-  return best && best.impurityReduction > 0 ? best : null;
 }
 
-function buildTree(
+function buildDisplay(
+  node: CartNode,
   rows: AiLabDataRow[],
-  columns: AiLabColumn[],
+  matrix: number[][],
   features: string[],
+  columns: AiLabColumn[],
   labelColumn: string,
-  depth: number,
+  codes: CategoryCodes,
+  labelByCode: string[],
+  regression: boolean,
+  valuesByColumn: Record<string, string[]>,
   pathKey: string,
 ): AiLabTreeNode {
-  const labels = labelsFor(rows, labelColumn);
-  if (
-    rows.length === 0 ||
-    depth >= MAX_DEPTH ||
-    features.length === 0 ||
-    new Set(labels).size <= 1
-  ) {
-    return leaf(rows, labelColumn, pathKey);
+  if (!node.left || !node.right || node.splitColumn === undefined || node.splitValue === undefined) {
+    return leafFromModel(node, rows, labelColumn, labelByCode, regression, pathKey);
   }
 
-  let bestFeature: string | null = null;
-  let bestReduction = 0;
-  let categoricalValues: string[] | null = null;
-  let numericalThreshold: number | null = null;
-
-  features.forEach((feature) => {
-    if (columnType(columns, feature) === "numerical") {
-      const split = bestNumericalSplit(rows, feature, labelColumn);
-      if (split && split.impurityReduction > bestReduction) {
-        bestFeature = feature;
-        bestReduction = split.impurityReduction;
-        categoricalValues = null;
-        numericalThreshold = split.threshold;
-      }
-      return;
-    }
-
-    const split = bestCategoricalSplit(rows, feature, labelColumn);
-    if (split && split.impurityReduction > bestReduction) {
-      bestFeature = feature;
-      bestReduction = split.impurityReduction;
-      categoricalValues = split.values;
-      numericalThreshold = null;
+  const column = node.splitColumn;
+  const threshold = node.splitValue;
+  const feature = features[column] ?? "";
+  const leftRows: AiLabDataRow[] = [];
+  const rightRows: AiLabDataRow[] = [];
+  const leftMatrix: number[][] = [];
+  const rightMatrix: number[][] = [];
+  rows.forEach((row, index) => {
+    const encoded = matrix[index]?.[column] ?? Number.NaN;
+    if (encoded < threshold) {
+      leftRows.push(row);
+      leftMatrix.push(matrix[index] ?? []);
+    } else {
+      rightRows.push(row);
+      rightMatrix.push(matrix[index] ?? []);
     }
   });
 
-  if (!bestFeature) {
-    return leaf(rows, labelColumn, pathKey);
-  }
+  const categorical = columnType(columns, feature) === "categorical";
+  const currentValues = valuesByColumn[feature] ?? [];
+  const featureCodes = codes[feature] ?? {};
+  const leftValues = categorical
+    ? valuesOnSide(currentValues, featureCodes, threshold, "left")
+    : undefined;
+  const rightValues = categorical
+    ? valuesOnSide(currentValues, featureCodes, threshold, "right")
+    : undefined;
+  const nextValues = categorical
+    ? { ...valuesByColumn, [feature]: leftValues ?? [] }
+    : valuesByColumn;
+  const rightValuesByColumn = categorical
+    ? { ...valuesByColumn, [feature]: rightValues ?? [] }
+    : valuesByColumn;
 
-  const remaining = features.filter((feature) => feature !== bestFeature);
-
-  if (numericalThreshold !== null) {
-    const leftRows = rows.filter(
-      (row) => Number(row[bestFeature]) <= numericalThreshold,
-    );
-    const rightRows = rows.filter(
-      (row) => Number(row[bestFeature]) > numericalThreshold,
-    );
-    return {
-      type: "decision",
-      pathKey,
-      feature: bestFeature,
-      splitType: "numerical",
-      threshold: numericalThreshold,
-      sampleCount: rows.length,
-      labelCounts: labelCounts(labels),
-      impurityReduction: bestReduction,
-      left: buildTree(
-        leftRows,
-        columns,
-        remaining,
-        labelColumn,
-        depth + 1,
-        `${pathKey}.0`,
-      ),
-      right: buildTree(
-        rightRows,
-        columns,
-        remaining,
-        labelColumn,
-        depth + 1,
-        `${pathKey}.1`,
-      ),
-    };
-  }
-
-  const values = categoricalValues ?? [];
   return {
     type: "decision",
     pathKey,
-    feature: bestFeature,
-    splitType: "categorical",
+    feature,
+    splitType: categorical ? "categorical" : "numerical",
+    threshold,
+    leftValues,
+    rightValues,
     sampleCount: rows.length,
-    labelCounts: labelCounts(labels),
-    impurityReduction: bestReduction,
-    children: Object.fromEntries(
-      values.map((value, index) => [
-        value,
-        buildTree(
-          rows.filter((row) => String(row[bestFeature]) === value),
-          columns,
-          remaining,
-          labelColumn,
-          depth + 1,
-          `${pathKey}.${index}`,
-        ),
-      ]),
+    labelCounts: countsFor(rows, labelColumn),
+    impurityReduction: node.gain ?? 0,
+    left: buildDisplay(
+      node.left,
+      leftRows,
+      leftMatrix,
+      features,
+      columns,
+      labelColumn,
+      codes,
+      labelByCode,
+      regression,
+      nextValues,
+      `${pathKey}.0`,
+    ),
+    right: buildDisplay(
+      node.right,
+      rightRows,
+      rightMatrix,
+      features,
+      columns,
+      labelColumn,
+      codes,
+      labelByCode,
+      regression,
+      rightValuesByColumn,
+      `${pathKey}.1`,
     ),
   };
 }
@@ -270,19 +300,45 @@ export function trainDecisionTree(
   columns: AiLabColumn[],
   features: string[],
   labelColumn: string,
+  options: TrainDecisionTreeOptions = {},
 ): AiLabTreeNode {
-  return buildTree(rows, columns, features, labelColumn, 0, "root");
+  if (rows.length === 0) return emptyLeaf("root");
+  const encodingRows = options.encodingRows ?? rows;
+  const encoded = encodeSheet(rows, columns, features, labelColumn, encodingRows);
+  const maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
+  const model = encoded.regression
+    ? new DecisionTreeRegression({ maxDepth })
+    : new DecisionTreeClassifier({ maxDepth });
+  model.train(encoded.matrix, encoded.labels);
+  const valuesByColumn: Record<string, string[]> = {};
+  for (const feature of features) {
+    const codes = encoded.codes[feature];
+    if (codes) valuesByColumn[feature] = Object.keys(codes);
+  }
+  return buildDisplay(
+    model.root,
+    rows,
+    encoded.matrix,
+    features,
+    columns,
+    labelColumn,
+    encoded.codes,
+    encoded.labelByCode,
+    encoded.regression,
+    valuesByColumn,
+    "root",
+  );
 }
 
-/** One question the trainer tried at a node, scored the way `buildTree` scores it. */
+/** One question the trainer tried at a node, scored the way CART scores it. */
 export interface AiLabSplitCandidate {
   feature: string;
   splitType: "numerical" | "categorical";
   threshold?: number;
-  /** The piles it would make, in the order the tree would draw them. */
+  /** The two piles CART would make, left then right. */
   branches: { label: string; counts: Record<string, number>; size: number }[];
   impurityReduction: number;
-  /** Share of the pile's mix it removes: 0 = no help, 1 = every pile one label. */
+  /** Share of the pile's mix it removes: 0 = no help, 1 = every pile pure. */
   sortedShare: number;
 }
 
@@ -295,50 +351,135 @@ export interface AiLabNodeCandidates {
   checked: number;
 }
 
+function squaredError(values: number[]): number {
+  if (values.length === 0) return 0;
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return values.reduce((sum, value) => sum + (value - mean) ** 2, 0);
+}
+
+function giniImpurity(labels: number[]): number {
+  if (labels.length === 0) return 0;
+  const classes = labels.reduce((max, label) => Math.max(max, label + 1), 0);
+  if (!Number.isFinite(classes) || classes <= 0) return 0;
+  const counts = new Array<number>(classes).fill(0);
+  for (const label of labels) {
+    if (Number.isInteger(label) && label >= 0 && label < classes) {
+      counts[label] = (counts[label] ?? 0) + 1 / labels.length;
+    }
+  }
+  const sum = counts.reduce((total, probability) => total + probability * probability, 0);
+  return 1 - sum;
+}
+
+function splitLabels(
+  values: number[],
+  labels: number[],
+  threshold: number,
+): { left: number[]; right: number[] } {
+  const left: number[] = [];
+  const right: number[] = [];
+  values.forEach((value, index) => {
+    const label = labels[index]!;
+    if (value < threshold) left.push(label);
+    else right.push(label);
+  });
+  return { left, right };
+}
+
+function bestThreshold(
+  values: number[],
+  labels: number[],
+  regression: boolean,
+): { threshold: number; gain: number } | null {
+  const pairs = values.map((value, index) => [value, labels[index]!] as const);
+  pairs.sort((a, b) => a[0] - b[0]);
+  let best: { threshold: number; gain: number } | null = null;
+  for (let index = 1; index < pairs.length; index += 1) {
+    if (pairs[index - 1]![1] === pairs[index]![1]) continue;
+    const threshold = (pairs[index - 1]![0] + pairs[index]![0]) / 2;
+    const { left, right } = splitLabels(values, labels, threshold);
+    if (left.length === 0 || right.length === 0) continue;
+    const gain = regression
+      ? squaredError(left) + squaredError(right)
+      : giniImpurity(labels) -
+        (giniImpurity(left) * left.length + giniImpurity(right) * right.length) / labels.length;
+    const better = regression
+      ? !best || gain < best.gain
+      : !best || gain > best.gain;
+    if (better) best = { threshold, gain };
+  }
+  return best;
+}
+
 function scoreCandidate(
   rows: AiLabDataRow[],
-  columns: AiLabColumn[],
+  matrix: number[][],
+  featureIndex: number,
   feature: string,
+  columns: AiLabColumn[],
   labelColumn: string,
-  parentGini: number,
+  codes: CategoryCodes,
+  values: string[],
+  regression: boolean,
+  parentScore: number,
 ): AiLabSplitCandidate | null {
-  const share = (reduction: number) => (parentGini > 0 ? reduction / parentGini : 0);
-  if (columnType(columns, feature) === "numerical") {
-    const split = bestNumericalSplit(rows, feature, labelColumn);
-    if (!split) return null;
-    const left = rows.filter((row) => Number(row[feature]) <= split.threshold);
-    const right = rows.filter((row) => Number(row[feature]) > split.threshold);
-    return {
-      feature,
-      splitType: "numerical",
-      threshold: split.threshold,
-      branches: [
-        { label: `≤ ${formatNumber(split.threshold)}`, counts: labelCounts(labelsFor(left, labelColumn)), size: left.length },
-        { label: `> ${formatNumber(split.threshold)}`, counts: labelCounts(labelsFor(right, labelColumn)), size: right.length },
-      ],
-      impurityReduction: split.impurityReduction,
-      sortedShare: share(split.impurityReduction),
-    };
-  }
-  const split = bestCategoricalSplit(rows, feature, labelColumn);
+  const column = matrix.map((row) => row[featureIndex] ?? Number.NaN);
+  const labels = rows.map((row) =>
+    regression
+      ? parseFloat(String(row[labelColumn]))
+      : (codes[labelColumn]?.[String(row[labelColumn])] ?? Number.NaN),
+  );
+  const split = bestThreshold(column, labels, regression);
   if (!split) return null;
+  const leftRows = rows.filter((_, index) => column[index]! < split.threshold);
+  const rightRows = rows.filter((_, index) => column[index]! >= split.threshold);
+  const categorical = columnType(columns, feature) === "categorical";
+  const featureCodes = codes[feature] ?? {};
+  const branches = categorical
+    ? [
+        valuesOnSide(values, featureCodes, split.threshold, "left"),
+        valuesOnSide(values, featureCodes, split.threshold, "right"),
+      ].map((side, index) => {
+        const group = index === 0 ? leftRows : rightRows;
+        return {
+          label: valueList(side),
+          counts: countsFor(group, labelColumn),
+          size: group.length,
+        };
+      })
+    : [
+        {
+          label: `< ${thresholdText(split.threshold)}`,
+          counts: countsFor(leftRows, labelColumn),
+          size: leftRows.length,
+        },
+        {
+          label: `≥ ${thresholdText(split.threshold)}`,
+          counts: countsFor(rightRows, labelColumn),
+          size: rightRows.length,
+        },
+      ];
+  const sortedShare = regression
+    ? parentScore > 0
+      ? Math.max(0, (parentScore - split.gain) / parentScore)
+      : 0
+    : parentScore > 0
+      ? split.gain / parentScore
+      : 0;
   return {
     feature,
-    splitType: "categorical",
-    branches: split.values.map((value) => {
-      const group = rows.filter((row) => String(row[feature]) === value);
-      return { label: value, counts: labelCounts(labelsFor(group, labelColumn)), size: group.length };
-    }),
-    impurityReduction: split.impurityReduction,
-    sortedShare: share(split.impurityReduction),
+    splitType: categorical ? "categorical" : "numerical",
+    threshold: split.threshold,
+    branches,
+    impurityReduction: split.gain,
+    sortedShare,
   };
 }
 
 /**
- * Every question the trainer tried at each decision node of `tree` (keyed
- * by `pathKey`), replaying `buildTree`'s search: the same rows reach each
- * node, a feature used above isn't tried again, and the node's own feature
- * is the best. Lets a viz show the search instead of just its winner.
+ * Every question CART tried at each decision node of `tree` (keyed by
+ * `pathKey`). A feature used above can be tried again. The node's own
+ * feature is the one the finished tree asks.
  */
 export function treeSplitCandidates(
   tree: AiLabTreeNode,
@@ -347,30 +488,84 @@ export function treeSplitCandidates(
   features: string[],
   labelColumn: string,
 ): Map<string, AiLabNodeCandidates> {
+  const encoded = encodeSheet(rows, columns, features, labelColumn, rows);
+  const valuesByColumn: Record<string, string[]> = {};
+  for (const feature of features) {
+    const codes = encoded.codes[feature];
+    if (codes) valuesByColumn[feature] = Object.keys(codes);
+  }
   const byNode = new Map<string, AiLabNodeCandidates>();
-  const visit = (node: AiLabTreeNode, nodeRows: AiLabDataRow[], available: string[]) => {
+  const visit = (
+    node: AiLabTreeNode,
+    nodeRows: AiLabDataRow[],
+    matrix: number[][],
+    availableValues: Record<string, string[]>,
+  ) => {
     if (node.type === "leaf") return;
-    const parentGini = gini(labelsFor(nodeRows, labelColumn));
-    const candidates = available
-      .map((feature) => scoreCandidate(nodeRows, columns, feature, labelColumn, parentGini))
+    const parentLabels = nodeRows.map((row) =>
+      encoded.regression
+        ? parseFloat(String(row[labelColumn]))
+        : (encoded.codes[labelColumn]?.[String(row[labelColumn])] ?? Number.NaN),
+    );
+    const parentScore = encoded.regression
+      ? squaredError(parentLabels)
+      : giniImpurity(parentLabels);
+    const candidates = features
+      .map((feature, index) =>
+        scoreCandidate(
+          nodeRows,
+          matrix,
+          index,
+          feature,
+          columns,
+          labelColumn,
+          encoded.codes,
+          availableValues[feature] ?? [],
+          encoded.regression,
+          parentScore,
+        ),
+      )
       .filter((candidate): candidate is AiLabSplitCandidate => candidate !== null);
     byNode.set(node.pathKey, {
       candidates,
       best: Math.max(0, candidates.findIndex((candidate) => candidate.feature === node.feature)),
-      checked: available.length,
+      checked: features.length,
     });
-    const remaining = available.filter((feature) => feature !== node.feature);
-    if (node.splitType === "numerical") {
-      visit(node.left, nodeRows.filter((row) => Number(row[node.feature]) <= node.threshold), remaining);
-      visit(node.right, nodeRows.filter((row) => Number(row[node.feature]) > node.threshold), remaining);
-      return;
-    }
-    Object.entries(node.children).forEach(([value, child]) =>
-      visit(child, nodeRows.filter((row) => String(row[node.feature]) === value), remaining),
-    );
+    const column = features.indexOf(node.feature);
+    const leftRows: AiLabDataRow[] = [];
+    const rightRows: AiLabDataRow[] = [];
+    const leftMatrix: number[][] = [];
+    const rightMatrix: number[][] = [];
+    nodeRows.forEach((row, index) => {
+      const value = matrix[index]?.[column] ?? Number.NaN;
+      if (value < node.threshold) {
+        leftRows.push(row);
+        leftMatrix.push(matrix[index] ?? []);
+      } else {
+        rightRows.push(row);
+        rightMatrix.push(matrix[index] ?? []);
+      }
+    });
+    const nextValues =
+      node.splitType === "categorical"
+        ? { ...availableValues, [node.feature]: node.leftValues ?? [] }
+        : availableValues;
+    const rightValues =
+      node.splitType === "categorical"
+        ? { ...availableValues, [node.feature]: node.rightValues ?? [] }
+        : availableValues;
+    visit(node.left, leftRows, leftMatrix, nextValues);
+    visit(node.right, rightRows, rightMatrix, rightValues);
   };
-  visit(tree, rows, features);
+  visit(tree, rows, encoded.matrix, valuesByColumn);
   return byNode;
+}
+
+function goesLeft(node: Extract<AiLabTreeNode, { type: "decision" }>, row: AiLabDataRow): boolean {
+  if (node.splitType === "categorical") {
+    return (node.leftValues ?? []).includes(String(row[node.feature] ?? ""));
+  }
+  return parseFloat(String(row[node.feature])) < node.threshold;
 }
 
 export function traceDecisionTree(
@@ -382,30 +577,14 @@ export function traceDecisionTree(
   let node = root;
 
   while (node.type === "decision") {
-    if (node.splitType === "numerical") {
-      const value = Number(row[node.feature]);
-      const goLeft = value <= node.threshold;
-      const next = goLeft ? node.left : node.right;
-      steps.push({
-        pathKey: node.pathKey,
-        feature: node.feature,
-        value,
-        branchLabel: goLeft
-          ? `≤ ${formatNumber(node.threshold)}`
-          : `> ${formatNumber(node.threshold)}`,
-      });
-      pathKeys.push(next.pathKey);
-      node = next;
-      continue;
-    }
-
-    const value = String(row[node.feature]);
-    const next = node.children[value] ?? Object.values(node.children)[0];
+    const left = goesLeft(node, row);
+    const next = left ? node.left : node.right;
+    const branches = treeBranches(node);
     steps.push({
       pathKey: node.pathKey,
       feature: node.feature,
-      value,
-      branchLabel: value,
+      value: row[node.feature] ?? "",
+      branchLabel: (left ? branches[0] : branches[1])?.label ?? "",
     });
     pathKeys.push(next.pathKey);
     node = next;
@@ -413,13 +592,14 @@ export function traceDecisionTree(
 
   return {
     prediction: node.prediction,
+    rawPrediction: node.rawPrediction,
     pathKeys,
     steps,
   };
 }
 
 export interface AiLabTreeBranch {
-  /** Text on the edge into this child (`chicken`, `≤ 3.5`). */
+  /** Text on the edge into this child (`hot or mild`, `< 3.5`). */
   label: string;
   child: AiLabTreeNode;
 }
@@ -428,15 +608,16 @@ export interface AiLabTreeBranch {
 export function treeBranches(node: AiLabTreeNode): AiLabTreeBranch[] {
   if (node.type === "leaf") return [];
   if (node.splitType === "numerical") {
+    const threshold = thresholdText(node.threshold);
     return [
-      { label: `≤ ${formatNumber(node.threshold)}`, child: node.left },
-      { label: `> ${formatNumber(node.threshold)}`, child: node.right },
+      { label: `< ${threshold}`, child: node.left },
+      { label: `≥ ${threshold}`, child: node.right },
     ];
   }
-  return Object.entries(node.children).map(([label, child]) => ({
-    label,
-    child,
-  }));
+  return [
+    { label: valueList(node.leftValues ?? []), child: node.left },
+    { label: valueList(node.rightValues ?? []), child: node.right },
+  ];
 }
 
 /**
@@ -554,10 +735,7 @@ export function summarizeTree(root: AiLabTreeNode): AiLabTreeSummary {
 /** Leaves under a node (1 for a leaf). Used by collapsed-subtree summaries. */
 export function countLeaves(node: AiLabTreeNode): number {
   if (node.type === "leaf") return 1;
-  return treeBranches(node).reduce(
-    (sum, branch) => sum + countLeaves(branch.child),
-    0,
-  );
+  return treeBranches(node).reduce((sum, branch) => sum + countLeaves(branch.child), 0);
 }
 
 /** Distinct predictions reachable under a node. */
@@ -572,4 +750,44 @@ export function subtreePredictions(node: AiLabTreeNode): string[] {
   };
   visit(node);
   return [...seen];
+}
+
+/**
+ * Whether one held-out row matches the way production grades a tree:
+ * categories must match exactly, and a numeric label must land within 5%
+ * of the label column's range on the whole sheet.
+ */
+export function cartPredictionCorrect(
+  tree: AiLabTreeNode,
+  row: AiLabDataRow,
+  labelColumn: string,
+  columns: AiLabColumn[],
+  tolerance: number,
+): boolean {
+  const trace = traceDecisionTree(tree, row);
+  const actual = String(row[labelColumn] ?? "");
+  if (columnType(columns, labelColumn) !== "numerical") return actual === trace.prediction;
+  const predicted = trace.rawPrediction ?? Number(trace.prediction);
+  return Math.abs(Number(actual) - predicted) <= tolerance;
+}
+
+/** `5%` of `max(label) - min(label)` over every cell, including blanks as 0. */
+export function cartRegressionTolerance(
+  rows: AiLabDataRow[],
+  labelColumn: string,
+): number {
+  let max = -Infinity;
+  let min = Infinity;
+  let dirty = false;
+  for (const row of rows) {
+    const value = Number(row[labelColumn]);
+    if (Number.isNaN(value)) {
+      dirty = true;
+      break;
+    }
+    if (value > max) max = value;
+    if (value < min) min = value;
+  }
+  if (dirty || !Number.isFinite(max) || !Number.isFinite(min)) return Number.NaN;
+  return (Math.abs(max - min) * 5) / 100;
 }
