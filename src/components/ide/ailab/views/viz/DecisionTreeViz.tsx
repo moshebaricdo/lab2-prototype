@@ -160,8 +160,9 @@ function featureName(columns: AiLabColumn[], feature: string): string {
   return columnById(columns, feature)?.name ?? feature;
 }
 
-function rowsText(count: number): string {
-  return `${count} Row${count === 1 ? "" : "s"}`;
+function rowsText(count: number, test = false): string {
+  const unit = test ? "test row" : "Row";
+  return `${count} ${unit}${count === 1 ? "" : "s"}`;
 }
 
 function purity(node: AiLabTreeNode): number {
@@ -450,7 +451,7 @@ export function DecisionTreeViz({
         modalDetail,
         visitsFor(laid, reservedVisits),
       );
-      return `${laid.key}:${facts.title}:${facts.displayTotal}:${facts.agree}:${facts.showResults}:${facts.bundleSize}`;
+      return `${laid.key}:${facts.title}:${facts.displayTotal}:${facts.testRows}:${facts.agree}:${facts.showResults}:${facts.bundleSize}`;
     })
     .join("|");
   useLayoutEffect(() => {
@@ -1365,6 +1366,8 @@ interface NodeHeadFacts {
   isDecision: boolean;
   bundleSize: number;
   displayTotal: number;
+  /** Count is the reserved test rows, so the label reads "N test rows". */
+  testRows: boolean;
   showResults: boolean;
   agree: number;
   disagree: number;
@@ -1388,7 +1391,8 @@ function nodeHeadFacts(
     isDecision: node.type === "decision",
     bundleSize: bundle?.members.length ?? 0,
     displayTotal,
-    // A leaf the reserved rows never reached stays "0 Rows" rather than a blank ✓ 0.
+    testRows: visits != null,
+    // A leaf the reserved rows never reached stays "0 test rows" rather than a blank ✓ 0.
     showResults: canon && node.type === "leaf" && displayTotal > 0,
     agree,
     disagree: displayTotal - agree,
@@ -1403,8 +1407,16 @@ function NodeHead({
   facts: NodeHeadFacts;
   indexOf: (label: string) => number;
 }) {
-  const { title, isDecision, bundleSize, displayTotal, showResults, agree, disagree } =
-    facts;
+  const {
+    title,
+    isDecision,
+    bundleSize,
+    displayTotal,
+    testRows,
+    showResults,
+    agree,
+    disagree,
+  } = facts;
   return (
     <div className={styles.nodeHead}>
       <p className={styles.nodeTitle}>
@@ -1438,7 +1450,7 @@ function NodeHead({
           ) : null}
         </span>
       ) : (
-        <span className={styles.nodeRows}>{rowsText(displayTotal)}</span>
+        <span className={styles.nodeRows}>{rowsText(displayTotal, testRows)}</span>
       )}
     </div>
   );
@@ -1453,7 +1465,7 @@ interface DiagramNodeProps {
   isSelected: boolean;
   /**
    * Rows-modal node (Figma treeNode): a fixed pill whose leaves count rows
-   * that match (✓) and don't match (✕) the prediction instead of "N Rows".
+   * that match (✓) and don't match (✕) the prediction instead of "N test rows".
    */
   canon: boolean;
   /** Reserved-row tally. Absent keeps the training `sampleCount`. */
@@ -1493,7 +1505,7 @@ function DiagramNode({
   const memberNames = bundle?.members.map((member) => member.branchLabel) ?? [];
   const note = isDetail ? leafNote(node, memberNames) : "";
   const head = nodeHeadFacts(laid, columns, canon, visits);
-  const { title, displayTotal, showResults, agree, disagree } = head;
+  const { title, displayTotal, testRows, showResults, agree, disagree } = head;
   const name = [
     laid.branchLabel && !bundle ? `Branch ${laid.branchLabel}.` : "",
     bundle
@@ -1502,9 +1514,9 @@ function DiagramNode({
         ? `Question: ${title}`
         : `Prediction: ${title}.`,
     showResults
-      ? `${rowsText(displayTotal)}: ${agree} ${agree === 1 ? "is" : "are"} ${title}, ${disagree} ${disagree === 1 ? "is" : "are"} not.`
+      ? `${rowsText(displayTotal, testRows)}: ${agree} ${agree === 1 ? "is" : "are"} ${title}, ${disagree} ${disagree === 1 ? "is" : "are"} not.`
       : visits
-        ? `${rowsText(displayTotal)}.`
+        ? `${rowsText(displayTotal, true)}.`
         : `${rowsText(node.sampleCount)}, ${countsText}.`,
     isCurrent
       ? "Current step."

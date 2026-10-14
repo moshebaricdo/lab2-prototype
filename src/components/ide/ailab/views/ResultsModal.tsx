@@ -160,7 +160,7 @@ function ScorecardTab({
           ]}
         />
       </div>
-      <div className={styles.tableWrap}>
+      <div className={`${styles.tableWrap} ${styles.keepRowEdge}`}>
         <table
           className={sheet.grid}
           aria-label="Scorecard"

@@ -571,7 +571,9 @@ function NodeDetail({
               </>
             )}
           </div>
-          <div className={`${results.tableWrap} ${styles.tableWrap}`}>
+          <div
+            className={`${results.tableWrap} ${results.keepRowEdge} ${styles.tableWrap}`}
+          >
             <table
               className={sheet.grid}
               aria-label={`${hasSplit ? (showingTest ? "Test rows" : "Trained rows") : "Rows"} at ${title}`}

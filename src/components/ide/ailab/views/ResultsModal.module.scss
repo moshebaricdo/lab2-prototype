@@ -78,15 +78,22 @@
     text-align: left;
   }
 
-  /* The wrapper draws the outer edge; the sheet's last-column and last-row
-   * cell borders would double it. Doubled class beats the sheet's
-   * `.thLabel:last-child:not(.thSelected)`. */
+  /* The wrapper draws the outer edge; the sheet's last-column cell borders
+   * would double it. Doubled class beats the sheet's
+   * `.thLabel:last-child:not(.thSelected)`. The last row keeps its bottom
+   * rule when `keepRowEdge` is set, so a short sheet still closes above
+   * the empty space. A sheet that fills the frame overlaps that rule with
+   * the box by one pixel instead of stacking a second line. */
   &#{&} tr > :last-child {
     border-right: 0;
   }
 
-  &#{&} tbody tr:last-child > td {
+  &#{&}:not(.keepRowEdge) tbody tr:last-child > td {
     border-bottom: 0;
+  }
+
+  &.keepRowEdge > table:last-child {
+    margin-bottom: -1px;
   }
 }
 
