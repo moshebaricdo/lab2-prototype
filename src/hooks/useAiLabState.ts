@@ -709,6 +709,17 @@ export function useAiLabState(config: AiLabLevelConfig) {
     });
   }, []);
 
+  // Canvas Testing unmounts when the student leaves the tab. Remember which
+  // prediction already walked so coming back shows the finished trace.
+  const playedTraceAt = useRef<number | undefined>(undefined);
+  const markTracePlayed = useCallback((committedAt: number) => {
+    playedTraceAt.current = committedAt;
+  }, []);
+  const traceWasPlayed = useCallback(
+    (committedAt: number) => playedTraceAt.current === committedAt,
+    [],
+  );
+
   const viewRows = useMemo(
     () => applyScales(state.rows, state.scales),
     [state.rows, state.scales],
@@ -849,6 +860,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
     setTestValue,
     commitShownTest,
     clearTestPrediction,
+    markTracePlayed,
+    traceWasPlayed,
     loadHoldoutRow,
     loadRandomRow,
     setLastPrediction,

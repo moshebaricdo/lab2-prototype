@@ -1,6 +1,8 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -177,7 +179,15 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
   const [resultsSession, setResultsSession] = useState(0);
   const [openNodeKey, setOpenNodeKey] = useState<string | undefined>(undefined);
   const nodeModal = lab.config.treeNodeDetail === "modal";
-  const [stepIndex, setStepIndex] = useState(0);
+  const committedAt = canvasLayout ? lab.shownTest?.committedAt : undefined;
+  // This mount opened onto a prediction that already walked. Land on the
+  // last step instead of playing it again.
+  const resumeAt = useRef(
+    committedAt != null && lab.traceWasPlayed(committedAt) ? committedAt : undefined,
+  );
+  const [stepIndex, setStepIndex] = useState(() =>
+    resumeAt.current != null ? Number.MAX_SAFE_INTEGER : 0,
+  );
   const setTraceStep = useCallback((index: number) => {
     setStepIndex(index);
   }, []);
@@ -217,15 +227,21 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
         : [];
   const playback = useStepPlayback(playbackSteps.length, setTraceStep);
   const { play, stop } = playback;
-  const committedAt = canvasLayout ? lab.shownTest?.committedAt : undefined;
+  const { markTracePlayed } = lab;
   const autoPlayTrace = lab.config.autoPlayTrace !== false;
   const isTreeModel = model?.algorithm === "decisionTree";
 
-  useEffect(() => {
-    if (!canvasLayout || committedAt == null) return;
+  useLayoutEffect(() => {
+    if (!canvasLayout || committedAt == null || playbackSteps.length === 0) return;
+    if (resumeAt.current === committedAt) {
+      stop();
+      setTraceStep(playbackSteps.length - 1);
+      return;
+    }
+    markTracePlayed(committedAt);
     if (isTreeModel && autoPlayTrace && playbackSteps.length >= 2) {
       play({ reducedMotion: "end" });
-    } else if (playbackSteps.length > 0) {
+    } else {
       stop();
       setTraceStep(playbackSteps.length - 1);
     }
@@ -234,6 +250,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
     canvasLayout,
     committedAt,
     isTreeModel,
+    markTracePlayed,
     play,
     playbackSteps.length,
     setTraceStep,
