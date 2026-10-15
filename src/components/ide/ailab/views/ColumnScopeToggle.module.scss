@@ -1,0 +1,4 @@
+/* CADS Button has no pressed look; the on state fills like a hovered secondary. */
+.toggle.toggle[aria-pressed="true"] {
+  background: var(--ds-background-neutral-tertiary);
+}

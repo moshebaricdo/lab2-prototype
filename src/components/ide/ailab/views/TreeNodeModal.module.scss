@@ -181,7 +181,13 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+
+.headDivider {
+  width: 1px;
+  height: 10px;
+  background: var(--ds-border-neutral-primary);
 }
 
 .count {

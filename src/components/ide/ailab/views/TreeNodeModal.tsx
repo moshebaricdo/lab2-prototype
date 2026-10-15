@@ -29,6 +29,7 @@ import type {
   AiLabTrainedModel,
   AiLabTreeNode,
 } from "../../../../types/aiLab";
+import { ColumnScopeToggle, extraSheetColumns } from "./ColumnScopeToggle";
 import sheet from "./DataStudio.module.scss";
 import results from "./ResultsModal.module.scss";
 import styles from "./TreeNodeModal.module.scss";
@@ -365,6 +366,7 @@ function NodeDetail({
   );
   const [filter, setFilter] = useState<RowFilter>("correct");
   const [pageCount, setPageCount] = useState(1);
+  const [showAllColumns, setShowAllColumns] = useState(false);
   const showingTest = !hasSplit || population === "test";
   const nodeRows = showingTest ? testNodeRows : trainedNodeRows;
   const isCorrect = (rowIndex: number) =>
@@ -423,6 +425,14 @@ function NodeDetail({
     !model.selectedFeatures.includes(titleColumnId)
       ? columnById(columns, titleColumnId)
       : undefined;
+  const extraColumns = showAllColumns
+    ? extraSheetColumns(columns, {
+        labelColumn,
+        features: model.selectedFeatures,
+        titleColumnId: titleColumn?.id,
+      })
+    : [];
+  const leadSpan = (titleColumn ? 1 : 0) + extraColumns.length;
   const visibleRows = filteredRows.slice(0, pageCount * PAGE_SIZE);
   const hiddenCount = filteredRows.length - visibleRows.length;
   const lastRowNumber = Math.max(1, ...nodeRows.map((index) => index + 1));
@@ -455,6 +465,15 @@ function NodeDetail({
       ]}
     />
   ) : null;
+  const columnToggle = (
+    <ColumnScopeToggle expanded={showAllColumns} onChange={setShowAllColumns} />
+  );
+  const headActions = (
+    <div className={results.actionGroup}>
+      {filterControl}
+      {columnToggle}
+    </div>
+  );
 
   return (
     <div className={styles.root}>
@@ -551,14 +570,17 @@ function NodeDetail({
                 <p id="tree-node-data" className={styles.sentence}>
                   {populationSentence}
                 </p>
-                <div className={styles.headEnd}>
-                  {filterControl}
-                  {canFilter ? null : (
+                {canFilter ? (
+                  headActions
+                ) : (
+                  <div className={styles.headEnd}>
                     <span className={styles.count}>
                       {rowCountLabel(nodeRows.length)}
                     </span>
-                  )}
-                </div>
+                    <span className={styles.headDivider} aria-hidden />
+                    {columnToggle}
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -567,7 +589,7 @@ function NodeDetail({
                   title={rowCountLabel(filteredRows.length)}
                   detail={dataCaption}
                 />
-                {filterControl}
+                {headActions}
               </>
             )}
           </div>
@@ -590,7 +612,9 @@ function NodeDetail({
                       className={`${sheet.th} ${sheet.thIndex}`}
                       aria-label="Row"
                     />
-                    {titleColumn ? <th className={sheet.th} /> : null}
+                    {leadSpan > 0 ? (
+                      <th className={sheet.th} colSpan={leadSpan} />
+                    ) : null}
                     <th className={sheet.th} colSpan={featureColumns.length}>
                       Feature
                     </th>
@@ -609,6 +633,16 @@ function NodeDetail({
                       {titleColumn.name}
                     </th>
                   ) : null}
+                  {extraColumns.map((column) => (
+                    <th
+                      key={column.id}
+                      className={`${sheet.th} ${
+                        column.type === "numerical" ? sheet.thNumeric : ""
+                      } ${nameTh}`}
+                    >
+                      {column.name}
+                    </th>
+                  ))}
                   {featureColumns.map((column) => (
                     <th
                       key={column.id}
@@ -643,6 +677,16 @@ function NodeDetail({
                             {formatCell(row?.[titleColumn.id] ?? "")}
                           </td>
                         ) : null}
+                        {extraColumns.map((column) => (
+                          <td
+                            key={column.id}
+                            className={`${sheet.td} ${
+                              column.type === "numerical" ? sheet.tdNumeric : ""
+                            }`}
+                          >
+                            {formatCell(row?.[column.id] ?? "")}
+                          </td>
+                        ))}
                         {featureColumns.map((column) => (
                           <td
                             key={column.id}

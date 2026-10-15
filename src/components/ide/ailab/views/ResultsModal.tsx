@@ -7,6 +7,7 @@ import type {
   AiLabTrainedModel,
   AiLabTrainingRun,
 } from "../../../../types/aiLab";
+import { ColumnScopeToggle, extraSheetColumns } from "./ColumnScopeToggle";
 import { PredictionStatement } from "./PredictionStatement";
 import sheet from "./DataStudio.module.scss";
 import styles from "./ResultsModal.module.scss";
@@ -96,6 +97,7 @@ function ScorecardTab({
 }) {
   const [filter, setFilter] = useState<"correct" | "incorrect">("correct");
   const [pageCount, setPageCount] = useState(1);
+  const [showAllColumns, setShowAllColumns] = useState(false);
   const model = lab.model;
   const columns = lab.config.dataset.columns;
   const featureColumns = useMemo(() => {
@@ -115,6 +117,15 @@ function ScorecardTab({
     !model.selectedFeatures.includes(titleColumnId)
       ? columnById(columns, titleColumnId)
       : undefined;
+  const extraColumns =
+    showAllColumns && model
+      ? extraSheetColumns(columns, {
+          labelColumn: model.labelColumn,
+          features: model.selectedFeatures,
+          titleColumnId: titleColumn?.id,
+        })
+      : [];
+  const leadSpan = (titleColumn ? 1 : 0) + extraColumns.length;
   const results = useMemo(() => {
     const rows = model?.holdoutResults ?? [];
     return rows.filter((result) =>
@@ -146,19 +157,25 @@ function ScorecardTab({
           {formatAccuracyPercent(model.accuracy)} Accuracy
         </p>
         <span className={styles.headDivider} aria-hidden />
-        <SegmentedButton
-          size="extraSmall"
-          aria-label="Filter scorecard rows"
-          value={filter}
-          onChange={(value) => {
-            setFilter(value as "correct" | "incorrect");
-            setPageCount(1);
-          }}
-          options={[
-            { value: "correct", label: "Correct" },
-            { value: "incorrect", label: "Incorrect" },
-          ]}
-        />
+        <div className={styles.actionGroup}>
+          <SegmentedButton
+            size="extraSmall"
+            aria-label="Filter scorecard rows"
+            value={filter}
+            onChange={(value) => {
+              setFilter(value as "correct" | "incorrect");
+              setPageCount(1);
+            }}
+            options={[
+              { value: "correct", label: "Correct" },
+              { value: "incorrect", label: "Incorrect" },
+            ]}
+          />
+          <ColumnScopeToggle
+            expanded={showAllColumns}
+            onChange={setShowAllColumns}
+          />
+        </div>
       </div>
       <div className={`${styles.tableWrap} ${styles.keepRowEdge}`}>
         <table
@@ -173,7 +190,9 @@ function ScorecardTab({
           <thead>
             <tr>
               <th className={`${sheet.th} ${sheet.thIndex}`} aria-label="Row" />
-              {titleColumn ? <th className={sheet.th} /> : null}
+              {leadSpan > 0 ? (
+                <th className={sheet.th} colSpan={leadSpan} />
+              ) : null}
               <th className={sheet.th} colSpan={featureColumns.length}>
                 Feature
               </th>
@@ -190,6 +209,16 @@ function ScorecardTab({
                   {titleColumn.name}
                 </th>
               ) : null}
+              {extraColumns.map((column) => (
+                <th
+                  key={column.id}
+                  className={`${sheet.th} ${
+                    column.type === "numerical" ? sheet.thNumeric : ""
+                  } ${styles.nameTh}`}
+                >
+                  {column.name}
+                </th>
+              ))}
               {featureColumns.map((column) => (
                 <th
                   key={column.id}
@@ -237,6 +266,16 @@ function ScorecardTab({
                         {row ? formatCell(row[titleColumn.id]) : "—"}
                       </td>
                     ) : null}
+                    {extraColumns.map((column) => (
+                      <td
+                        key={column.id}
+                        className={`${sheet.td} ${
+                          column.type === "numerical" ? sheet.tdNumeric : ""
+                        }`}
+                      >
+                        {row ? formatCell(row[column.id]) : "—"}
+                      </td>
+                    ))}
                     {featureColumns.map((column) => (
                       <td
                         key={column.id}

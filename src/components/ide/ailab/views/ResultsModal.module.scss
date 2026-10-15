@@ -67,6 +67,14 @@
   background: var(--ds-border-neutral-primary);
 }
 
+/* The filter and the column toggle sit tight together. */
+.actionGroup {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
 /* Same sheet as the Data view (DataStudio.module.scss), with a group
  * header row above the column names. */
 .tableWrap {
