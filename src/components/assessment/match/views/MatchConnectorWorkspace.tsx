@@ -121,7 +121,18 @@ function renderMatchCardBody(
     return (
       <div className={[styles.matchCardBlocks, blocksAlignClass].join(" ")}>
         {contentBlocks.map((block, index) =>
-          renderMatchContentBlock(block, `b-${index}`),
+          variant === "prompt" && block.type === "text" ? (
+            <p
+              key={`b-${index}`}
+              className={[styles.matchCardTextBlock, styles.definitionText].join(
+                " ",
+              )}
+            >
+              {block.text}
+            </p>
+          ) : (
+            renderMatchContentBlock(block, `b-${index}`)
+          ),
         )}
       </div>
     );
@@ -139,16 +150,7 @@ function renderMatchCardBody(
         {text}
       </span>
     ) : (
-      <p
-        className={[
-          styles.promptText,
-          align === "center" ? styles.promptTextAlignCenter : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        {text}
-      </p>
+      <p className={styles.promptText}>{text}</p>
     );
   }
   return null;
@@ -529,6 +531,9 @@ export function MatchConnectorWorkspace({
   const promptDotRefs = useRef<Record<string, HTMLElement | null>>({});
   const termDotRefs = useRef<Record<string, HTMLElement | null>>({});
   const didDragRef = useRef(false);
+  /** Set when a pointer-up already paired or selected, so the follow-up click does not toggle again. */
+  const swallowClickRef = useRef(false);
+  const gestureCleanupRef = useRef<(() => void) | null>(null);
   const dragHoverTargetRef = useRef<{
     type: "prompt" | "term";
     id: string;
@@ -543,6 +548,7 @@ export function MatchConnectorWorkspace({
       setInternalAssignments(buildInitialAssignments(promptIds));
     }
     dragCleanupRef.current?.();
+    gestureCleanupRef.current?.();
     setSelectedCard(null);
     setIsSubmitted(false);
     setIsTeacherAnswerRevealed(false);
@@ -550,12 +556,14 @@ export function MatchConnectorWorkspace({
 
   useEffect(() => {
     dragCleanupRef.current?.();
+    gestureCleanupRef.current?.();
     setSelectedCard(null);
   }, [isSubmitted, teacherRevealActive, embedded, groupSubmitted]);
 
   useEffect(() => {
     return () => {
       dragCleanupRef.current?.();
+      gestureCleanupRef.current?.();
     };
   }, []);
 
@@ -850,7 +858,7 @@ export function MatchConnectorWorkspace({
             )
           : "";
         setA11yStatus(
-          `${label} selected. Use arrow keys or Tab to move to a ${type === "term" ? "definition" : "term"}, then press Enter or Space to connect.`,
+          `${label} selected. Choose a ${type === "term" ? "definition" : "term"} to connect.`,
         );
         return;
       }
@@ -902,6 +910,10 @@ export function MatchConnectorWorkspace({
   const handleCardClick = useCallback(
     (type: "prompt" | "term", id: string) => {
       if (interactionLocked || isCardInteractionLocked(type, id)) return;
+      if (swallowClickRef.current) {
+        swallowClickRef.current = false;
+        return;
+      }
       if (didDragRef.current) {
         didDragRef.current = false;
         return;
@@ -1076,10 +1088,16 @@ export function MatchConnectorWorkspace({
           }
         }
         teardown();
+        window.setTimeout(() => {
+          didDragRef.current = false;
+        }, 0);
       };
 
       const onCancel = () => {
         teardown();
+        window.setTimeout(() => {
+          didDragRef.current = false;
+        }, 0);
       };
 
       dragCleanupRef.current = teardown;
@@ -1090,49 +1108,103 @@ export function MatchConnectorWorkspace({
     [resolveDropTarget],
   );
 
+  const DRAG_THRESHOLD_PX = 5;
+
+  const armPointerGesture = useCallback(
+    (
+      type: "prompt" | "term",
+      id: string,
+      event: ReactPointerEvent<HTMLElement>,
+    ) => {
+      if (event.button !== 0) return;
+      if (interactionLocked || isCardInteractionLocked(type, id)) return;
+      // Keep the click from also focusing via the pointer, and avoid text selection.
+      // A stationary pointer-up selects; movement past the threshold starts a line drag.
+      event.preventDefault();
+
+      const pointerId = event.pointerId;
+      const startClientX = event.clientX;
+      const startClientY = event.clientY;
+      let promoted = false;
+
+      const detach = () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onCancel);
+        if (gestureCleanupRef.current === detach) {
+          gestureCleanupRef.current = null;
+        }
+      };
+
+      const finishAsClick = () => {
+        swallowClickRef.current = true;
+        selectOrConnect(type, id);
+        window.setTimeout(() => {
+          swallowClickRef.current = false;
+        }, 0);
+      };
+
+      const onMove = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId || promoted) return;
+        if (
+          Math.hypot(e.clientX - startClientX, e.clientY - startClientY) <=
+          DRAG_THRESHOLD_PX
+        ) {
+          return;
+        }
+        promoted = true;
+        detach();
+        const dotEl =
+          type === "prompt"
+            ? promptDotRefs.current[id]
+            : termDotRefs.current[id];
+        const origin = getNodeCenter(dotEl);
+        if (!origin) {
+          finishAsClick();
+          return;
+        }
+        beginDrag(
+          { type, id, startX: origin.x, startY: origin.y },
+          pointerId,
+        );
+        didDragRef.current = true;
+      };
+
+      const onUp = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return;
+        detach();
+        if (!promoted) finishAsClick();
+      };
+
+      const onCancel = (e: PointerEvent) => {
+        if (e.pointerId !== pointerId) return;
+        detach();
+      };
+
+      gestureCleanupRef.current?.();
+      gestureCleanupRef.current = detach;
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onCancel);
+    },
+    [
+      interactionLocked,
+      isCardInteractionLocked,
+      getNodeCenter,
+      beginDrag,
+      selectOrConnect,
+    ],
+  );
+
   const handleCardPointerDown = useCallback(
     (
       type: "prompt" | "term",
       id: string,
       event: ReactPointerEvent<HTMLDivElement>,
     ) => {
-      if (interactionLocked || isCardInteractionLocked(type, id)) return;
-      if ((event.target as HTMLElement).closest("[data-connector-dot]"))
-        return;
-      event.preventDefault();
-
-      const dotEl =
-        type === "prompt"
-          ? promptDotRefs.current[id]
-          : termDotRefs.current[id];
-      const origin = getNodeCenter(dotEl);
-      if (!origin) return;
-
-      beginDrag(
-        { type, id, startX: origin.x, startY: origin.y },
-        event.pointerId,
-      );
+      armPointerGesture(type, id, event);
     },
-    [interactionLocked, isCardInteractionLocked, getNodeCenter, beginDrag],
-  );
-
-  const handleDotPointerDown = useCallback(
-    (
-      type: "prompt" | "term",
-      id: string,
-      event: ReactPointerEvent<HTMLElement>,
-    ) => {
-      if (interactionLocked || isCardInteractionLocked(type, id)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      const origin = getNodeCenter(event.currentTarget);
-      if (!origin) return;
-      beginDrag(
-        { type, id, startX: origin.x, startY: origin.y },
-        event.pointerId,
-      );
-    },
-    [interactionLocked, isCardInteractionLocked, getNodeCenter, beginDrag],
+    [armPointerGesture],
   );
 
   const handleSubmitMatches = () => {
@@ -1374,12 +1446,6 @@ export function MatchConnectorWorkspace({
                           data-dot-type="term"
                           data-dot-id={term.id}
                           aria-hidden={true}
-                          onPointerDown={(e) =>
-                            cardLocked
-                              ? undefined
-                              : handleDotPointerDown("term", term.id, e)
-                          }
-                          onClick={(e) => e.stopPropagation()}
                         />
 
                         {(showInlineFeedback && isConnected) || pairKeptCorrect ? (
@@ -1516,12 +1582,6 @@ export function MatchConnectorWorkspace({
                           data-dot-type="prompt"
                           data-dot-id={prompt.id}
                           aria-hidden={true}
-                          onPointerDown={(e) =>
-                            cardLocked
-                              ? undefined
-                              : handleDotPointerDown("prompt", prompt.id, e)
-                          }
-                          onClick={(e) => e.stopPropagation()}
                         />
 
                         {renderMatchCardBody(
