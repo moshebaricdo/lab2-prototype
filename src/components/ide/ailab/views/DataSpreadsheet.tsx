@@ -2,6 +2,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -9,7 +10,10 @@ import {
   type ReactElement,
   type RefObject,
 } from "react";
+import { Button, Tooltip } from "@moshebari/cads-react";
+import type { FaIconName } from "@moshebari/cads-react/icons";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
+import { useTheme } from "../../../../hooks/useTheme";
 import { useVirtualRange } from "../../../../hooks/useVirtualRange";
 import { formatCell, uniqueValues } from "../../../../lib/aiLab";
 import type {
@@ -44,7 +48,97 @@ function datalistId(columnId: string) {
   return `ai-lab-col-${columnId}`;
 }
 
+type SortDirection = "asc" | "desc";
+
+interface ColumnSort {
+  columnId: string;
+  direction: SortDirection;
+}
+
+function cellEmpty(value: AiLabCellValue | undefined) {
+  return value === null || value === undefined || value === "";
+}
+
+/** Empty cells stay last in either direction. Ties keep the original row order. */
+function compareCells(
+  a: AiLabCellValue | undefined,
+  b: AiLabCellValue | undefined,
+  numeric: boolean,
+  direction: SortDirection,
+): number {
+  const emptyA = cellEmpty(a);
+  const emptyB = cellEmpty(b);
+  if (emptyA && emptyB) return 0;
+  if (emptyA) return 1;
+  if (emptyB) return -1;
+  const compared = numeric
+    ? Number(a) - Number(b)
+    : String(a).localeCompare(String(b), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+  return direction === "asc" ? compared : -compared;
+}
+
+function cycleSort(current: ColumnSort | null, columnId: string): ColumnSort | null {
+  if (!current || current.columnId !== columnId) {
+    return { columnId, direction: "asc" };
+  }
+  if (current.direction === "asc") return { columnId, direction: "desc" };
+  return null;
+}
+
+function rowOrder(
+  rows: AiLabDataRow[],
+  columns: AiLabColumn[],
+  sort: ColumnSort | null,
+): number[] {
+  const indexes = rows.map((_, index) => index);
+  if (!sort) return indexes;
+  const column = columns.find((entry) => entry.id === sort.columnId);
+  if (!column) return indexes;
+  const numeric = column.type === "numerical";
+  return indexes.sort((a, b) => {
+    const compared = compareCells(
+      rows[a]?.[column.id],
+      rows[b]?.[column.id],
+      numeric,
+      sort.direction,
+    );
+    return compared || a - b;
+  });
+}
+
+/** Button icon is the current sort. Tooltip names the next click, with that step's icon. */
+function sortPresentation(
+  column: AiLabColumn,
+  direction: SortDirection | undefined,
+): { buttonIcon: FaIconName; label: string; tooltipIcon?: FaIconName } {
+  const numeric = column.type === "numerical";
+  if (direction === "desc") {
+    return {
+      buttonIcon: numeric ? "arrow-up-1-9" : "arrow-up-a-z",
+      label: "Original order",
+    };
+  }
+  if (direction === "asc") {
+    return {
+      buttonIcon: numeric ? "arrow-down-1-9" : "arrow-down-a-z",
+      label: numeric
+        ? `Sort by ${column.name} 9-1`
+        : `Sort by ${column.name} Z-A`,
+      tooltipIcon: numeric ? "arrow-up-9-1" : "arrow-up-z-a",
+    };
+  }
+  return {
+    buttonIcon: "sort",
+    label: numeric ? `Sort by ${column.name} 1-9` : `Sort by ${column.name} A-Z`,
+    tooltipIcon: numeric ? "arrow-down-1-9" : "arrow-down-a-z",
+  };
+}
+
 export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
+  const { theme } = useTheme();
   const columns = lab.config.dataset.columns;
   const rows = lab.rows;
   const readOnly = lab.config.allowDataEdit === false;
@@ -58,6 +152,10 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   const [active, setActive] = useState<CellRef | undefined>();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const [sort, setSort] = useState<ColumnSort | null>(null);
+  const order = useMemo(() => rowOrder(rows, columns, sort), [rows, columns, sort]);
+  const orderRef = useRef(order);
+  orderRef.current = order;
 
   const { start, end, topPad, bottomPad, scrollIntoView } = useVirtualRange({
     scrollRef,
@@ -98,7 +196,8 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
     (cell: CellRef) => {
       setActive(cell);
       latest.current.lab.setSelectedColumnId(cell.columnId);
-      scrollIntoView(cell.rowIndex);
+      const visual = orderRef.current.indexOf(cell.rowIndex);
+      scrollIntoView(visual >= 0 ? visual : cell.rowIndex);
     },
     [scrollIntoView],
   );
@@ -113,9 +212,13 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
       }
       const columnIndex = cols.findIndex((column) => column.id === current.columnId);
       const nextColumn = cols[columnIndex + columnDelta];
-      const nextRow = current.rowIndex + rowDelta;
-      if (!nextColumn || nextRow < 0 || nextRow >= all.length) return;
-      focusCell({ rowIndex: nextRow, columnId: nextColumn.id });
+      const visual = orderRef.current.indexOf(current.rowIndex);
+      const nextVisual = visual + rowDelta;
+      if (!nextColumn || nextVisual < 0 || nextVisual >= all.length) return;
+      focusCell({
+        rowIndex: orderRef.current[nextVisual] ?? current.rowIndex,
+        columnId: nextColumn.id,
+      });
     },
     [focusCell],
   );
@@ -151,8 +254,16 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   // the typed value is not silently lost.
   useEffect(() => {
     if (!editing || !active) return;
-    if (active.rowIndex < start || active.rowIndex >= end) commit();
+    const visual = orderRef.current.indexOf(active.rowIndex);
+    if (visual < start || visual >= end) commit();
   }, [active, commit, editing, end, start]);
+
+  useEffect(() => {
+    const current = latest.current.active;
+    if (!current) return;
+    const visual = orderRef.current.indexOf(current.rowIndex);
+    if (visual >= 0) scrollIntoView(visual);
+  }, [scrollIntoView, sort]);
 
   const cancel = useCallback(() => {
     skipCommitRef.current = true;
@@ -231,14 +342,15 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
           ((scrollRef.current?.clientHeight ?? 0) - HEADER_HEIGHT) / ROW_HEIGHT,
         ) - 1,
       );
-      const target = Math.min(
+      const visual = orderRef.current.indexOf(active.rowIndex);
+      const targetVisual = Math.min(
         rows.length - 1,
-        Math.max(
-          0,
-          active.rowIndex + (event.key === "PageDown" ? pageRows : -pageRows),
-        ),
+        Math.max(0, visual + (event.key === "PageDown" ? pageRows : -pageRows)),
       );
-      focusCell({ rowIndex: target, columnId: active.columnId });
+      focusCell({
+        rowIndex: orderRef.current[targetVisual] ?? active.rowIndex,
+        columnId: active.columnId,
+      });
     } else if (event.key === "Enter" || event.key === "F2") {
       if (lab.config.allowDataEdit === false) return;
       event.preventDefault();
@@ -291,12 +403,15 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   const onDraftChange = useCallback((value: string) => setDraft(value), []);
 
   const visibleRows: ReactElement[] = [];
-  for (let rowIndex = start; rowIndex < end; rowIndex += 1) {
+  for (let visualIndex = start; visualIndex < end; visualIndex += 1) {
+    const rowIndex = order[visualIndex];
+    if (rowIndex === undefined) continue;
     const isActiveRow = active?.rowIndex === rowIndex;
     visibleRows.push(
       <SheetRow
         key={rowIndex}
         rowIndex={rowIndex}
+        visualIndex={visualIndex}
         row={rows[rowIndex]}
         columns={columns}
         selectedColumnId={lab.selectedColumnId}
@@ -347,15 +462,27 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
                 const inspecting = lab.selectedColumnId === column.id;
                 const isLabel = lab.labelColumn === column.id;
                 const isFeature = lab.selectedFeatures.includes(column.id);
+                const direction =
+                  sort?.columnId === column.id ? sort.direction : undefined;
+                const sortUi = sortPresentation(column, direction);
                 return (
                   <th
                     key={column.id}
                     data-col={column.id}
+                    aria-sort={
+                      direction === "asc"
+                        ? "ascending"
+                        : direction === "desc"
+                          ? "descending"
+                          : "none"
+                    }
                     className={`${styles.th} ${
                       column.type === "numerical" ? styles.thNumeric : ""
                     } ${inspecting ? styles.thSelected : ""} ${
                       isLabel ? styles.thLabel : ""
-                    } ${isFeature ? styles.thFeature : ""}`}
+                    } ${isFeature ? styles.thFeature : ""} ${
+                      direction ? styles.thSorted : ""
+                    }`}
                   >
                     <button
                       type="button"
@@ -370,6 +497,43 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
                         <span className={styles.thName}>{column.name}</span>
                       </span>
                     </button>
+                    <span
+                      className={[
+                        styles.sortButton,
+                        inspecting && theme === "light" ? "dark" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      data-theme={
+                        inspecting
+                          ? theme === "dark"
+                            ? "Light"
+                            : "Dark"
+                          : undefined
+                      }
+                    >
+                      <Tooltip
+                        title={sortUi.label}
+                        iconName={sortUi.tooltipIcon}
+                        placement="bottom"
+                      >
+                        <Button
+                          type="button"
+                          size="extraSmall"
+                          variant="text"
+                          color="secondary"
+                          iconOnly
+                          startIconName={sortUi.buttonIcon}
+                          className={styles.sortControl}
+                          aria-label={sortUi.label}
+                          onClick={(event) => {
+                            const next = cycleSort(sort, column.id);
+                            if (!next) event.currentTarget.blur();
+                            setSort(next);
+                          }}
+                        />
+                      </Tooltip>
+                    </span>
                   </th>
                 );
               })}
@@ -409,6 +573,8 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
 
 interface SheetRowProps {
   rowIndex: number;
+  /** Position in the current view. Matches `rowIndex` until the sheet is sorted. */
+  visualIndex: number;
   row: AiLabDataRow;
   columns: AiLabColumn[];
   selectedColumnId: string | undefined;
@@ -431,6 +597,7 @@ interface SheetRowProps {
 
 const SheetRow = memo(function SheetRow({
   rowIndex,
+  visualIndex,
   row,
   columns,
   selectedColumnId,
@@ -449,7 +616,7 @@ const SheetRow = memo(function SheetRow({
 }: SheetRowProps) {
   const rowSelected = activeColumnId !== undefined;
   return (
-    <tr aria-rowindex={rowIndex + 2}>
+    <tr aria-rowindex={visualIndex + 2}>
       <td className={`${styles.td} ${styles.tdIndex}`}>{rowIndex + 1}</td>
       {columns.map((column) => {
         const isActive = activeColumnId === column.id;

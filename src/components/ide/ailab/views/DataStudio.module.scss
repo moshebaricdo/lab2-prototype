@@ -797,15 +797,53 @@ tbody tr:hover .tdIndex {
 }
 
 .thLead {
-  display: inline-block;
-  max-width: 100%;
-  vertical-align: middle;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
 }
 
 .thName {
   display: block;
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Sort sits on top of the name. The mask fades glyphs that run under it
+   and leaves short names alone, because the fade is the cell's right edge. */
+.th:hover .thName,
+.th:has(.sortControl:focus-visible) .thName,
+.thSorted .thName {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black calc(100% - 28px),
+    transparent calc(100% - 16px)
+  );
+  mask-image: linear-gradient(
+    to right,
+    black calc(100% - 28px),
+    transparent calc(100% - 16px)
+  );
+}
+
+/* 24px extra-small icon button, centered in the 28px header. */
+.sortButton {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 1;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.th:hover > .sortButton,
+.th > .sortButton:focus-within,
+.thSorted > .sortButton {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .th:not(.thIndex):not(.thNumeric),
