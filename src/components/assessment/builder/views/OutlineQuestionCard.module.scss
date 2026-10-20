@@ -39,9 +39,11 @@
 }
 
 .row {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 46px;
   padding: 10px 8px 10px 10px;
 }
 
@@ -53,7 +55,7 @@
   min-width: 0;
 }
 
-.kindHandle,
+.kindSlot,
 .kindIcon {
   display: flex;
   flex-shrink: 0;
@@ -64,29 +66,36 @@
   color: var(--text-neutral-quaternary);
 }
 
-.kindHandle {
-  padding: 0;
-  border: none;
-  border-radius: var(--shape-sm);
-  background: transparent;
-  cursor: grab;
-  touch-action: none;
-  transition:
-    background 0.12s ease,
-    color 0.12s ease;
+.kindType,
+.kindGrip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.kindHandle:hover {
-  background: var(--background-neutral-secondary);
-  color: var(--text-neutral-primary);
+.kindGrip {
+  display: none;
 }
 
-.kindHandle:active {
-  cursor: grabbing;
+.kindSlotGrip .kindType {
+  display: none;
 }
 
-.kindHandle:focus-visible {
-  @include focus-ring;
+.kindSlotGrip .kindGrip {
+  display: flex;
+}
+
+/* Same reveal as the hover trash: row hover, or keyboard focus in the actions. */
+.cardCollapsed:hover:not(.hoverSuppressed) .kindType,
+.cardCollapsed:has(.actions :focus-visible) .kindType,
+.cardCollapsed:has(.hoverAction:focus-within) .kindType {
+  display: none;
+}
+
+.cardCollapsed:hover:not(.hoverSuppressed) .kindGrip,
+.cardCollapsed:has(.actions :focus-visible) .kindGrip,
+.cardCollapsed:has(.hoverAction:focus-within) .kindGrip {
+  display: flex;
 }
 
 .preview {

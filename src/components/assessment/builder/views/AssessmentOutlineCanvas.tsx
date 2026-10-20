@@ -563,7 +563,7 @@ export function AssessmentOutlineCanvas({
                 className={styles.dragCard}
                 style={overlayWidth ? { width: overlayWidth } : undefined}
               >
-                <QuestionRowContent question={activeQuestion} />
+                <QuestionRowContent question={activeQuestion} forceGrip />
               </div>
             ) : null}
           </DragOverlay>

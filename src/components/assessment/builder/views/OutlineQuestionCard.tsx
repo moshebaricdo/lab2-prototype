@@ -15,16 +15,20 @@ export type QuestionEditorTab = "question" | "answers" | "usage";
 interface QuestionRowContentProps {
   question: QuestionItem;
   showHandle?: boolean;
+  /** Drag overlay: grip stays visible and actions stay hidden. */
+  forceGrip?: boolean;
   actions?: React.ReactNode;
 }
 
 /**
- * Collapsed row: type icon (drag handle) · internal name · stem peek ·
- * hover discard · unsaved warning · outlined pencil. Expanded: chevron-up.
+ * Collapsed row: type icon · internal name · stem peek · hover trash ·
+ * unsaved warning · outlined pencil. Hover and drag swap the type icon
+ * for a grip. Expanded: type icon and chevron-up.
  */
 export function QuestionRowContent({
   question,
   showHandle = true,
+  forceGrip = false,
   actions,
 }: QuestionRowContentProps) {
   const meta = questionKindMeta(question);
@@ -39,8 +43,19 @@ export function QuestionRowContent({
     <div className={styles.row}>
       <div className={styles.topRow}>
         {showHandle ? (
-          <span className={styles.kindHandle} aria-label={`Reorder ${meta.label}`}>
-            {icon}
+          <span
+            className={[
+              styles.kindSlot,
+              forceGrip ? styles.kindSlotGrip : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria-label={`Reorder ${meta.label}`}
+          >
+            <span className={styles.kindType}>{icon}</span>
+            <span className={styles.kindGrip} aria-hidden="true">
+              <FaIcon name="grip-vertical" size="small" />
+            </span>
           </span>
         ) : (
           <span className={styles.kindIcon} aria-label={meta.label}>
