@@ -45,8 +45,9 @@ export const aiLabScaleInstructions: Record<"dataset" | "test", string> = {
 export const aiLabUploadInstructions: Record<"dataset" | "test", string> = {
   dataset: [
     "# Train on your data",
-    "This level starts empty. Open **Dev**, expand **Data**, and drop CSV files on **Add a dataset** (or browse). Download the template so the file is formatted properly. The first row is the header. The last column starts as what the model predicts.",
-    "Each file stays in this browser tab. Uploading the same file name replaces that sheet. Remove a chip to drop that file.",
+    "Start by choosing a dataset. Pick a sample, or press **Upload CSV** to use your own. The panel on the right describes the data, where it came from, and what it could be used for. Then press **Use this dataset**.",
+    "A CSV needs a header row. The last column starts as what the model predicts.",
+    "Each upload stays in this browser tab. Uploading the same file name replaces that sheet. You can switch datasets later from the name above the sheet.",
     "Pick what to predict, choose the columns the model may use, and press **Train model**.",
   ].join("\n\n"),
   test: [

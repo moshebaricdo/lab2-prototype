@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import datasetTemplateCsv from "../../data/ailab/dataset-template.csv?raw";
 import { useNavigate } from "react-router-dom";
 import { Lab2Shell } from "../../components/lab2/Lab2Shell";
@@ -32,17 +32,23 @@ import {
   aiLabDevDefaults,
   cardTitleColumnDevOptions,
   clearUploadedSheets,
+  combineDatasetCatalog,
   datasetDevOptions,
   featureColumnDevOptions,
   findCatalogDataset,
+  labDatasetCatalog,
   labelColumnDevOptions,
   mergeAiLabDevConfig,
   mergeUploadedSheets,
+  readActiveDatasetId,
   readUploadedSheets,
   retainUploadedSheets,
   sheetsToDatasets,
   uniqueDevCatalog,
+  writeActiveDatasetId,
   writeUploadedSheets,
+  type IncomingCsv,
+  type MergeUploadedSheetsResult,
   type UploadedSheet,
 } from "../../lib/aiLab";
 import {
@@ -95,7 +101,7 @@ function aiLabDevFields(
       key: "presetDataset",
       label: "Pre-set dataset",
       description:
-        "Lock a catalog dataset so the sheet opens with it. User chooses keeps the setup picker.",
+        "Lock a catalog dataset so the sheet opens with it. User chooses lets the student pick.",
       type: "select",
       group: "Data",
       options: datasetDevOptions(catalog),
@@ -278,7 +284,7 @@ const uploadDatasetsDevField: DevPanelField = {
   key: UPLOADED_DATASETS_DEV_KEY,
   label: "Add a dataset",
   description:
-    "Dataset(s) you upload are stored in session storage. Use the template to ensure CSVs are formatted properly. Try to keep sets to a few hundred rows or less.",
+    "Same CSV list as Choose a dataset. Files stay in session storage for this tab. Download the template for the column layout. A few hundred rows each.",
   type: "file",
   accept: ".csv,text/csv",
   multiple: true,
@@ -323,18 +329,24 @@ export function AiLabLevelPage({
   const [uploadedSheets, setUploadedSheets] = useState<UploadedSheet[]>(() =>
     config.sessionDatasets ? readUploadedSheets() : [],
   );
+  const [studentDatasetId, setStudentDatasetId] = useState<string | undefined>(
+    () => (config.sessionDatasets ? readActiveDatasetId() : undefined),
+  );
   const uploadedDatasets = useMemo(
     () => sheetsToDatasets(uploadedSheets),
     [uploadedSheets],
   );
+  const pickerCatalog = useMemo(
+    () => combineDatasetCatalog(aiLabStudioCatalog, uploadedDatasets),
+    [uploadedDatasets],
+  );
   const catalog = useMemo(
     () =>
       sessionDatasets
-        ? uploadedDatasets
+        ? pickerCatalog.catalog
         : uniqueDevCatalog(config.dataset, aiLabStudioCatalog),
-    [sessionDatasets, uploadedDatasets, config.dataset],
+    [sessionDatasets, pickerCatalog.catalog, config.dataset],
   );
-  const latestUploaded = uploadedDatasets[uploadedDatasets.length - 1];
   const {
     activeTab,
     setActiveTab,
@@ -342,16 +354,13 @@ export function AiLabLevelPage({
     setIsSettingsOpen,
     sidebarWidth,
     setSidebarWidth,
-  } = useLayoutState(sessionDatasets ? "dev" : "instructions", { sidebarWidth: resourcePanelWidth });
+  } = useLayoutState("instructions", { sidebarWidth: resourcePanelWidth });
   const { chatMessages, setChatMessages, chatInput, setChatInput } = useChatState([]);
   const versionHistoryState = useVersionHistoryState();
   const defaults = aiLabDevDefaults(config);
   const overrideResult = usePropsOverride({
     ...defaults,
-    ...(sessionDatasets
-      ? { presetDataset: latestUploaded?.id ?? AI_LAB_STUDENT_CHOICE }
-      : {}),
-    showInstructionsTab: !sessionDatasets,
+    showInstructionsTab: true,
     showContinueButton: true,
     enableSidebarCollapse: sessionDatasets,
     collapseSidebarByDefault: false,
@@ -375,16 +384,59 @@ export function AiLabLevelPage({
     : [];
   const presetMatches = Boolean(findCatalogDataset(catalog, presetDataset));
   const effectivePreset =
-    presetMatches || presetDataset === AI_LAB_STUDENT_CHOICE
-      ? presetDataset
-      : sessionDatasets && latestUploaded
-        ? latestUploaded.id
-        : presetDataset;
-  const selectedUpload = findCatalogDataset(catalog, effectivePreset);
-  const labelDataset = selectedUpload ?? config.dataset;
+    sessionDatasets &&
+    !(presetMatches && presetDataset !== AI_LAB_STUDENT_CHOICE)
+      ? AI_LAB_STUDENT_CHOICE
+      : presetDataset;
+  const sessionLocked = sessionDatasets && effectivePreset !== AI_LAB_STUDENT_CHOICE;
+  const labCatalog = useMemo(
+    () =>
+      sessionDatasets
+        ? labDatasetCatalog(pickerCatalog, [
+            sessionLocked ? effectivePreset : undefined,
+            studentDatasetId,
+          ])
+        : catalog,
+    [
+      sessionDatasets,
+      pickerCatalog,
+      sessionLocked,
+      effectivePreset,
+      studentDatasetId,
+      catalog,
+    ],
+  );
+  const activeDataset = sessionDatasets
+    ? findCatalogDataset(
+        labCatalog,
+        sessionLocked ? effectivePreset : studentDatasetId,
+      )
+    : undefined;
+  const labelDataset =
+    activeDataset ??
+    (sessionDatasets
+      ? config.dataset
+      : findCatalogDataset(catalog, effectivePreset) ?? config.dataset);
   const datasetRevision =
-    uploadedSheets.find((sheet) => sheet.id === selectedUpload?.id)?.updatedAt ??
+    uploadedSheets.find((sheet) => sheet.id === activeDataset?.id)?.updatedAt ??
     "";
+  const sessionRef = useRef({
+    sheets: uploadedSheets,
+    sampleIds: new Set(pickerCatalog.samples.map((dataset) => dataset.id)),
+  });
+  sessionRef.current = {
+    sheets: uploadedSheets,
+    sampleIds: new Set(pickerCatalog.samples.map((dataset) => dataset.id)),
+  };
+  useEffect(() => {
+    if (!sessionDatasets) return;
+    writeActiveDatasetId(studentDatasetId);
+  }, [sessionDatasets, studentDatasetId]);
+  useEffect(() => {
+    if (!sessionDatasets || !studentDatasetId) return;
+    if (findCatalogDataset(catalog, studentDatasetId)) return;
+    setStudentDatasetId(undefined);
+  }, [sessionDatasets, catalog, studentDatasetId]);
   useEffect(() => {
     if (!sessionDatasets) return;
     if (presetDataset === AI_LAB_STUDENT_CHOICE || presetMatches) return;
@@ -397,54 +449,68 @@ export function AiLabLevelPage({
   ]);
   // Keyed on primitives so the config (and everything `useAiLabState`
   // derives from it) keeps its identity across unrelated page re-renders.
-  const levelConfig = useMemo(
-    () =>
-      mergeAiLabDevConfig(
-        sessionDatasets
-          ? {
-              ...config,
-              dataset: selectedUpload ?? config.dataset,
-              availableDatasets: catalog,
-              datasetRevision,
-              emptyDataset: catalog.length === 0 ? config.emptyDataset : undefined,
-            }
-          : config,
-        {
-          algorithmLock: sessionDatasets ? "decisionTree" : algorithmLock,
-          presetDataset: effectivePreset,
-          presetLabelColumn,
-          presetFeatures,
-          cardTitleColumn,
-          workspaceTabs,
-          hideTrainPanel,
-          defaultDataView,
-          bundleWideSplits: sessionDatasets ? false : bundleWideSplits,
-          trainingAnimation: sessionDatasets ? "rows" : trainingAnimation,
-          treeNodeDetail: sessionDatasets ? "modal" : treeNodeDetail,
-          randomizeTestData,
-        },
-        catalog,
-      ),
-    [
-      sessionDatasets,
-      config,
-      selectedUpload,
-      catalog,
-      datasetRevision,
-      algorithmLock,
-      effectivePreset,
-      presetLabelColumn,
-      presetFeatures,
-      cardTitleColumn,
-      workspaceTabs,
-      hideTrainPanel,
-      defaultDataView,
-      bundleWideSplits,
-      trainingAnimation,
-      treeNodeDetail,
-      randomizeTestData,
-    ],
-  );
+  const levelConfig = useMemo(() => {
+    const merged = mergeAiLabDevConfig(
+      sessionDatasets
+        ? {
+            ...config,
+            dataset: activeDataset ?? config.dataset,
+            availableDatasets: labCatalog,
+            datasetRevision,
+            emptyDataset: activeDataset ? undefined : config.emptyDataset,
+          }
+        : config,
+      {
+        algorithmLock: sessionDatasets ? "decisionTree" : algorithmLock,
+        presetDataset: effectivePreset,
+        presetLabelColumn,
+        presetFeatures,
+        cardTitleColumn,
+        workspaceTabs,
+        hideTrainPanel,
+        defaultDataView,
+        bundleWideSplits: sessionDatasets ? false : bundleWideSplits,
+        trainingAnimation: sessionDatasets ? "rows" : trainingAnimation,
+        treeNodeDetail: sessionDatasets ? "modal" : treeNodeDetail,
+        randomizeTestData,
+      },
+      sessionDatasets ? labCatalog : catalog,
+    );
+    if (!sessionDatasets || sessionLocked) return merged;
+    const ready = Boolean(
+      activeDataset &&
+        activeDataset.rows.length > 0 &&
+        activeDataset.columns.length >= 2,
+    );
+    return {
+      ...merged,
+      dataset: activeDataset ?? config.dataset,
+      availableDatasets: labCatalog,
+      lockDataset: false,
+      requireDatasetChoice: !ready,
+      emptyDataset: ready ? undefined : config.emptyDataset,
+    };
+  }, [
+    sessionDatasets,
+    sessionLocked,
+    config,
+    activeDataset,
+    labCatalog,
+    catalog,
+    datasetRevision,
+    algorithmLock,
+    effectivePreset,
+    presetLabelColumn,
+    presetFeatures,
+    cardTitleColumn,
+    workspaceTabs,
+    hideTrainPanel,
+    defaultDataView,
+    bundleWideSplits,
+    trainingAnimation,
+    treeNodeDetail,
+    randomizeTestData,
+  ]);
   const lab = useAiLabState(levelConfig);
   const levelIndex =
     progressLevelIndex ?? currentLevelIndex(currentLevelPath, levelLinks);
@@ -490,6 +556,50 @@ export function AiLabLevelPage({
     });
     return sessionDatasets ? [uploadDatasetsDevField, ...fields] : fields;
   }, [sessionDatasets, catalog, labelDataset, presetLabelColumn]);
+  const storeSheets = (next: UploadedSheet[]) => {
+    if (next.length === 0) clearUploadedSheets();
+    else writeUploadedSheets(next);
+    sessionRef.current = { ...sessionRef.current, sheets: next };
+    setUploadedSheets(next);
+    setStudentDatasetId((active) => {
+      if (!active) return active;
+      if (next.some((sheet) => sheet.id === active)) return active;
+      if (sessionRef.current.sampleIds.has(active)) return active;
+      return undefined;
+    });
+  };
+
+  const commitUploads = (
+    files: IncomingCsv[],
+    focus: boolean,
+  ): MergeUploadedSheetsResult => {
+    const current = sessionRef.current.sheets;
+    const result = mergeUploadedSheets(current, files);
+    if (result.sheets === current) return result;
+    try {
+      if (result.sheets.length === 0) clearUploadedSheets();
+      else writeUploadedSheets(result.sheets);
+    } catch (error) {
+      return {
+        sheets: current,
+        error:
+          error instanceof Error
+            ? error.message
+            : "This tab cannot store that file.",
+      };
+    }
+    sessionRef.current = { ...sessionRef.current, sheets: result.sheets };
+    setUploadedSheets(result.sheets);
+    if (focus && result.focusId) setStudentDatasetId(result.focusId);
+    return result;
+  };
+
+  const removeUploadById = (datasetId: string) => {
+    const next = sessionRef.current.sheets.filter((sheet) => sheet.id !== datasetId);
+    if (next.length === sessionRef.current.sheets.length) return;
+    storeSheets(next);
+  };
+
   const uploadedDatasetFieldValue = uploadedSheets.length
     ? {
         files: uploadedSheets.map((sheet) => ({
@@ -560,43 +670,23 @@ export function AiLabLevelPage({
               } | undefined;
               const files = payload?.files ?? [];
               if (payload?.source === "remove") {
-                const next = retainUploadedSheets(
-                  uploadedSheets,
-                  files.map((file) => file.name),
+                storeSheets(
+                  retainUploadedSheets(
+                    sessionRef.current.sheets,
+                    files.map((file) => file.name),
+                  ),
                 );
-                if (next.length === 0) {
-                  clearUploadedSheets();
-                } else {
-                  writeUploadedSheets(next);
-                }
-                setUploadedSheets(next);
-                const activeId = String(overrideResult.getValue("presetDataset"));
-                if (!next.some((sheet) => sheet.id === activeId)) {
-                  overrideResult.resetKey("presetDataset");
-                }
                 return;
               }
               if (files.length === 0) return;
-              const result = mergeUploadedSheets(uploadedSheets, files);
-              const unchanged = result.sheets === uploadedSheets;
-              if (unchanged) {
-                if (result.error) throw new Error(result.error);
-                return;
-              }
-              writeUploadedSheets(result.sheets);
-              setUploadedSheets(result.sheets);
-              if (result.focusId) {
-                overrideResult.setValue("presetDataset", result.focusId);
-              }
+              const result = commitUploads(files, !sessionLocked);
               if (result.error) throw new Error(result.error);
             }
           : undefined,
         onDevPanelSessionValueReset: sessionDatasets
           ? (key) => {
               if (key !== UPLOADED_DATASETS_DEV_KEY) return;
-              clearUploadedSheets();
-              setUploadedSheets([]);
-              overrideResult.resetKey("presetDataset");
+              storeSheets([]);
             }
           : undefined,
       }}
@@ -605,7 +695,37 @@ export function AiLabLevelPage({
       }}
     >
       {workspace === "guided" ? (
-        <AiLabGuidedWorkspace lab={lab} />
+        <AiLabGuidedWorkspace
+          lab={lab}
+          datasetPicker={
+            sessionDatasets
+              ? {
+                  presets: pickerCatalog.samples,
+                  uploads: uploadedSheets.flatMap((sheet) => {
+                    const dataset = uploadedDatasets.find(
+                      (entry) => entry.id === sheet.id,
+                    );
+                    return dataset
+                      ? [{ dataset, fileName: sheet.fileName }]
+                      : [];
+                  }),
+                  template: {
+                    fileName: "ai-lab-dataset-template.csv",
+                    content: datasetTemplateCsv,
+                    label: "Download template",
+                  },
+                  onUpload: (files) => commitUploads(files, false),
+                  onRemoveUpload: removeUploadById,
+                  onApply: (datasetId) => setStudentDatasetId(datasetId),
+                }
+              : undefined
+          }
+          onReturnToDatasetStart={
+            sessionDatasets && !sessionLocked
+              ? () => setStudentDatasetId(undefined)
+              : undefined
+          }
+        />
       ) : (
         <AiLabWorkspace lab={lab} />
       )}

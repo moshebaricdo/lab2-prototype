@@ -373,19 +373,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
 
   const startOver = useCallback(() => {
     setState((current) => ({
-      ...initialState({
-        ...config,
-        pretrained: config.algorithmLock ? config.pretrained : undefined,
-        initialSection: config.algorithmLock
-          ? config.initialSection
-          : config.trainAsOverlay
-            ? "dataset"
-            : "algorithm",
-      }),
-      dataView: current.dataView,
-      cardLayout: config.hideCardLayoutToggle
-        ? "carousel"
-        : current.cardLayout,
+      ...initialState(config),
       savedModels: current.savedModels,
     }));
   }, [config]);

@@ -1,0 +1,18 @@
+// CADS Dialog iconTop is brand purple with a primary confirm. This frame
+// uses the error badge and a contained error Start over (Figma 6114:27298).
+// Confirm colors are inline on the button, so the custom properties need
+// !important to win.
+.dialog {
+  > :first-child {
+    background-color: var(--background-error-primary);
+  }
+
+  [data-cads-component="Dialog"] > div button:last-child {
+    --btn-bg: var(--background-error-primary) !important;
+    --btn-bg-hover: var(--background-error-strong) !important;
+    --btn-bg-press: var(--background-error-strong) !important;
+    --btn-fg: var(--text-neutral-white-fixed) !important;
+    --btn-border: transparent !important;
+    --btn-disabled-bg: var(--background-disabled-error) !important;
+  }
+}

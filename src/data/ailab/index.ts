@@ -135,7 +135,7 @@ export const aiLabP0Config: AiLabLevelConfig = {
 export const aiLabUploadPlaceholder: AiLabDataset = {
   id: "upload_pending",
   name: "No dataset",
-  description: "Upload a CSV from the Dev panel.",
+  description: "Choose a sample dataset, or upload a CSV.",
   defaultLabelColumn: "",
   columns: [],
   rows: [],
@@ -149,7 +149,7 @@ export const aiLabUploadConfig: AiLabLevelConfig = {
   sessionDatasets: true,
   emptyDataset: {
     title: "No data to show",
-    copy: "Upload or select a dataset (via the Dev Panel) to populate this view.",
+    copy: "Choose a sample dataset, or upload a CSV.",
   },
   algorithmLock: "decisionTree",
   allowDataEdit: false,

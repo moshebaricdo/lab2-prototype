@@ -62,6 +62,18 @@ export interface AiLabDatasetStory {
   imageColumn?: string;
 }
 
+/**
+ * Production's dataset card: the facts the dataset chooser lists before a
+ * student commits. Rows of data comes from the sheet itself.
+ */
+export interface AiLabDatasetCard {
+  description: string;
+  source?: string;
+  lastUpdated?: string;
+  potentialUses?: string;
+  potentialMisuses?: string;
+}
+
 export interface AiLabDataset {
   id: string;
   name: string;
@@ -70,6 +82,9 @@ export interface AiLabDataset {
   columns: AiLabColumn[];
   rows: AiLabDataRow[];
   story?: AiLabDatasetStory;
+  card?: AiLabDatasetCard;
+  /** Cover art for the dataset chooser. Absent covers fall back to a sheet preview. */
+  cover?: string;
 }
 
 /**
@@ -273,13 +288,17 @@ export interface AiLabLevelConfig {
   requireDatasetChoice?: boolean;
   /**
    * Shown in place of the sheet when no dataset is selected. The setup
-   * modal stays closed so the empty state can point at an upload.
+   * modal stays closed. The upload level's empty card opens the dataset
+   * picker instead.
    */
   emptyDataset?: {
     title: string;
     copy: string;
   };
-  /** Catalog comes from CSV files kept in session storage, not the drop folder. */
+  /**
+   * This level can take CSV uploads kept in session storage. Sample
+   * datasets from the drop folder can sit beside those uploads.
+   */
   sessionDatasets?: boolean;
   /**
    * Bumps when the active sheet's bytes change so a re-upload remounts

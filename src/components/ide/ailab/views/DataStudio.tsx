@@ -39,6 +39,8 @@ import { DataSpreadsheet } from "./DataSpreadsheet";
 import { ModelActions } from "./ModelActions";
 import type { ModelInspectorTab } from "./ModelInspector";
 import { ScaleGroupEditor } from "./ScaleGroupEditor";
+import { DatasetStartEmptyState } from "./DatasetStartEmptyState";
+import type { DatasetPickerController } from "./DatasetPickerModal";
 import { DatasetStoryModal } from "./DatasetStoryModal";
 import { IntroActivity } from "./IntroActivity";
 import { PredictionStatement } from "./PredictionStatement";
@@ -86,9 +88,19 @@ interface DataStudioProps {
   lab: AiLabController;
   onOpenModel?: (tab: ModelInspectorTab) => void;
   onOpenSetup?: () => void;
+  /** Empty sheet action. Upload level opens the dataset picker from here. */
+  onChooseDataset?: () => void;
+  /** Full-screen start when the lab has no sheet yet. */
+  datasetStart?: DatasetPickerController;
 }
 
-export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
+export function DataStudio({
+  lab,
+  onOpenModel,
+  onOpenSetup,
+  onChooseDataset,
+  datasetStart,
+}: DataStudioProps) {
   const selected = lab.config.dataset.columns.find(
     (column) => column.id === lab.selectedColumnId,
   );
@@ -121,13 +133,17 @@ export function DataStudio({ lab, onOpenModel, onOpenSetup }: DataStudioProps) {
           )}
           {inIntro ? (
             <IntroActivity lab={lab} />
+          ) : awaitingUpload && datasetStart ? (
+            <DatasetStartEmptyState {...datasetStart} />
           ) : awaitingUpload ? (
             <EmptyDatasetSheet
               title={lab.config.emptyDataset?.title ?? "No data to show"}
               copy={
                 lab.config.emptyDataset?.copy ??
-                "Upload or select a dataset (via the Dev Panel) to populate this view."
+                "Choose a sample dataset, or upload a CSV."
               }
+              actionLabel={onChooseDataset ? "Choose a dataset" : undefined}
+              onAction={onChooseDataset}
             />
           ) : lab.needsDataset ? (
             <div className={styles.empty}>
@@ -164,7 +180,17 @@ const EMPTY_SHEET_COLUMNS = 5;
 const EMPTY_SHEET_CARD_COLUMNS = 3;
 const EMPTY_SHEET_CARD_ROWS = 9;
 
-function EmptyDatasetSheet({ title, copy }: { title: string; copy: string }) {
+function EmptyDatasetSheet({
+  title,
+  copy,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  copy: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState({ rendered: 12, full: 12 });
 
@@ -242,6 +268,16 @@ function EmptyDatasetSheet({ title, copy }: { title: string; copy: string }) {
               <h2 className={styles.emptyCardTitle}>{title}</h2>
               <p className={styles.emptyCardText}>{copy}</p>
             </div>
+            {onAction && actionLabel ? (
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={onAction}
+              >
+                {actionLabel}
+              </Button>
+            ) : null}
           </div>
         </div>
       </div>
@@ -285,7 +321,9 @@ function DataHeader({
         {lab.needsDataset ? null : (
           <>
             <span className={styles.setDot} aria-hidden />
-            <span className={styles.setMeta}>{lab.rows.length} rows</span>
+            <span className={styles.setMeta}>
+              {`${lab.rows.length} rows`}
+            </span>
             <Tooltip title="About this data" placement="bottom">
               <Button
                 variant="text"
@@ -417,6 +455,9 @@ function TrainRail({
   // exists, so opening it eagerly here is safe for either algorithm.
   const useTrainingModal = lab.config.trainingModal !== false;
   const [trainingOpen, setTrainingOpen] = useState(false);
+  useEffect(() => {
+    if (!lab.model) setTrainingOpen(false);
+  }, [lab.model]);
   const hasTree = Boolean(model?.tree);
   // Replay only when the trained tree still matches the dropdowns; a
   // changed label/feature set needs a real train, not a playback.

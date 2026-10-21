@@ -9,6 +9,11 @@ import {
   ModelInspector,
   type ModelInspectorTab,
 } from "./ModelInspector";
+import {
+  DatasetPickerModal,
+  type DatasetPickerController,
+} from "./DatasetPickerModal";
+import { AiLabStartOverDialog } from "./AiLabStartOverDialog";
 import { SetupModal } from "./SetupModal";
 import styles from "./AiLabGuidedWorkspace.module.scss";
 
@@ -34,26 +39,46 @@ const SECTION_TABS: Record<
 
 interface AiLabGuidedWorkspaceProps {
   lab: AiLabController;
+  /** Upload level: sample datasets and CSV upload, instead of the setup modal. */
+  datasetPicker?: DatasetPickerController;
+  /**
+   * Clears the chosen sheet so the dataset start shows again.
+   * Passed when the student can pick a dataset.
+   */
+  onReturnToDatasetStart?: () => void;
 }
 
-export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
+export function AiLabGuidedWorkspace({
+  lab,
+  datasetPicker,
+  onReturnToDatasetStart,
+}: AiLabGuidedWorkspaceProps) {
   const needsDataset = lab.needsDataset;
   const needsAlgorithm =
     !lab.selectedAlgorithm && !lab.config.algorithmLock;
   const needsSetup = needsDataset || needsAlgorithm;
   const awaitingUpload = Boolean(lab.config.emptyDataset) && needsDataset;
-  const canChangeSetup =
-    !awaitingUpload && (lab.canPickDataset || !lab.config.algorithmLock);
+  const canChangeSetup = datasetPicker
+    ? lab.canPickDataset && !awaitingUpload
+    : !awaitingUpload && (lab.canPickDataset || !lab.config.algorithmLock);
   const [setupOpen, setSetupOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [inspectorTab, setInspectorTab] =
     useState<ModelInspectorTab>("scorecard");
-  const setupModalOpen = !awaitingUpload && (needsSetup || setupOpen);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const setupModalOpen =
+    !datasetPicker && !awaitingUpload && (needsSetup || setupOpen);
   const canInspect = Boolean(
     lab.config.showModelDetails || lab.config.showExport,
   );
 
   const openSetup = () => {
+    if (datasetPicker) {
+      if (!lab.canPickDataset) return;
+      setPickerOpen(true);
+      return;
+    }
     if (!canChangeSetup) return;
     setSetupOpen(true);
   };
@@ -80,72 +105,96 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
     ? ALGORITHM_ICONS[lab.selectedAlgorithm]
     : "sitemap";
 
+  const returnToDatasetPicker = Boolean(
+    datasetPicker && lab.canPickDataset && onReturnToDatasetStart && lab.datasetId,
+  );
+  const showStartOver =
+    !awaitingUpload &&
+    (returnToDatasetPicker ||
+      lab.trainingRuns.length > 0 ||
+      Boolean(lab.shownTest) ||
+      Boolean(lab.model && !lab.config.pretrained));
+
+  const confirmStartOver = () => {
+    setConfirmReset(false);
+    setSetupOpen(false);
+    setPickerOpen(false);
+    setInspectorOpen(false);
+    if (returnToDatasetPicker) {
+      onReturnToDatasetStart?.();
+      return;
+    }
+    lab.startOver();
+  };
+
+  const showWorkspaceHeader = !(datasetPicker && awaitingUpload);
+
   return (
     <div className={styles.root}>
-      <PanelHeader
-        label="WORKSPACE"
-        left={
-          lab.visibleSections.length > 1 ? (
-            <SegmentedButton
-              size="extraSmall"
-              aria-label="AI Lab sections"
-              value={lab.section === "algorithm" ? "dataset" : lab.section}
-              onChange={(value) => {
-                const section = value as AiLabSection;
-                if (lab.canVisit(section)) lab.setSection(section);
-              }}
-              options={lab.visibleSections.map((section) => {
-                const disabled = !lab.canVisit(section);
-                const tab = SECTION_TABS[section];
-                return {
-                  value: section,
-                  label: tab.label,
-                  iconName: tab.iconName,
-                  disabled,
-                  tooltip:
-                    section === "test" && disabled
-                      ? "Testing unlocks once a model is trained"
-                      : undefined,
-                };
-              })}
-            />
-          ) : (
-            <div />
-          )
-        }
-        right={
-          <div className={styles.headerActions}>
-            {lab.section === "test" &&
-            lab.config.testLayout === "canvas" &&
-            lab.shownTest ? (
-              <Button
-                variant="outlined"
-                color="secondary"
+      {showWorkspaceHeader ? (
+        <PanelHeader
+          label="WORKSPACE"
+          left={
+            lab.visibleSections.length > 1 ? (
+              <SegmentedButton
                 size="extraSmall"
-                startIconName="arrow-rotate-left"
-                onClick={() => lab.clearTestPrediction()}
-              >
-                Start over
-              </Button>
-            ) : null}
-            {canChangeAlgorithm ? (
-              <Button
-                variant="outlined"
-                color="secondary"
-                size="extraSmall"
-                className={styles.setupChip}
-                startIconName={algorithmIcon}
-                endIconName="right-left"
-                aria-haspopup="dialog"
-                aria-expanded={setupModalOpen}
-                onClick={openSetup}
-              >
-                {algorithmLabel}
-              </Button>
-            ) : null}
-          </div>
-        }
-      />
+                aria-label="AI Lab sections"
+                value={lab.section === "algorithm" ? "dataset" : lab.section}
+                onChange={(value) => {
+                  const section = value as AiLabSection;
+                  if (lab.canVisit(section)) lab.setSection(section);
+                }}
+                options={lab.visibleSections.map((section) => {
+                  const disabled = !lab.canVisit(section);
+                  const tab = SECTION_TABS[section];
+                  return {
+                    value: section,
+                    label: tab.label,
+                    iconName: tab.iconName,
+                    disabled,
+                    tooltip:
+                      section === "test" && disabled
+                        ? "Testing unlocks once a model is trained"
+                        : undefined,
+                  };
+                })}
+              />
+            ) : (
+              <div />
+            )
+          }
+          right={
+            <div className={styles.headerActions}>
+              {showStartOver ? (
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  size="extraSmall"
+                  startIconName="arrow-rotate-left"
+                  onClick={() => setConfirmReset(true)}
+                >
+                  Start over
+                </Button>
+              ) : null}
+              {canChangeAlgorithm ? (
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  size="extraSmall"
+                  className={styles.setupChip}
+                  startIconName={algorithmIcon}
+                  endIconName="right-left"
+                  aria-haspopup="dialog"
+                  aria-expanded={setupModalOpen}
+                  onClick={openSetup}
+                >
+                  {algorithmLabel}
+                </Button>
+              ) : null}
+            </div>
+          }
+        />
+      ) : null}
 
       <div className={styles.body}>
         {lab.section === "test" ? (
@@ -158,6 +207,7 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
             lab={lab}
             onOpenModel={canInspect ? openInspector : undefined}
             onOpenSetup={canChangeSetup ? openSetup : undefined}
+            datasetStart={datasetPicker}
           />
         )}
       </div>
@@ -168,6 +218,16 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
         required={needsSetup}
         onClose={closeSetup}
       />
+
+      {datasetPicker ? (
+        <DatasetPickerModal
+          {...datasetPicker}
+          open={pickerOpen}
+          selectedId={lab.datasetId}
+          hasModel={Boolean(lab.model)}
+          onClose={() => setPickerOpen(false)}
+        />
+      ) : null}
 
       {canInspect && lab.model ? (
         <ModelInspector
@@ -183,6 +243,11 @@ export function AiLabGuidedWorkspace({ lab }: AiLabGuidedWorkspaceProps) {
         />
       ) : null}
 
+      <AiLabStartOverDialog
+        open={confirmReset}
+        onConfirm={confirmStartOver}
+        onCancel={() => setConfirmReset(false)}
+      />
     </div>
   );
 }

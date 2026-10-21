@@ -1,8 +1,11 @@
 import type { AiLabDataset } from "../../types/aiLab";
 import { datasetIdFromPath, parseCsvDataset } from "./csvDataset";
 
-/** Session key for CSV sheets uploaded from the AI Lab Dev panel. */
+/** Session key for CSV sheets uploaded from AI Lab. */
 export const UPLOADED_DATASETS_STORAGE_KEY = "ailab.uploadedDatasets";
+
+/** Session key for the dataset the student last chose on the upload level. */
+export const ACTIVE_DATASET_STORAGE_KEY = "ailab.activeDatasetId";
 
 /** Enough for a handful of modest sheets without crowding the tab quota. */
 export const MAX_UPLOADED_SHEETS = 20;
@@ -79,6 +82,69 @@ export function writeUploadedSheets(
 export function clearUploadedSheets(storage?: SheetStorage): void {
   const target = storage ?? browserStorage();
   target?.removeItem(UPLOADED_DATASETS_STORAGE_KEY);
+}
+
+export function readActiveDatasetId(storage?: SheetStorage): string | undefined {
+  const target = storage ?? browserStorage();
+  const value = target?.getItem(ACTIVE_DATASET_STORAGE_KEY)?.trim();
+  return value || undefined;
+}
+
+export function writeActiveDatasetId(
+  id: string | undefined,
+  storage?: SheetStorage,
+): void {
+  const target = storage ?? browserStorage();
+  if (!target) return;
+  if (!id) {
+    target.removeItem(ACTIVE_DATASET_STORAGE_KEY);
+    return;
+  }
+  target.setItem(ACTIVE_DATASET_STORAGE_KEY, id);
+}
+
+export interface DatasetCatalogParts {
+  /** Presets whose ids are not already used by an uploaded sheet. */
+  samples: AiLabDataset[];
+  uploads: AiLabDataset[];
+  /** Samples, then uploads. Dev panel options use this full list. */
+  catalog: AiLabDataset[];
+}
+
+/**
+ * Sample sheets and uploaded CSVs as one catalog. An upload that slugs to
+ * the same id as a sample replaces that sample so the id stays unambiguous.
+ */
+export function combineDatasetCatalog(
+  presets: AiLabDataset[],
+  uploads: AiLabDataset[],
+): DatasetCatalogParts {
+  const uploadIds = new Set(uploads.map((dataset) => dataset.id));
+  const samples = presets.filter((dataset) => !uploadIds.has(dataset.id));
+  return {
+    samples,
+    uploads,
+    catalog: [...samples, ...uploads],
+  };
+}
+
+/**
+ * Catalog the lab session should mount. Extra uploads stay out until one
+ * is the open sheet or a levelbuilder lock, so adding a file does not
+ * remount an in-progress model.
+ */
+export function labDatasetCatalog(
+  parts: DatasetCatalogParts,
+  activeIds: Array<string | undefined>,
+): AiLabDataset[] {
+  const wanted = new Set(
+    activeIds.filter((id): id is string => Boolean(id)),
+  );
+  const sampleIds = new Set(parts.samples.map((dataset) => dataset.id));
+  const extras = parts.uploads.filter(
+    (dataset) => wanted.has(dataset.id) && !sampleIds.has(dataset.id),
+  );
+  return [...parts.samples, ...extras];
 }
 
 function sheetId(fileName: string, sheets: UploadedSheet[]): string {

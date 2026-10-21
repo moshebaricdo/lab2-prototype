@@ -21,6 +21,9 @@ slug (`Has feathers` → `has_feathers`).
 Keep files modest (a few hundred rows). Everything trains in the browser and
 the spreadsheet renders every row.
 
-The starter file offered on **Add a dataset** lives one folder up
+A matching PNG in `covers/`, named with that same slug (`covers/bird_mammal_fish.png`),
+is the dataset's cover in the chooser. Datasets without one show a table icon on a neutral fill.
+
+The starter file offered from **Choose a dataset** and the Dev panel **Add a dataset** lives one folder up
 (`../dataset-template.csv`). Keep it out of this folder so it does not join
 the studio catalog.

@@ -9,6 +9,7 @@ import {
 } from "../../../../lib/aiLab";
 import type { AiLabColumn, AiLabDataRow } from "../../../../types/aiLab";
 import { DataStudio } from "./DataStudio";
+import type { DatasetPickerController } from "./DatasetPickerModal";
 import type { ModelInspectorTab } from "./ModelInspector";
 import styles from "./AiLabGuidedWorkspace.module.scss";
 
@@ -358,14 +359,24 @@ export function GuidedExplorePanel({
   lab,
   onOpenModel,
   onOpenSetup,
+  onChooseDataset,
+  datasetStart,
 }: {
   lab: AiLabController;
   onOpenModel?: (tab: ModelInspectorTab) => void;
   onOpenSetup?: () => void;
+  onChooseDataset?: () => void;
+  datasetStart?: DatasetPickerController;
 }) {
   return (
     <div className={styles.exploreRoot}>
-      <DataStudio lab={lab} onOpenModel={onOpenModel} onOpenSetup={onOpenSetup} />
+      <DataStudio
+        lab={lab}
+        onOpenModel={onOpenModel}
+        onOpenSetup={onOpenSetup}
+        onChooseDataset={onChooseDataset}
+        datasetStart={datasetStart}
+      />
     </div>
   );
 }

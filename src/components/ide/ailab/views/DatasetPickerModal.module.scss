@@ -1,0 +1,208 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lead,
+.note {
+  @include type-body-3-regular;
+  margin: 0;
+}
+
+.lead {
+  color: var(--text-neutral-tertiary);
+}
+
+.note {
+  color: var(--text-neutral-secondary);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  height: min(360px, calc(100dvh - 340px));
+  min-height: 240px;
+}
+
+.pane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.uploadPane {
+  padding-left: 16px;
+  border-left: 1px solid var(--border-neutral-primary);
+}
+
+.legend,
+.sublegend {
+  @include type-overline-2;
+  padding: 0;
+  color: var(--text-neutral-quaternary);
+}
+
+.sublegend {
+  margin: 0;
+}
+
+.list {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 2px;
+  overflow: auto;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 8px 8px 10px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}
+
+.choice:hover {
+  border-color: var(--border-neutral-secondary);
+}
+
+.choiceSelected,
+.choiceSelected:hover {
+  border-color: var(--border-selected-primary);
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 14%,
+    var(--background-neutral-primary)
+  );
+}
+
+.choiceMain {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.choiceCopy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.choiceTitle {
+  @include type-label-2;
+  color: var(--text-neutral-primary);
+}
+
+.choiceMeta,
+.choiceDetail,
+.dropHint,
+.reading {
+  @include type-body-4-regular;
+}
+
+.choiceMeta,
+.dropHint,
+.reading {
+  color: var(--text-neutral-tertiary);
+}
+
+.choiceDetail {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-neutral-secondary);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.dropzone {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  border: 1px dashed var(--border-neutral-secondary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-secondary);
+}
+
+.dropzoneActive {
+  border-color: var(--border-selected-primary);
+  background: color-mix(
+    in srgb,
+    var(--background-selected-primary) 14%,
+    var(--background-neutral-primary)
+  );
+}
+
+.dropHint,
+.reading {
+  margin: 0;
+  text-align: center;
+}
+
+.dropActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.uploads {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.uploads .list {
+  flex: 1;
+  max-height: 160px;
+}
+
+@media (max-width: 700px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .uploadPane {
+    padding-top: 16px;
+    padding-left: 0;
+    border-top: 1px solid var(--border-neutral-primary);
+    border-left: 0;
+  }
+}

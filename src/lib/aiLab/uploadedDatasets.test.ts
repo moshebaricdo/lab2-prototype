@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
+import type { AiLabDataset } from "../../types/aiLab";
 import {
   MAX_UPLOADED_CSV_CHARS,
   clearUploadedSheets,
+  combineDatasetCatalog,
+  labDatasetCatalog,
   mergeUploadedSheets,
+  readActiveDatasetId,
   readUploadedSheets,
   retainUploadedSheets,
   sheetsToDatasets,
+  writeActiveDatasetId,
   writeUploadedSheets,
 } from "./uploadedDatasets";
 
@@ -121,6 +126,37 @@ describe("retainUploadedSheets", () => {
   });
 });
 
+function dataset(id: string): AiLabDataset {
+  return {
+    id,
+    name: id,
+    description: "",
+    defaultLabelColumn: "label",
+    columns: [],
+    rows: [],
+  };
+}
+
+describe("combineDatasetCatalog", () => {
+  it("keeps samples and uploads, and lets an upload replace a matching sample id", () => {
+    const parts = combineDatasetCatalog(
+      [dataset("iris"), dataset("pets")],
+      [dataset("pets"), dataset("mine")],
+    );
+
+    expect(parts.samples.map((entry) => entry.id)).toEqual(["iris"]);
+    expect(parts.uploads.map((entry) => entry.id)).toEqual(["pets", "mine"]);
+    expect(parts.catalog.map((entry) => entry.id)).toEqual(["iris", "pets", "mine"]);
+    expect(labDatasetCatalog(parts, [undefined]).map((entry) => entry.id)).toEqual([
+      "iris",
+    ]);
+    expect(labDatasetCatalog(parts, ["mine"]).map((entry) => entry.id)).toEqual([
+      "iris",
+      "mine",
+    ]);
+  });
+});
+
 describe("session storage", () => {
   it("round-trips sheets and clears them", () => {
     const storage = memoryStorage();
@@ -132,5 +168,13 @@ describe("session storage", () => {
     expect(readUploadedSheets(storage)).toEqual(sheets);
     clearUploadedSheets(storage);
     expect(readUploadedSheets(storage)).toEqual([]);
+  });
+
+  it("remembers the dataset the student chose", () => {
+    const storage = memoryStorage();
+    writeActiveDatasetId("iris_species", storage);
+    expect(readActiveDatasetId(storage)).toBe("iris_species");
+    writeActiveDatasetId(undefined, storage);
+    expect(readActiveDatasetId(storage)).toBeUndefined();
   });
 });

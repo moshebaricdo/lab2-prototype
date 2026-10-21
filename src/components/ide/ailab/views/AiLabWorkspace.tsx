@@ -1,7 +1,8 @@
-import { Button, Dialog, Tabs, Tooltip } from "@moshebari/cads-react";
+import { Button, Tabs, Tooltip } from "@moshebari/cads-react";
 import { useState } from "react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import type { AiLabSection } from "../../../../types/aiLab";
+import { AiLabStartOverDialog } from "./AiLabStartOverDialog";
 import { AlgorithmPicker } from "./AlgorithmPicker";
 import { DatasetViews } from "./DatasetViews";
 import { TrainPanel } from "./TrainPanel";
@@ -91,21 +92,13 @@ export function AiLabWorkspace({ lab }: AiLabWorkspaceProps) {
         {lab.section === "test" ? <TestPanel lab={lab} /> : null}
       </div>
 
-      <Dialog
-        type="iconTop"
-        topIconName="arrow-rotate-left"
+      <AiLabStartOverDialog
         open={confirmReset}
-        title="Start over?"
-        description="Training and try-it-out values will be reset. The dataset stays the same."
-        primaryActionLabel="Start over"
-        secondaryActionLabel="Cancel"
-        isDismissable
-        onPrimaryAction={() => {
+        onConfirm={() => {
           setConfirmReset(false);
           lab.startOver();
         }}
-        onSecondaryAction={() => setConfirmReset(false)}
-        onClose={() => setConfirmReset(false)}
+        onCancel={() => setConfirmReset(false)}
       />
     </div>
   );
