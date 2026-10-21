@@ -111,6 +111,7 @@ export function AiLabGuidedWorkspace({
   const showStartOver =
     !awaitingUpload &&
     (returnToDatasetPicker ||
+      (lab.canPickDataset && Boolean(lab.datasetId)) ||
       lab.trainingRuns.length > 0 ||
       Boolean(lab.shownTest) ||
       Boolean(lab.model && !lab.config.pretrained));
@@ -206,7 +207,6 @@ export function AiLabGuidedWorkspace({
           <GuidedExplorePanel
             lab={lab}
             onOpenModel={canInspect ? openInspector : undefined}
-            onOpenSetup={canChangeSetup ? openSetup : undefined}
             datasetStart={datasetPicker}
           />
         )}

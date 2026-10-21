@@ -358,13 +358,11 @@ function GuidedColumnInspector({
 export function GuidedExplorePanel({
   lab,
   onOpenModel,
-  onOpenSetup,
   onChooseDataset,
   datasetStart,
 }: {
   lab: AiLabController;
   onOpenModel?: (tab: ModelInspectorTab) => void;
-  onOpenSetup?: () => void;
   onChooseDataset?: () => void;
   datasetStart?: DatasetPickerController;
 }) {
@@ -373,7 +371,6 @@ export function GuidedExplorePanel({
       <DataStudio
         lab={lab}
         onOpenModel={onOpenModel}
-        onOpenSetup={onOpenSetup}
         onChooseDataset={onChooseDataset}
         datasetStart={datasetStart}
       />

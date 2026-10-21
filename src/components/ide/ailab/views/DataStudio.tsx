@@ -87,7 +87,6 @@ function LockedLabelTooltip({
 interface DataStudioProps {
   lab: AiLabController;
   onOpenModel?: (tab: ModelInspectorTab) => void;
-  onOpenSetup?: () => void;
   /** Empty sheet action. Upload level opens the dataset picker from here. */
   onChooseDataset?: () => void;
   /** Full-screen start when the lab has no sheet yet. */
@@ -97,7 +96,6 @@ interface DataStudioProps {
 export function DataStudio({
   lab,
   onOpenModel,
-  onOpenSetup,
   onChooseDataset,
   datasetStart,
 }: DataStudioProps) {
@@ -129,7 +127,7 @@ export function DataStudio({
       <div className={styles.stage}>
         <div className={styles.sheetColumn}>
           {awaitingUpload ? null : (
-            <DataHeader lab={lab} onOpenSetup={onOpenSetup} inIntro={inIntro} />
+            <DataHeader lab={lab} inIntro={inIntro} />
           )}
           {inIntro ? (
             <IntroActivity lab={lab} />
@@ -287,14 +285,11 @@ function EmptyDatasetSheet({
 
 function DataHeader({
   lab,
-  onOpenSetup,
   inIntro = false,
 }: {
   lab: AiLabController;
-  onOpenSetup?: () => void;
   inIntro?: boolean;
 }) {
-  const canSwap = lab.canPickDataset && Boolean(onOpenSetup);
   const datasetLabel = lab.needsDataset
     ? "Choose dataset"
     : lab.config.dataset.name;
@@ -303,21 +298,7 @@ function DataHeader({
   return (
     <div className={styles.dataHeader}>
       <div className={styles.setName}>
-        {canSwap ? (
-          <Button
-            variant="outlined"
-            color="secondary"
-            size="extraSmall"
-            className={styles.datasetChip}
-            endIconName="right-left"
-            aria-haspopup="dialog"
-            onClick={onOpenSetup}
-          >
-            {datasetLabel}
-          </Button>
-        ) : (
-          <span className={styles.datasetName}>{datasetLabel}</span>
-        )}
+        <span className={styles.datasetName}>{datasetLabel}</span>
         {lab.needsDataset ? null : (
           <>
             <span className={styles.setDot} aria-hidden />
