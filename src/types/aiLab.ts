@@ -8,6 +8,11 @@ export type AiLabDataView = "table" | "cards";
 
 export type AiLabCardLayout = "catalog" | "carousel";
 
+export interface AiLabColumnFilter {
+  columnId: string;
+  values: string[];
+}
+
 export type AiLabCellValue = string | number;
 
 /**

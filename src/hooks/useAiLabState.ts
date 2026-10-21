@@ -14,6 +14,7 @@ import type {
   AiLabAlgorithmId,
   AiLabCardLayout,
   AiLabCellValue,
+  AiLabColumnFilter,
   AiLabDataRow,
   AiLabDataView,
   AiLabLevelConfig,
@@ -32,6 +33,7 @@ export interface AiLabState {
   dataView: AiLabDataView;
   cardLayout: AiLabCardLayout;
   selectedColumnId: string | undefined;
+  columnFilter: AiLabColumnFilter | undefined;
   cardIndex: number;
   labelColumn: string | undefined;
   selectedFeatures: string[];
@@ -168,6 +170,7 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     selectedColumnId: config.allowScaleColumns
       ? dataset?.columns.find((column) => column.type === "numerical")?.id
       : undefined,
+    columnFilter: undefined,
     cardIndex: 0,
     labelColumn,
     selectedFeatures,
@@ -322,6 +325,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
           rows: cloneRows(dataset.rows),
           scales: [],
           selectedColumnId: undefined,
+          columnFilter: undefined,
           cardIndex: 0,
           cardLayout: cardLayoutFor(config, dataset.rows.length),
           labelColumn,
@@ -420,6 +424,34 @@ export function useAiLabState(config: AiLabLevelConfig) {
       current.selectedColumnId === columnId
         ? current
         : { ...current, selectedColumnId: columnId },
+    );
+  }, []);
+
+  const setColumnFilter = useCallback(
+    (columnFilter: AiLabColumnFilter | undefined) => {
+      setState((current) => {
+        const normalized =
+          columnFilter && columnFilter.values.length > 0
+            ? {
+                columnId: columnFilter.columnId,
+                values: [...columnFilter.values],
+              }
+            : undefined;
+        return {
+          ...current,
+          columnFilter: normalized,
+          cardIndex: 0,
+        };
+      });
+    },
+    [],
+  );
+
+  const clearColumnFilter = useCallback(() => {
+    setState((current) =>
+      current.columnFilter
+        ? { ...current, columnFilter: undefined, cardIndex: 0 }
+        : current,
     );
   }, []);
 
@@ -752,6 +784,27 @@ export function useAiLabState(config: AiLabLevelConfig) {
     [resolvedConfig, state.scales.length, viewColumns],
   );
   const columns = viewColumns;
+  const activeColumnFilter = useMemo(() => {
+    const filter = state.columnFilter;
+    if (!filter || filter.values.length === 0) return undefined;
+    if (!columns.some((column) => column.id === filter.columnId)) {
+      return undefined;
+    }
+    return filter;
+  }, [state.columnFilter, columns]);
+  const filteredRowIndexes = useMemo(() => {
+    if (!activeColumnFilter) {
+      return viewRows.map((_, index) => index);
+    }
+    const allowed = new Set(activeColumnFilter.values);
+    const matching: number[] = [];
+    viewRows.forEach((row, index) => {
+      if (allowed.has(String(row[activeColumnFilter.columnId] ?? ""))) {
+        matching.push(index);
+      }
+    });
+    return matching;
+  }, [activeColumnFilter, viewRows]);
   const labelIsValid = Boolean(
     state.labelColumn &&
       (!config.classificationOnly ||
@@ -819,6 +872,10 @@ export function useAiLabState(config: AiLabLevelConfig) {
         current.selectedColumnId === scaleId
           ? current.scales.find((item) => item.id === scaleId)?.sourceColumnId
           : current.selectedColumnId,
+      columnFilter:
+        current.columnFilter?.columnId === scaleId
+          ? undefined
+          : current.columnFilter,
       model: undefined,
       lastPrediction: undefined,
       shownTest: undefined,
@@ -838,6 +895,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
 
   return {
     ...state,
+    columnFilter: activeColumnFilter,
+    filteredRowIndexes,
     rows: viewRows,
     config: viewConfig,
     availableDatasets,
@@ -860,6 +919,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
     setTrainingSetupOpen,
     selectColumn,
     setSelectedColumnId,
+    setColumnFilter,
+    clearColumnFilter,
     setLabelColumn,
     toggleFeature,
     setFeatures,

@@ -92,8 +92,9 @@ function rowOrder(
   rows: AiLabDataRow[],
   columns: AiLabColumn[],
   sort: ColumnSort | null,
+  filteredRowIndexes: number[],
 ): number[] {
-  const indexes = rows.map((_, index) => index);
+  const indexes = [...filteredRowIndexes];
   if (!sort) return indexes;
   const column = columns.find((entry) => entry.id === sort.columnId);
   if (!column) return indexes;
@@ -153,13 +154,17 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [sort, setSort] = useState<ColumnSort | null>(null);
-  const order = useMemo(() => rowOrder(rows, columns, sort), [rows, columns, sort]);
+  const filteredRowIndexes = lab.filteredRowIndexes;
+  const order = useMemo(
+    () => rowOrder(rows, columns, sort, filteredRowIndexes),
+    [rows, columns, sort, filteredRowIndexes],
+  );
   const orderRef = useRef(order);
   orderRef.current = order;
 
   const { start, end, topPad, bottomPad, scrollIntoView } = useVirtualRange({
     scrollRef,
-    itemCount: rows.length,
+    itemCount: order.length,
     itemSize: ROW_HEIGHT,
     leadingOffset: HEADER_HEIGHT,
     overscan: 8,
@@ -204,19 +209,26 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
 
   const move = useCallback(
     (rowDelta: number, columnDelta: number) => {
-      const { active: current, columns: cols, rows: all } = latest.current;
+      const { active: current, columns: cols } = latest.current;
+      const currentOrder = orderRef.current;
+      if (currentOrder.length === 0) return;
       if (!current) {
         const first = cols[0];
-        if (first) focusCell({ rowIndex: 0, columnId: first.id });
+        if (first) {
+          focusCell({
+            rowIndex: currentOrder[0] ?? 0,
+            columnId: first.id,
+          });
+        }
         return;
       }
       const columnIndex = cols.findIndex((column) => column.id === current.columnId);
       const nextColumn = cols[columnIndex + columnDelta];
-      const visual = orderRef.current.indexOf(current.rowIndex);
-      const nextVisual = visual + rowDelta;
-      if (!nextColumn || nextVisual < 0 || nextVisual >= all.length) return;
+      const visual = currentOrder.indexOf(current.rowIndex);
+      const nextVisual = (visual >= 0 ? visual : 0) + rowDelta;
+      if (!nextColumn || nextVisual < 0 || nextVisual >= currentOrder.length) return;
       focusCell({
-        rowIndex: orderRef.current[nextVisual] ?? current.rowIndex,
+        rowIndex: currentOrder[nextVisual] ?? current.rowIndex,
         columnId: nextColumn.id,
       });
     },
@@ -336,15 +348,16 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
       if (last) focusCell({ rowIndex: active.rowIndex, columnId: last.id });
     } else if (event.key === "PageDown" || event.key === "PageUp") {
       event.preventDefault();
+      if (orderRef.current.length === 0) return;
       const pageRows = Math.max(
         1,
         Math.floor(
           ((scrollRef.current?.clientHeight ?? 0) - HEADER_HEIGHT) / ROW_HEIGHT,
         ) - 1,
       );
-      const visual = orderRef.current.indexOf(active.rowIndex);
+      const visual = Math.max(0, orderRef.current.indexOf(active.rowIndex));
       const targetVisual = Math.min(
-        rows.length - 1,
+        orderRef.current.length - 1,
         Math.max(0, visual + (event.key === "PageDown" ? pageRows : -pageRows)),
       );
       focusCell({
@@ -540,17 +553,35 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
             </tr>
           </thead>
           <tbody>
-            {topPad > 0 ? (
-              <tr aria-hidden className={styles.spacerRow}>
-                <td colSpan={gridColumnCount} style={{ height: topPad }} />
+            {order.length === 0 && lab.columnFilter ? (
+              <tr>
+                <td colSpan={gridColumnCount} className={styles.emptyFilterCell}>
+                  <span>No rows match this filter.</span>
+                  <Button
+                    variant="text"
+                    color="secondary"
+                    size="extraSmall"
+                    onClick={() => lab.clearColumnFilter()}
+                  >
+                    Clear filter
+                  </Button>
+                </td>
               </tr>
-            ) : null}
-            {visibleRows}
-            {bottomPad > 0 ? (
-              <tr aria-hidden className={styles.spacerRow}>
-                <td colSpan={gridColumnCount} style={{ height: bottomPad }} />
-              </tr>
-            ) : null}
+            ) : (
+              <>
+                {topPad > 0 ? (
+                  <tr aria-hidden className={styles.spacerRow}>
+                    <td colSpan={gridColumnCount} style={{ height: topPad }} />
+                  </tr>
+                ) : null}
+                {visibleRows}
+                {bottomPad > 0 ? (
+                  <tr aria-hidden className={styles.spacerRow}>
+                    <td colSpan={gridColumnCount} style={{ height: bottomPad }} />
+                  </tr>
+                ) : null}
+              </>
+            )}
           </tbody>
           </table>
           {editingSuggestions && activeColumn ? (

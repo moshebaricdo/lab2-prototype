@@ -34,6 +34,7 @@ import {
 import type { AiLabColumn, AiLabDataRow } from "../../../../types/aiLab";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import { ColumnDistributionChart } from "./ColumnDistributionChart";
+import { DatasetFilterControl } from "./DatasetFilterControl";
 import { DataSpreadsheet } from "./DataSpreadsheet";
 import { ModelActions } from "./ModelActions";
 import type { ModelInspectorTab } from "./ModelInspector";
@@ -308,6 +309,7 @@ function DataHeader({
       </div>
       {inIntro ? null : (
       <div className={styles.viewType}>
+        {!lab.needsDataset ? <DatasetFilterControl lab={lab} /> : null}
         {lab.dataView === "table" &&
         !lab.needsDataset &&
         lab.config.allowDataEdit !== false ? (
@@ -666,11 +668,17 @@ function snapColumnCount(fit: number) {
 function CardCatalog({ lab }: { lab: AiLabController }) {
   const columns = lab.config.dataset.columns;
   const rows = lab.rows;
+  const filteredIndexes = lab.filteredRowIndexes;
+  const total = filteredIndexes.length;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [gridWidth, setGridWidth] = useState(0);
   const [pageSize, setPageSize] = useState(CARD_DEFAULT_PAGE_SIZE);
   const [page, setPage] = useState(0);
-  const compact = rows.length <= CARD_PAGE_SIZES[0];
+  const compact = total <= CARD_PAGE_SIZES[0];
+
+  useEffect(() => {
+    setPage(0);
+  }, [lab.columnFilter]);
 
   useEffect(() => {
     const element = scrollRef.current;
@@ -687,10 +695,10 @@ function CardCatalog({ lab }: { lab: AiLabController }) {
     Math.floor((gridWidth + CARD_GAP) / (CARD_MIN_WIDTH + CARD_GAP)),
   );
   const perRow = snapColumnCount(fit);
-  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
   const firstIndex = currentPage * pageSize;
-  const lastIndex = Math.min(rows.length, firstIndex + pageSize);
+  const lastIndex = Math.min(total, firstIndex + pageSize);
 
   const goToPage = (next: number) => {
     setPage(Math.min(Math.max(0, next), pageCount - 1));
@@ -700,27 +708,45 @@ function CardCatalog({ lab }: { lab: AiLabController }) {
   return (
     <>
       <div ref={scrollRef} className={styles.cardStage}>
-        <div
-          className={styles.cardGrid}
-          style={{ "--card-columns": perRow } as CSSProperties}
-        >
-          {rows.slice(firstIndex, lastIndex).map((row, offset) => (
-            <RowCard
-              key={firstIndex + offset}
-              index={firstIndex + offset}
-              row={row}
-              columns={columns}
-              labelColumnId={lab.labelColumn}
-              featureColumnIds={lab.selectedFeatures}
-              titleColumnId={lab.config.cardTitleColumn}
-            />
-          ))}
-        </div>
+        {total === 0 && lab.columnFilter ? (
+          <div className={styles.emptyFilterStage}>
+            <p className={styles.emptyFilterText}>No cards match this filter.</p>
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="small"
+              onClick={() => lab.clearColumnFilter()}
+            >
+              Clear filter
+            </Button>
+          </div>
+        ) : (
+          <div
+            className={styles.cardGrid}
+            style={{ "--card-columns": perRow } as CSSProperties}
+          >
+            {filteredIndexes.slice(firstIndex, lastIndex).map((rowIndex) => {
+              const row = rows[rowIndex];
+              if (!row) return null;
+              return (
+                <RowCard
+                  key={rowIndex}
+                  index={rowIndex}
+                  row={row}
+                  columns={columns}
+                  labelColumnId={lab.labelColumn}
+                  featureColumnIds={lab.selectedFeatures}
+                  titleColumnId={lab.config.cardTitleColumn}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
       <CardsFooter>
         {compact ? (
           <PagerNav
-            label={`${rows.length === 0 ? 0 : firstIndex + 1}–${lastIndex} of ${rows.length}`}
+            label={`${total === 0 ? 0 : firstIndex + 1}–${lastIndex} of ${total}`}
             previousLabel="Go to previous page"
             nextLabel="Go to next page"
             canPrevious={currentPage > 0}
@@ -732,7 +758,7 @@ function CardCatalog({ lab }: { lab: AiLabController }) {
           <TablePagination
             size="small"
             aria-label="Card pages"
-            count={rows.length}
+            count={total}
             page={currentPage}
             rowsPerPage={pageSize}
             rowsPerPageOptions={CARD_PAGE_SIZES}
@@ -777,7 +803,8 @@ const DECK_WINDOW_AFTER = DECK_PEEK + 1;
  */
 function CardCarousel({ lab }: { lab: AiLabController }) {
   const rows = lab.rows;
-  const total = rows.length;
+  const filteredIndexes = lab.filteredRowIndexes;
+  const total = filteredIndexes.length;
   const index = Math.min(Math.max(0, lab.cardIndex), Math.max(0, total - 1));
   const canPrevious = index > 0;
   const canNext = index < total - 1;
@@ -814,42 +841,60 @@ function CardCarousel({ lab }: { lab: AiLabController }) {
         tabIndex={0}
         onKeyDown={onKeyDown}
       >
-        {total > 0 ? (
+        {total === 0 && lab.columnFilter ? (
+          <div className={styles.emptyFilterStage}>
+            <p className={styles.emptyFilterText}>No cards match this filter.</p>
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="small"
+              onClick={() => lab.clearColumnFilter()}
+            >
+              Clear filter
+            </Button>
+          </div>
+        ) : total > 0 ? (
           <div className={styles.deck}>
-            {rows.slice(windowStart, windowEnd).map((row, offset) => {
-              const rowIndex = windowStart + offset;
-              const depth = rowIndex - index;
-              return (
-                <div
-                  key={rowIndex}
-                  className={`${styles.deckSlot} ${
-                    depth < 0 ? styles.deckSlotDealt : ""
-                  } ${depth > DECK_PEEK ? styles.deckSlotOnDeck : ""}`}
-                  style={{ "--deck-depth": Math.max(0, depth) } as CSSProperties}
-                  aria-hidden={depth !== 0}
-                >
-                  {depth > 0 ? (
-                    <div className={styles.deckGhost} />
-                  ) : (
-                    <RowCard
-                      index={rowIndex}
-                      row={row}
-                      columns={lab.config.dataset.columns}
-                      labelColumnId={lab.labelColumn}
-                      featureColumnIds={lab.selectedFeatures}
-                      titleColumnId={lab.config.cardTitleColumn}
-                      featured
-                    />
-                  )}
-                </div>
-              );
-            })}
+            {filteredIndexes
+              .slice(windowStart, windowEnd)
+              .map((rowIndex, offset) => {
+                const slotIndex = windowStart + offset;
+                const depth = slotIndex - index;
+                const row = rows[rowIndex];
+                if (!row) return null;
+                return (
+                  <div
+                    key={rowIndex}
+                    className={`${styles.deckSlot} ${
+                      depth < 0 ? styles.deckSlotDealt : ""
+                    } ${depth > DECK_PEEK ? styles.deckSlotOnDeck : ""}`}
+                    style={
+                      { "--deck-depth": Math.max(0, depth) } as CSSProperties
+                    }
+                    aria-hidden={depth !== 0}
+                  >
+                    {depth > 0 ? (
+                      <div className={styles.deckGhost} />
+                    ) : (
+                      <RowCard
+                        index={rowIndex}
+                        row={row}
+                        columns={lab.config.dataset.columns}
+                        labelColumnId={lab.labelColumn}
+                        featureColumnIds={lab.selectedFeatures}
+                        titleColumnId={lab.config.cardTitleColumn}
+                        featured
+                      />
+                    )}
+                  </div>
+                );
+              })}
           </div>
         ) : null}
       </div>
       <CardsFooter>
         <PagerNav
-          label={`Row ${total === 0 ? 0 : index + 1} of ${total}`}
+          label={`${lab.columnFilter ? "Card" : "Row"} ${total === 0 ? 0 : index + 1} of ${total}`}
           previousLabel="Previous row"
           nextLabel="Next row"
           canPrevious={canPrevious}
