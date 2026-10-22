@@ -67,4 +67,13 @@ export const temperatureScaleDataset: AiLabDataset = {
     whyItMatters:
       "A number can be turned into names like COLD or HOT. Those names are a choice, and the model will treat the choice as if it were in the data.",
   },
+  card: {
+    description:
+      "16 afternoons recorded with the outdoor temperature in degrees and whether someone went outside.",
+    source: "Code.org classroom log",
+    potentialUses:
+      "Predict whether someone went outside based on the afternoon temperature or a grouped temperature scale.",
+    potentialMisuses:
+      "Turning a number into bucket names like COLD, WARM, or HOT is a human choice — different cutoffs can change what the model learns.",
+  },
 };

@@ -6,6 +6,15 @@ export const tacoTruckGuidedDataset: AiLabDataset = {
   description:
     "25 neighborhood taco-truck orders. Weekday is included on purpose — it may not help the model.",
   defaultLabelColumn: "would_order_again",
+  card: {
+    description:
+      "25 neighborhood taco-truck orders. Each row records the filling, salsa, spice rating, price, weekday, and whether the customer would order again.",
+    source: "Code.org",
+    potentialUses:
+      "Predict whether a customer would order the same taco again from the columns that actually matter.",
+    potentialMisuses:
+      "Not every column in a dataset is useful — Weekday is a distractor that does not follow the customer's taste.",
+  },
   columns: [
     {
       id: "protein",

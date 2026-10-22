@@ -1,63 +1,30 @@
 @use "../../../../styles/_mixins.scss" as *;
 
-.story {
+/* Bleeds past the CADS Modal body's 24px padding so each section and stat
+ * divider runs edge to edge between the header and footer hairlines, matching
+ * the bordered card anatomy in DatasetStartEmptyState without double borders. */
+.root {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  margin: -24px;
 }
 
-.meta {
-  @include type-body-4-regular;
-  margin: 0;
-  color: var(--text-neutral-quaternary);
-}
-
-.block {
+.details {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-.heading {
-  @include type-overline-2;
-  margin: 0;
-  color: var(--text-neutral-quaternary);
-}
-
-.copy {
-  @include type-body-3-regular;
-  margin: 0;
-  color: var(--text-neutral-primary);
-}
-
-.hint {
-  @include type-body-4-regular;
-  margin: 0;
-  color: var(--text-neutral-tertiary);
-  line-height: 22px;
-
-  > * {
-    vertical-align: middle;
-  }
-}
-
-/* One real row as a small card: key on the left, value on the right. */
-.example {
-  display: flex;
-  flex-direction: column;
-  margin-top: 4px;
-  border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-md);
   background: var(--background-neutral-primary);
-  overflow: hidden;
 }
 
-.exampleRow {
+.detailBlock,
+.stat {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 6px 12px;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 24px;
+}
+
+.detailBlock {
   border-bottom: 1px solid var(--border-neutral-primary);
 
   &:last-child {
@@ -65,25 +32,108 @@
   }
 }
 
-.exampleRowLabel {
-  background: color-mix(
-    in srgb,
-    var(--background-accent-pink-light) 50%,
-    var(--background-neutral-primary)
-  );
+.statRow {
+  display: flex;
+  border-bottom: 1px solid var(--border-neutral-primary);
+
+  &:last-child {
+    border-bottom: 0;
+  }
 }
 
-.exampleKey {
-  @include type-body-4-regular;
+.stat {
+  flex: 1;
+
+  & + & {
+    border-left: 1px solid var(--border-neutral-primary);
+  }
+}
+
+.detailsLead,
+.sectionCopy {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-secondary);
+  overflow-wrap: anywhere;
+}
+
+.sectionLabel {
+  @include type-body-4-semibold;
+  margin: 0;
   color: var(--text-neutral-tertiary);
 }
 
-.exampleValue {
-  @include type-body-4-semibold;
+.statValue {
+  @include type-body-3-semibold;
+  margin: 0;
   color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
-.exampleHidden {
+.sourceLink {
+  @include type-body-3-semibold;
+  color: var(--text-brand-primary);
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+}
+
+.sampleSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-secondary);
+}
+
+.sampleCard {
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+}
+
+.sampleHeader,
+.sampleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.sampleHeader {
+  @include type-body-4-semibold;
+  justify-content: flex-start;
+  color: var(--text-neutral-quaternary);
+}
+
+.sampleLabel {
+  @include type-body-3-regular;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sampleValue {
+  @include type-body-3-semibold;
+  max-width: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sampleHidden {
   @include type-body-4-semibold;
   display: inline-flex;
   align-items: center;
@@ -95,3 +145,5 @@
   border-radius: var(--shape-round);
   color: var(--text-brand-primary);
 }
+
+

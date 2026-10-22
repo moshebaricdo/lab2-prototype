@@ -6,6 +6,15 @@ export const tacoTruckDataset: AiLabDataset = {
   description:
     "Orders from a neighborhood taco truck. Each row is one customer order.",
   defaultLabelColumn: "would_order_again",
+  card: {
+    description:
+      "Orders from a neighborhood taco truck, with each customer's filling, salsa, spice rating, price paid, and whether they would order again.",
+    source: "Code.org",
+    potentialUses:
+      "Predict whether a customer would order the same taco again based on what they ordered.",
+    potentialMisuses:
+      "Twenty orders from one truck cannot speak for every customer or menu item.",
+  },
   columns: [
     {
       id: "protein",
