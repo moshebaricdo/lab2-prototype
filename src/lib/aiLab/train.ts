@@ -12,12 +12,12 @@ import {
   cartPredictionCorrect,
   cartRegressionTolerance,
   traceDecisionTree,
-  trainDecisionTree,
+  trainDecisionTreeSweep,
 } from "./decisionTree";
 import {
   classificationKCandidates,
   DEFAULT_KNN_K,
-  knnDistances,
+  knnTopNeighborIndexes,
   majorityVote,
   predictKnn,
   regressionKnnK,
@@ -131,17 +131,20 @@ function holdoutRankings(
   columns: AiLabColumn[],
   features: string[],
   holdoutRowIndexes: number[],
+  maxK?: number,
 ): number[][] {
-  return holdoutRowIndexes.map((rowIndex) => {
-    const { order } = knnDistances(
-      rows,
-      rows[rowIndex]!,
-      features,
-      columns,
-      holdoutRowIndexes,
-    );
-    return order;
-  });
+  const trainCount = Math.max(1, rows.length - holdoutRowIndexes.length);
+  const candidates = classificationKCandidates(trainCount);
+  const limit =
+    maxK ?? Math.max(DEFAULT_KNN_K, regressionKnnK(trainCount), ...candidates);
+  return knnTopNeighborIndexes(
+    rows,
+    holdoutRowIndexes,
+    features,
+    columns,
+    limit,
+    holdoutRowIndexes,
+  );
 }
 
 function voteFromRanking(
@@ -265,17 +268,19 @@ function selectDecisionTree(options: {
 }): { tree: AiLabTreeNode; maxDepth: number } {
   const depths =
     options.holdoutRowIndexes.length === 0 ? [1] : [...CART_MAX_DEPTHS];
+  const treesByDepth = trainDecisionTreeSweep(
+    options.trainSet,
+    options.columns,
+    options.features,
+    options.labelColumn,
+    depths,
+    options.rows,
+  );
   let bestTree: AiLabTreeNode | undefined;
   let bestDepth = depths[0]!;
   let bestAccuracy = -1;
   for (const maxDepth of depths) {
-    const tree = trainDecisionTree(
-      options.trainSet,
-      options.columns,
-      options.features,
-      options.labelColumn,
-      { maxDepth, encodingRows: options.rows },
-    );
+    const tree = treesByDepth.get(maxDepth)!;
     if (!bestTree) {
       bestTree = tree;
       bestDepth = maxDepth;
@@ -379,6 +384,7 @@ export function trainModel(options: {
           options.columns,
           options.selectedFeatures,
           holdoutRowIndexes,
+          options.knnK,
         )
       : undefined;
   const knnK =

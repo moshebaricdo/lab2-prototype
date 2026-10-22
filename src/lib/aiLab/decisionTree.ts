@@ -1,4 +1,3 @@
-import { DecisionTreeClassifier, DecisionTreeRegression } from "ml-cart";
 import type { CartNode } from "ml-cart";
 import type {
   AiLabColumn,
@@ -54,8 +53,8 @@ function categoryCodes(rows: AiLabDataRow[], columnId: string): Record<string, n
     seen.push(option);
   }
   const codes: Record<string, number> = {};
-  seen.forEach((option) => {
-    codes[String(option)] = seen.indexOf(option);
+  seen.forEach((option, index) => {
+    codes[String(option)] = index;
   });
   return codes;
 }
@@ -204,8 +203,380 @@ function valuesOnSide(
   );
 }
 
-function buildDisplay(
-  node: CartNode,
+const DEFAULT_MIN_NUM_SAMPLES = 3;
+const DEFAULT_CLASSIFIER_GAIN_THRESHOLD = 0.01;
+
+interface FastCartNode extends CartNode {
+  left?: FastCartNode;
+  right?: FastCartNode;
+  /** Stored so a deeper tree can be truncated to a shallower `maxDepth` without retraining. */
+  nodeLabels?: number[];
+}
+
+function numberOfClasses(labels: number[]): number {
+  let max = -Infinity;
+  for (let i = 0; i < labels.length; i += 1) {
+    const v = labels[i]! + 1;
+    if (v > max) max = v;
+  }
+  return Number.isFinite(max) && max > 0 ? max : 0;
+}
+
+function discreteDistribution(
+  labels: number[],
+  numClasses: number,
+): { getRow(row: number): number[] } {
+  const counts = new Array<number>(numClasses).fill(0);
+  const inv = labels.length > 0 ? 1 / labels.length : 0;
+  for (let i = 0; i < labels.length; i += 1) {
+    const c = labels[i]!;
+    if (c >= 0 && c < numClasses) counts[c]! += inv;
+  }
+  return { getRow: () => counts };
+}
+
+function meanOf(labels: number[]): number {
+  if (labels.length === 0) return 0;
+  let sum = 0;
+  for (let i = 0; i < labels.length; i += 1) sum += labels[i]!;
+  return sum / labels.length;
+}
+
+/**
+ * O(N log N) exact equivalent of `ml-cart`'s `featureSplit` + `bestSplit` loop.
+ * Sweeps sorted `(featureValue, label)` pairs once with running counts / sums
+ * and evaluates each distinct threshold in the same order `ml-cart` does.
+ */
+function findBestFeatureSplit(
+  matrix: number[][],
+  rowIndexes: number[],
+  featureIndex: number,
+  labels: number[],
+  regression: boolean,
+  numClasses: number,
+  parentImpurity: number,
+): { threshold: number; gain: number } | null {
+  const n = rowIndexes.length;
+  if (n < 2) return null;
+
+  const pairs = new Array<[number, number]>(n);
+  for (let i = 0; i < n; i += 1) {
+    const rowIdx = rowIndexes[i]!;
+    pairs[i] = [matrix[rowIdx]![featureIndex] ?? Number.NaN, labels[i]!];
+  }
+  pairs.sort((a, b) => a[0] - b[0]);
+
+  // Collect candidate thresholds in exact ml-cart order (`arr[i - 1][1] !== arr[i][1]`).
+  const thresholds: number[] = [];
+  for (let i = 1; i < n; i += 1) {
+    if (pairs[i - 1]![1] !== pairs[i]![1]) {
+      thresholds.push((pairs[i - 1]![0] + pairs[i]![0]) / 2);
+    }
+  }
+  if (thresholds.length === 0) return null;
+
+  // Deduplicate thresholds for the single-pass sweep while remembering their
+  // sorted order, then scan `thresholds` in original order to preserve tie-breaking.
+  const uniqueThresholds = Array.from(new Set(thresholds)).sort((a, b) => a - b);
+  const gainByThreshold = new Map<number, number>();
+
+  if (regression) {
+    let totalSum = 0;
+    for (let i = 0; i < n; i += 1) totalSum += pairs[i]![1];
+
+    let leftCount = 0;
+    let leftSum = 0;
+    let ptr = 0;
+    // Precompute squared error via two-pass variance or running sumSq; to avoid
+    // any catastrophic cancellation on large offsets, shift by `mean = totalSum / n`.
+    const shift = totalSum / n;
+    let totalShiftedSum = 0;
+    let totalShiftedSq = 0;
+    for (let i = 0; i < n; i += 1) {
+      const d = pairs[i]![1] - shift;
+      totalShiftedSum += d;
+      totalShiftedSq += d * d;
+    }
+    let leftShiftedSum = 0;
+    let leftShiftedSq = 0;
+
+    for (let tIdx = 0; tIdx < uniqueThresholds.length; tIdx += 1) {
+      const t = uniqueThresholds[tIdx]!;
+      while (ptr < n && pairs[ptr]![0] < t) {
+        const y = pairs[ptr]![1];
+        const d = y - shift;
+        leftCount += 1;
+        leftSum += y;
+        leftShiftedSum += d;
+        leftShiftedSq += d * d;
+        ptr += 1;
+      }
+      const rightCount = n - leftCount;
+      if (leftCount === 0 || rightCount === 0) {
+        // One side is empty (e.g. NaN values or duplicate x): squaredError of empty is 0.
+        const err =
+          leftCount === 0
+            ? totalShiftedSq - (totalShiftedSum * totalShiftedSum) / n
+            : leftShiftedSq - (leftShiftedSum * leftShiftedSum) / leftCount;
+        gainByThreshold.set(t, Math.max(0, err));
+        continue;
+      }
+      const rightShiftedSum = totalShiftedSum - leftShiftedSum;
+      const rightShiftedSq = totalShiftedSq - leftShiftedSq;
+      const leftErr = Math.max(
+        0,
+        leftShiftedSq - (leftShiftedSum * leftShiftedSum) / leftCount,
+      );
+      const rightErr = Math.max(
+        0,
+        rightShiftedSq - (rightShiftedSum * rightShiftedSum) / rightCount,
+      );
+      void leftSum;
+      gainByThreshold.set(t, leftErr + rightErr);
+    }
+  } else {
+    const totalCounts = new Int32Array(numClasses);
+    for (let i = 0; i < n; i += 1) {
+      const c = pairs[i]![1];
+      if (c >= 0 && c < numClasses) totalCounts[c]! += 1;
+    }
+    const leftCounts = new Int32Array(numClasses);
+    let leftCount = 0;
+    let ptr = 0;
+
+    for (let tIdx = 0; tIdx < uniqueThresholds.length; tIdx += 1) {
+      const t = uniqueThresholds[tIdx]!;
+      while (ptr < n && pairs[ptr]![0] < t) {
+        const c = pairs[ptr]![1];
+        if (c >= 0 && c < numClasses) leftCounts[c]! += 1;
+        leftCount += 1;
+        ptr += 1;
+      }
+      const rightCount = n - leftCount;
+      let leftSumSq = 0;
+      let rightSumSq = 0;
+      for (let c = 0; c < numClasses; c += 1) {
+        const lc = leftCounts[c]!;
+        const rc = totalCounts[c]! - lc;
+        if (leftCount > 0 && lc > 0) {
+          const p = lc / leftCount;
+          leftSumSq += p * p;
+        }
+        if (rightCount > 0 && rc > 0) {
+          const p = rc / rightCount;
+          rightSumSq += p * p;
+        }
+      }
+      const leftGini = leftCount > 0 ? 1 - leftSumSq : 0;
+      const rightGini = rightCount > 0 ? 1 - rightSumSq : 0;
+      const splitsImpurity = (rightGini * rightCount + leftGini * leftCount) / n;
+      gainByThreshold.set(t, parentImpurity - splitsImpurity);
+    }
+  }
+
+  let bestGain = regression ? Infinity : -Infinity;
+  let bestThresholdVal: number | undefined;
+  for (let i = 0; i < thresholds.length; i += 1) {
+    const t = thresholds[i]!;
+    const gain = gainByThreshold.get(t);
+    if (gain === undefined) continue;
+    if (regression ? gain < bestGain : gain > bestGain) {
+      bestGain = gain;
+      bestThresholdVal = t;
+    }
+  }
+  if (bestThresholdVal === undefined) return null;
+  return { threshold: bestThresholdVal, gain: bestGain };
+}
+
+function fitFastCartNode(
+  matrix: number[][],
+  allLabels: number[],
+  rowIndexes: number[],
+  featureCount: number,
+  regression: boolean,
+  maxDepth: number,
+  currentDepth: number,
+  parentGain: number,
+): FastCartNode {
+  const n = rowIndexes.length;
+  const nodeLabels = new Array<number>(n);
+  for (let i = 0; i < n; i += 1) {
+    nodeLabels[i] = allLabels[rowIndexes[i]!]!;
+  }
+
+  const makeLeaf = (): FastCartNode => ({
+    distribution: regression
+      ? meanOf(nodeLabels)
+      : discreteDistribution(nodeLabels, numberOfClasses(nodeLabels)),
+    nodeLabels,
+  });
+
+  if (n <= DEFAULT_MIN_NUM_SAMPLES) {
+    return makeLeaf();
+  }
+
+  const numClasses = regression ? 0 : numberOfClasses(nodeLabels);
+  const parentImpurity = regression ? 0 : giniImpurity(nodeLabels);
+
+  let bestGain = regression ? Infinity : -Infinity;
+  let bestColumn: number | undefined;
+  let bestValue: number | undefined;
+
+  for (let col = 0; col < featureCount; col += 1) {
+    const split = findBestFeatureSplit(
+      matrix,
+      rowIndexes,
+      col,
+      nodeLabels,
+      regression,
+      numClasses,
+      parentImpurity,
+    );
+    if (!split) continue;
+    const better = regression ? split.gain < bestGain : split.gain > bestGain;
+    if (better) {
+      bestGain = split.gain;
+      bestColumn = col;
+      bestValue = split.threshold;
+    }
+  }
+
+  if (bestColumn === undefined || bestValue === undefined) {
+    return makeLeaf();
+  }
+
+  const leftIndexes: number[] = [];
+  const rightIndexes: number[] = [];
+  for (let i = 0; i < n; i += 1) {
+    const rowIdx = rowIndexes[i]!;
+    const val = matrix[rowIdx]![bestColumn] ?? Number.NaN;
+    if (val < bestValue) leftIndexes.push(rowIdx);
+    else rightIndexes.push(rowIdx);
+  }
+
+  const gainThreshold = regression ? 0 : DEFAULT_CLASSIFIER_GAIN_THRESHOLD;
+  if (
+    currentDepth < maxDepth &&
+    bestGain > gainThreshold &&
+    bestGain !== parentGain &&
+    leftIndexes.length > 0 &&
+    rightIndexes.length > 0
+  ) {
+    return {
+      splitColumn: bestColumn,
+      splitValue: bestValue,
+      gain: bestGain,
+      nodeLabels,
+      left: fitFastCartNode(
+        matrix,
+        allLabels,
+        leftIndexes,
+        featureCount,
+        regression,
+        maxDepth,
+        currentDepth + 1,
+        bestGain,
+      ),
+      right: fitFastCartNode(
+        matrix,
+        allLabels,
+        rightIndexes,
+        featureCount,
+        regression,
+        maxDepth,
+        currentDepth + 1,
+        bestGain,
+      ),
+    };
+  }
+
+  return makeLeaf();
+}
+
+/**
+ * Truncate an already-fitted `AiLabTreeNode` to `maxDepth`, converting any
+ * decision node at `depth === maxDepth` into a leaf with its majority class
+ * (or regression mean).
+ */
+export function truncateDecisionTree(
+  node: AiLabTreeNode,
+  maxDepth: number,
+  regression: boolean,
+  labelByCode: string[],
+  labelCodes: Record<string, number> | undefined,
+  rows?: AiLabDataRow[],
+  labelColumn?: string,
+  depth = 0,
+): AiLabTreeNode {
+  if (node.type === "leaf") return node;
+  if (depth >= maxDepth) {
+    if (regression && rows && labelColumn) {
+      let sum = 0;
+      for (let i = 0; i < rows.length; i += 1) {
+        sum += parseFloat(String(rows[i]![labelColumn]));
+      }
+      const mean = rows.length > 0 ? sum / rows.length : 0;
+      return {
+        type: "leaf",
+        pathKey: node.pathKey,
+        prediction: formatRegressionPrediction(mean),
+        rawPrediction: mean,
+        sampleCount: node.sampleCount,
+        labelCounts: node.labelCounts,
+      };
+    }
+    // Classification: pick the class with the highest count, breaking ties by
+    // lowest category code (matching `ml-cart`'s `toDiscreteDistribution` order).
+    let bestCode = Infinity;
+    let bestCount = -1;
+    let bestLabel = "";
+    for (const [label, count] of Object.entries(node.labelCounts)) {
+      const code = labelCodes?.[label] ?? labelByCode.indexOf(label);
+      if (
+        count > bestCount ||
+        (count === bestCount && code >= 0 && code < bestCode)
+      ) {
+        bestCount = count;
+        bestCode = code >= 0 ? code : Infinity;
+        bestLabel = label;
+      }
+    }
+    return {
+      type: "leaf",
+      pathKey: node.pathKey,
+      prediction: bestLabel,
+      sampleCount: node.sampleCount,
+      labelCounts: node.labelCounts,
+    };
+  }
+  return {
+    ...node,
+    left: truncateDecisionTree(
+      node.left,
+      maxDepth,
+      regression,
+      labelByCode,
+      labelCodes,
+      undefined,
+      undefined,
+      depth + 1,
+    ),
+    right: truncateDecisionTree(
+      node.right,
+      maxDepth,
+      regression,
+      labelByCode,
+      labelCodes,
+      undefined,
+      undefined,
+      depth + 1,
+    ),
+  };
+}
+
+function buildDisplayAtDepth(
+  node: FastCartNode,
   rows: AiLabDataRow[],
   matrix: number[][],
   features: string[],
@@ -216,9 +587,35 @@ function buildDisplay(
   regression: boolean,
   valuesByColumn: Record<string, string[]>,
   pathKey: string,
+  maxDepth: number,
+  currentDepth = 0,
 ): AiLabTreeNode {
-  if (!node.left || !node.right || node.splitColumn === undefined || node.splitValue === undefined) {
-    return leafFromModel(node, rows, labelColumn, labelByCode, regression, pathKey);
+  if (
+    currentDepth >= maxDepth ||
+    !node.left ||
+    !node.right ||
+    node.splitColumn === undefined ||
+    node.splitValue === undefined
+  ) {
+    const leafNode: CartNode =
+      node.distribution !== undefined
+        ? node
+        : {
+            distribution: regression
+              ? meanOf(node.nodeLabels ?? [])
+              : discreteDistribution(
+                  node.nodeLabels ?? [],
+                  numberOfClasses(node.nodeLabels ?? []),
+                ),
+          };
+    return leafFromModel(
+      leafNode,
+      rows,
+      labelColumn,
+      labelByCode,
+      regression,
+      pathKey,
+    );
   }
 
   const column = node.splitColumn;
@@ -266,7 +663,7 @@ function buildDisplay(
     sampleCount: rows.length,
     labelCounts: countsFor(rows, labelColumn),
     impurityReduction: node.gain ?? 0,
-    left: buildDisplay(
+    left: buildDisplayAtDepth(
       node.left,
       leftRows,
       leftMatrix,
@@ -278,8 +675,10 @@ function buildDisplay(
       regression,
       nextValues,
       `${pathKey}.0`,
+      maxDepth,
+      currentDepth + 1,
     ),
-    right: buildDisplay(
+    right: buildDisplayAtDepth(
       node.right,
       rightRows,
       rightMatrix,
@@ -291,8 +690,67 @@ function buildDisplay(
       regression,
       rightValuesByColumn,
       `${pathKey}.1`,
+      maxDepth,
+      currentDepth + 1,
     ),
   };
+}
+
+/**
+ * Fit one CART tree up to `max(depths)` and materialize `AiLabTreeNode` trees
+ * for each requested depth without re-encoding or re-fitting.
+ */
+export function trainDecisionTreeSweep(
+  rows: AiLabDataRow[],
+  columns: AiLabColumn[],
+  features: string[],
+  labelColumn: string,
+  depths: readonly number[],
+  encodingRows: AiLabDataRow[] = rows,
+): Map<number, AiLabTreeNode> {
+  const byDepth = new Map<number, AiLabTreeNode>();
+  if (rows.length === 0 || depths.length === 0) {
+    for (const d of depths) byDepth.set(d, emptyLeaf("root"));
+    return byDepth;
+  }
+  const encoded = encodeSheet(rows, columns, features, labelColumn, encodingRows);
+  const maxDepth = Math.max(...depths);
+  const allIndexes = Array.from({ length: rows.length }, (_, i) => i);
+  const root = fitFastCartNode(
+    encoded.matrix,
+    encoded.labels,
+    allIndexes,
+    features.length,
+    encoded.regression,
+    maxDepth,
+    0,
+    0,
+  );
+  const valuesByColumn: Record<string, string[]> = {};
+  for (const feature of features) {
+    const codes = encoded.codes[feature];
+    if (codes) valuesByColumn[feature] = Object.keys(codes);
+  }
+  for (const depth of depths) {
+    byDepth.set(
+      depth,
+      buildDisplayAtDepth(
+        root,
+        rows,
+        encoded.matrix,
+        features,
+        columns,
+        labelColumn,
+        encoded.codes,
+        encoded.labelByCode,
+        encoded.regression,
+        valuesByColumn,
+        "root",
+        depth,
+      ),
+    );
+  }
+  return byDepth;
 }
 
 export function trainDecisionTree(
@@ -303,31 +761,16 @@ export function trainDecisionTree(
   options: TrainDecisionTreeOptions = {},
 ): AiLabTreeNode {
   if (rows.length === 0) return emptyLeaf("root");
-  const encodingRows = options.encodingRows ?? rows;
-  const encoded = encodeSheet(rows, columns, features, labelColumn, encodingRows);
   const maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
-  const model = encoded.regression
-    ? new DecisionTreeRegression({ maxDepth })
-    : new DecisionTreeClassifier({ maxDepth });
-  model.train(encoded.matrix, encoded.labels);
-  const valuesByColumn: Record<string, string[]> = {};
-  for (const feature of features) {
-    const codes = encoded.codes[feature];
-    if (codes) valuesByColumn[feature] = Object.keys(codes);
-  }
-  return buildDisplay(
-    model.root,
+  const sweep = trainDecisionTreeSweep(
     rows,
-    encoded.matrix,
-    features,
     columns,
+    features,
     labelColumn,
-    encoded.codes,
-    encoded.labelByCode,
-    encoded.regression,
-    valuesByColumn,
-    "root",
+    [maxDepth],
+    options.encodingRows ?? rows,
   );
+  return sweep.get(maxDepth) ?? emptyLeaf("root");
 }
 
 /** One question the trainer tried at a node, scored the way CART scores it. */
@@ -371,44 +814,24 @@ function giniImpurity(labels: number[]): number {
   return 1 - sum;
 }
 
-function splitLabels(
-  values: number[],
-  labels: number[],
-  threshold: number,
-): { left: number[]; right: number[] } {
-  const left: number[] = [];
-  const right: number[] = [];
-  values.forEach((value, index) => {
-    const label = labels[index]!;
-    if (value < threshold) left.push(label);
-    else right.push(label);
-  });
-  return { left, right };
-}
-
 function bestThreshold(
   values: number[],
   labels: number[],
   regression: boolean,
 ): { threshold: number; gain: number } | null {
-  const pairs = values.map((value, index) => [value, labels[index]!] as const);
-  pairs.sort((a, b) => a[0] - b[0]);
-  let best: { threshold: number; gain: number } | null = null;
-  for (let index = 1; index < pairs.length; index += 1) {
-    if (pairs[index - 1]![1] === pairs[index]![1]) continue;
-    const threshold = (pairs[index - 1]![0] + pairs[index]![0]) / 2;
-    const { left, right } = splitLabels(values, labels, threshold);
-    if (left.length === 0 || right.length === 0) continue;
-    const gain = regression
-      ? squaredError(left) + squaredError(right)
-      : giniImpurity(labels) -
-        (giniImpurity(left) * left.length + giniImpurity(right) * right.length) / labels.length;
-    const better = regression
-      ? !best || gain < best.gain
-      : !best || gain > best.gain;
-    if (better) best = { threshold, gain };
-  }
-  return best;
+  const rowIndexes = Array.from({ length: values.length }, (_, i) => i);
+  const matrix = values.map((v) => [v]);
+  const numClasses = regression ? 0 : numberOfClasses(labels);
+  const parentImpurity = regression ? 0 : giniImpurity(labels);
+  return findBestFeatureSplit(
+    matrix,
+    rowIndexes,
+    0,
+    labels,
+    regression,
+    numClasses,
+    parentImpurity,
+  );
 }
 
 function scoreCandidate(
@@ -661,8 +1084,13 @@ export function nodeVisits(
   rows: AiLabDataRow[],
   rowIndexes: number[],
   labelColumn: string,
+  columns: AiLabColumn[] = [],
 ): Map<string, AiLabNodeVisits> {
   const visits = new Map<string, AiLabNodeVisits>();
+  const tolerance =
+    columnType(columns, labelColumn) === "numerical"
+      ? cartRegressionTolerance(rows, labelColumn)
+      : 0;
   const add = (key: string, correct: boolean) => {
     const current = visits.get(key) ?? { total: 0, correct: 0 };
     current.total += 1;
@@ -674,7 +1102,13 @@ export function nodeVisits(
     if (!row) continue;
     const trace = traceDecisionTree(root, row);
     const leafKey = trace.pathKeys[trace.pathKeys.length - 1];
-    const correct = String(row[labelColumn] ?? "") === trace.prediction;
+    const correct = cartPredictionCorrect(
+      root,
+      row,
+      labelColumn,
+      columns,
+      tolerance,
+    );
     for (const key of trace.pathKeys) add(key, key === leafKey && correct);
   }
   return visits;

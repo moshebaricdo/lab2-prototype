@@ -125,6 +125,39 @@ function insertNeighbor(
   if (neighbors.length > k) neighbors.pop();
 }
 
+export function knnTopNeighborIndexes(
+  rows: AiLabDataRow[],
+  queryRowIndexes: number[],
+  features: string[],
+  columns: AiLabColumn[],
+  maxK: number,
+  excludeRowIndexes: number[] = [],
+): number[][] {
+  const excluded = new Set(excludeRowIndexes);
+  const { encodings, matrix } = encodedSpace(rows, columns, features);
+  const width = features.length;
+  const limit = Math.min(maxK, rows.length - excluded.size);
+  if (limit <= 0) return queryRowIndexes.map(() => []);
+
+  return queryRowIndexes.map((queryRowIndex) => {
+    const query = rows[queryRowIndex];
+    if (!query) return [];
+    const queryVector = encodeRow(query, features, columns, encodings);
+    const neighbors: AiLabKnnNeighbor[] = [];
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+      if (excluded.has(rowIndex)) continue;
+      let sum = 0;
+      const offset = rowIndex * width;
+      for (let f = 0; f < width; f += 1) {
+        const delta = queryVector[f]! - matrix[offset + f]!;
+        sum += delta * delta;
+      }
+      insertNeighbor(neighbors, { rowIndex, distance: Math.sqrt(sum) }, limit);
+    }
+    return neighbors.map((neighbor) => neighbor.rowIndex);
+  });
+}
+
 export function predictKnn(
   rows: AiLabDataRow[],
   query: AiLabDataRow,

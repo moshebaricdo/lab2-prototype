@@ -2,7 +2,11 @@ import { trainModel, uniqueValues } from "../../lib/aiLab";
 import type { AiLabColumn, AiLabDataRow, AiLabDataset } from "../../types/aiLab";
 import type { TrainingWalkData } from "../../components/ide/ailab/views/trainingWalk";
 import { csvDatasets } from "./datasets";
-import { AI_LAB_PLAYTEST_LABEL_COLUMN, AI_LAB_PLAYTEST_TREE_FEATURES } from "./index";
+import {
+  AI_LAB_PLAYTEST_LABEL_COLUMN,
+  AI_LAB_PLAYTEST_TREE_FEATURES,
+  aiLabPlaytestDataset,
+} from "./index";
 
 /**
  * Frozen inputs for the training-animation sandbox
@@ -29,14 +33,14 @@ interface FixtureSpec {
   rowNoun: string;
 }
 
-const IRIS_FEATURES = ["sepallengthcm", "sepalwidthcm", "petallengthcm", "petalwidthcm"];
+const ZOO_FEATURES = ["hair", "feathers", "eggs", "milk", "aquatic", "legs"];
 
 const SPECS: FixtureSpec[] = [
   {
     id: "animals",
     name: "Animals (P0)",
     note: "52 rows, 2 yes/no features, 3 labels — the P0 level",
-    dataset: () => csv("bird_mammal_or_fish"),
+    dataset: () => aiLabPlaytestDataset,
     labelColumn: AI_LAB_PLAYTEST_LABEL_COLUMN,
     features: () => [...AI_LAB_PLAYTEST_TREE_FEATURES],
     titleColumn: "animal",
@@ -46,50 +50,54 @@ const SPECS: FixtureSpec[] = [
     id: "animals-3",
     name: "Animals, 3 traits",
     note: "52 rows, adds Lives in water — one level deeper",
-    dataset: () => csv("bird_mammal_or_fish"),
+    dataset: () => aiLabPlaytestDataset,
     labelColumn: AI_LAB_PLAYTEST_LABEL_COLUMN,
     features: () => ["has_feathers", "breathes_with_lungs", "lives_in_water"],
     titleColumn: "animal",
     rowNoun: "animal",
   },
   {
-    id: "iris",
-    name: "Iris",
-    note: "150 rows, 4 number features, 3 labels",
-    dataset: () => csv("iris_species"),
-    labelColumn: "species",
-    features: () => IRIS_FEATURES,
-    rowNoun: "flower",
+    id: "zoo",
+    name: "Zoo",
+    note: "101 rows, 6 animal traits, 7 classes",
+    dataset: () => csv("zoo"),
+    labelColumn: "class",
+    features: () => ZOO_FEATURES,
+    titleColumn: "animal_name",
+    rowNoun: "animal",
   },
   {
-    id: "drug",
-    name: "Drug",
-    note: "200 rows, 5 mixed features, 5 labels",
-    dataset: () => csv("drug200"),
-    labelColumn: "drug",
-    features: () => ["age", "sex", "bp", "cholesterol", "na_to_k"],
-    rowNoun: "patient",
+    id: "car-evaluation",
+    name: "Car Evaluation",
+    note: "1,727 rows, 6 categorical features, 4 acceptability ratings",
+    dataset: () => csv("car_evaluation"),
+    labelColumn: "car_acceptability",
+    features: (dataset) =>
+      dataset.columns
+        .map((column) => column.id)
+        .filter((id) => id !== "car_acceptability"),
+    rowNoun: "car",
   },
   {
     id: "stress-rows",
     name: "Stress: 6,000 rows",
-    note: "Iris ×40 with jitter and ~3% label noise — dot condensing at scale",
-    dataset: () => stressRows(csv("iris_species"), 40),
-    labelColumn: "species",
-    features: () => IRIS_FEATURES,
-    rowNoun: "flower",
+    note: "Zoo ×60 with ~3% label noise — dot condensing at scale",
+    dataset: () => stressRows(csv("zoo"), 60, "class"),
+    labelColumn: "class",
+    features: () => ZOO_FEATURES,
+    rowNoun: "animal",
   },
   {
     id: "stress-features",
     name: "Stress: 12 features",
-    note: "Iris + 8 noise columns — long rows, mostly unused features",
-    dataset: () => stressFeatures(csv("iris_species"), 8),
-    labelColumn: "species",
+    note: "Zoo + 6 noise columns — long rows, mostly unused features",
+    dataset: () => stressFeatures(csv("zoo"), 6, "class"),
+    labelColumn: "class",
     features: (dataset) =>
       dataset.columns
         .map((column) => column.id)
-        .filter((id) => id !== "id" && id !== "species"),
-    rowNoun: "flower",
+        .filter((id) => id !== "animal_name" && id !== "class"),
+    rowNoun: "animal",
   },
 ];
 
@@ -148,9 +156,13 @@ function seeded(seed: number): () => number {
   };
 }
 
-function stressRows(base: AiLabDataset, copies: number): AiLabDataset {
+function stressRows(
+  base: AiLabDataset,
+  copies: number,
+  labelColumnId: string,
+): AiLabDataset {
   const random = seeded(7);
-  const labels = uniqueValues(base.rows, "species");
+  const labels = uniqueValues(base.rows, labelColumnId);
   const numeric = base.columns.filter((column) => column.type === "numerical" && column.id !== "id");
   const rows: AiLabDataRow[] = [];
   for (let copy = 0; copy < copies; copy += 1) {
@@ -160,14 +172,20 @@ function stressRows(base: AiLabDataset, copies: number): AiLabDataset {
         const value = Number(row[column.id]);
         next[column.id] = Math.round((value + (random() - 0.5) * 0.4) * 10) / 10;
       });
-      if (random() < 0.03) next.species = labels[Math.floor(random() * labels.length)]!;
+      if (random() < 0.03) {
+        next[labelColumnId] = labels[Math.floor(random() * labels.length)]!;
+      }
       rows.push(next);
     });
   }
   return { ...base, id: `${base.id}-stress-rows`, rows };
 }
 
-function stressFeatures(base: AiLabDataset, extra: number): AiLabDataset {
+function stressFeatures(
+  base: AiLabDataset,
+  extra: number,
+  labelColumnId: string,
+): AiLabDataset {
   const random = seeded(11);
   const added: AiLabColumn[] = Array.from({ length: extra }, (_, index) => ({
     id: `noise_${index + 1}`,
@@ -175,7 +193,10 @@ function stressFeatures(base: AiLabDataset, extra: number): AiLabDataset {
     type: "numerical",
     description: "Random numbers with no link to the label.",
   }));
-  const labelIndex = base.columns.findIndex((column) => column.id === "species");
+  const labelIndex = Math.max(
+    0,
+    base.columns.findIndex((column) => column.id === labelColumnId),
+  );
   const columns = [
     ...base.columns.slice(0, labelIndex),
     ...added,

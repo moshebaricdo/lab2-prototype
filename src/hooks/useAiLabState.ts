@@ -3,6 +3,7 @@ import {
   applyScales,
   catalogDatasets,
   columnsWithScales,
+  columnUsable,
   DEFAULT_KNN_K,
   featureNotice,
   initialDatasetId,
@@ -64,8 +65,13 @@ export interface AiLabState {
   savedModels: AiLabSavedModel[];
 }
 
-function cloneRows(rows: AiLabDataRow[]): AiLabDataRow[] {
-  return rows.map((row) => ({ ...row }));
+/**
+ * Keep dataset rows by reference until a cell is edited or a row is added
+ * (copy-on-write). Avoids cloning thousands of row objects on init/switch
+ * and preserves WeakMap caches keyed on `dataset.rows`.
+ */
+function initialRows(rows: AiLabDataRow[]): AiLabDataRow[] {
+  return rows;
 }
 
 function setupSection(config: AiLabLevelConfig): AiLabSection {
@@ -97,6 +103,7 @@ function appendTrainingRun(
 ): AiLabTrainingRun[] {
   const run: AiLabTrainingRun = {
     id: `run-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    algorithm: model.algorithm,
     labelColumn: model.labelColumn,
     selectedFeatures: [...model.selectedFeatures],
     accuracy: model.accuracy,
@@ -135,7 +142,10 @@ function cardLayoutFor(
 function initialState(config: AiLabLevelConfig): AiLabState {
   const datasetId = initialDatasetId(config);
   const dataset = resolveDataset(config, datasetId);
-  const selectedAlgorithm = config.algorithmLock ?? config.pretrained?.algorithm;
+  const selectedAlgorithm =
+    config.algorithmLock ??
+    config.pretrained?.algorithm ??
+    config.initialAlgorithm;
   const labelColumn =
     config.pretrained?.labelColumn ??
     config.presetLabelColumn ??
@@ -184,7 +194,7 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     scales: [],
     trainingSetupOpen: Boolean(config.trainAsOverlay && config.pretrained),
     introComplete: !config.introActivity,
-    rows: dataset ? cloneRows(dataset.rows) : [],
+    rows: dataset ? initialRows(dataset.rows) : [],
     savedModels: [],
   };
 }
@@ -310,9 +320,16 @@ export function useAiLabState(config: AiLabLevelConfig) {
   );
 
   const selectDataset = useCallback(
-    (datasetId: string) => {
+    (datasetId: string, algorithm?: AiLabAlgorithmId) => {
       setState((current) => {
-        if (current.datasetId === datasetId) return current;
+        const nextAlgorithm =
+          config.algorithmLock ?? algorithm ?? current.selectedAlgorithm;
+        if (
+          current.datasetId === datasetId &&
+          current.selectedAlgorithm === nextAlgorithm
+        ) {
+          return current;
+        }
         const dataset = resolveDataset(config, datasetId);
         if (!dataset) return current;
         const labelColumn =
@@ -322,7 +339,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
         return {
           ...current,
           datasetId,
-          rows: cloneRows(dataset.rows),
+          selectedAlgorithm: nextAlgorithm,
+          rows: initialRows(dataset.rows),
           scales: [],
           selectedColumnId: undefined,
           columnFilter: undefined,
@@ -373,7 +391,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
 
   const startOver = useCallback(() => {
     setState((current) => ({
-      ...initialState(config),
+      ...initialState({ ...config, initialAlgorithm: undefined }),
       savedModels: current.savedModels,
     }));
   }, [config]);
@@ -775,11 +793,16 @@ export function useAiLabState(config: AiLabLevelConfig) {
   const activeColumnFilter = useMemo(() => {
     const filter = state.columnFilter;
     if (!filter || filter.values.length === 0) return undefined;
-    if (!columns.some((column) => column.id === filter.columnId)) {
+    const column = columns.find((col) => col.id === filter.columnId);
+    if (
+      !column ||
+      column.type !== "categorical" ||
+      !columnUsable(viewRows, columns, column.id)
+    ) {
       return undefined;
     }
     return filter;
-  }, [state.columnFilter, columns]);
+  }, [state.columnFilter, columns, viewRows]);
   const filteredRowIndexes = useMemo(() => {
     if (!activeColumnFilter) {
       return viewRows.map((_, index) => index);
@@ -875,6 +898,39 @@ export function useAiLabState(config: AiLabLevelConfig) {
     }));
   }, []);
 
+  const canClearTraining = Boolean(
+    state.model ||
+      (!config.hideLabelSelect &&
+        !config.lockLabelColumn &&
+        Boolean(state.labelColumn)) ||
+      (!config.lockFeatures && state.selectedFeatures.length > 0),
+  );
+
+  const clearTraining = useCallback(() => {
+    setState((current) => {
+      const dataset = resolveDataset(config, current.datasetId);
+      const labelColumn =
+        config.hideLabelSelect || config.lockLabelColumn
+          ? current.labelColumn ?? dataset?.defaultLabelColumn
+          : undefined;
+      const selectedFeatures = config.lockFeatures
+        ? current.selectedFeatures
+        : [];
+      return {
+        ...current,
+        labelColumn,
+        selectedFeatures,
+        model: undefined,
+        lastPrediction: undefined,
+        shownTest: undefined,
+        testValues: emptyTestValues(selectedFeatures),
+        testRowIndex: undefined,
+        section:
+          current.section === "test" ? setupSection(config) : current.section,
+      };
+    });
+  }, [config]);
+
   const completeIntro = useCallback(() => {
     setState((current) =>
       current.introComplete ? current : { ...current, introComplete: true },
@@ -894,6 +950,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
     visibleSections,
     canVisit,
     canTrain,
+    canClearTraining,
     trainBlockedReason,
     labelCardinality,
     featureCardinality,
@@ -901,6 +958,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
     selectDataset,
     selectAlgorithm,
     startOver,
+    clearTraining,
     setCardIndex,
     setDataView,
     setCardLayout,

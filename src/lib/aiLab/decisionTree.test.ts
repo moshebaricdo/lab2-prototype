@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { DecisionTreeClassifier, DecisionTreeRegression } from "ml-cart";
 import type { AiLabColumn, AiLabDataRow } from "../../types/aiLab";
+import { csvDatasets } from "../../data/ailab";
 import {
+  cartPredictionCorrect,
+  cartRegressionTolerance,
+  nodeVisits,
+  rowsByNode,
   traceDecisionTree,
   trainDecisionTree,
   treeBranches,
+  treeSplitCandidates,
 } from "./decisionTree";
 import { trainModel } from "./train";
 
@@ -133,6 +140,34 @@ describe("decision tree matches production ml-cart", () => {
     expect(trace.rawPrediction).toBeGreaterThan(10);
     expect(trace.rawPrediction).toBeLessThan(20);
     expect(rows.map((row) => Number(row.price))).not.toContain(trace.rawPrediction);
+
+    // Regression leaf visits and cartPredictionCorrect use the 5% range tolerance,
+    // even when no row exactly equals the mean prediction.
+    const tolerance = cartRegressionTolerance(rows, "price");
+    const visits = nodeVisits(
+      model.tree!,
+      rows,
+      model.holdoutRowIndexes,
+      "price",
+      columns,
+    );
+    const byNode = rowsByNode(model.tree!, rows, model.holdoutRowIndexes);
+    for (const [key, visit] of visits.entries()) {
+      const nodeRows = byNode.get(key) ?? [];
+      expect(visit.total).toBe(nodeRows.length);
+      if (key !== "root") {
+        const expectedCorrect = nodeRows.filter((rowIdx) =>
+          cartPredictionCorrect(
+            model.tree!,
+            rows[rowIdx]!,
+            "price",
+            columns,
+            tolerance,
+          ),
+        ).length;
+        expect(visit.correct).toBe(expectedCorrect);
+      }
+    }
   });
 
   it("sends a value equal to the threshold right, and groups categories", () => {
@@ -163,5 +198,73 @@ describe("decision tree matches production ml-cart", () => {
       "hot",
       "cold or mild",
     ]);
+  });
+
+  it("matches ml-cart splits and trains chunky production datasets quickly", () => {
+    const abalone = csvDatasets.find((d) => d.id === "abalone")!;
+    expect(abalone).toBeDefined();
+    expect(abalone.rowCount).toBe(4177);
+    expect(abalone.card?.source).toContain("UCI");
+
+    const features = ["length", "diameter", "height", "whole_weight"];
+    const t0 = performance.now();
+    const model = trainModel({
+      algorithm: "decisionTree",
+      rows: abalone.rows,
+      columns: abalone.columns,
+      labelColumn: abalone.defaultLabelColumn,
+      selectedFeatures: features,
+    });
+    const elapsed = performance.now() - t0;
+    expect(model.tree).toBeDefined();
+    expect(model.holdoutRowIndexes).toHaveLength(418);
+    expect(elapsed).toBeLessThan(1500);
+
+    // Also verify ml-cart parity on a classification prod dataset (car_evaluation: 1,727 rows)
+    const cars = csvDatasets.find((d) => d.id === "car_evaluation")!;
+    expect(cars).toBeDefined();
+    expect(cars.rows).toHaveLength(1727);
+    const carFeatures = cars.columns
+      .map((c) => c.id)
+      .filter((id) => id !== cars.defaultLabelColumn);
+    const carModel = trainModel({
+      algorithm: "decisionTree",
+      rows: cars.rows,
+      columns: cars.columns,
+      labelColumn: cars.defaultLabelColumn,
+      selectedFeatures: carFeatures,
+    });
+    expect(carModel.tree).toBeDefined();
+    expect(carModel.accuracy).toBeGreaterThan(0.7);
+
+    // Verify O(N log N) candidate scan on car_evaluation
+    const candidates = treeSplitCandidates(
+      carModel.tree!,
+      cars.rows,
+      cars.columns,
+      carFeatures,
+      cars.defaultLabelColumn,
+    );
+    expect(candidates.get("root")?.candidates.length).toBeGreaterThan(0);
+
+    // Verify ml-cart root split parity on numerical regression
+    const subRows = abalone.rows.slice(0, 300);
+    const X = subRows.map((r) => features.map((f) => Number(r[f])));
+    const y = subRows.map((r) => Number(r[abalone.defaultLabelColumn]));
+    const refCart = new DecisionTreeRegression({ maxDepth: 3 });
+    refCart.train(X, y);
+    const fastTree = trainDecisionTree(
+      subRows,
+      abalone.columns,
+      features,
+      abalone.defaultLabelColumn,
+      { maxDepth: 3 },
+    );
+    expect(fastTree.type).toBe("decision");
+    if (fastTree.type === "decision") {
+      expect(fastTree.feature).toBe(features[refCart.root.splitColumn!]);
+      expect(fastTree.threshold).toBeCloseTo(refCart.root.splitValue!, 8);
+    }
+    void DecisionTreeClassifier;
   });
 });

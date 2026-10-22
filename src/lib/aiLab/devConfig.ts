@@ -12,6 +12,7 @@ import {
 /** Levelbuilder-shaped Dev panel knobs. */
 export interface AiLabDevOverrides {
   algorithmLock: string;
+  algorithmSwitcher?: string;
   presetDataset: string;
   presetLabelColumn: string;
   cardTitleColumn: string;
@@ -33,6 +34,7 @@ export function aiLabDevDefaults(
     (config.lockLabelColumn ? config.dataset.defaultLabelColumn : undefined);
   return {
     algorithmLock: config.algorithmLock ?? "none",
+    algorithmSwitcher: config.algorithmSwitcher ?? "modal",
     presetDataset: config.lockDataset
       ? config.dataset.id
       : AI_LAB_STUDENT_CHOICE,
@@ -93,7 +95,9 @@ export function mergeAiLabDevConfig(
     presetLabelColumn,
   );
   const chosenAlgorithm = asAlgorithm(resolved.algorithmLock);
-  const sheetReady = dataset.rows.length > 0 && dataset.columns.length >= 2;
+  const sheetReady =
+    (dataset.rowCount ?? dataset.rows.length) > 0 &&
+    (dataset.columnCount ?? dataset.columns.length) >= 2;
   const needsPretrained =
     sheetReady && (hideDatasetTab || (hideTrainTab && !hideTestTab));
   const pretrainedAlgorithm =
@@ -127,6 +131,8 @@ export function mergeAiLabDevConfig(
     lockDataset: sheetReady && lockDataset,
     requireDatasetChoice: !(sheetReady && lockDataset),
     algorithmLock: pretrainedAlgorithm,
+    algorithmSwitcher:
+      resolved.algorithmSwitcher === "dropdown" ? "dropdown" : "modal",
     hideDatasetTab: sheetReady && hideDatasetTab,
     hideTestTab,
     hideTrainTab,

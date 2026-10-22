@@ -81,10 +81,16 @@ export interface AiLabDataset {
   defaultLabelColumn: string;
   columns: AiLabColumn[];
   rows: AiLabDataRow[];
+  /** Precomputed row count so dataset chooser cards don't have to eagerly parse lazy CSVs. */
+  rowCount?: number;
+  /** Precomputed column count so dataset chooser cards don't have to eagerly parse lazy CSVs. */
+  columnCount?: number;
   story?: AiLabDatasetStory;
   card?: AiLabDatasetCard;
   /** Cover art for the dataset chooser. Absent covers fall back to a sheet preview. */
   cover?: string;
+  /** Suggested algorithm surfaced in the post-dataset algorithm picker modal. */
+  recommendedAlgorithm?: AiLabAlgorithmId;
 }
 
 /**
@@ -242,6 +248,7 @@ export interface AiLabSavedModel {
 /** One successful `train()` in the session. Stored oldest-first; the Results modal lists newest first. */
 export interface AiLabTrainingRun {
   id: string;
+  algorithm: AiLabAlgorithmId;
   labelColumn: string;
   selectedFeatures: string[];
   /** Same 0–1 fraction the trained model stores. */
@@ -270,6 +277,9 @@ export type AiLabTrainingAnimation = "tree" | "rows";
 
 /** What clicking a decision-tree node does: grow it in place, or open its rows. */
 export type AiLabTreeNodeDetail = "inline" | "modal";
+
+/** How the student switches algorithms inside the Train rail when unlocked. */
+export type AiLabAlgorithmSwitcher = "modal" | "dropdown";
 
 export interface AiLabLevelConfig {
   dataset: AiLabDataset;
@@ -310,6 +320,10 @@ export interface AiLabLevelConfig {
   /** Save-model modal + getPrediction snippet. Independent of the scorecard. */
   showExport?: boolean;
   algorithmLock?: AiLabAlgorithmId;
+  /** Algorithm chosen in the post-dataset picker modal before the sheet mounts. */
+  initialAlgorithm?: AiLabAlgorithmId;
+  /** How the algorithm control in the Train rail switches algorithms (default `modal`). */
+  algorithmSwitcher?: AiLabAlgorithmSwitcher;
   hideDatasetTab?: boolean;
   /** Hide Testing. Dataset-only levels still combine with algorithm, dataset, train, and edit flags. */
   hideTestTab?: boolean;

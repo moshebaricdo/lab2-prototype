@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 import type { AiLabDataset } from "../../types/aiLab";
+import { recommendedAlgorithmFor } from "./catalog";
 import {
   MAX_UPLOADED_CSV_CHARS,
   clearUploadedSheets,
   combineDatasetCatalog,
   labDatasetCatalog,
   mergeUploadedSheets,
+  readActiveAlgorithm,
   readActiveDatasetId,
   readUploadedSheets,
   retainUploadedSheets,
   sheetsToDatasets,
+  writeActiveAlgorithm,
   writeActiveDatasetId,
   writeUploadedSheets,
 } from "./uploadedDatasets";
@@ -170,11 +173,54 @@ describe("session storage", () => {
     expect(readUploadedSheets(storage)).toEqual([]);
   });
 
-  it("remembers the dataset the student chose", () => {
+  it("remembers the dataset and algorithm the student chose", () => {
     const storage = memoryStorage();
     writeActiveDatasetId("iris_species", storage);
+    writeActiveAlgorithm("knn", storage);
     expect(readActiveDatasetId(storage)).toBe("iris_species");
+    expect(readActiveAlgorithm(storage)).toBe("knn");
     writeActiveDatasetId(undefined, storage);
+    writeActiveAlgorithm(undefined, storage);
     expect(readActiveDatasetId(storage)).toBeUndefined();
+    expect(readActiveAlgorithm(storage)).toBeUndefined();
+  });
+});
+
+describe("recommendedAlgorithmFor", () => {
+  it("uses authored recommendedAlgorithm metadata when present", () => {
+    expect(
+      recommendedAlgorithmFor({
+        ...dataset("custom"),
+        recommendedAlgorithm: "knn",
+        columns: [
+          { id: "a", name: "A", type: "categorical", description: "" },
+          { id: "b", name: "B", type: "categorical", description: "" },
+        ],
+      }),
+    ).toBe("knn");
+  });
+
+  it("falls back to column-type heuristic when recommendedAlgorithm is omitted", () => {
+    const numericalHeavy: AiLabDataset = {
+      ...dataset("measurements"),
+      defaultLabelColumn: "species",
+      columns: [
+        { id: "id", name: "Id", type: "numerical", description: "" },
+        { id: "length", name: "Length", type: "numerical", description: "" },
+        { id: "width", name: "Width", type: "numerical", description: "" },
+        { id: "species", name: "Species", type: "categorical", description: "" },
+      ],
+    };
+    const categoricalHeavy: AiLabDataset = {
+      ...dataset("traits"),
+      defaultLabelColumn: "type",
+      columns: [
+        { id: "feathers", name: "Feathers", type: "categorical", description: "" },
+        { id: "lungs", name: "Lungs", type: "categorical", description: "" },
+        { id: "type", name: "Type", type: "categorical", description: "" },
+      ],
+    };
+    expect(recommendedAlgorithmFor(numericalHeavy)).toBe("knn");
+    expect(recommendedAlgorithmFor(categoricalHeavy)).toBe("decisionTree");
   });
 });

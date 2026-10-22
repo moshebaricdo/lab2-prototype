@@ -1,4 +1,4 @@
-import type { AiLabDataset } from "../../types/aiLab";
+import type { AiLabAlgorithmId, AiLabDataset } from "../../types/aiLab";
 import { datasetIdFromPath, parseCsvDataset } from "./csvDataset";
 
 /** Session key for CSV sheets uploaded from AI Lab. */
@@ -7,9 +7,18 @@ export const UPLOADED_DATASETS_STORAGE_KEY = "ailab.uploadedDatasets";
 /** Session key for the dataset the student last chose on the upload level. */
 export const ACTIVE_DATASET_STORAGE_KEY = "ailab.activeDatasetId";
 
-/** Enough for a handful of modest sheets without crowding the tab quota. */
+/** Session key for the algorithm the student last chose on the upload level. */
+export const ACTIVE_ALGORITHM_STORAGE_KEY = "ailab.activeAlgorithm";
+
+/** Enough for several multi-thousand-row sheets without crowding memory. */
 export const MAX_UPLOADED_SHEETS = 20;
-export const MAX_UPLOADED_CSV_CHARS = 1_500_000;
+export const MAX_UPLOADED_CSV_CHARS = 15_000_000;
+
+/**
+ * In-memory fallback when an uploaded batch is valid (< MAX_UPLOADED_CSV_CHARS)
+ * but exceeds the browser's ~5 MB `sessionStorage` quota.
+ */
+let memorySheetsFallback: UploadedSheet[] | undefined;
 
 export interface UploadedSheet {
   id: string;
@@ -50,6 +59,7 @@ function isSheet(value: unknown): value is UploadedSheet {
 }
 
 export function readUploadedSheets(storage?: SheetStorage): UploadedSheet[] {
+  if (!storage && memorySheetsFallback) return memorySheetsFallback;
   const target = storage ?? browserStorage();
   if (!target) return [];
   try {
@@ -72,7 +82,12 @@ export function writeUploadedSheets(
   const payload = JSON.stringify(sheets);
   try {
     target.setItem(UPLOADED_DATASETS_STORAGE_KEY, payload);
+    if (!storage) memorySheetsFallback = undefined;
   } catch {
+    if (!storage) {
+      memorySheetsFallback = sheets;
+      return;
+    }
     throw new Error(
       "This tab cannot store that much CSV data. Remove a sheet or use a smaller file.",
     );
@@ -80,6 +95,7 @@ export function writeUploadedSheets(
 }
 
 export function clearUploadedSheets(storage?: SheetStorage): void {
+  if (!storage) memorySheetsFallback = undefined;
   const target = storage ?? browserStorage();
   target?.removeItem(UPLOADED_DATASETS_STORAGE_KEY);
 }
@@ -101,6 +117,28 @@ export function writeActiveDatasetId(
     return;
   }
   target.setItem(ACTIVE_DATASET_STORAGE_KEY, id);
+}
+
+export function readActiveAlgorithm(
+  storage?: SheetStorage,
+): AiLabAlgorithmId | undefined {
+  const target = storage ?? browserStorage();
+  const value = target?.getItem(ACTIVE_ALGORITHM_STORAGE_KEY)?.trim();
+  if (value === "knn" || value === "decisionTree") return value;
+  return undefined;
+}
+
+export function writeActiveAlgorithm(
+  algorithm: AiLabAlgorithmId | undefined,
+  storage?: SheetStorage,
+): void {
+  const target = storage ?? browserStorage();
+  if (!target) return;
+  if (!algorithm) {
+    target.removeItem(ACTIVE_ALGORITHM_STORAGE_KEY);
+    return;
+  }
+  target.setItem(ACTIVE_ALGORITHM_STORAGE_KEY, algorithm);
 }
 
 export interface DatasetCatalogParts {
@@ -239,9 +277,17 @@ export function retainUploadedSheets(
   return current.filter((sheet) => keep.has(sheet.fileName.toLowerCase()));
 }
 
+/** Cache parsed uploaded sheets by `(id, updatedAt, csv.length)` so re-renders don't re-parse large CSVs. */
+const parsedUploadCache = new Map<string, AiLabDataset>();
+
 export function sheetsToDatasets(sheets: UploadedSheet[]): AiLabDataset[] {
   return sheets.flatMap((sheet) => {
-    const dataset = usableDataset(sheet.csv, sheet.id);
+    const cacheKey = `${sheet.id}:${sheet.updatedAt}:${sheet.csv.length}`;
+    let dataset = parsedUploadCache.get(cacheKey);
+    if (!dataset) {
+      dataset = usableDataset(sheet.csv, sheet.id);
+      if (dataset) parsedUploadCache.set(cacheKey, dataset);
+    }
     return dataset ? [dataset] : [];
   });
 }

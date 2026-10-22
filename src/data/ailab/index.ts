@@ -1,10 +1,12 @@
 import type { AiLabDataset, AiLabLevelConfig } from "../../types/aiLab";
+import { birdMammalOrFishDataset } from "./birdMammalOrFish";
 import { temperatureScaleDataset } from "./temperatureScale";
 import { tacoTruckDataset } from "./tacoTruck";
 import { tacoTruckGuidedDataset } from "./tacoTruckGuided";
 import { csvDatasets } from "./datasets";
 
 export { csvDatasets } from "./datasets";
+export { birdMammalOrFishDataset } from "./birdMammalOrFish";
 export { temperatureScaleDataset } from "./temperatureScale";
 export { tacoTruckDataset } from "./tacoTruck";
 export { tacoTruckGuidedDataset } from "./tacoTruckGuided";
@@ -24,16 +26,8 @@ export {
   aiLabStudioSectionInstructions,
 } from "./instructions";
 
-function datasetById(id: string) {
-  const dataset = csvDatasets.find((entry) => entry.id === id);
-  if (!dataset) {
-    throw new Error(`Missing AI Lab dataset: ${id}`);
-  }
-  return dataset;
-}
-
 /** Playtest sheet. Ship an explicit feature list — auto-pretrain would also use Lives in water. Animal is blocked (more than 50 values). */
-export const aiLabPlaytestDataset = datasetById("bird_mammal_or_fish");
+export const aiLabPlaytestDataset = birdMammalOrFishDataset;
 
 export const AI_LAB_PLAYTEST_LABEL_COLUMN = "type";
 export const AI_LAB_PLAYTEST_TREE_FEATURES = [
@@ -59,7 +53,7 @@ const aiLabPlaytestShared = {
 export const aiLabStudioCatalog = csvDatasets;
 
 const studioDefaultDataset =
-  csvDatasets.find((dataset) => dataset.id === "catsanddogs_v2") ??
+  csvDatasets.find((dataset) => dataset.id === "zoo") ??
   csvDatasets[0]!;
 
 export const aiLabTrainYourselfConfig: AiLabLevelConfig = {
@@ -151,7 +145,6 @@ export const aiLabUploadConfig: AiLabLevelConfig = {
     title: "No data to show",
     copy: "Choose a sample dataset, or upload a CSV.",
   },
-  algorithmLock: "decisionTree",
   allowDataEdit: false,
   showModelDetails: false,
   showExport: false,

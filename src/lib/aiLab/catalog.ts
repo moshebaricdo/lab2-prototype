@@ -6,7 +6,7 @@ import type {
 import { categoryCheck, columnUsable } from "./cardinality";
 
 /** Studio testing-only example: small labeled sheet that trains instantly. */
-export const AI_LAB_TESTING_ONLY_DATASET_ID = "iris_species";
+export const AI_LAB_TESTING_ONLY_DATASET_ID = "zoo";
 
 export const AI_LAB_STUDENT_CHOICE = "student";
 
@@ -61,6 +61,40 @@ export function testingOnlyDataset(
     catalog[0] ??
     fallback
   );
+}
+
+/**
+ * Recommended algorithm for a dataset. Uses authored `recommendedAlgorithm`
+ * metadata when present, and otherwise falls back to a column-type heuristic:
+ * numerical-heavy feature sets suggest KNN; categorical or mixed sheets
+ * suggest Decision Tree.
+ */
+export function recommendedAlgorithmFor(
+  dataset: AiLabDataset | undefined,
+): AiLabAlgorithmId {
+  if (!dataset) return "decisionTree";
+  if (dataset.recommendedAlgorithm) return dataset.recommendedAlgorithm;
+  const nonIdColumns = dataset.columns.filter(
+    (column) => !/^id$/i.test(column.id) && !/^id$/i.test(column.name),
+  );
+  const featurePool = nonIdColumns.filter(
+    (column) => column.id !== dataset.defaultLabelColumn,
+  );
+  const columns =
+    featurePool.length > 0
+      ? featurePool
+      : nonIdColumns.length > 0
+        ? nonIdColumns
+        : dataset.columns;
+  let numericalCount = 0;
+  let categoricalCount = 0;
+  for (const column of columns) {
+    if (column.type === "numerical") numericalCount += 1;
+    else categoricalCount += 1;
+  }
+  return numericalCount >= 2 && numericalCount > categoricalCount
+    ? "knn"
+    : "decisionTree";
 }
 
 /** Locked Predict column, or undefined when the student may choose. */
