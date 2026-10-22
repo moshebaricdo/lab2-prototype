@@ -284,9 +284,9 @@ export function DecisionTreeViz({
   const reservedVisits = useMemo(
     () =>
       onOpenNode && rows && labelColumn && reservedRowIndexes && reservedRowIndexes.length > 0
-        ? nodeVisits(root, rows, reservedRowIndexes, labelColumn)
+        ? nodeVisits(root, rows, reservedRowIndexes, labelColumn, columns)
         : undefined,
-    [labelColumn, onOpenNode, reservedRowIndexes, root, rows],
+    [columns, labelColumn, onOpenNode, reservedRowIndexes, root, rows],
   );
 
   useEffect(() => {

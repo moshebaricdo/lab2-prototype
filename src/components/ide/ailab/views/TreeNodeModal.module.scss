@@ -6,7 +6,8 @@
   display: flex;
   width: calc(100% + 48px);
   min-width: 0;
-  height: min(70vh, 560px);
+  min-height: 0;
+  flex: 1 1 auto;
   flex-direction: column;
   margin: -24px;
   overflow: hidden;
@@ -18,6 +19,7 @@
   flex: 1 1 auto;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto;
   padding: 20px 24px 24px;
 }
 
@@ -123,7 +125,6 @@
 }
 
 .tableWrap {
-  flex: 1 1 auto;
   overscroll-behavior: none;
 }
 
@@ -212,22 +213,23 @@
 
 .exampleWrap {
   flex-shrink: 0;
-  overflow: hidden;
+  min-height: 0;
+  max-height: none;
+  overscroll-behavior: none;
 }
 
 /* Equal columns, no index: one row of answers, not a sheet. */
 .exampleGrid {
-  min-width: 0;
-
   th,
   td {
     position: static;
-    min-width: 0;
   }
 }
 
 /* "Your answers" spans the feature columns; "AI predicts" sits over the label. */
 .groupTh {
+  min-width: 0;
+  max-width: none;
   border-right: 0;
   border-bottom: 0;
 }

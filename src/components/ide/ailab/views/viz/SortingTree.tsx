@@ -1,7 +1,14 @@
 import { useLayoutEffect, useMemo, useRef, type CSSProperties, type ReactNode } from "react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import { useElementSize } from "../../../../../hooks/useElementSize";
-import { columnById, traceDecisionTree, treeBranches } from "../../../../../lib/aiLab";
+import {
+  cartPredictionCorrect,
+  cartRegressionTolerance,
+  columnById,
+  columnType,
+  traceDecisionTree,
+  treeBranches,
+} from "../../../../../lib/aiLab";
 import type { AiLabColumn, AiLabDataRow, AiLabTreeNode } from "../../../../../types/aiLab";
 import { groupLabels, type LabelGrouping } from "./labelGroups";
 import { labelFill } from "./labelPalette";
@@ -153,6 +160,8 @@ const EDGE_LABEL_GAP = 8;
 export interface SortDot {
   id: number;
   label: string;
+  /** Whether the leaf's prediction counts this row as correct (exact for categorical, 5% range tolerance for numerical). */
+  correct: boolean;
   /** Sheet row this dot stands for (the one shown while it joins, in `grow`). */
   rowIndex: number;
   /** Root → leaf keys this row falls through. */
@@ -176,6 +185,8 @@ export interface SortingModel {
    * a color and the rest fold into one neutral Other (`groupLabels`).
    */
   grouping: LabelGrouping;
+  /** Numerical regression tolerance (0 for classification). */
+  tolerance: number;
   /**
    * Dot id → the order it arrives in, for stages where rows come in one at
    * a time (`SortingTreeState.dotsShown`). Unset, every dot pops in at `read`.
@@ -236,9 +247,14 @@ export function useSortingModel(
   labelColumn: string,
   labels: string[],
   lookName: SortingLook = "default",
+  columns: AiLabColumn[] = [],
 ): SortingModel {
   return useMemo(() => {
     const look = LOOKS[lookName];
+    const tolerance =
+      columnType(columns, labelColumn) === "numerical"
+        ? cartRegressionTolerance(rows, labelColumn)
+        : 0;
     const leafOrder = new Map<string, number>();
     const walk = (node: AiLabTreeNode) => {
       if (node.type === "leaf") leafOrder.set(node.pathKey, leafOrder.size);
@@ -269,12 +285,20 @@ export function useSortingModel(
     const traced = rows.map((row, rowIndex) => {
       const trace = routed[rowIndex]!;
       const label = String(row[labelColumn]);
+      const correct = cartPredictionCorrect(
+        tree,
+        row,
+        labelColumn,
+        columns,
+        tolerance,
+      );
       return {
         rowIndex,
         label,
+        correct,
         pathKeys: trace.pathKeys,
         leaf: leafOrder.get(trace.pathKeys[trace.pathKeys.length - 1]!) ?? 0,
-        rank: label === trace.prediction ? -1 : rankOf(label),
+        rank: correct ? -1 : rankOf(label),
       };
     });
     traced.sort((a, b) => a.leaf - b.leaf || a.rank - b.rank || a.rowIndex - b.rowIndex);
@@ -283,6 +307,7 @@ export function useSortingModel(
     const dots = picked.map((entry, id) => ({
       id,
       label: entry.label,
+      correct: entry.correct,
       rowIndex: entry.rowIndex,
       pathKeys: entry.pathKeys,
     }));
@@ -330,8 +355,9 @@ export function useSortingModel(
       geometry,
       members,
       grouping,
+      tolerance,
     };
-  }, [tree, rows, labelColumn, labels, lookName]);
+  }, [columns, tree, rows, labelColumn, labels, lookName]);
 }
 
 /** Where a dot rests after `splitsDone` questions have sorted the piles. */
@@ -694,7 +720,10 @@ export function SortingTree({
               : asked(laid);
           const onPath = marbleKeys.has(laid.key);
           const hot = hotEdgeKey === laid.key;
-          const score = isLeaf && state.checked ? leafScore(node) : undefined;
+          const score =
+            isLeaf && state.checked
+              ? leafScore(node, model.tolerance)
+              : undefined;
           const ids = members.get(laid.key) ?? [];
           return (
             <div key={laid.key} className={styles.slot}>
@@ -815,7 +844,7 @@ export function SortingTree({
           const wrong =
             state.checked &&
             laid.node.type === "leaf" &&
-            laid.node.prediction !== dot.label;
+            !dot.correct;
           const answering = key === landedKey && marble?.answering === true;
           return (
             <span

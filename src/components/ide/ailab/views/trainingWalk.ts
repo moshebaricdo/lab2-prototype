@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  cartRegressionTolerance,
   columnById,
+  columnType,
   traceDecisionTree,
   treeSplitCandidates,
   type AiLabNodeCandidates,
@@ -256,8 +258,15 @@ export function useTrainingWalk(
   const intro = story === "grow" && options.intro === true;
   const growth = options.growth ?? "organic";
   const { tree, rows, labelColumn, labels, results, columns, features } = data;
-  const model = useSortingModel(tree, rows, labelColumn, labels);
-  const score = useMemo(() => treeScore(tree), [tree]);
+  const model = useSortingModel(tree, rows, labelColumn, labels, "default", columns);
+  const tolerance = useMemo(
+    () =>
+      columnType(columns, labelColumn) === "numerical"
+        ? cartRegressionTolerance(rows, labelColumn)
+        : 0,
+    [columns, labelColumn, rows],
+  );
+  const score = useMemo(() => treeScore(tree, tolerance), [tolerance, tree]);
   const { grouping } = model;
   const indexOf = grouping.indexOf;
   const quiz = useMemo<QuizRow[]>(

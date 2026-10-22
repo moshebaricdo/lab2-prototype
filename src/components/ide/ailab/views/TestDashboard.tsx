@@ -23,12 +23,15 @@ import type {
   AiLabTreeTrace,
 } from "../../../../types/aiLab";
 import {
+  cartPredictionCorrect,
+  cartRegressionTolerance,
   columnById,
   columnType,
   DEFAULT_KNN_K,
   explainKnn,
   explainTreeTrace,
   formatNumber,
+  isPredictionCorrect,
   numericalStats,
   predictKnn,
   traceDecisionTree,
@@ -296,7 +299,27 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
     prediction !== undefined && shownRow
       ? {
           value: String(shownRow[model.labelColumn] ?? ""),
-          correct: String(shownRow[model.labelColumn] ?? "") === prediction,
+          correct:
+            model.algorithm === "decisionTree" && model.tree
+              ? cartPredictionCorrect(
+                  model.tree,
+                  shownRow,
+                  model.labelColumn,
+                  lab.config.dataset.columns,
+                  columnType(lab.config.dataset.columns, model.labelColumn) ===
+                    "numerical"
+                    ? cartRegressionTolerance(lab.rows, model.labelColumn)
+                    : 0,
+                )
+              : isPredictionCorrect(
+                  String(shownRow[model.labelColumn] ?? ""),
+                  prediction,
+                  columnType(lab.config.dataset.columns, model.labelColumn),
+                  columnType(lab.config.dataset.columns, model.labelColumn) ===
+                    "numerical"
+                    ? numericalStats(lab.rows, model.labelColumn).range
+                    : 0,
+                ),
         }
       : undefined;
   const explanation = treeTrace

@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
-import { columnById, uniqueValues } from "../../../../lib/aiLab";
+import {
+  cartRegressionTolerance,
+  columnById,
+  columnType,
+  uniqueValues,
+} from "../../../../lib/aiLab";
 import {
   TrainingModalShell,
   TrainingResults,
@@ -60,7 +65,11 @@ export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps
     return <TrainingQuietModal key={key} {...shared} accuracy={model.accuracy} />;
   }
   if (lab.config.trainingAnimation === "tree") {
-    return <TreeGrowthBody key={key} {...shared} />;
+    const tolerance =
+      columnType(columns, model.labelColumn) === "numerical"
+        ? cartRegressionTolerance(lab.rows, model.labelColumn)
+        : 0;
+    return <TreeGrowthBody key={key} {...shared} tolerance={tolerance} />;
   }
   return (
     <TrainingTableRow
@@ -145,10 +154,11 @@ function TreeGrowthBody({
   labels,
   rowNoun,
   canTest,
-}: TrainingBodyProps) {
+  tolerance = 0,
+}: TrainingBodyProps & { tolerance?: number }) {
   const { order } = useGrowthLayout(tree);
   const total = order.length;
-  const score = useMemo(() => treeScore(tree), [tree]);
+  const score = useMemo(() => treeScore(tree, tolerance), [tolerance, tree]);
   const [revealed, setRevealed] = useState(0);
   const [phase, setPhase] = useState<Phase>("growing");
   const [instant, setInstant] = useState(false);
@@ -223,6 +233,7 @@ function TreeGrowthBody({
         revealedCount={revealed}
         showVerdicts={phase !== "growing"}
         instant={instant}
+        tolerance={tolerance}
       />
       <TrainingResults right={score.right} total={score.total} on={done}>
         Each box is a group of {rowNoun}s that answered the questions the same

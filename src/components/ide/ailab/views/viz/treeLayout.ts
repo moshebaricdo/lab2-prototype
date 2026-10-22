@@ -273,9 +273,18 @@ export function layoutTree(
       });
       last = laneSizes.length - 1;
     }
-    // A parent that spans a single lane (one visible child) must still fit.
-    if (first === last) {
-      laneSizes[first] = Math.max(laneSizes[first], laneExtent(width, height) + laneGap);
+    // A node must fit in the lanes it spans so adjacent decision nodes at the
+    // same depth (e.g. a parent over two narrow leaves) never overlap.
+    const required = laneExtent(width, height) + laneGap;
+    let currentSpan = 0;
+    for (let index = first; index <= last; index += 1) {
+      currentSpan += laneSizes[index] ?? 0;
+    }
+    if (currentSpan < required) {
+      const addEach = (required - currentSpan) / (last - first + 1);
+      for (let index = first; index <= last; index += 1) {
+        laneSizes[index] = (laneSizes[index] ?? 0) + addEach;
+      }
     }
     laneSpan.set(laid.key, [first, last]);
     return laid;
@@ -289,7 +298,6 @@ export function layoutTree(
     laneStarts[index] = laneCursor;
     laneCursor += laneSize;
   });
-  const laneCenter = (index: number) => laneStarts[index] + laneSizes[index] / 2;
 
   const levelStarts: number[] = [];
   let levelCursor = padding;
@@ -300,7 +308,16 @@ export function layoutTree(
 
   nodes.forEach((laid) => {
     const [first, last] = laneSpan.get(laid.key) ?? [0, 0];
-    const center = (laneCenter(first) + laneCenter(last)) / 2;
+    // Center on the outer span [laneStarts[first], laneEnd(last) - laneGap]
+    // rather than the midpoint of the first and last lane centers: when a
+    // wide parent spans asymmetric children (e.g. a narrow leaf on one side
+    // and a wide subtree on the other), centering on the two lane centers
+    // makes the parent overhang past its outer lane boundary and collide with
+    // a sibling subtree.
+    const spanStart = laneStarts[first] ?? padding;
+    const spanEnd =
+      (laneStarts[last] ?? padding) + (laneSizes[last] ?? 0) - laneGap;
+    const center = (spanStart + spanEnd) / 2;
     if (vertical) {
       laid.cx = center;
       laid.x = laid.cx - laid.width / 2;

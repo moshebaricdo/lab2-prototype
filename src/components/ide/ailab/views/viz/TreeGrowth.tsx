@@ -19,19 +19,36 @@ const EDGE_LABEL_HEIGHT = 22;
 const EDGE_LABEL_GAP = 8;
 
 /** Leaves: how many of the rows that landed here the prediction gets right. */
-export function leafScore(node: AiLabTreeNode): { right: number; wrong: number } {
+export function leafScore(
+  node: AiLabTreeNode,
+  tolerance = 0,
+): { right: number; wrong: number } {
   if (node.type !== "leaf") return { right: 0, wrong: 0 };
+  if (tolerance > 0) {
+    const predicted = node.rawPrediction ?? Number(node.prediction);
+    let right = 0;
+    for (const [label, count] of Object.entries(node.labelCounts)) {
+      const actual = Number(label);
+      if (Number.isFinite(actual) && Math.abs(actual - predicted) <= tolerance) {
+        right += count;
+      }
+    }
+    return { right, wrong: node.sampleCount - right };
+  }
   const right = node.labelCounts[node.prediction] ?? 0;
   return { right, wrong: node.sampleCount - right };
 }
 
 /** Sum of `leafScore` over the tree — the training rows the tree gets right. */
-export function treeScore(root: AiLabTreeNode): { right: number; total: number } {
+export function treeScore(
+  root: AiLabTreeNode,
+  tolerance = 0,
+): { right: number; total: number } {
   let right = 0;
   let total = 0;
   const walk = (node: AiLabTreeNode) => {
     if (node.type === "leaf") {
-      right += leafScore(node).right;
+      right += leafScore(node, tolerance).right;
       total += node.sampleCount;
       return;
     }
@@ -78,6 +95,8 @@ interface TreeGrowthProps {
   instant?: boolean;
   /** Pixel height cap; the tree scales down to fit width and this height. */
   maxHeight?: number;
+  /** Numerical regression tolerance (0 for classification). */
+  tolerance?: number;
 }
 
 /**
@@ -94,6 +113,7 @@ export function TreeGrowth({
   showVerdicts,
   instant = false,
   maxHeight = 420,
+  tolerance = 0,
 }: TreeGrowthProps) {
   const { layout, order } = useGrowthLayout(root);
   const indexOf = useMemo(() => labelIndexer(labels), [labels]);
@@ -159,7 +179,7 @@ export function TreeGrowth({
             ? node.prediction
             : `${columnById(columns, node.feature)?.name ?? node.feature}?`;
           const counts = describeCounts(node.labelCounts, labels);
-          const score = isLeaf ? leafScore(node) : undefined;
+          const score = isLeaf ? leafScore(node, tolerance) : undefined;
           return (
             <div key={laid.key} className={styles.slot}>
               {laid.branchLabel ? (

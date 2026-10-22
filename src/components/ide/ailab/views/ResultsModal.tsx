@@ -1,16 +1,41 @@
-import { useMemo, useState, type CSSProperties } from "react";
-import { Button, Modal, SegmentedButton, Tabs } from "@moshebari/cads-react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  Button,
+  Modal,
+  SegmentedButton,
+  Tabs,
+  Tag,
+  Tooltip,
+} from "@moshebari/cads-react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import { columnById, formatCell } from "../../../../lib/aiLab";
 import type {
+  AiLabAlgorithmId,
   AiLabColumn,
   AiLabTrainedModel,
   AiLabTrainingRun,
 } from "../../../../types/aiLab";
-import { ColumnScopeToggle, extraSheetColumns } from "./ColumnScopeToggle";
+import {
+  ColumnScopeToggle,
+  extraSheetColumns,
+  sheetColumnsFor,
+} from "./ColumnScopeToggle";
+import {
+  compareCells,
+  SortableSheetTh,
+  type ColumnSort,
+} from "./DataSpreadsheet";
 import { PredictionStatement } from "./PredictionStatement";
 import sheet from "./DataStudio.module.scss";
 import styles from "./ResultsModal.module.scss";
+
+const ALGORITHM_META: Record<
+  AiLabAlgorithmId,
+  { label: string; icon: "sitemap" | "chart-scatter" }
+> = {
+  decisionTree: { label: "Decision Tree", icon: "sitemap" },
+  knn: { label: "K-Nearest Neighbors", icon: "chart-scatter" },
+};
 
 export type ResultsTab = "scorecard" | "previous";
 
@@ -98,40 +123,75 @@ function ScorecardTab({
   const [filter, setFilter] = useState<"correct" | "incorrect">("correct");
   const [pageCount, setPageCount] = useState(1);
   const [showAllColumns, setShowAllColumns] = useState(false);
+  const [sort, setSort] = useState<ColumnSort | null>(null);
   const model = lab.model;
   const columns = lab.config.dataset.columns;
-  const featureColumns = useMemo(() => {
-    if (!model) return [];
-    return model.selectedFeatures
-      .map((feature) => columnById(columns, feature))
-      .filter((column): column is AiLabColumn => Boolean(column));
-  }, [columns, model]);
-  const labelName = model
-    ? columnById(columns, model.labelColumn)?.name ?? model.labelColumn
-    : "";
+  const labelColumnObj = model
+    ? columnById(columns, model.labelColumn) ?? {
+        id: model.labelColumn,
+        name: model.labelColumn,
+        type: "categorical" as const,
+      }
+    : { id: "", name: "", type: "categorical" as const };
   const titleColumnId = lab.config.cardTitleColumn;
-  const titleColumn =
-    titleColumnId &&
-    model &&
-    titleColumnId !== model.labelColumn &&
-    !model.selectedFeatures.includes(titleColumnId)
-      ? columnById(columns, titleColumnId)
-      : undefined;
-  const extraColumns =
-    showAllColumns && model
-      ? extraSheetColumns(columns, {
-          labelColumn: model.labelColumn,
-          features: model.selectedFeatures,
-          titleColumnId: titleColumn?.id,
-        })
-      : [];
-  const leadSpan = (titleColumn ? 1 : 0) + extraColumns.length;
+  const shownColumns = useMemo(
+    () =>
+      model
+        ? sheetColumnsFor(columns, {
+            labelColumn: model.labelColumn,
+            features: model.selectedFeatures,
+            titleColumnId,
+            showAllColumns,
+          })
+        : [],
+    [columns, model, showAllColumns, titleColumnId],
+  );
+  useEffect(() => {
+    if (
+      !showAllColumns &&
+      sort &&
+      extraSheetColumns(columns, {
+        labelColumn: model?.labelColumn ?? "",
+        features: model?.selectedFeatures ?? [],
+        titleColumnId,
+      }).some((column) => column.id === sort.columnId)
+    ) {
+      setSort(null);
+    }
+  }, [columns, model, showAllColumns, sort, titleColumnId]);
+  const holdoutResults = model?.holdoutResults ?? [];
+  const correctCount = useMemo(
+    () => holdoutResults.filter((result) => result.correct).length,
+    [holdoutResults],
+  );
   const results = useMemo(() => {
-    const rows = model?.holdoutResults ?? [];
-    return rows.filter((result) =>
+    const rows = holdoutResults.filter((result) =>
       filter === "correct" ? result.correct : !result.correct,
     );
-  }, [filter, model]);
+    if (!sort) return rows;
+    const isActual = sort.columnId === model?.labelColumn;
+    const isPredicted = sort.columnId === "__predicted__";
+    const col =
+      isActual || isPredicted
+        ? labelColumnObj
+        : columnById(columns, sort.columnId);
+    if (!col) return rows;
+    const numeric = col.type === "numerical";
+    return [...rows].sort((a, b) => {
+      const valA = isActual
+        ? a.actual
+        : isPredicted
+          ? a.predicted
+          : lab.rows[a.rowIndex]?.[col.id];
+      const valB = isActual
+        ? b.actual
+        : isPredicted
+          ? b.predicted
+          : lab.rows[b.rowIndex]?.[col.id];
+      const compared = compareCells(valA, valB, numeric, sort.direction);
+      return compared || a.rowIndex - b.rowIndex;
+    });
+  }, [columns, filter, holdoutResults, lab.rows, labelColumnObj, model, sort]);
   const visibleResults = results.slice(0, pageCount * SCORECARD_PAGE_SIZE);
   const hiddenCount = results.length - visibleResults.length;
   const canTry = !lab.config.hideTestTab;
@@ -167,8 +227,11 @@ function ScorecardTab({
               setPageCount(1);
             }}
             options={[
-              { value: "correct", label: "Correct" },
-              { value: "incorrect", label: "Incorrect" },
+              { value: "correct", label: `Correct (${correctCount})` },
+              {
+                value: "incorrect",
+                label: `Incorrect (${holdoutResults.length - correctCount})`,
+              },
             ]}
           />
           <ColumnScopeToggle
@@ -190,49 +253,32 @@ function ScorecardTab({
           <thead>
             <tr>
               <th className={`${sheet.th} ${sheet.thIndex}`} aria-label="Row" />
-              {leadSpan > 0 ? (
-                <th className={sheet.th} colSpan={leadSpan} />
-              ) : null}
-              <th className={sheet.th} colSpan={featureColumns.length}>
-                Feature
-              </th>
-              <th className={sheet.th}>Actual</th>
-              <th className={sheet.th}>AI Prediction</th>
-            </tr>
-            <tr>
-              <th
-                className={`${sheet.th} ${sheet.thIndex} ${styles.nameTh}`}
-                aria-hidden
+              {shownColumns.map((column) => {
+                const isLabel = column.id === model.labelColumn;
+                const isFeature = model.selectedFeatures.includes(column.id);
+                return (
+                  <SortableSheetTh
+                    key={column.id}
+                    column={column}
+                    sort={sort}
+                    onSortChange={setSort}
+                    className={
+                      isLabel
+                        ? sheet.thLabel
+                        : isFeature
+                          ? sheet.thFeature
+                          : undefined
+                    }
+                  />
+                );
+              })}
+              <SortableSheetTh
+                column={{ ...labelColumnObj, name: "AI predicts" }}
+                sortId="__predicted__"
+                sort={sort}
+                onSortChange={setSort}
+                className={sheet.thLabel}
               />
-              {titleColumn ? (
-                <th className={`${sheet.th} ${styles.nameTh}`}>
-                  {titleColumn.name}
-                </th>
-              ) : null}
-              {extraColumns.map((column) => (
-                <th
-                  key={column.id}
-                  className={`${sheet.th} ${
-                    column.type === "numerical" ? sheet.thNumeric : ""
-                  } ${styles.nameTh}`}
-                >
-                  {column.name}
-                </th>
-              ))}
-              {featureColumns.map((column) => (
-                <th
-                  key={column.id}
-                  className={`${sheet.th} ${sheet.thFeature} ${styles.nameTh}`}
-                >
-                  {column.name}
-                </th>
-              ))}
-              <th className={`${sheet.th} ${sheet.thLabel} ${styles.nameTh}`}>
-                {labelName}
-              </th>
-              <th className={`${sheet.th} ${sheet.thLabel} ${styles.nameTh}`}>
-                {labelName}
-              </th>
             </tr>
           </thead>
           {results.length > 0 ? (
@@ -261,35 +307,41 @@ function ScorecardTab({
                     <td className={`${sheet.td} ${sheet.tdIndex}`}>
                       {result.rowIndex + 1}
                     </td>
-                    {titleColumn ? (
-                      <td className={sheet.td}>
-                        {row ? formatCell(row[titleColumn.id]) : "—"}
-                      </td>
-                    ) : null}
-                    {extraColumns.map((column) => (
-                      <td
-                        key={column.id}
-                        className={`${sheet.td} ${
-                          column.type === "numerical" ? sheet.tdNumeric : ""
-                        }`}
-                      >
-                        {row ? formatCell(row[column.id]) : "—"}
-                      </td>
-                    ))}
-                    {featureColumns.map((column) => (
-                      <td
-                        key={column.id}
-                        className={`${sheet.td} ${sheet.tdFeature} ${
-                          column.type === "numerical" ? sheet.tdNumeric : ""
-                        }`}
-                      >
-                        {row ? formatCell(row[column.id]) : "—"}
-                      </td>
-                    ))}
-                    <td className={`${sheet.td} ${sheet.tdLabel}`}>
-                      {result.actual}
-                    </td>
-                    <td className={`${sheet.td} ${sheet.tdLabel}`}>
+                    {shownColumns.map((column) => {
+                      const isLabel = column.id === model.labelColumn;
+                      const isFeature = model.selectedFeatures.includes(
+                        column.id,
+                      );
+                      return (
+                        <td
+                          key={column.id}
+                          className={[
+                            sheet.td,
+                            isLabel
+                              ? sheet.tdLabel
+                              : isFeature
+                                ? sheet.tdFeature
+                                : "",
+                            column.type === "numerical" ? sheet.tdNumeric : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                        >
+                          {isLabel
+                            ? result.actual
+                            : row
+                              ? formatCell(row[column.id])
+                              : "—"}
+                        </td>
+                      );
+                    })}
+                    <td
+                      className={`${sheet.td} ${sheet.tdLabel} ${
+                        labelColumnObj.type === "numerical"
+                          ? sheet.tdNumeric
+                          : ""
+                      }`}
+                    >
                       {result.predicted}
                     </td>
                   </tr>
@@ -340,6 +392,7 @@ function PreviousTab({
         <div className={styles.rule} aria-hidden />
         <ResultRow
           columns={columns}
+          algorithm={model.algorithm}
           labelColumn={model.labelColumn}
           features={model.selectedFeatures}
           accuracy={model.accuracy}
@@ -359,6 +412,7 @@ function PreviousTab({
                 {index > 0 ? <div className={styles.rule} aria-hidden /> : null}
                 <ResultRow
                   columns={columns}
+                  algorithm={run.algorithm ?? model.algorithm}
                   labelColumn={run.labelColumn}
                   features={run.selectedFeatures}
                   accuracy={run.accuracy}
@@ -375,23 +429,27 @@ function PreviousTab({
 function RunHeading({ label }: { label: string }) {
   return (
     <div className={styles.logHead}>
-      <span>{label}</span>
+      <span className={styles.statementCol}>{label}</span>
       <span className={styles.accuracySlot}>Accuracy</span>
+      <span className={styles.modelSlot}>Model</span>
     </div>
   );
 }
 
 function ResultRow({
   columns,
+  algorithm,
   labelColumn,
   features,
   accuracy,
 }: {
   columns: AiLabColumn[];
+  algorithm: AiLabAlgorithmId;
   labelColumn: string;
   features: string[];
   accuracy: number;
 }) {
+  const algoMeta = ALGORITHM_META[algorithm];
   return (
     <div className={styles.logRow}>
       <PredictionStatement
@@ -404,6 +462,22 @@ function ResultRow({
       />
       <span className={`${styles.logAccuracy} ${styles.accuracySlot}`}>
         {formatAccuracyPercent(accuracy)}
+      </span>
+      <span className={styles.modelSlot}>
+        <Tooltip title={algoMeta.label} placement="top">
+          <span
+            className={styles.modelTagWrap}
+            aria-label={`Algorithm: ${algoMeta.label}`}
+          >
+            <Tag
+              size="medium"
+              color="brand"
+              startIconName={algoMeta.icon}
+              label=""
+              className={styles.modelTag}
+            />
+          </span>
+        </Tooltip>
       </span>
     </div>
   );

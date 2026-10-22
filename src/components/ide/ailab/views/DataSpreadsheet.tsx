@@ -48,9 +48,9 @@ function datalistId(columnId: string) {
   return `ai-lab-col-${columnId}`;
 }
 
-type SortDirection = "asc" | "desc";
+export type SortDirection = "asc" | "desc";
 
-interface ColumnSort {
+export interface ColumnSort {
   columnId: string;
   direction: SortDirection;
 }
@@ -60,7 +60,7 @@ function cellEmpty(value: AiLabCellValue | undefined) {
 }
 
 /** Empty cells stay last in either direction. Ties keep the original row order. */
-function compareCells(
+export function compareCells(
   a: AiLabCellValue | undefined,
   b: AiLabCellValue | undefined,
   numeric: boolean,
@@ -80,7 +80,10 @@ function compareCells(
   return direction === "asc" ? compared : -compared;
 }
 
-function cycleSort(current: ColumnSort | null, columnId: string): ColumnSort | null {
+export function cycleSort(
+  current: ColumnSort | null,
+  columnId: string,
+): ColumnSort | null {
   if (!current || current.columnId !== columnId) {
     return { columnId, direction: "asc" };
   }
@@ -111,8 +114,8 @@ function rowOrder(
 }
 
 /** Button icon is the current sort. Tooltip names the next click, with that step's icon. */
-function sortPresentation(
-  column: AiLabColumn,
+export function sortPresentation(
+  column: Pick<AiLabColumn, "name" | "type">,
   direction: SortDirection | undefined,
 ): { buttonIcon: FaIconName; label: string; tooltipIcon?: FaIconName } {
   const numeric = column.type === "numerical";
@@ -136,6 +139,70 @@ function sortPresentation(
     label: numeric ? `Sort by ${column.name} 1-9` : `Sort by ${column.name} A-Z`,
     tooltipIcon: numeric ? "arrow-down-1-9" : "arrow-down-a-z",
   };
+}
+
+/** Sortable column header cell shared by read-only modal sheets. */
+export function SortableSheetTh({
+  column,
+  sortId = column.id,
+  sort,
+  onSortChange,
+  className = "",
+}: {
+  column: Pick<AiLabColumn, "id" | "name" | "type">;
+  sortId?: string;
+  sort: ColumnSort | null;
+  onSortChange: (next: ColumnSort | null) => void;
+  className?: string;
+}) {
+  const direction = sort?.columnId === sortId ? sort.direction : undefined;
+  const sortUi = sortPresentation(column, direction);
+  return (
+    <th
+      aria-sort={
+        direction === "asc"
+          ? "ascending"
+          : direction === "desc"
+            ? "descending"
+            : "none"
+      }
+      className={[
+        styles.th,
+        column.type === "numerical" ? styles.thNumeric : "",
+        direction ? styles.thSorted : "",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <span className={styles.thLead}>
+        <span className={styles.thName}>{column.name}</span>
+      </span>
+      <span className={styles.sortButton}>
+        <Tooltip
+          title={sortUi.label}
+          iconName={sortUi.tooltipIcon}
+          placement="bottom"
+        >
+          <Button
+            type="button"
+            size="extraSmall"
+            variant="text"
+            color="secondary"
+            iconOnly
+            startIconName={sortUi.buttonIcon}
+            className={styles.sortControl}
+            aria-label={sortUi.label}
+            onClick={(event) => {
+              const next = cycleSort(sort, sortId);
+              if (!next) event.currentTarget.blur();
+              onSortChange(next);
+            }}
+          />
+        </Tooltip>
+      </span>
+    </th>
+  );
 }
 
 export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {

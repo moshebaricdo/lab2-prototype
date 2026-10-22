@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -16,7 +17,10 @@ import {
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import {
+  cartPredictionCorrect,
+  cartRegressionTolerance,
   columnById,
+  columnType,
   findTreeNode,
   formatCell,
   rowsByNode,
@@ -29,7 +33,16 @@ import type {
   AiLabTrainedModel,
   AiLabTreeNode,
 } from "../../../../types/aiLab";
-import { ColumnScopeToggle, extraSheetColumns } from "./ColumnScopeToggle";
+import {
+  ColumnScopeToggle,
+  extraSheetColumns,
+  sheetColumnsFor,
+} from "./ColumnScopeToggle";
+import {
+  compareCells,
+  SortableSheetTh,
+  type ColumnSort,
+} from "./DataSpreadsheet";
 import sheet from "./DataStudio.module.scss";
 import results from "./ResultsModal.module.scss";
 import styles from "./TreeNodeModal.module.scss";
@@ -355,7 +368,12 @@ function NodeDetail({
   const isLeaf = node.type === "leaf";
   const prediction = node.type === "leaf" ? node.prediction : "";
   const labelColumn = model.labelColumn;
-  const labelName = columnById(columns, labelColumn)?.name ?? labelColumn;
+  const labelColumnObj = columnById(columns, labelColumn) ?? {
+    id: labelColumn,
+    name: labelColumn,
+    type: "categorical" as const,
+  };
+  const labelName = labelColumnObj.name;
   const testNodeRows = rowsAtNode(node, nodeKey, testMembership);
   const trainedNodeRows = rowsAtNode(node, nodeKey, trainedMembership);
   // Test rows match the pill. An empty test sheet opens on the rows that
@@ -367,15 +385,33 @@ function NodeDetail({
   const [filter, setFilter] = useState<RowFilter>("correct");
   const [pageCount, setPageCount] = useState(1);
   const [showAllColumns, setShowAllColumns] = useState(false);
+  const [sort, setSort] = useState<ColumnSort | null>(null);
   const showingTest = !hasSplit || population === "test";
   const nodeRows = showingTest ? testNodeRows : trainedNodeRows;
-  const isCorrect = (rowIndex: number) =>
-    String(lab.rows[rowIndex]?.[labelColumn] ?? "") === prediction;
+  const treeTolerance = useMemo(
+    () =>
+      model.tree && columnType(columns, labelColumn) === "numerical"
+        ? cartRegressionTolerance(lab.rows, labelColumn)
+        : 0,
+    [columns, lab.rows, labelColumn, model.tree],
+  );
+  const isCorrect = (rowIndex: number) => {
+    const row = lab.rows[rowIndex];
+    if (!row) return false;
+    return model.tree
+      ? cartPredictionCorrect(
+          model.tree,
+          row,
+          labelColumn,
+          columns,
+          treeTolerance,
+        )
+      : String(row[labelColumn] ?? "") === prediction;
+  };
   // Correct / Incorrect is only a fair split of rows the tree did not train on.
   const canFilter = isLeaf && showingTest;
   // Incorrect rows set the real answer beside the AI's, like the Scorecard.
   const showMisses = canFilter && filter === "incorrect";
-  const nameTh = showMisses ? results.nameTh : "";
   const correctCount = canFilter
     ? nodeRows.filter((rowIndex) => isCorrect(rowIndex)).length
     : 0;
@@ -419,22 +455,54 @@ function NodeDetail({
   ];
 
   const titleColumnId = lab.config.cardTitleColumn;
-  const titleColumn =
-    titleColumnId &&
-    titleColumnId !== labelColumn &&
-    !model.selectedFeatures.includes(titleColumnId)
-      ? columnById(columns, titleColumnId)
-      : undefined;
-  const extraColumns = showAllColumns
-    ? extraSheetColumns(columns, {
+  const shownColumns = useMemo(
+    () =>
+      sheetColumnsFor(columns, {
         labelColumn,
         features: model.selectedFeatures,
-        titleColumnId: titleColumn?.id,
-      })
-    : [];
-  const leadSpan = (titleColumn ? 1 : 0) + extraColumns.length;
-  const visibleRows = filteredRows.slice(0, pageCount * PAGE_SIZE);
-  const hiddenCount = filteredRows.length - visibleRows.length;
+        titleColumnId,
+        showAllColumns,
+      }),
+    [columns, labelColumn, model.selectedFeatures, showAllColumns, titleColumnId],
+  );
+  useEffect(() => {
+    if (
+      (!showAllColumns &&
+        sort &&
+        extraSheetColumns(columns, {
+          labelColumn,
+          features: model.selectedFeatures,
+          titleColumnId,
+        }).some((column) => column.id === sort.columnId)) ||
+      (!showMisses && sort?.columnId === "__predicted__")
+    ) {
+      setSort(null);
+    }
+  }, [
+    columns,
+    labelColumn,
+    model.selectedFeatures,
+    showAllColumns,
+    showMisses,
+    sort,
+    titleColumnId,
+  ]);
+  const sortedRows = useMemo(() => {
+    if (!sort) return filteredRows;
+    const isPredicted = sort.columnId === "__predicted__";
+    const col = isPredicted
+      ? labelColumnObj
+      : columnById(columns, sort.columnId);
+    if (!col) return filteredRows;
+    const numeric = col.type === "numerical";
+    return [...filteredRows].sort((a, b) => {
+      const valA = isPredicted ? prediction : lab.rows[a]?.[col.id];
+      const valB = isPredicted ? prediction : lab.rows[b]?.[col.id];
+      return compareCells(valA, valB, numeric, sort.direction);
+    });
+  }, [columns, filteredRows, lab.rows, labelColumnObj, prediction, sort]);
+  const visibleRows = sortedRows.slice(0, pageCount * PAGE_SIZE);
+  const hiddenCount = sortedRows.length - visibleRows.length;
   const lastRowNumber = Math.max(1, ...nodeRows.map((index) => index + 1));
 
   const dataCaption = !isLeaf
@@ -606,60 +674,40 @@ function NodeDetail({
               }
             >
               <thead>
-                {showMisses ? (
-                  <tr>
-                    <th
-                      className={`${sheet.th} ${sheet.thIndex}`}
-                      aria-label="Row"
-                    />
-                    {leadSpan > 0 ? (
-                      <th className={sheet.th} colSpan={leadSpan} />
-                    ) : null}
-                    <th className={sheet.th} colSpan={featureColumns.length}>
-                      Feature
-                    </th>
-                    <th className={sheet.th}>Actual</th>
-                    <th className={sheet.th}>AI Prediction</th>
-                  </tr>
-                ) : null}
                 <tr>
                   <th
-                    className={`${sheet.th} ${sheet.thIndex} ${nameTh}`}
-                    aria-label={showMisses ? undefined : "Row"}
-                    aria-hidden={showMisses || undefined}
+                    className={`${sheet.th} ${sheet.thIndex}`}
+                    aria-label="Row"
                   />
-                  {titleColumn ? (
-                    <th className={`${sheet.th} ${nameTh}`}>
-                      {titleColumn.name}
-                    </th>
-                  ) : null}
-                  {extraColumns.map((column) => (
-                    <th
-                      key={column.id}
-                      className={`${sheet.th} ${
-                        column.type === "numerical" ? sheet.thNumeric : ""
-                      } ${nameTh}`}
-                    >
-                      {column.name}
-                    </th>
-                  ))}
-                  {featureColumns.map((column) => (
-                    <th
-                      key={column.id}
-                      className={`${sheet.th} ${sheet.thFeature} ${
-                        column.type === "numerical" ? sheet.thNumeric : ""
-                      } ${nameTh}`}
-                    >
-                      {column.name}
-                    </th>
-                  ))}
-                  <th className={`${sheet.th} ${sheet.thLabel} ${nameTh}`}>
-                    {labelName}
-                  </th>
+                  {shownColumns.map((column) => {
+                    const isLabel = column.id === labelColumn;
+                    const isFeature = model.selectedFeatures.includes(
+                      column.id,
+                    );
+                    return (
+                      <SortableSheetTh
+                        key={column.id}
+                        column={column}
+                        sort={sort}
+                        onSortChange={setSort}
+                        className={
+                          isLabel
+                            ? sheet.thLabel
+                            : isFeature
+                              ? sheet.thFeature
+                              : undefined
+                        }
+                      />
+                    );
+                  })}
                   {showMisses ? (
-                    <th className={`${sheet.th} ${sheet.thLabel} ${nameTh}`}>
-                      {labelName}
-                    </th>
+                    <SortableSheetTh
+                      column={{ ...labelColumnObj, name: "AI predicts" }}
+                      sortId="__predicted__"
+                      sort={sort}
+                      onSortChange={setSort}
+                      className={sheet.thLabel}
+                    />
                   ) : null}
                 </tr>
               </thead>
@@ -672,39 +720,40 @@ function NodeDetail({
                         <td className={`${sheet.td} ${sheet.tdIndex}`}>
                           {rowIndex + 1}
                         </td>
-                        {titleColumn ? (
-                          <td className={sheet.td}>
-                            {formatCell(row?.[titleColumn.id] ?? "")}
-                          </td>
-                        ) : null}
-                        {extraColumns.map((column) => (
-                          <td
-                            key={column.id}
-                            className={`${sheet.td} ${
-                              column.type === "numerical" ? sheet.tdNumeric : ""
-                            }`}
-                          >
-                            {formatCell(row?.[column.id] ?? "")}
-                          </td>
-                        ))}
-                        {featureColumns.map((column) => (
-                          <td
-                            key={column.id}
-                            className={`${sheet.td} ${sheet.tdFeature} ${
-                              column.type === "numerical" ? sheet.tdNumeric : ""
-                            } ${emphasis(column.id)}`}
-                          >
-                            {formatCell(row?.[column.id] ?? "")}
-                          </td>
-                        ))}
-                        <td
-                          className={`${sheet.td} ${sheet.tdLabel} ${emphasis(labelColumn)}`}
-                        >
-                          {formatCell(row?.[labelColumn] ?? "")}
-                        </td>
+                        {shownColumns.map((column) => {
+                          const isLabel = column.id === labelColumn;
+                          const isFeature = model.selectedFeatures.includes(
+                            column.id,
+                          );
+                          return (
+                            <td
+                              key={column.id}
+                              className={[
+                                sheet.td,
+                                isLabel
+                                  ? sheet.tdLabel
+                                  : isFeature
+                                    ? sheet.tdFeature
+                                    : "",
+                                column.type === "numerical"
+                                  ? sheet.tdNumeric
+                                  : "",
+                                emphasis(column.id),
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                            >
+                              {formatCell(row?.[column.id] ?? "")}
+                            </td>
+                          );
+                        })}
                         {showMisses ? (
                           <td
-                            className={`${sheet.td} ${sheet.tdLabel} ${emphasis(labelColumn)}`}
+                            className={`${sheet.td} ${sheet.tdLabel} ${
+                              labelColumnObj.type === "numerical"
+                                ? sheet.tdNumeric
+                                : ""
+                            } ${emphasis(labelColumn)}`}
                           >
                             {prediction}
                           </td>

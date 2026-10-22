@@ -159,7 +159,14 @@ export function TreeTableRow({
     titleColumn,
   } = data;
   const { score, quiz, tally, labelName, story, scanPlan, growPlan } = walk;
-  const baseModel = useSortingModel(tree, rows, labelColumn, labels, "compact");
+  const baseModel = useSortingModel(
+    tree,
+    rows,
+    labelColumn,
+    labels,
+    "compact",
+    columns,
+  );
   const slowCount = growPlan ? Math.min(GROW_SLOW, growPlan.arrivals.length) : 0;
   /* `grow` asks its questions in the order rows first mixed their piles; the
      slow rows' dots are handed off by the row morphing onto them. */
@@ -218,6 +225,10 @@ export function TreeTableRow({
     });
     return seen.slice(0, MAX_FEATURES);
   }, [baseModel.splits]);
+  const growFeatures = useMemo(
+    () => features.slice(0, MAX_FEATURES),
+    [features],
+  );
 
   const revealed = current !== undefined && state.revealed > state.quiz;
   /** The cell grades itself the moment the guess lands, not at the reveal beat. */
@@ -299,54 +310,62 @@ export function TreeTableRow({
       labelRef?: RefObject<HTMLTableCellElement | null>;
       label: ReactNode;
     },
-  ) => (
-    <table className={styles.sheet} aria-label={ariaLabel}>
-      <thead>
-        <tr>
-          <th className={styles.thIndex} />
-          {titleColumn ? (
-            <th className={styles.th}>{headerName(titleColumn)}</th>
-          ) : null}
-          {sheetFeatures.map((feature) => (
-            <th
-              key={feature}
-              className={`${styles.th} ${styles.thFeature} ${isNumeric(columns, feature) ? styles.numeric : ""}`}
-            >
-              {headerName(feature)}
-            </th>
-          ))}
-          <th className={`${styles.th} ${styles.thLabel}`}>{labelName}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr key={rowProps.key} className={rowProps.className} style={rowProps.style}>
-          <td className={styles.tdIndex}>{index + 1}</td>
-          {titleColumn ? (
-            <td className={styles.td}>{cellText(record[titleColumn])}</td>
-          ) : null}
-          {sheetFeatures.map((feature) => (
-            <td
-              key={feature}
-              className={[
-                styles.td,
-                styles.tdFeature,
-                isNumeric(columns, feature) ? styles.numeric : "",
-                rowProps.featureClass?.(feature) ?? "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              style={rowProps.featureStyle?.(feature)}
-            >
-              {cellText(record[feature])}
+  ) => {
+    const leadTitle =
+      titleColumn &&
+      titleColumn !== labelColumn &&
+      !sheetFeatures.includes(titleColumn)
+        ? titleColumn
+        : undefined;
+    return (
+      <table className={styles.sheet} aria-label={ariaLabel}>
+        <thead>
+          <tr>
+            <th className={styles.thIndex} />
+            {leadTitle ? (
+              <th className={styles.th}>{headerName(leadTitle)}</th>
+            ) : null}
+            {sheetFeatures.map((feature) => (
+              <th
+                key={feature}
+                className={`${styles.th} ${styles.thFeature} ${isNumeric(columns, feature) ? styles.numeric : ""}`}
+              >
+                {headerName(feature)}
+              </th>
+            ))}
+            <th className={`${styles.th} ${styles.thLabel}`}>{labelName}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr key={rowProps.key} className={rowProps.className} style={rowProps.style}>
+            <td className={styles.tdIndex}>{index + 1}</td>
+            {leadTitle ? (
+              <td className={styles.td}>{cellText(record[leadTitle])}</td>
+            ) : null}
+            {sheetFeatures.map((feature) => (
+              <td
+                key={feature}
+                className={[
+                  styles.td,
+                  styles.tdFeature,
+                  isNumeric(columns, feature) ? styles.numeric : "",
+                  rowProps.featureClass?.(feature) ?? "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                style={rowProps.featureStyle?.(feature)}
+              >
+                {cellText(record[feature])}
+              </td>
+            ))}
+            <td ref={rowProps.labelRef} className={`${styles.td} ${styles.tdLabel}`}>
+              {rowProps.label}
             </td>
-          ))}
-          <td ref={rowProps.labelRef} className={`${styles.td} ${styles.tdLabel}`}>
-            {rowProps.label}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  );
+          </tr>
+        </tbody>
+      </table>
+    );
+  };
 
   return (
     <div
@@ -369,7 +388,7 @@ export function TreeTableRow({
           columns={columns}
           rows={rows}
           titleColumn={titleColumn}
-          features={features}
+          features={growFeatures}
           labelColumn={labelColumn}
           target={firstDot?.rowIndex ?? 0}
           fill={
@@ -454,7 +473,7 @@ export function TreeTableRow({
                     dockRecord,
                     dockDot.rowIndex,
                     `Row ${dockDot.rowIndex + 1} joining the tree`,
-                    features,
+                    growFeatures,
                     {
                       key: dockRank,
                       label: (
@@ -486,7 +505,7 @@ export function TreeTableRow({
                       record={rows[rowIndex]!}
                       rowIndex={rowIndex}
                       titleColumn={titleColumn}
-                      features={features}
+                      features={growFeatures}
                       labelColumn={labelColumn}
                       dotFill={
                         position === 0

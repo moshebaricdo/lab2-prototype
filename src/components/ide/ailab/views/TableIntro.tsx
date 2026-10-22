@@ -31,11 +31,17 @@ export function ReelRow({
     record[id] === undefined ? "—" : formatCell(record[id]!);
   const numeric = (id: string) =>
     columnById(columns, id)?.type === "numerical" ? styles.numeric : "";
+  const leadTitle =
+    titleColumn &&
+    titleColumn !== labelColumn &&
+    !features.includes(titleColumn)
+      ? titleColumn
+      : undefined;
   return (
     <div className={`${styles.row} ${styles.reelRow}`}>
       <span className={styles.tdIndex}>{rowIndex + 1}</span>
-      {titleColumn ? (
-        <span className={styles.td}>{text(titleColumn)}</span>
+      {leadTitle ? (
+        <span className={styles.td}>{text(leadTitle)}</span>
       ) : null}
       {features.map((id) => (
         <span
@@ -101,12 +107,18 @@ export function TableIntro({
 }) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const windowRef = useRef<HTMLDivElement>(null);
+  const leadTitle =
+    titleColumn &&
+    titleColumn !== labelColumn &&
+    !features.includes(titleColumn)
+      ? titleColumn
+      : undefined;
   const order = useMemo(() => {
     const rest = columns
       .map((column) => column.id)
-      .filter((id) => id !== labelColumn && id !== titleColumn);
-    return [...(titleColumn ? [titleColumn] : []), ...rest, labelColumn];
-  }, [columns, labelColumn, titleColumn]);
+      .filter((id) => id !== labelColumn && id !== leadTitle);
+    return [...(leadTitle ? [leadTitle] : []), ...rest, labelColumn];
+  }, [columns, labelColumn, leadTitle]);
   const shown = useMemo(() => {
     if (rows.length === 0) return [];
     const cycle = (count: number, from: number) =>
@@ -177,7 +189,7 @@ export function TableIntro({
     const role =
       id === labelColumn
         ? "label"
-        : id === titleColumn
+        : id === leadTitle
           ? "title"
           : features.includes(id)
             ? "feature"
