@@ -80,7 +80,27 @@
   user-select: none;
   transition:
     border-color 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    opacity 0.2s ease;
+
+  /* Bleed hover/hit zones halfway into the 10px column gap so adjacent cards meet seamlessly. */
+  &::before {
+    content: "";
+    inset: -6px -1px;
+    position: absolute;
+  }
+
+  &:first-child::before {
+    top: -1px;
+  }
+
+  &:last-child::before {
+    bottom: -1px;
+  }
+}
+
+.cardDimmed {
+  opacity: 0.4;
 }
 
 /* Unmatched hover: secondary border + tertiary knob (tile hover drives the knob). */
@@ -440,7 +460,13 @@
   fill: none;
   stroke-linecap: round;
   stroke-width: 2;
-  transition: stroke 0.2s ease;
+  transition:
+    stroke 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.connectorPathDimmed {
+  opacity: 0.2;
 }
 
 .connectorPathCorrect {

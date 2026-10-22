@@ -175,6 +175,7 @@ function MatchConnectorKeyBoard({
   const promptDotRefs = useRef<Record<string, HTMLElement | null>>({});
   const termDotRefs = useRef<Record<string, HTMLElement | null>>({});
   const [layoutVersion, setLayoutVersion] = useState(0);
+  const [hoveredPromptId, setHoveredPromptId] = useState<string | null>(null);
 
   const assignments = useMemo(
     () =>
@@ -236,10 +237,11 @@ function MatchConnectorKeyBoard({
         if (!start || !end) return null;
         return {
           id: `${prompt.id}-${termId}`,
+          promptId: prompt.id,
           path: buildCurvePath(start, end),
         };
       })
-      .filter(Boolean) as Array<{ id: string; path: string }>;
+      .filter(Boolean) as Array<{ id: string; promptId: string; path: string }>;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assignments, layoutVersion, prompts]);
 
@@ -256,47 +258,125 @@ function MatchConnectorKeyBoard({
           <path
             key={seg.id}
             d={seg.path}
-            className={[styles.connectorPath, styles.connectorPathCorrect].join(
-              " ",
-            )}
+            className={[
+              styles.connectorPath,
+              styles.connectorPathCorrect,
+              hoveredPromptId !== null && seg.promptId !== hoveredPromptId
+                ? styles.connectorPathDimmed
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
           />
         ))}
       </svg>
       <div className={styles.matchColumns} style={columnFlexVars}>
-        <div className={styles.termsColumn} role="group" aria-label="Terms">
-          {terms.map((term) => (
-            <div
-              key={term.id}
-              className={[
-                styles.termCard,
-                cardAlignment.terms === "start"
-                  ? styles.termCardAlignStart
-                  : "",
-                styles.cardCorrect,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              aria-label={getMatchCardAccessibilityLabel(term, "Term")}
-            >
-              {renderMatchCardBody(
-                term.text,
-                term.contentBlocks,
-                "term",
-                cardAlignment.terms,
-              )}
-              <span
-                ref={(el) => {
-                  termDotRefs.current[term.id] = el;
-                }}
+        <div
+          className={styles.termsColumn}
+          role="group"
+          aria-label="Terms"
+          onPointerLeave={() => setHoveredPromptId(null)}
+        >
+          {terms.map((term) => {
+            const connectedPromptId = termToPromptId[term.id];
+            const isDimmed =
+              hoveredPromptId !== null && connectedPromptId !== hoveredPromptId;
+            return (
+              <div
+                key={term.id}
                 className={[
-                  styles.connectorDot,
-                  styles.connectorDotRight,
-                  styles.connectorDotLocked,
-                  styles.connectorDotCorrect,
-                ].join(" ")}
-                aria-hidden={true}
-              />
-              {termToPromptId[term.id] ? (
+                  styles.termCard,
+                  cardAlignment.terms === "start"
+                    ? styles.termCardAlignStart
+                    : "",
+                  styles.cardCorrect,
+                  isDimmed ? styles.cardDimmed : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                aria-label={getMatchCardAccessibilityLabel(term, "Term")}
+                onPointerEnter={() =>
+                  setHoveredPromptId(connectedPromptId ?? null)
+                }
+              >
+                {renderMatchCardBody(
+                  term.text,
+                  term.contentBlocks,
+                  "term",
+                  cardAlignment.terms,
+                )}
+                <span
+                  ref={(el) => {
+                    termDotRefs.current[term.id] = el;
+                  }}
+                  className={[
+                    styles.connectorDot,
+                    styles.connectorDotRight,
+                    styles.connectorDotLocked,
+                    styles.connectorDotCorrect,
+                  ].join(" ")}
+                  aria-hidden={true}
+                />
+                {connectedPromptId ? (
+                  <span
+                    className={[
+                      styles.feedbackBadge,
+                      styles.feedbackBadgeCorrect,
+                    ].join(" ")}
+                  >
+                    <FaIcon name="check" size="s" />
+                  </span>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+        <div
+          className={styles.promptsColumn}
+          role="group"
+          aria-label="Definitions"
+          onPointerLeave={() => setHoveredPromptId(null)}
+        >
+          {prompts.map((prompt) => {
+            const isDimmed =
+              hoveredPromptId !== null && prompt.id !== hoveredPromptId;
+            return (
+              <div
+                key={prompt.id}
+                className={[
+                  styles.promptCard,
+                  cardAlignment.prompts === "center"
+                    ? styles.promptCardAlignCenter
+                    : "",
+                  styles.cardCorrect,
+                  isDimmed ? styles.cardDimmed : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                aria-label={getMatchCardAccessibilityLabel(
+                  prompt,
+                  "Definition",
+                )}
+                onPointerEnter={() => setHoveredPromptId(prompt.id)}
+              >
+                <span
+                  ref={(el) => {
+                    promptDotRefs.current[prompt.id] = el;
+                  }}
+                  className={[
+                    styles.connectorDot,
+                    styles.connectorDotLeft,
+                    styles.connectorDotLocked,
+                    styles.connectorDotCorrect,
+                  ].join(" ")}
+                  aria-hidden={true}
+                />
+                {renderMatchCardBody(
+                  prompt.text,
+                  prompt.contentBlocks,
+                  "prompt",
+                  cardAlignment.prompts,
+                )}
                 <span
                   className={[
                     styles.feedbackBadge,
@@ -305,57 +385,9 @@ function MatchConnectorKeyBoard({
                 >
                   <FaIcon name="check" size="s" />
                 </span>
-              ) : null}
-            </div>
-          ))}
-        </div>
-        <div
-          className={styles.promptsColumn}
-          role="group"
-          aria-label="Definitions"
-        >
-          {prompts.map((prompt) => (
-            <div
-              key={prompt.id}
-              className={[
-                styles.promptCard,
-                cardAlignment.prompts === "center"
-                  ? styles.promptCardAlignCenter
-                  : "",
-                styles.cardCorrect,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              aria-label={getMatchCardAccessibilityLabel(prompt, "Definition")}
-            >
-              <span
-                ref={(el) => {
-                  promptDotRefs.current[prompt.id] = el;
-                }}
-                className={[
-                  styles.connectorDot,
-                  styles.connectorDotLeft,
-                  styles.connectorDotLocked,
-                  styles.connectorDotCorrect,
-                ].join(" ")}
-                aria-hidden={true}
-              />
-              {renderMatchCardBody(
-                prompt.text,
-                prompt.contentBlocks,
-                "prompt",
-                cardAlignment.prompts,
-              )}
-              <span
-                className={[
-                  styles.feedbackBadge,
-                  styles.feedbackBadgeCorrect,
-                ].join(" ")}
-              >
-                <FaIcon name="check" size="s" />
-              </span>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -523,6 +555,10 @@ export function MatchConnectorWorkspace({
     type: "prompt" | "term";
     id: string;
   } | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<{
+    type: "prompt" | "term";
+    id: string;
+  } | null>(null);
   const [a11yStatus, setA11yStatus] = useState("");
 
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -550,6 +586,7 @@ export function MatchConnectorWorkspace({
     dragCleanupRef.current?.();
     gestureCleanupRef.current?.();
     setSelectedCard(null);
+    setHoveredCard(null);
     setIsSubmitted(false);
     setIsTeacherAnswerRevealed(false);
   }, [level.id, promptIdsKey, isEmbeddedControlled]);
@@ -703,6 +740,52 @@ export function MatchConnectorWorkspace({
     );
   }, [displayAssignments]);
 
+  const allDisplayAssigned = useMemo(
+    () =>
+      level.question.prompts.every((p) => Boolean(displayAssignments[p.id])),
+    [displayAssignments, level.question.prompts],
+  );
+
+  const [hoverHighlightReady, setHoverHighlightReady] = useState(false);
+
+  useEffect(() => {
+    if (!allDisplayAssigned) {
+      setHoverHighlightReady(false);
+      return;
+    }
+    if (interactionLocked) {
+      setHoverHighlightReady(true);
+      return;
+    }
+    setHoverHighlightReady(false);
+    const timer = window.setTimeout(() => {
+      setHoverHighlightReady(true);
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [allDisplayAssigned, assignments, interactionLocked]);
+
+  const highlightedPromptId = useMemo(() => {
+    if (
+      !allDisplayAssigned ||
+      !hoverHighlightReady ||
+      activeDrag ||
+      !hoveredCard
+    ) {
+      return null;
+    }
+    if (hoveredCard.type === "prompt") {
+      return displayAssignments[hoveredCard.id] ? hoveredCard.id : null;
+    }
+    return termToPromptId[hoveredCard.id] ?? null;
+  }, [
+    allDisplayAssigned,
+    hoverHighlightReady,
+    activeDrag,
+    hoveredCard,
+    displayAssignments,
+    termToPromptId,
+  ]);
+
   const lockedPromptIds = useMemo(
     () => new Set(persistedCorrectPromptIds),
     [persistedCorrectPromptIds],
@@ -747,6 +830,7 @@ export function MatchConnectorWorkspace({
         const keptCorrect = lockedPromptIds.has(prompt.id) && isCorrect;
         return {
           id: `${prompt.id}-${termId}`,
+          promptId: prompt.id,
           path: buildCurvePath(start, end),
           state: replaceWithKey
             ? ("revealed" as const)
@@ -761,6 +845,7 @@ export function MatchConnectorWorkspace({
       })
       .filter(Boolean) as Array<{
       id: string;
+      promptId: string;
       path: string;
       state: "neutral" | "correct" | "incorrect" | "revealed";
     }>;
@@ -1309,6 +1394,10 @@ export function MatchConnectorWorkspace({
                       seg.state === "revealed"
                         ? styles.connectorPathRevealed
                         : "",
+                      highlightedPromptId !== null &&
+                      seg.promptId !== highlightedPromptId
+                        ? styles.connectorPathDimmed
+                        : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
@@ -1330,6 +1419,11 @@ export function MatchConnectorWorkspace({
                   className={styles.termsColumn}
                   role="group"
                   aria-label="Terms"
+                  onPointerLeave={() =>
+                    setHoveredCard((prev) =>
+                      prev?.type === "term" ? null : prev,
+                    )
+                  }
                 >
                   {level.question.terms.map((term) => {
                     const connectedPromptId = termToPromptId[term.id];
@@ -1358,6 +1452,9 @@ export function MatchConnectorWorkspace({
                       !cardLocked &&
                       activeDrag?.type === "term" &&
                       activeDrag.id === term.id;
+                    const isDimmed =
+                      highlightedPromptId !== null &&
+                      connectedPromptId !== highlightedPromptId;
 
                     const cardClasses = [
                       styles.termCard,
@@ -1380,6 +1477,7 @@ export function MatchConnectorWorkspace({
                       replaceWithKey ? styles.cardRevealed : "",
                       isDraggingThis ? styles.cardPress : "",
                       isDragHover ? styles.cardDragHover : "",
+                      isDimmed ? styles.cardDimmed : "",
                     ]
                       .filter(Boolean)
                       .join(" ");
@@ -1429,6 +1527,9 @@ export function MatchConnectorWorkspace({
                         onPointerDown={(e) =>
                           handleCardPointerDown("term", term.id, e)
                         }
+                        onPointerEnter={() =>
+                          setHoveredCard({ type: "term", id: term.id })
+                        }
                       >
                         {renderMatchCardBody(
                           term.text,
@@ -1473,6 +1574,11 @@ export function MatchConnectorWorkspace({
                   className={styles.promptsColumn}
                   role="group"
                   aria-label="Definitions"
+                  onPointerLeave={() =>
+                    setHoveredCard((prev) =>
+                      prev?.type === "prompt" ? null : prev,
+                    )
+                  }
                 >
                   {level.question.prompts.map((prompt) => {
                     const termId = displayAssignments[prompt.id];
@@ -1496,6 +1602,9 @@ export function MatchConnectorWorkspace({
                       !cardLocked &&
                       activeDrag?.type === "prompt" &&
                       activeDrag.id === prompt.id;
+                    const isDimmed =
+                      highlightedPromptId !== null &&
+                      prompt.id !== highlightedPromptId;
 
                     const cardClasses = [
                       styles.promptCard,
@@ -1518,6 +1627,7 @@ export function MatchConnectorWorkspace({
                       replaceWithKey ? styles.cardRevealed : "",
                       isDraggingThis ? styles.cardPress : "",
                       isDragHover ? styles.cardDragHover : "",
+                      isDimmed ? styles.cardDimmed : "",
                     ]
                       .filter(Boolean)
                       .join(" ");
@@ -1571,6 +1681,9 @@ export function MatchConnectorWorkspace({
                         }
                         onPointerDown={(e) =>
                           handleCardPointerDown("prompt", prompt.id, e)
+                        }
+                        onPointerEnter={() =>
+                          setHoveredCard({ type: "prompt", id: prompt.id })
                         }
                       >
                         <span

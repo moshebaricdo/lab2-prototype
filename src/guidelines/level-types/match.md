@@ -50,7 +50,7 @@ Rendering rules match multi-choice and free-response (`see multi-choice.md` stem
 - Fixed **left column (terms)** and **right column (definitions)**. Learners connect pairs by dragging a line between tiles, or by clicking a term and then a definition (the other order works too). Clicking the selected tile again clears the selection. Keyboard: arrow keys move, Enter or Space connects.
 - **Definition text** is left-aligned, including definition cards in the definition bank.
 - **Keyboard focus** draws the shared focus ring around the tile.
-- **Tile interaction** (Figma matching item): hover/press/focus anywhere on the tile also drives the connector knob. Unmatched hover uses a secondary border and tertiary knob; press/focus fill the knob with brand-light and a selected-primary ring. Connected tiles use brand-light / selected-primary; hover and press darken the knob to selected-strong. Correct and incorrect pairs have **no** hover/press.
+- **Tile interaction** (Figma matching item): hover/press/focus anywhere on the tile also drives the connector knob. Unmatched hover uses a secondary border and tertiary knob; press/focus fill the knob with brand-light and a selected-primary ring. Connected tiles use brand-light / selected-primary; hover and press darken the knob to selected-strong. Correct and incorrect pairs have **no** hover/press. Once all matches are made (after a 1.5s cooldown when completing matches, or immediately after submit/reveal), hovering any card isolates its matched pair by fading all other cards and nodes to 40% opacity and other connectors to 20% opacity.
 - **Clear all** and **Submit** follow the same footer rules as other assessment types.
 
 ## Student UX (submit and feedback)
