@@ -205,13 +205,6 @@
   font-size: 45cqh;
 }
 
-.tile:hover .placeholder,
-.tile:focus-visible .placeholder,
-.tile:active .placeholder,
-.tileSelected .placeholder {
-  background: var(--background-neutral-quaternary);
-}
-
 .selectedWash {
   position: absolute;
   inset: 0;
@@ -535,6 +528,7 @@
 
 .statRow {
   display: flex;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--border-neutral-primary);
 
   &:last-child {
@@ -543,10 +537,15 @@
 }
 
 .stat {
-  flex: 1;
+  flex: 1 1 0;
 
-  & + & {
+  &:nth-child(2) {
     border-left: 1px solid var(--border-neutral-primary);
+  }
+
+  &:nth-child(3) {
+    flex-basis: 100%;
+    border-top: 1px solid var(--border-neutral-primary);
   }
 }
 

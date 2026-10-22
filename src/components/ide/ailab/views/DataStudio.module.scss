@@ -292,6 +292,80 @@
   color: var(--text-neutral-primary);
 }
 
+.algorithmTrigger {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--border-neutral-secondary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  cursor: pointer;
+  transition: var(--transition-colors), var(--transition-press);
+
+  &:hover {
+    background: var(--background-neutral-tertiary);
+  }
+
+  &:active {
+    background: var(--background-neutral-tertiary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--background-neutral-primary),
+      0 0 0 4px var(--border-focused-primary);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .algorithmTrigger:active {
+    transform: scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .algorithmTrigger:active {
+    transform: none;
+  }
+}
+
+.algorithmTriggerMain {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+}
+
+.algorithmTriggerIcon,
+.algorithmTriggerSwap {
+  display: inline-grid;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  place-items: center;
+  color: var(--text-neutral-primary);
+  font-size: var(--text-body-xs);
+}
+
+.algorithmTriggerLabel {
+  @include type-body-3-semibold;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .cardFooter {
   display: flex;
   padding: 10px;
@@ -386,9 +460,13 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Cards view: scrolling stage (catalog grid or carousel deck) over a sticky
- * pager footer.
+ * Cards view: one row at a time on a stack of cards over a sticky pager.
  * ------------------------------------------------------------------------- */
+
+$deck-step: 10.5px;
+$deck-ease: cubic-bezier(0.32, 0.72, 0, 1);
+/* Room for the cards that rise above the front one. */
+$deck-top: 24px;
 
 .cardsView {
   display: flex;
@@ -398,187 +476,68 @@
   flex-direction: column;
 }
 
-.cardStage {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  overflow: auto;
-  padding: 8px;
-}
-
-/* `--card-columns` is set inline from the measured width, snapped to a
-   divisor of the page size so every page ends on a full row. */
-.cardGrid {
-  display: grid;
-  align-content: start;
-  width: 100%;
-  grid-template-columns: repeat(var(--card-columns, 1), minmax(0, 1fr));
-  gap: 8px;
-}
-
-/* Same box as the resource panel's `.continueBar` (1px border + 8px padding
-   around a small 32px control) so the two footers share a baseline. */
-.cardsFooter {
-  display: flex;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  min-height: 49px;
-  padding: 8px;
-  border-top: 1px solid var(--border-neutral-primary);
-  background: var(--background-neutral-primary);
-}
-
-/* Figma AI Lab 2 `5383:6634`: 10/12 padding, Body 2 heading, Body 3 rows
-   separated by hairlines on a 6px rhythm. */
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
-  border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-sm);
-  background: var(--background-neutral-primary);
-}
-
-.cardHeading {
-  @include type-body-2-semibold;
-  margin: 0;
-  color: var(--text-neutral-primary);
-}
-
-.cardBody {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-}
-
-.cardRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  /* Single-line rows keep every card in a grid row the same height. Full
-     values stay available via `title`. */
-  white-space: nowrap;
-
-  & + & {
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px solid var(--border-neutral-primary);
-  }
-}
-
-.cardLabel {
-  @include type-body-3-semibold;
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-neutral-primary);
-}
-
-.cardValue {
-  @include type-body-3-regular;
-  min-width: 0;
-  margin: 0;
-  overflow: hidden;
-  color: var(--text-neutral-primary);
-  text-align: right;
-  text-overflow: ellipsis;
-
-  /* Blank cells keep their line so every card row is the same height. */
-  &:empty::before {
-    content: "\00a0";
-  }
-}
-
-/* Carousel: one featured card centered on the stage, with ghost cards fanned
-   up behind it to read as a deck. */
-
 .carouselStage {
   display: flex;
   flex: 1;
-  min-width: 0;
-  min-height: 0;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px;
-  overflow: auto;
-
-  &:focus {
-    outline: none;
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-    outline-offset: -4px;
-  }
+  min-width: 0;
+  min-height: 0;
+  padding: var(--spacing-p-m);
+  overflow: hidden;
+  background-color: var(--background-neutral-secondary);
 }
 
-/* Every slot shares one grid cell; the deck is as tall as its tallest card so
-   nothing reflows while the stack moves. */
 .deck {
-  display: grid;
-  width: min(100%, 520px);
-  margin: auto;
-  align-items: start;
-  /* Headroom for the cards that rise above the active one. */
-  padding-top: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 400px);
+  min-height: 0;
+  max-height: 100%;
+  box-sizing: border-box;
+  padding-top: $deck-top;
 }
 
-/* A slot's place in the pile is a pure function of `--deck-depth` (0 = active,
-   1–2 = peeking behind). Because cards keep their keys across a flip, only the
-   depth changes and this one transition moves the whole stack together. */
+/* 0 is the front card. Higher depths sit behind it and peek above. */
 .deckSlot {
-  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
   z-index: calc(10 - var(--deck-depth));
-  opacity: calc(1 - var(--deck-depth) * 0.22);
-  transform: translateY(calc(var(--deck-depth) * -12px))
-    scale(calc(1 - var(--deck-depth) * 0.035));
+  min-height: 0;
+  opacity: calc(1 - var(--deck-depth) * 0.15);
+  transform: translateY(calc(var(--deck-depth) * -#{$deck-step}))
+    scale(calc(1 - var(--deck-depth) * 0.05));
   transform-origin: top center;
   transition:
-    transform 280ms cubic-bezier(0.32, 0.72, 0, 1),
-    opacity 280ms cubic-bezier(0.32, 0.72, 0, 1);
-  will-change: transform, opacity;
+    transform 280ms $deck-ease,
+    opacity 280ms $deck-ease;
 
+  /* Out of flow, so only the front card sizes the deck. */
   &[aria-hidden="true"] {
+    position: absolute;
+    inset: $deck-top 0 0;
     pointer-events: none;
   }
 }
 
-/* Hidden card waiting at the back of the pile; it fades forward on the next
-   flip instead of popping in. */
-.deckSlotOnDeck {
-  opacity: 0;
-}
-
-/* Cards behind the active one are empty shells. An absolute child does not
-   give its slot a height, and the deck aligns slots to the start, so these
-   slots stretch to the featured card. The slot transform then peeks that
-   shell above the card. */
-.deckSlot:has(.deckGhost) {
-  position: relative;
-  align-self: stretch;
-}
-
-.deckGhost {
-  position: absolute;
-  inset: 0;
-  box-sizing: border-box;
-  border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-lg);
-  background: var(--background-neutral-primary);
-  box-shadow: var(--elevation-sm);
-}
-
-/* The card just flipped past: dealt off the top toward the viewer, ready to
-   slide back if the user goes to Previous. */
 .deckSlotDealt {
   z-index: 11;
   opacity: 0;
   transform: translateY(28px) scale(1.03);
+}
+
+.deckSlotWaiting {
+  opacity: 0;
+}
+
+.deckGhost {
+  flex: 1;
+  box-sizing: border-box;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-lg);
+  background-color: var(--background-neutral-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -587,64 +546,162 @@
   }
 }
 
-.cardFeatured {
-  width: 100%;
-
+.card {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  padding: 16px 20px 6px;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding-top: 16px;
+  border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-lg);
-  box-shadow: var(--elevation-sm);
+  background-color: var(--background-neutral-primary);
+  box-shadow: var(--shadow-lg);
+}
 
-  .cardHeading {
-    @include type-body-1-semibold;
+.cardTitle {
+  @include type-body-1-semibold;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 20px;
+  color: var(--text-neutral-primary);
+}
+
+.cardList {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    right: var(--scrollbar-width, 0px);
+    left: 0;
+    z-index: 1;
+    height: 48px;
+    pointer-events: none;
+    opacity: 0;
   }
 
-  .cardRow,
-  .cardRow + .cardRow {
-    margin-top: 0;
-    align-items: center;
-    padding: 10px 0;
-    border-top: 1px solid var(--border-neutral-primary);
-    white-space: normal;
+  &::before {
+    top: 0;
+    background: linear-gradient(var(--background-neutral-primary), transparent);
   }
 
-  .cardLabel {
-    @include type-body-2-regular;
-    color: var(--text-neutral-primary);
+  &::after {
+    bottom: 0;
+    background: linear-gradient(transparent, var(--background-neutral-primary));
   }
 
-  .cardLabelRole {
-    @include type-body-2-semibold;
-  }
-
-  .cardLabelLabel {
-    color: var(--text-accent-pink-primary);
-  }
-
-  .cardLabelFeature {
-    color: var(--text-info-primary);
-  }
-
-  .cardValue {
-    @include type-body-2-semibold;
-    overflow: visible;
-    overflow-wrap: anywhere;
-    text-overflow: clip;
+  &[data-fade-top]::before,
+  &[data-fade-bottom]::after {
+    opacity: 1;
   }
 }
 
-.pagerNav {
+.cardDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  margin: 0;
+  padding-bottom: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  /* The card clips anything drawn outside the list. */
+  &:focus-visible {
+    outline: 2px solid var(--border-brand-primary);
+    outline-offset: -2px;
+  }
+}
+
+.cardRow {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 20px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.cardLabel,
+.cardValue {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.cardLabel {
+  @include type-body-2-regular;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-neutral-primary);
+
+  &[data-role] {
+    @include type-body-2-semibold;
+  }
+
+  &[data-role]::after {
+    content: "";
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--shape-round);
+    background-color: var(--role-dot);
+  }
+
+  &[data-role="label"] {
+    --role-dot: var(--background-accent-pink-primary);
+    color: var(--text-accent-pink-primary);
+  }
+
+  &[data-role="feature"] {
+    --role-dot: var(--background-info-primary);
+    color: var(--text-info-primary);
+  }
+}
+
+.cardValue {
+  @include type-body-2-semibold;
+  color: var(--text-neutral-primary);
+  text-align: right;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pager {
+  display: flex;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
+  min-height: 49px;
+  padding: 8px;
+  border-top: 1px solid var(--border-neutral-primary);
+  background-color: var(--background-neutral-primary);
 }
 
 .pagerCounter {
   @include type-body-3-regular;
-  min-width: 112px;
-  color: var(--text-neutral-secondary);
+  color: var(--text-neutral-tertiary);
   font-variant-numeric: tabular-nums;
-  text-align: center;
 }
 
 .sheet {
@@ -677,7 +734,6 @@
   min-width: max-content;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
 
   &:focus {
     outline: none;
@@ -698,10 +754,12 @@
   box-sizing: border-box;
   height: 28px;
   padding: 0 10px;
+  overflow: hidden;
   border-bottom: 1px solid var(--border-neutral-primary);
   border-right: 1px solid var(--border-neutral-primary);
   color: var(--text-neutral-primary);
   background: var(--background-neutral-primary);
+  text-overflow: ellipsis;
   vertical-align: middle;
   white-space: nowrap;
 }
@@ -846,14 +904,16 @@ tbody tr:hover .tdIndex {
   pointer-events: auto;
 }
 
-.th:not(.thIndex):not(.thNumeric),
-.td:not(.tdIndex):not(.tdNumeric) {
+.th:not(.thIndex):not(.thNumeric):not([colspan]),
+.td:not(.tdIndex):not(.tdNumeric):not([colspan]) {
   min-width: 160px;
+  max-width: 160px;
 }
 
-.thNumeric,
-.tdNumeric {
+.thNumeric:not([colspan]),
+.tdNumeric:not([colspan]) {
   min-width: 100px;
+  max-width: 100px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -974,32 +1034,6 @@ tbody tr:hover .td.tdLabel:not(.tdActive) {
 
 tbody tr:hover .td.tdFeature:not(.tdActive) {
   background: var(--background-info-light);
-}
-
-.cardLabelLabel {
-  color: var(--text-accent-pink-primary);
-}
-
-.cardLabelFeature {
-  color: var(--text-info-primary);
-}
-
-/* Inline role mark on card labels (table headers use the full-column tint). */
-.roleDot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-  border-radius: var(--shape-round);
-  background: var(--background-neutral-tertiary);
-}
-
-.roleDotLabel {
-  background: var(--background-accent-pink-primary);
-}
-
-.roleDotFeature {
-  background: var(--background-info-primary);
 }
 
 .tdSelectedRow {

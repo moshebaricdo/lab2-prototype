@@ -15,7 +15,11 @@ import {
 } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
-import { compareNatural, frequencies } from "../../../../lib/aiLab";
+import {
+  columnUsable,
+  compareNatural,
+  frequencies,
+} from "../../../../lib/aiLab";
 import styles from "./DatasetFilterControl.module.scss";
 
 function formatCategoryValue(value: string): string {
@@ -150,8 +154,13 @@ export function DatasetFilterControl({ lab }: { lab: AiLabController }) {
   const activeFilter = lab.columnFilter;
 
   const categoricalColumns = useMemo(
-    () => columns.filter((column) => column.type === "categorical"),
-    [columns],
+    () =>
+      columns.filter(
+        (column) =>
+          column.type === "categorical" &&
+          columnUsable(rows, columns, column.id),
+      ),
+    [columns, rows],
   );
 
   const [drillColumnId, setDrillColumnId] = useState<string | undefined>(

@@ -5,6 +5,7 @@ import type { AiLabDataset } from "../../../../types/aiLab";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import type { DatasetPickerController } from "./DatasetPickerModal";
+import { SetupModal } from "./SetupModal";
 import styles from "./DatasetStartEmptyState.module.scss";
 
 function isCsvFile(file: File): boolean {
@@ -65,16 +66,22 @@ function DatasetTile({
       </span>
       <span className={styles.caption}>
         <span className={styles.captionName}>{dataset.name}</span>
-        <span className={styles.captionMeta}>{`${dataset.rows.length} rows`}</span>
+        <span className={styles.captionMeta}>{`${(dataset.rowCount ?? dataset.rows.length).toLocaleString()} rows`}</span>
       </span>
     </button>
   );
 }
 
 function sourceHref(source: string): string | undefined {
-  const match = source.match(/https?:\/\/\S+/);
-  if (!match) return undefined;
-  return match[0].replace(/[),.;]+$/, "");
+  const explicit = source.match(/https?:\/\/\S+/);
+  if (explicit) return explicit[0].replace(/[),.;]+$/, "");
+  const parenthesized = source.match(
+    /\(([a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s)]*)?)\)/i,
+  );
+  if (parenthesized?.[1]) {
+    return `https://${parenthesized[1].replace(/[),.;]+$/, "")}`;
+  }
+  return undefined;
 }
 
 function UploadDetails({ dataset, fileName }: { dataset: AiLabDataset; fileName: string }) {
@@ -89,6 +96,10 @@ function UploadDetails({ dataset, fileName }: { dataset: AiLabDataset; fileName:
           <div className={`${styles.stat} ${styles.statTight}`}>
             <p className={styles.sectionLabel}>Rows</p>
             <p className={styles.statValue}>{dataset.rows.length}</p>
+          </div>
+          <div className={`${styles.stat} ${styles.statTight}`}>
+            <p className={styles.sectionLabel}>Columns</p>
+            <p className={styles.statValue}>{dataset.columns.length}</p>
           </div>
         </div>
       </div>
@@ -112,12 +123,14 @@ function DatasetDetails({ dataset, fileName }: { dataset: AiLabDataset; fileName
 
   const card = dataset.card;
   const description = card?.description ?? dataset.story?.whatIsARow ?? authoredDescription(dataset);
+  const potentialUses = card?.potentialUses ?? dataset.story?.question;
+  const potentialMisuses = card?.potentialMisuses ?? dataset.story?.whyItMatters;
   const source = card?.source ?? dataset.story?.source;
   const href = source ? sourceHref(source) : undefined;
   const sections = [
-    card?.potentialUses ? { label: "Potential Uses", value: card.potentialUses } : undefined,
-    card?.potentialMisuses
-      ? { label: "Potential Misuses", value: card.potentialMisuses }
+    potentialUses ? { label: "Potential Uses", value: potentialUses } : undefined,
+    potentialMisuses
+      ? { label: "Potential Misuses", value: potentialMisuses }
       : undefined,
   ].filter((section): section is { label: string; value: string } => Boolean(section));
 
@@ -130,7 +143,11 @@ function DatasetDetails({ dataset, fileName }: { dataset: AiLabDataset; fileName
       <div className={styles.statRow}>
         <div className={styles.stat}>
           <p className={styles.sectionLabel}>Rows</p>
-          <p className={styles.statValue}>{dataset.rows.length}</p>
+          <p className={styles.statValue}>{(dataset.rowCount ?? dataset.rows.length).toLocaleString()}</p>
+        </div>
+        <div className={styles.stat}>
+          <p className={styles.sectionLabel}>Columns</p>
+          <p className={styles.statValue}>{dataset.columnCount ?? dataset.columns.length}</p>
         </div>
         {card?.lastUpdated ? (
           <div className={styles.stat}>
@@ -153,7 +170,7 @@ function DatasetDetails({ dataset, fileName }: { dataset: AiLabDataset; fileName
               {source}
             </a>
           ) : (
-            <p className={styles.statValue}>{source}</p>
+            <p className={styles.sectionCopy}>{source}</p>
           )}
         </div>
       ) : null}
@@ -164,11 +181,13 @@ function DatasetDetails({ dataset, fileName }: { dataset: AiLabDataset; fileName
 export function DatasetStartEmptyState({
   presets,
   uploads,
+  algorithmLock,
   onUpload,
   onRemoveUpload,
   onApply,
 }: DatasetPickerController) {
   const [pendingId, setPendingId] = useState<string | undefined>();
+  const [algorithmModalOpen, setAlgorithmModalOpen] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [isReading, setIsReading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -184,7 +203,10 @@ export function DatasetStartEmptyState({
     const stillThere =
       presets.some((dataset) => dataset.id === pendingId) ||
       uploads.some((upload) => upload.dataset.id === pendingId);
-    if (!stillThere) setPendingId(undefined);
+    if (!stillThere) {
+      setPendingId(undefined);
+      setAlgorithmModalOpen(false);
+    }
   }, [pendingId, presets, uploads]);
 
   const select = (id: string) => {
@@ -365,13 +387,32 @@ export function DatasetStartEmptyState({
             disabled={!pending}
             endIconName="arrow-right"
             onClick={() => {
-              if (pending) onApply(pending.id);
+              if (!pending) return;
+              if (algorithmLock) {
+                onApply(pending.id, algorithmLock);
+                return;
+              }
+              setAlgorithmModalOpen(true);
             }}
           >
             Use this dataset
           </Button>
         </div>
       </aside>
+
+      {!algorithmLock ? (
+        <SetupModal
+          open={algorithmModalOpen && Boolean(pending)}
+          dataset={pending}
+          primaryActionLabel="Continue"
+          onClose={() => setAlgorithmModalOpen(false)}
+          onSelectAlgorithm={(algorithm) => {
+            if (!pending) return;
+            setAlgorithmModalOpen(false);
+            onApply(pending.id, algorithm);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

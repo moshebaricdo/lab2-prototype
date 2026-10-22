@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { Alert, Button, Modal, Radio } from "@moshebari/cads-react";
 import type { IncomingCsv, MergeUploadedSheetsResult } from "../../../../lib/aiLab";
-import type { AiLabDataset } from "../../../../types/aiLab";
+import type { AiLabAlgorithmId, AiLabDataset } from "../../../../types/aiLab";
 import styles from "./DatasetPickerModal.module.scss";
 
 export interface DatasetPickerUpload {
@@ -19,9 +19,10 @@ export interface DatasetPickerController {
   presets: AiLabDataset[];
   uploads: DatasetPickerUpload[];
   template: DatasetTemplateFile;
+  algorithmLock?: AiLabAlgorithmId;
   onUpload: (files: IncomingCsv[]) => MergeUploadedSheetsResult;
   onRemoveUpload: (datasetId: string) => void;
-  onApply: (datasetId: string) => void;
+  onApply: (datasetId: string, algorithm?: AiLabAlgorithmId) => void;
 }
 
 interface DatasetPickerModalProps extends DatasetPickerController {
@@ -59,8 +60,10 @@ async function readCsvFiles(list: ArrayLike<File>): Promise<IncomingCsv[]> {
 }
 
 function sheetMeta(dataset: AiLabDataset): string {
-  const rows = `${dataset.rows.length} row${dataset.rows.length === 1 ? "" : "s"}`;
-  const columns = `${dataset.columns.length} column${dataset.columns.length === 1 ? "" : "s"}`;
+  const rowCount = dataset.rowCount ?? dataset.rows.length;
+  const colCount = dataset.columnCount ?? dataset.columns.length;
+  const rows = `${rowCount.toLocaleString()} row${rowCount === 1 ? "" : "s"}`;
+  const columns = `${colCount} column${colCount === 1 ? "" : "s"}`;
   return `${rows} · ${columns}`;
 }
 

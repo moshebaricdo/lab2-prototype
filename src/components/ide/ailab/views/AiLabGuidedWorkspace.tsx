@@ -17,16 +17,6 @@ import { AiLabStartOverDialog } from "./AiLabStartOverDialog";
 import { SetupModal } from "./SetupModal";
 import styles from "./AiLabGuidedWorkspace.module.scss";
 
-const ALGORITHM_NAMES = {
-  knn: "K-Nearest Neighbors",
-  decisionTree: "Decision Tree",
-} as const;
-
-const ALGORITHM_ICONS = {
-  knn: "chart-scatter",
-  decisionTree: "sitemap",
-} as const;
-
 const SECTION_TABS: Record<
   AiLabSection,
   { label: string; iconName: "table" | "sitemap" | "gears" | "flask" }
@@ -56,11 +46,8 @@ export function AiLabGuidedWorkspace({
   const needsDataset = lab.needsDataset;
   const needsAlgorithm =
     !lab.selectedAlgorithm && !lab.config.algorithmLock;
-  const needsSetup = needsDataset || needsAlgorithm;
   const awaitingUpload = Boolean(lab.config.emptyDataset) && needsDataset;
-  const canChangeSetup = datasetPicker
-    ? lab.canPickDataset && !awaitingUpload
-    : !awaitingUpload && (lab.canPickDataset || !lab.config.algorithmLock);
+  const canChangeAlgorithm = !lab.config.algorithmLock;
   const [setupOpen, setSetupOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -68,18 +55,13 @@ export function AiLabGuidedWorkspace({
     useState<ModelInspectorTab>("scorecard");
   const [confirmReset, setConfirmReset] = useState(false);
   const setupModalOpen =
-    !datasetPicker && !awaitingUpload && (needsSetup || setupOpen);
+    !awaitingUpload && !needsDataset && (needsAlgorithm || setupOpen);
   const canInspect = Boolean(
     lab.config.showModelDetails || lab.config.showExport,
   );
 
   const openSetup = () => {
-    if (datasetPicker) {
-      if (!lab.canPickDataset) return;
-      setPickerOpen(true);
-      return;
-    }
-    if (!canChangeSetup) return;
+    if (!canChangeAlgorithm || awaitingUpload || needsDataset) return;
     setSetupOpen(true);
   };
 
@@ -94,16 +76,6 @@ export function AiLabGuidedWorkspace({
     setInspectorTab(tab);
     setInspectorOpen(true);
   };
-
-  // The header chip owns the algorithm; the dataset chip in the Data header
-  // uses the same button pattern. Both open the same setup modal.
-  const canChangeAlgorithm = !lab.config.algorithmLock;
-  const algorithmLabel = lab.selectedAlgorithm
-    ? ALGORITHM_NAMES[lab.selectedAlgorithm]
-    : "Choose algorithm";
-  const algorithmIcon = lab.selectedAlgorithm
-    ? ALGORITHM_ICONS[lab.selectedAlgorithm]
-    : "sitemap";
 
   const returnToDatasetPicker = Boolean(
     datasetPicker && lab.canPickDataset && onReturnToDatasetStart && lab.datasetId,
@@ -165,8 +137,8 @@ export function AiLabGuidedWorkspace({
             )
           }
           right={
-            <div className={styles.headerActions}>
-              {showStartOver ? (
+            showStartOver ? (
+              <div className={styles.headerActions}>
                 <Button
                   variant="outlined"
                   color="secondary"
@@ -176,23 +148,8 @@ export function AiLabGuidedWorkspace({
                 >
                   Start over
                 </Button>
-              ) : null}
-              {canChangeAlgorithm ? (
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  size="extraSmall"
-                  className={styles.setupChip}
-                  startIconName={algorithmIcon}
-                  endIconName="right-left"
-                  aria-haspopup="dialog"
-                  aria-expanded={setupModalOpen}
-                  onClick={openSetup}
-                >
-                  {algorithmLabel}
-                </Button>
-              ) : null}
-            </div>
+              </div>
+            ) : undefined
           }
         />
       ) : null}
@@ -207,15 +164,24 @@ export function AiLabGuidedWorkspace({
           <GuidedExplorePanel
             lab={lab}
             onOpenModel={canInspect ? openInspector : undefined}
+            onOpenAlgorithmModal={canChangeAlgorithm ? openSetup : undefined}
             datasetStart={datasetPicker}
           />
         )}
       </div>
 
       <SetupModal
-        lab={lab}
         open={setupModalOpen}
-        required={needsSetup}
+        dataset={lab.config.dataset}
+        selectedAlgorithm={lab.selectedAlgorithm}
+        hasModel={Boolean(lab.model)}
+        required={needsAlgorithm}
+        onSelectAlgorithm={(algorithm) => {
+          if (algorithm !== lab.selectedAlgorithm) {
+            lab.selectAlgorithm(algorithm, { advance: false });
+          }
+          closeSetup();
+        }}
         onClose={closeSetup}
       />
 

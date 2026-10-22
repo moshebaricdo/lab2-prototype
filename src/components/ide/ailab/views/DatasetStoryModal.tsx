@@ -190,7 +190,7 @@ export function DatasetStoryModal({
       maxWidth={520}
       isDismissable={!required}
       hasSecondaryAction={false}
-      primaryActionLabel={primaryActionLabel ?? (required ? "Continue" : "Got it")}
+      primaryActionLabel={primaryActionLabel ?? (required ? "Continue" : "Done")}
       onPrimaryAction={onClose}
       onClose={required ? undefined : onClose}
     >

@@ -12,72 +12,177 @@
   color: var(--text-neutral-tertiary);
 }
 
-.section {
-  display: flex;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  min-inline-size: 0;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.legend {
-  @include type-overline-2;
-  padding: 0;
-  color: var(--text-neutral-quaternary);
-}
-
-.list,
-.algorithmRow {
+.grid {
   display: grid;
-  gap: 8px;
-}
-
-.algorithmRow {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
 }
 
-.choice {
+.tile {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  padding: 8px 10px;
-  border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-sm);
-  background: var(--background-neutral-primary);
-  cursor: pointer;
-}
-
-.choiceSelected {
-  border-color: var(--border-selected-primary);
-  background: color-mix(
-    in srgb,
-    var(--background-selected-primary) 14%,
-    var(--background-neutral-primary)
-  );
-}
-
-.choiceCopy {
-  display: flex;
+  width: 100%;
   min-width: 0;
   flex-direction: column;
-  gap: 2px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md);
+  background: var(--background-neutral-primary);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-colors), var(--transition-press);
 }
 
-.choiceTitle {
-  @include type-label-2;
+@media (hover: hover) and (pointer: fine) {
+  .tile:active {
+    transform: scale(0.98);
+    box-shadow: none;
+  }
+
+  .tile:active:not(.tileSelected) {
+    border-color: var(--border-neutral-secondary);
+  }
+
+  .tile:active:not(.tileSelected) .media {
+    border-bottom-color: var(--border-neutral-secondary);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile:active {
+    transform: none;
+  }
+}
+
+.tile:hover {
+  border-color: var(--border-neutral-secondary);
+}
+
+.tile:hover .media {
+  border-bottom-color: var(--border-neutral-secondary);
+}
+
+.tileSelected,
+.tileSelected:hover {
+  border-color: var(--border-selected-primary);
+}
+
+.tile:focus-visible,
+.tileSelected:focus-visible,
+.tile:hover:focus-visible,
+.tileSelected:hover:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--background-neutral-primary),
+    0 0 0 4px var(--border-focused-primary);
+}
+
+.media {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  container-type: size;
+}
+
+.tileSelected .media {
+  border-bottom-color: var(--border-selected-primary);
+}
+
+.cover {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  object-fit: cover;
+  background: var(--background-neutral-secondary);
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--background-neutral-tertiary);
+  color: var(--text-neutral-quaternary);
+  font-size: 42cqh;
+}
+
+.selectedWash {
+  position: absolute;
+  inset: 0;
+  background: var(--background-selected-primary);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.selectedMark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border-radius: var(--shape-round);
+  background: var(--background-selected-primary-inverse);
+  color: var(--text-selected-primary-inverse);
+  font-size: var(--text-heading-md);
+  pointer-events: none;
+}
+
+.caption {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+}
+
+.captionHeader {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.captionName {
+  @include type-body-3-semibold;
+  min-width: 0;
+  overflow: hidden;
   color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.choiceMeta {
-  @include type-body-3-regular;
+.tileSelected .captionName {
+  color: var(--text-selected-primary-inverse);
+}
+
+.suggestedTag {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.captionDescription {
+  @include type-body-4-regular;
   color: var(--text-neutral-tertiary);
 }
 
 @media (max-width: 560px) {
-  .algorithmRow {
+  .grid {
     grid-template-columns: 1fr;
   }
 }

@@ -1,13 +1,13 @@
 import {
   memo,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent,
   type ReactElement,
-  type ReactNode,
 } from "react";
 import {
   Alert,
@@ -15,7 +15,6 @@ import {
   Dropdown,
   IconTooltip,
   SegmentedButton,
-  TablePagination,
   Tooltip,
 } from "@moshebari/cads-react";
 import { FaIcon } from "../../../ui/icons/FaIcon";
@@ -31,7 +30,11 @@ import {
   numericalStats,
   uniqueValues,
 } from "../../../../lib/aiLab";
-import type { AiLabColumn, AiLabDataRow } from "../../../../types/aiLab";
+import type {
+  AiLabAlgorithmId,
+  AiLabColumn,
+  AiLabDataRow,
+} from "../../../../types/aiLab";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import { ColumnDistributionChart } from "./ColumnDistributionChart";
 import { DatasetFilterControl } from "./DatasetFilterControl";
@@ -87,6 +90,7 @@ function LockedLabelTooltip({
 interface DataStudioProps {
   lab: AiLabController;
   onOpenModel?: (tab: ModelInspectorTab) => void;
+  onOpenAlgorithmModal?: () => void;
   /** Empty sheet action. Upload level opens the dataset picker from here. */
   onChooseDataset?: () => void;
   /** Full-screen start when the lab has no sheet yet. */
@@ -96,6 +100,7 @@ interface DataStudioProps {
 export function DataStudio({
   lab,
   onOpenModel,
+  onOpenAlgorithmModal,
   onChooseDataset,
   datasetStart,
 }: DataStudioProps) {
@@ -158,7 +163,13 @@ export function DataStudio({
             <DataSpreadsheet key={lab.datasetId} lab={lab} />
           )}
         </div>
-        {showTrain ? <TrainRail lab={lab} onOpenModel={onOpenModel} /> : null}
+        {showTrain ? (
+          <TrainRail
+            lab={lab}
+            onOpenModel={onOpenModel}
+            onOpenAlgorithmModal={onOpenAlgorithmModal}
+          />
+        ) : null}
       </div>
       {showAnalysis && selected ? (
         <ColumnAnalysis
@@ -305,7 +316,11 @@ function DataHeader({
             <span className={styles.setMeta}>
               {`${lab.rows.length} rows`}
             </span>
-            <Tooltip title="About this data" placement="bottom">
+            <Tooltip
+              title="About this data"
+              placement="bottom"
+              open={storyOpen ? false : undefined}
+            >
               <Button
                 variant="text"
                 color="tertiary"
@@ -342,20 +357,6 @@ function DataHeader({
             Add row
           </Button>
         ) : null}
-        {lab.dataView === "cards" && !lab.config.hideCardLayoutToggle ? (
-          <SegmentedButton
-            size="extraSmall"
-            aria-label="Cards layout"
-            value={lab.cardLayout}
-            onChange={(value) =>
-              lab.setCardLayout(value as "catalog" | "carousel")
-            }
-            options={[
-              { value: "catalog", label: "Catalog" },
-              { value: "carousel", label: "Carousel" },
-            ]}
-          />
-        ) : null}
         <SegmentedButton
           size="extraSmall"
           aria-label="Dataset view"
@@ -372,16 +373,41 @@ function DataHeader({
   );
 }
 
+const ALGORITHM_NAMES: Record<AiLabAlgorithmId, string> = {
+  decisionTree: "Decision Tree",
+  knn: "K-Nearest Neighbors",
+};
+
+const ALGORITHM_ICONS: Record<AiLabAlgorithmId, "sitemap" | "chart-scatter"> = {
+  decisionTree: "sitemap",
+  knn: "chart-scatter",
+};
+
+const ALGORITHM_DROPDOWN_OPTIONS = [
+  { value: "decisionTree", label: "Decision Tree" },
+  { value: "knn", label: "K-Nearest Neighbors" },
+];
+
 function TrainRail({
   lab,
   onOpenModel,
+  onOpenAlgorithmModal,
 }: {
   lab: AiLabController;
   onOpenModel?: (tab: ModelInspectorTab) => void;
+  onOpenAlgorithmModal?: () => void;
 }) {
   const [isTraining, setIsTraining] = useState(false);
+  const algorithmMenu = useChecklistMenuWidth();
   const labelMenu = useChecklistMenuWidth();
   const featuresMenu = useChecklistMenuWidth();
+  const canChangeAlgorithm = !lab.config.algorithmLock;
+  const algorithmLabel = lab.selectedAlgorithm
+    ? ALGORITHM_NAMES[lab.selectedAlgorithm]
+    : "Choose an algorithm";
+  const algorithmIcon = lab.selectedAlgorithm
+    ? ALGORITHM_ICONS[lab.selectedAlgorithm]
+    : "sitemap";
   const columns = lab.config.dataset.columns;
   const usable = (columnId: string) =>
     columnUsable(lab.rows, columns, columnId);
@@ -487,10 +513,79 @@ function TrainRail({
 
   return (
     <aside className={styles.trainRail} aria-label="Train">
-      <PanelHeader label="TRAIN" />
+      <PanelHeader
+        label="TRAIN"
+        right={
+          <Tooltip title="Clear selections and model" placement="bottom">
+            <span>
+              <Button
+                variant="text"
+                color="tertiary"
+                size="extraSmall"
+                iconOnly
+                startIconName="eraser"
+                aria-label="Clear selections and model"
+                disabled={!lab.canClearTraining || isTraining}
+                onClick={() => lab.clearTraining()}
+              />
+            </span>
+          </Tooltip>
+        }
+      />
       <div className={styles.railBody}>
         <section className={styles.configCard}>
           <div className={styles.cardFields}>
+            {canChangeAlgorithm ? (
+              <div className={styles.fieldStack}>
+                <TrainFieldLabel
+                  label="Algorithm"
+                  tip="How your model learns patterns from the data"
+                />
+                {lab.config.algorithmSwitcher === "dropdown" ? (
+                  <div ref={algorithmMenu.ref}>
+                    <Dropdown
+                      role="input"
+                      size="small"
+                      color="secondary"
+                      width="full"
+                      menuWidth="100%"
+                      startIconName={algorithmIcon}
+                      placeholder="Choose an algorithm"
+                      value={lab.selectedAlgorithm ?? ""}
+                      options={ALGORITHM_DROPDOWN_OPTIONS}
+                      onChange={(value) => {
+                        const next = String(value) as AiLabAlgorithmId;
+                        if (next && next !== lab.selectedAlgorithm) {
+                          lab.selectAlgorithm(next, { advance: false });
+                        }
+                      }}
+                      onOpenChange={algorithmMenu.onOpenChange}
+                      aria-label="Algorithm"
+                    />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.algorithmTrigger}
+                    aria-label={`Algorithm: ${algorithmLabel}. Change algorithm`}
+                    aria-haspopup="dialog"
+                    onClick={onOpenAlgorithmModal}
+                  >
+                    <span className={styles.algorithmTriggerMain}>
+                      <span className={styles.algorithmTriggerIcon} aria-hidden>
+                        <FaIcon name={algorithmIcon} size="inherit" />
+                      </span>
+                      <span className={styles.algorithmTriggerLabel}>
+                        {algorithmLabel}
+                      </span>
+                    </span>
+                    <span className={styles.algorithmTriggerSwap} aria-hidden>
+                      <FaIcon name="right-left" size="inherit" />
+                    </span>
+                  </button>
+                )}
+              </div>
+            ) : null}
             {lab.config.hideLabelSelect ? null : (
               <div className={styles.fieldStack}>
                 <TrainFieldLabel
@@ -651,218 +746,49 @@ function TrainRail({
   );
 }
 
-function DataCards({ lab }: { lab: AiLabController }) {
-  const useCarousel =
-    lab.config.hideCardLayoutToggle || lab.cardLayout === "carousel";
-  return (
-    <div className={styles.cardsView}>
-      {useCarousel ? <CardCarousel lab={lab} /> : <CardCatalog lab={lab} />}
-    </div>
-  );
-}
-
-/** Must match `.cardStage` padding and `.cardGrid` gap / min column width. */
-const CARD_STAGE_PADDING = 8;
-const CARD_GAP = 8;
-const CARD_MIN_WIDTH = 220;
-/**
- * Page sizes are multiples of 12 and the grid only ever uses a column count
- * that divides 12, so every page ends on a complete row at any width.
- */
-const CARD_PAGE_SIZES = [12, 24, 48, 96, 192];
-const CARD_DEFAULT_PAGE_SIZE = 24;
-const CARD_COLUMN_COUNTS = [1, 2, 3, 4, 6, 12];
-
-function snapColumnCount(fit: number) {
-  let best = 1;
-  for (const count of CARD_COLUMN_COUNTS) {
-    if (count <= fit) best = count;
-  }
-  return best;
-}
-
-/**
- * Paginated card grid: 24 cards per page by default with a rows-per-page
- * dropdown in the sticky footer. The column count snaps to a divisor of 12
- * (see `CARD_COLUMN_COUNTS`) so no page ends on a ragged row. Datasets that
- * fit the smallest page size drop the dropdown for the compact pager.
- */
-function CardCatalog({ lab }: { lab: AiLabController }) {
-  const columns = lab.config.dataset.columns;
-  const rows = lab.rows;
-  const filteredIndexes = lab.filteredRowIndexes;
-  const total = filteredIndexes.length;
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [gridWidth, setGridWidth] = useState(0);
-  const [pageSize, setPageSize] = useState(CARD_DEFAULT_PAGE_SIZE);
-  const [page, setPage] = useState(0);
-  const compact = total <= CARD_PAGE_SIZES[0];
-
-  useEffect(() => {
-    setPage(0);
-  }, [lab.columnFilter]);
-
-  useEffect(() => {
-    const element = scrollRef.current;
-    if (!element) return;
-    const observer = new ResizeObserver(() => {
-      setGridWidth(element.clientWidth - CARD_STAGE_PADDING * 2);
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  const fit = Math.max(
-    1,
-    Math.floor((gridWidth + CARD_GAP) / (CARD_MIN_WIDTH + CARD_GAP)),
-  );
-  const perRow = snapColumnCount(fit);
-  const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  const currentPage = Math.min(page, pageCount - 1);
-  const firstIndex = currentPage * pageSize;
-  const lastIndex = Math.min(total, firstIndex + pageSize);
-
-  const goToPage = (next: number) => {
-    setPage(Math.min(Math.max(0, next), pageCount - 1));
-    scrollRef.current?.scrollTo({ top: 0 });
-  };
-
-  return (
-    <>
-      <div ref={scrollRef} className={styles.cardStage}>
-        {total === 0 && lab.columnFilter ? (
-          <div className={styles.emptyFilterStage}>
-            <p className={styles.emptyFilterText}>No cards match this filter.</p>
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="small"
-              onClick={() => lab.clearColumnFilter()}
-            >
-              Clear filter
-            </Button>
-          </div>
-        ) : (
-          <div
-            className={styles.cardGrid}
-            style={{ "--card-columns": perRow } as CSSProperties}
-          >
-            {filteredIndexes.slice(firstIndex, lastIndex).map((rowIndex) => {
-              const row = rows[rowIndex];
-              if (!row) return null;
-              return (
-                <RowCard
-                  key={rowIndex}
-                  index={rowIndex}
-                  row={row}
-                  columns={columns}
-                  labelColumnId={lab.labelColumn}
-                  featureColumnIds={lab.selectedFeatures}
-                  titleColumnId={lab.config.cardTitleColumn}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
-      <CardsFooter>
-        {compact ? (
-          <PagerNav
-            label={`${total === 0 ? 0 : firstIndex + 1}–${lastIndex} of ${total}`}
-            previousLabel="Go to previous page"
-            nextLabel="Go to next page"
-            canPrevious={currentPage > 0}
-            canNext={currentPage < pageCount - 1}
-            onPrevious={() => goToPage(currentPage - 1)}
-            onNext={() => goToPage(currentPage + 1)}
-          />
-        ) : (
-          <TablePagination
-            size="small"
-            aria-label="Card pages"
-            count={total}
-            page={currentPage}
-            rowsPerPage={pageSize}
-            rowsPerPageOptions={CARD_PAGE_SIZES}
-            labelRowsPerPage="Cards per page"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}–${to} of ${count}`
-            }
-            onPageChange={(_event, next) => goToPage(next)}
-            onRowsPerPageChange={(event) => {
-              const next = Number(event.target.value);
-              if (!Number.isFinite(next) || next <= 0) return;
-              // Keep the first visible card in view across the size change.
-              setPageSize(next);
-              setPage(Math.floor(firstIndex / next));
-              scrollRef.current?.scrollTo({ top: 0 });
-            }}
-          />
-        )}
-      </CardsFooter>
-    </>
-  );
-}
-
-/** How many cards peek out behind the active one in the carousel deck. */
+/* Shows the dataset one row at a time on a stack of cards, with a pager to
+ * step through the rows. Cards behind the current one are blank and peek out
+ * above it. */
 const DECK_PEEK = 2;
-/**
- * Slots rendered around the active card: the previous card (dealt off toward
- * the viewer, so Previous can slide it back), the active card, `DECK_PEEK`
- * visible cards behind it, and one hidden on-deck card so a flip always has
- * a card to fade in at the back.
- */
-const DECK_WINDOW_BEFORE = 1;
-const DECK_WINDOW_AFTER = DECK_PEEK + 1;
 
-/**
- * One row at a time, presented as the top card of a deck. Cards are keyed by
- * row index and positioned purely by their depth relative to the active
- * card, so a flip is one CSS transition across the whole stack: the top card
- * is dealt off, every card behind steps forward, and a new one fades in at
- * the back. The last row has nothing behind it, so it reads as the bottom of
- * the pile. Arrow keys flip when the stage has focus.
- */
-function CardCarousel({ lab }: { lab: AiLabController }) {
+function DataCards({ lab }: { lab: AiLabController }) {
   const rows = lab.rows;
   const filteredIndexes = lab.filteredRowIndexes;
   const total = filteredIndexes.length;
-  const index = Math.min(Math.max(0, lab.cardIndex), Math.max(0, total - 1));
-  const canPrevious = index > 0;
-  const canNext = index < total - 1;
-  const windowStart = Math.max(0, index - DECK_WINDOW_BEFORE);
-  const windowEnd = Math.min(total, index + DECK_WINDOW_AFTER + 1);
+  const rowIndex = Math.min(Math.max(0, lab.cardIndex), Math.max(0, total - 1));
 
-  const go = (next: number) => {
-    lab.setCardIndex(Math.min(Math.max(0, next), Math.max(0, total - 1)));
+  // Render the previous card so it can animate away, and one card past the
+  // peeking ones so it can fade in.
+  const windowStart = Math.max(0, rowIndex - 1);
+  const windowEnd = Math.min(total, rowIndex + DECK_PEEK + 2);
+
+  const goToRow = (index: number) => {
+    lab.setCardIndex(Math.min(Math.max(index, 0), Math.max(0, total - 1)));
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+  const onKeyDown = (event: KeyboardEvent) => {
+    const targetRow = {
+      ArrowRight: rowIndex + 1,
+      ArrowDown: rowIndex + 1,
+      ArrowLeft: rowIndex - 1,
+      ArrowUp: rowIndex - 1,
+      Home: 0,
+      End: total - 1,
+    }[event.key];
+    if (targetRow !== undefined) {
       event.preventDefault();
-      if (canNext) go(index + 1);
-    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-      event.preventDefault();
-      if (canPrevious) go(index - 1);
-    } else if (event.key === "Home") {
-      event.preventDefault();
-      go(0);
-    } else if (event.key === "End") {
-      event.preventDefault();
-      go(total - 1);
+      goToRow(targetRow);
     }
   };
 
   return (
-    <>
-      <div
-        className={styles.carouselStage}
-        role="group"
-        aria-roledescription="carousel"
-        aria-label="Dataset rows, one card at a time"
-        tabIndex={0}
-        onKeyDown={onKeyDown}
-      >
+    <div
+      className={styles.cardsView}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Dataset rows"
+    >
+      <div className={styles.carouselStage}>
         {total === 0 && lab.columnFilter ? (
           <div className={styles.emptyFilterStage}>
             <p className={styles.emptyFilterText}>No cards match this filter.</p>
@@ -879,33 +805,36 @@ function CardCarousel({ lab }: { lab: AiLabController }) {
           <div className={styles.deck}>
             {filteredIndexes
               .slice(windowStart, windowEnd)
-              .map((rowIndex, offset) => {
+              .map((datasetRow, offset) => {
                 const slotIndex = windowStart + offset;
-                const depth = slotIndex - index;
-                const row = rows[rowIndex];
+                const depth = slotIndex - rowIndex;
+                const row = rows[datasetRow];
                 if (!row) return null;
                 return (
                   <div
-                    key={rowIndex}
-                    className={`${styles.deckSlot} ${
-                      depth < 0 ? styles.deckSlotDealt : ""
-                    } ${depth > DECK_PEEK ? styles.deckSlotOnDeck : ""}`}
+                    key={datasetRow}
+                    className={[
+                      styles.deckSlot,
+                      depth < 0 ? styles.deckSlotDealt : "",
+                      depth > DECK_PEEK ? styles.deckSlotWaiting : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                     style={
                       { "--deck-depth": Math.max(0, depth) } as CSSProperties
                     }
-                    aria-hidden={depth !== 0}
+                    aria-hidden={depth === 0 ? undefined : true}
                   >
                     {depth > 0 ? (
                       <div className={styles.deckGhost} />
                     ) : (
-                      <RowCard
-                        index={rowIndex}
+                      <DatasetRowCard
+                        isCurrent={depth === 0}
+                        rowNumber={datasetRow + 1}
                         row={row}
                         columns={lab.config.dataset.columns}
                         labelColumnId={lab.labelColumn}
                         featureColumnIds={lab.selectedFeatures}
-                        titleColumnId={lab.config.cardTitleColumn}
-                        featured
                       />
                     )}
                   </div>
@@ -914,143 +843,155 @@ function CardCarousel({ lab }: { lab: AiLabController }) {
           </div>
         ) : null}
       </div>
-      <CardsFooter>
-        <PagerNav
-          label={`${lab.columnFilter ? "Card" : "Row"} ${total === 0 ? 0 : index + 1} of ${total}`}
-          previousLabel="Previous row"
-          nextLabel="Next row"
-          canPrevious={canPrevious}
-          canNext={canNext}
-          onPrevious={() => go(index - 1)}
-          onNext={() => go(index + 1)}
+      <nav className={styles.pager} aria-label="Card navigation">
+        <PagerButton
+          label="Previous row"
+          icon="chevron-left"
+          disabled={total === 0 || rowIndex === 0}
+          onClick={() => goToRow(rowIndex - 1)}
+          onKeyDown={onKeyDown}
         />
-      </CardsFooter>
-    </>
+        <span className={styles.pagerCounter} aria-live="polite">
+          {`${lab.columnFilter ? "Card" : "Row"} ${total === 0 ? 0 : rowIndex + 1} of ${total}`}
+        </span>
+        <PagerButton
+          label="Next row"
+          icon="chevron-right"
+          disabled={total === 0 || rowIndex === total - 1}
+          onClick={() => goToRow(rowIndex + 1)}
+          onKeyDown={onKeyDown}
+        />
+      </nav>
+    </div>
   );
 }
 
-/**
- * Sticky bar under the cards stage; hosts whichever pager the layout needs.
- * Matches the resource panel's Continue bar height so the two footers align.
- */
-function CardsFooter({ children }: { children: ReactNode }) {
-  return <div className={styles.cardsFooter}>{children}</div>;
-}
-
-/**
- * Compact pager: prev / counter / next, the same cluster `TablePagination`
- * renders minus the rows-per-page dropdown. Used by the carousel and by the
- * catalog when the dataset fits on one page.
- */
-function PagerNav({
+function PagerButton({
   label,
-  previousLabel,
-  nextLabel,
-  canPrevious,
-  canNext,
-  onPrevious,
-  onNext,
+  icon,
+  disabled,
+  onClick,
+  onKeyDown,
 }: {
   label: string;
-  previousLabel: string;
-  nextLabel: string;
-  canPrevious: boolean;
-  canNext: boolean;
-  onPrevious: () => void;
-  onNext: () => void;
+  icon: "chevron-left" | "chevron-right";
+  disabled: boolean;
+  onClick: () => void;
+  onKeyDown: (event: KeyboardEvent) => void;
 }) {
   return (
-    <nav className={styles.pagerNav} aria-label="Card navigation">
-      <Button
-        size="small"
-        variant="outlined"
-        color="secondary"
-        iconOnly
-        startIconName="chevron-left"
-        aria-label={previousLabel}
-        disabled={!canPrevious}
-        onClick={onPrevious}
-      />
-      <span className={styles.pagerCounter} aria-live="polite">
-        {label}
-      </span>
-      <Button
-        size="small"
-        variant="outlined"
-        color="secondary"
-        iconOnly
-        startIconName="chevron-right"
-        aria-label={nextLabel}
-        disabled={!canNext}
-        onClick={onNext}
-      />
-    </nav>
+    <Button
+      size="small"
+      variant="outlined"
+      color="secondary"
+      iconOnly
+      startIconName={icon}
+      aria-label={label}
+      aria-disabled={disabled}
+      className={disabled ? "Mui-disabled" : undefined}
+      onClick={disabled ? undefined : onClick}
+      onKeyDown={onKeyDown}
+    />
   );
 }
 
-const RowCard = memo(function RowCard({
-  index,
+const DatasetRowCard = memo(function DatasetRowCard({
+  isCurrent,
+  rowNumber,
   row,
   columns,
   labelColumnId,
   featureColumnIds,
-  titleColumnId,
-  featured = false,
 }: {
-  index: number;
+  isCurrent: boolean;
+  rowNumber: number;
   row: AiLabDataRow;
   columns: AiLabColumn[];
   labelColumnId?: string;
   featureColumnIds?: string[];
-  titleColumnId?: string;
-  featured?: boolean;
 }) {
-  const titleValue = titleColumnId
-    ? formatCell(row[titleColumnId])
-    : undefined;
-  const heading = titleValue || `Row ${index + 1}`;
+  const titleId = useId();
+  const detailsRef = useRef<HTMLDListElement>(null);
+
+  // Coming back to a row would otherwise keep where its list was scrolled.
+  useEffect(() => {
+    if (isCurrent && detailsRef.current) {
+      detailsRef.current.scrollTop = 0;
+    }
+  }, [isCurrent]);
+
+  // Fade the list's top and bottom edges while there is more to scroll to,
+  // and keep the fades clear of the scrollbar.
+  useEffect(() => {
+    const el = detailsRef.current;
+    const list = el?.parentElement;
+    if (!el || !list) {
+      return;
+    }
+    const update = () => {
+      // Written to the DOM rather than state, so scrolling doesn't re-render.
+      const scrollbar = el.offsetWidth - el.clientWidth;
+      list.style.setProperty("--scrollbar-width", `${scrollbar}px`);
+      // Allow 1px for subpixel scroll positions.
+      list.toggleAttribute("data-fade-top", el.scrollTop > 1);
+      list.toggleAttribute(
+        "data-fade-bottom",
+        el.scrollHeight - el.scrollTop - el.clientHeight > 1,
+      );
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    el.addEventListener("scroll", update);
+    return () => {
+      observer.disconnect();
+      el.removeEventListener("scroll", update);
+    };
+  }, []);
+
   return (
-    <article
-      className={`${styles.card} ${featured ? styles.cardFeatured : ""}`}
-      aria-label={`Row ${index + 1}${titleValue ? `, ${titleValue}` : ""}`}
+    <div
+      className={styles.card}
+      role="group"
+      aria-labelledby={titleId}
+      aria-roledescription="slide"
     >
-      <p className={styles.cardHeading}>{heading}</p>
-      <dl className={styles.cardBody}>
-        {columns.map((column) => {
-          if (column.id === titleColumnId) return null;
-          const value = formatCell(row[column.id]);
-          const isLabel = labelColumnId === column.id;
-          const isFeature = featureColumnIds?.includes(column.id);
-          return (
-            <div key={column.id} className={styles.cardRow}>
-              <dt
-                className={[
-                  styles.cardLabel,
-                  isLabel || isFeature ? styles.cardLabelRole : "",
-                  isLabel ? styles.cardLabelLabel : "",
-                  isFeature ? styles.cardLabelFeature : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                {column.name}
-                {isLabel || isFeature ? (
-                  <span
-                    className={`${styles.roleDot} ${
-                      isLabel ? styles.roleDotLabel : styles.roleDotFeature
-                    }`}
-                    aria-hidden
-                  />
-                ) : null}
-              </dt>
-              <dd className={styles.cardValue} title={featured ? undefined : value}>
-                {value}
-              </dd>
-            </div>
-          );
-        })}
-      </dl>
-    </article>
+      <h3 id={titleId} className={styles.cardTitle}>
+        {`Row ${rowNumber}`}
+      </h3>
+      <div className={styles.cardList}>
+        <dl
+          ref={detailsRef}
+          className={styles.cardDetails}
+          tabIndex={isCurrent ? 0 : -1}
+        >
+          {columns.map((column) => {
+            const value = formatCell(row[column.id]);
+            const role =
+              labelColumnId === column.id
+                ? "label"
+                : featureColumnIds?.includes(column.id)
+                  ? "feature"
+                  : undefined;
+            return (
+              <div key={column.id} className={styles.cardRow}>
+                <dt className={styles.cardLabel} data-role={role}>
+                  {column.name}
+                  {role ? (
+                    <span className={styles.visuallyHidden}>
+                      {role === "label"
+                        ? ", used as the label"
+                        : ", used as a feature"}
+                    </span>
+                  ) : null}
+                </dt>
+                <dd className={styles.cardValue}>{value}</dd>
+              </div>
+            );
+          })}
+        </dl>
+      </div>
+    </div>
   );
 });
 

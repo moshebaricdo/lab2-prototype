@@ -40,11 +40,13 @@ import {
   labelColumnDevOptions,
   mergeAiLabDevConfig,
   mergeUploadedSheets,
+  readActiveAlgorithm,
   readActiveDatasetId,
   readUploadedSheets,
   retainUploadedSheets,
   sheetsToDatasets,
   uniqueDevCatalog,
+  writeActiveAlgorithm,
   writeActiveDatasetId,
   writeUploadedSheets,
   type IncomingCsv,
@@ -58,7 +60,11 @@ import {
   aiLabScaleLevelLinks,
   aiLabUploadLevelLinks,
 } from "../levelTypeLinks";
-import type { AiLabLevelConfig, AiLabSection } from "../../types/aiLab";
+import type {
+  AiLabAlgorithmId,
+  AiLabLevelConfig,
+  AiLabSection,
+} from "../../types/aiLab";
 
 interface AiLabLevelPageProps {
   currentLevelPath?: string;
@@ -90,7 +96,7 @@ function aiLabControl<T extends DevPanelField>(field: T): T {
 function aiLabDevFields(
   catalog: ReturnType<typeof uniqueDevCatalog>,
   labelDataset: (typeof catalog)[number],
-  options: { fixedDecisionTree?: boolean; labelColumnId?: string } = {},
+  options: { showRandomTestRows?: boolean; labelColumnId?: string } = {},
 ): DevPanelField[] {
   const featureOptions = featureColumnDevOptions(
     labelDataset,
@@ -171,7 +177,7 @@ function aiLabDevFields(
     }),
   ];
 
-  if (options.fixedDecisionTree) {
+  if (options.showRandomTestRows) {
     fields.push(
       aiLabControl({
         key: "randomizeTestData",
@@ -184,63 +190,77 @@ function aiLabDevFields(
     );
   }
 
-  if (!options.fixedDecisionTree) {
-    fields.push(
-      aiLabControl({
-        key: "algorithmLock",
-        label: "Pre-set algorithm",
-        description:
-          "Lock KNN or Decision Tree. User chooses keeps the setup picker.",
-        type: "select",
-        group: "Train",
-        options: [
-          { label: "User chooses", value: "none" },
-          { label: "K-Nearest Neighbors", value: "knn" },
-          { label: "Decision Tree", value: "decisionTree" },
-        ],
-      }),
-      aiLabControl({
-        key: "trainingAnimation",
-        label: "Training animation",
-        description:
-          "What the Train model modal plays for a decision tree. Sort and quiz (default) shows every row as a dot sorted into piles by the tree's questions (Training), then a few rows from the sheet trace down the tree and get guessed (Testing) before the score. Tree growth is the older fallback: the finished tree drawn depth by depth.",
-        type: "select",
-        group: "Train",
-        options: [
-          { label: "Sort and quiz (training → testing)", value: "rows" },
-          { label: "Tree growth (fallback)", value: "tree" },
-        ],
-        visibleWhen: (values) =>
-          values.workspaceTabs !== "test" &&
-          values.algorithmLock !== "knn" &&
-          !values.hideTrainPanel,
-      }),
-      aiLabControl({
-        key: "bundleWideSplits",
-        label: "Bundle wide tree splits",
-        description:
-          "When a decision splits 7+ ways, leaves that predict the same label fold into one bundle per outcome (click to open). Off leaves the wide split as-is.",
-        type: "boolean",
-        group: "Testing",
-        visibleWhen: (values) =>
-          values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
-      }),
-      aiLabControl({
-        key: "treeNodeDetail",
-        label: "Tree node details",
-        description:
-          "What clicking a node on the Testing diagram does. Rows modal (default) keeps nodes compact, counts correct and incorrect rows on each leaf, and opens a modal of the sheet rows that reached the node. Expand in place grows the node into a detail card.",
-        type: "select",
-        group: "Testing",
-        options: [
-          { label: "Rows modal", value: "modal" },
-          { label: "Expand in place", value: "inline" },
-        ],
-        visibleWhen: (values) =>
-          values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
-      }),
-    );
-  }
+  fields.push(
+    aiLabControl({
+      key: "algorithmLock",
+      label: "Pre-set algorithm",
+      description:
+        "Lock KNN or Decision Tree. User chooses opens the algorithm picker modal after choosing a dataset.",
+      type: "select",
+      group: "Train",
+      options: [
+        { label: "User chooses", value: "none" },
+        { label: "K-Nearest Neighbors", value: "knn" },
+        { label: "Decision Tree", value: "decisionTree" },
+      ],
+    }),
+    aiLabControl({
+      key: "algorithmSwitcher",
+      label: "Algorithm switcher",
+      description:
+        "How the student switches algorithms in the Train panel when Pre-set algorithm is User chooses: open the cover-card modal, or switch directly from a dropdown field.",
+      type: "select",
+      group: "Train",
+      options: [
+        { label: "Cover-card modal", value: "modal" },
+        { label: "Dropdown field", value: "dropdown" },
+      ],
+      visibleWhen: (values) =>
+        values.workspaceTabs !== "test" &&
+        (values.algorithmLock === "none" || !values.algorithmLock) &&
+        !values.hideTrainPanel,
+    }),
+    aiLabControl({
+      key: "trainingAnimation",
+      label: "Training animation",
+      description:
+        "What the Train model modal plays for a decision tree. Sort and quiz (default) shows every row as a dot sorted into piles by the tree's questions (Training), then a few rows from the sheet trace down the tree and get guessed (Testing) before the score. Tree growth is the older fallback: the finished tree drawn depth by depth.",
+      type: "select",
+      group: "Train",
+      options: [
+        { label: "Sort and quiz (training → testing)", value: "rows" },
+        { label: "Tree growth (fallback)", value: "tree" },
+      ],
+      visibleWhen: (values) =>
+        values.workspaceTabs !== "test" &&
+        values.algorithmLock !== "knn" &&
+        !values.hideTrainPanel,
+    }),
+    aiLabControl({
+      key: "bundleWideSplits",
+      label: "Bundle wide tree splits",
+      description:
+        "When a decision splits 7+ ways, leaves that predict the same label fold into one bundle per outcome (click to open). Off leaves the wide split as-is.",
+      type: "boolean",
+      group: "Testing",
+      visibleWhen: (values) =>
+        values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
+    }),
+    aiLabControl({
+      key: "treeNodeDetail",
+      label: "Tree node details",
+      description:
+        "What clicking a node on the Testing diagram does. Rows modal (default) keeps nodes compact, counts correct and incorrect rows on each leaf, and opens a modal of the sheet rows that reached the node. Expand in place grows the node into a detail card.",
+      type: "select",
+      group: "Testing",
+      options: [
+        { label: "Rows modal", value: "modal" },
+        { label: "Expand in place", value: "inline" },
+      ],
+      visibleWhen: (values) =>
+        values.workspaceTabs !== "dataset" && values.algorithmLock !== "knn",
+    }),
+  );
 
   fields.push(
     {
@@ -284,7 +304,7 @@ const uploadDatasetsDevField: DevPanelField = {
   key: UPLOADED_DATASETS_DEV_KEY,
   label: "Add a dataset",
   description:
-    "Same CSV list as Choose a dataset. Files stay in session storage for this tab. Download the template for the column layout. A few hundred rows each.",
+    "Same CSV list as Choose a dataset. Files stay in session storage for this tab. Download the template for the column layout.",
   type: "file",
   accept: ".csv,text/csv",
   multiple: true,
@@ -293,7 +313,7 @@ const uploadDatasetsDevField: DevPanelField = {
   lockedShare: true,
   buttonLabel: "Browse",
   maxFiles: 20,
-  maxTotalSizeBytes: 1_500_000,
+  maxTotalSizeBytes: 15_000_000,
   removable: true,
   dropzone: true,
   template: {
@@ -327,11 +347,14 @@ export function AiLabLevelPage({
   const navigate = useNavigate();
   const sessionDatasets = Boolean(config.sessionDatasets);
   const [uploadedSheets, setUploadedSheets] = useState<UploadedSheet[]>(() =>
-    config.sessionDatasets ? readUploadedSheets() : [],
+    readUploadedSheets(),
   );
   const [studentDatasetId, setStudentDatasetId] = useState<string | undefined>(
     () => (config.sessionDatasets ? readActiveDatasetId() : undefined),
   );
+  const [studentAlgorithm, setStudentAlgorithm] = useState<
+    AiLabAlgorithmId | undefined
+  >(() => (config.sessionDatasets ? readActiveAlgorithm() : undefined));
   const uploadedDatasets = useMemo(
     () => sheetsToDatasets(uploadedSheets),
     [uploadedSheets],
@@ -344,7 +367,7 @@ export function AiLabLevelPage({
     () =>
       sessionDatasets
         ? pickerCatalog.catalog
-        : uniqueDevCatalog(config.dataset, aiLabStudioCatalog),
+        : uniqueDevCatalog(config.dataset, pickerCatalog.catalog),
     [sessionDatasets, pickerCatalog.catalog, config.dataset],
   );
   const {
@@ -369,6 +392,7 @@ export function AiLabLevelPage({
   });
   const resolved = overrideResult.props;
   const algorithmLock = String(resolved.algorithmLock);
+  const algorithmSwitcher = String(resolved.algorithmSwitcher);
   const presetDataset = String(resolved.presetDataset);
   const presetLabelColumn = String(resolved.presetLabelColumn);
   const cardTitleColumn = String(resolved.cardTitleColumn);
@@ -384,34 +408,33 @@ export function AiLabLevelPage({
     : [];
   const presetMatches = Boolean(findCatalogDataset(catalog, presetDataset));
   const effectivePreset =
-    sessionDatasets &&
     !(presetMatches && presetDataset !== AI_LAB_STUDENT_CHOICE)
       ? AI_LAB_STUDENT_CHOICE
       : presetDataset;
-  const sessionLocked = sessionDatasets && effectivePreset !== AI_LAB_STUDENT_CHOICE;
+  const datasetLocked =
+    effectivePreset !== AI_LAB_STUDENT_CHOICE || workspaceTabs === "test";
+  const useDatasetPicker = !datasetLocked;
   const labCatalog = useMemo(
     () =>
-      sessionDatasets
+      useDatasetPicker || sessionDatasets
         ? labDatasetCatalog(pickerCatalog, [
-            sessionLocked ? effectivePreset : undefined,
+            datasetLocked ? effectivePreset : undefined,
             studentDatasetId,
           ])
         : catalog,
     [
+      useDatasetPicker,
       sessionDatasets,
       pickerCatalog,
-      sessionLocked,
+      datasetLocked,
       effectivePreset,
       studentDatasetId,
       catalog,
     ],
   );
-  const activeDataset = sessionDatasets
-    ? findCatalogDataset(
-        labCatalog,
-        sessionLocked ? effectivePreset : studentDatasetId,
-      )
-    : undefined;
+  const activeDataset = useDatasetPicker
+    ? findCatalogDataset(labCatalog, studentDatasetId)
+    : findCatalogDataset(labCatalog, effectivePreset);
   const labelDataset =
     activeDataset ??
     (sessionDatasets
@@ -433,10 +456,15 @@ export function AiLabLevelPage({
     writeActiveDatasetId(studentDatasetId);
   }, [sessionDatasets, studentDatasetId]);
   useEffect(() => {
-    if (!sessionDatasets || !studentDatasetId) return;
+    if (!sessionDatasets) return;
+    writeActiveAlgorithm(studentAlgorithm);
+  }, [sessionDatasets, studentAlgorithm]);
+  useEffect(() => {
+    if (!studentDatasetId) return;
     if (findCatalogDataset(catalog, studentDatasetId)) return;
     setStudentDatasetId(undefined);
-  }, [sessionDatasets, catalog, studentDatasetId]);
+    setStudentAlgorithm(undefined);
+  }, [catalog, studentDatasetId]);
   useEffect(() => {
     if (!sessionDatasets) return;
     if (presetDataset === AI_LAB_STUDENT_CHOICE || presetMatches) return;
@@ -447,21 +475,30 @@ export function AiLabLevelPage({
     presetMatches,
     overrideResult.resetKey,
   ]);
+  const defaultEmptyDataset = useMemo(
+    () =>
+      config.emptyDataset ?? {
+        title: "No data to show",
+        copy: "Choose a sample dataset, or upload a CSV.",
+      },
+    [config.emptyDataset],
+  );
   // Keyed on primitives so the config (and everything `useAiLabState`
   // derives from it) keeps its identity across unrelated page re-renders.
   const levelConfig = useMemo(() => {
     const merged = mergeAiLabDevConfig(
-      sessionDatasets
+      useDatasetPicker || sessionDatasets
         ? {
             ...config,
             dataset: activeDataset ?? config.dataset,
             availableDatasets: labCatalog,
             datasetRevision,
-            emptyDataset: activeDataset ? undefined : config.emptyDataset,
+            emptyDataset: activeDataset ? undefined : defaultEmptyDataset,
           }
         : config,
       {
-        algorithmLock: sessionDatasets ? "decisionTree" : algorithmLock,
+        algorithmLock,
+        algorithmSwitcher,
         presetDataset: effectivePreset,
         presetLabelColumn,
         presetFeatures,
@@ -469,18 +506,18 @@ export function AiLabLevelPage({
         workspaceTabs,
         hideTrainPanel,
         defaultDataView,
-        bundleWideSplits: sessionDatasets ? false : bundleWideSplits,
-        trainingAnimation: sessionDatasets ? "rows" : trainingAnimation,
-        treeNodeDetail: sessionDatasets ? "modal" : treeNodeDetail,
+        bundleWideSplits,
+        trainingAnimation,
+        treeNodeDetail,
         randomizeTestData,
       },
-      sessionDatasets ? labCatalog : catalog,
+      useDatasetPicker || sessionDatasets ? labCatalog : catalog,
     );
-    if (!sessionDatasets || sessionLocked) return merged;
+    if (!useDatasetPicker) return merged;
     const ready = Boolean(
       activeDataset &&
-        activeDataset.rows.length > 0 &&
-        activeDataset.columns.length >= 2,
+        (activeDataset.rowCount ?? activeDataset.rows.length) > 0 &&
+        (activeDataset.columnCount ?? activeDataset.columns.length) >= 2,
     );
     return {
       ...merged,
@@ -488,17 +525,21 @@ export function AiLabLevelPage({
       availableDatasets: labCatalog,
       lockDataset: false,
       requireDatasetChoice: !ready,
-      emptyDataset: ready ? undefined : config.emptyDataset,
+      emptyDataset: ready ? undefined : defaultEmptyDataset,
+      initialAlgorithm: merged.algorithmLock ?? studentAlgorithm,
     };
   }, [
+    useDatasetPicker,
     sessionDatasets,
-    sessionLocked,
     config,
     activeDataset,
     labCatalog,
     catalog,
     datasetRevision,
+    defaultEmptyDataset,
     algorithmLock,
+    algorithmSwitcher,
+    studentAlgorithm,
     effectivePreset,
     presetLabelColumn,
     presetFeatures,
@@ -512,6 +553,17 @@ export function AiLabLevelPage({
     randomizeTestData,
   ]);
   const lab = useAiLabState(levelConfig);
+  useEffect(() => {
+    if (!useDatasetPicker || levelConfig.algorithmLock) return;
+    if (lab.selectedAlgorithm && lab.selectedAlgorithm !== studentAlgorithm) {
+      setStudentAlgorithm(lab.selectedAlgorithm);
+    }
+  }, [
+    useDatasetPicker,
+    levelConfig.algorithmLock,
+    lab.selectedAlgorithm,
+    studentAlgorithm,
+  ]);
   const levelIndex =
     progressLevelIndex ?? currentLevelIndex(currentLevelPath, levelLinks);
   const progressLinks = levelLinks;
@@ -551,7 +603,7 @@ export function AiLabLevelPage({
     const labelColumnId =
       presetLabelColumn !== AI_LAB_STUDENT_CHOICE ? presetLabelColumn : undefined;
     const fields = aiLabDevFields(catalog, labelDataset, {
-      fixedDecisionTree: sessionDatasets,
+      showRandomTestRows: sessionDatasets,
       labelColumnId,
     });
     return sessionDatasets ? [uploadDatasetsDevField, ...fields] : fields;
@@ -565,6 +617,7 @@ export function AiLabLevelPage({
       if (!active) return active;
       if (next.some((sheet) => sheet.id === active)) return active;
       if (sessionRef.current.sampleIds.has(active)) return active;
+      setStudentAlgorithm(undefined);
       return undefined;
     });
   };
@@ -679,7 +732,7 @@ export function AiLabLevelPage({
                 return;
               }
               if (files.length === 0) return;
-              const result = commitUploads(files, !sessionLocked);
+              const result = commitUploads(files, !datasetLocked && Boolean(studentDatasetId));
               if (result.error) throw new Error(result.error);
             }
           : undefined,
@@ -698,7 +751,7 @@ export function AiLabLevelPage({
         <AiLabGuidedWorkspace
           lab={lab}
           datasetPicker={
-            sessionDatasets
+            useDatasetPicker
               ? {
                   presets: pickerCatalog.samples,
                   uploads: uploadedSheets.flatMap((sheet) => {
@@ -714,15 +767,26 @@ export function AiLabLevelPage({
                     content: datasetTemplateCsv,
                     label: "Download template",
                   },
+                  algorithmLock: levelConfig.algorithmLock,
                   onUpload: (files) => commitUploads(files, false),
                   onRemoveUpload: removeUploadById,
-                  onApply: (datasetId) => setStudentDatasetId(datasetId),
+                  onApply: (datasetId, algorithm) => {
+                    const resolvedAlgorithm =
+                      levelConfig.algorithmLock ?? algorithm;
+                    setStudentDatasetId(datasetId);
+                    setStudentAlgorithm(resolvedAlgorithm);
+                    lab.selectDataset(datasetId, resolvedAlgorithm);
+                  },
                 }
               : undefined
           }
           onReturnToDatasetStart={
-            sessionDatasets && !sessionLocked
-              ? () => setStudentDatasetId(undefined)
+            useDatasetPicker
+              ? () => {
+                  setStudentDatasetId(undefined);
+                  setStudentAlgorithm(undefined);
+                  lab.startOver();
+                }
               : undefined
           }
         />
