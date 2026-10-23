@@ -80,27 +80,7 @@
   user-select: none;
   transition:
     border-color 0.2s ease,
-    background 0.2s ease,
-    opacity 0.2s ease;
-
-  /* Bleed hover/hit zones halfway into the 10px column gap so adjacent cards meet seamlessly. */
-  &::before {
-    content: "";
-    inset: -6px -1px;
-    position: absolute;
-  }
-
-  &:first-child::before {
-    top: -1px;
-  }
-
-  &:last-child::before {
-    bottom: -1px;
-  }
-}
-
-.cardDimmed {
-  opacity: 0.4;
+    background 0.2s ease;
 }
 
 /* Unmatched hover: secondary border + tertiary knob (tile hover drives the knob). */
@@ -179,12 +159,12 @@
 
 .promptCard {
   align-items: center;
-  padding: 10px 16px 10px 20px;
+  padding: 10px 16px 10px 26px;
 }
 
 .termCard {
   align-items: center;
-  padding: 10px 16px;
+  padding: 10px 22px 10px 16px;
 }
 
 .termCardAlignStart {
@@ -365,24 +345,6 @@
   margin-top: 6px;
 }
 
-/* ── Feedback (icon only, no chrome) ──────────────────────────── */
-
-.feedbackBadge {
-  align-self: center;
-  display: inline-flex;
-  flex-shrink: 0;
-  line-height: 0;
-  margin-left: auto;
-}
-
-.feedbackBadgeCorrect {
-  color: var(--text-success-primary);
-}
-
-.feedbackBadgeIncorrect {
-  color: var(--text-error-primary);
-}
-
 /* ── Connector dots ───────────────────────────────────────────── */
 
 .visuallyHidden {
@@ -399,30 +361,37 @@
 }
 
 .connectorDot {
+  @include type-label-3;
+  align-items: center;
   background: var(--background-neutral-primary);
   border: 2px solid var(--border-neutral-secondary);
   border-radius: var(--shape-round, 999px);
+  color: var(--text-neutral-primary);
   cursor: crosshair;
-  display: inline-block;
+  display: inline-flex;
   flex-shrink: 0;
-  height: 15px;
+  height: 24px;
+  justify-content: center;
+  /* Glyph sits in the circle; the label leading would overflow it. */
+  line-height: 1;
   padding: 0;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   transition:
     border-color 0.15s ease,
-    background 0.15s ease;
-  width: 15px;
+    background 0.15s ease,
+    color 0.15s ease;
+  width: 24px;
   z-index: 3;
 }
 
 .connectorDotRight {
-  right: -8px;
+  right: -12px;
 }
 
 .connectorDotLeft {
-  left: -8px;
+  left: -12px;
 }
 
 .connectorDotLocked {
@@ -434,6 +403,7 @@
 .connectorDotSelected {
   background: var(--background-selected-primary);
   border-color: var(--background-selected-primary);
+  color: var(--text-selected-primary);
 }
 
 .connectorDotDragHover:not(.connectorDotActive):not(.connectorDotCorrect):not(
@@ -447,11 +417,13 @@
 .connectorDotRevealed {
   background: var(--background-success-primary);
   border-color: var(--background-success-primary);
+  color: var(--text-neutral-white-fixed);
 }
 
 .connectorDotIncorrect {
   background: var(--background-error-primary);
   border-color: var(--background-error-primary);
+  color: var(--text-neutral-white-fixed);
 }
 
 /* ── SVG paths ────────────────────────────────────────────────── */
@@ -460,13 +432,7 @@
   fill: none;
   stroke-linecap: round;
   stroke-width: 2;
-  transition:
-    stroke 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.connectorPathDimmed {
-  opacity: 0.2;
+  transition: stroke 0.2s ease;
 }
 
 .connectorPathCorrect {
@@ -475,6 +441,7 @@
 
 .connectorPathIncorrect {
   stroke: var(--border-error-primary);
+  stroke-dasharray: 4 5;
 }
 
 .connectorPathRevealed {
