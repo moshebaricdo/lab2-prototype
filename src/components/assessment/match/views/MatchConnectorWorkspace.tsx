@@ -75,8 +75,8 @@ function buildCurvePath(
 
 const BRAND_STROKE = "var(--border-selected-primary)";
 
-/** Room around the two columns where a drag or click-follow line stays alive. */
-const COLUMN_DRAG_PADDING_PX = 32;
+/** The connector is drawn only this far past the columns. The pairing itself continues beyond it. */
+const COLUMN_DRAG_PADDING_PX = 24;
 
 /** Stable pair mark for a term, in column order: A, B, … Z, then AA. */
 function pairLetter(index: number): string {
@@ -695,42 +695,37 @@ export function MatchConnectorWorkspace({
   const showInlineFeedback =
     isSubmittedForFeedback && !replaceWithKey;
 
-  const pointerInsideColumns = useCallback((clientX: number, clientY: number) => {
-    const columns = columnsRef.current;
-    if (!columns) return false;
-    const rect = columns.getBoundingClientRect();
-    return (
-      clientX >= rect.left - COLUMN_DRAG_PADDING_PX &&
-      clientX <= rect.right + COLUMN_DRAG_PADDING_PX &&
-      clientY >= rect.top - COLUMN_DRAG_PADDING_PX &&
-      clientY <= rect.bottom + COLUMN_DRAG_PADDING_PX
-    );
-  }, []);
+  /** Board-local point for the connector end. Past the padded columns, the line stops at that edge. */
+  const clampPointerToColumnPadding = useCallback(
+    (clientX: number, clientY: number) => {
+      const board = boardRef.current;
+      const columns = columnsRef.current;
+      if (!board || !columns) return null;
+      const boardRect = board.getBoundingClientRect();
+      const columnsRect = columns.getBoundingClientRect();
+      const minX = columnsRect.left - boardRect.left - COLUMN_DRAG_PADDING_PX;
+      const maxX = columnsRect.right - boardRect.left + COLUMN_DRAG_PADDING_PX;
+      const minY = columnsRect.top - boardRect.top - COLUMN_DRAG_PADDING_PX;
+      const maxY = columnsRect.bottom - boardRect.top + COLUMN_DRAG_PADDING_PX;
+      return {
+        x: Math.min(maxX, Math.max(minX, clientX - boardRect.left)),
+        y: Math.min(maxY, Math.max(minY, clientY - boardRect.top)),
+      };
+    },
+    [],
+  );
 
-  /* Click-to-pair: the connector follows the pointer until it leaves the padded column area. */
+  /* Click-to-pair: the connector follows the pointer, clipped to the padded columns. */
   useEffect(() => {
     if (!selectedCard || interactionLocked) {
       setFollowPoint(null);
       return;
     }
-    const cancelFollow = () => {
-      setSelectedCard(null);
-      setFollowPoint(null);
-      setA11yStatus("Selection cleared.");
-    };
     const onMove = (event: PointerEvent) => {
       if (activeDragRef.current) return;
-      if (!pointerInsideColumns(event.clientX, event.clientY)) {
-        cancelFollow();
-        return;
-      }
-      const board = boardRef.current;
-      if (!board) return;
-      const rect = board.getBoundingClientRect();
-      setFollowPoint({
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-      });
+      const point = clampPointerToColumnPadding(event.clientX, event.clientY);
+      if (!point) return;
+      setFollowPoint(point);
     };
     const onDown = (event: PointerEvent) => {
       if (event.button !== 0) return;
@@ -739,19 +734,13 @@ export function MatchConnectorWorkspace({
       setSelectedCard(null);
       setA11yStatus("Selection cleared.");
     };
-    const onLeaveWindow = (event: PointerEvent) => {
-      if (event.relatedTarget) return;
-      cancelFollow();
-    };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointerout", onLeaveWindow);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointerout", onLeaveWindow);
     };
-  }, [selectedCard, interactionLocked, pointerInsideColumns]);
+  }, [selectedCard, interactionLocked, clampPointerToColumnPadding]);
 
   const displayAssignments = useMemo(() => {
     if (replaceWithKey) {
@@ -1143,21 +1132,9 @@ export function MatchConnectorWorkspace({
 
       const onMove = (e: PointerEvent) => {
         didDragRef.current = true;
-        const board = boardRef.current;
-        if (!board) return;
-        if (!pointerInsideColumns(e.clientX, e.clientY)) {
-          teardown();
-          setA11yStatus("Selection cleared.");
-          window.setTimeout(() => {
-            didDragRef.current = false;
-          }, 0);
-          return;
-        }
-        const rect = board.getBoundingClientRect();
-        setDragPoint({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-        });
+        const point = clampPointerToColumnPadding(e.clientX, e.clientY);
+        if (!point) return;
+        setDragPoint(point);
 
         const el = document.elementFromPoint(e.clientX, e.clientY);
         const card = el?.closest<HTMLElement>("[data-match-card='true']");
@@ -1203,8 +1180,7 @@ export function MatchConnectorWorkspace({
 
       const onUp = (e: PointerEvent) => {
         const drag = activeDragRef.current;
-        const inside = pointerInsideColumns(e.clientX, e.clientY);
-        if (drag && inside) {
+        if (drag) {
           try {
             boardRef.current?.releasePointerCapture(pointerId);
           } catch {
@@ -1218,8 +1194,6 @@ export function MatchConnectorWorkspace({
             const termId = drag.type === "term" ? drag.id : dropTarget.id;
             assignTermToPromptRef.current(promptId, termId);
           }
-        } else if (drag) {
-          setA11yStatus("Selection cleared.");
         }
         teardown();
         window.setTimeout(() => {
@@ -1239,7 +1213,7 @@ export function MatchConnectorWorkspace({
       window.addEventListener("pointerup", onUp);
       window.addEventListener("pointercancel", onCancel);
     },
-    [resolveDropTarget, detachMatch, pointerInsideColumns],
+    [resolveDropTarget, detachMatch, clampPointerToColumnPadding],
   );
 
   const DRAG_THRESHOLD_PX = 5;

@@ -47,7 +47,7 @@ Rendering rules match multi-choice and free-response (`see multi-choice.md` stem
 
 ## Student UX (connector)
 
-- Fixed **left column (terms)** and **right column (definitions)**. Learners connect pairs by dragging a line between tiles, or by clicking a term and then a definition (the other order works too). A click starts a connector from that tile that follows the pointer until the learner clicks the other tile, clicks the same tile again, presses Escape, or the pointer leaves the two-column area, including about 32px of padding around the cards. Leaving that padded area drops the connector and the in-progress match. Dragging outside it does the same. Keyboard: arrow keys move, Enter or Space connects.
+- Fixed **left column (terms)** and **right column (definitions)**. Learners connect pairs by dragging a line between tiles, or by clicking a term and then a definition (the other order works too). A click starts a connector from that tile that follows the pointer until the learner clicks the other tile, clicks the same tile again, presses Escape, or clicks outside the cards. The line is drawn only through the two columns plus about 24px of padding; past that edge it stops visually, and the in-progress pair stays active so the learner can move back and finish it. A drag works the same way. Keyboard: arrow keys move, Enter or Space connects.
 - **Re-pairing** clears the existing pair as soon as that tile is chosen (click or drag), before the new pair is made.
 - **Definition text** is left-aligned, including definition cards in the definition bank.
 - **Keyboard focus** draws the shared focus ring around the tile.
