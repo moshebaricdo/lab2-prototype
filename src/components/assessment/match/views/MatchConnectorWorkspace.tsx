@@ -75,6 +75,9 @@ function buildCurvePath(
 
 const BRAND_STROKE = "var(--border-selected-primary)";
 
+/** Room around the two columns where a drag or click-follow line stays alive. */
+const COLUMN_DRAG_PADDING_PX = 32;
+
 /** Stable pair mark for a term, in column order: A, B, … Z, then AA. */
 function pairLetter(index: number): string {
   let n = index;
@@ -697,14 +700,14 @@ export function MatchConnectorWorkspace({
     if (!columns) return false;
     const rect = columns.getBoundingClientRect();
     return (
-      clientX >= rect.left &&
-      clientX <= rect.right &&
-      clientY >= rect.top &&
-      clientY <= rect.bottom
+      clientX >= rect.left - COLUMN_DRAG_PADDING_PX &&
+      clientX <= rect.right + COLUMN_DRAG_PADDING_PX &&
+      clientY >= rect.top - COLUMN_DRAG_PADDING_PX &&
+      clientY <= rect.bottom + COLUMN_DRAG_PADDING_PX
     );
   }, []);
 
-  /* Click-to-pair: the connector follows the pointer until it leaves the columns. */
+  /* Click-to-pair: the connector follows the pointer until it leaves the padded column area. */
   useEffect(() => {
     if (!selectedCard || interactionLocked) {
       setFollowPoint(null);
