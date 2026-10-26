@@ -523,6 +523,10 @@ export function MatchConnectorWorkspace({
   const [dragPoint, setDragPoint] = useState<{ x: number; y: number } | null>(
     null,
   );
+  /** Cursor position while a click-to-pair connector is following the pointer. */
+  const [followPoint, setFollowPoint] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const [internalKeptCorrectIds, setInternalKeptCorrectIds] = useState<
     string[]
   >([]);
@@ -543,6 +547,7 @@ export function MatchConnectorWorkspace({
   const [a11yStatus, setA11yStatus] = useState("");
 
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const columnsRef = useRef<HTMLDivElement | null>(null);
   /** Focus targets for arrow-key navigation (`term:id` / `prompt:id`). */
   const cardRefs = useRef<Record<string, HTMLElement | null>>({});
   const promptDotRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -584,14 +589,17 @@ export function MatchConnectorWorkspace({
     };
   }, []);
 
-  /* Escape clears selection when focus is inside the match board (avoids stealing Escape elsewhere). */
+  /* Escape cancels an in-progress pair. Skip text fields so it does not steal their Escape. */
   useEffect(() => {
     if (!selectedCard) return;
     const onDocKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      const board = boardRef.current;
-      const active = document.activeElement;
-      if (!board?.contains(active)) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.closest("input, textarea, select, [contenteditable='true']")
+      ) {
+        return;
+      }
       e.preventDefault();
       setSelectedCard(null);
       setA11yStatus("Selection cleared.");
@@ -683,6 +691,64 @@ export function MatchConnectorWorkspace({
     isSubmittedForFeedback || teacherRevealActive;
   const showInlineFeedback =
     isSubmittedForFeedback && !replaceWithKey;
+
+  const pointerInsideColumns = useCallback((clientX: number, clientY: number) => {
+    const columns = columnsRef.current;
+    if (!columns) return false;
+    const rect = columns.getBoundingClientRect();
+    return (
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom
+    );
+  }, []);
+
+  /* Click-to-pair: the connector follows the pointer until it leaves the columns. */
+  useEffect(() => {
+    if (!selectedCard || interactionLocked) {
+      setFollowPoint(null);
+      return;
+    }
+    const cancelFollow = () => {
+      setSelectedCard(null);
+      setFollowPoint(null);
+      setA11yStatus("Selection cleared.");
+    };
+    const onMove = (event: PointerEvent) => {
+      if (activeDragRef.current) return;
+      if (!pointerInsideColumns(event.clientX, event.clientY)) {
+        cancelFollow();
+        return;
+      }
+      const board = boardRef.current;
+      if (!board) return;
+      const rect = board.getBoundingClientRect();
+      setFollowPoint({
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      });
+    };
+    const onDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-match-card='true']")) return;
+      setSelectedCard(null);
+      setA11yStatus("Selection cleared.");
+    };
+    const onLeaveWindow = (event: PointerEvent) => {
+      if (event.relatedTarget) return;
+      cancelFollow();
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerout", onLeaveWindow);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerout", onLeaveWindow);
+    };
+  }, [selectedCard, interactionLocked, pointerInsideColumns]);
 
   const displayAssignments = useMemo(() => {
     if (replaceWithKey) {
@@ -814,6 +880,19 @@ export function MatchConnectorWorkspace({
       dragPoint.y - activeDrag.startY,
     ) > 5;
 
+  const followPathD = useMemo(() => {
+    if (!selectedCard || !followPoint || activeDrag) return null;
+    const dot =
+      selectedCard.type === "prompt"
+        ? promptDotRefs.current[selectedCard.id]
+        : termDotRefs.current[selectedCard.id];
+    const origin = getNodeCenter(dot);
+    if (!origin) return null;
+    return buildCurvePath(origin, followPoint);
+    // Node centers are read from refs; layoutVersion refreshes them after reflow.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCard, followPoint, activeDrag, getNodeCenter, layoutVersion]);
+
   /* ── Handlers ────────────────────────────────────────────────── */
 
   const assignTermToPrompt = useCallback(
@@ -836,6 +915,27 @@ export function MatchConnectorWorkspace({
 
   const assignTermToPromptRef = useRef(assignTermToPrompt);
   assignTermToPromptRef.current = assignTermToPrompt;
+
+  const detachMatch = useCallback(
+    (type: "prompt" | "term", id: string) => {
+      setAssignments((prev) => {
+        if (type === "prompt") {
+          if (!prev[id] || lockedPromptIds.has(id)) return prev;
+          return { ...prev, [id]: null };
+        }
+        let changed = false;
+        const next = { ...prev };
+        for (const promptId of Object.keys(next)) {
+          if (next[promptId] !== id) continue;
+          if (lockedPromptIds.has(promptId)) return prev;
+          next[promptId] = null;
+          changed = true;
+        }
+        return changed ? next : prev;
+      });
+    },
+    [setAssignments, lockedPromptIds],
+  );
 
   const resolveDropTarget = useCallback(
     (
@@ -867,7 +967,18 @@ export function MatchConnectorWorkspace({
     (type: "prompt" | "term", id: string) => {
       if (interactionLocked || isCardInteractionLocked(type, id)) return;
 
-      if (!selectedCard) {
+      const choosingAnchor = !selectedCard || selectedCard.type === type;
+      if (choosingAnchor) {
+        if (selectedCard?.type === type && selectedCard.id === id) {
+          setSelectedCard(null);
+          setA11yStatus("Selection cleared.");
+          return;
+        }
+        const wasMatched =
+          type === "prompt"
+            ? Boolean(assignments[id])
+            : Boolean(termToPromptId[id]);
+        if (wasMatched) detachMatch(type, id);
         setSelectedCard({ type, id });
         const item =
           type === "term"
@@ -879,30 +990,12 @@ export function MatchConnectorWorkspace({
               type === "term" ? "Term" : "Definition",
             )
           : "";
+        const other = type === "term" ? "definition" : "term";
         setA11yStatus(
-          `${label} selected. Choose a ${type === "term" ? "definition" : "term"} to connect.`,
+          wasMatched
+            ? `${label} unmatched. Choose a ${other} to connect.`
+            : `${label} selected. Choose a ${other} to connect.`,
         );
-        return;
-      }
-
-      if (selectedCard.type === type) {
-        if (selectedCard.id === id) {
-          setSelectedCard(null);
-          setA11yStatus("Selection cleared.");
-        } else {
-          setSelectedCard({ type, id });
-          const item =
-            type === "term"
-              ? level.question.terms.find((t) => t.id === id)
-              : level.question.prompts.find((p) => p.id === id);
-          const label = item
-            ? getMatchCardAccessibilityLabel(
-                item,
-                type === "term" ? "Term" : "Definition",
-              )
-            : "";
-          setA11yStatus(`${label} selected.`);
-        }
         return;
       }
 
@@ -924,6 +1017,9 @@ export function MatchConnectorWorkspace({
       interactionLocked,
       isCardInteractionLocked,
       selectedCard,
+      assignments,
+      termToPromptId,
+      detachMatch,
       assignTermToPrompt,
       level.question,
     ],
@@ -1031,6 +1127,8 @@ export function MatchConnectorWorkspace({
 
       activeDragRef.current = info;
       didDragRef.current = false;
+      setSelectedCard(null);
+      detachMatch(info.type, info.id);
       setActiveDrag(info);
       setDragPoint({ x: info.startX, y: info.startY });
 
@@ -1044,6 +1142,14 @@ export function MatchConnectorWorkspace({
         didDragRef.current = true;
         const board = boardRef.current;
         if (!board) return;
+        if (!pointerInsideColumns(e.clientX, e.clientY)) {
+          teardown();
+          setA11yStatus("Selection cleared.");
+          window.setTimeout(() => {
+            didDragRef.current = false;
+          }, 0);
+          return;
+        }
         const rect = board.getBoundingClientRect();
         setDragPoint({
           x: e.clientX - rect.left,
@@ -1094,7 +1200,8 @@ export function MatchConnectorWorkspace({
 
       const onUp = (e: PointerEvent) => {
         const drag = activeDragRef.current;
-        if (drag) {
+        const inside = pointerInsideColumns(e.clientX, e.clientY);
+        if (drag && inside) {
           try {
             boardRef.current?.releasePointerCapture(pointerId);
           } catch {
@@ -1108,6 +1215,8 @@ export function MatchConnectorWorkspace({
             const termId = drag.type === "term" ? drag.id : dropTarget.id;
             assignTermToPromptRef.current(promptId, termId);
           }
+        } else if (drag) {
+          setA11yStatus("Selection cleared.");
         }
         teardown();
         window.setTimeout(() => {
@@ -1127,7 +1236,7 @@ export function MatchConnectorWorkspace({
       window.addEventListener("pointerup", onUp);
       window.addEventListener("pointercancel", onCancel);
     },
-    [resolveDropTarget],
+    [resolveDropTarget, detachMatch, pointerInsideColumns],
   );
 
   const DRAG_THRESHOLD_PX = 5;
@@ -1158,9 +1267,17 @@ export function MatchConnectorWorkspace({
         }
       };
 
-      const finishAsClick = () => {
+      const finishAsClick = (clientX: number, clientY: number) => {
         swallowClickRef.current = true;
         selectOrConnect(type, id);
+        const board = boardRef.current;
+        if (board) {
+          const rect = board.getBoundingClientRect();
+          setFollowPoint({
+            x: clientX - rect.left,
+            y: clientY - rect.top,
+          });
+        }
         window.setTimeout(() => {
           swallowClickRef.current = false;
         }, 0);
@@ -1182,7 +1299,7 @@ export function MatchConnectorWorkspace({
             : termDotRefs.current[id];
         const origin = getNodeCenter(dotEl);
         if (!origin) {
-          finishAsClick();
+          finishAsClick(e.clientX, e.clientY);
           return;
         }
         beginDrag(
@@ -1195,7 +1312,7 @@ export function MatchConnectorWorkspace({
       const onUp = (e: PointerEvent) => {
         if (e.pointerId !== pointerId) return;
         detach();
-        if (!promoted) finishAsClick();
+        if (!promoted) finishAsClick(e.clientX, e.clientY);
       };
 
       const onCancel = (e: PointerEvent) => {
@@ -1343,10 +1460,16 @@ export function MatchConnectorWorkspace({
                 ))}
                 {showDraftLine ? (
                   <path d={draftPathD!} className={styles.draftPath} />
+                ) : followPathD ? (
+                  <path d={followPathD} className={styles.draftPath} />
                 ) : null}
               </svg>
 
-              <div className={styles.matchColumns} style={columnFlexVars}>
+              <div
+                ref={columnsRef}
+                className={styles.matchColumns}
+                style={columnFlexVars}
+              >
                 {/* ── Terms (left) ── */}
                 <div
                   className={styles.termsColumn}

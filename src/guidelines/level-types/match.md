@@ -47,7 +47,8 @@ Rendering rules match multi-choice and free-response (`see multi-choice.md` stem
 
 ## Student UX (connector)
 
-- Fixed **left column (terms)** and **right column (definitions)**. Learners connect pairs by dragging a line between tiles, or by clicking a term and then a definition (the other order works too). Clicking the selected tile again clears the selection. Keyboard: arrow keys move, Enter or Space connects.
+- Fixed **left column (terms)** and **right column (definitions)**. Learners connect pairs by dragging a line between tiles, or by clicking a term and then a definition (the other order works too). A click starts a connector from that tile that follows the pointer until the learner clicks the other tile, clicks the same tile again, presses Escape, or the pointer leaves the two-column card area. Leaving that area drops the connector and the in-progress match. Dragging outside the two columns does the same. Keyboard: arrow keys move, Enter or Space connects.
+- **Re-pairing** clears the existing pair as soon as that tile is chosen (click or drag), before the new pair is made.
 - **Definition text** is left-aligned, including definition cards in the definition bank.
 - **Keyboard focus** draws the shared focus ring around the tile.
 - **Tile interaction** (Figma matching item): hover/press/focus anywhere on the tile also drives the connector knob. Unmatched hover uses a secondary border and tertiary knob; press/focus fill the knob with brand-light and a selected-primary ring. Connected tiles use brand-light / selected-primary; hover and press darken the knob to selected-strong. Correct and incorrect pairs have **no** hover/press.
