@@ -70,7 +70,7 @@
   border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-sm);
   color: var(--text-neutral-primary);
-  cursor: pointer;
+  cursor: crosshair;
   display: flex;
   /* Grow to fill a taller column, but never shrink below the text. */
   flex: 1 0 auto;
@@ -450,9 +450,8 @@
 
 .draftPath {
   fill: none;
-  opacity: 0.6;
-  stroke: var(--border-neutral-primary);
-  stroke-dasharray: 6 4;
+  stroke: var(--border-neutral-secondary);
+  stroke-dasharray: 4 5;
   stroke-linecap: round;
   stroke-width: 2;
 }
