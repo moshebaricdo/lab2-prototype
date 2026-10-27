@@ -8,6 +8,7 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
+  type FocusEvent as ReactFocusEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
   type SetStateAction,
@@ -74,9 +75,6 @@ function buildCurvePath(
 }
 
 const BRAND_STROKE = "var(--border-selected-primary)";
-
-/** The connector is drawn only this far past the columns. The pairing itself continues beyond it. */
-const COLUMN_DRAG_PADDING_PX = 24;
 
 /** Stable pair mark for a term, in column order: A, B, … Z, then AA. */
 function pairLetter(index: number): string {
@@ -530,6 +528,13 @@ export function MatchConnectorWorkspace({
   const [followPoint, setFollowPoint] = useState<{ x: number; y: number } | null>(
     null,
   );
+  /** Match card with keyboard focus, so the connector can follow arrow-key moves. */
+  const [focusedCard, setFocusedCard] = useState<{
+    type: "prompt" | "term";
+    id: string;
+  } | null>(null);
+  /** Pointer aim and keyboard aim should not draw at the same time. */
+  const [lineFollow, setLineFollow] = useState<"pointer" | "keyboard">("pointer");
   const [internalKeptCorrectIds, setInternalKeptCorrectIds] = useState<
     string[]
   >([]);
@@ -551,6 +556,8 @@ export function MatchConnectorWorkspace({
 
   const boardRef = useRef<HTMLDivElement | null>(null);
   const columnsRef = useRef<HTMLDivElement | null>(null);
+  const termsColumnRef = useRef<HTMLDivElement | null>(null);
+  const promptsColumnRef = useRef<HTMLDivElement | null>(null);
   /** Focus targets for arrow-key navigation (`term:id` / `prompt:id`). */
   const cardRefs = useRef<Record<string, HTMLElement | null>>({});
   const promptDotRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -695,18 +702,24 @@ export function MatchConnectorWorkspace({
   const showInlineFeedback =
     isSubmittedForFeedback && !replaceWithKey;
 
-  /** Board-local point for the connector end. Past the padded columns, the line stops at that edge. */
+  /** Board-local point for the connector end. The line stays in the gap between the columns. */
   const clampPointerToColumnPadding = useCallback(
     (clientX: number, clientY: number) => {
       const board = boardRef.current;
       const columns = columnsRef.current;
-      if (!board || !columns) return null;
+      const terms = termsColumnRef.current;
+      const prompts = promptsColumnRef.current;
+      if (!board || !columns || !terms || !prompts) return null;
       const boardRect = board.getBoundingClientRect();
       const columnsRect = columns.getBoundingClientRect();
-      const minX = columnsRect.left - boardRect.left - COLUMN_DRAG_PADDING_PX;
-      const maxX = columnsRect.right - boardRect.left + COLUMN_DRAG_PADDING_PX;
-      const minY = columnsRect.top - boardRect.top - COLUMN_DRAG_PADDING_PX;
-      const maxY = columnsRect.bottom - boardRect.top + COLUMN_DRAG_PADDING_PX;
+      const termsRect = terms.getBoundingClientRect();
+      const promptsRect = prompts.getBoundingClientRect();
+      const gapLeft = Math.min(termsRect.right, promptsRect.right);
+      const gapRight = Math.max(termsRect.left, promptsRect.left);
+      const minX = Math.min(gapLeft, gapRight) - boardRect.left;
+      const maxX = Math.max(gapLeft, gapRight) - boardRect.left;
+      const minY = columnsRect.top - boardRect.top;
+      const maxY = columnsRect.bottom - boardRect.top;
       return {
         x: Math.min(maxX, Math.max(minX, clientX - boardRect.left)),
         y: Math.min(maxY, Math.max(minY, clientY - boardRect.top)),
@@ -715,7 +728,7 @@ export function MatchConnectorWorkspace({
     [],
   );
 
-  /* Click-to-pair: the connector follows the pointer, clipped to the padded columns. */
+  /* Click-to-pair: the connector follows the pointer, clipped to the gap between the columns. */
   useEffect(() => {
     if (!selectedCard || interactionLocked) {
       setFollowPoint(null);
@@ -873,17 +886,43 @@ export function MatchConnectorWorkspace({
     ) > 5;
 
   const followPathD = useMemo(() => {
-    if (!selectedCard || !followPoint || activeDrag) return null;
-    const dot =
+    if (!selectedCard || activeDrag) return null;
+    const originDot =
       selectedCard.type === "prompt"
         ? promptDotRefs.current[selectedCard.id]
         : termDotRefs.current[selectedCard.id];
-    const origin = getNodeCenter(dot);
+    const origin = getNodeCenter(originDot);
     if (!origin) return null;
+
+    const keyboardTarget =
+      lineFollow === "keyboard" &&
+      focusedCard &&
+      focusedCard.type !== selectedCard.type
+        ? focusedCard
+        : null;
+    if (keyboardTarget) {
+      const targetDot =
+        keyboardTarget.type === "prompt"
+          ? promptDotRefs.current[keyboardTarget.id]
+          : termDotRefs.current[keyboardTarget.id];
+      const target = getNodeCenter(targetDot);
+      if (!target) return null;
+      return buildCurvePath(origin, target);
+    }
+
+    if (lineFollow !== "pointer" || !followPoint) return null;
     return buildCurvePath(origin, followPoint);
     // Node centers are read from refs; layoutVersion refreshes them after reflow.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCard, followPoint, activeDrag, getNodeCenter, layoutVersion]);
+  }, [
+    selectedCard,
+    followPoint,
+    focusedCard,
+    lineFollow,
+    activeDrag,
+    getNodeCenter,
+    layoutVersion,
+  ]);
 
   /* ── Handlers ────────────────────────────────────────────────── */
 
@@ -1033,6 +1072,28 @@ export function MatchConnectorWorkspace({
     [interactionLocked, isCardInteractionLocked, selectOrConnect],
   );
 
+  const handleCardFocus = useCallback(
+    (type: "prompt" | "term", id: string) => {
+      setFocusedCard({ type, id });
+      setLineFollow("keyboard");
+    },
+    [],
+  );
+
+  const handleCardBlur = useCallback(
+    (event: ReactFocusEvent<HTMLDivElement>) => {
+      const next = event.relatedTarget;
+      if (
+        next instanceof Element &&
+        next.closest("[data-match-card='true']")
+      ) {
+        return;
+      }
+      setFocusedCard(null);
+    },
+    [],
+  );
+
   const handleCardKeyDown = useCallback(
     (
       event: ReactKeyboardEvent<HTMLDivElement>,
@@ -1047,6 +1108,9 @@ export function MatchConnectorWorkspace({
       const focusCard = (t: "prompt" | "term", cardId: string) => {
         const el = cardRefs.current[`${t}:${cardId}`];
         el?.focus();
+        // focus() from a key handler does not reliably deliver onFocus, so record it here.
+        setFocusedCard({ type: t, id: cardId });
+        setLineFollow("keyboard");
       };
 
       if (event.key === "Enter" || event.key === " ") {
@@ -1226,6 +1290,8 @@ export function MatchConnectorWorkspace({
     ) => {
       if (event.button !== 0) return;
       if (interactionLocked || isCardInteractionLocked(type, id)) return;
+      // A pointer gesture aims the line. Keyboard focus takes over again on the next focus.
+      setLineFollow("pointer");
       // Keep the click from also focusing via the pointer, and avoid text selection.
       // A stationary pointer-up selects; movement past the threshold starts a line drag.
       event.preventDefault();
@@ -1449,6 +1515,7 @@ export function MatchConnectorWorkspace({
               >
                 {/* ── Terms (left) ── */}
                 <div
+                  ref={termsColumnRef}
                   className={styles.termsColumn}
                   role="group"
                   aria-label="Terms"
@@ -1562,6 +1629,8 @@ export function MatchConnectorWorkspace({
                         )}
                         onClick={() => handleCardClick("term", term.id)}
                         onKeyDown={(e) => handleCardKeyDown(e, "term", term.id)}
+                        onFocus={() => handleCardFocus("term", term.id)}
+                        onBlur={handleCardBlur}
                         onPointerDown={(e) =>
                           handleCardPointerDown("term", term.id, e)
                         }
@@ -1592,6 +1661,7 @@ export function MatchConnectorWorkspace({
 
                 {/* ── Definitions (prompts, right) ── */}
                 <div
+                  ref={promptsColumnRef}
                   className={styles.promptsColumn}
                   role="group"
                   aria-label="Definitions"
@@ -1702,6 +1772,8 @@ export function MatchConnectorWorkspace({
                         onKeyDown={(e) =>
                           handleCardKeyDown(e, "prompt", prompt.id)
                         }
+                        onFocus={() => handleCardFocus("prompt", prompt.id)}
+                        onBlur={handleCardBlur}
                         onPointerDown={(e) =>
                           handleCardPointerDown("prompt", prompt.id, e)
                         }
