@@ -14,8 +14,12 @@ function randomKey(): string {
 
 /** Header copy for a question that has never been saved. */
 export function newQuestionHeaderLabel(question: QuestionItem): string {
+  if (question.item.kind === "multi") {
+    return question.item.content.selectionMode === "multiple"
+      ? "New multiple select question"
+      : "New multiple choice question";
+  }
   const kind = questionKindLabel(question).toLowerCase();
-  if (kind.startsWith("mc")) return "New multiple choice question";
   return `New ${kind} question`;
 }
 

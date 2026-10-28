@@ -2,7 +2,7 @@
 
 Living snapshot of **product decisions** and **prototype state** for this workstream. Specs and implementation details live in the linked docs; this file is the turn-by-turn source of truth for what is in, out, and still open.
 
-**Last updated:** 2026-09-09
+**Last updated:** 2026-10-22
 
 **How to maintain:** update this file in the same turn as substantive product or architecture changes (scope, modes, tagging, schema, routes, builder UX model). Skip for visual polish, copy nits, and bugfixes that do not change the model.
 
@@ -56,6 +56,7 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 
 - Lab2 workspace: **Build** outline + **Preview** via `QuizAttemptWorkspace` (empty Preview when there are no questions and intro is off). One-question preview uses the CFU in-card **Submit** footer, not the multi-question sticky bar.
 - Outline: intro as a workspace card (optional title + content; config toggles show/hide), sections as pages (no section names), dashed Create question (create-only), ghost ADD SECTION, kebab Add above/below / Move / Delete. Deleting a section shows a top-center toast with Undo. Expanding a question scrolls it to the top of the outline (64px offset). Empty quiz uses the dashed illustration state.
+- Create question lists **Multiple choice** and **Multiple select** separately. Both open the same answers editor; **Selection type** starts on the entry that was chosen. Correct options are marked with a radio or checkbox joined to the option field (`list-radio` / `list-check`). The bank type filter still treats both as one Multiple Choice bucket.
 - Open item tabs Question / Answers / Usage. Unsaved-changes tag on collapse. Leave-page dialog for dirty questions.
 - Save: silent for new; unpublished shared vs published-unit dialogs (no “fork” vocabulary). Save collapses the card and shows a top-center CADS toast (“Question saved”).
 - Bank: hover eye (Close Icon Button chrome, “preview” tooltip) opens Preview / Details / Usage. Filters default to **All**. Filter popover includes **Hide added items from results** (drops questions already on this quiz). Multi-section quizzes use an add-to-section menu. Adds stay collapsed. After add (or closing preview), the result remounts so eye / plus / already-added tooltips do not stick. `listedInBank: false` hidden.

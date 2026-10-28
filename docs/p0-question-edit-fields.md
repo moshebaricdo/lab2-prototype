@@ -34,9 +34,9 @@ Field inventory for mocking the **edit state** of the three P0 question types: M
 
 | Field | Notes | Input component |
 |-------|-------|-----------------|
-| **Selection mode** | Single (radio) vs. multiple (checkbox). Explicit, but smart-defaulted: starts single; auto-switches to multiple when a second correct answer is marked; never auto-switches back down. | `SegmentedControl` (Single / Multiple) |
-| **Options** | 2+ options; text or rich content (code / image). Add, remove, reorder. | Repeating row list: `AppTextField` per option, drag handle, remove `AppIconButton`, trailing "Add option" `AppButton` |
-| **Answer key** | Marked inline on the options themselves — no standalone field. Single: one correct option. Multiple: the set of correct options. | Leading control per option row: `AppRadio` in single mode, `AppCheckbox` in multiple mode |
+| **Selection mode** | **Multiple choice** (`list-radio`) vs **Multiple select** (`list-check`). The create menu picks the starting mode. Authors can still switch it on the question. | Segmented button |
+| **Options** | 2+ options. Add, remove, reorder. | Repeating row: drag handle, text field, remove, dashed Add option |
+| **Answer key** | Marked on the option itself — no standalone field. Single: one radio. Multiple: any set of checkboxes. | Radio or checkbox joined to the left of the option text field |
 
 Secondary / optional for the mock: survey mode (keyless, never scored — `AppCheckbox` toggle), required/max selection counts for multi-select (`AppTextField` number inputs), list-vs-grid option layout (`SegmentedControl`).
 

@@ -1,12 +1,30 @@
 import {
+  Children,
+  cloneElement,
   createContext,
-  useCallback,
+  isValidElement,
   useContext,
   useRef,
   useState,
-  type PointerEvent as ReactPointerEvent,
+  type HTMLAttributes,
+  type ReactElement,
   type ReactNode,
+  type Ref,
 } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCenter,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DraggableAttributes,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
 import { Button, Checkbox, Dropdown, Radio, SegmentedButton, Tag, TextInput } from "@moshebari/cads-react";
 import {
   QUESTION_DIFFICULTIES,
@@ -19,6 +37,7 @@ import type {
   QuestionItem,
 } from "../../../../types/assessmentBuilder";
 import { QuestionUsagePanel } from "./QuestionUsagePanel";
+import { MULTI_SELECTION_META } from "./questionKindMeta";
 import { StandardsTypeaheadField } from "./StandardsTypeahead";
 import styles from "./QuestionItemEditor.module.scss";
 
@@ -39,117 +58,224 @@ function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-function reorderById<T extends { id: string }>(
+function orderByIds<T extends { id: string }>(
   items: T[],
-  activeId: string,
-  overId: string,
+  orderedIds: string[],
 ): T[] {
-  const from = items.findIndex((item) => item.id === activeId);
-  const to = items.findIndex((item) => item.id === overId);
-  if (from < 0 || to < 0 || from === to) return items;
-  const next = [...items];
-  const [moved] = next.splice(from, 1);
-  next.splice(to, 0, moved);
-  return next;
+  const byId = new Map(items.map((item) => [item.id, item]));
+  return orderedIds.flatMap((id) => {
+    const item = byId.get(id);
+    return item ? [item] : [];
+  });
 }
 
-type OptionReorderApi = {
-  draggingId: string | null;
-  overId: string | null;
-  startDrag: (id: string, event: ReactPointerEvent<HTMLElement>) => void;
-};
+function sameOrder(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((id, index) => id === right[index]);
+}
 
-const OptionReorderContext = createContext<OptionReorderApi | null>(null);
+/** Same remove-then-insert index the outline uses for question cards. */
+function insertAtOriginalIndex(
+  ids: string[],
+  activeId: string,
+  overId: string,
+): string[] {
+  const location = ids.indexOf(overId);
+  if (location < 0 || activeId === overId) return ids;
+  const rest = ids.filter((id) => id !== activeId);
+  const at = Math.max(0, Math.min(rest.length, location));
+  return [...rest.slice(0, at), activeId, ...rest.slice(at)];
+}
 
+const OptionDragContext = createContext<string | null>(null);
+
+interface OptionCardProps {
+  id: string;
+  dragLabel: string;
+  children: ReactNode;
+  overlay?: boolean;
+}
+
+function optionCards(children: ReactNode): ReactElement<OptionCardProps>[] {
+  return Children.toArray(children).filter(
+    (child): child is ReactElement<OptionCardProps> =>
+      isValidElement(child) &&
+      typeof (child.props as OptionCardProps).id === "string",
+  );
+}
+
+/**
+ * Grip reorder for answer rows. Mirrors outline question drags: a 6px
+ * threshold, a dashed placeholder that shifts with the list, and a shadowed
+ * overlay that follows the pointer. The order commits on drop.
+ */
 function SortableOptionStack({
   onReorder,
   children,
 }: {
-  onReorder: (activeId: string, overId: string) => void;
+  onReorder: (orderedIds: string[]) => void;
   children: ReactNode;
 }) {
-  const draggingIdRef = useRef<string | null>(null);
-  const overIdRef = useRef<string | null>(null);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [overId, setOverId] = useState<string | null>(null);
-
-  const startDrag = useCallback(
-    (id: string, event: ReactPointerEvent<HTMLElement>) => {
-      event.preventDefault();
-      event.stopPropagation();
-      draggingIdRef.current = id;
-      overIdRef.current = id;
-      setDraggingId(id);
-      setOverId(id);
-
-      const onMove = (moveEvent: PointerEvent) => {
-        const node = document.elementFromPoint(
-          moveEvent.clientX,
-          moveEvent.clientY,
-        );
-        const card = node?.closest("[data-option-id]");
-        const nextOver =
-          card?.getAttribute("data-option-id") ?? draggingIdRef.current;
-        if (nextOver !== overIdRef.current) {
-          overIdRef.current = nextOver;
-          setOverId(nextOver);
-        }
-      };
-
-      const onUp = () => {
-        const active = draggingIdRef.current;
-        const over = overIdRef.current;
-        if (active && over && active !== over) onReorder(active, over);
-        draggingIdRef.current = null;
-        overIdRef.current = null;
-        setDraggingId(null);
-        setOverId(null);
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-      };
-
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
-    },
-    [onReorder],
+  const cards = optionCards(children);
+  const ids = cards.map((card) => card.props.id);
+  const baseIdsRef = useRef<string[]>([]);
+  const previewRef = useRef<string[] | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [previewIds, setPreviewIds] = useState<string[] | null>(null);
+  const [overlayWidth, setOverlayWidth] = useState<number | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
+  const order = previewIds ?? ids;
+  const byId = new Map(cards.map((card) => [card.props.id, card]));
+  const activeCard = activeId ? byId.get(activeId) : undefined;
+
+  const resetDrag = () => {
+    baseIdsRef.current = [];
+    previewRef.current = null;
+    setActiveId(null);
+    setPreviewIds(null);
+    setOverlayWidth(null);
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const id = String(event.active.id);
+    baseIdsRef.current = ids;
+    previewRef.current = ids;
+    setActiveId(id);
+    setPreviewIds(ids);
+    setOverlayWidth(event.active.rect.current.initial?.width ?? null);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const active = activeId ?? String(event.active.id);
+    const overId = event.over ? String(event.over.id) : null;
+    if (!overId) return;
+    const next = insertAtOriginalIndex(baseIdsRef.current, active, overId);
+    if (previewRef.current && sameOrder(previewRef.current, next)) return;
+    previewRef.current = next;
+    setPreviewIds(next);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const next = previewRef.current;
+    const base = baseIdsRef.current;
+    if (event.over && next && !sameOrder(base, next)) onReorder(next);
+    resetDrag();
+  };
+
   return (
-    <OptionReorderContext.Provider value={{ draggingId, overId, startDrag }}>
-      {children}
-    </OptionReorderContext.Provider>
+    <OptionDragContext.Provider value={activeId}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        onDragCancel={resetDrag}
+      >
+        {order.map((id) => byId.get(id))}
+        <DragOverlay dropAnimation={null}>
+          {activeCard ? (
+            <div style={overlayWidth ? { width: overlayWidth } : undefined}>
+              {cloneElement(activeCard, { overlay: true })}
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </OptionDragContext.Provider>
   );
 }
 
 function SortableOptionCard({
   id,
   dragLabel,
+  overlay = false,
   children,
-}: {
-  id: string;
-  dragLabel: string;
-  children: ReactNode;
-}) {
-  const reorder = useContext(OptionReorderContext);
-  const isDragging = reorder?.draggingId === id;
-  const isOver = reorder?.overId === id && !isDragging;
+}: OptionCardProps) {
+  if (overlay) {
+    return (
+      <OptionCardView id={id} dragLabel={dragLabel} overlay>
+        {children}
+      </OptionCardView>
+    );
+  }
+  return (
+    <DraggableOptionCard id={id} dragLabel={dragLabel}>
+      {children}
+    </DraggableOptionCard>
+  );
+}
+
+function DraggableOptionCard({
+  id,
+  dragLabel,
+  children,
+}: OptionCardProps) {
+  const activeId = useContext(OptionDragContext);
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+  } = useDraggable({ id });
+  const { setNodeRef: setDropRef } = useDroppable({ id });
 
   return (
+    <OptionCardView
+      id={id}
+      dragLabel={dragLabel}
+      placeholder={activeId === id}
+      setNodeRef={(node) => {
+        setNodeRef(node);
+        setDropRef(node);
+      }}
+      handleRef={setActivatorNodeRef}
+      handleListeners={listeners}
+      handleAttributes={attributes}
+    >
+      {children}
+    </OptionCardView>
+  );
+}
+
+function OptionCardView({
+  id,
+  dragLabel,
+  overlay = false,
+  placeholder = false,
+  setNodeRef,
+  handleRef,
+  handleListeners,
+  handleAttributes,
+  children,
+}: OptionCardProps & {
+  placeholder?: boolean;
+  setNodeRef?: Ref<HTMLDivElement>;
+  handleRef?: Ref<HTMLSpanElement>;
+  handleListeners?: HTMLAttributes<HTMLSpanElement>;
+  handleAttributes?: DraggableAttributes;
+}) {
+  return (
     <div
+      ref={setNodeRef}
       data-option-id={id}
       className={[
         styles.optionCard,
-        isDragging ? styles.optionCardDragging : "",
-        isOver ? styles.optionCardOver : "",
+        placeholder ? styles.optionCardPlaceholder : "",
+        overlay ? styles.optionDragOverlay : "",
       ]
         .filter(Boolean)
         .join(" ")}
+      aria-hidden={overlay || undefined}
     >
       <div className={styles.optionCardInner}>
         <span
+          ref={handleRef}
           className={styles.dragHandle}
           aria-label={dragLabel}
-          onPointerDown={(event) => reorder?.startDrag(id, event)}
+          {...handleListeners}
+          {...handleAttributes}
         >
           <Button
             variant="text"
@@ -696,8 +822,16 @@ function MultiChoiceEditor({
               }
             }}
             options={[
-              { value: "single", label: "Single (radio)" },
-              { value: "multiple", label: "Multiple (checkbox)" },
+              {
+                value: "single",
+                label: MULTI_SELECTION_META.single.label,
+                iconName: MULTI_SELECTION_META.single.iconName,
+              },
+              {
+                value: "multiple",
+                label: MULTI_SELECTION_META.multiple.label,
+                iconName: MULTI_SELECTION_META.multiple.iconName,
+              },
             ]}
           />
         </div>
@@ -716,9 +850,9 @@ function MultiChoiceEditor({
             <span className={styles.bankMetaLabel}>Options</span>
             <div className={styles.optionStack}>
               <SortableOptionStack
-                onReorder={(activeId, overId) =>
+                onReorder={(orderedIds) =>
                   updateContent({
-                    answers: reorderById(content.answers, activeId, overId),
+                    answers: orderByIds(content.answers, orderedIds),
                   })
                 }
               >
@@ -732,7 +866,30 @@ function MultiChoiceEditor({
                       id={answer.id}
                       dragLabel={`Reorder ${answer.text || "option"}`}
                     >
-                      <div className={styles.optionField}>
+                      <div className={styles.optionComposite}>
+                        <label className={styles.optionMark}>
+                          {isMultiple ? (
+                            <Checkbox
+                              size="small"
+                              checked={isCorrect}
+                              onChange={(event) =>
+                                toggleCorrectMultiple(
+                                  answer.id,
+                                  event.target.checked,
+                                )
+                              }
+                              aria-label={`Mark ${answer.text || "option"} as a correct answer`}
+                            />
+                          ) : (
+                            <Radio
+                              size="small"
+                              name={`correct-${question.bankId}`}
+                              checked={isCorrect}
+                              onChange={() => setCorrectSingle(answer.id)}
+                              aria-label={`Mark ${answer.text || "option"} as the correct answer`}
+                            />
+                          )}
+                        </label>
                         <TextInput
                           size="small"
                           color="secondary"
@@ -740,29 +897,9 @@ function MultiChoiceEditor({
                           onChange={(event) =>
                             updateAnswer(answer.id, event.target.value)
                           }
+                          aria-label={`Option text for ${answer.text || "option"}`}
                         />
                       </div>
-                      <Button
-                        variant={isCorrect ? "contained" : "outlined"}
-                        color="secondary"
-                        size="small"
-                        iconOnly
-                        startIconName="check"
-                        aria-pressed={isCorrect}
-                        aria-label={
-                          isCorrect
-                            ? `Unmark ${answer.text ?? "option"} as correct`
-                            : `Mark ${answer.text ?? "option"} as correct`
-                        }
-                        className={isCorrect ? styles.correctMark : undefined}
-                        onClick={() => {
-                          if (isMultiple) {
-                            toggleCorrectMultiple(answer.id, !isCorrect);
-                            return;
-                          }
-                          if (!isCorrect) setCorrectSingle(answer.id);
-                        }}
-                      />
                       <Button
                         variant="text"
                         color="error"
@@ -770,6 +907,7 @@ function MultiChoiceEditor({
                         iconOnly
                         startIconName="trash"
                         aria-label="Remove option"
+                        className={styles.optionRemove}
                         disabled={content.answers.length <= 2}
                         onClick={() => removeAnswer(answer.id)}
                       />
@@ -1058,9 +1196,9 @@ function MatchEditor({
           <span className={styles.bankMetaLabel}>Options</span>
           <div className={styles.optionStack}>
             <SortableOptionStack
-              onReorder={(activeId, overId) =>
+              onReorder={(orderedIds) =>
                 updateContent({
-                  prompts: reorderById(content.prompts, activeId, overId),
+                  prompts: orderByIds(content.prompts, orderedIds),
                 })
               }
             >
@@ -1110,6 +1248,7 @@ function MatchEditor({
                       iconOnly
                       startIconName="trash"
                       aria-label="Remove pair"
+                      className={styles.optionRemove}
                       disabled={content.prompts.length <= 2}
                       onClick={() =>
                         term ? removePair(prompt.id, term.id) : removePrompt(prompt.id)

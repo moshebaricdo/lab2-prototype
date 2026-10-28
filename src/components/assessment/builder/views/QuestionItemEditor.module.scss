@@ -57,6 +57,7 @@
   align-self: flex-start;
   width: fit-content;
   max-width: 100%;
+  gap: 2px;
 }
 
 .bankMetaLabel {
@@ -112,18 +113,31 @@
   flex-shrink: 0;
   cursor: grab;
   touch-action: none;
+  user-select: none;
 
   :global(button) {
     pointer-events: none;
   }
 }
 
-.optionCardDragging {
-  opacity: 0.55;
+.dragHandle:active {
+  cursor: grabbing;
 }
 
-.optionCardOver {
-  outline: 2px solid var(--border-selected-primary);
+.optionCardPlaceholder {
+  opacity: 0.35;
+  border-style: dashed;
+}
+
+.optionDragOverlay {
+  border-color: var(--border-neutral-secondary);
+  background: var(--background-neutral-secondary);
+  box-shadow: var(--shadow-md);
+  cursor: grabbing;
+
+  .optionRemove {
+    visibility: hidden;
+  }
 }
 
 .pairFields {
@@ -134,14 +148,32 @@
   min-width: 0;
 }
 
-.correctMark {
-  --btn-bg: var(--background-selected-primary) !important;
-  --btn-fg: var(--text-selected-primary) !important;
-  --btn-border: var(--background-selected-primary) !important;
-  --btn-bg-hover: var(--background-selected-strong) !important;
-  --btn-fg-hover: var(--text-selected-primary) !important;
-  --btn-bg-press: var(--background-selected-strong) !important;
-  --btn-fg-press: var(--text-selected-primary) !important;
+.optionComposite {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.optionMark {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  margin-right: -1px;
+  background: var(--background-neutral-primary);
+  border: 1px solid var(--border-neutral-secondary);
+  border-radius: var(--shape-sm) 0 0 var(--shape-sm);
+  cursor: pointer;
+}
+
+.optionComposite :global([data-cads-text-input]) {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .addOptionRow {

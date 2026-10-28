@@ -15,8 +15,8 @@ export type BlankQuestionKind =
   | "dragDropCategorization";
 
 export const BLANK_QUESTION_LABELS: Record<BlankQuestionKind, string> = {
-  multiSingle: "MC (Single)",
-  multiMultiple: "MC (Multi)",
+  multiSingle: "Multiple choice",
+  multiMultiple: "Multiple select",
   freeResponse: "Free Response",
   fillInBlank: "Fill in Blank",
   match: "Matching",
@@ -45,7 +45,7 @@ function blankContent(kind: BlankQuestionKind): QuestionItemContent {
       return {
         kind: "multi",
         content: {
-          prompt: "New select-all-that-apply question",
+          prompt: "New multiple select question",
           selectionMode: "multiple",
           correctAnswerIds: ["a", "b"],
           answers: [
@@ -134,7 +134,7 @@ function blankContent(kind: BlankQuestionKind): QuestionItemContent {
 
 const DEFAULT_TITLES: Record<BlankQuestionKind, string> = {
   multiSingle: "Untitled multiple choice",
-  multiMultiple: "Untitled select-all",
+  multiMultiple: "Untitled multiple select",
   freeResponse: "Untitled free response",
   fillInBlank: "Untitled fill in the blank",
   match: "Untitled matching",
@@ -167,8 +167,8 @@ export function questionKindLabel(item: QuestionItem): string {
   switch (item.item.kind) {
     case "multi":
       return item.item.content.selectionMode === "multiple"
-        ? "MC · Multi"
-        : "MC · Single";
+        ? "Multiple select"
+        : "Multiple choice";
     case "freeResponse":
       return "Free Response";
     case "fillInBlank":

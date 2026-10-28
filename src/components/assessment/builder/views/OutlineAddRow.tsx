@@ -59,7 +59,7 @@ interface CreateQuestionDropdownProps {
   onCreateQuestion: (kind: BlankQuestionKind) => void;
 }
 
-/** P0 create-only menu (MC / FR / Matching). Bank adds stay on the rail. */
+/** P0 create-only menu (choice / select / FR / matching). Bank adds stay on the rail. */
 function CreateQuestionDropdown({
   label,
   variant,

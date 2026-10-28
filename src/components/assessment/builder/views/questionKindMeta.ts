@@ -15,14 +15,26 @@ export interface QuestionKindMeta {
 }
 
 export const QUESTION_KIND_META: Record<QuestionItemKind, QuestionKindMeta> = {
-  multi: { label: "Multiple Choice", iconName: "list-check" },
+  /** Bank filter bucket. Both selection modes are still `kind: "multi"`. */
+  multi: { label: "Multiple Choice", iconName: "list-radio" },
   freeResponse: { label: "Free Response", iconName: "pen-field" },
   match: { label: "Matching", iconName: "diagram-next" },
   dragDrop: { label: "Drag & Drop", iconName: "layer-group" },
   fillInBlank: { label: "Fill in the Blank", iconName: "i-cursor" },
 };
 
+/** Glyphs for the two multiple-choice selection modes (Figma 379:7664). */
+export const MULTI_SELECTION_META = {
+  single: { label: "Multiple choice", iconName: "list-radio" },
+  multiple: { label: "Multiple select", iconName: "list-check" },
+} as const satisfies Record<"single" | "multiple", QuestionKindMeta>;
+
 export function questionKindMeta(question: QuestionItem): QuestionKindMeta {
+  if (question.item.kind === "multi") {
+    return question.item.content.selectionMode === "multiple"
+      ? MULTI_SELECTION_META.multiple
+      : MULTI_SELECTION_META.single;
+  }
   return QUESTION_KIND_META[question.item.kind];
 }
 
@@ -46,15 +58,22 @@ export const CREATE_QUESTION_OPTIONS: Array<
   { kind: "fillInBlank", ...QUESTION_KIND_META.fillInBlank },
 ];
 
-/** Final builder add menu: multiple choice, free response, matching. */
+/**
+ * Final builder add menu. Multiple choice and multiple select are separate
+ * entries; both still open the same editor with Selection type preselected.
+ */
 export const FINAL_CREATE_QUESTION_OPTIONS: Array<
   QuestionKindMeta & { kind: BlankQuestionKind }
-> = CREATE_QUESTION_OPTIONS.filter(
-  (option) =>
-    option.kind === "multiSingle" ||
-    option.kind === "freeResponse" ||
-    option.kind === "match",
-);
+> = [
+  { kind: "multiSingle", ...MULTI_SELECTION_META.single },
+  { kind: "multiMultiple", ...MULTI_SELECTION_META.multiple },
+  {
+    kind: "freeResponse",
+    label: "Free response",
+    iconName: QUESTION_KIND_META.freeResponse.iconName,
+  },
+  { kind: "match", ...QUESTION_KIND_META.match },
+];
 
 /** Bank type filter — Figma Question Type Chip set (MC / FR / Matching). */
 export const FINAL_BANK_KIND_FILTER_OPTIONS: Array<
