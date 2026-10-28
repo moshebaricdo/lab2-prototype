@@ -30,6 +30,7 @@ import {
   DEFAULT_KNN_K,
   explainKnn,
   explainTreeTrace,
+  formatCell,
   formatNumber,
   isPredictionCorrect,
   numericalStats,
@@ -164,6 +165,53 @@ function useDeferredInputs(lab: AiLabController, hold: boolean): ShownInputs {
  * canvas itself is full-bleed and is not clipped. Mirrors `.stageFloat`.
  */
 export const PREDICTION_RAIL_INSET = 279;
+
+/**
+ * The sheet row on the canvas, named by the card title column when that
+ * column is an id (not the label, and not one of the feature fields).
+ */
+function tracedRowLabel(
+  lab: AiLabController,
+  rowIndex: number | undefined,
+): { name: string; rowNumber: number } | undefined {
+  if (rowIndex == null || !lab.model) return undefined;
+  const titleId = lab.config.cardTitleColumn;
+  if (!titleId || titleId === lab.model.labelColumn) return undefined;
+  if (lab.model.selectedFeatures.includes(titleId)) return undefined;
+  if (!columnById(lab.config.dataset.columns, titleId)) return undefined;
+  const row = lab.rows[rowIndex];
+  if (!row) return undefined;
+  return {
+    name: formatCell(row[titleId] ?? "").trim(),
+    rowNumber: rowIndex + 1,
+  };
+}
+
+function TraceIdentity({
+  name,
+  rowNumber,
+  variant,
+}: {
+  name: string;
+  rowNumber: number;
+  /** Matches the card title it sits beside. */
+  variant: "rail" | "dock";
+}) {
+  const label = name ? `${name} (Row ${rowNumber})` : `Row ${rowNumber}`;
+  return (
+    <p
+      className={[
+        styles.traceIdentity,
+        variant === "rail" ? styles.traceIdentityRail : styles.traceIdentityDock,
+      ].join(" ")}
+    >
+      <span className={styles.traceDot} aria-hidden />
+      <span className={styles.traceName} title={label}>
+        {label}
+      </span>
+    </p>
+  );
+}
 
 interface TestDashboardProps {
   lab: AiLabController;
@@ -389,11 +437,22 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
       />
     );
 
+  const tracedRow = tracedRowLabel(lab, sourceRowIndex);
+
   const inputHead = (
     <div className={styles.ioHead}>
-      <h3 id="ai-lab-input-title" className={styles.ioTitle}>
-        Make a prediction
-      </h3>
+      <div className={styles.cardHeading}>
+        <h3 id="ai-lab-input-title" className={styles.ioTitle}>
+          Make a prediction
+        </h3>
+        {tracedRow ? (
+          <TraceIdentity
+            name={tracedRow.name}
+            rowNumber={tracedRow.rowNumber}
+            variant="dock"
+          />
+        ) : null}
+      </div>
       <div className={styles.ioTools}>
         <Button
           size="extraSmall"
@@ -612,9 +671,18 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
                 aria-labelledby="ai-lab-input-title"
               >
                 <div className={styles.railHead}>
-                  <h3 id="ai-lab-input-title" className={styles.railTitle}>
-                    Make a prediction
-                  </h3>
+                  <div className={styles.cardHeading}>
+                    <h3 id="ai-lab-input-title" className={styles.railTitle}>
+                      Make a prediction
+                    </h3>
+                    {tracedRow ? (
+                      <TraceIdentity
+                        name={tracedRow.name}
+                        rowNumber={tracedRow.rowNumber}
+                        variant="rail"
+                      />
+                    ) : null}
+                  </div>
                   {lab.config.hideTestViewToggle ? null : viewToggle}
                 </div>
                 <div className={styles.railFields}>{inputFields}</div>
@@ -792,6 +860,10 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
                 : undefined
             }
             onClose={() => setOpenNodeKey(undefined)}
+            onTryRow={(rowIndex) => {
+              lab.loadHoldoutRow(rowIndex);
+              setOpenNodeKey(undefined);
+            }}
           />
         ) : null}
       </section>

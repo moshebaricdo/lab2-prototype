@@ -21,11 +21,62 @@ import type {
   AiLabColumn,
   AiLabDataRow,
 } from "../../../../types/aiLab";
+import { pinSheetIdColumn } from "./ColumnScopeToggle";
 import styles from "./DataStudio.module.scss";
 
 /** Must match `.th, .td { height }` in DataStudio.module.scss. */
 const ROW_HEIGHT = 28;
 const HEADER_HEIGHT = 28;
+
+/** Tracks horizontal scroll so the pinned id column can show one edge shadow. */
+export function useSheetHorizontalScroll(
+  externalRef?: RefObject<HTMLDivElement | null>,
+): {
+  ref: RefObject<HTMLDivElement | null>;
+  scrolled: boolean;
+} {
+  const internalRef = useRef<HTMLDivElement>(null);
+  const ref = externalRef ?? internalRef;
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const onScroll = () => {
+      setScrolled(
+        node.scrollLeft > 0 && Boolean(node.querySelector("th[data-sheet-id]")),
+      );
+    };
+    // The pinned columns never move inside the scrollport, so their right
+    // edge only needs measuring on resize, not on scroll.
+    const measure = () => {
+      const index = node.querySelector("th");
+      const idHeader = node.querySelector("th[data-sheet-id]");
+      if (index instanceof HTMLElement) {
+        const indexWidth = index.getBoundingClientRect().width;
+        if (indexWidth > 0) {
+          node.style.setProperty("--pinned-index-width", `${indexWidth}px`);
+        }
+        if (idHeader instanceof HTMLElement) {
+          const edge = indexWidth + idHeader.getBoundingClientRect().width;
+          node.style.setProperty("--pin-shadow-x", `${edge}px`);
+        }
+      }
+      node.style.setProperty("--sheet-view-height", `${node.clientHeight}px`);
+      onScroll();
+    };
+    measure();
+    node.addEventListener("scroll", onScroll, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    const table = node.querySelector("table");
+    if (table) observer.observe(table);
+    return () => {
+      node.removeEventListener("scroll", onScroll);
+      observer.disconnect();
+    };
+  }, [ref]);
+  return { ref, scrolled };
+}
 
 interface CellRef {
   rowIndex: number;
@@ -148,17 +199,21 @@ export function SortableSheetTh({
   sort,
   onSortChange,
   className = "",
+  pinned = false,
 }: {
   column: Pick<AiLabColumn, "id" | "name" | "type">;
   sortId?: string;
   sort: ColumnSort | null;
   onSortChange: (next: ColumnSort | null) => void;
   className?: string;
+  /** Row-id column. Marks the header so the sheet can hang one shadow on it. */
+  pinned?: boolean;
 }) {
   const direction = sort?.columnId === sortId ? sort.direction : undefined;
   const sortUi = sortPresentation(column, direction);
   return (
     <th
+      data-sheet-id={pinned ? "" : undefined}
       aria-sort={
         direction === "asc"
           ? "ascending"
@@ -207,7 +262,15 @@ export function SortableSheetTh({
 
 export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   const { theme } = useTheme();
-  const columns = lab.config.dataset.columns;
+  const titleColumnId = lab.config.cardTitleColumn;
+  const columns = useMemo(
+    () => pinSheetIdColumn(lab.config.dataset.columns, titleColumnId),
+    [lab.config.dataset.columns, titleColumnId],
+  );
+  const idColumnId =
+    titleColumnId && columns.some((column) => column.id === titleColumnId)
+      ? titleColumnId
+      : undefined;
   const rows = lab.rows;
   const readOnly = lab.config.allowDataEdit === false;
   /** Drives `--index-col-ch` so the row # column fits the longest index. */
@@ -215,6 +278,7 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   const gridColumnCount = columns.length + 1;
   const gridRef = useRef<HTMLTableElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { scrolled: sheetScrolled } = useSheetHorizontalScroll(scrollRef);
   const inputRef = useRef<HTMLInputElement>(null);
   const skipCommitRef = useRef(false);
   const [active, setActive] = useState<CellRef | undefined>();
@@ -494,6 +558,7 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
         visualIndex={visualIndex}
         row={rows[rowIndex]}
         columns={columns}
+        idColumnId={idColumnId}
         selectedColumnId={lab.selectedColumnId}
         labelColumnId={lab.labelColumn}
         featureColumnIds={lab.selectedFeatures}
@@ -514,6 +579,11 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
   return (
     <div className={styles.sheet}>
       <div ref={scrollRef} className={styles.scroll}>
+        <div
+          className={styles.pinShadow}
+          data-visible={sheetScrolled ? "true" : undefined}
+          aria-hidden
+        />
         <div
           className={styles.scrollBody}
           style={{ "--index-col-ch": indexColCh } as CSSProperties}
@@ -540,8 +610,9 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
               <th className={`${styles.th} ${styles.thIndex}`} />
               {columns.map((column) => {
                 const inspecting = lab.selectedColumnId === column.id;
-                const isLabel = lab.labelColumn === column.id;
-                const isFeature = lab.selectedFeatures.includes(column.id);
+                const isId = column.id === idColumnId;
+                const isLabel = !isId && lab.labelColumn === column.id;
+                const isFeature = !isId && lab.selectedFeatures.includes(column.id);
                 const direction =
                   sort?.columnId === column.id ? sort.direction : undefined;
                 const sortUi = sortPresentation(column, direction);
@@ -549,6 +620,7 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
                   <th
                     key={column.id}
                     data-col={column.id}
+                    data-sheet-id={isId ? "" : undefined}
                     aria-sort={
                       direction === "asc"
                         ? "ascending"
@@ -559,10 +631,10 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
                     className={`${styles.th} ${
                       column.type === "numerical" ? styles.thNumeric : ""
                     } ${inspecting ? styles.thSelected : ""} ${
-                      isLabel ? styles.thLabel : ""
-                    } ${isFeature ? styles.thFeature : ""} ${
-                      direction ? styles.thSorted : ""
-                    }`}
+                      isId ? styles.thId : ""
+                    } ${isLabel ? styles.thLabel : ""} ${
+                      isFeature ? styles.thFeature : ""
+                    } ${direction ? styles.thSorted : ""}`}
                   >
                     <button
                       type="button"
@@ -675,6 +747,7 @@ interface SheetRowProps {
   visualIndex: number;
   row: AiLabDataRow;
   columns: AiLabColumn[];
+  idColumnId: string | undefined;
   selectedColumnId: string | undefined;
   /** Predict column — tinted brand so the sheet matches the statement Tags. */
   labelColumnId: string | undefined;
@@ -698,6 +771,7 @@ const SheetRow = memo(function SheetRow({
   visualIndex,
   row,
   columns,
+  idColumnId,
   selectedColumnId,
   labelColumnId,
   featureColumnIds,
@@ -719,8 +793,9 @@ const SheetRow = memo(function SheetRow({
       {columns.map((column) => {
         const isActive = activeColumnId === column.id;
         const isColumn = selectedColumnId === column.id;
-        const isLabel = labelColumnId === column.id;
-        const isFeature = featureColumnIds.includes(column.id);
+        const isId = column.id === idColumnId;
+        const isLabel = !isId && labelColumnId === column.id;
+        const isFeature = !isId && featureColumnIds.includes(column.id);
         const isEditing = isActive && editing;
         return (
           <td
@@ -729,7 +804,7 @@ const SheetRow = memo(function SheetRow({
               column.type === "numerical" ? styles.tdNumeric : ""
             } ${isColumn ? styles.tdSelectedColumn : ""} ${
               rowSelected ? styles.tdSelectedRow : ""
-            } ${isActive ? styles.tdActive : ""} ${
+            } ${isActive ? styles.tdActive : ""} ${isId ? styles.tdId : ""} ${
               isLabel ? styles.tdLabel : isFeature ? styles.tdFeature : ""
             }`}
             aria-selected={isActive}

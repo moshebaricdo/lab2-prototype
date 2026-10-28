@@ -1,4 +1,9 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   Button,
   Modal,
@@ -19,10 +24,12 @@ import {
   ColumnScopeToggle,
   extraSheetColumns,
   sheetColumnsFor,
+  sheetIdColumnId,
 } from "./ColumnScopeToggle";
 import {
   compareCells,
   SortableSheetTh,
+  useSheetHorizontalScroll,
   type ColumnSort,
 } from "./DataSpreadsheet";
 import { PredictionStatement } from "./PredictionStatement";
@@ -124,6 +131,7 @@ function ScorecardTab({
   const [pageCount, setPageCount] = useState(1);
   const [showAllColumns, setShowAllColumns] = useState(false);
   const [sort, setSort] = useState<ColumnSort | null>(null);
+  const sheetScroll = useSheetHorizontalScroll();
   const model = lab.model;
   const columns = lab.config.dataset.columns;
   const labelColumnObj = model
@@ -134,6 +142,13 @@ function ScorecardTab({
       }
     : { id: "", name: "", type: "categorical" as const };
   const titleColumnId = lab.config.cardTitleColumn;
+  const idColumnId = model
+    ? sheetIdColumnId({
+        labelColumn: model.labelColumn,
+        features: model.selectedFeatures,
+        titleColumnId,
+      })
+    : undefined;
   const shownColumns = useMemo(
     () =>
       model
@@ -240,7 +255,15 @@ function ScorecardTab({
           />
         </div>
       </div>
-      <div className={`${styles.tableWrap} ${styles.keepRowEdge}`}>
+      <div
+        ref={sheetScroll.ref}
+        className={`${styles.tableWrap} ${styles.keepRowEdge}`}
+      >
+        <div
+          className={sheet.pinShadow}
+          data-visible={sheetScroll.scrolled ? "true" : undefined}
+          aria-hidden
+        />
         <table
           className={sheet.grid}
           aria-label="Scorecard"
@@ -254,20 +277,25 @@ function ScorecardTab({
             <tr>
               <th className={`${sheet.th} ${sheet.thIndex}`} aria-label="Row" />
               {shownColumns.map((column) => {
-                const isLabel = column.id === model.labelColumn;
-                const isFeature = model.selectedFeatures.includes(column.id);
+                const isId = column.id === idColumnId;
+                const isLabel = !isId && column.id === model.labelColumn;
+                const isFeature =
+                  !isId && model.selectedFeatures.includes(column.id);
                 return (
                   <SortableSheetTh
                     key={column.id}
                     column={column}
                     sort={sort}
                     onSortChange={setSort}
+                    pinned={isId}
                     className={
-                      isLabel
-                        ? sheet.thLabel
-                        : isFeature
-                          ? sheet.thFeature
-                          : undefined
+                      isId
+                        ? sheet.thId
+                        : isLabel
+                          ? sheet.thLabel
+                          : isFeature
+                            ? sheet.thFeature
+                            : undefined
                     }
                   />
                 );
@@ -308,20 +336,22 @@ function ScorecardTab({
                       {result.rowIndex + 1}
                     </td>
                     {shownColumns.map((column) => {
-                      const isLabel = column.id === model.labelColumn;
-                      const isFeature = model.selectedFeatures.includes(
-                        column.id,
-                      );
+                      const isId = column.id === idColumnId;
+                      const isLabel = !isId && column.id === model.labelColumn;
+                      const isFeature =
+                        !isId && model.selectedFeatures.includes(column.id);
                       return (
                         <td
                           key={column.id}
                           className={[
                             sheet.td,
-                            isLabel
-                              ? sheet.tdLabel
-                              : isFeature
-                                ? sheet.tdFeature
-                                : "",
+                            isId
+                              ? sheet.tdId
+                              : isLabel
+                                ? sheet.tdLabel
+                                : isFeature
+                                  ? sheet.tdFeature
+                                  : "",
                             column.type === "numerical" ? sheet.tdNumeric : "",
                           ]
                             .filter(Boolean)

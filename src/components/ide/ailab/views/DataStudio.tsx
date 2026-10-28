@@ -835,6 +835,7 @@ function DataCards({ lab }: { lab: AiLabController }) {
                         columns={lab.config.dataset.columns}
                         labelColumnId={lab.labelColumn}
                         featureColumnIds={lab.selectedFeatures}
+                        titleColumnId={lab.config.cardTitleColumn}
                       />
                     )}
                   </div>
@@ -902,6 +903,7 @@ const DatasetRowCard = memo(function DatasetRowCard({
   columns,
   labelColumnId,
   featureColumnIds,
+  titleColumnId,
 }: {
   isCurrent: boolean;
   rowNumber: number;
@@ -909,9 +911,16 @@ const DatasetRowCard = memo(function DatasetRowCard({
   columns: AiLabColumn[];
   labelColumnId?: string;
   featureColumnIds?: string[];
+  titleColumnId?: string;
 }) {
   const titleId = useId();
   const detailsRef = useRef<HTMLDListElement>(null);
+  const rawTitle = titleColumnId ? row[titleColumnId] : undefined;
+  const titleValue =
+    typeof rawTitle === "string" || typeof rawTitle === "number"
+      ? formatCell(rawTitle).trim()
+      : "";
+  const heading = titleValue || `Row ${rowNumber}`;
 
   // Coming back to a row would otherwise keep where its list was scrolled.
   useEffect(() => {
@@ -957,7 +966,7 @@ const DatasetRowCard = memo(function DatasetRowCard({
       aria-roledescription="slide"
     >
       <h3 id={titleId} className={styles.cardTitle}>
-        {`Row ${rowNumber}`}
+        {heading}
       </h3>
       <div className={styles.cardList}>
         <dl
@@ -966,6 +975,7 @@ const DatasetRowCard = memo(function DatasetRowCard({
           tabIndex={isCurrent ? 0 : -1}
         >
           {columns.map((column) => {
+            if (column.id === titleColumnId) return null;
             const value = formatCell(row[column.id]);
             const role =
               labelColumnId === column.id

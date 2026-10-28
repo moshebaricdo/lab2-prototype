@@ -833,6 +833,69 @@ tbody tr:hover .tdIndex {
   backface-visibility: hidden;
 }
 
+/* Row id (card title): pinned against the index. The header matches the index
+   (neutral-secondary). Body cells rest on the light row-hover mix and fill
+   solid secondary when the row is hovered. --pinned-index-width is the index
+   header's measured width. The scroll shadow is one edge on the sheet, not a
+   shadow on each cell. */
+.thId,
+.tdId {
+  position: sticky;
+  left: var(
+    --pinned-index-width,
+    calc(var(--index-col-ch, 2) * 1ch + 16px)
+  );
+  backface-visibility: hidden;
+}
+
+.thId {
+  z-index: 4;
+  background: var(--background-neutral-secondary);
+}
+
+.tdId {
+  z-index: 2;
+  background: color-mix(
+    in srgb,
+    var(--background-neutral-secondary) 50%,
+    var(--background-neutral-primary)
+  );
+}
+
+/* One shadow for the pinned id column, not one per cell. The host is sticky
+   to the scrollport's top-left corner, so the browser keeps it in place while
+   the sheet scrolls. shadow-sm falls downward; the strip is turned -90deg so
+   that fall lands to the right. The strip covers the pinned columns (an outer
+   shadow never paints under its own box), so the shadow starts at their edge,
+   and it runs 16px past the scrollport so its ends never fade in view. */
+.pinShadow {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 6;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: calc(var(--sheet-view-height, 0px) + 16px);
+    left: 0;
+    width: calc(var(--sheet-view-height, 0px) + 32px);
+    height: var(--pin-shadow-x, 0px);
+    box-shadow: var(--shadow-sm);
+    transform-origin: left top;
+    transform: rotate(-90deg);
+  }
+
+  &[data-visible="true"] {
+    opacity: 1;
+  }
+}
+
 .thButton {
   @include type-label-3;
   display: block;
@@ -1036,6 +1099,10 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
   background: var(--background-info-light);
 }
 
+tbody tr:hover .td.tdId:not(.tdActive) {
+  background: var(--background-neutral-secondary);
+}
+
 .tdSelectedRow {
   background: color-mix(
     in srgb,
@@ -1048,6 +1115,11 @@ tbody tr:hover .td.tdFeature:not(.tdActive) {
   position: relative;
   z-index: 1;
   box-shadow: inset 0 0 0 2px var(--border-brand-primary);
+}
+
+.tdId.tdActive {
+  position: sticky;
+  z-index: 2;
 }
 
 .tdLabel.tdActive {

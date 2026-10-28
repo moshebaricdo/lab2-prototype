@@ -3,11 +3,44 @@ import type { AiLabColumn } from "../../../../types/aiLab";
 import styles from "./ColumnScopeToggle.module.scss";
 
 /**
+ * The card-title column when it is acting as a row id: set, and neither the
+ * label nor a trained feature. That column stays pinned beside the row index.
+ */
+export function sheetIdColumnId(shown: {
+  labelColumn: string;
+  features: readonly string[];
+  titleColumnId?: string;
+}): string | undefined {
+  const id = shown.titleColumnId;
+  if (!id || id === shown.labelColumn || shown.features.includes(id)) {
+    return undefined;
+  }
+  return id;
+}
+
+/** Keep the row-id column in the sticky slot immediately after the row index. */
+export function pinSheetIdColumn(
+  columns: AiLabColumn[],
+  idColumnId: string | undefined,
+): AiLabColumn[] {
+  if (!idColumnId) return columns;
+  const index = columns.findIndex((column) => column.id === idColumnId);
+  if (index <= 0) return columns;
+  const idColumn = columns[index]!;
+  return [
+    idColumn,
+    ...columns.slice(0, index),
+    ...columns.slice(index + 1),
+  ];
+}
+
+/**
  * Dataset columns to display in a results or tree-node sheet:
  * - When `showAllColumns` is false: the card title column (if set and not
  *   already a feature or the label), the selected features, and the label.
  * - When `showAllColumns` is true: every dataset column in its original
- *   dataset order.
+ *   dataset order, except the card-title id column, which stays first so it
+ *   can pin beside the row index.
  */
 export function sheetColumnsFor(
   columns: AiLabColumn[],
@@ -18,23 +51,23 @@ export function sheetColumnsFor(
     showAllColumns: boolean;
   },
 ): AiLabColumn[] {
-  if (shown.showAllColumns) return columns;
-  const featureSet = new Set(shown.features);
-  const titleColumn =
-    shown.titleColumnId &&
-    shown.titleColumnId !== shown.labelColumn &&
-    !featureSet.has(shown.titleColumnId)
-      ? columns.find((column) => column.id === shown.titleColumnId)
-      : undefined;
+  const idColumnId = sheetIdColumnId(shown);
+  if (shown.showAllColumns) return pinSheetIdColumn(columns, idColumnId);
+  const titleColumn = idColumnId
+    ? columns.find((column) => column.id === idColumnId)
+    : undefined;
   const featureColumns = shown.features
     .map((id) => columns.find((column) => column.id === id))
     .filter((column): column is AiLabColumn => Boolean(column));
   const label = columns.find((column) => column.id === shown.labelColumn);
-  return [
-    ...(titleColumn ? [titleColumn] : []),
-    ...featureColumns,
-    ...(label ? [label] : []),
-  ];
+  return pinSheetIdColumn(
+    [
+      ...(titleColumn ? [titleColumn] : []),
+      ...featureColumns,
+      ...(label ? [label] : []),
+    ],
+    idColumnId,
+  );
 }
 
 /**

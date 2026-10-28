@@ -94,6 +94,7 @@ $min-visible-rows: 2;
 /* Same sheet as the Data view (DataStudio.module.scss), with a group
  * header row above the column names. */
 .tableWrap {
+  position: relative;
   box-sizing: border-box;
   flex: 0 1 auto;
   min-height: min(($min-visible-rows + 1) * $row-height + 2px, 100%);

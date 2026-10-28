@@ -294,6 +294,50 @@
   color: var(--ds-text-neutral-primary);
 }
 
+.cardHeading {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+
+  > h3 {
+    flex-shrink: 0;
+  }
+}
+
+.traceIdentity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--ds-text-neutral-tertiary);
+}
+
+.traceIdentityRail {
+  @include type-body-4-regular;
+}
+
+.traceIdentityDock {
+  @include type-body-3-regular;
+}
+
+.traceDot {
+  width: 4px;
+  height: 4px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+  background: var(--ds-text-neutral-tertiary);
+}
+
+.traceName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .verdictHead {
   display: flex;
   flex-shrink: 0;

@@ -37,10 +37,12 @@ import {
   ColumnScopeToggle,
   extraSheetColumns,
   sheetColumnsFor,
+  sheetIdColumnId,
 } from "./ColumnScopeToggle";
 import {
   compareCells,
   SortableSheetTh,
+  useSheetHorizontalScroll,
   type ColumnSort,
 } from "./DataSpreadsheet";
 import sheet from "./DataStudio.module.scss";
@@ -70,6 +72,8 @@ interface TreeNodeModalProps {
   nodeKey: string | undefined;
   example?: TreeNodeExample;
   onClose: () => void;
+  /** Load this sheet row on Testing and close. Test rows and trained rows both trace. */
+  onTryRow: (rowIndex: number) => void;
 }
 
 /**
@@ -77,7 +81,8 @@ interface TreeNodeModalProps {
  * set, the sheet has two tabs: Test rows (those reserved rows; a leaf can
  * split them Correct / Incorrect) and Trained rows (the rows the tree
  * learned from). The pills on the diagram stay on the test set. A level
- * with no holdout shows the whole sheet and no tabs.
+ * with no holdout shows the whole sheet and no tabs. Clicking a row
+ * closes the modal and traces that row from the root.
  * Remounted per node (via `key`) so the tab and filter reset.
  */
 export function TreeNodeModal({
@@ -85,6 +90,7 @@ export function TreeNodeModal({
   nodeKey,
   example,
   onClose,
+  onTryRow,
 }: TreeNodeModalProps) {
   const model = lab.model;
   const tree = model?.tree;
@@ -147,6 +153,7 @@ export function TreeNodeModal({
         example={example}
         title={title}
         featureName={featureName}
+        onTryRow={onTryRow}
       />
     </Modal>
   );
@@ -164,6 +171,7 @@ interface NodeDetailProps {
   example: TreeNodeExample | undefined;
   title: string;
   featureName: (feature: string) => string;
+  onTryRow: (rowIndex: number) => void;
 }
 
 function rowCountLabel(count: number): string {
@@ -363,6 +371,7 @@ function NodeDetail({
   example,
   title,
   featureName,
+  onTryRow,
 }: NodeDetailProps) {
   const columns = lab.config.dataset.columns;
   const isLeaf = node.type === "leaf";
@@ -386,6 +395,7 @@ function NodeDetail({
   const [pageCount, setPageCount] = useState(1);
   const [showAllColumns, setShowAllColumns] = useState(false);
   const [sort, setSort] = useState<ColumnSort | null>(null);
+  const sheetScroll = useSheetHorizontalScroll();
   const showingTest = !hasSplit || population === "test";
   const nodeRows = showingTest ? testNodeRows : trainedNodeRows;
   const treeTolerance = useMemo(
@@ -455,6 +465,11 @@ function NodeDetail({
   ];
 
   const titleColumnId = lab.config.cardTitleColumn;
+  const idColumnId = sheetIdColumnId({
+    labelColumn,
+    features: model.selectedFeatures,
+    titleColumnId,
+  });
   const shownColumns = useMemo(
     () =>
       sheetColumnsFor(columns, {
@@ -662,8 +677,14 @@ function NodeDetail({
             )}
           </div>
           <div
+            ref={sheetScroll.ref}
             className={`${results.tableWrap} ${results.keepRowEdge} ${styles.tableWrap}`}
           >
+            <div
+              className={sheet.pinShadow}
+              data-visible={sheetScroll.scrolled ? "true" : undefined}
+              aria-hidden
+            />
             <table
               className={sheet.grid}
               aria-label={`${hasSplit ? (showingTest ? "Test rows" : "Trained rows") : "Rows"} at ${title}`}
@@ -680,22 +701,25 @@ function NodeDetail({
                     aria-label="Row"
                   />
                   {shownColumns.map((column) => {
-                    const isLabel = column.id === labelColumn;
-                    const isFeature = model.selectedFeatures.includes(
-                      column.id,
-                    );
+                    const isId = column.id === idColumnId;
+                    const isLabel = !isId && column.id === labelColumn;
+                    const isFeature =
+                      !isId && model.selectedFeatures.includes(column.id);
                     return (
                       <SortableSheetTh
                         key={column.id}
                         column={column}
                         sort={sort}
                         onSortChange={setSort}
+                        pinned={isId}
                         className={
-                          isLabel
-                            ? sheet.thLabel
-                            : isFeature
-                              ? sheet.thFeature
-                              : undefined
+                          isId
+                            ? sheet.thId
+                            : isLabel
+                              ? sheet.thLabel
+                              : isFeature
+                                ? sheet.thFeature
+                                : undefined
                         }
                       />
                     );
@@ -715,26 +739,45 @@ function NodeDetail({
               <tbody>
                 {visibleRows.map((rowIndex) => {
                     const row = lab.rows[rowIndex];
+                    const titleValue = titleColumnId
+                      ? formatCell(row?.[titleColumnId] ?? "").trim()
+                      : "";
+                    const traceName = titleValue
+                      ? `${titleValue}, row ${rowIndex + 1}`
+                      : `row ${rowIndex + 1}`;
                     return (
-                      <tr key={rowIndex}>
+                      <tr
+                        key={rowIndex}
+                        className={results.tryRow}
+                        tabIndex={0}
+                        aria-label={`Trace ${traceName}`}
+                        onClick={() => onTryRow(rowIndex)}
+                        onKeyDown={(event) => {
+                          if (event.key !== "Enter" && event.key !== " ") return;
+                          event.preventDefault();
+                          onTryRow(rowIndex);
+                        }}
+                      >
                         <td className={`${sheet.td} ${sheet.tdIndex}`}>
                           {rowIndex + 1}
                         </td>
                         {shownColumns.map((column) => {
-                          const isLabel = column.id === labelColumn;
-                          const isFeature = model.selectedFeatures.includes(
-                            column.id,
-                          );
+                          const isId = column.id === idColumnId;
+                          const isLabel = !isId && column.id === labelColumn;
+                          const isFeature =
+                            !isId && model.selectedFeatures.includes(column.id);
                           return (
                             <td
                               key={column.id}
                               className={[
                                 sheet.td,
-                                isLabel
-                                  ? sheet.tdLabel
-                                  : isFeature
-                                    ? sheet.tdFeature
-                                    : "",
+                                isId
+                                  ? sheet.tdId
+                                  : isLabel
+                                    ? sheet.tdLabel
+                                    : isFeature
+                                      ? sheet.tdFeature
+                                      : "",
                                 column.type === "numerical"
                                   ? sheet.tdNumeric
                                   : "",
