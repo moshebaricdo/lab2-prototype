@@ -56,18 +56,33 @@
 
 .note {
   @include type-body-4-regular;
-  flex: 1 1 200px;
+  flex: 1 1 180px;
   color: var(--text-neutral-tertiary);
+}
+
+.headerActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.dirtyBadge {
+  @include type-body-4-semibold;
+  padding: 2px 8px;
+  border-radius: var(--shape-round);
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary);
 }
 
 .transport {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
   display: grid;
-  grid-template-columns: auto minmax(240px, 1fr) 260px auto;
+  grid-template-columns: auto minmax(200px, 1fr) 260px auto;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   padding: 10px 24px;
   border-bottom: 1px solid var(--border-neutral-primary);
   background: var(--background-neutral-primary);
@@ -94,12 +109,27 @@
   @include type-overline-3;
   position: absolute;
   top: 0;
-  padding-left: 4px;
+  height: 14px;
+  padding: 0 0 0 4px;
   overflow: hidden;
+  border: 0;
   border-left: 1px solid var(--border-neutral-secondary);
+  background: transparent;
   color: var(--text-neutral-quaternary);
+  text-align: left;
   white-space: nowrap;
   line-height: 12px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-neutral-primary);
+  }
+}
+
+.bandActive {
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary);
+  border-radius: var(--shape-xs, 4px);
 }
 
 .tick {
@@ -108,6 +138,7 @@
   width: 1px;
   height: 4px;
   background: var(--border-neutral-secondary);
+  pointer-events: none;
 }
 
 .tickDone {
@@ -139,16 +170,59 @@
   white-space: nowrap;
 }
 
+.transportRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loopSelectWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  height: 24px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-secondary);
+}
+
+.compactSelect {
+  @include type-body-4-regular;
+  height: 24px;
+  border: 0;
+  background: transparent;
+  color: var(--text-neutral-primary);
+  outline: none;
+  cursor: pointer;
+}
+
+.workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+
+.workbenchWithRail {
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+
 .frames {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 24px;
   padding: 24px;
+  min-width: 0;
 }
 
 .frame {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 880px;
   gap: 8px;
 }
 
@@ -165,4 +239,247 @@
 .frameNote {
   @include type-body-4-regular;
   color: var(--text-neutral-tertiary);
+}
+
+/* ── Parametric Inspector Rail ── */
+.inspector {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+  height: calc(100vh - 109px);
+  position: sticky;
+  top: 53px;
+  overflow: hidden;
+}
+
+.inspectorHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.inspectorTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.inspectorTitle {
+  @include type-body-3-semibold;
+  margin: 0;
+}
+
+.inspectorHeaderButtons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workflowToggles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checkRow {
+  @include type-body-4-regular;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-neutral-secondary);
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    margin: 0;
+    accent-color: var(--border-selected-primary);
+  }
+}
+
+.inspectorBody {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.section {
+  border-bottom: 1px solid var(--border-neutral-secondary);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--background-neutral-secondary);
+}
+
+.sectionToggle {
+  @include type-overline-2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-neutral-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.sectionReset {
+  @include type-body-4-regular;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text-neutral-tertiary);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-neutral-primary);
+  }
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+.controlGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.controlField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .compactSelect {
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--border-neutral-primary);
+    border-radius: var(--shape-sm);
+    background: var(--background-neutral-primary);
+  }
+}
+
+.controlLabel {
+  @include type-body-4-semibold;
+  color: var(--text-neutral-secondary);
+}
+
+.sliderList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sliderRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sliderHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sliderLabel {
+  @include type-body-4-regular;
+  color: var(--text-neutral-secondary);
+}
+
+.sliderLabelDirty {
+  @include type-body-4-semibold;
+  color: var(--text-selected-primary);
+}
+
+.sliderValueGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sliderValue {
+  @include type-body-4-semibold;
+  color: var(--text-neutral-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.resetDot {
+  @include type-body-4-semibold;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--text-selected-primary);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.paramRange {
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--border-selected-primary);
+  cursor: pointer;
+}
+
+.subDivider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border-neutral-secondary);
+}
+
+.inspectorFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-neutral-primary);
+  background: var(--background-neutral-primary);
+}
+
+.exportActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.exportDrawer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exportFormatRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.exportCode {
+  @include type-body-4-regular;
+  max-height: 160px;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: auto;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.45;
 }

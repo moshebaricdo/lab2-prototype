@@ -4,7 +4,7 @@ import { FaIcon } from "@moshebari/cads-react/icons";
 import { columnById, formatCell } from "../../../../lib/aiLab";
 import type { AiLabColumn, AiLabDataRow } from "../../../../types/aiLab";
 import { Legend } from "./TrainingRowWalk";
-import type { TrainingStageProps } from "./trainingWalk";
+import { DOT_EASE_VALUES, type TrainingStageProps } from "./trainingWalk";
 import { labelFill } from "./viz/labelPalette";
 import { SortingTree } from "./viz/SortingTree";
 import type { TreeLayout } from "./viz/treeLayout";
@@ -22,9 +22,18 @@ import styles from "./TreeRide.module.scss";
  * Training opens on a few real rows, which stay while the dots pour into
  * the top pile and leave when the first question appears.
  */
-export function TreeRide({ data, walk, state, instant, mode }: TrainingStageProps & { mode: "lift" | "highlight" }) {
+export function TreeRide({
+  data,
+  walk,
+  state,
+  instant,
+  speed = 1,
+  mode,
+}: TrainingStageProps & { mode: "lift" | "highlight" }) {
   const { columns, labels, rowNoun, rows, titleColumn } = data;
-  const { model, score, indexOf, quiz, tally, labelName } = walk;
+  const { model, score, indexOf, quiz, tally, labelName, params } = walk;
+  const timeScale = params.scaleCssWithSpeed && speed !== 1 ? 1 / speed : 1;
+  const scaleMs = (ms: number) => Math.max(0, Math.round(ms * timeScale));
   const count = `${rows.length} ${rowNoun}${rows.length === 1 ? "" : "s"}`;
   const current = state.quiz >= 0 ? quiz[state.quiz] : undefined;
   const row = current ? rows[current.result.rowIndex] : undefined;
@@ -183,6 +192,14 @@ export function TreeRide({ data, walk, state, instant, mode }: TrainingStageProp
         instant={instant}
         maxHeight={460}
         hotEdgeKey={hotEdgeKey}
+        dotGlideMs={scaleMs(params.dotGlideMs)}
+        dotEase={DOT_EASE_VALUES[params.dotEase] ?? DOT_EASE_VALUES.move}
+        popStaggerMaxMs={scaleMs(params.popStaggerMaxMs)}
+        moveStaggerMaxMs={scaleMs(params.moveStaggerMaxMs)}
+        nodeEnterMs={scaleMs(params.nodeEnterMs)}
+        connectorShare={params.connectorShare}
+        traceExtraMs={scaleMs(params.traceExtraMs)}
+        answerBounceMs={scaleMs(params.guessDelayMs)}
         overlay={
           mode === "lift" ? (
             <>

@@ -28,6 +28,7 @@ export function SplitScan({
   picked,
   meter,
   columns,
+  previewDots = PREVIEW_DOTS,
 }: {
   model: SortingModel;
   plan: ScanPlan;
@@ -35,6 +36,7 @@ export function SplitScan({
   picked: boolean;
   meter: boolean;
   columns: AiLabColumn[];
+  previewDots?: number;
 }) {
   const laid = model.layout.byKey.get(plan.key);
   const tried = plan.candidates[candidate];
@@ -58,7 +60,7 @@ export function SplitScan({
   const piles = branches.slice(0, MAX_PILES);
   const extra = branches.length - piles.length;
   const total = tried.branches.reduce((sum, branch) => sum + branch.size, 0);
-  const unit = Math.max(1, Math.ceil(total / PREVIEW_DOTS));
+  const unit = Math.max(1, Math.ceil(total / Math.max(8, previewDots)));
   const name = columnById(columns, tried.feature)?.name ?? tried.feature;
 
   return (

@@ -3,6 +3,7 @@ import { FaIcon } from "@moshebari/cads-react/icons";
 import { columnById, formatCell } from "../../../../lib/aiLab";
 import type { TrainingRowWalkProps } from "./TrainingModalShell";
 import {
+  DOT_EASE_VALUES,
   type QuizRow,
   type TrainingStageProps,
   type TrainingWalk,
@@ -29,9 +30,17 @@ import styles from "./TrainingRowWalk.module.scss";
  * guess goes hollow — that's the score. The stage is sized from the
  * finished tree, so the modal never changes height while it plays.
  */
-export function TrainingRowWalkStage({ data, walk, state, instant }: TrainingStageProps) {
+export function TrainingRowWalkStage({
+  data,
+  walk,
+  state,
+  instant,
+  speed = 1,
+}: TrainingStageProps) {
   const { columns, features, labels, rowNoun, rows, titleColumn } = data;
-  const { model, score, indexOf, quiz, tally, labelName } = walk;
+  const { model, score, indexOf, quiz, tally, labelName, params } = walk;
+  const timeScale = params.scaleCssWithSpeed && speed !== 1 ? 1 / speed : 1;
+  const scaleMs = (ms: number) => Math.max(0, Math.round(ms * timeScale));
   const count = `${rows.length} ${rowNoun}${rows.length === 1 ? "" : "s"}`;
   const current = state.quiz >= 0 ? quiz[state.quiz] : undefined;
   const currentSplit =
@@ -143,6 +152,14 @@ export function TrainingRowWalkStage({ data, walk, state, instant }: TrainingSta
             }
             instant={instant}
             maxHeight={300}
+            dotGlideMs={scaleMs(params.dotGlideMs)}
+            dotEase={DOT_EASE_VALUES[params.dotEase] ?? DOT_EASE_VALUES.move}
+            popStaggerMaxMs={scaleMs(params.popStaggerMaxMs)}
+            moveStaggerMaxMs={scaleMs(params.moveStaggerMaxMs)}
+            nodeEnterMs={scaleMs(params.nodeEnterMs)}
+            connectorShare={params.connectorShare}
+            traceExtraMs={scaleMs(params.traceExtraMs)}
+            answerBounceMs={scaleMs(params.guessDelayMs)}
             ariaLabel={`Decision tree sorting ${count} into groups by ${labelName}`}
           />
         </div>

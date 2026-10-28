@@ -92,6 +92,11 @@ export function TableIntro({
   fill,
   phase,
   instant,
+  filterMs = INTRO_FILTER_MS,
+  scrollMs = INTRO_SCROLL_MS,
+  spinRows = SPIN_ROWS,
+  overshootPx = OVERSHOOT,
+  shrinkFrom = SHRINK_FROM,
 }: {
   columns: AiLabColumn[];
   rows: AiLabDataRow[];
@@ -104,6 +109,11 @@ export function TableIntro({
   fill: string;
   phase: number;
   instant?: boolean;
+  filterMs?: number;
+  scrollMs?: number;
+  spinRows?: number;
+  overshootPx?: number;
+  shrinkFrom?: number;
 }) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const windowRef = useRef<HTMLDivElement>(null);
@@ -124,12 +134,12 @@ export function TableIntro({
     const cycle = (count: number, from: number) =>
       Array.from({ length: count }, (_, index) => (from + index) % rows.length);
     return [
-      ...cycle(SPIN_ROWS, 0),
+      ...cycle(spinRows, 0),
       target,
       ...cycle(TAIL_ROWS, target + 1),
     ];
-  }, [rows.length, target]);
-  const land = -SPIN_ROWS * ROW_HEIGHT;
+  }, [rows.length, target, spinRows]);
+  const land = -spinRows * ROW_HEIGHT;
   const narrowed = phase >= 1;
   const spinning = phase >= 2;
   const landed = phase >= 3;
@@ -155,25 +165,26 @@ export function TableIntro({
     const from = view.getBoundingClientRect().height;
     view.style.flex = "none";
     view.style.height = `${ROW_HEIGHT}px`;
+    const clampedShrink = Math.min(0.85, Math.max(0.05, shrinkFrom));
     const close = view.animate(
       [
         { height: `${from}px` },
-        { offset: SHRINK_FROM, height: `${from}px`, easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+        { offset: clampedShrink, height: `${from}px`, easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
         { height: `${ROW_HEIGHT}px` },
       ],
-      { duration: INTRO_SCROLL_MS * 0.9 },
+      { duration: scrollMs * 0.9 },
     );
     const spin = body.animate(
       [
         { transform: "translateY(0)", easing: "cubic-bezier(0.55, 0, 0.3, 1)" },
         {
           offset: 0.88,
-          transform: `translateY(${land - OVERSHOOT}px)`,
+          transform: `translateY(${land - overshootPx}px)`,
           easing: "cubic-bezier(0.3, 0, 0.3, 1)",
         },
         { transform: `translateY(${land}px)` },
       ],
-      { duration: INTRO_SCROLL_MS, fill: "forwards" },
+      { duration: scrollMs, fill: "forwards" },
     );
     spin.onfinish = () => {
       body.style.transform = `translateY(${land}px)`;
@@ -183,7 +194,7 @@ export function TableIntro({
       spin.cancel();
       close.cancel();
     };
-  }, [spinning, landed, instant, land]);
+  }, [spinning, landed, instant, land, scrollMs, overshootPx, shrinkFrom]);
 
   const cellClass = (id: string, head: boolean) => {
     const role =
@@ -216,7 +227,7 @@ export function TableIntro({
   return (
     <div
       className={styles.intro}
-      style={{ "--intro-filter": `${INTRO_FILTER_MS}ms` } as CSSProperties}
+      style={{ "--intro-filter": `${filterMs}ms` } as CSSProperties}
       aria-hidden
     >
       <div className={`${styles.row} ${styles.head}`}>
@@ -230,7 +241,7 @@ export function TableIntro({
       <div ref={windowRef} className={styles.window}>
         <div ref={bodyRef} className={styles.body}>
           {shown.map((rowIndex, index) => {
-            const isTarget = index === SPIN_ROWS;
+            const isTarget = index === spinRows;
             return (
               <div key={index} className={styles.row}>
                 <span className={styles.tdIndex}>{rowIndex + 1}</span>

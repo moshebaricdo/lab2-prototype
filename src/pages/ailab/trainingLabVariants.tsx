@@ -41,6 +41,8 @@ export interface TrainingVariant {
   intro?: boolean;
   /** `grow` only: how the tree takes shape; defaults to `organic`. */
   growth?: GrowthMode;
+  /** `scan` only: show the impurity-reduction meter; defaults to `true`. */
+  scanMeter?: boolean;
 }
 
 const TABLE_ROW_CHROME = {
@@ -88,8 +90,9 @@ export const TRAINING_VARIANTS: TrainingVariant[] = [
     id: "scan-plain",
     name: "Scan (no meter)",
     note: "Scan for the best question without the bar: students judge each try by its piles' colors.",
-    Stage: (props) => <TreeTableRow {...props} scanMeter={false} />,
+    Stage: TreeTableRow,
     story: "scan",
+    scanMeter: false,
     ...TABLE_ROW_CHROME,
   },
   {

@@ -434,6 +434,33 @@ export const aiLabPlaytestIndexLinks: LevelProgressLink[] =
 export const aiLabPlaytestV2IndexLinks: LevelProgressLink[] =
   aiLabPlaytestV2Progression.indexLinks;
 
+export const aiLabTrainingExperimentLinks: LevelProgressLink[] = [
+  {
+    name: "Row from the table (sort & quiz)",
+    path: "/experiments/ailab-training",
+  },
+  {
+    name: "Scan for the best question",
+    path: "/experiments/ailab-training?variant=scan",
+  },
+  {
+    name: "Rows grow the tree",
+    path: "/experiments/ailab-training?variant=grow",
+  },
+  {
+    name: "Table to tree (lotto wheel intro)",
+    path: "/experiments/ailab-training?variant=table-to-tree",
+  },
+  {
+    name: "Table to tree (paired branches)",
+    path: "/experiments/ailab-training?variant=table-to-tree-paired",
+  },
+  {
+    name: "Table to tree (whole table first)",
+    path: "/experiments/ailab-training?variant=table-to-tree-batch",
+  },
+];
+
 export const aiLabIndexLinks: LevelProgressLink[] = [
   ...aiLabP0LevelLinks,
   ...aiLabUploadLevelLinks,

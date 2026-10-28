@@ -170,6 +170,8 @@ export interface SortDot {
 
 export interface SortingModel {
   look: SortingLook;
+  /** Resolved connector elbow bend ratio (`0.15`–`0.75`). */
+  bend: number;
   layout: TreeLayout;
   /** Decision nodes in the order their questions are asked (depth, then left to right). */
   splits: LaidOutNode[];
@@ -197,6 +199,13 @@ export interface SortingModel {
    * of them (`TreeTableRow`'s row morph): they appear at once, no fade.
    */
   handoff?: number;
+}
+
+export interface SortingModelOptions {
+  maxDots?: number;
+  dotScale?: number;
+  levelGap?: number;
+  bendRatio?: number;
 }
 
 /**
@@ -248,9 +257,33 @@ export function useSortingModel(
   labels: string[],
   lookName: SortingLook = "default",
   columns: AiLabColumn[] = [],
+  options?: SortingModelOptions,
 ): SortingModel {
+  const maxDots = options?.maxDots ?? MAX_DOTS;
+  const dotScale = options?.dotScale ?? 1;
+  const customLevelGap = options?.levelGap;
+  const customBendRatio = options?.bendRatio;
   return useMemo(() => {
-    const look = LOOKS[lookName];
+    const baseLook = LOOKS[lookName];
+    const scaledDots: [DotGeometry, DotGeometry, DotGeometry] =
+      dotScale === 1
+        ? baseLook.dots
+        : (baseLook.dots.map((d) => ({
+            dot: Number((d.dot * dotScale).toFixed(2)),
+            gap: Number((d.gap * dotScale).toFixed(2)),
+          })) as [DotGeometry, DotGeometry, DotGeometry]);
+    const look: LookGeometry = {
+      ...baseLook,
+      levelGap:
+        customLevelGap !== undefined && lookName === "compact"
+          ? customLevelGap
+          : baseLook.levelGap,
+      bend:
+        customBendRatio !== undefined && lookName === "compact"
+          ? customBendRatio
+          : baseLook.bend,
+      dots: scaledDots,
+    };
     const tolerance =
       columnType(columns, labelColumn) === "numerical"
         ? cartRegressionTolerance(rows, labelColumn)
@@ -302,7 +335,7 @@ export function useSortingModel(
       };
     });
     traced.sort((a, b) => a.leaf - b.leaf || a.rank - b.rank || a.rowIndex - b.rowIndex);
-    const picked = condense(traced, MAX_DOTS);
+    const picked = condense(traced, Math.max(12, maxDots));
     const geometry = dotGeometry(picked.length, look);
     const dots = picked.map((entry, id) => ({
       id,
@@ -347,6 +380,7 @@ export function useSortingModel(
 
     return {
       look: lookName,
+      bend: look.bend,
       layout,
       splits,
       splitIndex: new Map(splits.map((laid, index) => [laid.key, index])),
@@ -357,7 +391,18 @@ export function useSortingModel(
       grouping,
       tolerance,
     };
-  }, [columns, tree, rows, labelColumn, labels, lookName]);
+  }, [
+    columns,
+    tree,
+    rows,
+    labelColumn,
+    labels,
+    lookName,
+    maxDots,
+    dotScale,
+    customLevelGap,
+    customBendRatio,
+  ]);
 }
 
 /** Where a dot rests after `splitsDone` questions have sorted the piles. */
@@ -480,6 +525,15 @@ interface SortingTreeProps {
    * takes the landing leaf's color as it starts the last connector.
    */
   marbleStyle?: SortingMarbleStyle;
+  /** Parametric motion overrides for dot glide, staggers, node entrance, and trace timing. */
+  dotGlideMs?: number;
+  dotEase?: string;
+  popStaggerMaxMs?: number;
+  moveStaggerMaxMs?: number;
+  nodeEnterMs?: number;
+  connectorShare?: number;
+  traceExtraMs?: number;
+  answerBounceMs?: number;
   ariaLabel: string;
 }
 
@@ -489,8 +543,12 @@ export type SortingMarbleStyle = "marble" | "trace" | "rider";
 const TRACE_EXTRA_MS = 50;
 
 /** How long a taken connector takes to draw in `trace` mode. */
-export function traceMs(travelMs: number): number {
-  return Math.round(travelMs * CONNECTOR_SHARE) + TRACE_EXTRA_MS;
+export function traceMs(
+  travelMs: number,
+  connectorShare: number = CONNECTOR_SHARE,
+  traceExtraMs: number = TRACE_EXTRA_MS,
+): number {
+  return Math.round(travelMs * connectorShare) + traceExtraMs;
 }
 
 /**
@@ -518,12 +576,21 @@ export function SortingTree({
   pairedBranches = false,
   labelSwatch = true,
   marbleStyle = "marble",
+  dotGlideMs = 560,
+  dotEase = "cubic-bezier(0.55, 0, 0.25, 1)",
+  popStaggerMaxMs = 700,
+  moveStaggerMaxMs = 320,
+  nodeEnterMs = 320,
+  connectorShare = CONNECTOR_SHARE,
+  traceExtraMs = TRACE_EXTRA_MS,
+  answerBounceMs = 250,
   ariaLabel,
 }: SortingTreeProps) {
   const trace = marbleStyle !== "marble";
   const rider = marbleStyle === "rider";
   const { layout, splits, splitIndex, dots, members, geometry } = model;
   const look = LOOKS[model.look];
+  const bend = model.bend ?? look.bend;
   const compact = model.look === "compact";
   const indexOf = model.grouping.indexOf;
   const { ref, size } = useElementSize<HTMLDivElement>();
@@ -587,8 +654,11 @@ export function SortingTree({
   /** In `trace` mode, the node the line is still drawing toward. */
   const arrivingKey =
     trace && marble && marble.step > 0 ? marble.pathKeys[marble.step] : undefined;
+  const resolvedTraceMs = marble
+    ? traceMs(marble.travelMs, connectorShare, traceExtraMs)
+    : 500;
   const arriveDelay = (key: string): CSSProperties | undefined =>
-    key === arrivingKey && !instant ? { transitionDelay: `${traceMs(marble!.travelMs)}ms` } : undefined;
+    key === arrivingKey && !instant ? { transitionDelay: `${resolvedTraceMs}ms` } : undefined;
   const linkPathD = (sourceKey: string, targetKey: string) => {
     const source = layout.byKey.get(sourceKey);
     const target = layout.byKey.get(targetKey);
@@ -599,7 +669,7 @@ export function SortingTree({
       target.cx,
       target.y,
       8,
-      look.bend,
+      bend,
     );
   };
 
@@ -638,9 +708,15 @@ export function SortingTree({
   const slotsAt = packedSlots ?? slotOf;
 
   const lastSplit = state.splitsDone > 0 ? splits[state.splitsDone - 1] : undefined;
-  const popStep = Math.min(28, 700 / Math.max(1, dots.length));
+  const popCap = Math.max(0, popStaggerMaxMs);
+  const popStep =
+    popCap <= 0 ? 0 : Math.min(28 * (popCap / 700), popCap / Math.max(1, dots.length));
   const movingSlots = lastSplit ? slotOf.get(lastSplit.key) : undefined;
-  const moveStep = Math.min(22, 320 / Math.max(1, movingSlots?.size ?? 1));
+  const moveCap = Math.max(0, moveStaggerMaxMs);
+  const moveStep =
+    moveCap <= 0
+      ? 0
+      : Math.min(22 * (moveCap / 320), moveCap / Math.max(1, movingSlots?.size ?? 1));
 
   return (
     <div
@@ -665,6 +741,11 @@ export function SortingTree({
             transition: resizeTransition && !instant ? `transform ${resizeTransition}` : undefined,
             "--dot": `${geometry.dot}px`,
             "--dot-gap": `${geometry.gap}px`,
+            "--dot-glide-ms": `${dotGlideMs}ms`,
+            "--dot-ease": dotEase,
+            "--node-enter-ms": `${nodeEnterMs}ms`,
+            "--count-late-delay": `${Math.round(moveCap + dotGlideMs + 220)}ms`,
+            "--answer-bounce-ms": `${answerBounceMs}ms`,
           } as CSSProperties
         }
       >
@@ -698,7 +779,7 @@ export function SortingTree({
                   <path
                     key={`${marble.id}:${targetKey}`}
                     className={`${styles.linkTrace} ${targetKey === arrivingKey ? styles.linkTraceDraw : ""}`}
-                    style={{ "--trace-ms": `${traceMs(marble.travelMs)}ms` } as CSSProperties}
+                    style={{ "--trace-ms": `${resolvedTraceMs}ms` } as CSSProperties}
                     pathLength={1}
                     d={d}
                   />
@@ -837,7 +918,7 @@ export function SortingTree({
           const delay = arrival
             ? 0
             : state.splitsShown === 0
-              ? Math.min(dot.id * popStep, 700)
+              ? Math.min(dot.id * popStep, popCap)
               : !state.quiet && moving !== undefined
                 ? moving * moveStep
                 : 0;
@@ -880,6 +961,7 @@ export function SortingTree({
             key={marble.id}
             layout={layout}
             marble={marble}
+            rideMs={resolvedTraceMs}
             pathOf={linkPathD}
             color={
               marble.step > 0 && marble.step === marble.pathKeys.length - 1
@@ -893,7 +975,8 @@ export function SortingTree({
           <Marble
             key={marble.id}
             layout={layout}
-            bend={look.bend}
+            bend={bend}
+            connectorShare={connectorShare}
             marble={marble}
             color={
               marble.revealedLabel !== undefined
@@ -937,12 +1020,14 @@ const CONNECTOR_SHARE = 0.8;
 function Marble({
   layout,
   bend,
+  connectorShare = CONNECTOR_SHARE,
   marble,
   color,
   instant,
 }: {
   layout: TreeLayout;
   bend: number;
+  connectorShare?: number;
   marble: SortingMarble;
   color: string | undefined;
   instant: boolean;
@@ -974,7 +1059,7 @@ function Marble({
     );
     const total = lengths.reduce((sum, length) => sum + length, 0) || 1;
     const passThrough = child.node.type === "decision";
-    const share = passThrough ? CONNECTOR_SHARE : 1;
+    const share = passThrough ? Math.min(0.92, Math.max(0.4, connectorShare)) : 1;
     let run = 0;
     const frames: Keyframe[] = points.map((point, index) => {
       run += lengths[index]!;
@@ -983,8 +1068,8 @@ function Marble({
     if (passThrough) {
       const exit = bottomCenter(child);
       frames.push(
-        { transform: `${placeAt(topCenter(child))} scale(0.4)`, opacity: 0, offset: share + 0.06 },
-        { transform: `${placeAt(exit)} scale(0.4)`, opacity: 0, offset: share + 0.08 },
+        { transform: `${placeAt(topCenter(child))} scale(0.4)`, opacity: 0, offset: Math.min(0.97, share + 0.04) },
+        { transform: `${placeAt(exit)} scale(0.4)`, opacity: 0, offset: Math.min(0.99, share + 0.06) },
         { transform: placeAt(exit), opacity: 1, offset: 1 },
       );
     }
@@ -992,7 +1077,7 @@ function Marble({
       duration: marble.travelMs,
       easing: "cubic-bezier(0.45, 0, 0.25, 1)",
     });
-  }, [layout, bend, marble.pathKeys, marble.step, marble.travelMs, instant]);
+  }, [layout, bend, connectorShare, marble.pathKeys, marble.step, marble.travelMs, instant]);
 
   if (!at) return null;
   return (
@@ -1023,12 +1108,14 @@ const MARBLE_DROP_MS = 180;
 function RiderMarble({
   layout,
   marble,
+  rideMs: customRideMs,
   pathOf,
   color,
   instant,
 }: {
   layout: TreeLayout;
   marble: SortingMarble;
+  rideMs?: number;
   pathOf: (sourceKey: string, targetKey: string) => string | undefined;
   color: string | undefined;
   instant: boolean;
@@ -1055,7 +1142,7 @@ function RiderMarble({
        element would stack on its resting `transform`. A question's exit
        drop-in rides the same timeline. */
     const path = `path("${d}")`;
-    const rideMs = traceMs(marble.travelMs);
+    const rideMs = customRideMs ?? traceMs(marble.travelMs);
     const ride: Keyframe[] = [
       { offsetPath: path, offsetRotate: "0deg", offsetDistance: "0%", transform: "none", easing: TRACE_EASE },
       { offsetPath: path, offsetRotate: "0deg", offsetDistance: "100%", transform: "none" },

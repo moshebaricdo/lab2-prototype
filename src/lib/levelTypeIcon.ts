@@ -51,6 +51,7 @@ const AI_LAB_PATH_PREFIXES = [
   "/levels/ailab",
   "/levels/progression-ailab",
   "/levels/progression-ailab-v2",
+  "/experiments/ailab-training",
 ];
 
 const TEACHER_DASHBOARD_PATH_PREFIXES = ["/levels/teacher-dashboard"];

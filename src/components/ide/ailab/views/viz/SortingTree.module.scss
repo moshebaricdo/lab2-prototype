@@ -34,7 +34,7 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   stroke-width: 2;
   opacity: 0;
   transition:
-    opacity 320ms ease,
+    opacity var(--node-enter-ms, 320ms) ease,
     stroke 200ms ease;
 }
 
@@ -90,7 +90,7 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   transform: translate(-50%, -100%);
   opacity: 0;
   transition:
-    opacity 320ms ease 120ms,
+    opacity var(--node-enter-ms, 320ms) ease 120ms,
     background-color 200ms ease,
     color 200ms ease;
 }
@@ -120,8 +120,8 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   opacity: 0;
   transform: translateY(-6px);
   transition:
-    opacity 320ms ease,
-    transform 320ms $ease-out,
+    opacity var(--node-enter-ms, 320ms) ease,
+    transform var(--node-enter-ms, 320ms) $ease-out,
     border-color 200ms ease,
     background-color 200ms ease,
     box-shadow 200ms ease;
@@ -142,7 +142,7 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
    `scale` (not `transform`) so it composes with the dots' inline translate;
    its dots share the bounce through `.dotAnswer`. */
 .nodeAnswer {
-  animation: answer-bounce 250ms $ease-out;
+  animation: answer-bounce var(--answer-bounce-ms, 250ms) $ease-out;
 }
 
 @keyframes answer-bounce {
@@ -194,7 +194,7 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
 
 /* After the slowest dot has landed (pop / move stagger + 560ms glide). */
 .countLate {
-  transition-delay: 1100ms;
+  transition-delay: var(--count-late-delay, 1100ms);
 }
 
 .countOn {
@@ -256,7 +256,7 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
   border-radius: var(--shape-round);
   background: currentColor;
   transition:
-    transform 560ms $ease-move,
+    transform var(--dot-glide-ms, 560ms) var(--dot-ease, #{$ease-move}),
     opacity 300ms ease,
     background-color 240ms ease,
     box-shadow 240ms ease;
@@ -271,7 +271,7 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
 /* Something landed exactly on top of it: take over at once, then move like any dot. */
 .dotHandoff {
   transition:
-    transform 560ms $ease-move,
+    transform var(--dot-glide-ms, 560ms) var(--dot-ease, #{$ease-move}),
     opacity 0s,
     background-color 240ms ease,
     box-shadow 240ms ease;
@@ -285,7 +285,7 @@ $ease-move: cubic-bezier(0.55, 0, 0.25, 1);
 /* Rides the leaf's bounce: the inline `transform-origin` is the leaf's
    center, so `scale` grows the pile with the card rather than each dot. */
 .dotAnswer {
-  animation: answer-bounce 250ms $ease-out;
+  animation: answer-bounce var(--answer-bounce-ms, 250ms) $ease-out;
 }
 
 /* A wrong guess keeps its real color but loses its fill: no extra hue to

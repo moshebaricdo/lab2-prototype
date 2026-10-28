@@ -61,7 +61,7 @@
   inset: 0;
   border-top: 1px solid var(--border-neutral-primary);
   transform: translateY(100%);
-  transition: transform 185ms cubic-bezier(0.4, 0, 1, 1);
+  transition: transform var(--sheet-out-ms, 185ms) cubic-bezier(0.4, 0, 1, 1);
 }
 
 .sheetLayer tbody > tr > * {
@@ -70,7 +70,7 @@
 
 .sheetLayerOn {
   transform: none;
-  transition: transform 285ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--sheet-in-ms, 285ms) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* `grow`: the training row docks over the canvas top instead, since the
@@ -342,19 +342,19 @@
   padding: 12px 16px;
   background: var(--background-neutral-secondary);
   transition:
-    padding-top 185ms cubic-bezier(0.4, 0, 1, 1),
-    padding-bottom 185ms cubic-bezier(0.4, 0, 1, 1);
+    padding-top var(--sheet-out-ms, 185ms) cubic-bezier(0.4, 0, 1, 1),
+    padding-bottom var(--sheet-out-ms, 185ms) cubic-bezier(0.4, 0, 1, 1);
 }
 
 /* The tree's center rises with the sheet (same timing as `.sheetLayerOn`). */
 .canvasDocked {
   padding-bottom: calc(12px + 57px);
-  transition: padding-bottom 285ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: padding-bottom var(--sheet-in-ms, 285ms) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .canvasDockedTop {
   padding-top: calc(12px + 57px);
-  transition: padding-top 285ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: padding-top var(--sheet-in-ms, 285ms) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .legend {
@@ -372,8 +372,8 @@
   opacity: 0;
   transform: translateY(6px);
   transition:
-    opacity 320ms ease,
-    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    opacity var(--node-enter-ms, 320ms) ease,
+    transform var(--node-enter-ms, 320ms) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .legendOn > * {

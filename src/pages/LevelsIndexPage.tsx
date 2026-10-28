@@ -21,6 +21,7 @@ import {
   aiLabIndexLinks,
   aiLabPlaytestIndexLinks,
   aiLabPlaytestV2IndexLinks,
+  aiLabTrainingExperimentLinks,
   AI_LAB_PLAYTEST_PATH,
   AI_LAB_PLAYTEST_V2_PATH,
   bubbleChoiceLevelLinks,
@@ -219,6 +220,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/ailab": "AI Lab",
   "/levels/progression-ailab": "AI Lab",
   "/levels/progression-ailab-v2": "AI Lab",
+  "/experiments/ailab-training": "AI Lab",
   "/levels/weblab2": "Web Lab 2",
   "/levels/levelgroup": "Assessment experiment",
   "/levels/bubble-choice": "Bubble choice",
@@ -615,6 +617,36 @@ export function LevelsIndexPage() {
                 </div>
                 <div className={styles.bubbleRow}>
                   {aiLabPlaytestV2IndexLinks.map((page, index) => (
+                    <Tooltip
+                      key={page.path}
+                      title={page.name}
+                      placement="top"
+                      iconName={levelTypeTooltipIconName(page.path)}
+                    >
+                      <Link
+                        to={page.path}
+                        aria-label={`Open ${page.name}`}
+                        className={styles.bubble}
+                      >
+                        {index + 1}
+                      </Link>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className={`${styles.card} ${styles.cardWithDescription}`}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>
+                    AI Lab training animation
+                  </h3>
+                  <p className={styles.cardDescription}>
+                    Parametric sort-and-quiz workbench (/experiments/ailab-training):
+                    scrub beats, loop phases, and live-tune timings, dot caps,
+                    easing, and story/growth knobs.
+                  </p>
+                </div>
+                <div className={styles.bubbleRow}>
+                  {aiLabTrainingExperimentLinks.map((page, index) => (
                     <Tooltip
                       key={page.path}
                       title={page.name}

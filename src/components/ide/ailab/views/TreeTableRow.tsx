@@ -18,6 +18,7 @@ import {
   type TrainingRowWalkProps,
 } from "./TrainingModalShell";
 import {
+  DOT_EASE_VALUES,
   GUESS_DELAY_MS,
   GUESS_FLY_MS,
   GROW_SLOW,
@@ -48,11 +49,6 @@ import styles from "./TreeTableRow.module.scss";
  * `"marble"` is the old rolling "?" dot.
  */
 const MARBLE_STYLE: SortingMarbleStyle = "rider";
-/**
- * The guess leaves the leaf after its bounce and lands in the label cell;
- * the cell fills in (and takes the bold) as it lands.
- */
-const GUESS_LAND_MS = GUESS_DELAY_MS + Math.round(GUESS_FLY_MS * 0.9);
 /** How far the flight bows up between the leaf and the cell. */
 const FLY_ARC = 28;
 /** Tree features shown in the strip; wider trees keep the first few. */
@@ -73,13 +69,6 @@ const DOCK_HEIGHT = 57;
 const CANVAS_PAD_Y = 12;
 /** How far past its layout size a small tree may grow to fill the canvas. */
 const MAX_TREE_SCALE = 1.35;
-/**
- * The tree rescales on the sheet's own timing (`.sheetLayer` /
- * `.sheetLayerOn` in the SCSS), so it gives way as the row rises and fills
- * back in as it drops.
- */
-const SHEET_IN = "285ms cubic-bezier(0.2, 0.8, 0.2, 1)";
-const SHEET_OUT = "185ms cubic-bezier(0.4, 0, 1, 1)";
 
 /**
  * Modal chrome this stage is designed for. The lab's modal and the
@@ -143,7 +132,8 @@ export function TreeTableRow({
   walk,
   state,
   instant,
-  scanMeter = true,
+  speed = 1,
+  scanMeter,
 }: TrainingStageProps & {
   /** `scan` story: show the "how well it sorts" bar under each try. */
   scanMeter?: boolean;
@@ -158,16 +148,37 @@ export function TreeTableRow({
     rows,
     titleColumn,
   } = data;
-  const { score, quiz, tally, labelName, story, scanPlan, growPlan } = walk;
+  const { score, quiz, tally, labelName, story, scanPlan, growPlan, params } = walk;
+  const timeScale = params.scaleCssWithSpeed && speed !== 1 ? 1 / speed : 1;
+  const scaleMs = (ms: number) => Math.max(0, Math.round(ms * timeScale));
+  const resolvedScanMeter = scanMeter ?? params.scanMeter;
+  const marbleStyle = params.marbleStyle ?? MARBLE_STYLE;
+  const guessDelayMs = scaleMs(params.guessDelayMs ?? GUESS_DELAY_MS);
+  const guessFlyMs = scaleMs(params.guessFlyMs ?? GUESS_FLY_MS);
+  const guessLandMs = guessDelayMs + Math.round(guessFlyMs * 0.9);
+  const flyArcPx = params.flyArcPx ?? FLY_ARC;
+  const sheetInMs = scaleMs(params.sheetInMs ?? 285);
+  const sheetOutMs = scaleMs(params.sheetOutMs ?? 185);
+  const sheetInTransition = `${sheetInMs}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+  const sheetOutTransition = `${sheetOutMs}ms cubic-bezier(0.4, 0, 1, 1)`;
+
   const baseModel = useSortingModel(
     tree,
     rows,
     labelColumn,
     labels,
-    "compact",
+    params.look ?? "compact",
     columns,
+    {
+      maxDots: params.maxDots,
+      dotScale: params.dotScale,
+      levelGap: params.levelGap,
+      bendRatio: params.bendRatio,
+    },
   );
-  const slowCount = growPlan ? Math.min(GROW_SLOW, growPlan.arrivals.length) : 0;
+  const slowCount = growPlan
+    ? Math.min(params.growSlowCount ?? GROW_SLOW, growPlan.arrivals.length)
+    : 0;
   /* `grow` asks its questions in the order rows first mixed their piles; the
      slow rows' dots are handed off by the row morphing onto them. */
   const model = useMemo(
@@ -186,7 +197,7 @@ export function TreeTableRow({
   const dockRank =
     intakeRank >= 0
       ? intakeRank
-      : growing && (state.dotsShown ?? 0) > 0
+      : growing && (state.dotsShown ?? 0) > 0 && slowCount > 0
         ? slowCount - 1
         : -1;
   const dockDot =
@@ -197,11 +208,17 @@ export function TreeTableRow({
   /* The intro's wheel lands on this row, exactly where the dock shows it. */
   const firstDot = growPlan ? model.dots[growPlan.arrivals[0]!] : undefined;
   const topOn = intakeRank >= 0 && dockRecord !== undefined;
-  const baseTiming = intakeTiming(Math.max(0, dockRank), walk.intro);
-  const timing =
+  const baseTiming = intakeTiming(Math.max(0, dockRank), walk.intro, params);
+  const unscaledTiming =
     dockRank === 0 && growPlan?.hold
       ? { ...baseTiming, settle: baseTiming.settle + growPlan.hold }
       : baseTiming;
+  const timing: IntakeTiming = {
+    settle: scaleMs(unscaledTiming.settle),
+    scan: scaleMs(unscaledTiming.scan),
+    fly: scaleMs(unscaledTiming.fly),
+    gap: scaleMs(unscaledTiming.gap),
+  };
   const intakeFill = dockDot
     ? labelFill(model.grouping.indexOf(dockDot.label))
     : NEUTRAL_FILL;
@@ -259,9 +276,9 @@ export function TreeTableRow({
       ? handingOff.feature
       : undefined;
   const boldDelayMs = state.guessed
-    ? GUESS_LAND_MS
-    : MARBLE_STYLE !== "marble"
-      ? traceMs(state.travelMs)
+    ? guessLandMs
+    : marbleStyle !== "marble"
+      ? traceMs(state.travelMs, params.connectorShare, scaleMs(params.traceExtraMs))
       : 0;
   const boldDelay =
     boldDelayMs > 0 && !instant
@@ -294,6 +311,9 @@ export function TreeTableRow({
     fill: current
       ? labelFill(model.grouping.indexOf(current.result.predicted))
       : NEUTRAL_FILL,
+    delayMs: guessDelayMs,
+    durationMs: guessFlyMs,
+    arcPx: flyArcPx,
   });
   /** One cut of the Data Set sheet: header plus a single row. */
   const sheet = (
@@ -371,6 +391,13 @@ export function TreeTableRow({
     <div
       ref={boardRef}
       className={`${styles.board} ${instant ? styles.instant : ""}`}
+      style={
+        {
+          "--sheet-in-ms": `${sheetInMs}ms`,
+          "--sheet-out-ms": `${sheetOutMs}ms`,
+          "--node-enter-ms": `${scaleMs(params.nodeEnterMs)}ms`,
+        } as CSSProperties
+      }
     >
       {flight}
       {growPlan && intakeRank >= 0 && dockDot && !instant ? (
@@ -398,6 +425,11 @@ export function TreeTableRow({
           }
           phase={state.intro}
           instant={instant}
+          filterMs={scaleMs(params.introFilterMs)}
+          scrollMs={scaleMs(params.introScrollMs)}
+          spinRows={params.introSpinRows}
+          overshootPx={params.introOvershootPx}
+          shrinkFrom={params.introShrinkFrom}
         />
       ) : null}
       <div
@@ -439,8 +471,8 @@ export function TreeTableRow({
               maxHeight={
                 CANVAS_HEIGHT - CANVAS_PAD_Y * 2 - (docked ? DOCK_HEIGHT : 0)
               }
-              maxScale={MAX_TREE_SCALE}
-              resizeTransition={docked ? SHEET_IN : SHEET_OUT}
+              maxScale={params.maxTreeScale ?? MAX_TREE_SCALE}
+              resizeTransition={docked ? sheetInTransition : sheetOutTransition}
               askOnArrival={story === "scan" ? "leaves" : true}
               incoming={intakeRank >= 0 ? intakeRank : undefined}
               pairedBranches={growPlan !== undefined && growPlan.growth !== "organic"}
@@ -451,13 +483,22 @@ export function TreeTableRow({
                     plan={scanning}
                     candidate={state.candidate}
                     picked={state.picked}
-                    meter={scanMeter}
+                    meter={resolvedScanMeter}
                     columns={columns}
+                    previewDots={params.scanPreviewDots}
                   />
                 ) : undefined
               }
               labelSwatch={false}
-              marbleStyle={MARBLE_STYLE}
+              marbleStyle={marbleStyle}
+              dotGlideMs={scaleMs(params.dotGlideMs)}
+              dotEase={DOT_EASE_VALUES[params.dotEase] ?? DOT_EASE_VALUES.move}
+              popStaggerMaxMs={scaleMs(params.popStaggerMaxMs)}
+              moveStaggerMaxMs={scaleMs(params.moveStaggerMaxMs)}
+              nodeEnterMs={scaleMs(params.nodeEnterMs)}
+              connectorShare={params.connectorShare}
+              traceExtraMs={scaleMs(params.traceExtraMs)}
+              answerBounceMs={guessDelayMs}
               ariaLabel={`Decision tree sorting ${rows.length.toLocaleString()} ${noun(rows.length)} into groups by ${headerName(labelColumn)}`}
             />
           </div>
@@ -561,7 +602,7 @@ export function TreeTableRow({
                         style={
                           instant
                             ? undefined
-                            : { animationDelay: `${GUESS_LAND_MS}ms` }
+                            : { animationDelay: `${guessLandMs}ms` }
                         }
                       >
                         <FaIcon
@@ -663,6 +704,9 @@ function useGuessFlight({
   flyKey,
   label,
   fill,
+  delayMs = GUESS_DELAY_MS,
+  durationMs = GUESS_FLY_MS,
+  arcPx = FLY_ARC,
 }: {
   boardRef: RefObject<HTMLDivElement | null>;
   labelCellRef: RefObject<HTMLTableCellElement | null>;
@@ -670,6 +714,9 @@ function useGuessFlight({
   flyKey: string | undefined;
   label: string;
   fill: string;
+  delayMs?: number;
+  durationMs?: number;
+  arcPx?: number;
 }) {
   const [flight, setFlight] = useState<Flight | null>(null);
   const flyerRef = useRef<HTMLSpanElement>(null);
@@ -722,21 +769,21 @@ function useGuessFlight({
         { offset: 0.1, transform: at(dx, dy - 4, scale), opacity: 1 },
         {
           offset: 0.5,
-          transform: at(dx * 0.5, dy * 0.5 - FLY_ARC, (scale + 1) / 2 + 0.06),
+          transform: at(dx * 0.5, dy * 0.5 - arcPx, (scale + 1) / 2 + 0.06),
           opacity: 1,
         },
         { offset: 0.9, transform: at(0, 0, 1), opacity: 1 },
         { transform: at(0, 0, 1), opacity: 0 },
       ],
       {
-        duration: GUESS_FLY_MS,
-        delay: GUESS_DELAY_MS,
+        duration: durationMs,
+        delay: delayMs,
         easing: "cubic-bezier(0.4, 0, 0.2, 1)",
         fill: "both",
       },
     );
     return () => fly.cancel();
-  }, [flight]);
+  }, [flight, durationMs, delayMs, arcPx]);
 
   if (!flight) return null;
   return (
