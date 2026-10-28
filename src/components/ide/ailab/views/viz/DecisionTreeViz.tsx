@@ -10,7 +10,7 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
-import { Button, Tooltip } from "@moshebari/cads-react";
+import { Button, Dropdown, Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type {
   AiLabColumn,
@@ -24,6 +24,7 @@ import {
   nodeVisits,
   type AiLabNodeVisits,
 } from "../../../../../lib/aiLab";
+import { useBackpack } from "../../../../../hooks/BackpackContext";
 import { useElementSize } from "../../../../../hooks/useElementSize";
 import { CanvasCards, CARD_INSET, type CanvasChrome } from "./CanvasCards";
 import { DistributionBar, LabelSwatch, describeCounts } from "./LabelMarks";
@@ -47,6 +48,10 @@ import {
   type TreeOrientation,
 } from "./treeLayout";
 import { VizFrame } from "./VizFrame";
+import {
+  decisionTreeImageFileName,
+  exportDecisionTreeImage,
+} from "./exportDecisionTreeImage";
 import styles from "./DecisionTreeViz.module.scss";
 
 export type TreeView = "diagram" | "rules";
@@ -117,6 +122,8 @@ interface DecisionTreeVizProps {
   labelColumn?: string;
   /** Rows kept out of training. Empty leaves the pills on the training counts. */
   reservedRowIndexes?: number[];
+  /** Dataset name used in the saved tree image's file name. */
+  imageName: string;
 }
 
 /** Rows that reached a leaf but carry a different label than it predicts. */
@@ -261,6 +268,7 @@ export function DecisionTreeViz({
   rows,
   labelColumn,
   reservedRowIndexes,
+  imageName,
 }: DecisionTreeVizProps) {
   const modalDetail = onOpenNode != null;
   const [internalStep, setInternalStep] = useState(0);
@@ -562,6 +570,7 @@ export function DecisionTreeViz({
             orientation={orientation}
             besideCards={Boolean(canvasChrome) && !externalRail}
             frameInsetRight={frameInsetRight}
+            imageName={imageName}
           />
         ) : (
           <TreeRules
@@ -792,6 +801,8 @@ interface TreeDiagramProps {
   besideCards: boolean;
   /** Extra right inset when the dashboard's rail floats over this frame. */
   frameInsetRight: number;
+  /** Dataset name used in the saved tree image's file name. */
+  imageName: string;
 }
 
 function TreeDiagram({
@@ -813,10 +824,15 @@ function TreeDiagram({
   orientation,
   besideCards,
   frameInsetRight,
+  imageName,
 }: TreeDiagramProps) {
   const vertical = orientation === "vertical";
   const { ref: frameRef, size } = useElementSize<HTMLDivElement>();
   const nodeRefs = useRef(new Map<string, HTMLDivElement>());
+  const treeRef = useRef<HTMLDivElement>(null);
+  const savingImageRef = useRef(false);
+  const [savingImage, setSavingImage] = useState(false);
+  const { saveFileToBackpack, setShowSaveErrorAlert } = useBackpack();
   const [focusedKey, setFocusedKey] = useState<string>(layout.nodes[0]?.key);
   const paintedLinks = useMemo(
     () =>
@@ -1147,6 +1163,54 @@ function TreeDiagram({
 
   const atFit = sameViewport(viewport, fitAll);
 
+  const saveTreeImage = (destination: "device" | "backpack") => {
+    const tree = treeRef.current;
+    if (!tree || savingImageRef.current) return;
+    savingImageRef.current = true;
+    const classNames = [styles.exportResting];
+    if (tree.closest(`.${styles.railMode}`)) classNames.push(styles.railMode);
+    const exportOptions =
+      destination === "device"
+        ? { format: "png" as const, pixelRatio: 2 }
+        : {
+            format: "jpeg" as const,
+            pixelRatio: 1,
+            maxDimension: 1600,
+            quality: 0.82,
+          };
+    setSavingImage(true);
+    void exportDecisionTreeImage(tree, wholeBox, classNames, exportOptions)
+      .then((result) => {
+        if (!result) {
+          setShowSaveErrorAlert(true);
+          return;
+        }
+        if (destination === "device") {
+          const link = document.createElement("a");
+          link.href = result.dataUrl;
+          link.download = decisionTreeImageFileName(imageName, "png");
+          link.click();
+          return;
+        }
+        saveFileToBackpack(
+          {
+            name: decisionTreeImageFileName(imageName, "jpg"),
+            type: "image",
+            content: result.dataUrl,
+          },
+          { sourceLab: "ailab" },
+        );
+      })
+      .catch((error: unknown) => {
+        console.error("[AiLab] Failed to save the decision tree image", error);
+        setShowSaveErrorAlert(true);
+      })
+      .finally(() => {
+        savingImageRef.current = false;
+        setSavingImage(false);
+      });
+  };
+
   return (
     <div
       ref={frameRef}
@@ -1177,6 +1241,7 @@ function TreeDiagram({
         style={{ left: viewport.x, top: viewport.y }}
       >
       <div
+        ref={treeRef}
         className={styles.zoomed}
         style={{ width: layout.width, height: layout.height, zoom: viewport.zoom }}
       >
@@ -1288,7 +1353,43 @@ function TreeDiagram({
       </div>
       </div>
 
-      <div className={styles.zoomTools} role="group" aria-label="Zoom">
+      <div
+        className={styles.zoomTools}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <Tooltip title="Save image" placement="right">
+          <span className={styles.zoomSave}>
+          <Dropdown
+            role="action"
+            size="extraSmall"
+            buttonVariant="text"
+            buttonColor="tertiary"
+            iconOnly
+            startIconName="camera"
+            aria-label="Save image of the tree"
+            menuPlacement="topLeft"
+            disabled={savingImage}
+            options={[
+              {
+                value: "device",
+                label: "Save to device",
+                iconName: "download",
+              },
+              {
+                value: "backpack",
+                label: "Save to backpack",
+                iconName: "backpack",
+              },
+            ]}
+            onAction={(action) => {
+              if (action === "device" || action === "backpack") saveTreeImage(action);
+            }}
+          />
+          </span>
+        </Tooltip>
+        <div className={styles.zoomDivider} role="separator" />
+        <div className={styles.zoomGroup} role="group" aria-label="Zoom">
         <Tooltip title="Zoom in" placement="right">
           <Button
             size="extraSmall"
@@ -1337,6 +1438,7 @@ function TreeDiagram({
             onClick={fit}
           />
         </Tooltip>
+        </div>
       </div>
     </div>
   );

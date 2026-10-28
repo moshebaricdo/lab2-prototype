@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { Alert, Button, Modal, Radio } from "@moshebari/cads-react";
 import type { IncomingCsv, MergeUploadedSheetsResult } from "../../../../lib/aiLab";
-import type { AiLabAlgorithmId, AiLabDataset } from "../../../../types/aiLab";
+import type {
+  AiLabAlgorithmId,
+  AiLabDataset,
+  AiLabUploadedDatasetMetadata,
+} from "../../../../types/aiLab";
 import styles from "./DatasetPickerModal.module.scss";
 
 export interface DatasetPickerUpload {
   dataset: AiLabDataset;
   fileName: string;
+  metadata?: AiLabUploadedDatasetMetadata;
 }
 
 export interface DatasetTemplateFile {
@@ -20,8 +25,13 @@ export interface DatasetPickerController {
   uploads: DatasetPickerUpload[];
   template: DatasetTemplateFile;
   algorithmLock?: AiLabAlgorithmId;
+  projectSaving?: boolean;
   onUpload: (files: IncomingCsv[]) => MergeUploadedSheetsResult;
   onRemoveUpload: (datasetId: string) => void;
+  onUpdateUploadMetadata?: (
+    datasetId: string,
+    metadata: AiLabUploadedDatasetMetadata,
+  ) => void;
   onApply: (datasetId: string, algorithm?: AiLabAlgorithmId) => void;
 }
 

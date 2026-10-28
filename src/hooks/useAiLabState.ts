@@ -10,6 +10,8 @@ import {
   labelNotice,
   resolveDataset,
   trainModel,
+  appendTrainingRun,
+  trainingRunLoadBlock,
 } from "../lib/aiLab";
 import type {
   AiLabAlgorithmId,
@@ -55,6 +57,8 @@ export interface AiLabState {
   shownTest: AiLabShownTest | undefined;
   /** Successful trains this session, oldest first, capped at 20. */
   trainingRuns: AiLabTrainingRun[];
+  /** Run Testing is showing. Absent when the model was pretrained, not trained. */
+  activeRunId: string | undefined;
   knnK: number;
   /** Named groups derived from a numeric column. Empty unless the level allows it. */
   scales: AiLabScale[];
@@ -93,23 +97,6 @@ function firstVisibleSection(
   if (!config.hideTrainTab && !config.trainAsOverlay) return "train";
   if (!config.hideTestTab) return "test";
   return "dataset";
-}
-
-const MAX_TRAINING_RUNS = 20;
-
-function appendTrainingRun(
-  runs: AiLabTrainingRun[],
-  model: AiLabTrainedModel,
-): AiLabTrainingRun[] {
-  const run: AiLabTrainingRun = {
-    id: `run-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
-    algorithm: model.algorithm,
-    labelColumn: model.labelColumn,
-    selectedFeatures: [...model.selectedFeatures],
-    accuracy: model.accuracy,
-    createdAt: Date.now(),
-  };
-  return [...runs, run].slice(-MAX_TRAINING_RUNS);
 }
 
 function emptyTestValues(features: string[]): AiLabDataRow {
@@ -190,6 +177,7 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     lastPrediction: undefined,
     shownTest: undefined,
     trainingRuns: [],
+    activeRunId: undefined,
     knnK: config.defaultKnnK ?? DEFAULT_KNN_K,
     scales: [],
     trainingSetupOpen: Boolean(config.trainAsOverlay && config.pretrained),
@@ -352,6 +340,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
           lastPrediction: undefined,
           shownTest: undefined,
           trainingRuns: [],
+          activeRunId: undefined,
           testValues: emptyTestValues([]),
           testRowIndex: undefined,
           section:
@@ -562,6 +551,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
           lastPrediction: undefined,
           shownTest: undefined,
           trainingRuns: [],
+          activeRunId: undefined,
         };
       });
     },
@@ -590,6 +580,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
         lastPrediction: undefined,
         shownTest: undefined,
         trainingRuns: [],
+        activeRunId: undefined,
       };
     });
   }, [config]);
@@ -617,6 +608,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
           (config.defaultKnnK != null ? 0 : undefined),
         randomizeTestData: config.randomizeTestData,
       });
+      const trainingRuns = appendTrainingRun(current.trainingRuns, model);
       return {
         ...current,
         knnK: model.knnK ?? current.knnK,
@@ -625,7 +617,8 @@ export function useAiLabState(config: AiLabLevelConfig) {
         testRowIndex: undefined,
         lastPrediction: undefined,
         shownTest: undefined,
-        trainingRuns: appendTrainingRun(current.trainingRuns, model),
+        trainingRuns,
+        activeRunId: trainingRuns.at(-1)?.id,
         trainingSetupOpen: config.trainAsOverlay ? true : current.trainingSetupOpen,
       };
     });
@@ -649,6 +642,37 @@ export function useAiLabState(config: AiLabLevelConfig) {
         return {
           ...current,
           savedModels: [saved, ...current.savedModels],
+        };
+      });
+    },
+    [config],
+  );
+
+  /**
+   * Replace the model on Testing with an earlier run from this sheet.
+   * No-ops when the run is missing, already current, or blocked by a lock.
+   */
+  const loadTrainingRun = useCallback(
+    (runId: string) => {
+      setState((current) => {
+        const run = current.trainingRuns.find((entry) => entry.id === runId);
+        if (!run || run.id === current.activeRunId) return current;
+        const dataset = resolveDataset(config, current.datasetId);
+        if (!dataset) return current;
+        const columns = columnsWithScales(dataset.columns, current.scales);
+        if (trainingRunLoadBlock(config, run, columns)) return current;
+        return {
+          ...current,
+          selectedAlgorithm: config.algorithmLock ?? run.algorithm,
+          labelColumn: run.labelColumn,
+          selectedFeatures: [...run.selectedFeatures],
+          model: run.model,
+          knnK: run.model.knnK ?? current.knnK,
+          activeRunId: run.id,
+          testValues: emptyTestValues(run.selectedFeatures),
+          testRowIndex: undefined,
+          lastPrediction: undefined,
+          shownTest: undefined,
         };
       });
     },
@@ -869,6 +893,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
       lastPrediction: undefined,
       shownTest: undefined,
       trainingRuns: [],
+      activeRunId: undefined,
       testValues: emptyTestValues(current.selectedFeatures),
       testRowIndex: undefined,
     }));
@@ -891,6 +916,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
       lastPrediction: undefined,
       shownTest: undefined,
       trainingRuns: [],
+      activeRunId: undefined,
       testValues: emptyTestValues(
         current.selectedFeatures.filter((id) => id !== scaleId),
       ),
@@ -977,6 +1003,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
     removeScale,
     train,
     saveModel,
+    loadTrainingRun,
     setTestValue,
     commitShownTest,
     clearTestPrediction,

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Modal,
@@ -13,6 +13,8 @@ import {
   predictionStatement,
   slugifyModelName,
 } from "../../../../lib/aiLab";
+import { PredictionStatement } from "./PredictionStatement";
+import { formatAccuracyPercent } from "./ResultsModal";
 import styles from "./ModelInspector.module.scss";
 
 export type ModelInspectorTab = "scorecard" | "card";
@@ -138,6 +140,8 @@ export function ExportModal({ lab, open, onClose }: ExportModalProps) {
     model.selectedFeatures,
   );
 
+  const projectSaving = Boolean(lab.config.projectSaving);
+
   return (
     <Modal
       open={open}
@@ -150,11 +154,37 @@ export function ExportModal({ lab, open, onClose }: ExportModalProps) {
       onPrimaryAction={onClose}
       onClose={onClose}
     >
-      <div className={styles.root}>
-        <ModelCard lab={lab} statement={statement} />
+      <div
+        className={
+          projectSaving ? `${styles.root} ${styles.rootHandoff}` : styles.root
+        }
+      >
+        {projectSaving ? (
+          <HandoffModelCard lab={lab} />
+        ) : (
+          <ModelCard lab={lab} statement={statement} />
+        )}
       </div>
     </Modal>
   );
+}
+
+function modelCallSnippet(lab: AiLabController, name: string): string {
+  const model = lab.model;
+  if (!model) return "";
+  const columns = lab.config.dataset.columns;
+  const example = lab.rows[0];
+  const slug = slugifyModelName(name);
+  const snippetLines = model.selectedFeatures.map((feature) => {
+    const column = columnById(columns, feature);
+    const raw = example?.[feature];
+    const value =
+      column?.type === "numerical"
+        ? String(raw ?? 0)
+        : `"${String(raw ?? "")}"`;
+    return `  ${feature}: ${value}`;
+  });
+  return `getPrediction("${slug}", {\n${snippetLines.join(",\n")}\n})`;
 }
 
 function Scorecard({
@@ -313,19 +343,7 @@ function ModelCard({
   const [limitations, setLimitations] = useState("");
   if (!model) return null;
 
-  const columns = lab.config.dataset.columns;
-  const example = lab.rows[0];
-  const slug = slugifyModelName(name);
-  const snippetLines = model.selectedFeatures.map((feature) => {
-    const column = columnById(columns, feature);
-    const raw = example?.[feature];
-    const value =
-      column?.type === "numerical"
-        ? String(raw ?? 0)
-        : `"${String(raw ?? "")}"`;
-    return `  ${feature}: ${value}`;
-  });
-  const snippet = `getPrediction("${slug}", {\n${snippetLines.join(",\n")}\n})`;
+  const snippet = modelCallSnippet(lab, name);
 
   return (
     <div className={styles.panel}>
@@ -413,6 +431,143 @@ function ModelCard({
             </li>
           ))}
         </ul>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Project-saving handoff: the model card a later programming level would
+ * receive. Still session-local — the snippet is the call that level would make.
+ */
+function HandoffModelCard({ lab }: { lab: AiLabController }) {
+  const model = lab.model;
+  const [name, setName] = useState(() => lab.config.dataset.name);
+  const [intendedUse, setIntendedUse] = useState("");
+  const [limitations, setLimitations] = useState("");
+  const [copied, setCopied] = useState(false);
+  const snippet = modelCallSnippet(lab, name);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timeout = window.setTimeout(() => setCopied(false), 1600);
+    return () => window.clearTimeout(timeout);
+  }, [copied]);
+
+  if (!model) return null;
+
+  return (
+    <div className={styles.panel}>
+      <p className={styles.panelLead}>
+        Save this model to use in a programming level later in this session.
+      </p>
+      <PredictionStatement
+        columns={lab.config.dataset.columns}
+        labelColumn={model.labelColumn}
+        features={model.selectedFeatures}
+        size="large"
+        fit
+        className={styles.handoffStatement}
+      />
+      <dl className={styles.facts}>
+        <div>
+          <dt>Algorithm</dt>
+          <dd>{ALGORITHM_NAMES[model.algorithm]}</dd>
+        </div>
+        <div>
+          <dt>Dataset</dt>
+          <dd>{lab.config.dataset.name}</dd>
+        </div>
+        <div>
+          <dt>Accuracy</dt>
+          <dd>{formatAccuracyPercent(model.accuracy)}</dd>
+        </div>
+      </dl>
+      <form
+        className={styles.form}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!name.trim()) return;
+          lab.saveModel({ name, intendedUse, limitations });
+        }}
+      >
+        <TextInput
+          size="small"
+          color="secondary"
+          label="Model name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+        <label className={styles.field}>
+          <span className={styles.fieldLabel}>Intended use</span>
+          <textarea
+            className={styles.textarea}
+            rows={2}
+            value={intendedUse}
+            onChange={(event) => setIntendedUse(event.target.value)}
+            placeholder="What should someone use this prediction for?"
+          />
+        </label>
+        <label className={styles.field}>
+          <span className={styles.fieldLabel}>Limitations</span>
+          <textarea
+            className={styles.textarea}
+            rows={2}
+            value={limitations}
+            onChange={(event) => setLimitations(event.target.value)}
+            placeholder="Where might this model be wrong or unfair?"
+          />
+        </label>
+        <div className={styles.formActions}>
+          <Button
+            size="small"
+            variant="contained"
+            color="primary"
+            type="submit"
+            disabled={!name.trim()}
+          >
+            Save model
+          </Button>
+        </div>
+      </form>
+      <div className={`${styles.snippetBlock} ${styles.snippetRule}`}>
+        <div className={styles.snippetHead}>
+          <p className={styles.fieldLabel}>Use in a program</p>
+          <Button
+            size="extraSmall"
+            variant="outlined"
+            color="secondary"
+            startIconName="copy"
+            onClick={() => {
+              void navigator.clipboard.writeText(snippet).then(
+                () => setCopied(true),
+                () => undefined,
+              );
+            }}
+          >
+            {copied ? "Copied" : "Copy"}
+          </Button>
+        </div>
+        <pre className={styles.snippet}>{snippet}</pre>
+      </div>
+      {lab.savedModels.length > 0 ? (
+        <>
+          <p className={styles.savedHeading}>Saved this session</p>
+          <ul className={styles.savedList}>
+            {lab.savedModels.map((saved) => (
+              <li key={saved.id} className={styles.savedItem}>
+                <div>
+                  <p className={styles.savedName}>{saved.name}</p>
+                  <p className={styles.savedMeta}>
+                    {saved.datasetName}
+                    {saved.intendedUse ? ` · ${saved.intendedUse}` : ""}
+                  </p>
+                </div>
+                <Tag size="small" color="neutral" label="Saved" />
+              </li>
+            ))}
+          </ul>
+        </>
       ) : null}
     </div>
   );

@@ -82,6 +82,23 @@
   box-shadow: var(--shadow-sm);
 }
 
+.zoomSave {
+  display: flex;
+  justify-content: center;
+}
+
+/* Edge to edge inside the card, splitting the image action from zoom. */
+.zoomDivider {
+  height: 1px;
+  margin: 2px -2px;
+  background: var(--ds-border-neutral-primary);
+}
+
+.zoomGroup {
+  display: flex;
+  flex-direction: column;
+}
+
 .links {
   position: absolute;
   top: 0;
@@ -725,4 +742,48 @@ $path-rail-gap: 6px;
 .ruleBar {
   max-width: 96px;
   margin-top: 4px;
+}
+
+/* Applied only to the export clone, so a traced path saves as the idle tree. */
+.exportResting {
+  .node {
+    border-width: 1.5px;
+    border-style: solid;
+    border-color: var(--ds-background-neutral-septenary);
+    background: var(--ds-background-neutral-primary);
+    box-shadow: var(--shadow-sm);
+    scale: 1;
+
+    .nodeTitle {
+      color: var(--ds-text-neutral-primary);
+    }
+
+    .nodeRows {
+      color: var(--ds-text-neutral-tertiary);
+    }
+  }
+
+  .nodeBundle {
+    border-style: dashed;
+  }
+
+  .link {
+    stroke: var(--ds-background-neutral-septenary);
+    stroke-width: 1.5;
+    stroke-dasharray: none;
+  }
+
+  .edgeLabel {
+    background: var(--ds-background-neutral-secondary);
+    color: var(--ds-text-neutral-primary);
+    box-shadow: none;
+  }
+
+  &.railMode .edgeLabel {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &:not(.railMode) .edgeLabel {
+    font-weight: var(--font-weight-normal);
+  }
 }

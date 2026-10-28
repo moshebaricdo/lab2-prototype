@@ -46,6 +46,7 @@ import {
   retainUploadedSheets,
   sheetsToDatasets,
   uniqueDevCatalog,
+  updateUploadedSheetMetadata,
   writeActiveAlgorithm,
   writeActiveDatasetId,
   writeUploadedSheets,
@@ -64,6 +65,7 @@ import type {
   AiLabAlgorithmId,
   AiLabLevelConfig,
   AiLabSection,
+  AiLabUploadedDatasetMetadata,
 } from "../../types/aiLab";
 
 interface AiLabLevelPageProps {
@@ -174,6 +176,14 @@ function aiLabDevFields(
       type: "boolean",
       group: "Workspace",
       visibleWhen: (values) => values.workspaceTabs !== "test",
+    }),
+    aiLabControl({
+      key: "projectSaving",
+      label: "Project saving",
+      description:
+        "Standalone project-saving mode: Library / Uploaded dataset tabs, header CSV upload, student-authored dataset metadata, Save model on Testing, and Load on previous training results.",
+      type: "boolean",
+      group: "Workspace",
     }),
   ];
 
@@ -403,6 +413,7 @@ export function AiLabLevelPage({
   const trainingAnimation = String(resolved.trainingAnimation);
   const treeNodeDetail = String(resolved.treeNodeDetail);
   const randomizeTestData = Boolean(resolved.randomizeTestData);
+  const projectSaving = Boolean(resolved.projectSaving);
   const presetFeatures = Array.isArray(resolved.presetFeatures)
     ? resolved.presetFeatures.map(String)
     : [];
@@ -510,6 +521,7 @@ export function AiLabLevelPage({
         trainingAnimation,
         treeNodeDetail,
         randomizeTestData,
+        projectSaving,
       },
       useDatasetPicker || sessionDatasets ? labCatalog : catalog,
     );
@@ -551,6 +563,7 @@ export function AiLabLevelPage({
     trainingAnimation,
     treeNodeDetail,
     randomizeTestData,
+    projectSaving,
   ]);
   const lab = useAiLabState(levelConfig);
   useEffect(() => {
@@ -653,6 +666,19 @@ export function AiLabLevelPage({
     storeSheets(next);
   };
 
+  const updateUploadMetadataById = (
+    datasetId: string,
+    metadata: AiLabUploadedDatasetMetadata,
+  ) => {
+    const next = updateUploadedSheetMetadata(
+      sessionRef.current.sheets,
+      datasetId,
+      metadata,
+    );
+    if (next === sessionRef.current.sheets) return;
+    storeSheets(next);
+  };
+
   const uploadedDatasetFieldValue = uploadedSheets.length
     ? {
         files: uploadedSheets.map((sheet) => ({
@@ -698,7 +724,7 @@ export function AiLabLevelPage({
         showInstructionsTab: Boolean(resolved.showInstructionsTab),
         showAiTutorTab: false,
         showHistoryTab: false,
-        showBackpackTab: false,
+        showBackpackTab: true,
         showContinueButton: Boolean(resolved.showContinueButton),
         collapsible: Boolean(resolved.enableSidebarCollapse),
         defaultCollapsed:
@@ -759,7 +785,13 @@ export function AiLabLevelPage({
                       (entry) => entry.id === sheet.id,
                     );
                     return dataset
-                      ? [{ dataset, fileName: sheet.fileName }]
+                      ? [
+                          {
+                            dataset,
+                            fileName: sheet.fileName,
+                            metadata: sheet.metadata,
+                          },
+                        ]
                       : [];
                   }),
                   template: {
@@ -768,8 +800,10 @@ export function AiLabLevelPage({
                     label: "Download template",
                   },
                   algorithmLock: levelConfig.algorithmLock,
+                  projectSaving: levelConfig.projectSaving,
                   onUpload: (files) => commitUploads(files, false),
                   onRemoveUpload: removeUploadById,
+                  onUpdateUploadMetadata: updateUploadMetadataById,
                   onApply: (datasetId, algorithm) => {
                     const resolvedAlgorithm =
                       levelConfig.algorithmLock ?? algorithm;

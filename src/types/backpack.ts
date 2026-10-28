@@ -1,7 +1,12 @@
 import type { FileKind } from "./file";
 
 /** Lab environment that originally saved the item — drives section grouping in the panel. */
-export type BackpackSourceLab = "sketch-lab" | "weblab2" | "pythonlab" | "generic";
+export type BackpackSourceLab =
+  | "sketch-lab"
+  | "weblab2"
+  | "pythonlab"
+  | "ailab"
+  | "generic";
 
 /** Lab environment where the student is importing backpack files into a project. */
 export type BackpackImportLab = "weblab2" | "pythonlab" | "sketch-lab" | "aichatlab";

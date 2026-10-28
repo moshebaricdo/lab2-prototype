@@ -24,6 +24,7 @@ export interface AiLabDevOverrides {
   trainingAnimation: string;
   treeNodeDetail: string;
   randomizeTestData: boolean;
+  projectSaving?: boolean;
 }
 
 export function aiLabDevDefaults(
@@ -52,6 +53,7 @@ export function aiLabDevDefaults(
     trainingAnimation: config.trainingAnimation ?? "rows",
     treeNodeDetail: config.treeNodeDetail ?? "modal",
     randomizeTestData: Boolean(config.randomizeTestData),
+    projectSaving: Boolean(config.projectSaving),
   };
 }
 
@@ -152,6 +154,7 @@ export function mergeAiLabDevConfig(
     trainingAnimation: resolved.trainingAnimation === "tree" ? "tree" : "rows",
     treeNodeDetail: resolved.treeNodeDetail === "inline" ? "inline" : "modal",
     randomizeTestData: Boolean(resolved.randomizeTestData),
+    projectSaving: Boolean(resolved.projectSaving),
     pretrained,
     initialSection: !sheetReady
       ? "dataset"

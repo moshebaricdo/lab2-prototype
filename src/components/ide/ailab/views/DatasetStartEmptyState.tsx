@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
-import { Alert, Button } from "@moshebari/cads-react";
+import { Alert, Button, Dropdown, SegmentedButton } from "@moshebari/cads-react";
 import type { IncomingCsv, MergeUploadedSheetsResult } from "../../../../lib/aiLab";
 import type { AiLabDataset } from "../../../../types/aiLab";
 import { FaIcon } from "../../../ui/icons/FaIcon";
 import { PanelHeader } from "../../../ui/PanelHeader";
+import { DatasetMetadataModal } from "./DatasetMetadataModal";
 import type { DatasetPickerController } from "./DatasetPickerModal";
 import { SetupModal } from "./SetupModal";
 import styles from "./DatasetStartEmptyState.module.scss";
+
+type DatasetSourceTab = "library" | "uploaded";
 
 function isCsvFile(file: File): boolean {
   const name = file.name.toLowerCase();
@@ -118,8 +121,20 @@ function UploadDetails({ dataset, fileName }: { dataset: AiLabDataset; fileName:
   );
 }
 
-function DatasetDetails({ dataset, fileName }: { dataset: AiLabDataset; fileName?: string }) {
-  if (fileName) return <UploadDetails dataset={dataset} fileName={fileName} />;
+function DatasetDetails({
+  dataset,
+  fileName,
+  projectSaving = false,
+  onEditMetadata,
+}: {
+  dataset: AiLabDataset;
+  fileName?: string;
+  projectSaving?: boolean;
+  onEditMetadata?: () => void;
+}) {
+  if (fileName && !projectSaving) {
+    return <UploadDetails dataset={dataset} fileName={fileName} />;
+  }
 
   const card = dataset.card;
   const description = card?.description ?? dataset.story?.whatIsARow ?? authoredDescription(dataset);
@@ -133,45 +148,77 @@ function DatasetDetails({ dataset, fileName }: { dataset: AiLabDataset; fileName
       ? { label: "Potential Misuses", value: potentialMisuses }
       : undefined,
   ].filter((section): section is { label: string; value: string } => Boolean(section));
+  const hasAuthoredDetails = Boolean(
+    description || sections.length > 0 || source || card?.lastUpdated || dataset.cover,
+  );
+  const sample = fileName && !hasAuthoredDetails ? dataset.rows[0] : undefined;
 
   return (
-    <div className={styles.details}>
-      <div className={styles.detailBlock}>
-        <h3 className={styles.detailsTitle}>{dataset.name}</h3>
-        {description ? <p className={styles.detailsLead}>{description}</p> : null}
-      </div>
-      <div className={styles.statRow}>
-        <div className={styles.stat}>
-          <p className={styles.sectionLabel}>Rows</p>
-          <p className={styles.statValue}>{(dataset.rowCount ?? dataset.rows.length).toLocaleString()}</p>
+    <div className={styles.detailsStack}>
+      <div className={styles.details}>
+        <div className={styles.detailBlock}>
+          <h3 className={styles.detailsTitle}>{dataset.name}</h3>
+          {description ? <p className={styles.detailsLead}>{description}</p> : null}
         </div>
-        <div className={styles.stat}>
-          <p className={styles.sectionLabel}>Columns</p>
-          <p className={styles.statValue}>{dataset.columnCount ?? dataset.columns.length}</p>
-        </div>
-        {card?.lastUpdated ? (
+        <div className={styles.statRow}>
           <div className={styles.stat}>
-            <p className={styles.sectionLabel}>Last Updated</p>
-            <p className={styles.statValue}>{card.lastUpdated}</p>
+            <p className={styles.sectionLabel}>Rows</p>
+            <p className={styles.statValue}>{(dataset.rowCount ?? dataset.rows.length).toLocaleString()}</p>
+          </div>
+          <div className={styles.stat}>
+            <p className={styles.sectionLabel}>Columns</p>
+            <p className={styles.statValue}>{dataset.columnCount ?? dataset.columns.length}</p>
+          </div>
+          {card?.lastUpdated ? (
+            <div className={styles.stat}>
+              <p className={styles.sectionLabel}>Last Updated</p>
+              <p className={styles.statValue}>{card.lastUpdated}</p>
+            </div>
+          ) : null}
+        </div>
+        {sections.map((section) => (
+          <div key={section.label} className={styles.detailBlock}>
+            <p className={styles.sectionLabel}>{section.label}</p>
+            <p className={styles.sectionCopy}>{section.value}</p>
+          </div>
+        ))}
+        {source ? (
+          <div className={styles.detailBlock}>
+            <p className={styles.sectionLabel}>Source</p>
+            {href ? (
+              <a className={styles.sourceLink} href={href} target="_blank" rel="noreferrer">
+                {source}
+              </a>
+            ) : (
+              <p className={styles.sectionCopy}>{source}</p>
+            )}
+          </div>
+        ) : null}
+        {fileName && onEditMetadata ? (
+          <div className={styles.detailBlock}>
+            <div className={styles.editMetadataRow}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="small"
+                startIconName="pen"
+                onClick={onEditMetadata}
+              >
+                {hasAuthoredDetails ? "Edit dataset details" : "Add dataset details"}
+              </Button>
+            </div>
           </div>
         ) : null}
       </div>
-      {sections.map((section) => (
-        <div key={section.label} className={styles.detailBlock}>
-          <p className={styles.sectionLabel}>{section.label}</p>
-          <p className={styles.sectionCopy}>{section.value}</p>
-        </div>
-      ))}
-      {source ? (
-        <div className={styles.detailBlock}>
-          <p className={styles.sectionLabel}>Source</p>
-          {href ? (
-            <a className={styles.sourceLink} href={href} target="_blank" rel="noreferrer">
-              {source}
-            </a>
-          ) : (
-            <p className={styles.sectionCopy}>{source}</p>
-          )}
+      {sample ? (
+        <div className={styles.sampleCard}>
+          <div className={styles.sampleHeader}>Sample row</div>
+          {dataset.columns.map((column) => (
+            <div key={column.id} className={styles.sampleRow}>
+              <span className={styles.sampleLabel}>{column.name}</span>
+              <span className={styles.sampleValue}>{sample[column.id]}</span>
+            </div>
+          ))}
         </div>
       ) : null}
     </div>
@@ -182,12 +229,16 @@ export function DatasetStartEmptyState({
   presets,
   uploads,
   algorithmLock,
+  projectSaving = false,
   onUpload,
   onRemoveUpload,
+  onUpdateUploadMetadata,
   onApply,
 }: DatasetPickerController) {
+  const [sourceTab, setSourceTab] = useState<DatasetSourceTab>("library");
   const [pendingId, setPendingId] = useState<string | undefined>();
   const [algorithmModalOpen, setAlgorithmModalOpen] = useState(false);
+  const [metadataModalOpen, setMetadataModalOpen] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [isReading, setIsReading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -206,6 +257,7 @@ export function DatasetStartEmptyState({
     if (!stillThere) {
       setPendingId(undefined);
       setAlgorithmModalOpen(false);
+      setMetadataModalOpen(false);
     }
   }, [pendingId, presets, uploads]);
 
@@ -237,7 +289,10 @@ export function DatasetStartEmptyState({
           );
           return;
         }
-        if (result.focusId) setPendingId(result.focusId);
+        if (result.focusId) {
+          if (projectSaving) setSourceTab("uploaded");
+          setPendingId(result.focusId);
+        }
         if (result.error) setError(result.error);
       })
       .catch(() => {
@@ -255,6 +310,11 @@ export function DatasetStartEmptyState({
     ingestFiles(event.dataTransfer.files);
   };
 
+  const showingUploadsTab = projectSaving && sourceTab === "uploaded";
+  const visibleDatasets = showingUploadsTab
+    ? uploads.map((upload) => upload.dataset)
+    : presets;
+
   return (
     <div className={styles.root}>
       <section
@@ -271,7 +331,37 @@ export function DatasetStartEmptyState({
         }}
         onDrop={onDrop}
       >
-        <PanelHeader label="CHOOSE A DATASET" />
+        <PanelHeader
+          label="CHOOSE A DATASET"
+          left={
+            projectSaving ? (
+              <SegmentedButton
+                size="extraSmall"
+                aria-label="Dataset source"
+                value={sourceTab}
+                onChange={(value) => setSourceTab(value as DatasetSourceTab)}
+                options={[
+                  { value: "library", label: "Library" },
+                  { value: "uploaded", label: "Uploaded" },
+                ]}
+              />
+            ) : undefined
+          }
+          right={
+            projectSaving ? (
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="extraSmall"
+                startIconName="upload"
+                onClick={() => inputRef.current?.click()}
+                disabled={isReading}
+              >
+                {isReading ? "Reading file…" : "Upload CSV"}
+              </Button>
+            ) : undefined
+          }
+        />
         <div className={styles.gridArea}>
           <div className={`${styles.gridScroll} ${isDragOver ? styles.gridDimmed : ""}`}>
             {error ? (
@@ -279,16 +369,49 @@ export function DatasetStartEmptyState({
                 {error}
               </Alert>
             ) : null}
-            <div className={styles.grid} role="radiogroup" aria-label="Datasets">
-              {presets.map((dataset) => (
-                <DatasetTile
-                  key={dataset.id}
-                  dataset={dataset}
-                  selected={pendingId === dataset.id}
-                  onSelect={() => select(dataset.id)}
-                />
-              ))}
-            </div>
+            {showingUploadsTab && visibleDatasets.length === 0 ? (
+              <div className={styles.uploadsEmpty}>
+                <span className={styles.detailsEmptyIcon} aria-hidden>
+                  <FaIcon name="file-csv" size="inherit" />
+                </span>
+                <span className={styles.detailsEmptyCopy}>
+                  <span className={styles.detailsEmptyTitle}>
+                    No uploaded datasets yet
+                  </span>
+                  <span className={styles.detailsEmptyHint}>
+                    Upload a CSV file or drag and drop one here to use your own
+                    data.
+                  </span>
+                </span>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  size="small"
+                  startIconName="upload"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={isReading}
+                >
+                  {isReading ? "Reading file…" : "Upload CSV"}
+                </Button>
+              </div>
+            ) : (
+              <div
+                className={styles.grid}
+                role="radiogroup"
+                aria-label={
+                  showingUploadsTab ? "Uploaded datasets" : "Library datasets"
+                }
+              >
+                {visibleDatasets.map((dataset) => (
+                  <DatasetTile
+                    key={dataset.id}
+                    dataset={dataset}
+                    selected={pendingId === dataset.id}
+                    onSelect={() => select(dataset.id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           {isDragOver ? (
             <div className={styles.dropOverlay} aria-hidden>
@@ -302,48 +425,7 @@ export function DatasetStartEmptyState({
             </div>
           ) : null}
         </div>
-        <div className={styles.footer}>
-          <div className={styles.footerStart}>
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="small"
-              startIconName="upload"
-              onClick={() => inputRef.current?.click()}
-              disabled={isReading}
-            >
-              {isReading ? "Reading file…" : "Upload CSV"}
-            </Button>
-            {uploads.length > 0 ? <span className={styles.footerDivider} aria-hidden /> : null}
-            {uploads.map(({ dataset, fileName }) => (
-              <div
-                key={dataset.id}
-                className={`${styles.uploadChip} ${
-                  pendingId === dataset.id ? styles.uploadChipSelected : ""
-                }`}
-              >
-                <button
-                  type="button"
-                  className={styles.uploadChipSelect}
-                  aria-pressed={pendingId === dataset.id}
-                  onClick={() => select(dataset.id)}
-                >
-                  <span className={styles.uploadChipIcon}>
-                    <FaIcon name="file-csv" size="inherit" />
-                  </span>
-                  <span className={styles.uploadChipName}>{fileName}</span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.uploadChipClose}
-                  aria-label={`Remove ${fileName}`}
-                  onClick={() => onRemoveUpload(dataset.id)}
-                >
-                  <FaIcon name="xmark" size="inherit" />
-                </button>
-              </div>
-            ))}
-          </div>
+        {projectSaving ? (
           <input
             ref={inputRef}
             type="file"
@@ -357,14 +439,117 @@ export function DatasetStartEmptyState({
               event.currentTarget.value = "";
             }}
           />
-        </div>
+        ) : (
+          <div className={styles.footer}>
+            <div className={styles.footerStart}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="small"
+                startIconName="upload"
+                onClick={() => inputRef.current?.click()}
+                disabled={isReading}
+              >
+                {isReading ? "Reading file…" : "Upload CSV"}
+              </Button>
+              {uploads.length > 0 ? <span className={styles.footerDivider} aria-hidden /> : null}
+              {uploads.map(({ dataset, fileName }) => (
+                <div
+                  key={dataset.id}
+                  className={`${styles.uploadChip} ${
+                    pendingId === dataset.id ? styles.uploadChipSelected : ""
+                  }`}
+                >
+                  <button
+                    type="button"
+                    className={styles.uploadChipSelect}
+                    aria-pressed={pendingId === dataset.id}
+                    onClick={() => select(dataset.id)}
+                  >
+                    <span className={styles.uploadChipIcon}>
+                      <FaIcon name="file-csv" size="inherit" />
+                    </span>
+                    <span className={styles.uploadChipName}>{fileName}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.uploadChipClose}
+                    aria-label={`Remove ${fileName}`}
+                    onClick={() => onRemoveUpload(dataset.id)}
+                  >
+                    <FaIcon name="xmark" size="inherit" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".csv,text/csv"
+              multiple
+              className={styles.fileInput}
+              tabIndex={-1}
+              aria-label="Upload CSV files"
+              onChange={(event) => {
+                ingestFiles(event.currentTarget.files);
+                event.currentTarget.value = "";
+              }}
+            />
+          </div>
+        )}
       </section>
 
       <aside className={styles.detailsRail} aria-label="About this data">
-        <PanelHeader label="ABOUT THIS DATA" />
+        <PanelHeader
+          label="ABOUT THIS DATA"
+          right={
+            projectSaving && pendingUpload ? (
+              <Dropdown
+                role="action"
+                size="extraSmall"
+                buttonVariant="text"
+                buttonColor="tertiary"
+                iconOnly
+                startIconName="ellipsis-vertical"
+                aria-label={`Dataset actions for ${pendingUpload.dataset.name}`}
+                menuPlacement="bottomRight"
+                options={[
+                  ...(onUpdateUploadMetadata
+                    ? [
+                        {
+                          value: "edit",
+                          label: "Edit dataset details",
+                          iconName: "pen" as const,
+                        },
+                      ]
+                    : []),
+                  {
+                    value: "delete",
+                    label: "Delete dataset",
+                    iconName: "trash" as const,
+                    destructive: true,
+                  },
+                ]}
+                onAction={(action) => {
+                  if (action === "edit") setMetadataModalOpen(true);
+                  if (action === "delete") onRemoveUpload(pendingUpload.dataset.id);
+                }}
+              />
+            ) : undefined
+          }
+        />
         <div className={styles.detailsScroll}>
           {pending ? (
-            <DatasetDetails dataset={pending} fileName={pendingUpload?.fileName} />
+            <DatasetDetails
+              dataset={pending}
+              fileName={pendingUpload?.fileName}
+              projectSaving={projectSaving}
+              onEditMetadata={
+                projectSaving && pendingUpload && onUpdateUploadMetadata
+                  ? () => setMetadataModalOpen(true)
+                  : undefined
+              }
+            />
           ) : (
             <div className={styles.detailsEmpty}>
               <span className={styles.detailsEmptyIcon} aria-hidden>
@@ -411,6 +596,19 @@ export function DatasetStartEmptyState({
             setAlgorithmModalOpen(false);
             onApply(pending.id, algorithm);
           }}
+        />
+      ) : null}
+
+      {projectSaving && pendingUpload && onUpdateUploadMetadata ? (
+        <DatasetMetadataModal
+          open={metadataModalOpen}
+          dataset={pendingUpload.dataset}
+          fileName={pendingUpload.fileName}
+          metadata={pendingUpload.metadata}
+          onClose={() => setMetadataModalOpen(false)}
+          onSave={(metadata) =>
+            onUpdateUploadMetadata(pendingUpload.dataset.id, metadata)
+          }
         />
       ) : null}
     </div>

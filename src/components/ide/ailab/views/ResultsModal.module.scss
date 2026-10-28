@@ -204,6 +204,18 @@ $min-visible-rows: 2;
   align-items: center;
 }
 
+.actionSlot {
+  display: flex;
+  flex-shrink: 0;
+  width: 72px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.loadWrap {
+  display: inline-flex;
+}
+
 .modelTagWrap {
   display: inline-flex;
   line-height: 0;

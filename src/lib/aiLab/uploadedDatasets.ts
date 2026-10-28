@@ -1,4 +1,9 @@
-import type { AiLabAlgorithmId, AiLabDataset } from "../../types/aiLab";
+import type {
+  AiLabAlgorithmId,
+  AiLabDataset,
+  AiLabDatasetCard,
+  AiLabUploadedDatasetMetadata,
+} from "../../types/aiLab";
 import { datasetIdFromPath, parseCsvDataset } from "./csvDataset";
 
 /** Session key for CSV sheets uploaded from AI Lab. */
@@ -25,6 +30,7 @@ export interface UploadedSheet {
   fileName: string;
   csv: string;
   updatedAt: string;
+  metadata?: AiLabUploadedDatasetMetadata;
 }
 
 export interface IncomingCsv {
@@ -277,6 +283,94 @@ export function retainUploadedSheets(
   return current.filter((sheet) => keep.has(sheet.fileName.toLowerCase()));
 }
 
+export function normalizeUploadedMetadata(
+  metadata: AiLabUploadedDatasetMetadata | undefined,
+): AiLabUploadedDatasetMetadata | undefined {
+  if (!metadata) return undefined;
+  const name = metadata.name?.trim();
+  const cover = metadata.cover?.trim();
+  const description = metadata.description?.trim();
+  const potentialUses = metadata.potentialUses?.trim();
+  const potentialMisuses = metadata.potentialMisuses?.trim();
+  const source = metadata.source?.trim();
+  if (
+    !name &&
+    !cover &&
+    !description &&
+    !potentialUses &&
+    !potentialMisuses &&
+    !source
+  ) {
+    return undefined;
+  }
+  return {
+    ...(name ? { name } : {}),
+    ...(cover ? { cover } : {}),
+    ...(description ? { description } : {}),
+    ...(potentialUses ? { potentialUses } : {}),
+    ...(potentialMisuses ? { potentialMisuses } : {}),
+    ...(source ? { source } : {}),
+  };
+}
+
+/**
+ * Update student-authored metadata on an uploaded sheet without bumping
+ * `updatedAt` (so an in-progress trained model is not cleared).
+ */
+export function updateUploadedSheetMetadata(
+  current: UploadedSheet[],
+  datasetId: string,
+  metadata: AiLabUploadedDatasetMetadata | undefined,
+): UploadedSheet[] {
+  const index = current.findIndex((sheet) => sheet.id === datasetId);
+  if (index < 0) return current;
+  const normalized = normalizeUploadedMetadata(metadata);
+  return current.map((sheet, idx) => {
+    if (idx !== index) return sheet;
+    const next: UploadedSheet = {
+      id: sheet.id,
+      fileName: sheet.fileName,
+      csv: sheet.csv,
+      updatedAt: sheet.updatedAt,
+      ...(normalized ? { metadata: normalized } : {}),
+    };
+    return next;
+  });
+}
+
+function applyMetadataToDataset(
+  base: AiLabDataset,
+  metadata: AiLabUploadedDatasetMetadata | undefined,
+): AiLabDataset {
+  const normalized = normalizeUploadedMetadata(metadata);
+  if (!normalized) return base;
+  const hasCardDetails = Boolean(
+    normalized.description ||
+      normalized.potentialUses ||
+      normalized.potentialMisuses ||
+      normalized.source,
+  );
+  const card: AiLabDatasetCard | undefined = hasCardDetails
+    ? {
+        description: normalized.description ?? "",
+        ...(normalized.potentialUses
+          ? { potentialUses: normalized.potentialUses }
+          : {}),
+        ...(normalized.potentialMisuses
+          ? { potentialMisuses: normalized.potentialMisuses }
+          : {}),
+        ...(normalized.source ? { source: normalized.source } : {}),
+      }
+    : base.card;
+  return {
+    ...base,
+    name: normalized.name ?? base.name,
+    description: normalized.description ?? base.description,
+    ...(normalized.cover ? { cover: normalized.cover } : {}),
+    ...(card ? { card } : {}),
+  };
+}
+
 /** Cache parsed uploaded sheets by `(id, updatedAt, csv.length)` so re-renders don't re-parse large CSVs. */
 const parsedUploadCache = new Map<string, AiLabDataset>();
 
@@ -288,6 +382,6 @@ export function sheetsToDatasets(sheets: UploadedSheet[]): AiLabDataset[] {
       dataset = usableDataset(sheet.csv, sheet.id);
       if (dataset) parsedUploadCache.set(cacheKey, dataset);
     }
-    return dataset ? [dataset] : [];
+    return dataset ? [applyMetadataToDataset(dataset, sheet.metadata)] : [];
   });
 }

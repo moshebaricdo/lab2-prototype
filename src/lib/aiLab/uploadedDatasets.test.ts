@@ -12,6 +12,7 @@ import {
   readUploadedSheets,
   retainUploadedSheets,
   sheetsToDatasets,
+  updateUploadedSheetMetadata,
   writeActiveAlgorithm,
   writeActiveDatasetId,
   writeUploadedSheets,
@@ -222,5 +223,47 @@ describe("recommendedAlgorithmFor", () => {
     };
     expect(recommendedAlgorithmFor(numericalHeavy)).toBe("knn");
     expect(recommendedAlgorithmFor(categoricalHeavy)).toBe("decisionTree");
+  });
+});
+
+describe("updateUploadedSheetMetadata", () => {
+  it("hydrates student-authored metadata onto parsed datasets and preserves rows/updatedAt", () => {
+    const initial = mergeUploadedSheets(
+      [],
+      [{ name: "animals.csv", content: animals }],
+      () => "t1",
+    );
+    const beforeDataset = sheetsToDatasets(initial.sheets)[0]!;
+
+    const updated = updateUploadedSheetMetadata(initial.sheets, "animals", {
+      name: "Backyard Wildlife",
+      cover: "data:image/png;base64,AAAA",
+      description: "Field observations from the school garden.",
+      potentialUses: "Classify sightings by traits.",
+      potentialMisuses: "Only two species recorded so far.",
+      source: "https://example.org/wildlife",
+    });
+
+    expect(updated[0]?.updatedAt).toBe("t1");
+    const hydrated = sheetsToDatasets(updated)[0]!;
+    expect(hydrated.name).toBe("Backyard Wildlife");
+    expect(hydrated.cover).toBe("data:image/png;base64,AAAA");
+    expect(hydrated.description).toBe("Field observations from the school garden.");
+    expect(hydrated.card).toEqual({
+      description: "Field observations from the school garden.",
+      potentialUses: "Classify sightings by traits.",
+      potentialMisuses: "Only two species recorded so far.",
+      source: "https://example.org/wildlife",
+    });
+    expect(hydrated.rows).toBe(beforeDataset.rows);
+
+    const reuploaded = mergeUploadedSheets(
+      updated,
+      [{ name: "animals.csv", content: `${animals}Otter,fur,Mammal\n` }],
+      () => "t2",
+    );
+    const rehydrated = sheetsToDatasets(reuploaded.sheets)[0]!;
+    expect(rehydrated.name).toBe("Backyard Wildlife");
+    expect(rehydrated.rows).toHaveLength(3);
   });
 });

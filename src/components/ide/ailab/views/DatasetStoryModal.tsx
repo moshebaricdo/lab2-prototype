@@ -172,6 +172,8 @@ interface DatasetStoryModalProps {
   /** Story-first intro: not dismissable, one Continue button. */
   required?: boolean;
   primaryActionLabel?: string;
+  /** Optional secondary action to edit student-authored metadata on an uploaded dataset. */
+  onEditMetadata?: () => void;
   onClose: () => void;
 }
 
@@ -181,15 +183,26 @@ export function DatasetStoryModal({
   open,
   required = false,
   primaryActionLabel,
+  onEditMetadata,
   onClose,
 }: DatasetStoryModalProps) {
+  const canEdit = !required && Boolean(onEditMetadata);
   return (
     <Modal
       open={open}
       title={dataset.name}
       maxWidth={520}
       isDismissable={!required}
-      hasSecondaryAction={false}
+      hasSecondaryAction={canEdit}
+      secondaryActionLabel={canEdit ? "Edit details" : undefined}
+      onSecondaryAction={
+        canEdit
+          ? () => {
+              onClose();
+              onEditMetadata?.();
+            }
+          : undefined
+      }
       primaryActionLabel={primaryActionLabel ?? (required ? "Continue" : "Done")}
       onPrimaryAction={onClose}
       onClose={required ? undefined : onClose}

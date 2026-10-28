@@ -3,6 +3,7 @@ import {
   useMemo,
   useState,
   type CSSProperties,
+  type ReactNode,
 } from "react";
 import {
   Button,
@@ -13,12 +14,10 @@ import {
   Tooltip,
 } from "@moshebari/cads-react";
 import type { AiLabController } from "../../../../hooks/useAiLabState";
-import { columnById, formatCell } from "../../../../lib/aiLab";
+import { columnById, formatCell, trainingRunLoadBlock } from "../../../../lib/aiLab";
 import type {
   AiLabAlgorithmId,
   AiLabColumn,
-  AiLabTrainedModel,
-  AiLabTrainingRun,
 } from "../../../../types/aiLab";
 import {
   ColumnScopeToggle,
@@ -61,6 +60,8 @@ interface ResultsModalProps {
   initialTab: ResultsTab;
   onClose: () => void;
   onTryRow: (rowIndex: number) => void;
+  /** Restore a previous run onto Testing. Shown only when project saving is on. */
+  onLoadRun?: (runId: string) => void;
 }
 
 /**
@@ -73,6 +74,7 @@ export function ResultsModal({
   initialTab,
   onClose,
   onTryRow,
+  onLoadRun,
 }: ResultsModalProps) {
   const [tab, setTab] = useState<ResultsTab>(initialTab);
   const model = lab.model;
@@ -109,9 +111,10 @@ export function ResultsModal({
             <ScorecardTab lab={lab} onTryRow={onTryRow} />
           ) : (
             <PreviousTab
-              columns={lab.config.dataset.columns}
-              model={model}
-              runs={lab.trainingRuns}
+              lab={lab}
+              onLoadRun={
+                lab.config.projectSaving && onLoadRun ? onLoadRun : undefined
+              }
             />
           )}
         </div>
@@ -402,23 +405,30 @@ function ScorecardTab({
 }
 
 function PreviousTab({
-  columns,
-  model,
-  runs,
+  lab,
+  onLoadRun,
 }: {
-  columns: AiLabColumn[];
-  model: AiLabTrainedModel;
-  runs: AiLabTrainingRun[];
+  lab: AiLabController;
+  onLoadRun?: (runId: string) => void;
 }) {
+  const columns = lab.config.dataset.columns;
+  const model = lab.model;
+  const runs = lab.trainingRuns;
+  if (!model) return null;
+  const activeRun = runs.find((run) => run.id === lab.activeRunId);
   const newestFirst = [...runs].reverse();
-  // The newest run is the model just trained. Current is that model on its
-  // own; everything older stays in Previous. A pretrained model has no runs.
-  const previousRuns = newestFirst.slice(1);
+  // Current is the model on Testing. With no active id (a pretrained model,
+  // or the first paint) the newest run is that model, so it stays out of
+  // Previous. Loading an older run makes that one Current instead.
+  const previousRuns = activeRun
+    ? newestFirst.filter((run) => run.id !== activeRun.id)
+    : newestFirst.slice(1);
+  const canLoad = Boolean(onLoadRun);
 
   return (
     <div className={styles.log}>
       <section className={styles.runGroup} aria-label="Current">
-        <RunHeading label="Current" />
+        <RunHeading label="Current" reserveAction={canLoad} />
         <div className={styles.rule} aria-hidden />
         <ResultRow
           columns={columns}
@@ -426,29 +436,56 @@ function PreviousTab({
           labelColumn={model.labelColumn}
           features={model.selectedFeatures}
           accuracy={model.accuracy}
+          reserveAction={canLoad}
         />
       </section>
       <section className={styles.previousGroup} aria-label="Previous">
         <div className={styles.runGroup}>
-          <RunHeading label="Previous" />
+          <RunHeading label="Previous" reserveAction={canLoad} />
           <div className={styles.rule} aria-hidden />
         </div>
         {previousRuns.length === 0 ? (
           <p className={styles.emptyLine}>No previous results yet.</p>
         ) : (
           <ul className={styles.logList}>
-            {previousRuns.map((run, index) => (
-              <li key={run.id} className={styles.logItem}>
-                {index > 0 ? <div className={styles.rule} aria-hidden /> : null}
-                <ResultRow
-                  columns={columns}
-                  algorithm={run.algorithm ?? model.algorithm}
-                  labelColumn={run.labelColumn}
-                  features={run.selectedFeatures}
-                  accuracy={run.accuracy}
-                />
-              </li>
-            ))}
+            {previousRuns.map((run, index) => {
+              const block = trainingRunLoadBlock(lab.config, run, columns);
+              return (
+                <li key={run.id} className={styles.logItem}>
+                  {index > 0 ? <div className={styles.rule} aria-hidden /> : null}
+                  <ResultRow
+                    columns={columns}
+                    algorithm={run.algorithm ?? model.algorithm}
+                    labelColumn={run.labelColumn}
+                    features={run.selectedFeatures}
+                    accuracy={run.accuracy}
+                    reserveAction={canLoad}
+                    action={
+                      onLoadRun ? (
+                        <Tooltip
+                          title={
+                            block ?? "Use this model on Testing"
+                          }
+                          placement="top"
+                        >
+                          <span className={styles.loadWrap}>
+                            <Button
+                              size="extraSmall"
+                              variant="outlined"
+                              color="secondary"
+                              disabled={Boolean(block)}
+                              onClick={() => onLoadRun(run.id)}
+                            >
+                              Load
+                            </Button>
+                          </span>
+                        </Tooltip>
+                      ) : null
+                    }
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -456,12 +493,19 @@ function PreviousTab({
   );
 }
 
-function RunHeading({ label }: { label: string }) {
+function RunHeading({
+  label,
+  reserveAction = false,
+}: {
+  label: string;
+  reserveAction?: boolean;
+}) {
   return (
     <div className={styles.logHead}>
       <span className={styles.statementCol}>{label}</span>
       <span className={styles.accuracySlot}>Accuracy</span>
       <span className={styles.modelSlot}>Model</span>
+      {reserveAction ? <span className={styles.actionSlot} /> : null}
     </div>
   );
 }
@@ -472,12 +516,16 @@ function ResultRow({
   labelColumn,
   features,
   accuracy,
+  reserveAction = false,
+  action,
 }: {
   columns: AiLabColumn[];
   algorithm: AiLabAlgorithmId;
   labelColumn: string;
   features: string[];
   accuracy: number;
+  reserveAction?: boolean;
+  action?: ReactNode;
 }) {
   const algoMeta = ALGORITHM_META[algorithm];
   return (
@@ -509,6 +557,9 @@ function ResultRow({
           </span>
         </Tooltip>
       </span>
+      {reserveAction ? (
+        <span className={styles.actionSlot}>{action}</span>
+      ) : null}
     </div>
   );
 }

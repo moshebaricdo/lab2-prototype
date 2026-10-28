@@ -43,6 +43,7 @@ import { ModelActions } from "./ModelActions";
 import type { ModelInspectorTab } from "./ModelInspector";
 import { ScaleGroupEditor } from "./ScaleGroupEditor";
 import { DatasetStartEmptyState } from "./DatasetStartEmptyState";
+import { DatasetMetadataModal } from "./DatasetMetadataModal";
 import type { DatasetPickerController } from "./DatasetPickerModal";
 import { DatasetStoryModal } from "./DatasetStoryModal";
 import { IntroActivity } from "./IntroActivity";
@@ -132,7 +133,11 @@ export function DataStudio({
       <div className={styles.stage}>
         <div className={styles.sheetColumn}>
           {awaitingUpload ? null : (
-            <DataHeader lab={lab} inIntro={inIntro} />
+            <DataHeader
+              lab={lab}
+              inIntro={inIntro}
+              datasetStart={datasetStart}
+            />
           )}
           {inIntro ? (
             <IntroActivity lab={lab} />
@@ -297,14 +302,23 @@ function EmptyDatasetSheet({
 function DataHeader({
   lab,
   inIntro = false,
+  datasetStart,
 }: {
   lab: AiLabController;
   inIntro?: boolean;
+  datasetStart?: DatasetPickerController;
 }) {
   const datasetLabel = lab.needsDataset
     ? "Choose dataset"
     : lab.config.dataset.name;
   const [storyOpen, setStoryOpen] = useState(false);
+  const [metadataOpen, setMetadataOpen] = useState(false);
+  const activeUpload =
+    datasetStart?.projectSaving && datasetStart.onUpdateUploadMetadata
+      ? datasetStart.uploads.find(
+          (upload) => upload.dataset.id === lab.config.dataset.id,
+        )
+      : undefined;
 
   return (
     <div className={styles.dataHeader}>
@@ -336,8 +350,26 @@ function DataHeader({
             <DatasetStoryModal
               dataset={lab.config.dataset}
               open={storyOpen}
+              onEditMetadata={
+                activeUpload ? () => setMetadataOpen(true) : undefined
+              }
               onClose={() => setStoryOpen(false)}
             />
+            {activeUpload && datasetStart?.onUpdateUploadMetadata ? (
+              <DatasetMetadataModal
+                open={metadataOpen}
+                dataset={lab.config.dataset}
+                fileName={activeUpload.fileName}
+                metadata={activeUpload.metadata}
+                onClose={() => setMetadataOpen(false)}
+                onSave={(metadata) =>
+                  datasetStart.onUpdateUploadMetadata?.(
+                    activeUpload.dataset.id,
+                    metadata,
+                  )
+                }
+              />
+            ) : null}
           </>
         )}
       </div>

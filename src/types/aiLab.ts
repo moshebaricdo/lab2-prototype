@@ -74,6 +74,19 @@ export interface AiLabDatasetCard {
   potentialMisuses?: string;
 }
 
+/**
+ * Student-authored metadata on an uploaded CSV dataset (behind `projectSaving`).
+ * Hydrates `AiLabDataset.name`, `cover`, `description`, and `card`.
+ */
+export interface AiLabUploadedDatasetMetadata {
+  name?: string;
+  cover?: string;
+  description?: string;
+  potentialUses?: string;
+  potentialMisuses?: string;
+  source?: string;
+}
+
 export interface AiLabDataset {
   id: string;
   name: string;
@@ -245,7 +258,12 @@ export interface AiLabSavedModel {
   model: AiLabTrainedModel;
 }
 
-/** One successful `train()` in the session. Stored oldest-first; the Results modal lists newest first. */
+/**
+ * One successful `train()` in the session. Stored oldest-first; the Results
+ * modal lists newest first. `model` is the snapshot Load restores. The log
+ * clears when the dataset or sheet changes, so a snapshot always matches
+ * the sheet it was trained on.
+ */
 export interface AiLabTrainingRun {
   id: string;
   algorithm: AiLabAlgorithmId;
@@ -254,6 +272,7 @@ export interface AiLabTrainingRun {
   /** Same 0–1 fraction the trained model stores. */
   accuracy: number;
   createdAt: number;
+  model: AiLabTrainedModel;
 }
 
 /**
@@ -310,6 +329,13 @@ export interface AiLabLevelConfig {
    * datasets from the drop folder can sit beside those uploads.
    */
   sessionDatasets?: boolean;
+  /**
+   * Broad project-saving flag for standalone AI Lab workflows:
+   * Library / Uploaded dataset chooser tabs, header CSV upload,
+   * student-authored dataset metadata, Save model on Testing, and Load
+   * on previous training results.
+   */
+  projectSaving?: boolean;
   /**
    * Bumps when the active sheet's bytes change so a re-upload remounts
    * the lab even if the dataset id stays the same.

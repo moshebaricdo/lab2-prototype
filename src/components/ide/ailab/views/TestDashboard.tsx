@@ -44,7 +44,7 @@ import { KnnViz, KNN_TRACE_STEP_COUNT, type KnnView } from "./viz/KnnViz";
 import { TraceBar, type TraceStep } from "./viz/TraceBar";
 import { useStepPlayback } from "./viz/useStepPlayback";
 import { ModelActions } from "./ModelActions";
-import type { ModelInspectorTab } from "./ModelInspector";
+import { ExportModal, type ModelInspectorTab } from "./ModelInspector";
 import {
   formatAccuracyPercent,
   ResultsModal,
@@ -228,6 +228,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
   const [resultsOpen, setResultsOpen] = useState(false);
   const [resultsEntry, setResultsEntry] = useState<ResultsTab>("scorecard");
   const [resultsSession, setResultsSession] = useState(0);
+  const [exportOpen, setExportOpen] = useState(false);
   const [openNodeKey, setOpenNodeKey] = useState<string | undefined>(undefined);
   const nodeModal = lab.config.treeNodeDetail === "modal";
   const committedAt = canvasLayout ? lab.shownTest?.committedAt : undefined;
@@ -562,6 +563,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
         rows={lab.rows}
         labelColumn={model.labelColumn}
         reservedRowIndexes={model.holdoutRowIndexes}
+        imageName={lab.config.dataset.name}
       />
     ) : (
       <KnnViz
@@ -618,6 +620,17 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
               >
                 Previous results
               </Button>
+              {lab.config.projectSaving ? (
+                <Button
+                  size="extraSmall"
+                  variant="outlined"
+                  color="secondary"
+                  startIconName="floppy-disk"
+                  onClick={() => setExportOpen(true)}
+                >
+                  Save model
+                </Button>
+              ) : null}
             </div>
           </header>
         ) : (
@@ -833,17 +846,30 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
         )}
 
         {canvasLayout ? (
-          <ResultsModal
-            key={resultsSession}
-            lab={lab}
-            open={resultsOpen}
-            initialTab={resultsEntry}
-            onClose={() => setResultsOpen(false)}
-            onTryRow={(rowIndex) => {
-              lab.loadHoldoutRow(rowIndex);
-              setResultsOpen(false);
-            }}
-          />
+          <>
+            <ResultsModal
+              key={resultsSession}
+              lab={lab}
+              open={resultsOpen}
+              initialTab={resultsEntry}
+              onClose={() => setResultsOpen(false)}
+              onTryRow={(rowIndex) => {
+                lab.loadHoldoutRow(rowIndex);
+                setResultsOpen(false);
+              }}
+              onLoadRun={(runId) => {
+                lab.loadTrainingRun(runId);
+                setResultsOpen(false);
+              }}
+            />
+            {lab.config.projectSaving ? (
+              <ExportModal
+                lab={lab}
+                open={exportOpen}
+                onClose={() => setExportOpen(false)}
+              />
+            ) : null}
+          </>
         ) : null}
         {nodeModal && model.algorithm === "decisionTree" ? (
           <TreeNodeModal

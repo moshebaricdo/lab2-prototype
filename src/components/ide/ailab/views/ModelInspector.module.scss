@@ -16,6 +16,40 @@
   overflow: hidden;
 }
 
+/* Let the modal body scroll the whole card. A max-height here shrinks the
+ * flex panel and clips the snippet under the footer. */
+.rootHandoff {
+  max-height: none;
+  overflow: visible;
+
+  .panel {
+    flex: none;
+    overflow: visible;
+  }
+}
+
+.handoffStatement {
+  min-width: 0;
+}
+
+.snippetHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.snippetRule {
+  padding-top: 4px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.savedHeading {
+  @include type-overline-2;
+  margin: 0;
+  color: var(--text-neutral-quaternary);
+}
+
 .header {
   display: flex;
   align-items: flex-start;
