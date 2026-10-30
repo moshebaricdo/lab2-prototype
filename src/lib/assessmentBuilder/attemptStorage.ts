@@ -5,7 +5,7 @@
  */
 
 export interface QuizAttemptSnapshotResponses {
-  selectedMulti: Record<string, string | null>;
+  selectedMulti: Record<string, string | string[] | null>;
   freeText: Record<string, string>;
   matchAssignments: Record<string, Record<string, string | null>>;
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Dialog, SegmentedButton, Toast } from "@moshebari/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import { PanelHeader } from "../../../ui/PanelHeader";
@@ -7,6 +7,7 @@ import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles"
 import type { DevPanelField } from "../../../lab2/dev";
 import { initialChatMessages } from "../../../../data/weblab2";
 import { useAssessmentBuilderState } from "../../../../hooks/useAssessmentBuilderState";
+import { useEditableQuiz } from "../../../../hooks/useEditableQuiz";
 import { useQuestionBank } from "../../../../hooks/useQuestionBank";
 import { useChatState } from "../../../../hooks/useChatState";
 import { useLayoutState } from "../../../../hooks/useLayoutState";
@@ -30,9 +31,12 @@ import {
   questionRefId,
   removeQuestionRef,
   replaceQuestionRef,
+  clearEditableQuizCache,
+  hrefWithoutEditableQuizArtifact,
   resetAllCourseBanks,
   resetAssessmentDrafts,
   resolvedShowIntro,
+  searchWithEditableQuiz,
   withSavedIdentity,
   type BlankQuestionKind,
   type OutlineDropTarget,
@@ -51,6 +55,13 @@ import { QuizPreviewEmptyState } from "./QuizPreviewEmptyState";
 import { QuizStatusTag } from "./QuizStatusTag";
 import { SaveQuestionPrompt, type SaveQuestionPromptKind } from "./SaveQuestionPrompt";
 import styles from "./AssessmentBuilderWorkspace.module.scss";
+
+function overridesWithoutArtifact(overrides: Record<string, unknown>) {
+  if (!("artifact" in overrides)) return overrides;
+  const next = { ...overrides };
+  delete next.artifact;
+  return next;
+}
 
 type WorkspaceMode = "edit" | "preview";
 
@@ -79,6 +90,11 @@ interface AssessmentBuilderWorkspaceProps {
   currentLevelPath?: string;
   /** P0-aligned authoring: CFU/exam only; course/unit as bank scope; standards as tags. */
   p0Aligned?: boolean;
+  /**
+   * Student route for a session-backed demo. Save and Back open this quiz,
+   * and the encoded `o` param carries its questions and config.
+   */
+  playPath?: string;
 }
 
 export function AssessmentBuilderWorkspace({
@@ -86,10 +102,20 @@ export function AssessmentBuilderWorkspace({
   levelLinks,
   currentLevelPath,
   p0Aligned = false,
+  playPath,
 }: AssessmentBuilderWorkspaceProps) {
   const navigate = useNavigate();
-  const { artifact, bankQuestions, resolvedQuestions, updateArtifact } =
-    useAssessmentBuilderState(assessmentId);
+  const location = useLocation();
+  const draftState = useAssessmentBuilderState(assessmentId);
+  const editableState = useEditableQuiz(playPath ? assessmentId : null);
+  const artifact = playPath ? editableState.artifact : draftState.artifact;
+  const bankQuestions = playPath ? editableState.bankQuestions : draftState.bankQuestions;
+  const resolvedQuestions = playPath
+    ? editableState.resolvedQuestions
+    : draftState.resolvedQuestions;
+  const updateArtifact = playPath
+    ? editableState.updateArtifact
+    : draftState.updateArtifact;
   const { saveQuestion } = useQuestionBank(artifact?.courseId ?? "aif-cert");
 
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
@@ -232,15 +258,27 @@ export function AssessmentBuilderWorkspace({
     useChatState(initialChatMessages);
   const versionHistory = useVersionHistoryState();
   const overrideResult = usePropsOverride(BUILDER_DEV_DEFAULTS);
+  const devOverrideResult = playPath
+    ? {
+        ...overrideResult,
+        overrides: overridesWithoutArtifact(overrideResult.overrides),
+        hasOverrides:
+          Object.keys(overridesWithoutArtifact(overrideResult.overrides))
+            .length > 0,
+      }
+    : overrideResult;
 
   const handleResetStoredQuizzes = useCallback(() => {
     const confirmed = window.confirm(
-      "Reset stored quiz drafts and the question bank to the seed fixtures, clear session storage, then reload?",
+      "Reset stored quiz drafts and the question bank to the seed fixtures, clear session storage and the encoded quiz link, then reload?",
     );
     if (!confirmed) return;
+    const nextHref = hrefWithoutEditableQuizArtifact(window.location.href);
+    clearEditableQuizCache();
     resetAssessmentDrafts();
     resetAllCourseBanks();
     window.sessionStorage.clear();
+    window.history.replaceState(null, "", nextHref);
     window.location.reload();
   }, []);
 
@@ -250,7 +288,7 @@ export function AssessmentBuilderWorkspace({
         key: "resetStoredQuizzes",
         label: "Reset stored quizzes",
         description:
-          "Clears saved quiz drafts, the question bank, and session storage, then reloads from the seed fixtures.",
+          "Clears saved quiz drafts, the question bank, session storage, and the encoded quiz link, then reloads from the seed fixtures.",
         type: "action",
         buttonLabel: "Reset and reload",
         iconName: "eraser",
@@ -627,6 +665,41 @@ export function AssessmentBuilderWorkspace({
     }));
   };
 
+  const openPlayableQuiz = (next: typeof artifact) => {
+    if (!playPath) {
+      navigate("/levels");
+      return;
+    }
+    const search = searchWithEditableQuiz(
+      new URLSearchParams(location.search),
+      next,
+    ).toString();
+    navigate({ pathname: playPath, search });
+  };
+
+  const handleLeaveBuilder = () => {
+    if (playPath) openPlayableQuiz(artifact);
+    else navigate("/levels");
+  };
+
+  const handleSaveQuiz = () => {
+    if (!playPath) return;
+    let next = artifact;
+    for (const session of Object.values(editSessions)) {
+      if (
+        session.draft.neverSaved ||
+        isQuestionDraftDirty(session.baseline, session.draft)
+      ) {
+        next = replaceQuestionRef(next, session.draft.bankId, {
+          type: "inline",
+          item: withSavedIdentity(session.draft),
+        });
+      }
+    }
+    const prepared = editableState.updateArtifact(() => next) ?? next;
+    openPlayableQuiz(prepared);
+  };
+
   return (
     <Lab2Shell
       topNavigationProps={{
@@ -646,16 +719,17 @@ export function AssessmentBuilderWorkspace({
               startIconName="arrow-left"
               onClick={() => {
                 if (dirtyCount > 0) setLeaveOpen(true);
-                else navigate("/levels");
+                else handleLeaveBuilder();
               }}
             >
-              Back to Levelbuilder
+              {playPath ? "Back to quiz" : "Back to Levelbuilder"}
             </Button>
             <Button
               variant="outlined"
               color="secondary"
               size="extraSmall"
               startIconName="floppy-disk"
+              onClick={playPath ? handleSaveQuiz : undefined}
             >
               Save
             </Button>
@@ -684,7 +758,7 @@ export function AssessmentBuilderWorkspace({
         showAiTutorTab: false,
         showBackpackTab: false,
         devPanelFields: builderDevFields,
-        devPanelOverrideResult: overrideResult,
+        devPanelOverrideResult: devOverrideResult,
         showContinueButton: false,
         collapsible: true,
         defaultCollapsed: false,
@@ -779,6 +853,8 @@ export function AssessmentBuilderWorkspace({
                 <QuizAttemptWorkspace
                   artifact={artifact}
                   bankQuestions={bankQuestions}
+                  levelLinks={levelLinks}
+                  currentLevelPath={currentLevelPath}
                   embedded
                 />
               )
@@ -834,7 +910,7 @@ export function AssessmentBuilderWorkspace({
             primaryActionLabel="Keep editing"
             secondaryActionLabel="Leave and discard"
             onPrimaryAction={() => setLeaveOpen(false)}
-            onSecondaryAction={() => navigate("/levels")}
+            onSecondaryAction={handleLeaveBuilder}
             onClose={() => setLeaveOpen(false)}
           />
         </>

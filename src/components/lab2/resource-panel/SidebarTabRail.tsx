@@ -25,6 +25,8 @@ interface SidebarTabRailProps {
   showValidationTab: boolean;
   showAiTutorTab: boolean;
   showHistoryTab: boolean;
+  /** Quiz submission review names this tab Attempt history. */
+  historyBrowseOnly?: boolean;
   showBackpackTab: boolean;
   showTeacherResourcesTab: boolean;
   showRubricTab: boolean;
@@ -152,6 +154,7 @@ export function SidebarTabRail({
   showValidationTab,
   showAiTutorTab,
   showHistoryTab,
+  historyBrowseOnly = false,
   showBackpackTab,
   showTeacherResourcesTab,
   showRubricTab,
@@ -198,7 +201,7 @@ export function SidebarTabRail({
     },
     {
       tab: "history",
-      tooltip: "Version History",
+      tooltip: historyBrowseOnly ? "Attempt history" : "Version History",
       iconName: "clock-rotate-left",
       visible: showHistoryTab,
     },

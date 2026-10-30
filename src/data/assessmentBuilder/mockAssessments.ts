@@ -268,71 +268,24 @@ When you are ready, begin.`,
 };
 
 /**
- * Final quiz builder seed: one-question check for understanding.
- * Flat outline (no pages), attached to Unit 2, unpublished.
- */
-export const mockP0CfuAssessment: AssessmentArtifact = {
-  id: "draft-p0-cfu",
-  courseId: "aif-cert",
-  title: "Unit 2 CFU · Accountability",
-  lessonName: "Lesson 8",
-  levelId: 47620,
-  placement: {
-    kind: "attached",
-    courseId: "aif-cert",
-    courseLabel: "AI Foundations",
-    unitId: "aif-unit-responsible",
-    unitLabel: "Unit 2",
-  },
-  purpose: "check_for_understanding",
-  mode: "checkpoint",
-  layout: "stepped",
-  metadata: {
-    ...SHARED_METADATA,
-    levelPosition: 2,
-    assessmentName: "Unit 2 CFU · Accountability",
-  },
-  questionRefs: [{ type: "bank", bankId: "q-aif-multi-two" }],
-  shuffle: { shuffleQuestions: false, shuffleOptions: false },
-  showIntroScreen: false,
-  allowMultipleAttempts: true,
-  requireCorrectAnswerToContinue: true,
-  feedback: {
-    showCorrectness: true,
-    revealAnswerExplanation: false,
-  },
-  tutor: { enabled: false },
-  unitPlacements: [
-    {
-      unitName: "Unit 2: Responsible AI",
-      courseName: "AI Foundations",
-      lessonName: "8",
-      publishedState: "in_development",
-    },
-  ],
-  updatedAt: new Date(2026, 8, 6).getTime(),
-};
-
-/**
- * P0 floating quiz: not in a live unit, no purpose yet. Title and level id
- * are already set — Levelbuilder creates the Level before this screen.
+ * Blank quiz demo: nothing authored yet. No title, lesson name, level id,
+ * purpose, questions, or unit placement. The purpose chooser stays up
+ * until one is picked.
  */
 export const mockP0FloatingAssessment: AssessmentArtifact = {
   id: "draft-p0-floating",
   courseId: "aif-cert",
-  title: "AI Foundations Certification Exam",
-  lessonName: "Untitled",
-  levelId: 50102,
+  title: "",
+  lessonName: "",
   placement: { kind: "floating" },
   mode: "checkpoint",
   layout: "stepped",
   metadata: {
     ...SHARED_METADATA,
     levelPosition: 1,
-    assessmentName: "AI Foundations Certification Exam",
   },
   questionRefs: [],
   shuffle: { shuffleQuestions: false, shuffleOptions: false },
   tutor: { enabled: false },
-  updatedAt: Date.now(),
+  updatedAt: new Date(2026, 9, 29).getTime(),
 };

@@ -107,6 +107,7 @@ export function Sidebar({
   hasPendingAiChanges = false,
   newProjectPlanQuestionnaireSignal = 0,
   historyVersions,
+  historyBrowseOnly = false,
   showNewProjectHistoryEmptyState = false,
   onCollapsedChange,
   devPanelFields,
@@ -336,6 +337,7 @@ export function Sidebar({
         showValidationTab={showValidationTab}
         showAiTutorTab={showAiTutorTab}
         showHistoryTab={showHistoryTab}
+        historyBrowseOnly={historyBrowseOnly}
         showBackpackTab={showBackpackTab}
         showTeacherResourcesTab={showTeacherResourcesTab}
         showRubricTab={showRubricTab}
@@ -430,6 +432,7 @@ export function Sidebar({
             hasPendingAiChanges={hasPendingAiChanges}
             newProjectPlanQuestionnaireSignal={newProjectPlanQuestionnaireSignal}
             historyVersions={historyVersions}
+            historyBrowseOnly={historyBrowseOnly}
             showNewProjectHistoryEmptyState={showNewProjectHistoryEmptyState}
             onImportBackpackItem={onImportBackpackItem}
             backpackImportLab={backpackImportLab}

@@ -56,6 +56,8 @@ interface FreeResponseWorkspaceProps {
   /** CFU / quiz student card: Figma question-container stem pad. */
   studentQuestionChrome?: boolean;
   afterBody?: ReactNode;
+  /** Top-right of the question stem, beside the overline. */
+  headerEnd?: ReactNode;
 }
 
 const freeResponseDevFields: DevPanelField[] = [
@@ -86,6 +88,7 @@ export function FreeResponseWorkspace({
   hideDevPanel = false,
   studentQuestionChrome = false,
   afterBody,
+  headerEnd,
 }: FreeResponseWorkspaceProps = {}) {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -261,15 +264,17 @@ export function FreeResponseWorkspace({
             question={level.stem.question}
             description={level.stem.description}
             afterBody={afterBody}
+            headerEnd={headerEnd}
           >
-            <div
-              className={[
-                styles.inputWrap,
-                studentQuestionChrome ? "" : styles.inputWrapStandalone,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
+              <div
+                className={[
+                  styles.inputWrap,
+                  studentQuestionChrome ? "" : styles.inputWrapStandalone,
+                  inputReadOnly ? styles.inputLocked : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
               <TextInput
                 multiline
                 color="secondary"

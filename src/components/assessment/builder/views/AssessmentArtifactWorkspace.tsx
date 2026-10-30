@@ -21,6 +21,7 @@ import {
   allBlocksComplete,
   getLevelContinueTarget,
   LevelGroupEmbeddedBlock,
+  multiSelectionIds,
   useLevelGroupFlowState,
 } from "../../levelgroup/views/LevelGroupFlowBlocks";
 import { LevelGroupAssessmentIntro } from "../../levelgroup/views/LevelGroupAssessmentIntro";
@@ -135,9 +136,7 @@ export function AssessmentArtifactWorkspace({
       }
       const response = {
         bankId: question.bankId,
-        multiSelectedIds: state.selectedMulti[blockId]
-          ? [state.selectedMulti[blockId]!]
-          : [],
+        multiSelectedIds: multiSelectionIds(state.selectedMulti[blockId]),
         freeText: state.freeText[blockId],
         matchAssignments: state.matchAssignments[blockId],
         fillInBlank: state.fillInBlankResponses[blockId],

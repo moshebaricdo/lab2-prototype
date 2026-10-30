@@ -1,13 +1,24 @@
 .root {
   position: relative;
   display: flex;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  flex: 1;
+  overflow: hidden;
+}
+
+.scrollArea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 0;
   flex: 1;
 }
 
-.scrollArea {
-  min-height: 0;
-  flex: 1;
+.scrollViewport {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .scrollViewport > div {
@@ -16,10 +27,13 @@
 }
 
 .content {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 0;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 8px;
 }
 
@@ -83,6 +97,8 @@
 
 .section {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .connector {
@@ -92,6 +108,8 @@
 }
 
 .card {
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--border-neutral-primary);
   border-radius: var(--shape-sm);
   background: var(--background-neutral-secondary);
@@ -101,6 +119,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
   height: 40px;
   padding: 8px 8px 8px 12px;
   border-bottom: 1px solid var(--border-neutral-primary);
@@ -114,8 +135,9 @@
 .rowMain {
   display: flex;
   align-self: stretch;
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
+  overflow: hidden;
   align-items: center;
   gap: 10px;
   border: 0;
@@ -132,6 +154,7 @@
 }
 
 .radio {
+  flex-shrink: 0;
   width: 18px;
   height: 18px;
   border: 2px solid var(--text-neutral-primary);
@@ -159,11 +182,48 @@
 }
 
 .label {
+  display: flex;
+  align-items: baseline;
+  flex: 1;
+  min-width: 0;
   margin: 0;
+  overflow: hidden;
   color: var(--text-neutral-primary);
   font-size: var(--text-body-sm);
   font-weight: var(--font-weight-semi-bold);
   line-height: var(--leading-body-sm);
+}
+
+.labelName,
+.labelNameOnly {
+  white-space: nowrap;
+}
+
+.labelName {
+  flex: none;
+}
+
+.labelSeparator {
+  flex: none;
+  padding-inline: 0.4em;
+  font-weight: var(--font-weight-regular);
+  color: var(--text-neutral-secondary);
+}
+
+.labelNameOnly {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.labelMeta {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-weight-regular);
+  color: var(--text-neutral-secondary);
 }
 
 .labelAutosave {
@@ -180,6 +240,7 @@
 
 .restoreButton {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 4px;
   border: 1px solid var(--border-neutral-primary);
@@ -201,12 +262,18 @@
   box-shadow: 0 0 0 2px var(--border-selected-primary);
 }
 
-.autosaveIcon {
+.autosaveIcon,
+.bestAttemptIcon {
+  display: inline-flex;
+  width: 20px;
+  flex-shrink: 0;
   color: var(--text-neutral-placeholder);
   font-size: var(--text-body-sm);
 }
 
 .aiSaveIcon {
+  display: inline-flex;
+  flex-shrink: 0;
   color: var(--text-neutral-placeholder);
   font-size: var(--text-body-sm);
 }

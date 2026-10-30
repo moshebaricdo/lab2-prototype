@@ -21,6 +21,8 @@ export interface AssessmentStemSectionProps {
   children?: ReactNode;
   /** Figma explanation cards sit in the same 24px question-content stack. */
   afterBody?: ReactNode;
+  /** Question outcome tag, pinned to the card’s top-right. */
+  headerEnd?: ReactNode;
 }
 
 /**
@@ -35,6 +37,7 @@ export function AssessmentStemSection({
   description,
   children,
   afterBody,
+  headerEnd,
 }: AssessmentStemSectionProps) {
   const eyebrowEl = eyebrow.trim() ? (
     <p
@@ -50,6 +53,10 @@ export function AssessmentStemSection({
     <h1 className={styles.question}>{question}</h1>
   ) : null;
 
+  const headerEndEl = headerEnd ? (
+    <div className={styles.headerEnd}>{headerEnd}</div>
+  ) : null;
+
   const descriptionEl = description ? (
     <div className={question ? styles.description : styles.descriptionOnly}>
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{description}</ReactMarkdown>
@@ -60,6 +67,7 @@ export function AssessmentStemSection({
     return (
       <div className={[styles.root, styles.questionContainer].join(" ")}>
         <div className={styles.headerStack}>
+          {headerEndEl}
           <div className={styles.titleStack}>
             {eyebrowEl}
             {questionEl}
@@ -74,6 +82,7 @@ export function AssessmentStemSection({
 
   return (
     <div className={styles.root}>
+      {headerEndEl}
       {eyebrowEl}
       {questionEl}
       {descriptionEl}

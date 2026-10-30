@@ -11,6 +11,18 @@
   margin-top: 24px;
 }
 
+/* Submitted answers stay read-only. Click, hover, and focus keep the resting field. */
+.inputLocked {
+  :global([data-cads-text-input][data-readonly="true"]) {
+    &:hover,
+    &:active,
+    &:focus-within {
+      box-shadow: none;
+      background-color: var(--background-neutral-secondary) !important;
+    }
+  }
+}
+
 .textarea {
   background: var(--input-background);
   border: 1px solid var(--border-neutral-primary);

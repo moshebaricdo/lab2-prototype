@@ -205,6 +205,8 @@ export interface SidebarProps {
   hasPendingAiChanges?: boolean;
   newProjectPlanQuestionnaireSignal?: number;
   historyVersions?: ComponentProps<typeof VersionHistory>["versions"];
+  /** Quiz submission review: browse versions without save or restore. */
+  historyBrowseOnly?: boolean;
   showNewProjectHistoryEmptyState?: boolean;
   /** Fires when `collapsible && isCollapsed` changes (for shell chrome such as resize handle). */
   onCollapsedChange?: (collapsed: boolean) => void;

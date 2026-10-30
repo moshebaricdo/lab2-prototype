@@ -21,6 +21,12 @@ export {
   type QuizAttemptSnapshotResponses,
 } from "./attemptStorage";
 export {
+  appendStoredQuizAttempt,
+  loadStoredQuizAttempts,
+  type StoredQuizAttempt,
+  type StoredQuizAttemptAnswers,
+} from "./submittedAttempts";
+export {
   QUESTION_DIFFICULTIES,
   QUESTION_DIFFICULTY_LABELS,
 } from "./difficulty";
@@ -45,9 +51,12 @@ export {
 } from "./quizPurpose";
 export {
   primaryQuizPageLabel,
+  questionOutcomeTag,
   quizActionHasArrow,
   quizAttemptChipCopy,
+  responseWasSkipped,
   studentIncorrectFooterLayout,
+  type QuestionOutcomeTag,
   type StudentIncorrectFooterLayout,
 } from "./studentFooter";
 export {
@@ -58,6 +67,7 @@ export {
   deriveQuizStatus,
   liveUnitCount,
   quizStatusMeta,
+  resolvedQuizTitle,
   unitPublishedTag,
   unitStateLabel,
 } from "./quizStatus";
@@ -142,6 +152,12 @@ export {
   questionKindLabel,
   type BlankQuestionKind,
 } from "./blankQuestion";
+export {
+  clearEditableQuizCache,
+  editableQuizResetInProgress,
+  hrefWithoutEditableQuizArtifact,
+  searchWithEditableQuiz,
+} from "./editableQuizSession";
 export {
   cloneQuestionItem,
   isQuestionDraftDirty,

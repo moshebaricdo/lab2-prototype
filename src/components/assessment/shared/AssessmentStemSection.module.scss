@@ -3,6 +3,7 @@
 .root {
   margin-top: 8px;
   padding: 16px 24px 0;
+  position: relative;
 }
 
 .questionContainer {
@@ -25,6 +26,15 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  /* Room for the corner tag so a long title does not move when it appears. */
+  padding-right: 80px;
+}
+
+.headerEnd {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1;
 }
 
 .questionContainer .eyebrow {

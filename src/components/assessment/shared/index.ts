@@ -19,11 +19,8 @@ export { QuizAttemptChip } from "./QuizAttemptChip";
 export { StudentQuestionCardFooter } from "./StudentQuestionCardFooter";
 export {
   AnswerNotesBlock,
-  ResponseResultTag,
+  QuestionOutcomeTag,
   StudentResponsesRow,
   ViewpointBanner,
 } from "./ViewpointChrome";
-export type {
-  ResponseResultStatus,
-  ViewpointBannerVariant,
-} from "./ViewpointChrome";
+export type { ViewpointBannerVariant } from "./ViewpointChrome";

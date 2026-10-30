@@ -4,7 +4,6 @@ import type {
 } from "../../types/assessmentBuilder";
 import {
   mockBlankAssessment,
-  mockP0CfuAssessment,
   mockP0ExamAssessment,
   mockP0FloatingAssessment,
   mockQuizPracticeAssessment,
@@ -17,7 +16,6 @@ const DEFAULT_DRAFTS: AssessmentArtifact[] = [
   mockBlankAssessment,
   mockSeededAssessment,
   mockP0ExamAssessment,
-  mockP0CfuAssessment,
   mockP0FloatingAssessment,
   mockQuizPracticeAssessment,
 ];
@@ -53,13 +51,11 @@ function mergeMissingDefaultDrafts(drafts: AssessmentArtifact[]): AssessmentArti
  * Upgrade stored drafts that predate sectioned outlines, quiz placement,
  * named P0 sections, or the P0-only question-type seed. A draft without a
  * `sections` key was written before sections existed; reseed the P0 exam so
- * the outline is demoable. Missing placement / seed titles / lesson name /
- * level id fill from the seed without wiping author edits. Placeholder
- * “New quiz” titles on the floating draft upgrade to the Levelbuilder name.
- * Stale fill-in-blank and
- * ordering refs remap to the current Multiple Choice / Matching items.
- * Untouched CFU seeds that still have the old attempts-off default pick up
- * attempts-on + require-correct (legacy CfU).
+ * the outline is demoable. Missing placement / lesson name / level id on the
+ * exam fill from the seed without wiping author edits. Untouched copies of
+ * the old named empty quiz (title already set, no questions) reset to the
+ * blank seed. Stale fill-in-blank and ordering refs remap to the current
+ * Multiple Choice / Matching items.
  */
 function hydrateDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
   let changed = false;
@@ -74,43 +70,16 @@ function hydrateDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
       }
     }
     if (draft.id === mockP0FloatingAssessment.id) {
-      const placeholderTitle =
-        !draft.title.trim() ||
-        draft.title === "New quiz" ||
-        draft.title === "New checkpoint";
-      if (placeholderTitle) {
+      const untouchedNamedSeed =
+        draft.questionRefs.length === 0 &&
+        (draft.sections == null || draft.sections.length === 0) &&
+        draft.purpose == null &&
+        (draft.title === "AI Foundations Certification Exam" ||
+          draft.title === "New quiz" ||
+          draft.title === "New checkpoint");
+      if (untouchedNamedSeed) {
         changed = true;
-        return {
-          ...draft,
-          title: mockP0FloatingAssessment.title,
-          metadata: {
-            ...draft.metadata,
-            assessmentName: mockP0FloatingAssessment.metadata.assessmentName,
-          },
-          levelId: draft.levelId ?? mockP0FloatingAssessment.levelId,
-        };
-      }
-      if (draft.levelId == null && mockP0FloatingAssessment.levelId != null) {
-        changed = true;
-        return { ...draft, levelId: mockP0FloatingAssessment.levelId };
-      }
-    }
-    if (draft.id === mockP0CfuAssessment.id) {
-      const looksLikeOldCfuSeed =
-        draft.allowMultipleAttempts === false &&
-        draft.requireCorrectAnswerToContinue == null &&
-        draft.feedback?.showCorrectness === true &&
-        draft.feedback?.revealAnswerExplanation === false &&
-        draft.tutor.enabled === false &&
-        draft.showIntroScreen === false;
-      if (looksLikeOldCfuSeed) {
-        changed = true;
-        return {
-          ...draft,
-          allowMultipleAttempts: true,
-          requireCorrectAnswerToContinue: true,
-          attempts: undefined,
-        };
+        return structuredClone(mockP0FloatingAssessment);
       }
     }
     if (draft.id !== mockP0ExamAssessment.id) return draft;

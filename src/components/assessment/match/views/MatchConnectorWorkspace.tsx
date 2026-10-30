@@ -389,6 +389,11 @@ interface MatchConnectorWorkspaceProps {
   completedLevelPaths?: string[];
   embedded?: boolean;
   groupSubmitted?: boolean;
+  /**
+   * Graded marks on a locked attempt. Off keeps the student's pairs
+   * connected and ungraded. Standalone levels omit this.
+   */
+  showCorrectness?: boolean;
   controlledAssignments?: MatchAssignments;
   onControlledAssignmentsChange?: (next: MatchAssignments) => void;
   embeddedInScrollGroup?: boolean;
@@ -406,6 +411,8 @@ interface MatchConnectorWorkspaceProps {
   /** Prompt ids that stayed correct on Try again — stay matched and marked. */
   persistedCorrectPromptIds?: string[];
   afterBody?: ReactNode;
+  /** Top-right of the question stem, beside the overline. */
+  headerEnd?: ReactNode;
 }
 
 const matchDevFields: DevPanelField[] = [
@@ -424,6 +431,7 @@ export function MatchConnectorWorkspace({
   completedLevelPaths,
   embedded = false,
   groupSubmitted = false,
+  showCorrectness = true,
   controlledAssignments,
   onControlledAssignmentsChange,
   embeddedInScrollGroup = false,
@@ -434,6 +442,7 @@ export function MatchConnectorWorkspace({
   studentQuestionChrome = false,
   persistedCorrectPromptIds: persistedCorrectPromptIdsProp,
   afterBody,
+  headerEnd,
 }: MatchConnectorWorkspaceProps) {
   const navigate = useNavigate();
 
@@ -700,7 +709,15 @@ export function MatchConnectorWorkspace({
   const interactionLocked =
     isSubmittedForFeedback || teacherRevealActive;
   const showInlineFeedback =
-    isSubmittedForFeedback && !replaceWithKey;
+    showCorrectness && isSubmittedForFeedback && !replaceWithKey;
+  /**
+   * Marking individual pairs right or wrong reveals the rest of the key.
+   * A fully correct match still uses success styling. An explicit key
+   * (teacher reveal or reveal-alongside) still marks pairs.
+   */
+  const showPairMarks =
+    showInlineFeedback &&
+    (isPerfectMatch || teacherRevealActive || revealKeyAlongsideSelection);
 
   /** Board-local point for the connector end. The line stays in the gap between the columns. */
   const clampPointerToColumnPadding = useCallback(
@@ -843,7 +860,7 @@ export function MatchConnectorWorkspace({
           path: buildCurvePath(start, end),
           state: replaceWithKey
             ? ("revealed" as const)
-            : showInlineFeedback
+            : showPairMarks
               ? isCorrect
                 ? ("correct" as const)
                 : ("incorrect" as const)
@@ -865,7 +882,7 @@ export function MatchConnectorWorkspace({
     layoutVersion,
     level.question.prompts,
     lockedPromptIds,
-    showInlineFeedback,
+    showPairMarks,
   ]);
 
   const draftPathD = useMemo(() => {
@@ -1453,6 +1470,7 @@ export function MatchConnectorWorkspace({
             question={level.stem.question}
             description={level.stem.description}
             afterBody={afterBody}
+            headerEnd={headerEnd}
           >
             <div
               className={styles.visuallyHidden}
@@ -1536,7 +1554,7 @@ export function MatchConnectorWorkspace({
                       lockedPromptIds.has(connectedPromptId!) &&
                       isCorrect;
                     const showPairCorrect =
-                      (showInlineFeedback && isConnected && isCorrect) ||
+                      (showPairMarks && isConnected && isCorrect) ||
                       pairKeptCorrect;
                     const cardLocked = interactionLocked || pairKeptCorrect;
                     const isDragHover =
@@ -1558,13 +1576,13 @@ export function MatchConnectorWorkspace({
                         ? styles.termCardSelected
                         : "",
                       isConnected &&
-                      !showInlineFeedback &&
+                      !showPairMarks &&
                       !replaceWithKey &&
                       !pairKeptCorrect
                         ? styles.termCardConnected
                         : "",
                       showPairCorrect ? styles.cardCorrect : "",
-                      showInlineFeedback && isConnected && !isCorrect
+                      showPairMarks && isConnected && !isCorrect
                         ? styles.cardIncorrect
                         : "",
                       replaceWithKey ? styles.cardRevealed : "",
@@ -1579,7 +1597,7 @@ export function MatchConnectorWorkspace({
                       styles.connectorDotRight,
                       cardLocked ? styles.connectorDotLocked : "",
                       isConnected &&
-                      !showInlineFeedback &&
+                      !showPairMarks &&
                       !replaceWithKey &&
                       !pairKeptCorrect
                         ? styles.connectorDotActive
@@ -1589,7 +1607,7 @@ export function MatchConnectorWorkspace({
                         : "",
                       isDragHover ? styles.connectorDotDragHover : "",
                       showPairCorrect ? styles.connectorDotCorrect : "",
-                      showInlineFeedback && isConnected && !isCorrect
+                      showPairMarks && isConnected && !isCorrect
                         ? styles.connectorDotIncorrect
                         : "",
                       replaceWithKey
@@ -1603,7 +1621,7 @@ export function MatchConnectorWorkspace({
                       ? "correct"
                       : showPairCorrect
                         ? "correct"
-                        : showInlineFeedback && isConnected && !isCorrect
+                        : showPairMarks && isConnected && !isCorrect
                           ? "incorrect"
                           : undefined;
 
@@ -1677,7 +1695,7 @@ export function MatchConnectorWorkspace({
                     const pairKeptCorrect =
                       lockedPromptIds.has(prompt.id) && isCorrect;
                     const showPairCorrect =
-                      (showInlineFeedback && isConnected && isCorrect) ||
+                      (showPairMarks && isConnected && isCorrect) ||
                       pairKeptCorrect;
                     const cardLocked = interactionLocked || pairKeptCorrect;
                     const isDragHover =
@@ -1699,13 +1717,13 @@ export function MatchConnectorWorkspace({
                         ? styles.promptCardSelected
                         : "",
                       isConnected &&
-                      !showInlineFeedback &&
+                      !showPairMarks &&
                       !replaceWithKey &&
                       !pairKeptCorrect
                         ? styles.promptCardConnected
                         : "",
                       showPairCorrect ? styles.cardCorrect : "",
-                      showInlineFeedback && isConnected && !isCorrect
+                      showPairMarks && isConnected && !isCorrect
                         ? styles.cardIncorrect
                         : "",
                       replaceWithKey ? styles.cardRevealed : "",
@@ -1720,7 +1738,7 @@ export function MatchConnectorWorkspace({
                       styles.connectorDotLeft,
                       cardLocked ? styles.connectorDotLocked : "",
                       isConnected &&
-                      !showInlineFeedback &&
+                      !showPairMarks &&
                       !replaceWithKey &&
                       !pairKeptCorrect
                         ? styles.connectorDotActive
@@ -1730,7 +1748,7 @@ export function MatchConnectorWorkspace({
                         : "",
                       isDragHover ? styles.connectorDotDragHover : "",
                       showPairCorrect ? styles.connectorDotCorrect : "",
-                      showInlineFeedback && isConnected && !isCorrect
+                      showPairMarks && isConnected && !isCorrect
                         ? styles.connectorDotIncorrect
                         : "",
                       replaceWithKey
@@ -1744,7 +1762,7 @@ export function MatchConnectorWorkspace({
                       ? "correct"
                       : showPairCorrect
                         ? "correct"
-                        : showInlineFeedback && isConnected && !isCorrect
+                        : showPairMarks && isConnected && !isCorrect
                           ? "incorrect"
                           : undefined;
 
@@ -1847,10 +1865,10 @@ export function MatchConnectorWorkspace({
               right={
                 embedded ? (
                   <>
-                    {showInlineFeedback && isPerfectMatch && (
+                    {showPairMarks && isPerfectMatch && (
                       <AssessmentSuccessFeedback />
                     )}
-                    {showInlineFeedback && !isPerfectMatch && (
+                    {showPairMarks && !isPerfectMatch && (
                       <p className={styles.partialFeedback}>
                         {totalCorrect} of {level.question.prompts.length}{" "}
                         matches are correct.
@@ -1859,10 +1877,10 @@ export function MatchConnectorWorkspace({
                   </>
                 ) : (
                   <>
-                    {showInlineFeedback && isPerfectMatch && (
+                    {showPairMarks && isPerfectMatch && (
                       <AssessmentSuccessFeedback />
                     )}
-                    {showInlineFeedback && !isPerfectMatch && (
+                    {showPairMarks && !isPerfectMatch && (
                       <p className={styles.partialFeedback}>
                         {totalCorrect} of {level.question.prompts.length}{" "}
                         matches are correct.

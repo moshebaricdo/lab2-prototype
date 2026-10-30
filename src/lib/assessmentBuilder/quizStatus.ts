@@ -142,3 +142,10 @@ export function unitPublishedTag(state: QuizUnitPublishedState): {
 export function statusKindFromTable(status: QuizStatusKind): QuizStatusKind {
   return status;
 }
+
+/** Stored quiz title, or the level name when that title is still unset. */
+export function resolvedQuizTitle(title: string, levelName = ""): string {
+  const named = title.trim();
+  if (named) return named;
+  return levelName.trim();
+}

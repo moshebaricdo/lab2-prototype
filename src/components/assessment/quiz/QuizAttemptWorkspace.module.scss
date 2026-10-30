@@ -17,6 +17,12 @@
   padding: 64px;
 }
 
+.scrollFill {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
 .questionCard,
 .summaryCard {
   display: flex;
@@ -89,6 +95,27 @@
   min-width: 0;
 }
 
+.cardFooterActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.submittedStat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.submittedStatCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .metaRow {
   display: flex;
   flex-wrap: wrap;
@@ -105,7 +132,10 @@
 }
 
 .metaSuccess {
+  display: flex;
+  gap: 6px;
   color: var(--text-success-primary);
+  font-size: var(--text-body-sm);
 }
 
 .stats {
@@ -137,6 +167,21 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
+}
+
+/* Two stats sit number-beside-label, flush left. Three stack the number above the label. */
+.statsPair .stat {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  padding-inline: 24px;
+  text-align: left;
+}
+
+.statsPair .statCopy {
+  align-items: flex-start;
+  width: auto;
 }
 
 .statValue {
@@ -192,6 +237,7 @@
 
 .footer {
   display: grid;
+  flex-shrink: 0;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 12px;

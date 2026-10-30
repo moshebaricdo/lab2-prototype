@@ -83,6 +83,7 @@ interface SidebarPanelContentProps {
   hasPendingAiChanges: NonNullable<SidebarProps["hasPendingAiChanges"]>;
   newProjectPlanQuestionnaireSignal: NonNullable<SidebarProps["newProjectPlanQuestionnaireSignal"]>;
   historyVersions: SidebarProps["historyVersions"];
+  historyBrowseOnly: NonNullable<SidebarProps["historyBrowseOnly"]>;
   showNewProjectHistoryEmptyState: NonNullable<SidebarProps["showNewProjectHistoryEmptyState"]>;
   onImportBackpackItem: SidebarProps["onImportBackpackItem"];
   backpackImportLab: SidebarProps["backpackImportLab"];
@@ -187,6 +188,7 @@ export function SidebarPanelContent({
   hasPendingAiChanges,
   newProjectPlanQuestionnaireSignal,
   historyVersions,
+  historyBrowseOnly,
   showNewProjectHistoryEmptyState,
   onImportBackpackItem,
   backpackImportLab,
@@ -213,7 +215,11 @@ export function SidebarPanelContent({
   return (
     <div className={styles.content}>
       <PanelHeader
-        label={PANEL_LABEL[activeTab]}
+        label={
+          activeTab === "history" && historyBrowseOnly
+            ? "Attempt history"
+            : PANEL_LABEL[activeTab]
+        }
         right={
           activeTab === "ai-tutor" ? (
             <div className="flex gap-1">
@@ -351,6 +357,7 @@ export function SidebarPanelContent({
           showSaveSuccessAlert={showSaveSuccessAlert}
           setShowSaveSuccessAlert={setShowSaveSuccessAlert}
           showNewProjectEmptyState={showNewProjectHistoryEmptyState}
+          browseOnly={historyBrowseOnly}
         />
       )}
       {activeTab === "backpack" && (

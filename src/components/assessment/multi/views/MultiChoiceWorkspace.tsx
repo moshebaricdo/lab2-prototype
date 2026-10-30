@@ -51,8 +51,13 @@ interface MultiChoiceWorkspaceProps {
   completedLevelPaths?: string[];
   /** Renders only the assessment card (no Lab2 shell). Used inside level groups. */
   embedded?: boolean;
-  /** Parent submitted the whole group — show graded feedback for this block. */
+  /** Parent submitted the whole group — lock this block. */
   groupSubmitted?: boolean;
+  /**
+   * Graded marks on a locked answer. Off keeps the student's pick selected
+   * and ungraded (no correct, incorrect, or key). Standalone levels omit this.
+   */
+  showCorrectness?: boolean;
   controlledSelectedIds?: string[];
   onControlledSelectedIdsChange?: (ids: string[]) => void;
   /** Level group scroll: no inner card; counter in stem eyebrow. */
@@ -75,6 +80,8 @@ interface MultiChoiceWorkspaceProps {
   revealKeyAlongsideSelection?: boolean;
   /** Explanation / teacher cards inside the question-content stack. */
   afterBody?: ReactNode;
+  /** Top-right of the question stem, beside the overline. */
+  headerEnd?: ReactNode;
 }
 
 function arraysEqualAsSets(a: string[], b: string[]): boolean {
@@ -203,6 +210,7 @@ export function MultiChoiceWorkspace({
   completedLevelPaths,
   embedded = false,
   groupSubmitted = false,
+  showCorrectness = true,
   controlledSelectedIds,
   onControlledSelectedIdsChange,
   embeddedInScrollGroup = false,
@@ -214,6 +222,7 @@ export function MultiChoiceWorkspace({
   persistedCorrectAnswerIds: persistedCorrectAnswerIdsProp,
   revealKeyAlongsideSelection = false,
   afterBody,
+  headerEnd,
 }: MultiChoiceWorkspaceProps) {
   const navigate = useNavigate();
 
@@ -414,9 +423,18 @@ export function MultiChoiceWorkspace({
     !isAnswerLocked &&
     !teacherRevealActive;
 
-  const showInlineFeedback = isAnswerLocked && !revealReplacesSelection;
+  const showInlineFeedback =
+    showCorrectness && isAnswerLocked && !revealReplacesSelection;
+  /**
+   * Multiple select: marking individual picks right or wrong reveals the rest
+   * of the key. Single-answer multiple choice still marks the one pick. A
+   * fully correct multi-select can use success styling, and an explicit key
+   * still marks options.
+   */
+  const hideItemizedChoiceMarks =
+    isMultiSelect && showInlineFeedback && !isCorrect && !revealMarksActive;
   const showWrongSelectionHighlights =
-    showInlineFeedback && !isCorrect;
+    showInlineFeedback && !isCorrect && !hideItemizedChoiceMarks;
 
   const handleSubmitAnswer = () => {
     if (embedded || !canSubmit || teacherRevealActive) {
@@ -487,6 +505,7 @@ export function MultiChoiceWorkspace({
             question={level.stem.question}
             description={level.stem.description}
             afterBody={afterBody}
+            headerEnd={headerEnd}
           >
             <fieldset
               className={[
@@ -525,6 +544,7 @@ export function MultiChoiceWorkspace({
                 const isSubmittedCorrectHighlight =
                   !isSurveyLevel &&
                   showInlineFeedback &&
+                  !hideItemizedChoiceMarks &&
                   correctIds.includes(answer.id) &&
                   selectedIds.includes(answer.id);
                 const isRevealedFeedback =
@@ -543,8 +563,14 @@ export function MultiChoiceWorkspace({
                   !isRevealedCorrect &&
                   !isSubmittedCorrectHighlight &&
                   !isIncorrectSelection;
+                const ungradedSelected =
+                  isAnswerLocked &&
+                  !teacherRevealActive &&
+                  checked &&
+                  (!showCorrectness || hideItemizedChoiceMarks);
                 const showDisabledSurface =
                   !isRevealedFeedback &&
+                  !ungradedSelected &&
                   (isAnswerLocked ||
                     teacherRevealActive ||
                     showPersistentWrongMark ||

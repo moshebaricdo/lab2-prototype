@@ -6,12 +6,38 @@ import { Dialog } from "../../../ui/Dialog";
 import { ScrollArea } from "../../../ui/scroll-area";
 import styles from "./VersionHistory.module.scss";
 
+function VersionRowLabel({
+  label,
+  meta,
+  plain = false,
+}: {
+  label: string;
+  meta?: string;
+  plain?: boolean;
+}) {
+  return (
+    <p className={`${styles.label} ${plain ? styles.labelAutosave : ""}`}>
+      <span className={meta ? styles.labelName : styles.labelNameOnly}>{label}</span>
+      {meta ? (
+        <>
+          <span className={styles.labelSeparator} aria-hidden="true">
+            •
+          </span>
+          <span className={styles.labelMeta}>{meta}</span>
+        </>
+      ) : null}
+    </p>
+  );
+}
+
 export interface VersionItem {
   id: string;
   label: string;
   description?: string;
   isAutoSave?: boolean;
   isAiSave?: boolean;
+  /** Highest-scoring quiz submission. Shown with the award icon. */
+  isBestAttempt?: boolean;
   createdAt?: string;
 }
 
@@ -26,6 +52,11 @@ interface VersionHistoryProps {
   showSaveSuccessAlert?: boolean;
   setShowSaveSuccessAlert?: (show: boolean) => void;
   showNewProjectEmptyState?: boolean;
+  /**
+   * Teacher review. Selecting a row shows that version.
+   * Save and restore stay hidden — there is nothing to write back.
+   */
+  browseOnly?: boolean;
 }
 
 export function VersionHistory({
@@ -39,6 +70,7 @@ export function VersionHistory({
   showSaveSuccessAlert = false,
   setShowSaveSuccessAlert,
   showNewProjectEmptyState = false,
+  browseOnly = false,
 }: VersionHistoryProps) {
   const [internalSelectedVersion, setInternalSelectedVersion] = useState("current");
   const [expandedAutoSaveGroups, setExpandedAutoSaveGroups] = useState<Set<string>>(
@@ -158,12 +190,14 @@ export function VersionHistory({
               <span className={`${styles.radio} ${isSelected ? styles.radioSelected : ""}`}>
                 {isSelected ? <span className={styles.radioDot} /> : null}
               </span>
-              <p className={`${styles.label} ${version.isAutoSave ? styles.labelAutosave : ""}`}>
-                {version.label}
-              </p>
+              <VersionRowLabel
+                label={version.label}
+                meta={browseOnly ? version.description : undefined}
+                plain={version.isAutoSave}
+              />
             </button>
 
-            {isSelected ? (
+            {isSelected && !browseOnly ? (
               <button
                 onClick={(event) => {
                   event.stopPropagation();
@@ -191,11 +225,19 @@ export function VersionHistory({
                   />
                 </span>
               </Tooltip>
-            ) : (
+            ) : version.isBestAttempt ? (
+              <Tooltip title="Best attempt" placement="top">
+                <span className={styles.bestAttemptIcon}>
+                  <FaIcon name="award-simple" size="s" />
+                </span>
+              </Tooltip>
+            ) : browseOnly ? null : (
               <span aria-hidden="true" className={styles.iconSmall} />
             )}
           </div>
-          {version.description ? <p className={styles.description}>{version.description}</p> : null}
+          {version.description && !browseOnly ? (
+            <p className={styles.description}>{version.description}</p>
+          ) : null}
         </div>
       </div>
     );
@@ -243,10 +285,21 @@ export function VersionHistory({
                         <span className={styles.radioDot} />
                       ) : null}
                     </span>
-                    <p className={styles.label}>Current Version</p>
+                    <VersionRowLabel
+                      label={browseOnly ? currentVersion.label : "Current Version"}
+                      meta={browseOnly ? currentVersion.description : undefined}
+                    />
                   </button>
+                  {currentVersion.isBestAttempt ? (
+                    <Tooltip title="Best attempt" placement="top">
+                      <span className={styles.bestAttemptIcon}>
+                        <FaIcon name="award-simple" size="s" />
+                      </span>
+                    </Tooltip>
+                  ) : null}
                 </div>
 
+                {browseOnly ? null : (
                 <div className={styles.savePanel}>
                   <TextInput
                     value={versionDescription}
@@ -279,6 +332,7 @@ export function VersionHistory({
                     Save current version
                   </Button>
                 </div>
+                )}
               </div>
             </div>
 

@@ -219,13 +219,13 @@ Assessment builder is a Lab2 level type with its own workspace chrome under `com
 - **`QuizConfigPanel`** — purpose chooser/dropdown and student settings
 - **`QuizAttemptWorkspace`** — student quiz (also used as Preview) and teacher viewpoints
 - **`QuizPreviewEmptyState`** — Preview tab when the quiz has no questions and intro is off
-- **`CfuQuestionWorkspace`** — student CFU and teacher viewpoints. Single-question incorrect footer layout, last-page labels, and attempt-chip copy live in `lib/assessmentBuilder/studentFooter.ts` and `StudentQuestionCardFooter`. `QuizAttemptChip` is the sitting-count pill. Matching Try again keeps correct pairs via `lib/assessmentBuilder/matchRetry.ts`.
+- **`CfuQuestionWorkspace`** — student CFU and teacher viewpoints. Single-question incorrect footer layout, last-page labels, and attempt-chip copy live in `lib/assessmentBuilder/studentFooter.ts` and `StudentQuestionCardFooter` (sticky bottom bar, including a one-question CFU). `QuizAttemptChip` is the sitting-count pill. Matching Try again keeps correct pairs via `lib/assessmentBuilder/matchRetry.ts`.
 - **`AssessmentBuildCanvas`** (legacy routes) — older outline
 - **`AssessmentBuilderPanel`** — bank + configuration. Bank preview: **`QuestionBankPreviewModal`**. Question-tab **Standard(s)** and bank filter standards share **`StandardsTypeahead`**.
 
 Sectioned-outline invariants (flat vs fully-sectioned, `page.item` numbering, wrap/flatten, `questionRefs` mirror) live in `lib/assessmentBuilder/outline.ts`.
 
-Canonical schema and runtime helpers live in `types/assessmentBuilder.ts` and `lib/assessmentBuilder/` (adapters, bank/draft `localStorage`, scoring, exam pool draw). Mock fixtures: `data/assessmentBuilder/`. See `src/guidelines/level-types/assessment-builder.md` for routes, UX, and known gaps.
+Canonical schema and runtime helpers live in `types/assessmentBuilder.ts` and `lib/assessmentBuilder/` (adapters, bank/draft `localStorage`, scoring, exam pool draw). Mock fixtures: `data/assessmentBuilder/`. Editable quiz demos (`/levels/quiz-demo/*`) keep their artifact in session storage and the encoded `o` query param via `useEditableQuiz`, separate from the localStorage draft store. See `src/guidelines/level-types/assessment-builder.md` for routes, UX, and known gaps.
 
 ## State Ownership
 
@@ -233,6 +233,7 @@ Route pages get state and handlers from dedicated hooks:
 
 - `useLayoutState` for tab/layout/sidebar width
 - `useAssessmentBuilderState` for loading/updating an `AssessmentArtifact`, resolving bank questions, and draft persistence (assessment builder routes)
+- `useEditableQuiz` for the five `/levels/quiz-demo` quizzes: same artifact on the student page and in the builder, stored in session storage and mirrored into the encoded `o` share param. The student page’s header account menu switches student, teacher, a submitted review, and an in-progress review (`editableQuizViewpoint.ts`, `view` query param). A submitted review with more than one attempt lists those submissions in Attempt history (`buildEditableQuizSubmissionHistory`): the panel and rail tooltip say Attempt history, every row is Attempt N, newest first, with a timestamp, and save/restore stay off. Submits from the student view are stored in `submittedAttempts.ts` and replace that sample; the same panel opens on the student view as those attempts are recorded
 - `useQuestionBank` for upserting `QuestionItem` records to the course bank (`localStorage` in prototype)
 - `useFileWorkspaceState` for selected/open files and file view behavior
 - `useChatState` for Tutor messages/input where the sidebar Tutor is visible. Web Lab 2 and Python Lab pass route-scoped session storage keys so chat history survives reload alongside file workspace state.

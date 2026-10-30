@@ -37,7 +37,7 @@ Use these docs as handoff context for follow-up threads.
 
 ## Routes Snapshot
 
-- `/levels` -> categorized level index (Lab environments, Assessment, Modernizing assessments, Misc)
+- `/levels` -> categorized level index (Lab environments, Modernizing assessments, Assessment, Misc)
 - `/levels/pythonlab` and `/levels/pythonlab-blank`
 - `/levels/sketchlab` and `/levels/sketchlab-blank`
 - `/levels/aichatlab`, `/levels/aichatlab-setup`, and `/levels/aichatlab-model-card`
@@ -53,7 +53,8 @@ Use these docs as handoff context for follow-up threads.
 - `/levels/drag-drop-parsons`, `/levels/drag-drop-categorization`, `/levels/drag-drop-parsons-code-ref` (see `drag-drop.md`)
 - `/levels/fill-in-blank`, `/levels/fill-in-blank-multi`, `/levels/fill-in-blank-code-ref` (see `fill-in-blank.md`)
 - `/levels/levelgroup-scroll`, `/levels/levelgroup-stepped` (see `levelgroup.md`)
-- `/levels/assessment-builder-p0`, `/levels/assessment-builder-p0-cfu`, and `/levels/assessment-builder-p0-draft` (see `assessment-builder.md`); legacy `/levels/assessment-builder-new` and `/levels/assessment-builder-seeded` are under Experiments on `/levels`
+- `/levels/assessment-builder-p0-draft` (blank quiz) and `/levels/assessment-builder-p0` (pre-populated demo quiz) (see `assessment-builder.md`); legacy `/levels/assessment-builder-new` and `/levels/assessment-builder-seeded` are under Experiments on `/levels`
+- Editable quizzes (builder-backed, session storage + encoded `o` link): `/levels/quiz-demo/multi`, `/levels/quiz-demo/multi-select`, `/levels/quiz-demo/free-response`, `/levels/quiz-demo/matching`, and `/levels/quiz-demo/blank` (`/edit` opens the builder; blank’s index link opens the builder). The header account button switches student, teacher, a submitted review, and an in-progress review (`view=teacher`, `view=submission`, or `view=in-progress`). A submitted review with retries opens Attempt history (the version history panel), one row per submission. Submits while viewing as Student fill that list and open the panel on the student view
 - `/levels/cfu-multi` (plus `-retry`, `-continue`, `-reveal`, `-capped`), `/levels/cfu-multi-checkboxes` (plus `-continue`, `-no-retry`, `-reveal`, `-capped`), `/levels/cfu-free-response` (plus `-reveal`, `-capped`), `/levels/cfu-matching` (plus `-retry`, `-reattempt`, `-continue`, `-reveal`, `-capped`) — `/levels` groups these by question type; teacher card lists every viewpoint × type (`/levels/cfu-teacher`, `-checkboxes`, `-free-response`, `-matching`, and the same suffixes on `-as-student` / `-response`)
 - `/levels/quiz-practice`, `/levels/quiz-exam-retries`, `/levels/quiz-exam-final`, `/levels/quiz-exam`, `/levels/quiz-exam-resume`; teacher viewpoints `/levels/quiz-teacher`, `/levels/quiz-teacher-as-student`, `/levels/quiz-teacher-response`, `/levels/quiz-teacher-response-submitted`
 - `/levels/bubble-choice` and `/levels/bubble-choice-images`

@@ -73,7 +73,7 @@ const LEVEL_PAGE_GROUPS: LevelPageGroup[] = [
   { levelType: "Drag and drop", pages: dragDropLevelLinks },
   { levelType: "Fill in the blank", pages: fillInBlankLevelLinks },
   { levelType: "Assessment sets", pages: assessmentSetLevelLinks },
-  { levelType: "Assessment builder", pages: assessmentBuilderLevelLinks },
+  { levelType: "Quiz builder", pages: assessmentBuilderLevelLinks },
   { levelType: "Check for understanding", pages: cfuLevelLinks },
   {
     levelType: "Check for understanding (teacher)",

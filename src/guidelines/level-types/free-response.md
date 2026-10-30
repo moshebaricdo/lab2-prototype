@@ -36,7 +36,7 @@ Bubble navigation for these demos is defined in `src/pages/levelTypeLinks.ts` (`
 - **Submit:** Enabled when the text meets `minCharacters`, or when **`allowFileUpload`** is true and either the minimum is met **or** a file is attached (file-only submit is allowed).
 - **File upload (`allowFileUpload`):** Full-width dashed drop zone with **Upload a file** and **Record audio**. Record audio stays enabled as a visual stub (click is a no-op). Dropping or choosing a file shows an **`UploadedFileChip`** below the zone.
 - **Teacher answer (`revealAnswerEnabled`):** **Reveal answer** / **Hide answer** in the **bottom row** (left cluster), same interaction pattern as multi-choice. When revealed, an **inline** “Teacher answer key” block (exemplar + rubric or expected-elements list) appears inside the main card above the footer. Submit and inputs are disabled while revealed.
-- **Submit / submitted:** On submit, textarea and file controls disable. There is **no** “Edit response” path. The bottom row shows a **Submitted** pill (light success background, check icon) and **Continue** (navigates to the next link in `freeResponseLevelLinks` or `/levels`).
+- **Submit / submitted:** On submit, the textarea is read-only and file controls disable. Click, hover, and focus leave the field in its resting style. There is **no** “Edit response” path. The bottom row shows a **Submitted** pill (light success background, check icon) and **Continue** (navigates to the next link in `freeResponseLevelLinks` or `/levels`).
 
 ## Data Shape
 

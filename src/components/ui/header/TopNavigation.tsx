@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@moshebari/cads-react";
+import { Button, Dropdown } from "@moshebari/cads-react";
 import {
   LevelProgressBubbles,
   type LevelProgressLink,
@@ -8,6 +8,20 @@ import {
 import { ContinueButton } from "../../lab2/resource-panel/ContinueButton";
 import { Logo } from "../icons/Logo";
 import styles from "./TopNavigation.module.scss";
+
+export interface AccountMenuOption {
+  value: string;
+  label: string;
+  iconName?: string;
+}
+
+/** Replaces the static Username button with a view or account menu. */
+export interface AccountMenuConfig {
+  /** Selected option. The field shows that option's label. */
+  value: string;
+  options: AccountMenuOption[];
+  onSelect: (value: string) => void;
+}
 
 export interface TopNavigationProps {
   title?: string;
@@ -32,6 +46,10 @@ export interface TopNavigationProps {
    * title, the title sits next to those buttons instead of the center.
    */
   leadingActions?: ReactNode;
+  /** Actions on the right, before the account button. */
+  trailingActions?: ReactNode;
+  /** When set, the Username button opens this menu. */
+  accountMenu?: AccountMenuConfig;
 }
 
 export function TopNavigation({
@@ -52,6 +70,8 @@ export function TopNavigation({
   onProgressLevelSelect,
   hideTitle = false,
   leadingActions,
+  trailingActions,
+  accountMenu,
 }: TopNavigationProps) {
   const continueButton = showContinueButton ? (
     <ContinueButton
@@ -119,15 +139,40 @@ export function TopNavigation({
       </div>
 
       <div className={styles.rightGroup}>
-        <Button
-          variant="outlined"
-          color="secondary"
-          size="extraSmall"
-          endIconName="chevron-down"
-          className={styles.userButton}
-        >
-          Username
-        </Button>
+        {trailingActions ? (
+          <div className={styles.leadingActions}>{trailingActions}</div>
+        ) : null}
+        {accountMenu ? (
+          <div className={styles.accountMenu} data-theme="Light">
+            <Dropdown
+              role="input"
+              size="extraSmall"
+              color="secondary"
+              menuPlacement="bottomRight"
+              aria-label="View quiz as"
+              value={accountMenu.value}
+              onChange={(next) => {
+                const value = Array.isArray(next) ? next[0] : next;
+                if (value) accountMenu.onSelect(value);
+              }}
+              options={accountMenu.options.map((option) => ({
+                value: option.value,
+                label: option.label,
+                iconName: option.iconName,
+              }))}
+            />
+          </div>
+        ) : (
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="extraSmall"
+            endIconName="chevron-down"
+            className={styles.userButton}
+          >
+            Username
+          </Button>
+        )}
         <div className={styles.iconGroup}>
           <Button
             variant="text"

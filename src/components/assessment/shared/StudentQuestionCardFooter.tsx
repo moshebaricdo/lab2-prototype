@@ -5,7 +5,6 @@ import styles from "./StudentQuestionCardFooter.module.scss";
 
 interface StudentQuestionCardFooterProps {
   leftExtra?: ReactNode;
-  resultTag?: ReactNode;
   /** Sitting chip / timer — left of Try again or the primary in `submitWrap`. */
   submitLeading?: ReactNode;
   retry?: Pick<
@@ -44,23 +43,20 @@ function RetryButton({
 }
 
 /**
- * Single-question card action row (Figma `optionWrap` + `submitWrap`).
- * Primary always sits on the right.
+ * Single-question sticky action row (Figma `optionWrap` + `submitWrap`).
+ * Pinned to the bottom of the workspace. Primary always sits on the right.
  */
 export function StudentQuestionCardFooter({
   leftExtra,
-  resultTag,
   submitLeading,
   retry,
   primary,
 }: StudentQuestionCardFooterProps) {
-  const retryOnLeft = retry?.retryPlacement === "left";
   const retryOnRight = retry?.retryPlacement === "right";
   const leftCluster =
-    retryOnLeft || resultTag ? (
+    retry?.retryPlacement === "left" ? (
       <div className={styles.optionWrap}>
-        {retryOnLeft && retry ? <RetryButton retry={retry} /> : null}
-        {resultTag}
+        <RetryButton retry={retry} />
       </div>
     ) : null;
 

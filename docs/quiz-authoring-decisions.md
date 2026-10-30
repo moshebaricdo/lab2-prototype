@@ -219,7 +219,7 @@ Sentence case everywhere a student or author reads a control or a title. No Titl
 |---|---|---|
 | Buttons | Sentence case, no `?` | Keep working, Submit now, Submit this attempt, Try again, Next level, View results, Finish, Submit, Begin, Resume |
 
-A CfU is a quiz. The card footer uses the same words as the quiz bar: **Submit**, not Submit answer. **Try again** has no start icon in either place. **Next level** / **Finish** / **Next** keep the end `arrow-right` because they navigate.
+A CfU is a quiz. Continue actions use the sticky bottom bar in both places: **Submit**, not Submit answer. **Try again** has no start icon. **Next level** / **Finish** / **Next** keep the end `arrow-right` because they navigate.
 | Dialog titles | Sentence case; `?` only when it is a question | Submit now?, Submit this attempt?, Submit assessment?, Time’s up, 2 questions unanswered |
 | Timer chip | `m:ss remaining` | `1:00 remaining` |
 | Intro eyebrows | lowercase | `before you begin`, `in progress`, `submitted` |

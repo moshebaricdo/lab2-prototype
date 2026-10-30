@@ -104,7 +104,7 @@ export function encodePropsOverride(overrides: Record<string, unknown>): string 
   return btoa(binary);
 }
 
-function decode(encoded: string): Record<string, unknown> {
+export function decodePropsOverride(encoded: string): Record<string, unknown> {
   try {
     const binary = atob(encoded);
     const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
@@ -172,7 +172,7 @@ export function usePropsOverride<T extends Record<string, unknown>>(
   const overrides = useMemo<Record<string, unknown>>(() => {
     const raw = searchParams.get(PARAM_KEY);
     if (!raw) return {};
-    return decode(raw);
+    return decodePropsOverride(raw);
   }, [searchParams]);
 
   const props = useMemo(() => deepMerge(defaults, overrides), [defaults, overrides]);

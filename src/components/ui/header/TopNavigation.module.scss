@@ -116,6 +116,11 @@
   gap: 4px;
 }
 
+.accountMenu {
+  display: flex;
+  color-scheme: light;
+}
+
 .userButton {
   --btn-bg: transparent !important;
   --btn-fg: var(--text-neutral-white-fixed) !important;

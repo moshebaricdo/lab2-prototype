@@ -1,4 +1,9 @@
 import type { LevelProgressLink } from "../components/ui/header/LevelProgressBubbles";
+import {
+  EDITABLE_QUIZ_DEMOS,
+  editableQuizEditPath,
+  editableQuizPlayPath,
+} from "../data/assessmentBuilder/editableQuizDemos";
 
 export const webLab2LevelLinks: LevelProgressLink[] = [
   {
@@ -291,18 +296,43 @@ export const quizTeacherLevelLinks: LevelProgressLink[] = [
 
 export const assessmentBuilderLevelLinks: LevelProgressLink[] = [
   {
-    name: "Quiz builder (CFU)",
-    path: "/levels/assessment-builder-p0-cfu",
-  },
-  {
-    name: "Quiz builder (exam)",
-    path: "/levels/assessment-builder-p0",
-  },
-  {
-    name: "Quiz builder (new)",
+    name: "Blank quiz",
     path: "/levels/assessment-builder-p0-draft",
   },
+  {
+    name: "Demo quiz",
+    path: "/levels/assessment-builder-p0",
+  },
 ];
+
+/** Student-facing editable quizzes. Blank is included so bubbles can open the saved quiz. */
+export const editableQuizPlayLinks: LevelProgressLink[] = EDITABLE_QUIZ_DEMOS.map(
+  (demo) => ({
+    name: demo.name,
+    path: editableQuizPlayPath(demo.id),
+  }),
+);
+
+/** Builder routes for the same five quizzes. */
+export const editableQuizEditLinks: LevelProgressLink[] = EDITABLE_QUIZ_DEMOS.map(
+  (demo) => ({
+    name: demo.name,
+    path: editableQuizEditPath(demo.id),
+  }),
+);
+
+/**
+ * Index card. The four question demos open the student quiz.
+ * Blank quiz opens the builder.
+ */
+export const editableQuizIndexLinks: LevelProgressLink[] = EDITABLE_QUIZ_DEMOS.map(
+  (demo) => ({
+    name: demo.name,
+    path: demo.indexOpensBuilder
+      ? editableQuizEditPath(demo.id)
+      : editableQuizPlayPath(demo.id),
+  }),
+);
 
 export const assessmentBuilderExperimentLinks: LevelProgressLink[] = [
   {

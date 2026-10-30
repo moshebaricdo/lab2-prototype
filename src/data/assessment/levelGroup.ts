@@ -35,8 +35,12 @@ export interface LevelGroupMultiQuestion {
     text?: string;
     contentBlocks?: MultiChoiceAnswerContentBlock[];
   }>;
-  /** Required for graded quizzes. Omit when the level uses `surveyMode`. */
+  /** Required for graded single-select. Omit when the level uses `surveyMode` or multi-select. */
   correctAnswerId?: string;
+  selectionMode?: "single" | "multiple";
+  correctAnswerIds?: string[];
+  requiredSelectionCount?: number;
+  maxSelectionCount?: number;
 }
 
 export interface LevelGroupFreeResponseQuestion {
@@ -479,6 +483,7 @@ export function levelGroupMultiToPayload(
 ): MultiChoiceLevelPayload {
   const q = block.question;
   const survey = flowLevel.surveyMode === true;
+  const multiple = q.selectionMode === "multiple";
   return {
     level: {
       id: flowLevel.id * 100 + stepIndex,
@@ -492,7 +497,18 @@ export function levelGroupMultiToPayload(
       })),
       ...(survey
         ? { surveyMode: true as const }
-        : { correctAnswerId: q.correctAnswerId! }),
+        : multiple
+          ? {
+              selectionMode: "multiple" as const,
+              correctAnswerIds: q.correctAnswerIds,
+              ...(q.requiredSelectionCount != null
+                ? { requiredSelectionCount: q.requiredSelectionCount }
+                : {}),
+              ...(q.maxSelectionCount != null
+                ? { maxSelectionCount: q.maxSelectionCount }
+                : {}),
+            }
+          : { correctAnswerId: q.correctAnswerId! }),
       metadata: flowLevel.metadata,
     },
   };

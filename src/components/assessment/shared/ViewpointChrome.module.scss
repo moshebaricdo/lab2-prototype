@@ -122,15 +122,3 @@
   color: var(--text-neutral-tertiary);
 }
 
-/* Figma responseTag (`295:40744`): 32px frame. extraSmall Alert is 34px min
-   (8+18+8) before the 1px border; lock the painted box to the mock.
-   Icon wrap gets Figma’s 1px optical offset (`pt-px`). */
-.resultTag {
-  flex-shrink: 0;
-  --alert-min-height: 32px !important;
-  height: 32px;
-
-  > :first-child > :first-child {
-    padding-top: 1px;
-  }
-}

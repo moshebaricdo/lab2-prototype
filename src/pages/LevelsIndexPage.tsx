@@ -17,6 +17,7 @@ import {
   assessmentSetLevelLinks,
   assessmentBuilderExperimentLinks,
   assessmentBuilderLevelLinks,
+  editableQuizIndexLinks,
   aiChatLabLevelLinks,
   aiLabIndexLinks,
   aiLabPlaytestIndexLinks,
@@ -113,6 +114,49 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
     ],
   },
   {
+    title: "Modernizing assessments",
+    entries: [
+      {
+        levelType: "Quiz builder",
+        description:
+          "This is what authors use to create and edit quizzes.",
+        pages: assessmentBuilderLevelLinks,
+      },
+      {
+        levelType: "Editable quiz levels",
+        description:
+          "A level for each question type + a blank quiz.",
+        pages: editableQuizIndexLinks,
+      },
+      {
+        levelType: "Check for understanding",
+        description:
+          "Student CFU type and settings demos: no-retry, must-correct, can-continue, and reveal walkthroughs.",
+        pages: cfuLevelLinks,
+        groups: cfuIndexGroups,
+      },
+      {
+        levelType: "Check for understanding (teacher)",
+        description:
+          "Teacher viewpoints for each question type: answer key, as a student, and a student’s response.",
+        pages: cfuTeacherIndexLinks,
+        groups: cfuTeacherIndexGroups,
+      },
+      {
+        levelType: "Quiz taking",
+        description:
+          "Student quiz rows: practice, exam retries, final attempt, no reveal, and resume.",
+        pages: quizTakingLevelLinks,
+      },
+      {
+        levelType: "Quiz taking (teacher)",
+        description:
+          "Teacher viewpoints: view questions, as a student, an in-progress response, and a completed submission.",
+        pages: quizTeacherLevelLinks,
+      },
+    ],
+  },
+  {
     title: "Assessment",
     entries: [
       {
@@ -148,43 +192,6 @@ const LEVEL_CATEGORIES: LevelCategory[] = [
     ],
   },
   {
-    title: "Modernizing assessments",
-    entries: [
-      {
-        levelType: "Check for understanding",
-        description:
-          "Student CFU type and settings demos: no-retry, must-correct, can-continue, and reveal walkthroughs.",
-        pages: cfuLevelLinks,
-        groups: cfuIndexGroups,
-      },
-      {
-        levelType: "Check for understanding (teacher)",
-        description:
-          "Teacher viewpoints for each question type: answer key, as a student, and a student’s response.",
-        pages: cfuTeacherIndexLinks,
-        groups: cfuTeacherIndexGroups,
-      },
-      {
-        levelType: "Quiz taking",
-        description:
-          "Student quiz rows: practice, exam retries, final attempt, no reveal, and resume.",
-        pages: quizTakingLevelLinks,
-      },
-      {
-        levelType: "Quiz taking (teacher)",
-        description:
-          "Teacher viewpoints: view questions, as a student, an in-progress response, and a completed submission.",
-        pages: quizTeacherLevelLinks,
-      },
-      {
-        levelType: "Assessment builder",
-        description:
-          "Final quiz builder: CFU, exam, and new Level seeds from the Modernizing Assessments handoff.",
-        pages: assessmentBuilderLevelLinks,
-      },
-    ],
-  },
-  {
     title: "Misc",
     entries: [
       {
@@ -207,8 +214,9 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/drag-drop-parsons": "Drag and drop",
   "/levels/fill-in-blank": "Fill in the blank",
   "/levels/levelgroup-survey-intro": "Assessment sets",
-  "/levels/assessment-builder-p0": "Assessment builder",
+  "/levels/assessment-builder-p0": "Quiz builder",
   "/levels/cfu-multi": "Check for understanding",
+  "/levels/quiz-demo": "Editable quizzes",
   "/levels/quiz-practice": "Quiz taking",
   "/levels/quiz-exam": "Quiz taking",
   "/levels/quiz-teacher": "Quiz taking (teacher)",

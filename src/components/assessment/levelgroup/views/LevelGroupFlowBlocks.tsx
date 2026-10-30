@@ -77,8 +77,18 @@ function buildInitialFillInBlankResponses(
   }, {});
 }
 
+/** Single-select stores one id. Multi-select stores the checked ids. */
+export type FlowMultiSelection = string | string[] | null;
+
+export function multiSelectionIds(
+  value: FlowMultiSelection | undefined,
+): string[] {
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+}
+
 export interface LevelGroupFlowState {
-  selectedMulti: Record<string, string | null>;
+  selectedMulti: Record<string, FlowMultiSelection>;
   freeText: Record<string, string>;
   matchAssignments: Record<string, MatchAssignments>;
   dragDropParsons: Record<string, ParsonsSolutionState>;
@@ -136,7 +146,7 @@ export function useLevelGroupFlowState(steps: LevelGroupQuestionBlock[]) {
   }, [steps]);
 
   const [selectedMulti, setSelectedMulti] = useState<
-    Record<string, string | null>
+    Record<string, FlowMultiSelection>
   >({});
   const [freeText, setFreeText] = useState<Record<string, string>>({});
   const [matchAssignments, setMatchAssignments] =
@@ -188,9 +198,13 @@ export function useLevelGroupFlowState(steps: LevelGroupQuestionBlock[]) {
 
 function isMultiComplete(
   block: Extract<LevelGroupQuestionBlock, { kind: "multi" }>,
-  selectedId: string | null | undefined,
+  selected: FlowMultiSelection | undefined,
 ): boolean {
-  return Boolean(selectedId);
+  const ids = multiSelectionIds(selected);
+  if (block.question.selectionMode !== "multiple") return ids.length > 0;
+  const required = block.question.requiredSelectionCount;
+  if (required != null) return ids.length === required;
+  return ids.length > 0;
 }
 
 function isFreeComplete(
@@ -241,7 +255,7 @@ export function isBlockComplete(
   flow: LevelGroupFlowState,
 ): boolean {
   if (block.kind === "multi") {
-    return isMultiComplete(block, flow.selectedMulti[block.blockId] ?? null);
+    return isMultiComplete(block, flow.selectedMulti[block.blockId]);
   }
   if (block.kind === "freeResponse") {
     return isFreeComplete(block, flow.freeText[block.blockId]);
@@ -276,8 +290,15 @@ function sectionScore(
     return isBlockComplete(block, flow);
   }
   if (block.kind === "multi") {
-    const id = flow.selectedMulti[block.blockId];
-    return id === block.question.correctAnswerId;
+    const ids = multiSelectionIds(flow.selectedMulti[block.blockId]);
+    if (block.question.selectionMode === "multiple") {
+      const correct = block.question.correctAnswerIds ?? [];
+      return (
+        ids.length === correct.length &&
+        correct.every((id) => ids.includes(id))
+      );
+    }
+    return ids[0] === block.question.correctAnswerId;
   }
   if (block.kind === "freeResponse") {
     return isFreeComplete(block, flow.freeText[block.blockId]);
@@ -345,7 +366,7 @@ export interface LevelGroupEmbeddedBlockProps {
   isSubmitted: boolean;
   flow: LevelGroupFlowState;
   setSelectedMulti: Dispatch<
-    SetStateAction<Record<string, string | null>>
+    SetStateAction<Record<string, FlowMultiSelection>>
   >;
   setFreeText: Dispatch<SetStateAction<Record<string, string>>>;
   setMatchAssignments: Dispatch<
@@ -371,10 +392,17 @@ export interface LevelGroupEmbeddedBlockProps {
   studentQuestionChrome?: boolean;
   /** Multi / match: keep the student's work visible next to the key. */
   revealKeyAlongsideSelection?: boolean;
+  /**
+   * Quiz feedback. Off locks the answer without correct or incorrect marks.
+   * Standalone and CFU callers omit this and still grade.
+   */
+  showCorrectness?: boolean;
   /** Parent-managed X marks carried across Try again (single-question retry). */
   persistedWrongAnswerIds?: string[];
   persistedCorrectAnswerIds?: string[];
   afterBody?: ReactNode;
+  /** Top-right of the question stem, beside the overline. */
+  headerEnd?: ReactNode;
 }
 
 function blockEyebrowLabel(block: LevelGroupQuestionBlock): string {
@@ -408,9 +436,11 @@ export function LevelGroupEmbeddedBlock({
   groupTeacherReveal,
   studentQuestionChrome = false,
   revealKeyAlongsideSelection = false,
+  showCorrectness = true,
   persistedWrongAnswerIds,
   persistedCorrectAnswerIds,
   afterBody,
+  headerEnd,
 }: LevelGroupEmbeddedBlockProps) {
   const scrollGroup = layout === "scrollGroup";
   const steppedTypeOnly = layout === "stepped";
@@ -441,6 +471,7 @@ export function LevelGroupEmbeddedBlock({
   if (block.kind === "multi") {
     const payload = levelGroupMultiToPayload(block, flowLevel, stepIndex);
     const selected = flow.selectedMulti[block.blockId];
+    const multiple = block.question.selectionMode === "multiple";
     return wrapStepped(
       <MultiChoiceWorkspace
         embedded
@@ -450,17 +481,19 @@ export function LevelGroupEmbeddedBlock({
         embeddedStepEyebrow={embeddedStepEyebrowForChild}
         payload={payload}
         groupSubmitted={isSubmitted}
+        showCorrectness={showCorrectness}
         groupTeacherReveal={groupTeacherReveal}
         studentQuestionChrome={studentQuestionChrome}
         revealKeyAlongsideSelection={revealKeyAlongsideSelection}
         persistedWrongAnswerIds={persistedWrongAnswerIds}
         persistedCorrectAnswerIds={persistedCorrectAnswerIds}
         afterBody={afterBody}
-        controlledSelectedIds={selected ? [selected] : []}
+        headerEnd={headerEnd}
+        controlledSelectedIds={multiSelectionIds(selected)}
         onControlledSelectedIdsChange={(ids) =>
           setSelectedMulti((prev) => ({
             ...prev,
-            [block.blockId]: ids[0] ?? null,
+            [block.blockId]: multiple ? ids : (ids[0] ?? null),
           }))
         }
       />,
@@ -480,6 +513,7 @@ export function LevelGroupEmbeddedBlock({
         groupTeacherReveal={groupTeacherReveal}
         studentQuestionChrome={studentQuestionChrome}
         afterBody={afterBody}
+        headerEnd={headerEnd}
         controlledResponseText={flow.freeText[block.blockId] ?? ""}
         onControlledResponseTextChange={(text) =>
           setFreeText((prev) => ({ ...prev, [block.blockId]: text }))
@@ -579,11 +613,13 @@ export function LevelGroupEmbeddedBlock({
       embeddedStepEyebrow={embeddedStepEyebrowForChild}
       payload={payload}
       groupSubmitted={isSubmitted}
+      showCorrectness={showCorrectness}
       groupTeacherReveal={groupTeacherReveal}
       studentQuestionChrome={studentQuestionChrome}
       revealKeyAlongsideSelection={revealKeyAlongsideSelection}
       persistedCorrectPromptIds={persistedCorrectAnswerIds}
       afterBody={afterBody}
+      headerEnd={headerEnd}
       controlledAssignments={assignments}
       onControlledAssignmentsChange={(next) =>
         setMatchAssignments((prev) => ({ ...prev, [block.blockId]: next }))

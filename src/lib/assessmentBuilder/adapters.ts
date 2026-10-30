@@ -94,9 +94,18 @@ function multiContentToLevelGroup(
     prompt: stem.prompt,
     ...(stem.description ? { description: stem.description } : {}),
     answers: content.answers,
-    ...(content.surveyMode
-      ? {}
-      : content.selectionMode === "multiple"
+    ...(content.selectionMode === "multiple"
+      ? {
+          selectionMode: "multiple" as const,
+          correctAnswerIds: content.correctAnswerIds,
+          ...(content.requiredSelectionCount != null
+            ? { requiredSelectionCount: content.requiredSelectionCount }
+            : {}),
+          ...(content.maxSelectionCount != null
+            ? { maxSelectionCount: content.maxSelectionCount }
+            : {}),
+        }
+      : content.surveyMode
         ? {}
         : { correctAnswerId: content.correctAnswerId }),
   };

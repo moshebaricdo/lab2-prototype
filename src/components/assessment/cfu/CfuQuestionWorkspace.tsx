@@ -12,7 +12,9 @@ import {
   correctMatchPromptIds,
   keepCorrectMatchAssignments,
   questionItemToPreviewPayload,
+  questionOutcomeTag,
   quizAttemptChipCopy,
+  responseWasSkipped,
   scoreQuestionResponse,
   studentIncorrectFooterLayout,
 } from "../../../lib/assessmentBuilder";
@@ -23,7 +25,7 @@ import { MatchConnectorWorkspace } from "../match/views/MatchConnectorWorkspace"
 import { MultiChoiceWorkspace } from "../multi/views/MultiChoiceWorkspace";
 import {
   AnswerNotesBlock,
-  ResponseResultTag,
+  QuestionOutcomeTag,
   QuizAttemptChip,
   StudentQuestionCardFooter,
   StudentResponsesRow,
@@ -217,12 +219,15 @@ export function CfuQuestionWorkspace({
     setSubmitted(false);
   };
 
-  const resultTag =
-    submitted && showCorrectness && !isTeacher && !isStudentResponse ? (
-      <ResponseResultTag
-        status={scoring.outcome === "correct" ? "correct" : "incorrect"}
-      />
-    ) : null;
+  const outcomeKind = questionOutcomeTag({
+    visible: submitted && !isTeacher,
+    skipped: responseWasSkipped(question, response),
+    incorrect: scoring.outcome !== "correct" && scoring.outcome !== "ungraded",
+    freeResponse: isFr,
+  });
+  const headerEnd = outcomeKind ? (
+    <QuestionOutcomeTag kind={outcomeKind} />
+  ) : null;
 
   const incorrectLayout =
     submitted &&
@@ -301,8 +306,6 @@ export function CfuQuestionWorkspace({
 
   const footer = (
     <StudentQuestionCardFooter
-      leftExtra={teacherActions}
-      resultTag={resultTag}
       submitLeading={
         attemptChipLabel ? (
           <QuizAttemptChip label={attemptChipLabel} />
@@ -396,6 +399,7 @@ export function CfuQuestionWorkspace({
                 persistedWrongAnswerIds={persistedWrongIds}
                 persistedCorrectAnswerIds={persistedCorrectIds}
                 afterBody={notesBlock}
+                headerEnd={headerEnd}
                 controlledSelectedIds={selectedIds}
                 onControlledSelectedIdsChange={setSelectedIds}
               />
@@ -410,6 +414,7 @@ export function CfuQuestionWorkspace({
                 groupSubmitted={workspaceLocked}
                 groupTeacherReveal={revealActive}
                 afterBody={notesBlock}
+                headerEnd={headerEnd}
                 controlledResponseText={freeText}
                 onControlledResponseTextChange={setFreeText}
               />
@@ -426,15 +431,18 @@ export function CfuQuestionWorkspace({
                 revealKeyAlongsideSelection={keyAlongsideSelection}
                 afterBody={notesBlock}
                 persistedCorrectPromptIds={persistedCorrectIds}
+                headerEnd={headerEnd}
                 controlledAssignments={matchAssignments}
                 onControlledAssignmentsChange={setMatchAssignments}
               />
             ) : null}
-
-            {footer}
+            {teacherActions ? (
+              <footer className={styles.cardFooter}>{teacherActions}</footer>
+            ) : null}
           </article>
           </div>
         </div>
+        {footer}
       </div>
     </Lab2Shell>
   );

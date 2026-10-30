@@ -157,10 +157,6 @@ const AssessmentBuilderP0DraftPage = lazyPage(
   () => import("./pages/assessment-builder/AssessmentBuilderP0DraftPage"),
   "AssessmentBuilderP0DraftPage",
 );
-const AssessmentBuilderP0CfuPage = lazyPage(
-  () => import("./pages/assessment-builder/AssessmentBuilderP0CfuPage"),
-  "AssessmentBuilderP0CfuPage",
-);
 const CfuPages = () => import("./pages/cfu/CfuPages");
 const CfuMultiPage = lazyPage(CfuPages, "CfuMultiPage");
 const CfuMultiRetryPage = lazyPage(CfuPages, "CfuMultiRetryPage");
@@ -233,6 +229,15 @@ const CfuTeacherResponseMatchingPage = lazyPage(
   "CfuTeacherResponseMatchingPage",
 );
 const QuizPages = () => import("./pages/quiz/QuizPages");
+const EditableQuizPages = () => import("./pages/quiz/EditableQuizPages");
+const EditableQuizStudentPage = lazyPage(
+  EditableQuizPages,
+  "EditableQuizStudentPage",
+);
+const EditableQuizBuilderPage = lazyPage(
+  EditableQuizPages,
+  "EditableQuizBuilderPage",
+);
 const QuizPracticePage = lazyPage(QuizPages, "QuizPracticePage");
 const QuizExamRetriesPage = lazyPage(QuizPages, "QuizExamRetriesPage");
 const QuizExamFinalPage = lazyPage(QuizPages, "QuizExamFinalPage");
@@ -791,10 +796,6 @@ export default function App() {
           path="/levels/assessment-builder-p0-draft"
           element={<AssessmentBuilderP0DraftPage />}
         />
-        <Route
-          path="/levels/assessment-builder-p0-cfu"
-          element={<AssessmentBuilderP0CfuPage />}
-        />
         <Route path="/levels/cfu-multi" element={<CfuMultiPage />} />
         <Route path="/levels/cfu-multi-retry" element={<CfuMultiRetryPage />} />
         <Route
@@ -901,6 +902,8 @@ export default function App() {
           path="/levels/cfu-teacher-response-matching"
           element={<CfuTeacherResponseMatchingPage />}
         />
+        <Route path="/levels/quiz-demo/:demoSlug/edit" element={<EditableQuizBuilderPage />} />
+        <Route path="/levels/quiz-demo/:demoSlug" element={<EditableQuizStudentPage />} />
         <Route path="/levels/quiz-practice" element={<QuizPracticePage />} />
         <Route
           path="/levels/quiz-exam-retries"

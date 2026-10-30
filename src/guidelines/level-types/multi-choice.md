@@ -99,10 +99,11 @@ Prefer `answer.text` for short plain-text options. Use `contentBlocks` when an o
   - A short shimmer animation runs on those option cards.
   - Bottom bar: **“Nice work!”** and a primary **Continue** button that navigates to the next route in the demo `levelLinks` chain (or `/levels` after the last demo).
 - **Incorrect answer** *(graded levels only; not used when `surveyMode` is true)*
-  - After submit, judged picks use the **full** success/error option chrome (green/red fill, matching radio/checkbox, check or ✕). A keyed pick that was right still gets the full green row even when the attempt is otherwise wrong. Unused locked options stay on the disabled white surface with no marks.
+  - After submit, a single-answer question marks the student's pick with the **full** success/error option chrome (green/red fill, matching radio, check or ✕). Multiple select does not mark individual options when the key is hidden, because that reveals the rest of the answer; the question tag is the all-or-nothing signal, and selected options stay in the usual checked state. A fully correct multi-select still uses success styling. When the key is revealed, a keyed pick uses the green row even if the student did not select it, and a wrong selected option uses the red row. Unused locked options stay on the disabled white surface with no marks.
   - **Try again** clears the attempt and wrong selections. On the next attempt only, previously correct picks stay selected and disabled with a check, and previously wrong picks keep an ✕, both on the Figma **disabled** surface (white, muted type) — not the full green/red reveal.
   - **Continue** is not shown until they answer correctly.
 - **Disabled / unused after submit:** options that are locked but not in a revealed correct/incorrect state use the disabled surface (`--background-neutral-primary`), not the default gray option fill.
+- **Correctness hidden:** a submitted selection stays on the usual checked surface. The radio or checkbox is disabled, and it keeps its usual checked colors instead of the gray disabled control.
 - **Teacher tools:** **Reveal answer** / **Hide answer** toggles the keyed answer(s) with success styling; it disables submit until hidden again as implemented in the workspace.
 
 ## Option layout

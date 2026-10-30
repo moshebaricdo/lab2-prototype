@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { Alert, Button } from "@moshebari/cads-react";
+import { Alert, Button, Tag } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
+import type { QuestionOutcomeTag as QuestionOutcomeTagKind } from "../../../lib/assessmentBuilder";
 import styles from "./ViewpointChrome.module.scss";
 
 export type ViewpointBannerVariant = "info" | "warning";
@@ -29,25 +30,18 @@ export function ViewpointBanner({
   );
 }
 
-export type ResponseResultStatus = "correct" | "incorrect";
-
-interface ResponseResultTagProps {
-  status: ResponseResultStatus;
-}
-
-/** Figma `responseTag` (`295:40744`) — CADS Alert extraSmall, hug width. */
-export function ResponseResultTag({ status }: ResponseResultTagProps) {
-  const isCorrect = status === "correct";
+/** Small outcome tag in the question card’s top-right after submit or on results. */
+export function QuestionOutcomeTag({ kind }: { kind: QuestionOutcomeTagKind }) {
+  if (kind === "ungraded") {
+    return <Tag size="small" color="neutral" label="Ungraded" />;
+  }
   return (
-    <Alert
-      className={styles.resultTag}
-      sentiment={isCorrect ? "success" : "error"}
-      size="extraSmall"
-      fullWidth={false}
-      iconName={isCorrect ? "circle-check" : "circle-xmark"}
-    >
-      {isCorrect ? "Great job!" : "Incorrect"}
-    </Alert>
+    <Tag
+      size="small"
+      color="error"
+      startIconName="xmark"
+      label={kind === "skipped" ? "Skipped" : "Incorrect"}
+    />
   );
 }
 

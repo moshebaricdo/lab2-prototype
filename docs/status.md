@@ -2,7 +2,7 @@
 
 Living snapshot of **product decisions** and **prototype state** for this workstream. Specs and implementation details live in the linked docs; this file is the turn-by-turn source of truth for what is in, out, and still open.
 
-**Last updated:** 2026-10-22
+**Last updated:** 2026-10-29
 
 **How to maintain:** update this file in the same turn as substantive product or architecture changes (scope, modes, tagging, schema, routes, builder UX model). Skip for visual polish, copy nits, and bugfixes that do not change the model.
 
@@ -12,9 +12,10 @@ Living snapshot of **product decisions** and **prototype state** for this workst
 
 | Route | Role |
 |-------|------|
-| [`/levels/assessment-builder-p0`](/levels/assessment-builder-p0) | **Final quiz builder.** Seeded Unit 3 Assessment: AI in Society (12 questions, 4 pages), attached, Live in 2 units. Purpose, Configuration, outline tabs, bank preview. |
-| [`/levels/assessment-builder-p0-cfu`](/levels/assessment-builder-p0-cfu) | **Final quiz builder.** Seeded Unit 2 CFU · Accountability: one two-correct question, flat outline, unpublished. Purpose already set to check for understanding. |
-| [`/levels/assessment-builder-p0-draft`](/levels/assessment-builder-p0-draft) | **Final quiz builder.** New Level (already named in Levelbuilder: AI Foundations Certification Exam), no purpose until the chooser. |
+| [`/levels/assessment-builder-p0-draft`](/levels/assessment-builder-p0-draft) | **Final quiz builder.** Blank quiz. No title, lesson name, level id, purpose, or questions. First header bubble. |
+| [`/levels/assessment-builder-p0`](/levels/assessment-builder-p0) | **Final quiz builder.** Pre-populated demo quiz: Unit 3 Assessment: AI in Society (12 questions, 4 pages), attached, Live in 2 units. Second header bubble. |
+| [`/levels/quiz-demo/multi`](/levels/quiz-demo/multi) · [`multi-select`](/levels/quiz-demo/multi-select) · [`free-response`](/levels/quiz-demo/free-response) · [`matching`](/levels/quiz-demo/matching) | Editable student quizzes. One question each, check-for-understanding settings. Header **Edit** opens that quiz in the builder. The account button switches Student, Teacher, Student submission, and Submission in progress. A completed submission with retries lists each try in Attempt history (Attempt N, newest first, with the time beside the name). Submits made while viewing as Student replace that sample and show up in the panel as they happen. |
+| [`/levels/quiz-demo/blank`](/levels/quiz-demo/blank/edit) | Blank quiz. Index opens the builder; **Save** / **Back to quiz** opens the student quiz at [`/levels/quiz-demo/blank`](/levels/quiz-demo/blank). |
 | [`/levels/cfu-multi`](/levels/cfu-multi) · [`-retry`](/levels/cfu-multi-retry) · [`-continue`](/levels/cfu-multi-continue) · [`-reveal`](/levels/cfu-multi-reveal) · [`-capped`](/levels/cfu-multi-capped) | Student CFU radio: no-retry (S4), must-correct (S5), can-continue (S6), reveal after submit, capped attempts (S9). |
 | [`/levels/cfu-multi-checkboxes`](/levels/cfu-multi-checkboxes) · [`-continue`](/levels/cfu-multi-checkboxes-continue) · [`-no-retry`](/levels/cfu-multi-checkboxes-no-retry) · [`-reveal`](/levels/cfu-multi-checkboxes-reveal) · [`-capped`](/levels/cfu-multi-checkboxes-capped) | Student CFU two-correct: must-correct, can-continue, no-retry, reveal, capped attempts (S9). |
 | [`/levels/cfu-free-response`](/levels/cfu-free-response) · [`-reveal`](/levels/cfu-free-response-reveal) · [`-capped`](/levels/cfu-free-response-capped) | Student CFU FR. File upload row; no correctness chrome. Reveal does not add an explanation card (teacher views show the exemplar only). Capped shows the attempt chip only. |
@@ -23,7 +24,7 @@ Living snapshot of **product decisions** and **prototype state** for this workst
 | [`/levels/quiz-practice`](/levels/quiz-practice) | Student quiz. Intro, 3 questions, one page, retries, correctness. |
 | [`/levels/quiz-exam-retries`](/levels/quiz-exam-retries) | Student exam. 12q / 4 pages, 3 attempts, correctness on. |
 | [`/levels/quiz-exam-final`](/levels/quiz-exam-final) | Student exam. 1 attempt, correctness on (last-attempt confirm). |
-| [`/levels/quiz-exam`](/levels/quiz-exam) | Student exam. 1 attempt, correctness off → submitted receipt. |
+| [`/levels/quiz-exam`](/levels/quiz-exam) | Student exam. 1 attempt, correctness off → submitted results with the student’s answers (no score). |
 | [`/levels/quiz-exam-resume`](/levels/quiz-exam-resume) | Student exam. In-progress intro; `sessionStorage` restore; **Resume** lands on the last page. |
 | [`/levels/quiz-teacher`](/levels/quiz-teacher) · [`-as-student`](/levels/quiz-teacher-as-student) · [`-response`](/levels/quiz-teacher-response) · [`-response-submitted`](/levels/quiz-teacher-response-submitted) | Teacher quiz viewpoints on the 12-question exam, including an in-progress response and a completed submission. |
 | [`/levels/assessment-builder-new`](/levels/assessment-builder-new) | Kept exploration — blank legacy outline. Listed under Experiments on `/levels`. |
@@ -54,12 +55,12 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 
 ## What the P0 builder has today
 
-- Lab2 workspace: **Build** outline + **Preview** via `QuizAttemptWorkspace` (empty Preview when there are no questions and intro is off). One-question preview uses the CFU in-card **Submit** footer, not the multi-question sticky bar.
+- Lab2 workspace: **Build** outline + **Preview** via `QuizAttemptWorkspace` (empty Preview when there are no questions and intro is off). One-question preview uses the same sticky attempt bar as a multi-question quiz (**Submit**, then **Try again** / **Next level**).
 - Outline: intro as a workspace card (optional title + content; config toggles show/hide), sections as pages (no section names), dashed Create question (create-only), ghost ADD SECTION, kebab Add above/below / Move / Delete. Deleting a section shows a top-center toast with Undo. Expanding a question scrolls it to the top of the outline (64px offset). Empty quiz uses the dashed illustration state.
 - Create question lists **Multiple choice** and **Multiple select** separately. Both open the same answers editor; **Selection type** starts on the entry that was chosen. Correct options are marked with a radio or checkbox joined to the option field (`list-radio` / `list-check`). The bank type filter still treats both as one Multiple Choice bucket.
 - Open item tabs Question / Answers / Usage. Unsaved-changes tag on collapse. Leave-page dialog for dirty questions.
 - Save: silent for new; unpublished shared vs published-unit dialogs (no “fork” vocabulary). Save collapses the card and shows a top-center CADS toast (“Question saved”).
-- Bank: hover eye (Close Icon Button chrome, “preview” tooltip) opens Preview / Details / Usage. Filters default to **All**. Filter popover includes **Hide added items from results** (drops questions already on this quiz). Multi-section quizzes use an add-to-section menu. Adds stay collapsed. After add (or closing preview), the result remounts so eye / plus / already-added tooltips do not stick. `listedInBank: false` hidden.
+- Bank: hover eye (Close Icon Button chrome, “preview” tooltip) opens Preview / Details / Usage. Filters default to **All**. Filter popover includes **Hide added items from results** (drops questions already on this quiz). Multi-page quizzes use an add-to-page menu. Adds stay collapsed. After add (or closing preview), the result remounts so eye / plus / already-added tooltips do not stick. `listedInBank: false` hidden.
 - Configuration: purpose chooser or dropdown; Content / Rules / Feedback / AI Tutor. Rules nest **Require a correct answer to continue** under Allow multiple attempts (same wrap as Max attempts). When settings differ from the purpose defaults, a **Reset to defaults** control sits beside Purpose.
 
 ---
@@ -85,6 +86,29 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 ## Changelog
 
 Newest first. Log **decisions and model changes**, not polish.
+
+### 2026-10-29
+
+- Attempt history on an editable quiz records each submit made while viewing as Student (`sessionStorage`, per quiz). The panel opens on that view and fills a row per submit. Student submission shows those rows; the three-row sample stays only until the first real submit. Editing the quiz clears the log.
+- Attempt history marks the highest-scoring submission with an award icon and a **Best attempt** tooltip, in the same slot as an autosave or AI save. A tie across every attempt, or a quiz with nothing graded, shows no badge.
+- Attempt history rows are all **Attempt N** (Attempt 3, Attempt 2, Attempt 1), newest first. The read-only banner uses that same name.
+- The submission review keeps a single blue read-only banner. It names the attempt on screen. Switching attempts is done from the list.
+- Attempt history copy: the rail tooltip and panel title say **Attempt history**. Each row is **Attempt N**, newest first. The submission time is secondary text on the same row (`Oct 28, 3:05:18PM`). Web Lab version history is unchanged.
+- A teacher reviewing one student’s completed editable quiz (`view=submission` on `/levels/quiz-demo/*`) uses that panel when the quiz allows more than one attempt. Each submission is a row. No autosaves, and no save or restore. One attempt, and a submission still in progress, do not open the panel. The seeded list stops at three submissions so it stays readable. Dedicated quiz-teacher routes are unchanged.
+- Editable quizzes (`/levels/quiz-demo/*`) switch viewpoint from the header account button: **Student** (default), **Teacher** (keys and response counts), **Student submission** (read-only results), and **Submission in progress** (saved answers, not submitted). Stored as `view=teacher`, `view=submission`, or `view=in-progress`.
+- Quiz builder demos are two bubbles: **Blank quiz** (`/levels/assessment-builder-p0-draft`, no title, lesson name, level id, purpose, or questions) and **Demo quiz** (`/levels/assessment-builder-p0`, the pre-populated Unit 3 exam). The CFU builder seed is gone.
+- Student question actions use the sticky bottom bar even when the quiz has one question (a CFU). **Submit**, **Try again**, and **Next level** no longer sit on the question card. Teacher **View student responses** stays on the card.
+- Question cards no longer show **Great job!** / **Incorrect** in the action bar. After submit or on results, a small error tag in the card’s top-right is **Skipped** for a blank graded question (counts as incorrect) or **Incorrect** when the answer is not fully correct, including when Show correctness is on. Marks still show which picks were right or wrong; the tag keeps a mixed result from reading as partial credit. A correct answer has no tag. Free response shows a neutral **Ungraded** tag with no icon, because it is not graded.
+- Editable quizzes (`/levels/quiz-demo/*`) do not disable answers from the previous try. **Try again** leaves every option and pair editable. Dedicated CFU routes and standalone multi levels still lock a wrong option (✕) and keep a correct pick disabled.
+- An untimed quiz results card is score and attempt only. **Time elapsed** appears when the quiz has a time limit. Two stats lay the number beside its label, aligned to the left of each column. Three stats stack the number above the label.
+- A quiz with **Show correctness** off still opens the results view after submit. The summary is a submitted card (attempt number, submitted time, **Try again** when another attempt remains, **Finish level**) and every question shows the student’s answers, with no score and no correct or incorrect marks.
+- Every quiz results footer puts the submitted time on the left. **Try again**, when another attempt remains, sits beside **Next level**, **Finish level**, or **Submit this attempt** on the right.
+- When **Show correctness** is on and the key is hidden, single-answer multiple choice still marks that one pick. Multiple select and matching do not mark individual options or pairs, because that reveals the rest of the answer. A fully correct answer still uses success styling. Reveal and teacher views still show the key.
+
+### 2026-10-28
+
+- Student quizzes honor **Show correctness**. Off locks the submitted answer ungraded (the pick stays selected; no correct or incorrect marks, no key). On with reveal off marks only the student's own pick. Matches the production quiz attempt: `correct: null` and a nulled answer key when the quiz does not show correctness.
+- Editable quizzes under Modernizing assessments (that group now sits above the legacy Assessment group on `/levels`): multiple choice, multiple select, free response, matching, and a blank quiz. Each one is a real builder artifact. **Edit** in the student header opens the quiz builder; **Save** returns to the student quiz. State is session storage for the tab and the encoded `o` query param, so the address bar is a share link for the questions and config. Multiple select keeps its selection mode on the student attempt (checkboxes, every checked answer scored).
 
 ### 2026-09-09
 

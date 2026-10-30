@@ -53,14 +53,14 @@ Rendering rules match multi-choice and free-response (`see multi-choice.md` stem
 - **Keyboard focus** draws the shared focus ring around the tile.
 - **Tile interaction** (Figma matching item): the whole tile uses a crosshair cursor while it can be paired. Hover/press/focus anywhere on the tile also drives the connector knob. Unmatched hover uses a secondary border and tertiary knob; press/focus fill the knob with brand-light and a selected-primary ring. Connected tiles use brand-light / selected-primary; hover and press darken the knob to selected-strong. Correct and incorrect pairs have **no** hover/press.
 - **Pair letters:** each term node shows a letter in column order (A, B, C…). Definition nodes stay empty until that definition is matched, then show the letter of the term it is connected to. Rematching moves the letter with the pair. The same letters appear on the Correct Answer board.
-- **Correctness** is the card, node, and connector color. An incorrect connector is dashed, so the wrong pair is identifiable without relying on red versus green. The card name includes “correct” or “incorrect” once feedback is showing. There is no check or x icon on the cards.
+- **Correctness** is the card, node, and connector color when every pair is correct, or when the key is revealed. An imperfect match with the key hidden keeps the student's pairs in the connected style, with no per-pair right or wrong marks, because those marks reveal the rest of the key. When marks are on, an incorrect connector is dashed. The card name includes “correct” or “incorrect” once those marks are showing. There is no check or x icon on the cards.
 - **Clear all** and **Submit** follow the same footer rules as other assessment types.
 
 ## Student UX (submit and feedback)
 
 - **Sounds:** `success-sound.mp3` when all matches are correct; `error-sound.mp3` when any are wrong.
 - **All correct** — success styling; bottom bar **“Nice work!”** and **Continue** (next route in `matchLevelLinks` or `/levels` after the last demo).
-- **Any incorrect** — error styling where applicable; **Try again** until all correct; **Continue** only after a fully correct attempt. On Try again, pairs that were already correct stay matched and locked (success styling, no hover/press); incorrect pairs clear. Submit stays disabled until every remaining pair is filled.
+- **Any incorrect** — the question is incorrect, but individual pairs stay in the connected style unless the key is revealed. **Try again** until all correct; **Continue** only after a fully correct attempt. On Try again, pairs that were already correct stay matched and locked (success styling, no hover/press); incorrect pairs clear. Submit stays disabled until every remaining pair is filled.
 - **Teacher tools:** **Reveal answer** / **Hide answer** shows the key in the live UI; Submit disabled while revealed (same pattern as multi-choice).
 
 ## Teacher answer key

@@ -262,13 +262,14 @@ export type AssessmentQuestionRef =
   | { type: "inline"; item: QuestionItem };
 
 /**
- * Authoring group of questions presented to learners as a single page.
- * Structural invariant: an assessment is either flat (no sections) or fully
- * sectioned (every question lives in a section) — never mixed.
+ * Authoring group of questions presented as a single page.
+ * Structural invariant: an assessment is either flat (no pages) or fully
+ * paged (every question lives on a page) — never mixed.
+ * Stored on the artifact as `sections`.
  */
 export interface AssessmentSection {
   id: string;
-  /** Custom title shown next to the `Section N` overline. */
+  /** Custom title shown next to the `Page N` overline. */
   title?: string;
   /** Learner-facing description (future). */
   description?: string;
@@ -297,8 +298,8 @@ export interface AssessmentArtifact {
   id: string;
   courseId: string;
   /**
-   * Level name. Always set on the in-lab builder — authors name the Level
-   * in Levelbuilder before this screen. Not authored here.
+   * Level name. Empty on the blank quiz demo until the author sets one;
+   * the outline then shows the level name and a double-click edits this.
    */
   title: string;
   lessonName: string;
@@ -348,9 +349,8 @@ export interface AssessmentArtifact {
   /** Prototype stand-in for script_levels this quiz is placed in. */
   unitPlacements?: QuizUnitPlacement[];
   /**
-   * Levelbuilder numeric level id. Always present on the in-lab builder:
-   * authors open this screen after the Level row exists. Distinct from the
-   * draft storage `id`. Optional only on pre-P0 / student-route mocks.
+   * Levelbuilder numeric level id. Set on the pre-populated demo quiz.
+   * Omitted on the blank quiz demo. Distinct from the draft storage `id`.
    */
   levelId?: number;
   surveyMode?: boolean;

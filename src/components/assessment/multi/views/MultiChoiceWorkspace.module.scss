@@ -245,6 +245,22 @@
 .answerOptionChecked {
   background-color: var(--background-brand-light);
   border-color: var(--border-brand-light);
+
+  /* Submitted with correctness hidden: the control is disabled, but a
+     checked radio/checkbox keeps its usual selected colors. */
+  .answerControl :global(.MuiCheckbox-root.Mui-checked.Mui-disabled) {
+    opacity: 1;
+    --cads-checkbox-bg: var(--background-selected-primary) !important;
+    --cads-checkbox-border: var(--border-selected-primary) !important;
+    --cads-checkbox-icon: var(--text-selected-primary) !important;
+  }
+
+  .answerControl :global(.MuiRadio-root.Mui-checked.Mui-disabled) {
+    opacity: 1;
+    --cads-radio-bg: var(--background-neutral-primary) !important;
+    --cads-radio-border: var(--border-selected-primary) !important;
+    --cads-radio-dot: var(--background-selected-primary) !important;
+  }
 }
 
 .answerOptionRevealedCorrect {
