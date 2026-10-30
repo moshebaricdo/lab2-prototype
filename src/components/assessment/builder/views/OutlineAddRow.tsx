@@ -97,7 +97,7 @@ interface OutlineEmptyQuizProps {
 }
 
 /**
- * W1.1 dashed illustration when the quiz has no sections and no questions.
+ * W1.1 dashed illustration when the quiz has no pages and no questions.
  * Create types only; bank adds stay on the rail.
  */
 export function OutlineEmptyQuiz({
@@ -108,7 +108,7 @@ export function OutlineEmptyQuiz({
     <div
       className={styles.emptyQuiz}
       role="region"
-      aria-label="This quiz is empty. Add a question from the bank, create a new question, or add a section."
+      aria-label="This quiz is empty. Add a question from the bank, create a new question, or add a page."
     >
       <div className={styles.emptyQuizInner}>
         <div className={styles.emptyQuizMessage}>
@@ -123,7 +123,7 @@ export function OutlineEmptyQuiz({
             <h2 className={styles.emptyQuizTitle}>This quiz is empty</h2>
             <p className={styles.emptyQuizBody}>
               Start by adding a question from the bank on the left, creating a
-              new question, or adding a section.
+              new question, or adding a page.
             </p>
           </div>
         </div>
@@ -142,7 +142,7 @@ export function OutlineEmptyQuiz({
             startIconName="rectangle-history-circle-plus"
             onClick={onAddSection}
           >
-            New Section
+            New page
           </Button>
         </div>
       </div>
@@ -155,10 +155,12 @@ interface OutlineAddQuestionRowProps {
   droppableId: string;
   isDropActive: boolean;
   onCreateQuestion: (kind: BlankQuestionKind) => void;
+  /** Nested in a page: item radius. At the root (no pages): page radius. */
+  inPage?: boolean;
 }
 
 /**
- * Dashed "+ Create question" row at the end of a populated section (or
+ * Dashed "+ Create question" row at the end of a populated page (or
  * flat list). Create types only — bank adds stay on the rail. Doubles as
  * the append drop target for question drags.
  */
@@ -166,6 +168,7 @@ export function OutlineAddQuestionRow({
   droppableId,
   isDropActive,
   onCreateQuestion,
+  inPage = false,
 }: OutlineAddQuestionRowProps) {
   const { setNodeRef } = useDroppable({ id: droppableId });
 
@@ -174,6 +177,7 @@ export function OutlineAddQuestionRow({
       ref={setNodeRef}
       className={[
         styles.addQuestionRow,
+        inPage ? styles.addQuestionRowInPage : "",
         isDropActive ? styles.addQuestionRowDropActive : "",
       ]
         .filter(Boolean)
@@ -197,7 +201,7 @@ interface OutlineEmptySectionSlotProps {
 }
 
 /**
- * Dashed placeholder for an empty section. Create types only; bank adds
+ * Dashed placeholder for an empty page. Create types only; bank adds
  * stay on the rail.
  */
 export function OutlineEmptySectionSlot({
@@ -214,10 +218,10 @@ export function OutlineEmptySectionSlot({
         .filter(Boolean)
         .join(" ")}
       role="region"
-      aria-label="This section is empty. Add a question from the bank or create a new question."
+      aria-label="This page is empty. Add a question from the bank or create a new question."
     >
       <div className={styles.emptySlotCopy}>
-        <p className={styles.emptySlotTitle}>This section is empty</p>
+        <p className={styles.emptySlotTitle}>This page is empty</p>
         <p className={styles.emptySlotHint}>
           Add a question from the bank or create a new question.
         </p>
@@ -237,15 +241,20 @@ interface OutlineAddSectionGhostProps {
   onClick: () => void;
 }
 
-/** End-of-outline ghost header: plus + ADD SECTION, no box. */
+/** Centered outlined control at the end of a non-empty outline. */
 export function OutlineAddSectionGhost({ onClick }: OutlineAddSectionGhostProps) {
   return (
-    <button type="button" className={styles.sectionGhost} onClick={onClick}>
-      <span className={styles.sectionGhostPlus} aria-hidden>
-        <FaIcon name="plus" size="extraSmall" />
-      </span>
-      <span className={styles.sectionGhostLabel}>Add section</span>
-    </button>
+    <div className={styles.addPage}>
+      <Button
+        variant="outlined"
+        color="secondary"
+        size="extraSmall"
+        startIconName="plus"
+        onClick={onClick}
+      >
+        Add page
+      </Button>
+    </div>
   );
 }
 
@@ -261,7 +270,7 @@ export function OutlineAddSectionRow({
   return (
     <AddRowButton
       iconName="rectangle-history"
-      label={wrapsExisting ? "Group questions into a section" : "Add section"}
+      label={wrapsExisting ? "Group questions into a page" : "Add page"}
       onClick={onClick}
     />
   );
@@ -272,7 +281,7 @@ interface OutlineAddIntroRowProps {
 }
 
 interface OutlineConnectorProps {
-  /** 12px between intro/sections; 8px between questions. */
+  /** 16px between intro/pages; 8px between questions. */
   size: "section" | "item";
   droppableId?: string;
   isDropActive?: boolean;

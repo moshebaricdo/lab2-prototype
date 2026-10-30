@@ -49,13 +49,17 @@
   align-items: center;
   justify-content: center;
   padding: 8px 0;
-  border: 1px dashed var(--border-neutral-primary);
-  border-radius: var(--shape-sm);
-  background: transparent;
+  border: 1px dashed var(--border-neutral-secondary);
+  border-radius: var(--shape-lg);
+  background: var(--background-neutral-secondary);
   transition:
     background 0.12s ease,
     border-color 0.12s ease,
     border-style 0.12s ease;
+}
+
+.addQuestionRowInPage {
+  border-radius: var(--shape-sm);
 }
 
 .addQuestionRowDropActive {
@@ -64,45 +68,16 @@
   background: var(--background-brand-light);
 }
 
-.sectionGhost {
+.addPage {
+  box-sizing: border-box;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  min-height: 28px;
-  padding: 2px 0 2px 6px;
-  border: none;
-  border-radius: var(--shape-sm);
-  background: transparent;
-  color: var(--text-neutral-secondary);
-  cursor: pointer;
-  text-align: left;
-}
-
-.sectionGhost:focus-visible {
-  @include focus-ring;
-}
-
-.sectionGhostPlus {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--shape-sm);
-  color: var(--text-neutral-quaternary);
-  transition: background 0.12s ease;
-}
-
-.sectionGhost:hover .sectionGhostPlus,
-.sectionGhostPlus:hover {
-  background: var(--background-neutral-tertiary);
-}
-
-.sectionGhostLabel {
-  @include type-overline-2;
-  text-transform: uppercase;
+  width: fit-content;
+  margin-inline: auto;
+  padding: 8px;
+  border: 1px dashed var(--border-neutral-secondary);
+  border-radius: var(--shape-lg);
+  background: var(--background-neutral-secondary);
 }
 
 .emptyQuiz {
@@ -182,8 +157,8 @@
   justify-content: center;
   gap: 12px;
   min-height: 46px;
-  padding: 16px 10px 18px;
-  border: 1px dashed var(--border-neutral-primary);
+  padding: 4px 0px 10px 0px;
+  border: 1px solid transparent;
   border-radius: var(--shape-md);
   background: transparent;
   text-align: center;
@@ -252,11 +227,11 @@
 .connector {
   display: flex;
   align-items: center;
-  padding-left: 18px;
+  justify-content: center;
 }
 
 .connectorSection {
-  height: 12px;
+  height: 16px;
 }
 
 .connectorItem {
@@ -270,7 +245,6 @@
 }
 
 .connectorDropActive {
-  padding-left: 0;
   border-radius: var(--shape-sm);
   background: var(--background-brand-light);
   box-shadow: 0 0 0 1px var(--border-selected-primary);

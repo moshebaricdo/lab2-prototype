@@ -28,8 +28,35 @@
 
 .title {
   margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: text;
   @include type-heading-h2-semibold;
-  color: var(--text-neutral-primary);
+  color: var(--ds-text-neutral-primary);
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-border-brand-primary);
+    outline-offset: 2px;
+  }
+}
+
+.titleInput {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  outline: none;
+  @include type-heading-h2-semibold;
+  color: var(--ds-text-neutral-primary);
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-border-brand-primary);
+    outline-offset: 2px;
+  }
 }
 
 .metaRow {
@@ -60,8 +87,12 @@
 .dragCard {
   overflow: hidden;
   border: 1px solid var(--border-neutral-secondary);
-  border-radius: var(--shape-sm);
+  border-radius: var(--shape-lg);
   background: var(--background-neutral-primary);
   box-shadow: var(--shadow-md);
   cursor: grabbing;
+}
+
+.dragCardInPage {
+  border-radius: var(--shape-sm);
 }

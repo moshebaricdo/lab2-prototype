@@ -5,7 +5,7 @@ export const BANK_ADD_NEW_SECTION = "new" as const;
 
 export type BankAddSectionId = string | typeof BANK_ADD_NEW_SECTION;
 
-/** Figma B1.6 — extraSmall action menu when the quiz has multiple sections. */
+/** Figma B1.6 — extraSmall action menu when the quiz has multiple pages. */
 export function bankSectionMenuOptions(sections: AssessmentSection[]) {
   return [
     ...sections.map((section, index) => ({
@@ -15,7 +15,7 @@ export function bankSectionMenuOptions(sections: AssessmentSection[]) {
     { type: "separator" as const },
     {
       value: BANK_ADD_NEW_SECTION,
-      label: "New section",
+      label: "New page",
       iconName: "plus" as const,
     },
   ];

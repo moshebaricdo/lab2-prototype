@@ -1,0 +1,77 @@
+@use "../../styles/_mixins.scss" as *;
+
+.page {
+  min-height: 100vh;
+  background: var(--background-neutral-secondary);
+}
+
+.column {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  width: 100%;
+  max-width: calc(800px + 64px);
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  padding: 12px 0;
+  background: var(--background-neutral-secondary);
+}
+
+.roundTitle {
+  margin: 0 0 -32px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  @include type-heading-h4-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.variant {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.variantHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.variantLetter {
+  @include type-overline-2;
+  color: var(--text-neutral-quaternary);
+}
+
+.variantName {
+  margin: 0;
+  @include type-heading-h6-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.variantDescription {
+  margin: 0;
+  @include type-body-3-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.outline {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.questionCard {
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}

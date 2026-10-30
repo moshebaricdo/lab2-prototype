@@ -343,6 +343,14 @@ export const assessmentBuilderExperimentLinks: LevelProgressLink[] = [
     name: "Legacy: seeded assessment (6 questions)",
     path: "/levels/assessment-builder-seeded",
   },
+  {
+    name: "Collapsed page variants",
+    path: "/experiments/quiz-page-collapse",
+  },
+  {
+    name: "Intro screen variants",
+    path: "/experiments/quiz-intro",
+  },
 ];
 
 export const levelGroupLevelLinks: LevelProgressLink[] = assessmentSetLevelLinks;

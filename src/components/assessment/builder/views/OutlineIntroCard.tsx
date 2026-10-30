@@ -53,6 +53,7 @@ export function OutlineIntroCard({
             </span>
             <span className={styles.preview}>
               <span className={styles.name}>Intro Screen</span>
+              <span className={styles.dot} aria-hidden />
               <span className={styles.stem}>
                 {peek || "Tell learners what to expect before they begin."}
               </span>

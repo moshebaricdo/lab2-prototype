@@ -40,7 +40,7 @@ export function OutlineAddToolbar({
           startIconName="square-dashed-circle-plus"
           onClick={onAddSection}
         >
-          New section
+          New page
         </Button>
       </div>
       <div className={styles.typeActions}>

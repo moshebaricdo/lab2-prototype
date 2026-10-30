@@ -64,6 +64,7 @@ export function QuestionRowContent({
         )}
         <span className={styles.preview}>
           <span className={styles.name}>{name}</span>
+          {stem ? <span className={styles.dot} aria-hidden /> : null}
           <span className={styles.stem}>{stem}</span>
         </span>
       </div>
@@ -110,6 +111,8 @@ interface OutlineQuestionCardProps {
   onRemove: () => void;
   onUpdateQuestion: (question: QuestionItem) => void;
   setCardRef: (node: HTMLDivElement | null) => void;
+  /** Nested in a page: item radius. At the root (no pages): page radius, to match intro. */
+  inPage?: boolean;
 }
 
 export function OutlineQuestionCard({
@@ -130,6 +133,7 @@ export function OutlineQuestionCard({
   onRemove,
   onUpdateQuestion,
   setCardRef,
+  inPage = false,
 }: OutlineQuestionCardProps) {
   const dndId = `q:${question.bankId}`;
   const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
@@ -209,6 +213,7 @@ export function OutlineQuestionCard({
       ref={setNode}
       className={[
         styles.card,
+        inPage ? styles.cardInPage : "",
         expanded ? styles.cardExpanded : styles.cardCollapsed,
         isDragSource ? styles.cardPlaceholder : "",
         suppressHoverReveal ? styles.hoverSuppressed : "",

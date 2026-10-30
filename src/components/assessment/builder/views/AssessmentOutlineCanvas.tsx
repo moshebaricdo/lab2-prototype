@@ -16,6 +16,7 @@ import { ScrollArea } from "../../../ui/scroll-area";
 import {
   isSectioned,
   questionRefId,
+  sectionDisplayTitle,
   resolvedAllowRetries,
   resolvedShowIntro,
   type OutlineDropTarget,
@@ -76,6 +77,87 @@ function insertAt<T>(items: T[], index: number, item: T): T[] {
   return [...items.slice(0, at), item, ...items.slice(at)];
 }
 
+function OutlineQuizTitle({
+  title,
+  levelName,
+  onCommit,
+}: {
+  title: string;
+  levelName: string;
+  onCommit: (title: string) => void;
+}) {
+  const stored = title.trim();
+  const displayed = stored || levelName.trim();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(displayed);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const cancelRef = useRef(false);
+
+  useEffect(() => {
+    if (!editing) setDraft(displayed);
+  }, [displayed, editing]);
+
+  useEffect(() => {
+    if (!editing) return;
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, [editing]);
+
+  const commit = () => {
+    if (cancelRef.current) {
+      cancelRef.current = false;
+      setDraft(displayed);
+      setEditing(false);
+      return;
+    }
+    const next = draft.trim();
+    setEditing(false);
+    if (next === stored) return;
+    if (!stored && next === levelName.trim()) return;
+    onCommit(next);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        className={styles.titleInput}
+        value={draft}
+        aria-label="Quiz title"
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            event.currentTarget.blur();
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            cancelRef.current = true;
+            event.currentTarget.blur();
+          }
+        }}
+      />
+    );
+  }
+
+  return (
+    <h1
+      className={styles.title}
+      tabIndex={0}
+      onDoubleClick={() => setEditing(true)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          setEditing(true);
+        }
+      }}
+    >
+      {displayed}
+    </h1>
+  );
+}
+
 interface AssessmentOutlineCanvasProps {
   artifact: AssessmentArtifact;
   /** bankId → resolved question, with the in-flight editing draft overlaid. */
@@ -100,11 +182,14 @@ interface AssessmentOutlineCanvasProps {
   onRemoveIntro: () => void;
   onCreateQuestion: (kind: BlankQuestionKind, sectionId: string | null) => void;
   onAddSection: () => void;
+  /** Header bubble name. Shown when the quiz title is unset. */
+  levelName?: string;
+  onUpdateTitle?: (title: string) => void;
 }
 
 /**
  * Block-based visual outline for the P0 builder: overview header, pinned
- * intro, sections-as-pages, question rows, and tick connectors.
+ * intro, pages, question rows, and tick connectors.
  */
 export function AssessmentOutlineCanvas({
   artifact,
@@ -129,6 +214,8 @@ export function AssessmentOutlineCanvas({
   onRemoveIntro,
   onCreateQuestion,
   onAddSection,
+  levelName = "",
+  onUpdateTitle,
 }: AssessmentOutlineCanvasProps) {
   const sectioned = isSectioned(artifact);
 
@@ -174,7 +261,7 @@ export function AssessmentOutlineCanvas({
     if (!sectioned) return null;
     return (artifact.sections ?? []).map((section, index) => ({
       id: section.id,
-      displayTitle: `Section ${index + 1}`,
+      displayTitle: sectionDisplayTitle(section, index),
       items: section.questionRefs.flatMap((ref) => {
         const question = questionsById.get(questionRefId(ref));
         return question
@@ -343,10 +430,11 @@ export function AssessmentOutlineCanvas({
     });
   };
 
-  const renderQuestionCard = (item: OutlineItemView) => (
+  const renderQuestionCard = (item: OutlineItemView, inPage = false) => (
     <OutlineQuestionCard
       key={item.bankId}
       question={item.question}
+      inPage={inPage}
       expanded={selectedBankId === item.bankId}
       isDragSource={
         activeDrag?.kind === "question" && activeDrag.bankId === item.bankId
@@ -397,7 +485,11 @@ export function AssessmentOutlineCanvas({
       <ScrollArea className={styles.root}>
       <div className={styles.inner}>
         <header className={styles.header}>
-          <h1 className={styles.title}>{artifact.title}</h1>
+          <OutlineQuizTitle
+            title={artifact.title}
+            levelName={levelName}
+            onCommit={(next) => onUpdateTitle?.(next)}
+          />
           <div className={styles.metaRow}>
             <span className={styles.metaItem}>
               <FaIcon name="circle-question" size="small" />
@@ -464,7 +556,9 @@ export function AssessmentOutlineCanvas({
                         displayTitle={section.displayTitle}
                         sectionNumber={sectionIndex + 1}
                         questionCount={section.items.length}
+                        questionTitles={section.items.map((item) => item.question.title)}
                         collapsed={collapsed}
+                        collapsedStyle="card"
                         isFirst={sectionIndex === 0}
                         isLast={sectionIndex === preview.sections!.length - 1}
                         isQuestionDropTarget={
@@ -480,9 +574,6 @@ export function AssessmentOutlineCanvas({
                         onAddBelow={() => onInsertSection(section.id, "below")}
                         onDelete={() => handleDeleteSection(section)}
                       >
-                        {!collapsed && (
-                          <OutlineConnector size="section" />
-                        )}
                         {!collapsed && section.items.length === 0 && (
                           <OutlineEmptySectionSlot
                             droppableId={`end:${section.id}`}
@@ -500,7 +591,7 @@ export function AssessmentOutlineCanvas({
                             {itemIndex > 0 && (
                               <OutlineConnector size="item" />
                             )}
-                            {renderQuestionCard(item)}
+                            {renderQuestionCard(item, true)}
                           </div>
                         ))}
                         {!collapsed && section.items.length > 0 && (
@@ -508,6 +599,7 @@ export function AssessmentOutlineCanvas({
                             <OutlineConnector size="item" />
                             <OutlineAddQuestionRow
                               droppableId={`end:${section.id}`}
+                              inPage
                               isDropActive={
                                 activeDrag?.kind === "question" &&
                                 overDroppableId === `end:${section.id}`
@@ -560,7 +652,12 @@ export function AssessmentOutlineCanvas({
           <DragOverlay dropAnimation={null}>
             {activeQuestion ? (
               <div
-                className={styles.dragCard}
+                className={[
+                  styles.dragCard,
+                  sectioned ? styles.dragCardInPage : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 style={overlayWidth ? { width: overlayWidth } : undefined}
               >
                 <QuestionRowContent question={activeQuestion} forceGrip />
@@ -572,7 +669,7 @@ export function AssessmentOutlineCanvas({
       </ScrollArea>
       <SectionDeleteDialog
         open={sectionDelete != null}
-        displayTitle={sectionDelete?.displayTitle ?? "this section"}
+        displayTitle={sectionDelete?.displayTitle ?? "this page"}
         questionCount={sectionDelete?.questionCount ?? 0}
         onConfirm={() => {
           if (!sectionDelete) return;

@@ -10,8 +10,8 @@ interface SectionDeleteDialogProps {
 }
 
 /**
- * Confirm deleting a populated section. Empty sections delete immediately.
- * Removing the section also removes its questions from the quiz.
+ * Confirm deleting a populated page. Empty pages delete immediately.
+ * Removing the page also removes its questions from the quiz.
  */
 export function SectionDeleteDialog({
   open,
@@ -28,7 +28,7 @@ export function SectionDeleteDialog({
         <div className={styles.copy}>
           <h2 className={styles.title}>Remove {displayTitle}?</h2>
           <p className={styles.description}>
-            {displayTitle} has {countLabel}. Removing the section also removes
+            {displayTitle} has {countLabel}. Removing the page also removes
             those questions from the quiz.
           </p>
         </div>
@@ -47,7 +47,7 @@ export function SectionDeleteDialog({
             color="error"
             onClick={onConfirm}
           >
-            Remove section and questions
+            Remove page and questions
           </Button>
         </div>
       </div>

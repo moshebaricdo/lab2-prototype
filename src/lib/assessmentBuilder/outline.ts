@@ -26,17 +26,17 @@ export function createSectionId(): string {
   return `section-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-/** Author-facing label. Section names are not shown in P0. */
+/** Author-facing label. Page names are not shown in P0. */
 export function sectionDisplayTitle(
   _section: AssessmentSection,
   index: number,
 ): string {
-  return `Section ${index + 1}`;
+  return `Page ${index + 1}`;
 }
 
 /**
- * Outline position label. Flat outlines count `1, 2, 3…`; sectioned outlines
- * are `page.item` (`2.1`) because each section is a page to the learner.
+ * Outline position label. Flat outlines count `1, 2, 3…`; paged outlines
+ * are `page.item` (`2.1`).
  */
 export function formatOutlineNumber(
   sectionIndex: number | null,
@@ -71,8 +71,8 @@ export function withSections(
 
 /**
  * Add a section. On a flat outline with questions this is the wrap step:
- * existing questions become Section 1. Flat and empty starts Section 1
- * empty; already-sectioned outlines append an empty section.
+ * existing questions become Page 1. Flat and empty starts Page 1
+ * empty; already-sectioned outlines append an empty page.
  */
 export function addSection(artifact: AssessmentArtifact): AssessmentArtifact {
   const sections = artifact.sections ?? [];

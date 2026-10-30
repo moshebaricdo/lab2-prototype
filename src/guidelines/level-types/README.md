@@ -18,7 +18,7 @@ Use these docs as handoff context for follow-up threads.
 - [Drag and drop](./drag-drop.md)
 - [Fill in the blank](./fill-in-blank.md)
 - [Levelgroup](./levelgroup.md)
-- [Assessment builder](./assessment-builder.md)
+- [Assessment builder](./assessment-builder.md) — outline chrome speclet for prod: [`docs/quiz-outline-chrome-speclet.md`](../../../docs/quiz-outline-chrome-speclet.md)
 - Modernizing assessments — [living status](../../../docs/status.md) (P0 decisions, prototype routes, changelog)
 - Assessment product specs (repo root): [Question types & fields](../../../docs/question-types-and-fields.md), [Assessment config & modes](../../../docs/assessment-config-and-modes.md)
 - [Bubble choice](./bubble-choice.md)

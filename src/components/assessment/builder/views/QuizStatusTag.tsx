@@ -5,6 +5,7 @@ import {
   liveUnitCount,
   quizPurposeLabel,
   quizStatusMeta,
+  resolvedQuizTitle,
   unitPublishedTag,
 } from "../../../../lib/assessmentBuilder";
 import type { AssessmentArtifact } from "../../../../types/assessmentBuilder";
@@ -22,9 +23,11 @@ function formatLastEdited(ms: number): string {
 
 interface QuizStatusTagProps {
   artifact: AssessmentArtifact;
+  /** Header bubble name. Shown when the quiz title is unset. */
+  levelName?: string;
 }
 
-export function QuizStatusTag({ artifact }: QuizStatusTagProps) {
+export function QuizStatusTag({ artifact, levelName = "" }: QuizStatusTagProps) {
   const kind = deriveQuizStatus(artifact.unitPlacements);
   const liveCount = liveUnitCount(artifact.unitPlacements);
   const meta = quizStatusMeta(kind, liveCount);
@@ -91,8 +94,8 @@ export function QuizStatusTag({ artifact }: QuizStatusTagProps) {
             />
             <IdentityStat
               label="Level name"
-              value={artifact.title.trim() ? artifact.title : "—"}
-              empty={!artifact.title.trim()}
+              value={resolvedQuizTitle(artifact.title, levelName) || "—"}
+              empty={!resolvedQuizTitle(artifact.title, levelName)}
             />
             <IdentityStat
               label="Purpose"

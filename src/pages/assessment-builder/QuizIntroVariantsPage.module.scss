@@ -1,0 +1,188 @@
+@use "../../styles/_mixins.scss" as *;
+
+.page {
+  min-height: 100vh;
+  padding-right: 320px;
+  background: var(--background-neutral-secondary);
+}
+
+.column {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  width: 100%;
+  max-width: calc(800px + 64px);
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+}
+
+.lede {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  @include type-heading-h4-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.body {
+  margin: 0;
+  max-width: 62ch;
+  @include type-body-3-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.roundTitle {
+  margin: 0 0 -32px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  @include type-heading-h4-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.laneLabel {
+  @include type-overline-2;
+  color: var(--text-neutral-quaternary);
+}
+
+.outline {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.variant {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.variantHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.variantLetter {
+  @include type-overline-2;
+  color: var(--text-neutral-quaternary);
+}
+
+.variantName {
+  margin: 0;
+  @include type-heading-h6-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.variantDescription {
+  margin: 0;
+  max-width: 62ch;
+  @include type-body-3-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.questionCard {
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}
+
+.connector {
+  display: flex;
+  align-items: center;
+  height: var(--tick-height, 16px);
+}
+
+.connectorCenter {
+  justify-content: center;
+}
+
+.connectorIcon {
+  justify-content: flex-start;
+  padding-left: var(--tick-inset, 18px);
+}
+
+.connectorNone {
+  visibility: hidden;
+}
+
+.tick {
+  width: 1px;
+  height: 100%;
+  background: var(--border-neutral-primary);
+}
+
+.intro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: var(--intro-min-h, 46px);
+  padding: 8px var(--intro-pad-x, 10px);
+  border: 1px solid var(--intro-border, var(--border-neutral-primary));
+  border-radius: var(--intro-radius, var(--shape-sm));
+  background: var(--intro-fill, var(--background-neutral-primary));
+}
+
+.introCompact {
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 0;
+}
+
+.introIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 22px;
+  color: var(--text-neutral-quaternary);
+}
+
+.introName {
+  flex-shrink: 0;
+  @include type-body-3-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.introPeek {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  @include type-body-3-regular;
+  color: var(--text-neutral-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.introAction {
+  display: flex;
+  flex-shrink: 0;
+  margin-left: auto;
+}

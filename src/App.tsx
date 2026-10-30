@@ -137,6 +137,14 @@ const CadsParityPage = lazyPage(
   () => import("./pages/design-system/CadsParityPage"),
   "default",
 );
+const QuizPageCollapseVariantsPage = lazyPage(
+  () => import("./pages/assessment-builder/QuizPageCollapseVariantsPage"),
+  "QuizPageCollapseVariantsPage",
+);
+const QuizIntroVariantsPage = lazyPage(
+  () => import("./pages/assessment-builder/QuizIntroVariantsPage"),
+  "QuizIntroVariantsPage",
+);
 const AiLabTrainingLabPage = lazyPage(
   () => import("./pages/ailab/AiLabTrainingLabPage"),
   "AiLabTrainingLabPage",
@@ -514,6 +522,14 @@ export default function App() {
         <Route
           path="/experiments/ailab-training"
           element={<AiLabTrainingLabPage />}
+        />
+        <Route
+          path="/experiments/quiz-page-collapse"
+          element={<QuizPageCollapseVariantsPage />}
+        />
+        <Route
+          path="/experiments/quiz-intro"
+          element={<QuizIntroVariantsPage />}
         />
         <Route path="/levels/aichatlab" element={<AiChatLabLevelPage />} />
         <Route

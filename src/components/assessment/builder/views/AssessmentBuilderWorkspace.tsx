@@ -116,6 +116,8 @@ export function AssessmentBuilderWorkspace({
   const updateArtifact = playPath
     ? editableState.updateArtifact
     : draftState.updateArtifact;
+  const levelName =
+    levelLinks?.find((link) => link.path === currentLevelPath)?.name ?? "";
   const { saveQuestion } = useQuestionBank(artifact?.courseId ?? "aif-cert");
 
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
@@ -792,7 +794,11 @@ export function AssessmentBuilderWorkspace({
               onChange={(value) => setWorkspaceMode(value as WorkspaceMode)}
             />
           }
-          right={p0Aligned ? <QuizStatusTag artifact={artifact} /> : undefined}
+          right={
+            p0Aligned ? (
+              <QuizStatusTag artifact={artifact} levelName={levelName} />
+            ) : undefined
+          }
         />
         <div className={styles.workspaceSurface}>
           {workspaceMode === "edit" ? (
@@ -820,6 +826,17 @@ export function AssessmentBuilderWorkspace({
                 onRemoveIntro={handleRemoveIntro}
                 onCreateQuestion={handleAddOneOffTo}
                 onAddSection={handleAddSection}
+                levelName={levelName}
+                onUpdateTitle={(title) =>
+                  updateArtifact((current) => ({
+                    ...current,
+                    title,
+                    metadata: {
+                      ...current.metadata,
+                      assessmentName: title || undefined,
+                    },
+                  }))
+                }
               />
             ) : (
               <AssessmentBuildCanvas
@@ -898,7 +915,7 @@ export function AssessmentBuilderWorkspace({
             onAction={handleUndoSectionRemove}
             onClose={dismissSectionRemovedToast}
           >
-            Section removed
+            Page removed
           </Toast>
           <Dialog
             open={leaveOpen}

@@ -1,74 +1,175 @@
-/* Section header + nested cards. Connectors between items live on the canvas. */
+/* Page group: bordered frame with a pill straddling the top edge. */
 
 @use "../../../../styles/_mixins.scss" as *;
 
+$deck-ease: cubic-bezier(0.23, 1, 0.32, 1);
+
+/* Two card edges tucked under a collapsed page. They rest just below the
+   card and spread a little on hover. Needs `position: relative` on the
+   host and an isolating ancestor (`.block`). */
+@mixin deck-layers($radius, $step: 3px, $spread-on-hover: true) {
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    height: 16px;
+    border: 1px solid var(--border-neutral-primary);
+    border-radius: $radius;
+    background: var(--background-neutral-primary);
+    transition: transform 220ms $deck-ease;
+  }
+
+  &::before {
+    left: 6px;
+    right: 6px;
+    z-index: -1;
+    transform: translateY($step);
+  }
+
+  &::after {
+    left: 12px;
+    right: 12px;
+    z-index: -2;
+    transform: translateY($step * 1.8);
+  }
+
+  @if $spread-on-hover {
+    &:hover::before {
+      transform: translateY(6px);
+    }
+
+    &:hover::after {
+      transform: translateY(11px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before,
+    &::after {
+      transition: none;
+    }
+  }
+}
+
 .block {
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 28px;
-  padding: 2px 8px 2px 6px;
-  border-radius: var(--shape-sm);
-  background: var(--background-neutral-secondary);
-  cursor: default;
+.frame {
+  position: relative;
+  box-sizing: border-box;
+  margin-top: 12px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-lg);
+  background: transparent;
 }
 
-.headerDropActive {
+.frameCollapsed {
+  margin-top: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.frameDeck {
+  background: var(--background-neutral-primary);
+}
+
+.frameDeckStacked {
+  margin-bottom: 6px;
+  @include deck-layers(var(--shape-lg));
+}
+
+.frameDropActive:not(.frameCollapsed) {
+  border-color: var(--border-selected-primary);
+}
+
+.frameDropActive .pill {
+  border-color: var(--border-selected-primary);
   background: var(--background-brand-light);
-  box-shadow: 0 0 0 1px var(--border-selected-primary);
+}
+
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  transform: translateY(-50%);
+}
+
+.headerStart {
+  justify-content: flex-start;
+  padding-left: 16px;
+}
+
+.frameCollapsed .header {
+  position: static;
+  transform: none;
+}
+
+.pill {
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  height: 24px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  overflow: hidden;
 }
 
 .collapseHit {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: stretch;
+  min-width: 0;
   padding: 0;
   border: none;
   background: transparent;
+  color: var(--text-neutral-primary);
   font: inherit;
-  color: inherit;
-  text-align: left;
   cursor: pointer;
 }
 
 .collapseHit:focus-visible {
-  @include focus-ring;
+  outline: 2px solid var(--border-focused-primary);
+  outline-offset: -2px;
 }
 
-.collapse {
+.collapseIcon {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: var(--shape-sm);
-  background: transparent;
-  color: var(--text-neutral-quaternary);
-  pointer-events: none;
-  transition:
-    background 0.12s ease,
-    color 0.12s ease;
-}
-
-.collapseHit:hover .collapse,
-.collapseHit:focus-visible .collapse {
-  background: var(--background-neutral-tertiary);
+  border-right: 1px solid var(--border-neutral-primary);
   color: var(--text-neutral-primary);
 }
 
-.overline {
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 8px;
+}
+
+.collapseHit:hover .collapseIcon,
+.collapseHit:hover .identity,
+.collapseHit:focus-visible .collapseIcon,
+.collapseHit:focus-visible .identity {
+  background: var(--background-neutral-tertiary);
+}
+
+.title {
   flex-shrink: 0;
-  @include type-overline-2;
-  color: var(--text-neutral-secondary);
+  @include type-body-4-semibold;
+  color: var(--text-neutral-primary);
 }
 
 .dot {
@@ -85,18 +186,228 @@
   color: var(--text-neutral-tertiary);
 }
 
-.headerSpacer {
-  flex: 1;
-  min-width: 0;
-}
-
 .menu {
   display: flex;
   flex-shrink: 0;
+  align-items: stretch;
+}
+
+.menuHit {
+  display: flex;
   align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 24px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-left: 1px solid var(--border-neutral-primary);
+  border-radius: 0;
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  cursor: pointer;
+}
+
+.menuHit:hover {
+  background: var(--background-neutral-tertiary);
+}
+
+.menuHit:focus-visible {
+  outline: 2px solid var(--border-focused-primary);
+  outline-offset: -2px;
 }
 
 .body {
   display: flex;
   flex-direction: column;
+  padding: 22px 16px 16px;
+}
+
+.closedPeek {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 20px 24px 12px;
+  border: none;
+  border-radius: 0 0 var(--shape-lg) var(--shape-lg);
+  background: transparent;
+  @include type-body-4-regular;
+  color: var(--text-neutral-quaternary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.closedPeek:hover {
+  color: var(--text-neutral-secondary);
+}
+
+.closedPeekStart {
+  padding-left: 16px;
+  text-align: left;
+}
+
+/* Card: full-width header bar in both states, tinted well for the body. */
+
+.card {
+  position: relative;
+  box-sizing: border-box;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-lg);
+  background: var(--background-neutral-primary);
+}
+
+.cardDeck {
+  margin-bottom: 10px;
+  @include deck-layers(var(--shape-lg), $step: 6px, $spread-on-hover: false);
+}
+
+.cardDropActive {
+  border-color: var(--border-selected-primary);
+}
+
+.cardDropActive .cardHeader {
+  background: var(--background-brand-light);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  gap: 12px;
+  min-height: 46px;
+  padding: 10px 10px 10px 12px;
+  border-bottom: 1px solid transparent;
+  border-radius: var(--shape-lg);
+}
+
+.cardHeaderOpen {
+  border-bottom-color: var(--border-neutral-primary);
+  border-radius: var(--shape-lg) var(--shape-lg) 0 0;
+}
+
+.cardHit {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  align-self: stretch;
+  padding: 0;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--text-neutral-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cardMenu {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border-radius: 0 0 var(--shape-lg) var(--shape-lg);
+  background: var(--background-neutral-secondary);
+}
+
+/* Collapsed summary row (summary + deck). Same height as a question row. */
+
+.summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 46px;
+  padding: 0 8px 0 0;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}
+
+.summaryDropActive {
+  border-color: var(--border-selected-primary);
+  background: var(--background-brand-light);
+}
+
+.summaryDeck {
+  margin-bottom: 6px;
+  @include deck-layers(var(--shape-sm));
+}
+
+.summaryHit {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  align-self: stretch;
+  padding: 0 0 0 10px;
+  border: none;
+  border-radius: var(--shape-sm) 0 0 var(--shape-sm);
+  background: transparent;
+  color: var(--text-neutral-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.summaryHit:focus-visible {
+  outline: 2px solid var(--border-focused-primary);
+  outline-offset: -2px;
+}
+
+.summaryIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 2px;
+  border-radius: var(--shape-sm);
+  color: var(--text-neutral-quaternary);
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.summaryHit:hover .summaryIcon,
+.summaryHit:focus-visible .summaryIcon {
+  background: var(--background-neutral-tertiary);
+  color: var(--text-neutral-primary);
+}
+
+.summaryTitle {
+  flex-shrink: 0;
+  @include type-body-3-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.summaryCount {
+  flex-shrink: 0;
+  @include type-body-3-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.summaryPeek {
+  flex: 1;
+  min-width: 0;
+  margin-left: 6px;
+  padding-right: 12px;
+  @include type-body-3-regular;
+  color: var(--text-neutral-quaternary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
