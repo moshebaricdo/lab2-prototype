@@ -114,7 +114,15 @@ If no doc update is needed, mention that the documentation impact was checked. I
 
 ## Verification
 
-Always run before considering work complete:
+### Browser
+
+Skip the browser for changes that do not alter what a user can do or how a screen is laid out. That includes index card order and titles, copy, docs, comments, and label renames.
+
+Open the browser when the change affects interaction, layout, styling, routing behavior, client state, or rendered data. Exercise the flow; a single screenshot is not verification.
+
+### Typecheck and build
+
+Run both before considering work complete:
 
 ```bash
 npm run typecheck
