@@ -42,6 +42,19 @@ export const mockSeededAssessment: AssessmentArtifact = {
     { type: "bank", bankId: "q-aif-match-1" },
     { type: "bank", bankId: "q-aif-survey-1" },
   ],
+  sections: [
+    {
+      id: "sec-seeded",
+      questionRefs: [
+        { type: "bank", bankId: "q-aif-multi-1" },
+        { type: "bank", bankId: "q-aif-multi-2" },
+        { type: "bank", bankId: "q-aif-code-1" },
+        { type: "bank", bankId: "q-aif-fr-1" },
+        { type: "bank", bankId: "q-aif-match-1" },
+        { type: "bank", bankId: "q-aif-survey-1" },
+      ],
+    },
+  ],
   shuffle: { shuffleQuestions: true, shuffleOptions: true },
   tutor: { enabled: true, explainWrongAnswers: true },
   updatedAt: Date.now(),
@@ -238,6 +251,16 @@ export const mockQuizPracticeAssessment: AssessmentArtifact = {
     { type: "bank", bankId: "q-aif-multi-1" },
     { type: "bank", bankId: "q-aif-fr-1" },
     { type: "bank", bankId: "q-aif-match-1" },
+  ],
+  sections: [
+    {
+      id: "sec-practice",
+      questionRefs: [
+        { type: "bank", bankId: "q-aif-multi-1" },
+        { type: "bank", bankId: "q-aif-fr-1" },
+        { type: "bank", bankId: "q-aif-match-1" },
+      ],
+    },
   ],
   shuffle: { shuffleQuestions: false, shuffleOptions: false },
   showIntroScreen: true,

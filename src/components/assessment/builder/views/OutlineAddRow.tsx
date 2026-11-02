@@ -4,7 +4,6 @@ import { Button, Dropdown } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type { FaIconName } from "../../../../icons/faProRegularCodepoints";
 import type { BlankQuestionKind } from "../../../../lib/assessmentBuilder";
-import quizEmptyState from "../../../../assets/empty-states/quiz-empty-state.svg";
 import { FINAL_CREATE_QUESTION_OPTIONS } from "./questionKindMeta";
 import styles from "./OutlineAddRow.module.scss";
 
@@ -93,32 +92,31 @@ function CreateQuestionDropdown({
 
 interface OutlineEmptyQuizProps {
   onCreateQuestion: (kind: BlankQuestionKind) => void;
-  onAddSection: () => void;
 }
 
 /**
- * W1.1 dashed illustration when the quiz has no pages and no questions.
- * Create types only; bank adds stay on the rail.
+ * Dashed empty quiz (Figma W1.1 / 356:15253): septenary clipboard badge,
+ * body-1 title, body-3 helper, single Create question control. Bank adds
+ * stay on the rail; the first create lands in Page 1.
  */
 export function OutlineEmptyQuiz({
   onCreateQuestion,
-  onAddSection,
 }: OutlineEmptyQuizProps) {
   return (
     <div
       className={styles.emptyQuiz}
       role="region"
-      aria-label="This quiz is empty. Add a question from the bank, create a new question, or add a page."
+      aria-label="This quiz is empty. Add a question from the bank on the left, create a new question, or add a page."
     >
       <div className={styles.emptyQuizInner}>
         <div className={styles.emptyQuizMessage}>
-          <img
-            src={quizEmptyState}
-            alt=""
-            width={200}
-            height={146}
-            className={styles.emptyQuizArt}
-          />
+          <span className={styles.emptyQuizIcon} aria-hidden>
+            <FaIcon
+              name="clipboard-question"
+              family="solid"
+              fontSize="24px"
+            />
+          </span>
           <div className={styles.emptyQuizCopy}>
             <h2 className={styles.emptyQuizTitle}>This quiz is empty</h2>
             <p className={styles.emptyQuizBody}>
@@ -135,15 +133,6 @@ export function OutlineEmptyQuiz({
             ariaLabel="Create question"
             onCreateQuestion={onCreateQuestion}
           />
-          <Button
-            variant="outlined"
-            color="secondary"
-            size="extraSmall"
-            startIconName="rectangle-history-circle-plus"
-            onClick={onAddSection}
-          >
-            New page
-          </Button>
         </div>
       </div>
     </div>
@@ -241,7 +230,10 @@ interface OutlineAddSectionGhostProps {
   onClick: () => void;
 }
 
-/** Centered outlined control at the end of a non-empty outline. */
+/**
+ * Hugging "+ Add page" slot at the end of a non-empty outline. Appends an
+ * empty page (the first question already created Page 1).
+ */
 export function OutlineAddSectionGhost({ onClick }: OutlineAddSectionGhostProps) {
   return (
     <div className={styles.addPage}>

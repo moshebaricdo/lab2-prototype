@@ -31,7 +31,7 @@ Map these once, then ignore prototype names.
 | `--outline-text-muted` | Stems, counts, dot | `--text-neutral-tertiary` | muted text |
 | `--outline-text-faint` | Empty-page hint | `--text-neutral-quaternary` | placeholder / faint |
 | `--outline-icon` | Leading type / intro icon | `--text-neutral-quaternary` | faint icon |
-| `--outline-radius-block` | Intro, page, root question, Add page slot | `--shape-lg` | **10px** |
+| `--outline-radius-block` | Intro, page, Add page slot | `--shape-lg` | **10px** |
 | `--outline-radius-item` | Nested question, nested Create question | `--shape-sm` | **6px** |
 
 Type (map to prod body styles of similar density):
@@ -48,9 +48,9 @@ Icon buttons in these headers are **24×24** (extra-small). Trailing controls si
 
 ## Invariants (layout, not chrome)
 
-1. The outline is **either** flat (no pages; questions at the root) **or** fully paged (every question lives in a page). Once a page exists, questions never sit beside pages.
+1. The outline is **empty** (no pages, no questions) or **fully paged**. The first question creates Page 1 — questions never sit at the root.
 2. **Intro radius never changes.** It always uses `--outline-radius-block`, whether or not pages exist.
-3. **Question radius follows nesting:** root = block (10); inside a page = item (6). Create-question slots follow the same rule.
+3. **Question radius is always item (6)** (nested in a page). Create-question slots inside a page match.
 4. **Connectors are always centered** in their row. Do not inset ticks to the type-icon column.
 5. Collapsed intro, page header, and question rows share one **header recipe** (height, padding, trailing 24px actions) so they line up as siblings.
 
@@ -96,8 +96,8 @@ A 1px vertical rule, color `--outline-stroke`, **horizontally centered** in a fu
 
 | Between | Tick height |
 |---------|-------------|
-| Intro ↔ page / root question, page ↔ page, last block ↔ Add page | **16px** |
-| Question ↔ question, question ↔ Create question (inside a page or at root) | **8px** |
+| Intro ↔ page; page ↔ page; last page ↔ Add page | **16px** |
+| Question ↔ question, question ↔ Create question (inside a page) | **8px** |
 
 Drop-target on a tick: hide the rule, fill the row with `--outline-well-selected` and a 1px selected stroke.
 
@@ -235,7 +235,7 @@ Drop-target: solid selected stroke, `--outline-well-selected` fill.
 
 ### Add page (hugging slot)
 
-After a 16px centered tick, at the end of a non-empty outline (not on a fully empty quiz).
+After a 16px centered tick, at the **end** of a non-empty outline. Always appends an empty page (Page 1 already exists once there are questions). Omit on a fully empty quiz (empty state is create-only).
 
 ```
 width: fit-content
@@ -256,9 +256,7 @@ Control inside: extra-small outlined secondary, plus + **Add page**.
 |---------|--------|
 | Intro card | 10 |
 | Page card, page header, page well corners, page deck layers | 10 |
-| Question at root (no pages) | 10 |
 | Question inside a page | 6 |
-| Create question at root | 10 |
 | Create question inside a page | 6 |
 | Add page slot | 10 |
 
@@ -298,7 +296,7 @@ Prod already has this outline. Patch existing modules; do not rebuild the protot
 | Intro | `IntroScreenCard.tsx` (uses BuilderCard) | Same row metrics as questions. Radius **block (10)** — pass a radius/size on BuilderCard; do not restyle when pages exist. |
 | Pages | `QuizBuilderWorkspace.tsx` + `quiz-builder-workspace.module.scss` (`.page` / `.pageHeader`) | Turn the box into a **header card**: surface fill, 10px radius, header uses the shared padding, questions sit in an 8px well (secondary fill). Replace `.pageHeaderDot` (4px FA circle) with the 2px CSS dot. |
 | Create question slot | `.addQuestionRow` (already dashed, `8px 0`, item radius) | Keep. Nested in a page → stay at 6px radius. |
-| Add page | `.addPageButton` (text button, no slot) | Wrap in a hugging dashed well: secondary fill, muted dashed stroke, 8px padding, 10px radius, centered. |
+| Add page | `.addPageButton` (text button, no slot) | Wrap in a hugging dashed well: secondary fill, muted dashed stroke, 8px padding, 10px radius, centered. Always **after the last page**. First question creates Page 1 — no root-question / wrap-between-intro state. |
 | Ticks | none | 16px centered ticks between intro / pages / Add page; 8px between questions. |
 
 **Do not invent in this pass unless product already has it:** page overflow menu (add above/below, move, delete), page-as-stored-entity, dnd, DialKit, or the unused collapse variants. Prod pages are derived from `question.page`, not a separate list.

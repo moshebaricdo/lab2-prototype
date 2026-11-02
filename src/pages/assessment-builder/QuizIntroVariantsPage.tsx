@@ -105,7 +105,7 @@ const RECIPES: Array<{
     letter: "B",
     name: "Always a page-sized card",
     description:
-      "Intro keeps page chrome in both layouts. Centered ticks, because it is not a question. Nested question rows stay sm; root questions (no pages) use the same lg radius as intro.",
+      "Intro keeps page chrome in both layouts. Centered ticks, because it is not a question. Nested question rows stay sm.",
     look: {
       treatment: "page",
       radius: "lg",
@@ -253,6 +253,7 @@ function QuestionCard({ question }: { question: QuestionItem }) {
   );
 }
 
+/** Single-page outline — the post–first-question shape (no root questions). */
 function FlatOutline({
   look,
   itemHeight,
@@ -265,19 +266,41 @@ function FlatOutline({
   return (
     <div className={styles.outline}>
       <PlaygroundIntro look={look} />
-      <Tick align={look.fromIntro} height={sectionHeight} />
-      {FLAT_QUESTIONS.map((question, index) => (
-        <div key={question.bankId}>
-          {index > 0 ? <Tick align="icon" height={itemHeight} /> : null}
-          <QuestionCard question={question} />
-        </div>
-      ))}
-      <Tick align="icon" height={itemHeight} />
-      <OutlineAddQuestionRow
-        droppableId="end:flat"
-        isDropActive={false}
-        onCreateQuestion={() => {}}
-      />
+      <Tick align="center" height={sectionHeight} />
+      <OutlineSectionBlock
+        sectionId="sec-flat"
+        displayTitle="Page 1"
+        sectionNumber={1}
+        questionCount={FLAT_QUESTIONS.length}
+        questionTitles={FLAT_QUESTIONS.map((question) => question.title)}
+        collapsed={false}
+        collapsedStyle="card"
+        isFirst
+        isLast
+        isQuestionDropTarget={false}
+        onToggleCollapsed={() => {}}
+        onMoveUp={() => {}}
+        onMoveDown={() => {}}
+        onAddAbove={() => {}}
+        onAddBelow={() => {}}
+        onDelete={() => {}}
+      >
+        {FLAT_QUESTIONS.map((question, itemIndex) => (
+          <div key={question.bankId}>
+            {itemIndex > 0 ? <Tick align="icon" height={itemHeight} /> : null}
+            <QuestionCard question={question} />
+          </div>
+        ))}
+        <Tick align="icon" height={itemHeight} />
+        <OutlineAddQuestionRow
+          droppableId="end:sec-flat"
+          inPage
+          isDropActive={false}
+          onCreateQuestion={() => {}}
+        />
+      </OutlineSectionBlock>
+      <Tick align="center" height={sectionHeight} />
+      <OutlineAddSectionGhost onClick={() => {}} />
     </div>
   );
 }

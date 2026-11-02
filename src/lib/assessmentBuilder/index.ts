@@ -77,6 +77,7 @@ export {
   insertSection,
   createSectionId,
   deleteSection,
+  ensurePagedOutline,
   insertSectionAt,
   formatOutlineNumber,
   isSectioned,

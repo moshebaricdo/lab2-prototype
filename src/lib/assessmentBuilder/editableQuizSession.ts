@@ -13,6 +13,7 @@ import type {
   QuestionItem,
 } from "../../types/assessmentBuilder";
 import { getBankQuestionMap } from "./bankStorage";
+import { ensurePagedOutline } from "./outline";
 
 /** Same `o` query param as other encoded level links. Payload key is `artifact`. */
 export const EDITABLE_QUIZ_PARAM = "o";
@@ -109,7 +110,9 @@ export function prepareEditableQuiz(
     sections,
     updatedAt: Date.now(),
   };
-  return JSON.parse(JSON.stringify(stamped)) as AssessmentArtifact;
+  return JSON.parse(
+    JSON.stringify(ensurePagedOutline(stamped)),
+  ) as AssessmentArtifact;
 }
 
 function readSession(id: EditableQuizDemoId): AssessmentArtifact | null {
@@ -175,7 +178,7 @@ export function ensureEditableQuiz(
   encoded: string | null,
 ): AssessmentArtifact {
   if (resetInProgress) {
-    const seed = structuredClone(editableQuizSeed(id));
+    const seed = ensurePagedOutline(structuredClone(editableQuizSeed(id)));
     memory.set(id, seed);
     lastEncoded.set(id, null);
     return seed;
@@ -186,17 +189,24 @@ export function ensureEditableQuiz(
   const seen = lastEncoded.get(id);
 
   if (urlMatchesDemo && encoded !== seen) {
-    memory.set(id, fromUrl);
+    const paged = ensurePagedOutline(fromUrl);
+    memory.set(id, paged);
     lastEncoded.set(id, encoded);
-    writeSession(fromUrl);
-    return fromUrl;
+    writeSession(paged);
+    return paged;
   }
 
   const cached = memory.get(id);
-  if (cached) return cached;
+  if (cached) {
+    const paged = ensurePagedOutline(cached);
+    if (paged !== cached) memory.set(id, paged);
+    return paged;
+  }
 
   const stored = typeof window === "undefined" ? null : readSession(id);
-  const initial = stored ?? structuredClone(editableQuizSeed(id));
+  const initial = ensurePagedOutline(
+    stored ?? structuredClone(editableQuizSeed(id)),
+  );
   memory.set(id, initial);
   return initial;
 }

@@ -2,7 +2,7 @@
 
 Living snapshot of **product decisions** and **prototype state** for this workstream. Specs and implementation details live in the linked docs; this file is the turn-by-turn source of truth for what is in, out, and still open.
 
-**Last updated:** 2026-10-29
+**Last updated:** 2026-11-02
 
 **How to maintain:** update this file in the same turn as substantive product or architecture changes (scope, modes, tagging, schema, routes, builder UX model). Skip for visual polish, copy nits, and bugfixes that do not change the model.
 
@@ -56,7 +56,7 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 ## What the P0 builder has today
 
 - Lab2 workspace: **Build** outline + **Preview** via `QuizAttemptWorkspace` (empty Preview when there are no questions and intro is off). One-question preview uses the same sticky attempt bar as a multi-question quiz (**Submit**, then **Try again** / **Next level**).
-- Outline: intro as a workspace card (optional title + content; config toggles show/hide), pages as header cards (full-width bar in both states, tinted well when open, deck under a closed page that has questions; no page names). Intro and page cards use `shape-lg`. Question rows use `shape-sm` inside a page and `shape-lg` at the root (questions never sit outside a page once a page exists). Dashed Create question (create-only), ghost ADD PAGE, kebab Add above/below / Move / Delete. Deleting a page shows a top-center toast with Undo. Expanding a question scrolls it to the top of the outline (64px offset). Empty quiz uses the dashed illustration state. Collapsed-page experiments stay on `/experiments/quiz-page-collapse`.
+- Outline: intro as a workspace card (optional title + content; config toggles show/hide), pages as header cards (full-width bar in both states, tinted well when open, deck under a closed page that has questions; no page names). Intro and page cards use `shape-lg`. Question rows always live in a page (`shape-sm`) — the first question creates Page 1. Dashed Create question (create-only), ghost **Add page** at the end of a non-empty outline, page kebab Add above/below / Move / Delete. Deleting a page shows a top-center toast with Undo. Expanding a question scrolls it to the top of the outline (64px offset). Empty quiz uses the dashed well with clipboard-question badge + Create question only. Collapsed-page experiments stay on `/experiments/quiz-page-collapse`.
 - Create question lists **Multiple choice** and **Multiple select** separately. Both open the same answers editor; **Selection type** starts on the entry that was chosen. Correct options are marked with a radio or checkbox joined to the option field (`list-radio` / `list-check`). The bank type filter still treats both as one Multiple Choice bucket.
 - Open item tabs Question / Answers / Usage. Unsaved-changes tag on collapse. Leave-page dialog for dirty questions.
 - Save: silent for new; unpublished shared vs published-unit dialogs (no “fork” vocabulary). Save collapses the card and shows a top-center CADS toast (“Question saved”).
@@ -147,7 +147,7 @@ Newest first. Log **decisions and model changes**, not polish.
 - P0 UI brought to Lab 2 Frame parity: workspace label + live/draft badge, header Back/Save without progression bubbles, bank type Tags, outline rows without `page.item`/grips, section overlines, tick connectors, floating add toolbar. Catalog/placement model unchanged.
 - **Casing:** standards are the only question tags. Course/unit are bank **scope** (split Course + Unit filters, AND of layers) and quiz **placement** (Levelbuilder-owned), not chips on bank cards or editor fields. Reopened the earlier “tag by course, unit, concept” lock.
 - Placement chrome: attached P0 exam defaults the bank to AI Foundations · Unit 3; new `/levels/assessment-builder-p0-draft` is a floating checkpoint (empty course/unit scope).
-- P0 Build canvas rebuilt as the block-based outline (`AssessmentOutlineCanvas`): overview header, pinned intro card, sections-as-pages with the wrap/flatten invariant, dnd-kit cross-section drag, ghost add rows. Legacy routes keep `AssessmentBuildCanvas`.
+- P0 Build canvas rebuilt as the block-based outline (`AssessmentOutlineCanvas`): overview header, pinned intro card, always-paged sections (first question creates Page 1), dnd-kit cross-section drag, ghost add rows. Legacy routes keep `AssessmentBuildCanvas`.
 - Schema: `AssessmentSection` + optional `sections` on `AssessmentArtifact`; optional `placement` (`floating` | `attached`). Flattened `questionRefs` kept in sync so adapters/preview/scoring are untouched. P0 seed now sectioned (3 sections + intro).
 - Single-save model shipped on P0: Done-when-clean, Save-when-dirty, shared-question prompt (*Update the shared question* vs *Save a copy in this assessment only* → inline conversion). Two-destination save menu removed from the P0 editor.
 - Question bank panel: search + filter button (badge counts deviations from placement scope), result-count overline, bordered result cards with **standard** tags only.

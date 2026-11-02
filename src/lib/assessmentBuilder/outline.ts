@@ -7,10 +7,10 @@ import type {
 /**
  * Sectioned-outline helpers for the P0 builder.
  *
- * Invariant: an assessment is either flat (`sections` undefined/empty, order
- * lives in `questionRefs`) or fully sectioned (every question in a section,
- * `questionRefs` kept as the flattened mirror so adapters/preview/scoring
- * never have to know about sections).
+ * Invariant: a quiz is empty (`sections` absent/empty and no questions) or
+ * fully paged (every question lives in a page). The first question creates
+ * Page 1 — questions never sit at the root. `questionRefs` stays the
+ * flattened mirror so adapters/preview/scoring stay page-unaware.
  */
 
 /** Stable identity for a ref — bank id either way. */
@@ -35,8 +35,8 @@ export function sectionDisplayTitle(
 }
 
 /**
- * Outline position label. Flat outlines count `1, 2, 3…`; paged outlines
- * are `page.item` (`2.1`).
+ * Outline position label. Empty/legacy flat counts `1, 2, 3…`; paged
+ * outlines are `page.item` (`2.1`).
  */
 export function formatOutlineNumber(
   sectionIndex: number | null,
@@ -44,6 +44,20 @@ export function formatOutlineNumber(
 ): string {
   if (sectionIndex == null) return String(itemIndex + 1);
   return `${sectionIndex + 1}.${itemIndex + 1}`;
+}
+
+/**
+ * If questions exist without pages, wrap them into Page 1. Empty quizzes
+ * stay empty (no pages). Already-paged artifacts are unchanged.
+ */
+export function ensurePagedOutline(
+  artifact: AssessmentArtifact,
+): AssessmentArtifact {
+  if (isSectioned(artifact)) return artifact;
+  if (artifact.questionRefs.length === 0) return artifact;
+  return withSections(artifact, [
+    { id: createSectionId(), questionRefs: [...artifact.questionRefs] },
+  ]);
 }
 
 function flattenSections(sections: AssessmentSection[]): AssessmentQuestionRef[] {
@@ -70,9 +84,9 @@ export function withSections(
 }
 
 /**
- * Add a section. On a flat outline with questions this is the wrap step:
- * existing questions become Page 1. Flat and empty starts Page 1
- * empty; already-sectioned outlines append an empty page.
+ * Add a page. Empty quizzes get Page 1 (empty). Already-paged outlines
+ * append an empty page. Leftover flat questions (legacy) are wrapped into
+ * Page 1 instead of staying at the root.
  */
 export function addSection(artifact: AssessmentArtifact): AssessmentArtifact {
   const sections = artifact.sections ?? [];
@@ -223,8 +237,9 @@ export function insertSectionAt(
 }
 
 /**
- * Append a question. Sectioned outlines default to the last section unless
- * a target section is given; flat outlines append to the flat list.
+ * Append a question. The first question on an empty quiz creates Page 1
+ * and lands inside it. Already-paged outlines default to the last page
+ * unless a target page is given.
  */
 export function appendQuestionRef(
   artifact: AssessmentArtifact,
@@ -232,7 +247,12 @@ export function appendQuestionRef(
   sectionId?: string | null,
 ): AssessmentArtifact {
   if (!isSectioned(artifact)) {
-    return { ...artifact, questionRefs: [...artifact.questionRefs, ref] };
+    return withSections(artifact, [
+      {
+        id: createSectionId(),
+        questionRefs: [...artifact.questionRefs, ref],
+      },
+    ]);
   }
   const sections = artifact.sections ?? [];
   const targetId = sectionId ?? sections[sections.length - 1].id;

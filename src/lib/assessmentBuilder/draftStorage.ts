@@ -9,6 +9,7 @@ import {
   mockQuizPracticeAssessment,
   mockSeededAssessment,
 } from "../../data/assessmentBuilder/mockAssessments";
+import { ensurePagedOutline } from "./outline";
 
 const STORAGE_KEY = "lab2:assessment-drafts";
 
@@ -155,7 +156,14 @@ function hydrateDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
     }
     return updated;
   });
-  return changed ? next : drafts;
+
+  // Always-paged invariant: questions never sit at the root.
+  const pagedAll = next.map((draft) => {
+    const paged = ensurePagedOutline(draft);
+    if (paged !== draft) changed = true;
+    return paged;
+  });
+  return changed ? pagedAll : drafts;
 }
 
 function readDrafts(): AssessmentArtifact[] {

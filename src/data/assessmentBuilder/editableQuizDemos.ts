@@ -218,6 +218,7 @@ function cfuQuiz(
   levelPosition: number,
   item: QuestionItem,
 ): AssessmentArtifact {
+  const ref = { type: "inline" as const, item };
   return applyQuizPurpose(
     {
       id,
@@ -233,7 +234,9 @@ function cfuQuiz(
         totalLevelsInScript: EDITABLE_QUIZ_DEMOS.length,
         assessmentName: title,
       },
-      questionRefs: [{ type: "inline", item }],
+      questionRefs: [ref],
+      // First question always lives on a page (prod always-paged invariant).
+      sections: [{ id: `sec-${id}`, questionRefs: [ref] }],
       shuffle: { shuffleQuestions: false, shuffleOptions: false },
       tutor: { enabled: false },
       updatedAt: SEED_UPDATED_AT,

@@ -45,7 +45,6 @@ import { OutlineSectionBlock } from "./OutlineSectionBlock";
 import { SectionDeleteDialog } from "./SectionDeleteDialog";
 import styles from "./AssessmentOutlineCanvas.module.scss";
 
-const FLAT_END_ID = "end:flat";
 const EXPAND_SCROLL_OFFSET_PX = 52;
 
 /** Prefer question / end slots so section headers don't steal within-section drops. */
@@ -463,6 +462,8 @@ export function AssessmentOutlineCanvas({
     ? (baseSections ?? []).reduce((sum, section) => sum + section.items.length, 0)
     : (baseFlat ?? []).length;
   const isEmptyQuiz = !sectioned && questionCount === 0;
+  // First question creates Page 1, so a non-empty outline is always paged.
+  // Add page stays at the end and appends an empty page.
   const showAddSectionGhost = !isEmptyQuiz;
 
   const activeQuestion =
@@ -537,7 +538,6 @@ export function AssessmentOutlineCanvas({
                 {showIntro ? <OutlineConnector size="section" /> : null}
                 <OutlineEmptyQuiz
                   onCreateQuestion={(kind) => onCreateQuestion(kind, null)}
-                  onAddSection={onAddSection}
                 />
               </>
             ) : preview.sections
@@ -614,33 +614,7 @@ export function AssessmentOutlineCanvas({
                     </div>
                   );
                 })
-              : (
-                <>
-                  {(preview.flat ?? []).map((item, index) => (
-                    <div key={item.bankId}>
-                      {(index > 0 || showIntro) && (
-                        <OutlineConnector
-                          size={index === 0 ? "section" : "item"}
-                        />
-                      )}
-                      {renderQuestionCard(item)}
-                    </div>
-                  ))}
-                  {(preview.flat ?? []).length > 0 && (
-                    <>
-                      <OutlineConnector size="item" />
-                      <OutlineAddQuestionRow
-                        droppableId={FLAT_END_ID}
-                        isDropActive={
-                          activeDrag?.kind === "question" &&
-                          overDroppableId === FLAT_END_ID
-                        }
-                        onCreateQuestion={(kind) => onCreateQuestion(kind, null)}
-                      />
-                    </>
-                  )}
-                </>
-              )}
+              : null}
             {showAddSectionGhost ? (
               <>
                 <OutlineConnector size="section" />
