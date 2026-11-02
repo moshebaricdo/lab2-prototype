@@ -16,7 +16,7 @@ export interface QuestionKindMeta {
 
 export const QUESTION_KIND_META: Record<QuestionItemKind, QuestionKindMeta> = {
   /** Bank filter bucket. Both selection modes are still `kind: "multi"`. */
-  multi: { label: "Multiple Choice", iconName: "list-radio" },
+  multi: { label: "Multiple Choice", iconName: "circle-dot" },
   freeResponse: { label: "Free Response", iconName: "pen-field" },
   match: { label: "Matching", iconName: "diagram-next" },
   dragDrop: { label: "Drag & Drop", iconName: "layer-group" },
@@ -25,8 +25,9 @@ export const QUESTION_KIND_META: Record<QuestionItemKind, QuestionKindMeta> = {
 
 /** Glyphs for the two multiple-choice selection modes (Figma 379:7664). */
 export const MULTI_SELECTION_META = {
-  single: { label: "Multiple choice", iconName: "list-radio" },
-  multiple: { label: "Multiple select", iconName: "list-check" },
+  single: { label: "Multiple choice", iconName: "circle-dot" },
+  /** FA6 name for the classic check-square glyph. */
+  multiple: { label: "Multiple select", iconName: "square-check" },
 } as const satisfies Record<"single" | "multiple", QuestionKindMeta>;
 
 export function questionKindMeta(question: QuestionItem): QuestionKindMeta {

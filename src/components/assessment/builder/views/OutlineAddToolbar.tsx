@@ -1,6 +1,10 @@
 import { Button, Dropdown } from "@moshebari/cads-react";
 import type { BlankQuestionKind } from "../../../../lib/assessmentBuilder";
-import { CREATE_QUESTION_OPTIONS } from "./questionKindMeta";
+import {
+  CREATE_QUESTION_OPTIONS,
+  MULTI_SELECTION_META,
+  QUESTION_KIND_META,
+} from "./questionKindMeta";
 import styles from "./OutlineAddToolbar.module.scss";
 
 const TOOLBAR_PRIMARY: Array<{
@@ -8,9 +12,21 @@ const TOOLBAR_PRIMARY: Array<{
   label: string;
   iconName: (typeof CREATE_QUESTION_OPTIONS)[number]["iconName"];
 }> = [
-  { kind: "multiSingle", label: "Multiple Choice", iconName: "list-check" },
-  { kind: "freeResponse", label: "Free Response", iconName: "pen-field" },
-  { kind: "match", label: "Matching", iconName: "diagram-next" },
+  {
+    kind: "multiSingle",
+    label: "Multiple Choice",
+    iconName: MULTI_SELECTION_META.single.iconName,
+  },
+  {
+    kind: "freeResponse",
+    label: "Free Response",
+    iconName: QUESTION_KIND_META.freeResponse.iconName,
+  },
+  {
+    kind: "match",
+    label: "Matching",
+    iconName: QUESTION_KIND_META.match.iconName,
+  },
 ];
 
 const TOOLBAR_PRIMARY_KINDS = new Set(TOOLBAR_PRIMARY.map((entry) => entry.kind));

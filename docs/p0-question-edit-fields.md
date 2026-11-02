@@ -34,7 +34,7 @@ Field inventory for mocking the **edit state** of the three P0 question types: M
 
 | Field | Notes | Input component |
 |-------|-------|-----------------|
-| **Selection mode** | **Multiple choice** (`list-radio`) vs **Multiple select** (`list-check`). The create menu picks the starting mode. Authors can still switch it on the question. | Segmented button |
+| **Selection mode** | **Multiple choice** (`circle-dot`) vs **Multiple select** (`square-check`). The create menu picks the starting mode. Authors can still switch it on the question. | Segmented button |
 | **Options** | 2+ options. Add, remove, reorder. | Repeating row: drag handle, text field, remove, dashed Add option |
 | **Answer key** | Marked on the option itself — no standalone field. Single: one radio. Multiple: any set of checkboxes. | Radio or checkbox joined to the left of the option text field |
 
