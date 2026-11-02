@@ -2,6 +2,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Button, Dropdown, Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
+import { outlineMenuDropdownProps } from "./outlineMenu";
 import styles from "./OutlineSectionBlock.module.scss";
 
 /**
@@ -56,6 +57,10 @@ interface OutlineSectionBlockProps {
   onAddAbove: () => void;
   onAddBelow: () => void;
   onDelete: () => void;
+  /** Exclusive outline overflow. Omitted on experiment pages. */
+  menuId?: string;
+  menuOpen?: boolean;
+  onMenuOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }
 
@@ -77,6 +82,9 @@ export function OutlineSectionBlock({
   onAddAbove,
   onAddBelow,
   onDelete,
+  menuId,
+  menuOpen,
+  onMenuOpenChange,
   children,
 }: OutlineSectionBlockProps) {
   const { setNodeRef: setDroppableRef } = useDroppable({ id: `sec:${sectionId}` });
@@ -103,6 +111,25 @@ export function OutlineSectionBlock({
 
   const collapseLabel = collapsed ? "Expand page" : "Collapse page";
   const collapseIcon = collapsed ? "arrows-from-line" : "arrows-to-line";
+  const menuControl = outlineMenuDropdownProps({ menuOpen, onMenuOpenChange });
+
+  const pageMenu = (
+    <span data-outline-menu={menuId}>
+      <Dropdown
+        role="action"
+        size="extraSmall"
+        menuPlacement="bottomRight"
+        buttonVariant="text"
+        buttonColor="tertiary"
+        iconOnly
+        startIconName="ellipsis"
+        aria-label={`${displayTitle} options`}
+        options={[...menuOptions]}
+        onAction={handleAction}
+        {...menuControl}
+      />
+    </span>
+  );
 
   if (collapsedStyle === "card") {
     return (
@@ -134,18 +161,7 @@ export function OutlineSectionBlock({
               <span className={styles.summaryCount}>{countLabel}</span>
             </button>
             <div className={styles.cardMenu}>
-              <Dropdown
-                role="action"
-                size="extraSmall"
-                menuPlacement="bottomRight"
-                buttonVariant="text"
-                buttonColor="tertiary"
-                iconOnly
-                startIconName="ellipsis"
-                aria-label={`${displayTitle} options`}
-                options={[...menuOptions]}
-                onAction={handleAction}
-              />
+              {pageMenu}
               <Button
                 variant="outlined"
                 color="secondary"

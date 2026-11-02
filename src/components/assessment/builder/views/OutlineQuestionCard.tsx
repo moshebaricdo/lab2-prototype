@@ -1,16 +1,25 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { Button, Tabs, Tag, Tooltip } from "@moshebari/cads-react";
+import { Button, Dropdown, Tabs, Tag, Tooltip } from "@moshebari/cads-react";
+import type { DropdownOption } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type { UnitOption } from "../../../../lib/assessmentBuilder";
 import { newQuestionHeaderLabel } from "../../../../lib/assessmentBuilder";
 import type { QuestionItem } from "../../../../types/assessmentBuilder";
 import { QuestionItemEditor } from "./QuestionItemEditor";
+import { outlineMenuDropdownProps } from "./outlineMenu";
 import { questionKindMeta } from "./questionKindMeta";
 import styles from "./OutlineQuestionCard.module.scss";
 
 export type OutlineRefType = "bank" | "inline";
 export type QuestionEditorTab = "question" | "answers" | "usage";
+
+export interface QuestionPageOption {
+  sectionId: string;
+  label: string;
+  /** True when this is the question's current page. */
+  current?: boolean;
+}
 
 interface QuestionRowContentProps {
   question: QuestionItem;
@@ -21,7 +30,7 @@ interface QuestionRowContentProps {
 }
 
 /**
- * Collapsed row: type icon · internal name · stem peek · hover trash ·
+ * Collapsed row: type icon · internal name · stem peek · overflow ·
  * unsaved warning · outlined pencil. Hover and drag swap the type icon
  * for a grip. Expanded: type icon and chevron-up.
  */
@@ -99,6 +108,12 @@ interface OutlineQuestionCardProps {
   isDragSource: boolean;
   dirty: boolean;
   graded: boolean;
+  /** First in its page (or flat list) — disables Move up. */
+  isFirst: boolean;
+  /** Last in its page (or flat list) — disables Move down. */
+  isLast: boolean;
+  /** Other pages for Move to page. Empty / single-page → section omitted. */
+  pageOptions?: QuestionPageOption[];
   courseOptions: Array<{ value: string; label: string }>;
   domainOptions: Array<{ value: string; label: string; code?: string }>;
   unitOptions: UnitOption[];
@@ -109,6 +124,13 @@ interface OutlineQuestionCardProps {
   onDiscard: () => void;
   onCancelEdits: () => void;
   onRemove: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onMoveToPage: (sectionId: string) => void;
+  /** Exclusive outline overflow. Omitted when the card is rendered alone. */
+  menuId?: string;
+  menuOpen?: boolean;
+  onMenuOpenChange?: (open: boolean) => void;
   onUpdateQuestion: (question: QuestionItem) => void;
   setCardRef: (node: HTMLDivElement | null) => void;
   /** Nested in a page: item radius. At the root (no pages): page radius, to match intro. */
@@ -121,6 +143,9 @@ export function OutlineQuestionCard({
   isDragSource,
   dirty,
   graded,
+  isFirst,
+  isLast,
+  pageOptions = [],
   courseOptions,
   domainOptions,
   unitOptions,
@@ -131,6 +156,12 @@ export function OutlineQuestionCard({
   onDiscard,
   onCancelEdits,
   onRemove,
+  onMoveUp,
+  onMoveDown,
+  onMoveToPage,
+  menuId,
+  menuOpen,
+  onMenuOpenChange,
   onUpdateQuestion,
   setCardRef,
   inPage = false,
@@ -162,33 +193,83 @@ export function OutlineQuestionCard({
   };
 
   const neverSaved = question.neverSaved === true;
+  const removeLabel = neverSaved ? "Discard" : "Remove from quiz";
+  const headerLabel = neverSaved
+    ? newQuestionHeaderLabel(question)
+    : question.title;
+  const otherPages = pageOptions.filter((page) => page.current !== true);
 
-  const stopRowInteraction = (event: { stopPropagation: () => void }) => {
+  const menuOptions: DropdownOption[] = [
+    {
+      value: "up",
+      label: "Move question up",
+      iconName: "arrow-up",
+      disabled: isFirst,
+    },
+    {
+      value: "down",
+      label: "Move question down",
+      iconName: "arrow-down",
+      disabled: isLast,
+    },
+    ...(otherPages.length > 0
+      ? ([
+          { type: "separator" },
+          { type: "group", label: "Move to page" },
+          ...otherPages.map((page) => ({
+            value: `to:${page.sectionId}`,
+            label: page.label,
+          })),
+        ] as DropdownOption[])
+      : []),
+    { type: "separator" },
+    {
+      value: "remove",
+      label: removeLabel,
+      iconName: "trash-can",
+      destructive: true,
+    },
+  ];
+
+  const handleMenuAction = (action: string) => {
+    if (action === "up") onMoveUp();
+    if (action === "down") onMoveDown();
+    if (action === "remove") {
+      if (neverSaved) onDiscard();
+      else onRemove();
+      return;
+    }
+    if (action.startsWith("to:")) onMoveToPage(action.slice(3));
+  };
+
+  // Stop the drag handle from seeing the press. Leave `click` alone so it
+  // reaches the document — CADS menus close on click-away, and stopping
+  // the click here left every other overflow menu open.
+  const stopDrag = (event: { stopPropagation: () => void }) => {
     event.stopPropagation();
   };
 
   const collapsedActions = (
     <div className={styles.actions}>
-      {expanded ? null : (
-        <span className={styles.hoverAction}>
-          <Tooltip title="Remove from quiz" placement="top">
-            <Button
-              variant="text"
-              color="error"
-              size="extraSmall"
-              iconOnly
-              startIconName="trash"
-              aria-label={neverSaved ? "Discard question" : "Remove from quiz"}
-              onPointerDown={stopRowInteraction}
-              onClick={(event) => {
-                event.stopPropagation();
-                if (neverSaved) onDiscard();
-                else onRemove();
-              }}
-            />
-          </Tooltip>
-        </span>
-      )}
+      <span
+        className={styles.menuWrap}
+        data-outline-menu={menuId}
+        onPointerDown={stopDrag}
+      >
+        <Dropdown
+          role="action"
+          size="extraSmall"
+          menuPlacement="bottomRight"
+          buttonVariant="text"
+          buttonColor="tertiary"
+          iconOnly
+          startIconName="ellipsis"
+          aria-label={`${headerLabel || "Question"} options`}
+          options={menuOptions}
+          onAction={handleMenuAction}
+          {...outlineMenuDropdownProps({ menuOpen, onMenuOpenChange })}
+        />
+      </span>
       {dirty && !expanded ? <UnsavedChangesTag /> : null}
       <Button
         variant="outlined"
@@ -198,9 +279,8 @@ export function OutlineQuestionCard({
         startIconName={expanded ? "chevron-up" : "pencil"}
         aria-label={expanded ? "Collapse question" : "Edit question"}
         aria-expanded={expanded}
-        onPointerDown={stopRowInteraction}
-        onClick={(event) => {
-          event.stopPropagation();
+        onPointerDown={stopDrag}
+        onClick={() => {
           if (expanded) onCollapse();
           else onExpand();
         }}

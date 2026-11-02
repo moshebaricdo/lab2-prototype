@@ -89,16 +89,14 @@
   display: flex;
 }
 
-/* Same reveal as the hover trash: row hover, or keyboard focus in the actions. */
+/* Grip replaces the type icon on row hover or keyboard focus in the actions. */
 .cardCollapsed:hover:not(.hoverSuppressed) .kindType,
-.cardCollapsed:has(.actions :focus-visible) .kindType,
-.cardCollapsed:has(.hoverAction:focus-within) .kindType {
+.cardCollapsed:has(.actions :focus-visible) .kindType {
   display: none;
 }
 
 .cardCollapsed:hover:not(.hoverSuppressed) .kindGrip,
-.cardCollapsed:has(.actions :focus-visible) .kindGrip,
-.cardCollapsed:has(.hoverAction:focus-within) .kindGrip {
+.cardCollapsed:has(.actions :focus-visible) .kindGrip {
   display: flex;
 }
 
@@ -168,14 +166,9 @@
   display: none;
 }
 
-.hoverAction {
-  display: none;
-}
-
-.cardCollapsed:hover:not(.hoverSuppressed) .hoverAction,
-.cardCollapsed:has(.actions :focus-visible) .hoverAction,
-.hoverAction:focus-within {
-  display: flex;
+.menuWrap {
+  display: inline-flex;
+  flex-shrink: 0;
 }
 
 .tabs {

@@ -42,6 +42,7 @@ import {
   type OutlineRefType,
 } from "./OutlineQuestionCard";
 import { OutlineSectionBlock } from "./OutlineSectionBlock";
+import { useSingleOutlineMenu } from "./outlineMenu";
 import { SectionDeleteDialog } from "./SectionDeleteDialog";
 import styles from "./AssessmentOutlineCanvas.module.scss";
 
@@ -217,6 +218,7 @@ export function AssessmentOutlineCanvas({
   onUpdateTitle,
 }: AssessmentOutlineCanvasProps) {
   const sectioned = isSectioned(artifact);
+  const outlineMenu = useSingleOutlineMenu();
 
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [introExpanded, setIntroExpanded] = useState(false);
@@ -408,6 +410,32 @@ export function AssessmentOutlineCanvas({
     onRemoveQuestion(item.bankId);
   };
 
+  /** Keyboard-accessible sibling reorder (overflow menu; drag remains). */
+  const handleMoveQuestionBy = (bankId: string, direction: -1 | 1) => {
+    const location = findLocation(bankId);
+    if (!location) return;
+    const list =
+      location.sectionId == null
+        ? (baseFlat ?? [])
+        : (baseSections?.find((entry) => entry.id === location.sectionId)
+            ?.items ?? []);
+    const nextIndex = location.index + direction;
+    if (nextIndex < 0 || nextIndex >= list.length) return;
+    onMoveQuestion(bankId, {
+      sectionId: location.sectionId,
+      index: nextIndex,
+    });
+  };
+
+  /** Append the question to another page (a11y alternative to cross-page drag). */
+  const handleMoveQuestionToPage = (bankId: string, sectionId: string) => {
+    const location = findLocation(bankId);
+    if (!location || location.sectionId === sectionId) return;
+    const targetList =
+      baseSections?.find((entry) => entry.id === sectionId)?.items ?? [];
+    onMoveQuestion(bankId, { sectionId, index: targetList.length });
+  };
+
   const handleDeleteSection = (section: OutlineSectionView) => {
     if (section.items.length === 0) {
       onDeleteSection(section.id);
@@ -429,17 +457,35 @@ export function AssessmentOutlineCanvas({
     });
   };
 
-  const renderQuestionCard = (item: OutlineItemView, inPage = false) => (
+  const pageMenuOptions = (currentSectionId: string | null) =>
+    (baseSections ?? []).map((section, index) => ({
+      sectionId: section.id,
+      label: `Page ${index + 1}`,
+      current: section.id === currentSectionId,
+    }));
+
+  const renderQuestionCard = (
+    item: OutlineItemView,
+    options: {
+      inPage?: boolean;
+      isFirst: boolean;
+      isLast: boolean;
+      sectionId: string | null;
+    },
+  ) => (
     <OutlineQuestionCard
       key={item.bankId}
       question={item.question}
-      inPage={inPage}
+      inPage={options.inPage}
       expanded={selectedBankId === item.bankId}
       isDragSource={
         activeDrag?.kind === "question" && activeDrag.bankId === item.bankId
       }
       dirty={dirtyBankIds.has(item.bankId)}
       graded
+      isFirst={options.isFirst}
+      isLast={options.isLast}
+      pageOptions={pageMenuOptions(options.sectionId)}
       courseOptions={courseOptions}
       domainOptions={getDomainOptionsForCourse(item.question.courseId)}
       unitOptions={getUnitOptionsForCourse(item.question.courseId)}
@@ -450,6 +496,12 @@ export function AssessmentOutlineCanvas({
       onDiscard={() => onDiscardUnsaved(item.bankId)}
       onCancelEdits={onCancelEdits}
       onRemove={() => handleRemove(item)}
+      onMoveUp={() => handleMoveQuestionBy(item.bankId, -1)}
+      onMoveDown={() => handleMoveQuestionBy(item.bankId, 1)}
+      onMoveToPage={(sectionId) =>
+        handleMoveQuestionToPage(item.bankId, sectionId)
+      }
+      {...outlineMenu(`q:${item.bankId}`)}
       onUpdateQuestion={onUpdateQuestion}
       setCardRef={(node) => {
         if (node) cardRefs.current.set(item.bankId, node);
@@ -573,6 +625,7 @@ export function AssessmentOutlineCanvas({
                         onAddAbove={() => onInsertSection(section.id, "above")}
                         onAddBelow={() => onInsertSection(section.id, "below")}
                         onDelete={() => handleDeleteSection(section)}
+                        {...outlineMenu(`page:${section.id}`)}
                       >
                         {!collapsed && section.items.length === 0 && (
                           <OutlineEmptySectionSlot
@@ -591,7 +644,12 @@ export function AssessmentOutlineCanvas({
                             {itemIndex > 0 && (
                               <OutlineConnector size="item" />
                             )}
-                            {renderQuestionCard(item, true)}
+                            {renderQuestionCard(item, {
+                              inPage: true,
+                              isFirst: itemIndex === 0,
+                              isLast: itemIndex === section.items.length - 1,
+                              sectionId: section.id,
+                            })}
                           </div>
                         ))}
                         {!collapsed && section.items.length > 0 && (
