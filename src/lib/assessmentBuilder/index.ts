@@ -145,6 +145,7 @@ export {
   getDefaultTutorEnabled,
   resolveAssessmentQuestions,
   shouldSuppressRevealDuringAttempt,
+  type ResolveQuestionsOptions,
 } from "./examRuntime";
 export {
   BLANK_QUESTION_LABELS,
@@ -168,3 +169,9 @@ export {
   newQuestionHeaderLabel,
   withSavedIdentity,
 } from "./questionIdentity";
+export {
+  quizSaveSnapshot,
+  quizSaveState,
+  type QuizSaveBlocker,
+  type QuizSaveState,
+} from "./quizSave";

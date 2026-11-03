@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Dialog, SegmentedButton, Toast } from "@moshebari/cads-react";
+import { Button, Dialog, SegmentedButton, Toast, Tooltip } from "@moshebari/cads-react";
 import { Lab2Shell } from "../../../lab2/Lab2Shell";
 import { PanelHeader } from "../../../ui/PanelHeader";
 import type { LevelProgressLink } from "../../../ui/header/LevelProgressBubbles";
@@ -19,6 +19,10 @@ import {
   cloneQuestionItem,
   createBlankQuestion,
   deleteSection,
+  deriveQuizStatus,
+  liveUnitCount,
+  quizSaveSnapshot,
+  quizSaveState,
   forkQuestionItem,
   insertSectionAt,
   getAllCourseBanksSnapshot,
@@ -69,6 +73,8 @@ type WorkspaceMode = "edit" | "preview";
 
 const QUESTION_SAVE_TOAST_MS = 2000;
 const SECTION_REMOVED_TOAST_MS = 5000;
+/** Fake network time so the Saving state is visible. */
+const QUIZ_SAVE_DELAY_MS = 700;
 
 /** Outline toasts after removing something. Undo restores the outline. */
 type OutlineToastKind = "question-removed" | "question-deleted" | "intro-removed";
@@ -146,6 +152,17 @@ export function AssessmentBuilderWorkspace({
   const [outlineToast, setOutlineToast] = useState<OutlineToastKind | null>(null);
   const outlineUndoRef = useRef<AssessmentArtifact | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  /** Last saved quiz. Save is off while the artifact still matches it. */
+  const [savedArtifact, setSavedArtifact] = useState<AssessmentArtifact | null>(
+    null,
+  );
+  const [quizSaving, setQuizSaving] = useState(false);
+  const [liveSaveOpen, setLiveSaveOpen] = useState(false);
+  const [quizSavedToastOpen, setQuizSavedToastOpen] = useState(false);
+  const [quizSaveFailedToastOpen, setQuizSaveFailedToastOpen] = useState(false);
+  const failNextSaveRef = useRef(false);
+  const latestArtifactRef = useRef(artifact);
+  latestArtifactRef.current = artifact;
   const allCourseBanks = useSyncExternalStore(
     (callback) => {
       const handler = (event: StorageEvent) => {
@@ -233,16 +250,47 @@ export function AssessmentBuilderWorkspace({
     return ids;
   }, [editSessions]);
   const dirtyCount = dirtyBankIds.size;
+  const newQuestionCount = canvasQuestions.filter(
+    (question) => question.neverSaved === true,
+  ).length;
+  const editedQuestionCount = [...dirtyBankIds].filter(
+    (bankId) => questionsById.get(bankId)?.neverSaved !== true,
+  ).length;
 
   useEffect(() => {
-    if (dirtyCount === 0) return;
+    if (artifact && savedArtifact == null) setSavedArtifact(artifact);
+  }, [artifact, savedArtifact]);
+
+  const savedSnapshot = useMemo(
+    () => (savedArtifact ? quizSaveSnapshot(savedArtifact) : null),
+    [savedArtifact],
+  );
+  const currentSnapshot = useMemo(
+    () => (artifact ? quizSaveSnapshot(artifact) : null),
+    [artifact],
+  );
+  const hasQuizChanges =
+    savedSnapshot != null && currentSnapshot !== savedSnapshot;
+  const hasUnsavedWork = dirtyCount > 0 || hasQuizChanges;
+
+  useEffect(() => {
+    if (!hasUnsavedWork) return;
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [dirtyCount]);
+  }, [hasUnsavedWork]);
+
+  useEffect(() => {
+    if (!quizSavedToastOpen) return undefined;
+    const timeoutId = window.setTimeout(
+      () => setQuizSavedToastOpen(false),
+      QUESTION_SAVE_TOAST_MS,
+    );
+    return () => window.clearTimeout(timeoutId);
+  }, [quizSavedToastOpen]);
 
   useEffect(() => {
     if (!outlineToast) return undefined;
@@ -319,6 +367,19 @@ export function AssessmentBuilderWorkspace({
         iconName: "eraser",
         group: "Session",
         onAction: handleResetStoredQuizzes,
+      },
+      {
+        key: "failNextQuizSave",
+        label: "Fail the next save",
+        description:
+          "The next header Save shows the error toast instead of saving.",
+        type: "action",
+        buttonLabel: "Fail next save",
+        iconName: "circle-xmark",
+        group: "Session",
+        onAction: () => {
+          failNextSaveRef.current = true;
+        },
       },
     ],
     [handleResetStoredQuizzes],
@@ -751,28 +812,72 @@ export function AssessmentBuilderWorkspace({
     navigate({ pathname: playPath, search });
   };
 
-  const handleLeaveBuilder = () => {
-    if (playPath) openPlayableQuiz(artifact);
+  const handleLeaveBuilder = (next: AssessmentArtifact = artifact) => {
+    if (playPath) openPlayableQuiz(next);
     else navigate("/levels");
   };
 
-  const handleSaveQuiz = () => {
-    if (!playPath) return;
-    let next = artifact;
-    for (const session of Object.values(editSessions)) {
-      if (
-        session.draft.neverSaved ||
-        isQuestionDraftDirty(session.baseline, session.draft)
-      ) {
-        next = replaceQuestionRef(next, session.draft.bankId, {
-          type: "inline",
-          item: withSavedIdentity(session.draft),
-        });
-      }
-    }
-    const prepared = editableState.updateArtifact(() => next) ?? next;
-    openPlayableQuiz(prepared);
+  /** Leave and discard: put the outline back to the last save. */
+  const handleDiscardAndLeave = () => {
+    setLeaveOpen(false);
+    const restored = hasQuizChanges && savedArtifact ? savedArtifact : artifact;
+    if (restored !== artifact) updateArtifact(() => restored);
+    handleLeaveBuilder(restored);
   };
+
+  const saveState = quizSaveState({
+    artifact,
+    hasQuizChanges,
+    newQuestionCount,
+    editedQuestionCount,
+  });
+  const quizIsLive = deriveQuizStatus(artifact.unitPlacements) === "live";
+  const liveCount = liveUnitCount(artifact.unitPlacements);
+
+  const performQuizSave = () => {
+    setLiveSaveOpen(false);
+    setSaveToastOpen(false);
+    setOutlineToast(null);
+    setQuizSavedToastOpen(false);
+    setQuizSaveFailedToastOpen(false);
+    setQuizSaving(true);
+    window.setTimeout(() => {
+      setQuizSaving(false);
+      if (failNextSaveRef.current) {
+        failNextSaveRef.current = false;
+        setQuizSaveFailedToastOpen(true);
+        return;
+      }
+      const latest = latestArtifactRef.current;
+      if (latest) setSavedArtifact(latest);
+      setQuizSavedToastOpen(true);
+    }, QUIZ_SAVE_DELAY_MS);
+  };
+
+  const handleSaveQuiz = () => {
+    if (saveState.blocker || quizSaving) return;
+    if (quizIsLive) {
+      setLiveSaveOpen(true);
+      return;
+    }
+    performQuizSave();
+  };
+
+  const saveButton = (
+    <Button
+      variant="outlined"
+      color="secondary"
+      size="extraSmall"
+      startIconName="floppy-disk"
+      className={styles.saveButton}
+      loading={quizSaving}
+      disabled={!quizSaving && saveState.blocker != null}
+      aria-label={quizSaving ? "Saving" : undefined}
+      onClick={handleSaveQuiz}
+    >
+      Save
+    </Button>
+  );
 
   return (
     <Lab2Shell
@@ -792,21 +897,21 @@ export function AssessmentBuilderWorkspace({
               size="extraSmall"
               startIconName="arrow-left"
               onClick={() => {
-                if (dirtyCount > 0) setLeaveOpen(true);
+                if (hasUnsavedWork) setLeaveOpen(true);
                 else handleLeaveBuilder();
               }}
             >
               {playPath ? "Back to quiz" : "Back to Levelbuilder"}
             </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="extraSmall"
-              startIconName="floppy-disk"
-              onClick={playPath ? handleSaveQuiz : undefined}
-            >
-              Save
-            </Button>
+            {saveState.tooltip && !quizSaving ? (
+              <Tooltip title={saveState.tooltip} placement="bottom">
+                <span className={styles.saveTooltipTrigger} tabIndex={0}>
+                  {saveButton}
+                </span>
+              </Tooltip>
+            ) : (
+              saveButton
+            )}
           </>
         ) : undefined,
       }}
@@ -1001,22 +1106,57 @@ export function AssessmentBuilderWorkspace({
           >
             {outlineToast ? OUTLINE_TOAST_COPY[outlineToast] : ""}
           </Toast>
+          <Toast
+            open={quizSavedToastOpen}
+            placement="topCenter"
+            sentiment="success"
+            isDismissible
+            onClose={() => setQuizSavedToastOpen(false)}
+          >
+            Quiz saved successfully
+          </Toast>
+          <Toast
+            open={quizSaveFailedToastOpen}
+            placement="topCenter"
+            sentiment="error"
+            isDismissible
+            hasAction
+            actionLabel="Try again"
+            onAction={() => {
+              setQuizSaveFailedToastOpen(false);
+              handleSaveQuiz();
+            }}
+            onClose={() => setQuizSaveFailedToastOpen(false)}
+          >
+            Couldn't save the quiz
+          </Toast>
           <QuestionDeleteDialog
             open={pendingDeleteId != null}
             onConfirm={handleConfirmDelete}
             onCancel={() => setPendingDeleteId(null)}
           />
           <Dialog
+            open={liveSaveOpen}
+            title="Save changes to a live quiz?"
+            description={`This quiz is live in ${liveCount} unit${
+              liveCount === 1 ? "" : "s"
+            }. Students who start after you save get this version. Attempts already in progress or submitted stay on the version they started.`}
+            isDismissable
+            primaryActionLabel="Save changes"
+            secondaryActionLabel="Cancel"
+            onPrimaryAction={performQuizSave}
+            onSecondaryAction={() => setLiveSaveOpen(false)}
+            onClose={() => setLiveSaveOpen(false)}
+          />
+          <Dialog
             open={leaveOpen}
             title="Leave without saving?"
-            description={`${dirtyCount} question${
-              dirtyCount === 1 ? " has" : "s have"
-            } unsaved changes. If you leave this page now, those changes are lost.`}
+            description="You have unsaved changes. If you leave now, those changes will be lost."
             isDismissable
             primaryActionLabel="Keep editing"
             secondaryActionLabel="Leave and discard"
             onPrimaryAction={() => setLeaveOpen(false)}
-            onSecondaryAction={handleLeaveBuilder}
+            onSecondaryAction={handleDiscardAndLeave}
             onClose={() => setLeaveOpen(false)}
           />
         </>

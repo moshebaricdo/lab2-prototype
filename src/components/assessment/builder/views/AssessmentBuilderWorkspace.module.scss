@@ -1,3 +1,5 @@
+@use "../../../../styles/_mixins.scss" as *;
+
 .workspace {
   display: flex;
   flex: 1;
@@ -23,4 +25,27 @@
   left: 50%;
   z-index: 2;
   transform: translateX(-50%);
+}
+
+/* Disabled buttons get no pointer events, so the tooltip anchors here. */
+.saveTooltipTrigger {
+  display: inline-flex;
+  border-radius: var(--shape-sm);
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+/*
+ * Header Save on the brand bar (Figma W10.x). The header already makes its
+ * buttons white on transparent; CADS disabled and loading read their own
+ * variables, so they need the same treatment. Doubled class beats the
+ * header's `.leadingActions button` rule.
+ */
+.saveButton.saveButton {
+  --btn-disabled-bg: transparent !important;
+  --btn-disabled-fg: var(--neutral-white-alpha-30) !important;
+  --btn-disabled-border: var(--neutral-white-alpha-30) !important;
+  --btn-spinner-fg: var(--text-neutral-white-fixed) !important;
 }
