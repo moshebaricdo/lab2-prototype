@@ -42,6 +42,7 @@ import {
   type OutlineDropTarget,
 } from "../../../../lib/assessmentBuilder";
 import type {
+  AssessmentArtifact,
   AssessmentIntro,
   AssessmentSection,
   QuestionItem,
@@ -54,6 +55,7 @@ import { QuizAttemptWorkspace } from "../../quiz/QuizAttemptWorkspace";
 import { QuizPreviewEmptyState } from "./QuizPreviewEmptyState";
 import { QuizStatusTag } from "./QuizStatusTag";
 import { SaveQuestionPrompt, type SaveQuestionPromptKind } from "./SaveQuestionPrompt";
+import { QuestionDeleteDialog } from "./QuestionDeleteDialog";
 import styles from "./AssessmentBuilderWorkspace.module.scss";
 
 function overridesWithoutArtifact(overrides: Record<string, unknown>) {
@@ -67,6 +69,15 @@ type WorkspaceMode = "edit" | "preview";
 
 const QUESTION_SAVE_TOAST_MS = 2000;
 const SECTION_REMOVED_TOAST_MS = 5000;
+
+/** Outline toasts after removing something. Undo restores the outline. */
+type OutlineToastKind = "question-removed" | "question-deleted" | "intro-removed";
+
+const OUTLINE_TOAST_COPY: Record<OutlineToastKind, string> = {
+  "question-removed": "Question removed",
+  "question-deleted": "Question deleted",
+  "intro-removed": "Intro removed",
+};
 
 type QuestionEditSession = { draft: QuestionItem; baseline: QuestionItem };
 
@@ -132,6 +143,9 @@ export function AssessmentBuilderWorkspace({
   const [saveToastOpen, setSaveToastOpen] = useState(false);
   const [sectionRemovedToastOpen, setSectionRemovedToastOpen] = useState(false);
   const sectionUndoRef = useRef<SectionUndoSnapshot | null>(null);
+  const [outlineToast, setOutlineToast] = useState<OutlineToastKind | null>(null);
+  const outlineUndoRef = useRef<AssessmentArtifact | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const allCourseBanks = useSyncExternalStore(
     (callback) => {
       const handler = (event: StorageEvent) => {
@@ -229,6 +243,15 @@ export function AssessmentBuilderWorkspace({
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [dirtyCount]);
+
+  useEffect(() => {
+    if (!outlineToast) return undefined;
+    const timeoutId = window.setTimeout(() => {
+      setOutlineToast(null);
+      outlineUndoRef.current = null;
+    }, SECTION_REMOVED_TOAST_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [outlineToast]);
 
   useEffect(() => {
     if (!saveToastOpen) return undefined;
@@ -542,7 +565,39 @@ export function AssessmentBuilderWorkspace({
     updateArtifact((current) => removeQuestionRef(current, bankId));
   };
 
-  const handleRemoveQuestionById = (bankId: string) => {
+  const showOutlineToast = (
+    kind: OutlineToastKind,
+    undoSnapshot: AssessmentArtifact | null,
+  ) => {
+    outlineUndoRef.current = undoSnapshot;
+    setSaveToastOpen(false);
+    setSectionRemovedToastOpen(false);
+    sectionUndoRef.current = null;
+    setOutlineToast(kind);
+  };
+
+  const handleUndoOutlineRemove = () => {
+    const snapshot = outlineUndoRef.current;
+    outlineUndoRef.current = null;
+    setOutlineToast(null);
+    if (snapshot) updateArtifact(() => snapshot);
+  };
+
+  /**
+   * A saved one-off made in this quiz and used nowhere else. Removing it
+   * deletes it outright, so it asks first and has no Undo.
+   */
+  const isUnusedOneOff = (bankId: string) => {
+    const ref = artifact.questionRefs.find(
+      (entry) => questionRefId(entry) === bankId,
+    );
+    if (ref?.type !== "inline") return false;
+    const question = questionsById.get(bankId) ?? ref.item;
+    return question.neverSaved !== true && question.attachedToOtherQuizzes !== true;
+  };
+
+  const removeQuestionNow = (bankId: string, kind: OutlineToastKind) => {
+    const before = artifact;
     if (selectedBankId === bankId) closeEditor();
     setEditSessions((current) => {
       const next = { ...current };
@@ -550,6 +605,21 @@ export function AssessmentBuilderWorkspace({
       return next;
     });
     updateArtifact((current) => removeQuestionRef(current, bankId));
+    showOutlineToast(kind, kind === "question-deleted" ? null : before);
+  };
+
+  const handleRemoveQuestionById = (bankId: string) => {
+    if (isUnusedOneOff(bankId)) {
+      setPendingDeleteId(bankId);
+      return;
+    }
+    removeQuestionNow(bankId, "question-removed");
+  };
+
+  const handleConfirmDelete = () => {
+    if (!pendingDeleteId) return;
+    removeQuestionNow(pendingDeleteId, "question-deleted");
+    setPendingDeleteId(null);
   };
 
   const handleMoveQuestion = (bankId: string, target: OutlineDropTarget) => {
@@ -661,10 +731,12 @@ export function AssessmentBuilderWorkspace({
   };
 
   const handleRemoveIntro = () => {
+    const before = artifact;
     updateArtifact((current) => ({
       ...current,
       showIntroScreen: false,
     }));
+    showOutlineToast("intro-removed", before);
   };
 
   const openPlayableQuiz = (next: typeof artifact) => {
@@ -917,6 +989,23 @@ export function AssessmentBuilderWorkspace({
           >
             Page removed
           </Toast>
+          <Toast
+            open={outlineToast != null}
+            placement="topCenter"
+            sentiment="success"
+            isDismissible
+            hasAction={outlineToast !== "question-deleted"}
+            actionLabel="Undo"
+            onAction={handleUndoOutlineRemove}
+            onClose={() => setOutlineToast(null)}
+          >
+            {outlineToast ? OUTLINE_TOAST_COPY[outlineToast] : ""}
+          </Toast>
+          <QuestionDeleteDialog
+            open={pendingDeleteId != null}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setPendingDeleteId(null)}
+          />
           <Dialog
             open={leaveOpen}
             title="Leave without saving?"

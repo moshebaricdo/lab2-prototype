@@ -60,6 +60,7 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 - Create question lists **Multiple choice** and **Multiple select** separately. Both open the same answers editor; **Selection type** starts on the entry that was chosen. Correct options are marked with a radio or checkbox joined to the option field (`circle-dot` / `square-check`). The bank type filter still treats both as one Multiple Choice bucket.
 - Open item tabs Question / Answers / Usage. Unsaved-changes tag on collapse. Leave-page dialog for dirty questions.
 - Save: silent for new; unpublished shared vs published-unit dialogs (no “fork” vocabulary). Save collapses the card and shows a top-center CADS toast (“Question saved”).
+- Removing a saved one-off that no other quiz uses asks first (**Delete this question?**) and has no Undo. Other removals, and removing the intro, show a toast with Undo.
 - Bank: hover eye (Close Icon Button chrome, “preview” tooltip) opens Preview / Details / Usage. Filters default to **All**. Filter popover includes **Hide added items from results** (drops questions already on this quiz). Multi-page quizzes use an add-to-page menu. Adds stay collapsed. After add (or closing preview), the result remounts so eye / plus / already-added tooltips do not stick. `listedInBank: false` hidden.
 - Configuration: purpose chooser or dropdown; Content / Rules / Feedback / AI Tutor. Rules include **Shuffle question order** (within each page) and **Shuffle answer options** (multiple choice and matching); on by default for Exam and Exam simulation. Rules nest **Require a correct answer to continue** under Allow multiple attempts (same wrap as Max attempts). When settings differ from the purpose defaults, a **Reset to defaults** control sits beside Purpose.
 
@@ -90,6 +91,7 @@ Newest first. Log **decisions and model changes**, not polish.
 ### 2026-11-03
 
 - Shuffle is back in P0. Question order shuffles within each page; answer options shuffle for multiple choice and matching. Exam and Exam simulation default both on. A teacher reviewing a shuffled quiz can switch between **Student’s order** and **Original order**.
+- Removing a saved one-off used nowhere else is a hard delete behind a confirm dialog, with no Undo.
 
 ### 2026-10-29
 

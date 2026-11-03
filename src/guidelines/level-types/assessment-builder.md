@@ -187,6 +187,7 @@ The builder splits responsibilities between a **workspace** (center outline + in
 - Leave-page dialog if any question is dirty. Not on collapse or switching items. Builder dialogs (save prompt, leave page, purpose change, page delete) use the CADS Dialog default **800px** max width.
 - Resource panel tabs: **Question bank**, **Configuration** (`builder-settings`), and **Dev** (reset stored quiz drafts / question bank / session storage, then reload).
 - P0 global header keeps the centered level-progress bubbles, hides the lesson name / save subtitle, and shows **Back to Levelbuilder** / **Save** (outlined extraSmall on brand) beside the logo.
+- Removing a saved inline question that is not attached to other quizzes opens **Delete this question?** (`QuestionDeleteDialog.tsx`) and toasts “Question deleted” with no Undo. Other removals toast “Question removed” with Undo; removing the intro toasts “Intro removed” with Undo.
 - Resource panel width uses the shared `useLayoutState` default (**400px**); drag-resize clamps between 300px and 600px, same as other assessment levels.
 - On mount, the active tab defaults to **`builder-bank`**. Irrelevant default tabs are hidden (`showAiTutorTab: false`, `showBackpackTab: false`, `showHistoryTab: false`). The Tutor is a *setting* (`tutor.enabled`), not a panel here.
 
