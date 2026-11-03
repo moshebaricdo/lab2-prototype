@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Dialog, Pagination } from "@moshebari/cads-react";
+import { Button, Dialog, Pagination, SegmentedButton } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import { Lab2Shell } from "../../lab2/Lab2Shell";
 import type { AccountMenuConfig } from "../../ui/header/TopNavigation";
@@ -134,6 +134,12 @@ interface QuizAttemptWorkspaceProps {
 }
 
 type AttemptPhase = "intro" | "attempt" | "results";
+type ReviewOrder = "student" | "original";
+
+const REVIEW_ORDER_OPTIONS = [
+  { value: "student", label: "Student’s order" },
+  { value: "original", label: "Original order" },
+];
 type ConfirmKind =
   | "submit"
   | "submit-from-results"
@@ -341,12 +347,23 @@ export function QuizAttemptWorkspace({
   const timerEnabled = !isTeacherViewer && !isResponseReview;
   const continueTarget = getLevelContinueTarget(levelLinks, currentLevelPath);
   const attemptSeed = useMemo(
-    () => String(Date.now()),
-    [artifact.id, artifact.updatedAt],
+    () =>
+      isResponseReview
+        ? `review:${studentResponse?.studentName ?? "student"}`
+        : String(Date.now()),
+    [artifact.id, artifact.updatedAt, isResponseReview, studentResponse?.studentName],
   );
+  /** Teacher review can flip between the shuffled order and the authored one. */
+  const showsReviewOrderToggle =
+    isResponseReview &&
+    (artifact.shuffle.shuffleQuestions || artifact.shuffle.shuffleOptions);
+  const [reviewOrder, setReviewOrder] = useState<ReviewOrder>("student");
   const resolvedQuestions = useMemo(
-    () => resolveAssessmentQuestions(artifact, bankQuestions, attemptSeed),
-    [artifact, bankQuestions, attemptSeed],
+    () =>
+      resolveAssessmentQuestions(artifact, bankQuestions, attemptSeed, {
+        canonical: showsReviewOrderToggle && reviewOrder === "original",
+      }),
+    [artifact, bankQuestions, attemptSeed, showsReviewOrderToggle, reviewOrder],
   );
   const flowPayload = useMemo(
     () => assessmentToFlowPayloadFromQuestions(artifact, resolvedQuestions),
@@ -543,6 +560,10 @@ export function QuizAttemptWorkspace({
 
   /** Response review: seed the flow with the student's saved answers. */
   const [reviewHydrated, setReviewHydrated] = useState(false);
+  // Flow block ids include position, so a new order needs the answers re-seeded.
+  useEffect(() => {
+    setReviewHydrated(false);
+  }, [reviewOrder]);
   const selectedSubmission = hasSubmissionHistory
     ? (submissionVersions?.find((version) => version.id === selectedSubmissionId) ??
       submissionVersions?.[0] ??
@@ -1265,6 +1286,19 @@ export function QuizAttemptWorkspace({
     maxAttempts,
   );
 
+  const reviewOrderControl = showsReviewOrderToggle ? (
+    <div className={styles.reviewOrder}>
+      <p className={styles.reviewOrderLabel}>Question order</p>
+      <SegmentedButton
+        size="extraSmall"
+        options={REVIEW_ORDER_OPTIONS}
+        value={reviewOrder}
+        onChange={(value) => setReviewOrder(value as ReviewOrder)}
+        aria-label="Question order"
+      />
+    </div>
+  ) : null;
+
   const main = (
     <div className={styles.shell}>
       {viewpointBanner}
@@ -1377,16 +1411,19 @@ export function QuizAttemptWorkspace({
             actionLabel={emptyState.actionLabel}
             onBackToBuild={emptyState.onAction}
           />
-        ) : phase === "attempt"
-          ? pageIndexes.map((stepIndex) => (
+        ) : phase === "attempt" ? (
+          <>
+            {reviewOrderControl}
+            {pageIndexes.map((stepIndex) => (
               <article
                 key={steps[stepIndex]?.blockId}
                 className={styles.questionCard}
               >
                 {renderQuestion(stepIndex)}
               </article>
-            ))
-          : null}
+            ))}
+          </>
+        ) : null}
 
         {phase === "results" && (!isResponseReview || reviewHydrated) ? (
           <>
@@ -1485,6 +1522,7 @@ export function QuizAttemptWorkspace({
               {resultsCardFooter}
             </article>
             )}
+            {reviewOrderControl}
             {pages.map((indexes, pageIndex) => (
               <div key={pageIndex} className={styles.pageGroup}>
                 {pageCount > 1 ? (

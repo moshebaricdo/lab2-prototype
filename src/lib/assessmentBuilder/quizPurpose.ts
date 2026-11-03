@@ -5,8 +5,6 @@ import type {
   QuizPurpose,
 } from "../../types/assessmentBuilder";
 
-const NO_SHUFFLE = { shuffleQuestions: false, shuffleOptions: false } as const;
-
 export const QUIZ_PURPOSE_CARDS: Array<{
   value: QuizPurpose;
   label: string;
@@ -56,6 +54,9 @@ export interface QuizPurposeSeed {
   revealAnswerExplanation: boolean;
   tutorEnabled: boolean;
   layout: AssessmentArtifact["layout"];
+  /** Exams shuffle so neighbors see a different order. */
+  shuffleQuestions: boolean;
+  shuffleOptions: boolean;
 }
 
 export function purposeSeeds(purpose: QuizPurpose): QuizPurposeSeed {
@@ -71,6 +72,8 @@ export function purposeSeeds(purpose: QuizPurpose): QuizPurposeSeed {
         revealAnswerExplanation: false,
         tutorEnabled: false,
         layout: "stepped",
+        shuffleQuestions: false,
+        shuffleOptions: false,
       };
     case "practice":
       return {
@@ -83,6 +86,8 @@ export function purposeSeeds(purpose: QuizPurpose): QuizPurposeSeed {
         revealAnswerExplanation: false,
         tutorEnabled: true,
         layout: "scroll",
+        shuffleQuestions: false,
+        shuffleOptions: false,
       };
     case "exam":
       return {
@@ -95,6 +100,8 @@ export function purposeSeeds(purpose: QuizPurpose): QuizPurposeSeed {
         revealAnswerExplanation: false,
         tutorEnabled: false,
         layout: "stepped",
+        shuffleQuestions: true,
+        shuffleOptions: true,
       };
     case "exam_simulation":
       return {
@@ -107,6 +114,8 @@ export function purposeSeeds(purpose: QuizPurpose): QuizPurposeSeed {
         revealAnswerExplanation: false,
         tutorEnabled: false,
         layout: "stepped",
+        shuffleQuestions: true,
+        shuffleOptions: true,
       };
   }
 }
@@ -149,7 +158,10 @@ function applySeed(
     purpose,
     mode: purposeToLegacyMode(purpose),
     layout: seed.layout,
-    shuffle: { ...NO_SHUFFLE },
+    shuffle: {
+      shuffleQuestions: seed.shuffleQuestions,
+      shuffleOptions: seed.shuffleOptions,
+    },
     showIntroScreen: seed.showIntroScreen,
     intro: seed.showIntroScreen ? intro : intro,
     timing:
@@ -192,6 +204,8 @@ export function settingsDifferFromPurpose(
   const correctness = artifact.feedback?.showCorrectness === true;
   const reveal = artifact.feedback?.revealAnswerExplanation === true;
   const tutor = artifact.tutor.enabled;
+  const shuffleQuestions = artifact.shuffle?.shuffleQuestions === true;
+  const shuffleOptions = artifact.shuffle?.shuffleOptions === true;
   return (
     showIntro !== seed.showIntroScreen ||
     (time ?? undefined) !== seed.timeLimitMinutes ||
@@ -202,7 +216,9 @@ export function settingsDifferFromPurpose(
       : false) ||
     correctness !== seed.showCorrectness ||
     reveal !== seed.revealAnswerExplanation ||
-    tutor !== seed.tutorEnabled
+    tutor !== seed.tutorEnabled ||
+    shuffleQuestions !== seed.shuffleQuestions ||
+    shuffleOptions !== seed.shuffleOptions
   );
 }
 

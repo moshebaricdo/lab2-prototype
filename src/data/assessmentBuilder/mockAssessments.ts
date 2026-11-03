@@ -130,7 +130,7 @@ export const mockP0ExamAssessment: AssessmentArtifact = {
       ],
     },
   ],
-  shuffle: { shuffleQuestions: false, shuffleOptions: false },
+  shuffle: { shuffleQuestions: true, shuffleOptions: true },
   showIntroScreen: true,
   timing: { timeLimitMinutes: 45 },
   allowMultipleAttempts: false,

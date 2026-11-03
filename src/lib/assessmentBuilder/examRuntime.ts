@@ -47,10 +47,73 @@ function drawFromPool(
   return shuffled.slice(0, rule.count);
 }
 
+/** Reorder answer choices (multiple choice) or answer tiles (matching). */
+function shuffleQuestionOptions(question: QuestionItem, seed: number): QuestionItem {
+  const { item } = question;
+  if (item.kind === "multi") {
+    return {
+      ...question,
+      item: {
+        ...item,
+        content: {
+          ...item.content,
+          answers: seededShuffle(item.content.answers, seed),
+        },
+      },
+    };
+  }
+  if (item.kind === "match") {
+    return {
+      ...question,
+      item: {
+        ...item,
+        content: {
+          ...item.content,
+          terms: seededShuffle(item.content.terms, seed),
+        },
+      },
+    };
+  }
+  return question;
+}
+
+/**
+ * Questions shuffle within each page, so page membership never changes.
+ * Scroll layout and unpaged quizzes are one page.
+ */
+function shuffleWithinPages(
+  artifact: AssessmentArtifact,
+  fixed: QuestionItem[],
+  seedBase: string,
+): QuestionItem[] {
+  const sections = artifact.sections ?? [];
+  if (artifact.layout === "scroll" || sections.length === 0) {
+    return seededShuffle(fixed, hashSeed(`${seedBase}:questions`));
+  }
+  const result: QuestionItem[] = [];
+  let cursor = 0;
+  sections.forEach((section, index) => {
+    const slice = fixed.slice(cursor, cursor + section.questionRefs.length);
+    cursor += section.questionRefs.length;
+    result.push(...seededShuffle(slice, hashSeed(`${seedBase}:page-${index}`)));
+  });
+  result.push(...fixed.slice(cursor));
+  return result;
+}
+
+export interface ResolveQuestionsOptions {
+  /**
+   * Authored order and authored options, ignoring shuffle settings.
+   * Teacher review uses this for "Original order".
+   */
+  canonical?: boolean;
+}
+
 export function resolveAssessmentQuestions(
   artifact: AssessmentArtifact,
   bankQuestions: Map<string, QuestionItem>,
   attemptSeed = "default",
+  options: ResolveQuestionsOptions = {},
 ): QuestionItem[] {
   const usedIds = new Set<string>();
   const fixed: QuestionItem[] = [];
@@ -76,11 +139,20 @@ export function resolveAssessmentQuestions(
     }
   }
 
-  const combined = [...fixed, ...pooled];
-  if (!artifact.shuffle.shuffleQuestions) return combined;
-  return seededShuffle(
-    combined,
-    hashSeed(`${artifact.id}:${attemptSeed}:questions`),
+  if (options.canonical) return [...fixed, ...pooled];
+  const seedBase = `${artifact.id}:${attemptSeed}`;
+  const ordered = [
+    ...(artifact.shuffle.shuffleQuestions
+      ? shuffleWithinPages(artifact, fixed, seedBase)
+      : fixed),
+    ...pooled,
+  ];
+  if (!artifact.shuffle.shuffleOptions) return ordered;
+  return ordered.map((question) =>
+    shuffleQuestionOptions(
+      question,
+      hashSeed(`${seedBase}:options:${question.bankId}`),
+    ),
   );
 }
 

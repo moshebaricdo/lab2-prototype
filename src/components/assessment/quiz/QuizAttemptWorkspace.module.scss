@@ -227,6 +227,23 @@
   background: var(--border-neutral-primary);
 }
 
+/* Teacher review: flip between the student's shuffled order and the authored one. */
+.reviewOrder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(800px, 100%);
+  margin-inline: auto;
+}
+
+.reviewOrderLabel {
+  margin: 0;
+  @include type-overline-2;
+  color: var(--text-neutral-tertiary);
+  text-transform: uppercase;
+}
+
 .pageDividerLabel {
   margin: 0;
   @include type-overline-2;

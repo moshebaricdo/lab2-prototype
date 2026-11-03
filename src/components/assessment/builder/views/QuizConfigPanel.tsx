@@ -287,6 +287,32 @@ export function QuizConfigPanel({
             </div>
           ) : null}
         </CardRow>
+        <CardRow>
+          <ToggleRow
+            label="Shuffle question order"
+            helper="Questions shuffle within each page."
+            checked={artifact.shuffle.shuffleQuestions}
+            onChange={(checked) =>
+              onUpdateArtifact((current) => ({
+                ...current,
+                shuffle: { ...current.shuffle, shuffleQuestions: checked },
+              }))
+            }
+          />
+        </CardRow>
+        <CardRow>
+          <ToggleRow
+            label="Shuffle answer options"
+            helper="Applies to multiple choice and matching."
+            checked={artifact.shuffle.shuffleOptions}
+            onChange={(checked) =>
+              onUpdateArtifact((current) => ({
+                ...current,
+                shuffle: { ...current.shuffle, shuffleOptions: checked },
+              }))
+            }
+          />
+        </CardRow>
       </ConfigCard>
 
       <ConfigCard title="Feedback">

@@ -2,7 +2,7 @@
 
 Living snapshot of **product decisions** and **prototype state** for this workstream. Specs and implementation details live in the linked docs; this file is the turn-by-turn source of truth for what is in, out, and still open.
 
-**Last updated:** 2026-11-02
+**Last updated:** 2026-11-03
 
 **How to maintain:** update this file in the same turn as substantive product or architecture changes (scope, modes, tagging, schema, routes, builder UX model). Skip for visual polish, copy nits, and bugfixes that do not change the model.
 
@@ -61,7 +61,7 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 - Open item tabs Question / Answers / Usage. Unsaved-changes tag on collapse. Leave-page dialog for dirty questions.
 - Save: silent for new; unpublished shared vs published-unit dialogs (no “fork” vocabulary). Save collapses the card and shows a top-center CADS toast (“Question saved”).
 - Bank: hover eye (Close Icon Button chrome, “preview” tooltip) opens Preview / Details / Usage. Filters default to **All**. Filter popover includes **Hide added items from results** (drops questions already on this quiz). Multi-page quizzes use an add-to-page menu. Adds stay collapsed. After add (or closing preview), the result remounts so eye / plus / already-added tooltips do not stick. `listedInBank: false` hidden.
-- Configuration: purpose chooser or dropdown; Content / Rules / Feedback / AI Tutor. Rules nest **Require a correct answer to continue** under Allow multiple attempts (same wrap as Max attempts). When settings differ from the purpose defaults, a **Reset to defaults** control sits beside Purpose.
+- Configuration: purpose chooser or dropdown; Content / Rules / Feedback / AI Tutor. Rules include **Shuffle question order** (within each page) and **Shuffle answer options** (multiple choice and matching); on by default for Exam and Exam simulation. Rules nest **Require a correct answer to continue** under Allow multiple attempts (same wrap as Max attempts). When settings differ from the purpose defaults, a **Reset to defaults** control sits beside Purpose.
 
 ---
 
@@ -69,7 +69,7 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 
 - Frozen deep-links per Figma cell (S1.1 … S6.4).
 - Student Unsubmit.
-- Surveys / shuffle / difficulty.
+- Surveys / difficulty.
 - Levelbuilder integration.
 
 ---
@@ -86,6 +86,10 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 ## Changelog
 
 Newest first. Log **decisions and model changes**, not polish.
+
+### 2026-11-03
+
+- Shuffle is back in P0. Question order shuffles within each page; answer options shuffle for multiple choice and matching. Exam and Exam simulation default both on. A teacher reviewing a shuffled quiz can switch between **Student’s order** and **Original order**.
 
 ### 2026-10-29
 

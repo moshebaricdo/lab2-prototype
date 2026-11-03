@@ -10,7 +10,7 @@ Living workstream status: [`docs/status.md`](../../../docs/status.md). Decision 
 - **`purpose`** (`check_for_understanding` | `practice` | `exam` | `exam_simulation`) seeds student settings and is the reporting tag. Authors may override fields; that does not change purpose.
 - The **question bank** stores reusable `QuestionItem` records keyed by `bankId`. Hide rows with `listedInBank: false`.
 - Questions are tagged by **standards** only. Course and unit are bank **scope** and quiz **placement**.
-- P0 does **not** shuffle question order or answer options.
+- P0 can shuffle question order (within each page) and answer options (multiple choice and matching). Exam and Exam simulation default both on; Check for understanding and Practice default off.
 - P0 question types are **Multiple Choice, Free Response, and Matching**. The create menu lists **Multiple choice** (`circle-dot`) and **Multiple select** (`square-check`) separately; both still save as `kind: "multi"` and open the same editor with **Selection type** set from the menu. Fill-in-the-blank and ordering (Parsons) stay in mock data for legacy routes but are not listed in the P0 bank and are not seeded on the exam.
 
 ## Routes
@@ -67,7 +67,7 @@ Legacy multi / FR / match / levelgroup routes remain under Assessment for compar
 `/levels/quiz-demo/*` are the student quizzes the builder actually produces. The four question demos are one inline question with check-for-understanding settings. Blank has no purpose and no questions until you add them. Multiple select keeps `selectionMode: "multiple"` on the student attempt, so those options are checkboxes and every checked answer is scored.
 
 - **Edit** in the student header opens `/edit` for that quiz. **Save** commits open question drafts and returns to the student quiz. **Back to quiz** leaves without those unsaved question drafts.
-- The header account button switches viewpoint on the student quiz (not the builder). **Student** is the default. **Teacher** is the teacher quiz (keys, explanations, teacher notes, response counts). **Student submission** is a completed read-only review of the questions currently on the quiz. When that quiz allows more than one attempt, the submission review opens **Attempt history** (the version history panel, renamed). Each submission is a row labeled **Attempt N** (Attempt 3, Attempt 2, Attempt 1), newest first. The submission time sits beside the name. There are no autosaves. Choosing a row shows that attempt. Save and restore stay hidden. A quiz with one attempt, and **Submission in progress**, leave the panel hidden. **Submission in progress** is the same student still working: a warning banner, saved answers, and **View results**. The choice is a `view` query param (`teacher`, `submission`, or `in-progress`; student omits it) and survives Edit / Save.
+- The header account button switches viewpoint on the student quiz (not the builder). **Student** is the default. **Teacher** is the teacher quiz (keys, explanations, teacher notes, response counts). **Student submission** is a completed read-only review of the questions currently on the quiz. When that quiz allows more than one attempt, the submission review opens **Attempt history** (the version history panel, renamed). Each submission is a row labeled **Attempt N** (Attempt 3, Attempt 2, Attempt 1), newest first. The submission time sits beside the name. There are no autosaves. Choosing a row shows that attempt. Save and restore stay hidden. A quiz with one attempt, and **Submission in progress**, leave the panel hidden. **Submission in progress** is the same student still working: a warning banner, saved answers, and **View results**. The choice is a `view` query param (`teacher`, `submission`, or `in-progress`; student omits it) and survives Edit / Save. When the quiz shuffles questions or options, the submission review shows a **Question order** control above the questions: **Student’s order** (seeded per student) or **Original order** (authored order and option letters). Answers and score stay the same either way.
 - The artifact lives in `sessionStorage` (`lab2:editable-quiz:<id>`), not the localStorage draft store. The same payload is written into the encoded `o` query param (`{ artifact }`), so copying the address bar — or the dev panel share link — shares the questions and config.
 - A shared `o` value wins over the tab’s session copy. Bank questions added in the builder are snapshotted inline before they are stored, so the link does not depend on the recipient’s bank.
 - Dev panel **Reset stored quizzes** drops `artifact` from that link and ignores the encoded copy still held on the page, then reloads. Otherwise that copy would be saved again before the reload finished. Editable demos return to their seeds; the blank quiz has no questions.
@@ -159,7 +159,7 @@ Assessment-level config:
 - `questionRefs`: live `bank` references or `inline` snapshots
 - `sections?`: `AssessmentSection[]` (`{ id, title?, description?, questionRefs }`). Authors and learners call these **pages**. The stored field name stays `sections`. Structural invariant: empty quiz = no pages and no questions; as soon as the first question is added it creates **Page 1** and lives inside it — questions never sit at the root. When paged, `sections` is authoring truth and the flattened `questionRefs` mirror is re-derived on every mutation (`withSections` / `appendQuestionRef` / `ensurePagedOutline` in `outline.ts`) so adapters/preview/scoring stay page-unaware.
 - `poolDrawRules?`: draw N questions from tagged pool at runtime (not authored in P0)
-- `shuffle`: question + option order (**off and hidden in P0**)
+- `shuffle`: question order (within each page) + option order (multiple choice answers, matching terms). Seeded per attempt in `examRuntime.ts`; `canonical: true` returns the authored order for teacher review.
 - `timing?`, `attempts?`, `tutor`, `surveyMode?` (survey mode hidden in P0)
 
 ### `QuestionResponse` / `ScoringResult`
@@ -329,7 +329,7 @@ Figma Teacher Facing rows. Shared chrome: `ViewpointBanner`, `AnswerNotesBlock`,
 - Publish-time question pinning deferred
 - Drag-drop scoring marked `ungraded` in prototype scorer
 - Free-response AI/rubric scoring is affordance-only
-- P0 does not shuffle questions/options or author surveys; those remain on the schema for later phases
+- P0 does not author surveys; that remains on the schema for later phases
 - No student Unsubmit
 - Reveal-when (after item vs after attempt) is derived from purpose
 - Drag-drop scoring marked `ungraded` in prototype scorer
