@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { Button, Dropdown, Tabs, Tag, Tooltip } from "@moshebari/cads-react";
+import { Button, Dropdown, Tabs } from "@moshebari/cads-react";
 import type { DropdownOption } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type { UnitOption } from "../../../../lib/assessmentBuilder";
@@ -9,6 +9,7 @@ import type { QuestionItem } from "../../../../types/assessmentBuilder";
 import { QuestionItemEditor } from "./QuestionItemEditor";
 import { outlineMenuDropdownProps } from "./outlineMenu";
 import { questionKindMeta } from "./questionKindMeta";
+import { OutlineUnsavedTag } from "./OutlineUnsavedTag";
 import styles from "./OutlineQuestionCard.module.scss";
 
 export type OutlineRefType = "bank" | "inline";
@@ -30,8 +31,8 @@ interface QuestionRowContentProps {
 }
 
 /**
- * Collapsed row: type icon · internal name · stem peek · overflow ·
- * unsaved warning · outlined pencil. Hover and drag swap the type icon
+ * Collapsed row: type icon · internal name · stem peek · unsaved warning ·
+ * overflow · outlined pencil. Hover and drag swap the type icon
  * for a grip. Expanded: type icon and chevron-up.
  */
 export function QuestionRowContent({
@@ -79,26 +80,6 @@ export function QuestionRowContent({
       </div>
       {actions}
     </div>
-  );
-}
-
-function UnsavedChangesTag() {
-  return (
-    <Tooltip title="Unsaved changes" placement="top">
-      <span
-        className={styles.unsavedWrap}
-        role="img"
-        aria-label="Unsaved changes"
-      >
-        <Tag
-          size="medium"
-          color="warning"
-          startIconName="triangle-exclamation"
-          label=""
-          className={styles.unsavedTag}
-        />
-      </span>
-    </Tooltip>
   );
 }
 
@@ -251,6 +232,7 @@ export function OutlineQuestionCard({
 
   const collapsedActions = (
     <div className={styles.actions}>
+      {dirty && !expanded ? <OutlineUnsavedTag title="Unsaved changes" /> : null}
       <span
         className={styles.menuWrap}
         data-outline-menu={menuId}
@@ -270,7 +252,6 @@ export function OutlineQuestionCard({
           {...outlineMenuDropdownProps({ menuOpen, onMenuOpenChange })}
         />
       </span>
-      {dirty && !expanded ? <UnsavedChangesTag /> : null}
       <Button
         variant="outlined"
         color="secondary"

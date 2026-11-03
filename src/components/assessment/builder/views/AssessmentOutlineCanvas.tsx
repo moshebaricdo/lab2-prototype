@@ -610,6 +610,11 @@ export function AssessmentOutlineCanvas({
                         questionCount={section.items.length}
                         questionTitles={section.items.map((item) => item.question.title)}
                         collapsed={collapsed}
+                        unsavedCount={
+                          section.items.filter((item) =>
+                            dirtyBankIds.has(item.bankId),
+                          ).length
+                        }
                         collapsedStyle="card"
                         isFirst={sectionIndex === 0}
                         isLast={sectionIndex === preview.sections!.length - 1}

@@ -3,6 +3,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { Button, Dropdown, Tooltip } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import { outlineMenuDropdownProps } from "./outlineMenu";
+import { OutlineUnsavedTag } from "./OutlineUnsavedTag";
 import styles from "./OutlineSectionBlock.module.scss";
 
 /**
@@ -45,6 +46,8 @@ interface OutlineSectionBlockProps {
   /** Question names, shown in the collapsed peek for `closed` / `summary` / `deck`. */
   questionTitles?: string[];
   collapsed: boolean;
+  /** Questions on this page with unsaved changes. Badged while collapsed. */
+  unsavedCount?: number;
   collapsedStyle?: CollapsedPageStyle;
   /** Where the header pill sits on the frame's top edge. */
   pillAlign?: PagePillAlign;
@@ -71,6 +74,7 @@ export function OutlineSectionBlock({
   questionCount,
   questionTitles = [],
   collapsed,
+  unsavedCount = 0,
   collapsedStyle = "card",
   pillAlign = "center",
   isFirst,
@@ -161,6 +165,15 @@ export function OutlineSectionBlock({
               <span className={styles.summaryCount}>{countLabel}</span>
             </button>
             <div className={styles.cardMenu}>
+              {collapsed && unsavedCount > 0 ? (
+                <OutlineUnsavedTag
+                  title={
+                    unsavedCount === 1
+                      ? "Page contains an unsaved question"
+                      : "Page contains unsaved questions"
+                  }
+                />
+              ) : null}
               {pageMenu}
               <Button
                 variant="outlined"

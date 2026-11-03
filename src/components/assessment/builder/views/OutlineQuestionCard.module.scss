@@ -144,28 +144,6 @@
   gap: 6px;
 }
 
-.unsavedWrap {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-}
-
-.unsavedTag[data-cads-component="Tag"] {
-  box-sizing: border-box;
-  width: 24px;
-  min-width: 24px;
-  max-width: 24px;
-  padding-inline: 0;
-  justify-content: center;
-}
-
-.unsavedTag :global(span:empty) {
-  display: none;
-}
-
 .menuWrap {
   display: inline-flex;
   flex-shrink: 0;
