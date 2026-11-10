@@ -134,6 +134,7 @@ export function trainingFixture(id: string): TrainingFixture {
       rowNoun: spec.rowNoun,
       rows: dataset.rows,
       results: model.holdoutResults,
+      holdoutRowIndexes: model.holdoutRowIndexes,
       titleColumn: spec.titleColumn,
     },
   };

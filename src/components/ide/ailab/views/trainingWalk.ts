@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  cartPredictionCorrect,
   cartRegressionTolerance,
   columnById,
   columnType,
@@ -7,14 +8,15 @@ import {
   treeSplitCandidates,
   type AiLabNodeCandidates,
 } from "../../../../lib/aiLab";
-import type { AiLabHoldoutResult } from "../../../../types/aiLab";
+import type { AiLabDataRow, AiLabHoldoutResult } from "../../../../types/aiLab";
 import type { TrainingRowWalkProps } from "./TrainingModalShell";
 import { OTHER_WEDGE } from "./viz/labelGroups";
 import { labelFill, OTHER_LABEL_INDEX } from "./viz/labelPalette";
 import {
-   useSortingModel,
+  useSortingModel,
   type SortingLook,
   type SortingMarbleStyle,
+  type SortingModel,
   type SortingTreeState,
 } from "./viz/SortingTree";
 import { treeScore } from "./viz/TreeGrowth";
@@ -179,6 +181,28 @@ export interface TrainingWalkParams {
   /** `TableIntro`: fraction of spin elapsed before the window shrinks to 1 row (`0.1`–`0.8`). */
   introShrinkFrom: number;
 
+  /* ── `split` story & `TableSplit` beats ── */
+  /** `TableSplit`: open on the Data Set sheet; off, the dots bloom straight into one cluster. */
+  splitShowSheet: boolean;
+  /** `TableSplit`: hold (ms) on the sheet before its rows become dots. */
+  splitSheetHoldMs: number;
+  /** `TableSplit`: grey dots blooming out from the canvas center into one cluster (ms). */
+  splitBloomMs: number;
+  /** `TableSplit`: the dots taking their label colors, center out (ms). */
+  splitColorMs: number;
+  /** `TableSplit`: the legend gliding from under the cluster to the canvas's bottom-left (ms). */
+  splitLegendMs: number;
+  /** `TableSplit`: the cluster parting into Training and Testing (ms). */
+  splitSeparateMs: number;
+  /** `TableSplit`: Training centering and growing; Testing dropping into the tray (ms). */
+  splitFocusMs: number;
+  /** `TableSplit`: hold (ms) after each move, so it reads before the next. */
+  splitHoldMs: number;
+  /** `TableSplit`: one training dot flying into the root pile (ms). */
+  splitFlyMs: number;
+  /** `TableSplit`: stagger window (ms) across the flock, top row to bottom. */
+  splitFlyStaggerMs: number;
+
   /* ── Testing & Score beats ── */
   /** Number of test rows quizzed one by one (`QUIZ_SIZE`). */
   quizSize: number;
@@ -258,6 +282,17 @@ export const DEFAULT_TRAINING_PARAMS: TrainingWalkParams = {
   introSpinRows: 64,
   introOvershootPx: 7,
   introShrinkFrom: 0.35,
+
+  splitShowSheet: false,
+  splitSheetHoldMs: 1200,
+  splitBloomMs: 900,
+  splitColorMs: 700,
+  splitLegendMs: 650,
+  splitSeparateMs: 800,
+  splitFocusMs: 650,
+  splitHoldMs: 800,
+  splitFlyMs: 800,
+  splitFlyStaggerMs: 500,
 
   quizSize: QUIZ_SIZE,
   quizTravelMs: 680,
@@ -341,9 +376,12 @@ export type Act = "training" | "testing" | "checking" | "done";
  * tries every column's question and keeps the one that sorts best. `grow`
  * is the row-at-a-time picture (rows arrive shuffled; a question appears
  * the first time its pile gets mixed) — not how our trainer works, kept to
- * compare; it grows the same final tree so Testing matches.
+ * compare; it grows the same final tree so Testing matches. `split` is
+ * `sort` opened by the data: the sheet sets its test rows aside into the
+ * tray, the training rows become the root pile, and Testing quizzes the
+ * rows the tree never saw.
  */
-export type TrainingStory = "sort" | "scan" | "grow";
+export type TrainingStory = "sort" | "scan" | "grow" | "split";
 
 export interface WalkState extends SortingTreeState {
   act: Act;
@@ -364,6 +402,14 @@ export interface WalkState extends SortingTreeState {
    * fading out; −1 not shown (or done).
    */
   intro: number;
+  /**
+   * `split` (`TableSplit`): 0 the sheet, 1 grey dots bloom into one
+   * cluster, 2 colored by label with a legend, 3 the legend to the corner,
+   * 4 parted into Training and Testing, 5 focus on Training (Testing into
+   * the tray), 6 the Training dots pour into the root pile; −1 not shown
+   * (or done).
+   */
+  split: number;
   /** The stage's label key has slid in (first beat after open). */
   legend: boolean;
   /** Quiz row on the card (−1 before Testing). */
@@ -384,6 +430,7 @@ export const INITIAL_WALK: WalkState = {
   picked: false,
   intake: -1,
   intro: -1,
+  split: -1,
   legend: false,
   rootShown: false,
   read: false,
@@ -422,6 +469,7 @@ export type TrainingWalkData = Pick<
   | "rowNoun"
   | "rows"
   | "results"
+  | "holdoutRowIndexes"
   | "titleColumn"
 >;
 
@@ -481,6 +529,15 @@ export interface TrainingWalk {
   /** `grow`: the stage re-orders its splits (`withSplitOrder`) to match. */
   growPlan?: GrowPlan;
   model: ReturnType<typeof useSortingModel>;
+  /** Rows the tree's dots stand for: the sheet minus `holdout` (`split`), else every row. */
+  trainRows: AiLabDataRow[];
+  /** Sheet index of each `trainRows` entry. */
+  trainSheetIndexes: number[];
+  /** `split`: sheet indexes of the rows set aside before training; empty otherwise. */
+  holdout: number[];
+  /** `split`: the held-out rows scored against the tree, in sheet order. */
+  testResults: AiLabHoldoutResult[];
+  /** `split`: right / total over `testResults`; otherwise over the tree's own rows. */
   score: { right: number; total: number };
   indexOf: (label: string) => number;
   quiz: QuizRow[];
@@ -517,13 +574,51 @@ export function useTrainingWalk(
   const params = useMemo(() => resolveTrainingParams(options), [options]);
   const intro = story === "grow" && params.intro === true;
   const growth = params.growth;
-  const { tree, rows, labelColumn, labels, results, columns, features } = data;
-  const model = useSortingModel(tree, rows, labelColumn, labels, "default", columns, {
-    maxDots: params.maxDots,
-    dotScale: params.dotScale,
-    levelGap: params.levelGap,
-    bendRatio: params.bendRatio,
-  });
+  const {
+    tree,
+    rows,
+    labelColumn,
+    labels,
+    results,
+    columns,
+    features,
+    holdoutRowIndexes,
+  } = data;
+  /* `split`: the test rows leave the sheet before the tree ever sees it. */
+  const holdout = useMemo(
+    () =>
+      story === "split"
+        ? resolveHoldout(rows.length, results, holdoutRowIndexes)
+        : NO_HOLDOUT,
+    [story, rows.length, results, holdoutRowIndexes],
+  );
+  const trainSheetIndexes = useMemo(() => {
+    const reserved = new Set(holdout);
+    return rows.map((_, index) => index).filter((index) => !reserved.has(index));
+  }, [rows, holdout]);
+  const trainRows = useMemo(
+    () =>
+      holdout.length === 0 ? rows : trainSheetIndexes.map((index) => rows[index]!),
+    [rows, holdout.length, trainSheetIndexes],
+  );
+  const baseModel = useSortingModel(
+    tree,
+    trainRows,
+    labelColumn,
+    labels,
+    "default",
+    columns,
+    {
+      maxDots: params.maxDots,
+      dotScale: params.dotScale,
+      levelGap: params.levelGap,
+      bendRatio: params.bendRatio,
+    },
+  );
+  const model = useMemo(
+    () => (story === "split" ? splitModel(baseModel) : baseModel),
+    [story, baseModel],
+  );
   const tolerance = useMemo(
     () =>
       columnType(columns, labelColumn) === "numerical"
@@ -531,22 +626,46 @@ export function useTrainingWalk(
         : 0,
     [columns, labelColumn, rows],
   );
-  const score = useMemo(() => treeScore(tree, tolerance), [tolerance, tree]);
+  const testResults = useMemo<AiLabHoldoutResult[]>(
+    () =>
+      holdout.map((rowIndex) => {
+        const row = rows[rowIndex]!;
+        return {
+          rowIndex,
+          actual: String(row[labelColumn] ?? ""),
+          predicted: traceDecisionTree(tree, row).prediction,
+          correct: cartPredictionCorrect(tree, row, labelColumn, columns, tolerance),
+        };
+      }),
+    [holdout, rows, tree, labelColumn, columns, tolerance],
+  );
+  /* `split` scores the rows the tree never saw; the rest score its own rows. */
+  const score = useMemo(
+    () =>
+      holdout.length > 0
+        ? {
+            right: testResults.filter((result) => result.correct).length,
+            total: testResults.length,
+          }
+        : treeScore(tree, tolerance),
+    [holdout.length, testResults, tolerance, tree],
+  );
   const { grouping } = model;
   const indexOf = grouping.indexOf;
+  const quizFrom = holdout.length > 0 ? testResults : results;
   const quiz = useMemo<QuizRow[]>(
     () =>
-      orderQuiz(pickSample(results, Math.max(1, params.quizSize))).map((result) => ({
+      orderQuiz(pickSample(quizFrom, Math.max(1, params.quizSize))).map((result) => ({
         result,
         pathKeys: rows[result.rowIndex]
           ? traceDecisionTree(tree, rows[result.rowIndex]!).pathKeys
           : ["root"],
       })),
-    [results, rows, tree, params.quizSize],
+    [quizFrom, rows, tree, params.quizSize],
   );
   const tally = useMemo(() => {
     const counts = new Map<string, number>();
-    rows.forEach((row) => {
+    trainRows.forEach((row) => {
       const label = String(row[labelColumn]);
       counts.set(label, (counts.get(label) ?? 0) + 1);
     });
@@ -574,7 +693,7 @@ export function useTrainingWalk(
         folded: rest,
       },
     ];
-  }, [rows, labelColumn, labels, indexOf, grouping]);
+  }, [trainRows, labelColumn, labels, indexOf, grouping]);
   const splitCount = model.splits.length;
   const scanPlan = useMemo(() => {
     if (story !== "scan") return undefined;
@@ -610,9 +729,21 @@ export function useTrainingWalk(
       ? scanBeats(scanPlan, params)
       : growPlan
         ? growBeats(growPlan, model.dots.length, intro, params)
-        : sortBeats(splitCount, params);
+        : story === "split"
+          ? splitBeats(splitCount, holdout.length > 0, params)
+          : sortBeats(splitCount, params);
     return buildBeats(training, splitCount, quiz, params);
-  }, [scanPlan, growPlan, model.dots.length, splitCount, quiz, intro, params]);
+  }, [
+    story,
+    scanPlan,
+    growPlan,
+    model.dots.length,
+    splitCount,
+    quiz,
+    intro,
+    holdout.length,
+    params,
+  ]);
   const labelName = columnById(columns, labelColumn)?.name ?? labelColumn;
   return useMemo(
     () => ({
@@ -622,6 +753,10 @@ export function useTrainingWalk(
       scanPlan,
       growPlan,
       model,
+      trainRows,
+      trainSheetIndexes,
+      holdout,
+      testResults,
       score,
       indexOf,
       quiz,
@@ -637,6 +772,10 @@ export function useTrainingWalk(
       scanPlan,
       growPlan,
       model,
+      trainRows,
+      trainSheetIndexes,
+      holdout,
+      testResults,
       score,
       indexOf,
       quiz,
@@ -646,6 +785,37 @@ export function useTrainingWalk(
       final,
     ],
   );
+}
+
+const NO_HOLDOUT: number[] = [];
+
+/**
+ * `split`: the rows set aside before training. The lab passes them; a
+ * caller with only the trainer's scored rows (the ones it trained on) gets
+ * the rest of the sheet, and one that scored every row gets none.
+ */
+function resolveHoldout(
+  rowCount: number,
+  results: AiLabHoldoutResult[],
+  holdoutRowIndexes?: number[],
+): number[] {
+  if (holdoutRowIndexes) return holdoutRowIndexes;
+  /* The model's results are its reserved rows, scored (as in production). */
+  if (results.length === 0 || results.length >= rowCount) return NO_HOLDOUT;
+  return results.map((result) => result.rowIndex).sort((a, b) => a - b);
+}
+
+/**
+ * `split`: every dot is handed off by its flyer from the sheet, so the root
+ * pile fills at once with no pop; the piles still stagger when they split.
+ */
+export function splitModel(model: SortingModel): SortingModel {
+  return {
+    ...model,
+    arrival: model.dots.map((_, id) => id),
+    handoff: model.dots.length,
+    staggerMoves: true,
+  };
 }
 
 /** The winner plus the first others in feature order, kept in feature order. */
@@ -882,12 +1052,71 @@ function sortBeats(
   splitCount: number,
   params: TrainingWalkParams = DEFAULT_TRAINING_PARAMS,
 ): Beat[] {
-  const f = splitPace(splitCount, params.splitPaceFloor);
-  const beats: Beat[] = [
+  return [
     { wait: params.openLegendMs, patch: { legend: true } },
     { wait: params.openRootMs, patch: { rootShown: true } },
     { wait: params.openReadMs, patch: { read: true } },
+    ...askBeats(splitCount, params),
   ];
+}
+
+/**
+ * `split`: the opening (`WalkState.split`), one motion per beat:
+ * 0 the sheet (with `splitShowSheet`), 1 grey dots bloom out from the
+ * canvas center ("52 animals"), 2 they take their label colors and the
+ * legend appears under the caption, 3 the legend glides to the canvas's
+ * bottom-left as the caption goes, 4 the cluster parts into Training and
+ * Testing, 5 Training takes the middle while Testing drops into the tray,
+ * 6 the Training dots pour into the root pile. Then the questions, as in
+ * `sort`. With nothing held out, 3 goes straight to 6.
+ */
+function splitBeats(
+  splitCount: number,
+  hasHoldout: boolean,
+  params: TrainingWalkParams = DEFAULT_TRAINING_PARAMS,
+): Beat[] {
+  const hold = params.splitHoldMs;
+  const beats: Beat[] = params.splitShowSheet
+    ? [
+        { wait: 300, patch: { split: 0 } },
+        { wait: params.splitSheetHoldMs, patch: { split: 1 } },
+      ]
+    : [{ wait: 300, patch: { split: 1 } }];
+  beats.push(
+    { wait: params.splitBloomMs + hold, patch: { split: 2 } },
+    { wait: params.splitColorMs + hold, patch: { split: 3 } },
+  );
+  let settle = params.splitLegendMs;
+  if (hasHoldout) {
+    beats.push(
+      { wait: settle + Math.round(hold * 0.4), patch: { split: 4 } },
+      { wait: params.splitSeparateMs + hold + 300, patch: { split: 5 } },
+    );
+    settle = params.splitFocusMs;
+  }
+  beats.push(
+    {
+      wait: settle + Math.round(hold * 0.6),
+      /* Root up, dots still hidden (`read` false) but parked on their own
+         slots, so each flyer lands on its dot. The stage's legend takes
+         over from the overlay's, in the same spot. */
+      patch: { split: 6, legend: true, rootShown: true },
+    },
+    {
+      wait: params.splitFlyMs + params.splitFlyStaggerMs + 100,
+      patch: { split: -1, read: true },
+    },
+  );
+  return [...beats, ...askBeats(splitCount, params)];
+}
+
+/** Each question in ask order: it appears, its piles sprout, the dots fall through. */
+function askBeats(
+  splitCount: number,
+  params: TrainingWalkParams = DEFAULT_TRAINING_PARAMS,
+): Beat[] {
+  const f = splitPace(splitCount, params.splitPaceFloor);
+  const beats: Beat[] = [];
   for (let i = 0; i < splitCount; i += 1) {
     beats.push(
       {

@@ -29,6 +29,11 @@ export interface TrainingBodyProps {
 export interface TrainingRowWalkProps extends TrainingBodyProps {
   rows: AiLabDataRow[];
   results: AiLabHoldoutResult[];
+  /**
+   * Rows reserved before training (`AiLabTrainedModel.holdoutRowIndexes`).
+   * The `split` story sets them aside on screen and quizzes them.
+   */
+  holdoutRowIndexes?: number[];
   /** Column that names a row on the quiz card (`animal` → "Bat"). */
   titleColumn?: string;
 }

@@ -153,6 +153,10 @@ const AiLabTrainingLabPage = lazyPage(
   () => import("./pages/ailab/AiLabTrainingLabPage"),
   "AiLabTrainingLabPage",
 );
+const AiLabSplitLabPage = lazyPage(
+  () => import("./pages/ailab/AiLabSplitLabPage"),
+  "AiLabSplitLabPage",
+);
 const AssessmentBuilderNewPage = lazyPage(
   () => import("./pages/assessment-builder/AssessmentBuilderNewPage"),
   "AssessmentBuilderNewPage",
@@ -526,6 +530,10 @@ export default function App() {
         <Route
           path="/experiments/ailab-training"
           element={<AiLabTrainingLabPage />}
+        />
+        <Route
+          path="/experiments/ailab-split"
+          element={<AiLabSplitLabPage />}
         />
         <Route
           path="/experiments/quiz-page-collapse"

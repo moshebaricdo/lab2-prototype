@@ -1,0 +1,246 @@
+@use "../../../../styles/_mixins.scss" as *;
+
+/* Over the canvas, the dock, and the legend, down to the statement row
+   (56px). Transparent, so the canvas shows behind the clusters. */
+.split {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 56px;
+  left: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ── Phase 0: the sheet, just the chosen columns ── */
+
+.sheet {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-neutral-primary);
+  animation: sheet-in 320ms ease-out backwards;
+  transition:
+    opacity var(--split-gather, 900ms) ease,
+    transform var(--split-gather, 900ms) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The rows have left as dots: the sheet sinks back and fades. */
+.sheetGone {
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.row {
+  display: flex;
+  flex-shrink: 0;
+  height: 28px;
+}
+
+.th,
+.td,
+.thIndex,
+.tdIndex {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  border-left: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.th,
+.td {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.th,
+.thIndex,
+.tdIndex {
+  @include type-body-4-semibold;
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-tertiary);
+}
+
+.td {
+  @include type-body-4-regular;
+}
+
+.th,
+.td,
+.thIndex,
+.tdIndex {
+  line-height: 27px;
+}
+
+.thIndex,
+.tdIndex {
+  flex: 0 0 36px;
+  padding: 0;
+  border-left: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Same role tints as the dock's sheet (`TreeTableRow.module.scss`). */
+.thFeature {
+  border-color: var(--border-info-primary);
+  background: var(--background-info-mid);
+  color: var(--text-neutral-primary);
+}
+
+.tdFeature {
+  border-color: var(--border-info-light);
+  background: color-mix(
+    in srgb,
+    var(--background-info-light) 50%,
+    var(--background-neutral-primary)
+  );
+}
+
+.thLabel {
+  border-color: var(--border-accent-pink-primary);
+  background: var(--background-accent-pink-mid);
+  color: var(--text-neutral-primary);
+}
+
+.tdLabel {
+  border-color: var(--border-accent-pink-light);
+  background: color-mix(
+    in srgb,
+    var(--background-accent-pink-light) 50%,
+    var(--background-neutral-primary)
+  );
+}
+
+/* Where each row's dot starts its trip. */
+.labelDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: var(--shape-round);
+  vertical-align: -1px;
+}
+
+/* ── Phases 1–4: the dots ── */
+
+/* Placed by transform only (`TableSplit`); sized at `--dot` and scaled.
+   Grey until phase 2, when an inline background takes it to its label's
+   color (staggered center out). */
+.dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-septenary);
+  transform-origin: 0 0;
+  transition: background-color var(--split-color, 700ms) ease;
+  will-change: transform, opacity;
+}
+
+/* The label key: centered under "52 animals" (phase 2), then gliding to
+   the stage legend's spot (phase 3), which takes over at the pour. Same
+   type and dots as `LegendKeys`, so the handoff doesn't shift. */
+.legend {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.legendOn {
+  opacity: 1;
+  transition: opacity 320ms ease var(--split-color, 700ms);
+}
+
+.legendMoving {
+  transition:
+    opacity 200ms ease,
+    transform var(--split-legend, 650ms) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.legendItem {
+  @include type-body-4-regular;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-neutral-primary);
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+}
+
+/* "52 animals", then "Training · 46 animals" / "Testing · 6 animals",
+   centered under its cluster. */
+.caption {
+  @include type-body-3-semibold;
+  position: absolute;
+  z-index: 2;
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 260ms ease,
+    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.captionOn {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  transition-delay: 220ms;
+}
+
+/* Tags in the statement's pairing: Testing wears the label's pink, since
+   its label is what the tree has to guess. */
+.captionTrain,
+.captionTest {
+  @include type-body-4-semibold;
+  padding: 2px 10px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-primary);
+}
+
+.captionTest {
+  border-color: var(--border-accent-pink-primary);
+  background: var(--background-accent-pink-mid);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .caption,
+  .dot,
+  .legend {
+    animation: none;
+    transition: none;
+  }
+}

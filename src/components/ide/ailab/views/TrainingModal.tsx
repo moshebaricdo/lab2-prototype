@@ -40,9 +40,9 @@ interface TrainingModalProps {
  * The training step for a decision tree. Opens right after Train model;
  * what plays is the level's `trainingAnimation`: sort and quiz (default —
  * `TrainingTableRow`: rows as dots sorted into piles, then a few test rows
- * rise in from the sheet and get guessed) or the tree growing top-down
- * (`tree`, kept as a fallback). Both end on the same score. Replay
- * training reopens it.
+ * rise in from the sheet and get guessed), the same opened by the sheet
+ * splitting into training and test rows (`split`), or the tree growing
+ * top-down (`tree`, kept as a fallback). Replay training reopens it.
  */
 export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps) {
   const model = lab.model;
@@ -78,7 +78,9 @@ export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps
       {...shared}
       rows={lab.rows}
       results={model.holdoutResults}
+      holdoutRowIndexes={model.holdoutRowIndexes}
       titleColumn={lab.config.cardTitleColumn}
+      story={lab.config.trainingAnimation === "split" ? "split" : "sort"}
     />
   );
 }

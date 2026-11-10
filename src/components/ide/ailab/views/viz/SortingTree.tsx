@@ -199,6 +199,11 @@ export interface SortingModel {
    * of them (`TreeTableRow`'s row morph): they appear at once, no fade.
    */
   handoff?: number;
+  /**
+   * Arrival mode, once every row is in: piles still stagger their dots
+   * when they split (`split`), instead of moving as one.
+   */
+  staggerMoves?: boolean;
 }
 
 export interface SortingModelOptions {
@@ -915,7 +920,7 @@ export function SortingTree({
           const { x, y } = slotPosition(laid, slotsAt.get(key)?.get(dot.id) ?? 0, geometry, look);
           const moving = movingSlots?.get(dot.id);
           const shown = state.read && (!arrived || arrived(dot.id));
-          const delay = arrival
+          const delay = arrival && (!model.staggerMoves || state.splitsShown === 0)
             ? 0
             : state.splitsShown === 0
               ? Math.min(dot.id * popStep, popCap)

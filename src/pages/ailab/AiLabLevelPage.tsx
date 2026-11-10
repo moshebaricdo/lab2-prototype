@@ -234,11 +234,12 @@ function aiLabDevFields(
       key: "trainingAnimation",
       label: "Training animation",
       description:
-        "What the Train model modal plays for a decision tree. Sort and quiz (default) shows every row as a dot sorted into piles by the tree's questions (Training), then a few rows from the sheet trace down the tree and get guessed (Testing) before the score. Tree growth is the older fallback: the finished tree drawn depth by depth.",
+        "What the Train model modal plays for a decision tree. Sort and quiz (default) shows every row as a dot sorted into piles by the tree's questions (Training), then a few rows from the sheet trace down the tree and get guessed (Testing) before the score. Split, sort, test opens on the Data Set sheet: it sets its test rows aside into a tray, the training rows become the root pile, and Testing quizzes the rows the tree never saw. Tree growth is the older fallback: the finished tree drawn depth by depth.",
       type: "select",
       group: "Train",
       options: [
         { label: "Sort and quiz (training → testing)", value: "rows" },
+        { label: "Split, sort, test (sheet → tray → tree)", value: "split" },
         { label: "Tree growth (fallback)", value: "tree" },
       ],
       visibleWhen: (values) =>

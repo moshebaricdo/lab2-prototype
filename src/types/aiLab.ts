@@ -290,8 +290,12 @@ export interface AiLabShownTest {
  */
 export type AiLabTestLayout = "dock" | "canvas";
 
-/** Training modal playback: walk the rows through the tree (default), or grow it. */
-export type AiLabTrainingAnimation = "tree" | "rows";
+/**
+ * Training modal playback: walk the rows through the tree (default), open
+ * on the sheet splitting into training and test rows first (`split`), or
+ * grow the finished tree.
+ */
+export type AiLabTrainingAnimation = "tree" | "rows" | "split";
 
 /** What clicking a decision-tree node does: grow it in place, or open its rows. */
 export type AiLabTreeNodeDetail = "inline" | "modal";
@@ -403,8 +407,11 @@ export interface AiLabLevelConfig {
    * What the training modal plays. `rows` (default) is the sort and quiz
    * (`TrainingTableRow`): every row is a dot sorted into piles by the
    * tree's questions (Training), then a few rows from the sheet trace down
-   * the tree and get guessed (Testing) before the score. `tree` is the
-   * fallback that grows the finished tree depth by depth. Dev panel knob.
+   * the tree and get guessed (Testing) before the score. `split` opens on
+   * the Data Set sheet: it sets its test rows aside into a tray, the
+   * training rows become the root pile, and Testing quizzes the rows the
+   * tree never saw. `tree` is the fallback that grows the finished tree
+   * depth by depth. Dev panel knob.
    */
   trainingAnimation?: AiLabTrainingAnimation;
   /**

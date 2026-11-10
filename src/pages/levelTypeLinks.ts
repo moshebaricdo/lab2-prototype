@@ -478,6 +478,14 @@ export const aiLabPlaytestV2IndexLinks: LevelProgressLink[] =
 
 export const aiLabTrainingExperimentLinks: LevelProgressLink[] = [
   {
+    name: "The split (timeline sandbox)",
+    path: "/experiments/ailab-split",
+  },
+  {
+    name: "Split, sort, test (sheet → tray → tree)",
+    path: "/experiments/ailab-training?variant=split",
+  },
+  {
     name: "Row from the table (sort & quiz)",
     path: "/experiments/ailab-training",
   },

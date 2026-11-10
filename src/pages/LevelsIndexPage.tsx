@@ -229,6 +229,7 @@ const PATH_TO_LEVEL_TYPE: Record<string, string> = {
   "/levels/progression-ailab": "AI Lab",
   "/levels/progression-ailab-v2": "AI Lab",
   "/experiments/ailab-training": "AI Lab",
+  "/experiments/ailab-split": "AI Lab",
   "/levels/weblab2": "Web Lab 2",
   "/levels/levelgroup": "Assessment experiment",
   "/levels/bubble-choice": "Bubble choice",

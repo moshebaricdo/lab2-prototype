@@ -31,7 +31,7 @@ import styles from "./AiLabTrainingLabPage.module.scss";
 const END_HOLD_MS = 800;
 const SPEEDS = ["0.5", "1", "2"];
 
-type LoopMode = "off" | "beat" | "training" | "testing" | "score";
+type LoopMode = "off" | "beat" | "split" | "training" | "testing" | "score";
 type ExportFormat = "ts" | "diff" | "full";
 
 interface SliderSpec<K extends keyof TrainingWalkParams = keyof TrainingWalkParams> {
@@ -103,6 +103,18 @@ const INTRO_SLIDERS: SliderSpec[] = [
   { key: "introShrinkFrom", label: "Window shrink start", min: 0.1, max: 0.8, step: 0.05 },
 ];
 
+const SPLIT_SLIDERS: SliderSpec[] = [
+  { key: "splitSheetHoldMs", label: "Sheet hold", min: 200, max: 3000, step: 50, unit: "ms" },
+  { key: "splitBloomMs", label: "Grey bloom", min: 200, max: 2400, step: 25, unit: "ms" },
+  { key: "splitColorMs", label: "Color by label", min: 100, max: 2000, step: 25, unit: "ms" },
+  { key: "splitLegendMs", label: "Legend to corner", min: 150, max: 1600, step: 25, unit: "ms" },
+  { key: "splitSeparateMs", label: "Cluster parts in two", min: 200, max: 2000, step: 25, unit: "ms" },
+  { key: "splitFocusMs", label: "Focus on Training", min: 200, max: 2000, step: 25, unit: "ms" },
+  { key: "splitHoldMs", label: "Hold after each move", min: 0, max: 2400, step: 50, unit: "ms" },
+  { key: "splitFlyMs", label: "Dots → root pile", min: 200, max: 2400, step: 25, unit: "ms" },
+  { key: "splitFlyStaggerMs", label: "Flock stagger", min: 0, max: 2000, step: 25, unit: "ms" },
+];
+
 const TESTING_SLIDERS: SliderSpec[] = [
   { key: "quizSize", label: "Quizzed rows", min: 1, max: 6, step: 1 },
   { key: "quizTravelMs", label: "Step travel", min: 200, max: 1600, step: 20, unit: "ms" },
@@ -145,7 +157,9 @@ export function AiLabTrainingLabPage() {
     TRAINING_FIXTURES[0]!.id;
   const initialStory = ((): TrainingStory => {
     const raw = searchParams.get("story");
-    if (raw === "sort" || raw === "scan" || raw === "grow") return raw;
+    if (raw === "sort" || raw === "scan" || raw === "grow" || raw === "split") {
+      return raw;
+    }
     return initialVariant.story ?? "sort";
   })();
 
@@ -154,7 +168,8 @@ export function AiLabTrainingLabPage() {
   const [story, setStory] = useState<TrainingStory>(initialStory);
   const [params, setParams] = useState<TrainingWalkParams>(() => ({
     ...presetParamsForVariant(initialVariant),
-    ...parseTrainingParamsFromSearch(window.location.search),
+    /* The query lives in the hash (HashRouter), so read it from the router. */
+    ...parseTrainingParamsFromSearch(searchParams.toString()),
   }));
   const [controlsOpen, setControlsOpen] = useState(true);
   const [replayOnTweak, setReplayOnTweak] = useState(true);
@@ -393,7 +408,7 @@ function Player({
   }, [time, times, total]);
 
   // Reset to start when switching dataset fixture or story mode.
-  const identityKey = `${fixtureId}:${story}:${params.intro}:${params.growth}`;
+  const identityKey = `${fixtureId}:${story}:${params.intro}:${params.growth}:${params.splitShowSheet}`;
   const prevIdentityRef = useRef(identityKey);
   useEffect(() => {
     if (prevIdentityRef.current !== identityKey) {
@@ -438,6 +453,7 @@ function Player({
       return { from, to: Math.max(from + 200, to) };
     }
     const labelMap: Record<Exclude<LoopMode, "off" | "beat">, string> = {
+      split: "Split",
       training: "Training",
       testing: "Testing",
       score: "Score",
@@ -624,6 +640,7 @@ function Player({
           <div className={styles.bands} aria-hidden>
             {phases.map((band) => {
               const isLooped =
+                (loopMode === "split" && band.label === "Split") ||
                 (loopMode === "training" && band.label === "Training") ||
                 (loopMode === "testing" && band.label === "Testing") ||
                 (loopMode === "score" && band.label === "Score");
@@ -701,6 +718,9 @@ function Player({
             >
               <option value="off">Loop: Off</option>
               <option value="beat">Loop: Beat</option>
+              {phases.some((band) => band.label === "Split") ? (
+                <option value="split">Loop: Split</option>
+              ) : null}
               <option value="training">Loop: Training</option>
               <option value="testing">Loop: Testing</option>
               <option value="score">Loop: Score</option>
@@ -962,6 +982,7 @@ function ParametricInspector({
                   { value: "sort", label: "Sort" },
                   { value: "scan", label: "Scan" },
                   { value: "grow", label: "Grow" },
+                  { value: "split", label: "Split" },
                 ]}
               />
             </div>
@@ -1121,6 +1142,41 @@ function ParametricInspector({
           </>
         ) : null}
 
+        {story === "split" ? (
+          <InspectorSection
+            title="Training Beats (Split)"
+            onReset={() =>
+              onResetKeys([
+                "splitShowSheet",
+                ...SPLIT_SLIDERS.map((s) => s.key),
+                ...SORT_BEAT_SLIDERS.map((s) => s.key),
+              ])
+            }
+          >
+            <label className={styles.checkRow}>
+              <input
+                type="checkbox"
+                checked={params.splitShowSheet}
+                onChange={(e) => onUpdateParam("splitShowSheet", e.target.checked)}
+              />
+              <span>Open on the data table</span>
+            </label>
+            {renderSliderGroup(
+              params.splitShowSheet
+                ? SPLIT_SLIDERS
+                : SPLIT_SLIDERS.filter((s) => s.key !== "splitSheetHoldMs"),
+            )}
+            <div className={styles.subDivider} />
+            {renderSliderGroup(
+              SORT_BEAT_SLIDERS.filter((s) =>
+                ["firstSplitWaitMs", "splitWaitMs", "branchWaitMs", "sortWaitMs", "splitPaceFloor", "namedWaitMs", "preTestHoldMs"].includes(
+                  s.key,
+                ),
+              ),
+            )}
+          </InspectorSection>
+        ) : null}
+
         {/* Section 5: Testing & Quiz Flight */}
         <InspectorSection
           title="Testing & Quiz Flight"
@@ -1248,8 +1304,12 @@ function phaseBands(beats: Beat[], times: number[], total: number) {
   };
   const testing = startOf("testing");
   const checking = startOf("checking");
+  /* `split`: the opening gets its own band (and loop), up to the full pile. */
+  const splitEnd = beats.findIndex((beat) => beat.patch.split === -1);
+  const trainFrom = splitEnd < 0 ? 0 : times[splitEnd]!;
   return [
-    { label: "Training", from: 0, to: testing },
+    ...(splitEnd < 0 ? [] : [{ label: "Split", from: 0, to: trainFrom }]),
+    { label: "Training", from: trainFrom, to: testing },
     { label: "Testing", from: testing, to: checking },
     { label: "Score", from: checking, to: total },
   ];
@@ -1263,6 +1323,14 @@ function describeBeat(beat: Beat, state: WalkState): string {
   if (patch.picked) return `Pile ${state.scan + 1} keeps its best question`;
   if (patch.scan !== undefined && patch.scan >= 0) return `Pile ${patch.scan + 1} starts trying questions`;
   if (patch.candidate !== undefined && patch.candidate >= 0) return `Pile ${state.scan + 1} tries another question`;
+  if (patch.split === 0) return "The data table appears";
+  if (patch.split === 1) return "Grey dots bloom into one cluster";
+  if (patch.split === 2) return "The dots take their label colors; the legend appears";
+  if (patch.split === 3) return "The legend moves to the corner";
+  if (patch.split === 4) return "The cluster parts: Training and Testing";
+  if (patch.split === 5) return "Focus on Training; Testing drops into the tray";
+  if (patch.split === 6) return "The Training dots pour into the root pile";
+  if (patch.split === -1) return "The pile is full";
   if (patch.intro === 0) return "The data table appears";
   if (patch.intro === 1) return "It narrows to the chosen columns";
   if (patch.intro === 2) return "The rows scroll by";

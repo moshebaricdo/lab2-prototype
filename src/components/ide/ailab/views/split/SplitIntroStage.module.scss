@@ -1,0 +1,390 @@
+@use "../../../../../styles/_mixins.scss" as *;
+
+/* The training modal's surface (Figma AI Lab 2, Training/Testing Modal),
+   inline so the timeline dock can sit under it. */
+.modal {
+  width: 800px;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: var(--shape-lg);
+  background: var(--background-neutral-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  height: 72px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+}
+
+.title {
+  @include type-heading-h3-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+/* One bar from start to finish, above the canvas: done steps get a check,
+   the current one spins, the rest wait (a dashed ring). */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 56px;
+  margin: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  list-style: none;
+  overflow: hidden;
+}
+
+.step {
+  @include type-body-2-semibold;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  transition: color 240ms ease;
+}
+
+.done {
+  color: var(--text-neutral-secondary);
+}
+
+.current {
+  color: var(--text-neutral-primary);
+}
+
+.upcoming {
+  color: var(--text-neutral-quaternary);
+}
+
+/* Eight dots, so step the turn and each dot lands where the last one was. */
+.spinner {
+  display: inline-block;
+  animation: spinner-turn 1s steps(8) infinite;
+}
+
+/* Paused or scrubbing: the spinner holds still with everything else. */
+.paused .spinner {
+  animation-play-state: paused;
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.pending {
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 1.5px dashed currentColor;
+  border-radius: var(--shape-round);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+
+/* Canvas plus key row: one surface (the keys sit inside it in Figma). */
+.field {
+  position: relative;
+  background: var(--background-neutral-secondary);
+}
+
+.canvas {
+  position: relative;
+  overflow: hidden;
+}
+
+/* The pile tree's links, drawn under the dots. */
+.links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* As the lab tree's compact connectors. */
+.link {
+  fill: none;
+  stroke: var(--background-neutral-septenary);
+  stroke-width: 1.5;
+}
+
+/* Everything the timeline moves, over the canvas and the key row. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--shape-round);
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* "52 animals": the cluster's one-line caption. */
+.count {
+  @include type-body-3-semibold;
+  position: absolute;
+  margin: 0;
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+}
+
+/* "Training / 46 animals": word over count, centered under a cluster. */
+.caption {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.captionWord {
+  @include type-body-3-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.captionCount {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-secondary);
+}
+
+/* The label legend and the dot scale: one line each, placed by transform. */
+.key {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.keyItem {
+  @include type-body-4-regular;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  color: var(--text-neutral-primary);
+}
+
+.keyDot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--shape-round);
+}
+
+/* A question chip: its pile's question, then the node it leaves behind. */
+.question {
+  @include type-body-4-semibold;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+  /* Lighting along a test row's path eases on and off rather than snapping. */
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+/* A collapsed branch: the questions below it, not grown. */
+.more {
+  border-style: dashed;
+  background: transparent;
+  color: var(--text-neutral-secondary);
+}
+
+/* The first test row's path, as the lab tree traces a row. */
+.linkLit {
+  fill: none;
+  stroke: var(--border-selected-primary);
+  stroke-width: 2;
+}
+
+.questionLit {
+  border-color: var(--border-selected-primary);
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary);
+}
+
+/* The answer on a link ("yes", "≤ 3.5"), as the lab tree's compact edge label. */
+.branch {
+  @include type-body-4-semibold;
+  position: absolute;
+  max-width: 132px;
+  padding: 1px 10px;
+  overflow: hidden;
+  border-radius: var(--shape-round);
+  background: var(--background-neutral-secondary);
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform-origin: 50% 100%;
+  /* Lighting along a test row's path eases on and off rather than snapping. */
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.branchLit {
+  background: var(--background-selected-primary);
+  color: var(--text-selected-primary);
+}
+
+/* The row under test's card (Figma: AI Lab 2, 6345:22954): its name, its
+   values, its label and the AI's prediction; then, in place, the results. */
+.rowCard {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md, 8px);
+  background: var(--background-neutral-primary);
+}
+
+.rowCardBody,
+.resultBody {
+  position: absolute;
+  inset: 0 0 auto;
+}
+
+.rowTitle {
+  @include type-body-4-semibold;
+  box-sizing: border-box;
+  height: 27px;
+  margin: 0;
+  padding: 4px 8px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-neutral-primary);
+  color: var(--text-neutral-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowLines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 10px;
+}
+
+.rowLine {
+  @include type-body-4-regular;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 18px;
+  margin: 0;
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+}
+
+/* The real label, then what the AI predicts: right or wrong reads from
+   the two lines, not from color. */
+.rowFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.rowKey {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowValue {
+  @include type-body-4-semibold;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Footer: key and label both give way, in proportion, when they don't fit. */
+.rowFooter .rowKey {
+  flex: 0 1 auto;
+}
+
+.rowFooter .rowValue {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.rowText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The results card: accuracy on every test row, and the count. */
+.resultBody {
+  padding: 6px 10px;
+}
+
+.resultValue {
+  @include type-body-3-semibold;
+  margin: 0;
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+}
+
+.resultDetail {
+  @include type-body-4-regular;
+  margin: 0;
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+}
+
+/* A settled pile's prediction, under it. */
+.leafLabel {
+  @include type-body-4-semibold;
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-neutral-primary);
+  white-space: nowrap;
+  transform-origin: 50% 0;
+}
+
+.statement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 56px;
+  padding: 0 24px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+

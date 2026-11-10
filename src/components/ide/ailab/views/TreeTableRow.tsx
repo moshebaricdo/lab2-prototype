@@ -23,11 +23,13 @@ import {
   GUESS_FLY_MS,
   GROW_SLOW,
   intakeTiming,
+  splitModel,
   useTrainingWalk,
   useWalkPlayback,
   type IntakeTiming,
   type TallyEntry,
   type TrainingStageProps,
+  type TrainingStory,
   type WalkState,
 } from "./trainingWalk";
 import { labelFill, OTHER_LABEL_INDEX } from "./viz/labelPalette";
@@ -41,6 +43,7 @@ import {
 } from "./viz/SortingTree";
 import { SplitScan } from "./viz/SplitScan";
 import { ReelRow, TableIntro } from "./TableIntro";
+import { TableSplit } from "./TableSplit";
 import styles from "./TreeTableRow.module.scss";
 
 /**
@@ -62,6 +65,11 @@ const FOLDED_TOOLTIP_MAX = 24;
 const CANVAS_HEIGHT = 437;
 /** The test row's dock over the canvas bottom. Mirrored by `.dock` in the SCSS. */
 const DOCK_HEIGHT = 57;
+/**
+ * `split`: the dock is the tray, with the waiting test rows peeking under
+ * the top one. Mirrored by `.dockTray` in the SCSS.
+ */
+const TRAY_HEIGHT = 67;
 /**
  * Canvas inset on top and bottom, inside which the tree is centered (on top
  * of the stage's own 20px padding). Mirrored by `.canvas` in the SCSS.
@@ -91,12 +99,16 @@ export function tableRowTitle(state: WalkState): string {
 
 /**
  * The lab's decision-tree training modal (default `trainingAnimation`):
- * plays the sort-and-quiz beats on timers through `TreeTableRow`.
+ * plays the sort-and-quiz beats on timers through `TreeTableRow`, as the
+ * `sort` story or opened by the sheet splitting (`split`).
  */
-export function TrainingTableRow(props: TrainingRowWalkProps) {
+export function TrainingTableRow({
+  story = "sort",
+  ...props
+}: TrainingRowWalkProps & { story?: TrainingStory }) {
   const { open, onClose, onTest, columns, labelColumn, features, canTest } =
     props;
-  const walk = useTrainingWalk(props);
+  const walk = useTrainingWalk(props, story);
   const { state, instant, skip, paused, togglePause, restart } =
     useWalkPlayback(open, walk);
   return (
@@ -148,7 +160,20 @@ export function TreeTableRow({
     rows,
     titleColumn,
   } = data;
-  const { score, quiz, tally, labelName, story, scanPlan, growPlan, params } = walk;
+  const {
+    score,
+    quiz,
+    tally,
+    labelName,
+    story,
+    scanPlan,
+    growPlan,
+    params,
+    trainRows,
+    trainSheetIndexes,
+    holdout,
+    testResults,
+  } = walk;
   const timeScale = params.scaleCssWithSpeed && speed !== 1 ? 1 / speed : 1;
   const scaleMs = (ms: number) => Math.max(0, Math.round(ms * timeScale));
   const resolvedScanMeter = scanMeter ?? params.scanMeter;
@@ -164,7 +189,7 @@ export function TreeTableRow({
 
   const baseModel = useSortingModel(
     tree,
-    rows,
+    trainRows,
     labelColumn,
     labels,
     params.look ?? "compact",
@@ -181,12 +206,15 @@ export function TreeTableRow({
     : 0;
   /* `grow` asks its questions in the order rows first mixed their piles; the
      slow rows' dots are handed off by the row morphing onto them. */
+  const split = story === "split";
   const model = useMemo(
     () =>
       growPlan
         ? withSplitOrder(baseModel, growPlan.order, growPlan.arrival, slowCount)
-        : baseModel,
-    [baseModel, growPlan, slowCount],
+        : split
+          ? splitModel(baseModel)
+          : baseModel,
+    [baseModel, growPlan, slowCount, split],
   );
   const current = state.quiz >= 0 ? quiz[state.quiz] : undefined;
   const row = current ? rows[current.result.rowIndex] : undefined;
@@ -246,6 +274,15 @@ export function TreeTableRow({
     () => features.slice(0, MAX_FEATURES),
     [features],
   );
+  /* `split`: the chosen columns in sheet order, so the sheet's strips land
+     square on the tray's cells. */
+  const splitFeatures = useMemo(
+    () =>
+      columns
+        .map((column) => column.id)
+        .filter((id) => growFeatures.includes(id)),
+    [columns, growFeatures],
+  );
 
   const revealed = current !== undefined && state.revealed > state.quiz;
   /** The cell grades itself the moment the guess lands, not at the reveal beat. */
@@ -289,10 +326,59 @@ export function TreeTableRow({
   const hasTest =
     state.act !== "training" && current !== undefined && row !== undefined;
   const sheetOn = hasTest && !state.checked;
-  const docked = sheetOn || topOn;
+  /* `split`: the tray holds the test rows from the moment they leave the
+     sheet to the score, so the dock never goes away. The top one is the
+     first row Testing will quiz. */
+  const trayOn =
+    split && holdout.length > 0 && (state.split >= 5 || state.read);
+  const trayQuiz = trayOn && !hasTest ? quiz[0] : undefined;
+  const trayRecord = trayQuiz ? rows[trayQuiz.result.rowIndex] : undefined;
+  const testsLeft = Math.max(
+    0,
+    holdout.length - (state.quiz >= 0 ? state.quiz + 1 : 0),
+  );
+  const docked = sheetOn || topOn || trayOn;
+  const dockHeight = split ? TRAY_HEIGHT : DOCK_HEIGHT;
+  /* `split` never grades the tree's own rows: no hollow dots, no leaf marks. */
+  const treeState = useMemo(
+    () => (split ? { ...state, checked: false } : state),
+    [split, state],
+  );
+  const hiddenLabel = (
+    <span className={styles.hiddenLabel} aria-label="hidden">
+      ?
+    </span>
+  );
   const headerName = (id: string) => columnById(columns, id)?.name ?? id;
-  const noun = (count: number) => `${rowNoun}${count === 1 ? "" : "s"}`;
+  /* `split` says "row" when the sheet has no title column to name one by. */
+  const unit = split && !titleColumn ? "row" : rowNoun;
+  const noun = (count: number) => `${unit}${count === 1 ? "" : "s"}`;
   const perDot = Math.round(model.rowsPerDot);
+  /* The status on the statement row's right; `split` narrates its opening. */
+  const phaseWord =
+    split && state.act === "training"
+      ? (state.split >= 0 && state.split < 4) || (state.split < 0 && !state.rootShown)
+        ? "Reading the data"
+        : state.split === 4
+          ? "Splitting the data"
+          : "Training"
+      : state.act === "training"
+        ? "Training"
+        : "Testing";
+  const phaseCount =
+    rowsIn !== undefined
+      ? `${rowsIn.toLocaleString()} of ${rows.length.toLocaleString()} ${noun(rows.length)}`
+      : split && state.act === "training"
+        ? (state.split >= 0 && state.split < 4) || (state.split < 0 && !state.rootShown)
+          ? `${rows.length.toLocaleString()} ${noun(rows.length)}`
+          : state.split === 4
+            ? undefined
+            : `${trainRows.length.toLocaleString()} ${noun(trainRows.length)}`
+        : split && state.act === "testing"
+          ? `${holdout.length} ${noun(holdout.length)} the tree never saw`
+          : undefined;
+  const percent =
+    score.total > 0 ? Math.round((score.right / score.total) * 100) : 0;
   /* Explorable once the run is over; nodes stay plain (no click, no modal). */
   const panZoom = usePanZoom(state.act === "done", "Finished decision tree");
   const greyTaken = tally.some((entry) => entry.fill === NEUTRAL_FILL);
@@ -432,6 +518,31 @@ export function TreeTableRow({
           shrinkFrom={params.introShrinkFrom}
         />
       ) : null}
+      {split && state.split >= 0 ? (
+        <TableSplit
+          columns={columns}
+          rows={rows}
+          titleColumn={titleColumn}
+          features={splitFeatures}
+          labelColumn={labelColumn}
+          trainSheetIndexes={trainSheetIndexes}
+          holdout={holdout}
+          model={model}
+          phase={state.split}
+          instant={instant}
+          boardRef={boardRef}
+          rowNoun={rowNoun}
+          tally={tally}
+          showSheet={params.splitShowSheet}
+          bloomMs={scaleMs(params.splitBloomMs)}
+          colorMs={scaleMs(params.splitColorMs)}
+          legendMs={scaleMs(params.splitLegendMs)}
+          separateMs={scaleMs(params.splitSeparateMs)}
+          focusMs={scaleMs(params.splitFocusMs)}
+          flyMs={scaleMs(params.splitFlyMs)}
+          flyStaggerMs={scaleMs(params.splitFlyStaggerMs)}
+        />
+      ) : null}
       <div
         {...panZoom.frameProps}
         className={`${styles.field} ${panZoom.frameProps.className}`}
@@ -441,7 +552,7 @@ export function TreeTableRow({
         <div
           className={[
             styles.canvas,
-            sheetOn ? styles.canvasDocked : "",
+            trayOn ? styles.canvasDockedTray : sheetOn ? styles.canvasDocked : "",
             topOn ? styles.canvasDockedTop : "",
           ]
             .filter(Boolean)
@@ -452,7 +563,7 @@ export function TreeTableRow({
               model={model}
               columns={columns}
               labels={labels}
-              state={state}
+              state={treeState}
               marble={
                 current && state.step >= 0
                   ? {
@@ -469,13 +580,15 @@ export function TreeTableRow({
               }
               instant={instant}
               maxHeight={
-                CANVAS_HEIGHT - CANVAS_PAD_Y * 2 - (docked ? DOCK_HEIGHT : 0)
+                CANVAS_HEIGHT - CANVAS_PAD_Y * 2 - (docked ? dockHeight : 0)
               }
               maxScale={params.maxTreeScale ?? MAX_TREE_SCALE}
               resizeTransition={docked ? sheetInTransition : sheetOutTransition}
-              askOnArrival={story === "scan" ? "leaves" : true}
+              askOnArrival={story === "scan" || split ? "leaves" : true}
               incoming={intakeRank >= 0 ? intakeRank : undefined}
-              pairedBranches={growPlan !== undefined && growPlan.growth !== "organic"}
+              pairedBranches={
+                split || (growPlan !== undefined && growPlan.growth !== "organic")
+              }
               overlay={
                 scanning ? (
                   <SplitScan
@@ -577,26 +690,67 @@ export function TreeTableRow({
             </div>
           </div>
         ) : null}
-        <div className={styles.dock}>
+        <div
+          className={`${styles.dock} ${split ? styles.dockTray : ""}`}
+          data-dock-tray={split ? "" : undefined}
+        >
           <div
-            className={`${styles.sheetLayer} ${sheetOn ? styles.sheetLayerOn : ""}`}
-            aria-hidden={!sheetOn || undefined}
+            className={`${styles.sheetLayer} ${sheetOn || trayOn ? styles.sheetLayerOn : ""}`}
+            aria-hidden={!(sheetOn || trayOn) || undefined}
           >
-            {hasTest && row && current
-              ? sheet(
-                  row,
-                  current.result.rowIndex,
-                  `Row ${current.result.rowIndex + 1} from the table`,
-                  treeFeatures,
-                  {
-                    featureClass: (feature) =>
-                      feature === activeFeature ? styles.tdAsked : "",
-                    featureStyle: (feature) =>
-                      feature === activeFeature || feature === previousFeature
-                        ? boldDelay
-                        : undefined,
-                    labelRef: labelCellRef,
-                    label: state.guessed ? (
+            {split && state.checked ? (
+              <div
+                className={styles.chips}
+                aria-label={`Results for ${holdout.length} test ${noun(holdout.length)}`}
+              >
+                <span className={styles.chipsLabel}>
+                  Test {noun(holdout.length)}
+                </span>
+                <span className={styles.chipRow}>
+                  {testResults.map((result) => (
+                    <span
+                      key={result.rowIndex}
+                      className={`${styles.chip} ${result.correct ? "" : styles.chipWrong}`}
+                      style={{
+                        color: labelFill(model.grouping.indexOf(result.actual)),
+                      }}
+                      title={`Row ${result.rowIndex + 1}: guessed ${result.predicted}${
+                        result.correct ? "" : `, was ${result.actual}`
+                      }`}
+                    />
+                  ))}
+                </span>
+              </div>
+            ) : hasTest && row && current ? (
+              sheet(
+                row,
+                current.result.rowIndex,
+                `Row ${current.result.rowIndex + 1} from the table`,
+                split ? splitFeatures : treeFeatures,
+                {
+                  featureClass: (feature) =>
+                    feature === activeFeature ? styles.tdAsked : "",
+                  featureStyle: (feature) =>
+                    feature === activeFeature || feature === previousFeature
+                      ? boldDelay
+                      : undefined,
+                  labelRef: labelCellRef,
+                  label: state.guessed ? (
+                    <>
+                      {/* `split`: the "?" holds until the guess lands on it. */}
+                      {split ? (
+                        <span
+                          className={`${styles.hiddenLabel} ${styles.hiddenLabelOut}`}
+                          style={
+                            instant
+                              ? undefined
+                              : { animationDelay: `${Math.max(0, guessLandMs - 120)}ms` }
+                          }
+                          aria-hidden
+                        >
+                          ?
+                        </span>
+                      ) : null}
                       <span
                         className={`${styles.guess} ${styles.guessEnter}`}
                         style={
@@ -611,15 +765,43 @@ export function TreeTableRow({
                         />
                         {current.result.predicted}
                       </span>
-                    ) : null,
-                  },
-                )
-              : null}
+                    </>
+                  ) : split ? (
+                    hiddenLabel
+                  ) : null,
+                },
+              )
+            ) : trayQuiz && trayRecord ? (
+              sheet(
+                trayRecord,
+                trayQuiz.result.rowIndex,
+                `Test row ${trayQuiz.result.rowIndex + 1}, set aside`,
+                splitFeatures,
+                { label: hiddenLabel },
+              )
+            ) : null}
+            {split && trayOn && !state.checked && testsLeft > 1 ? (
+              <div className={styles.trayStack} aria-hidden>
+                <span />
+                {testsLeft > 2 ? <span /> : null}
+              </div>
+            ) : null}
           </div>
         </div>
+        {split && holdout.length > 0 ? (
+          <span
+            className={`${styles.trayTag} ${trayOn && state.read && !state.checked ? styles.trayTagOn : ""}`}
+            aria-hidden={!trayOn || undefined}
+          >
+            {state.quiz >= 0
+              ? `Test ${unit} ${state.quiz + 1} of ${holdout.length}`
+              : `${holdout.length} test ${noun(holdout.length)} set aside`}
+          </span>
+        ) : null}
       </div>
       <div
         className={`${styles.legend} ${state.legend ? styles.legendOn : ""}`}
+        data-stage-legend
         aria-label={`${labelName} colors`}
       >
         <LegendKeys tally={tally} />
@@ -657,19 +839,22 @@ export function TreeTableRow({
         />
         {state.checked ? (
           <span className={styles.accuracy}>
-            {score.total > 0
-              ? Math.round((score.right / score.total) * 100)
-              : 0}
-            % Accuracy
+            {split && score.total > 0 ? (
+              <span className={styles.accuracyCount}>
+                {score.right} of {score.total} right ·{" "}
+              </span>
+            ) : null}
+            {percent}% Accuracy
           </span>
         ) : (
-          <span key={state.act} className={styles.phase} role="status">
-            {state.act === "training" ? "Training" : "Testing"}
-            {rowsIn !== undefined ? (
-              <span className={styles.phaseCount}>
-                {rowsIn.toLocaleString()} of {rows.length.toLocaleString()}{" "}
-                {noun(rows.length)}
-              </span>
+          <span
+            key={`${state.act}:${phaseWord}`}
+            className={styles.phase}
+            role="status"
+          >
+            {phaseWord}
+            {phaseCount !== undefined ? (
+              <span className={styles.phaseCount}>{phaseCount}</span>
             ) : null}
             <FaIcon name="spinner" fontSize="14px" className={styles.spinner} />
           </span>
@@ -1053,7 +1238,11 @@ function LegendKeys({ tally }: { tally: TallyEntry[] }) {
   );
 
   return (
-    <ul ref={rowRef} className={`${styles.legendItems} ${styles.legendKeys}`}>
+    <ul
+      ref={rowRef}
+      className={`${styles.legendItems} ${styles.legendKeys}`}
+      data-legend-keys
+    >
       {shown.map((item) => (
         <li key={item.label} className={styles.legendItem}>
           {entry(item)}

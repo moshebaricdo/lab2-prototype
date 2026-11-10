@@ -79,6 +79,14 @@ export const TRAINING_VARIANTS: TrainingVariant[] = [
     ...TABLE_ROW_CHROME,
   },
   {
+    id: "split",
+    name: "Split, sort, test",
+    note: "One story, three acts: the sheet sets its test rows aside into the tray, the training rows become the root pile and the best question splits it (sort), then the rows the tree never saw are quizzed and scored.",
+    Stage: TreeTableRow,
+    story: "split",
+    ...TABLE_ROW_CHROME,
+  },
+  {
     id: "scan",
     name: "Scan for the best question",
     note: "How our trainer really works: each pile tries every column's question (ghost piles + how well it sorts), keeps the best, then splits.",
