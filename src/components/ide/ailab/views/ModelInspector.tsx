@@ -14,7 +14,7 @@ import {
   slugifyModelName,
 } from "../../../../lib/aiLab";
 import { PredictionStatement } from "./PredictionStatement";
-import { formatAccuracyPercent } from "./ResultsModal";
+import { formatAccuracyPercent, formatAccuracyWhole } from "./ResultsModal";
 import styles from "./ModelInspector.module.scss";
 
 export type ModelInspectorTab = "scorecard" | "card";
@@ -113,7 +113,7 @@ export function ScorecardModal({
             </p>
           </div>
           <div className={styles.accuracyBlock}>
-            <p className={styles.accuracy}>{Math.round(model.accuracy * 100)}%</p>
+            <p className={styles.accuracy}>{formatAccuracyWhole(model.accuracy)}</p>
             <span className={styles.accuracyNote}>
               {correctCount} of {results.length} rows
             </span>
@@ -363,7 +363,7 @@ function ModelCard({
         </div>
         <div>
           <dt>Accuracy</dt>
-          <dd>{Math.round(model.accuracy * 100)}%</dd>
+          <dd>{formatAccuracyWhole(model.accuracy)}</dd>
         </div>
       </dl>
       <form

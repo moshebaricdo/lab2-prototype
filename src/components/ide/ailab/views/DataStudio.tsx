@@ -51,6 +51,7 @@ import { PredictionStatement } from "./PredictionStatement";
 import { TrainingModal } from "./TrainingModal";
 import { TreeThumbnail } from "./viz/TreeGrowth";
 import styles from "./DataStudio.module.scss";
+import { formatAccuracyWhole } from "./ResultsModal";
 
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map(String) : [];
@@ -481,7 +482,7 @@ function TrainRail({
     .filter((column) => usable(column.id))
     .map((column) => ({ value: column.id, label: column.name }));
   const model = lab.model;
-  const accuracy = model ? Math.round(model.accuracy * 100) : undefined;
+  const accuracy = model ? formatAccuracyWhole(model.accuracy) : undefined;
   const correct = model
     ? model.holdoutResults.filter((result) => result.correct).length
     : 0;
@@ -731,7 +732,7 @@ function TrainRail({
             ) : null}
             <div className={styles.metricRow}>
               <div className={`${styles.metric} ${styles.metricDivider}`}>
-                <span className={styles.metricValue}>{accuracy}%</span>
+                <span className={styles.metricValue}>{accuracy}</span>
                 <span className={styles.metricLabel}>Accuracy</span>
               </div>
               <div className={styles.metric}>

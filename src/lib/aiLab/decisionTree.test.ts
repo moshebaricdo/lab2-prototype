@@ -71,10 +71,9 @@ describe("decision tree matches production ml-cart", () => {
       selectedFeatures: ["value", "noise"],
     });
     expect(model.maxDepth).toBe(1);
-    const trained = rows
-      .map((_, index) => index)
-      .filter((index) => !model.holdoutRowIndexes.includes(index));
-    expect(model.holdoutResults.map((result) => result.rowIndex)).toEqual(trained);
+    expect(model.holdoutResults.map((result) => result.rowIndex)).toEqual(
+      model.holdoutRowIndexes,
+    );
     expect(model.holdoutResults.every((result) => result.correct)).toBe(true);
     for (const index of model.holdoutRowIndexes) {
       expect(traceDecisionTree(model.tree!, rows[index]!).prediction).toBe(

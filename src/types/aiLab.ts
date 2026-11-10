@@ -231,10 +231,9 @@ export interface AiLabTrainedModel {
    */
   holdoutRowIndexes: number[];
   /**
-   * Scored rows used for reported accuracy. KNN: the reserved rows that
-   * also selected k. Decision tree: the rows the tree was trained on.
-   * The reserved rows still choose the depth, and the diagram counts them
-   * separately.
+   * The reserved rows, scored: reported accuracy for every algorithm, as
+   * production grades its accuracy-check rows. The same rows chose the
+   * tree's depth or KNN's k.
    */
   holdoutResults: AiLabHoldoutResult[];
   accuracy: number;

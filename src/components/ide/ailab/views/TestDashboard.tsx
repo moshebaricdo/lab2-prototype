@@ -47,6 +47,7 @@ import { ModelActions } from "./ModelActions";
 import { ExportModal, type ModelInspectorTab } from "./ModelInspector";
 import {
   formatAccuracyPercent,
+  formatAccuracyWhole,
   ResultsModal,
   type ResultsTab,
 } from "./ResultsModal";
@@ -657,7 +658,7 @@ export function TestDashboard({ lab, onOpenModel }: TestDashboardProps) {
                 ) : null}
                 <span className={styles.metricDot} aria-hidden />
                 <span className={styles.metricStat}>
-                  {Math.round(model.accuracy * 100)}% Accuracy
+                  {formatAccuracyWhole(model.accuracy)} Accuracy
                 </span>
               </p>
               <div className={styles.metricActions}>

@@ -18,6 +18,7 @@ import { TABLE_ROW_SHELL, TrainingTableRow } from "./TreeTableRow";
 import { TreeGrowth, treeScore, useGrowthLayout } from "./viz/TreeGrowth";
 import { prefersReducedMotion } from "./viz/useStepPlayback";
 import styles from "./TrainingModal.module.scss";
+import { formatAccuracyWhole } from "./ResultsModal";
 
 /** Time each node takes to land while the tree grows. */
 const NODE_MS = 650;
@@ -96,7 +97,7 @@ function TrainingQuietModal({
   canTest,
   accuracy,
 }: TrainingBodyProps & { accuracy: number }) {
-  const percent = Math.round(accuracy * 100);
+  const percent = formatAccuracyWhole(accuracy);
   return (
     <TrainingModalShell
       {...TABLE_ROW_SHELL}
@@ -131,7 +132,7 @@ function TrainingQuietModal({
             size="large"
             fit
           />
-          <span className={styles.quietAccuracy}>{percent}% Accuracy</span>
+          <span className={styles.quietAccuracy}>{percent} Accuracy</span>
         </div>
       </div>
     </TrainingModalShell>

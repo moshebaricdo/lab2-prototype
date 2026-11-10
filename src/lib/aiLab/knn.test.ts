@@ -66,11 +66,14 @@ describe("holdoutIndexes", () => {
     expect(holdoutIndexes(100, 0)).toEqual([]);
   });
 
-  it("draws the same count at random and never the last row", () => {
-    const drawn = randomHoldoutIndexes(20, undefined, () => 0);
-    expect(drawn).toEqual([0, 1]);
+  it("draws the same count at random, any row included, as production does", () => {
     expect(randomHoldoutIndexes(52)).toHaveLength(6);
-    expect(randomHoldoutIndexes(52)).not.toContain(51);
+    /* getRandomInt(rowCount) can land on the last row. */
+    let draws = 0;
+    const lastThenFirst = () => (draws++ === 0 ? 0.999 : 0);
+    expect(randomHoldoutIndexes(20, undefined, lastThenFirst)).toEqual([0, 19]);
+    /* A stuck source still returns the full count. */
+    expect(randomHoldoutIndexes(20, undefined, () => 0)).toEqual([0, 1]);
     expect(randomHoldoutIndexes(14, 0)).toEqual([]);
   });
 });
@@ -132,7 +135,7 @@ describe("trainModel knn", () => {
     expect(classificationKCandidates(36)).toContain(model.knnK);
   });
 
-  it("honors a locked k and leave-one-out when holdoutCount is 0", () => {
+  it("honors a locked k and grades nothing when holdoutCount is 0", () => {
     const rows = [row(0, 0, "A"), row(0.1, 0, "A"), row(8, 0, "B")];
     const model = trainModel({
       algorithm: "knn",
@@ -145,7 +148,9 @@ describe("trainModel knn", () => {
     });
     expect(model.knnK).toBe(1);
     expect(model.holdoutRowIndexes).toEqual([]);
-    expect(model.holdoutResults).toHaveLength(3);
+    /* As production: no reserved rows, no predictions, no accuracy ("—"). */
+    expect(model.holdoutResults).toEqual([]);
+    expect(model.accuracy).toBeNaN();
   });
 });
 
@@ -167,7 +172,10 @@ describe("trainModel decision tree", () => {
     const trainedIndexes = rows
       .map((_, index) => index)
       .filter((index) => !model.holdoutRowIndexes.includes(index));
-    expect(model.holdoutResults.map((result) => result.rowIndex)).toEqual(trainedIndexes);
+    /* Graded on the reserved rows, as production grades its accuracy-check rows. */
+    expect(model.holdoutResults.map((result) => result.rowIndex)).toEqual(
+      model.holdoutRowIndexes,
+    );
 
     const tree = model.tree!;
     const visits = nodeVisits(tree, rows, model.holdoutRowIndexes, "label");
@@ -180,7 +188,7 @@ describe("trainModel decision tree", () => {
     );
   });
 
-  it("scores the trained rows when the reserved rows are random", () => {
+  it("scores the reserved rows when they are random", () => {
     const rows: AiLabDataRow[] = [];
     for (let index = 0; index < 20; index += 1) {
       rows.push(row(index < 10 ? 0 : 10, 0, index < 10 ? "A" : "B"));
@@ -194,13 +202,8 @@ describe("trainModel decision tree", () => {
       randomizeTestData: true,
     });
     expect(model.holdoutRowIndexes).toHaveLength(2);
-    expect(model.holdoutRowIndexes).not.toContain(19);
-    expect(model.holdoutRowIndexes).not.toEqual(holdoutIndexes(20));
-    const trainedIndexes = rows
-      .map((_, index) => index)
-      .filter((index) => !model.holdoutRowIndexes.includes(index));
     expect(model.holdoutResults.map((result) => result.rowIndex)).toEqual(
-      trainedIndexes,
+      model.holdoutRowIndexes,
     );
   });
 });

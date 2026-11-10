@@ -47,11 +47,20 @@ export type ResultsTab = "scorecard" | "previous";
 
 const SCORECARD_PAGE_SIZE = 200;
 
-/** Up to two decimals, trailing zeros dropped so 68 stays 68% and 99.40 stays 99.4%. */
+/**
+ * Up to two decimals, trailing zeros dropped so 68 stays 68% and 99.40 stays
+ * 99.4%. A model graded on no rows has no accuracy: "—", as production shows.
+ */
 export function formatAccuracyPercent(accuracy: number): string {
+  if (!Number.isFinite(accuracy)) return "—";
   const percent = Math.round(accuracy * 10000) / 100;
   if (Number.isInteger(percent)) return `${percent}%`;
   return `${percent.toFixed(2).replace(/0$/, "")}%`;
+}
+
+/** Whole percent for compact spots ("68%"), or "—" with no accuracy. */
+export function formatAccuracyWhole(accuracy: number): string {
+  return Number.isFinite(accuracy) ? `${Math.round(accuracy * 100)}%` : "—";
 }
 
 interface ResultsModalProps {

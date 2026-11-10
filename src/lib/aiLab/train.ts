@@ -50,10 +50,11 @@ export function holdoutIndexes(
 }
 
 /**
- * Production's random reserve (`randomizeTestData`). Same count as the
- * end split. The draw matches `getRandomInt(length - 1)`, which never
- * selects the current last index, so the sheet's last row stays in
- * training. Returned indexes are in sheet order.
+ * Production's random reserve (\`randomizeTestData\`), as its
+ * \`reserveRowIndices\`: the same count as the end split, each row drawn with
+ * \`getRandomInt(rowCount)\` (any row, the last included) until that many
+ * distinct rows are in. Returned in sheet order. A stuck \`random\` (tests)
+ * stops after a while and takes the first rows still free.
  */
 export function randomHoldoutIndexes(
   rowCount: number,
@@ -62,16 +63,14 @@ export function randomHoldoutIndexes(
 ): number[] {
   const take = reservedCount(rowCount, holdoutCount);
   if (take === 0) return [];
-  const pool = Array.from({ length: rowCount }, (_, index) => index);
-  const reserved: number[] = [];
-  while (reserved.length < take) {
-    const index = Math.floor(random() * Math.floor(pool.length - 1));
-    const picked = pool.splice(index, 1)[0];
-    if (picked === undefined) break;
-    reserved.push(picked);
+  const reserved = new Set<number>();
+  for (let tries = 0; reserved.size < take && tries < take * 1000; tries += 1) {
+    reserved.add(Math.floor(random() * Math.floor(rowCount)));
   }
-  reserved.sort((left, right) => left - right);
-  return reserved;
+  for (let index = 0; reserved.size < take && index < rowCount; index += 1) {
+    reserved.add(index);
+  }
+  return [...reserved].sort((left, right) => left - right);
 }
 
 export function trainingRows(
@@ -412,13 +411,12 @@ export function trainModel(options: {
     knnK,
   };
 
-  const reserved = new Set(holdoutRowIndexes);
-  const trainedRowIndexes = options.rows
-    .map((_, index) => index)
-    .filter((index) => !reserved.has(index));
+  /* Every algorithm is graded on the reserved rows, as production's
+     BaseTrainer does: the same rows that chose the tree's depth or k. With
+     none reserved there is nothing to grade (production reports "—"). */
   const scored =
     options.algorithm === "decisionTree" && tree
-      ? trainedRowIndexes.map((rowIndex) =>
+      ? holdoutRowIndexes.map((rowIndex) =>
           scoreTreeRow(
             options.rows,
             options.columns,
@@ -443,28 +441,12 @@ export function trainModel(options: {
               ),
             ),
           )
-        : options.rows.map((row, rowIndex) =>
-            scorePrediction(
-              options.rows,
-              options.columns,
-              options.labelColumn,
-              rowIndex,
-              predictKnn(
-                options.rows,
-                row,
-                options.selectedFeatures,
-                options.labelColumn,
-                options.columns,
-                knnK,
-                [rowIndex],
-              ).prediction,
-            ),
-          );
+        : [];
   const correctCount = scored.filter((result) => result.correct).length;
 
   return {
     ...draft,
     holdoutResults: scored,
-    accuracy: scored.length === 0 ? 0 : correctCount / scored.length,
+    accuracy: scored.length === 0 ? Number.NaN : correctCount / scored.length,
   };
 }

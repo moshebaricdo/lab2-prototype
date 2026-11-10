@@ -10,6 +10,7 @@ import {
 import type { AiLabController } from "../../../../hooks/useAiLabState";
 import { predictionStatement } from "../../../../lib/aiLab";
 import styles from "./AiLabGuidedWorkspace.module.scss";
+import { formatAccuracyWhole } from "./ResultsModal";
 
 const K_OPTIONS = [
   { value: "1", label: "k = 1" },
@@ -32,7 +33,7 @@ export function GuidedTrainingBar({ lab }: GuidedTrainingBarProps) {
   const featureColumns = columns.filter(
     (column) => column.id !== lab.labelColumn,
   );
-  const accuracy = lab.model ? Math.round(lab.model.accuracy * 100) : undefined;
+  const accuracy = lab.model ? formatAccuracyWhole(lab.model.accuracy) : undefined;
 
   const runTrain = () => {
     if (!lab.canTrain || isTraining) return;
@@ -143,7 +144,7 @@ export function GuidedTrainingBar({ lab }: GuidedTrainingBarProps) {
       {lab.model ? (
         <div className={styles.builderResult}>
           <Alert sentiment="success" size="small">
-            Trained. {accuracy}% accuracy on the current sheet.
+            Trained. {accuracy} accuracy on the current sheet.
           </Alert>
           <Button
             size="small"
