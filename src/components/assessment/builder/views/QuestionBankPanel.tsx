@@ -12,7 +12,6 @@ import type {
   AssessmentCourseBank,
   AssessmentSection,
   QuestionItem,
-  QuestionItemKind,
   QuizPlacement,
 } from "../../../../types/assessmentBuilder";
 import {
@@ -26,7 +25,12 @@ import {
   QuestionBankFilterMenu,
   type BankSort,
 } from "./QuestionBankFilterMenu";
-import { questionKindMeta, FINAL_BANK_KIND_FILTER_OPTIONS } from "./questionKindMeta";
+import {
+  bankKindFilterId,
+  questionKindMeta,
+  FINAL_BANK_KIND_FILTER_OPTIONS,
+  type BankKindFilterId,
+} from "./questionKindMeta";
 import { QuestionBankPreviewModal } from "./QuestionBankPreviewModal";
 import {
   BANK_ADD_NEW_SECTION,
@@ -35,17 +39,15 @@ import {
 } from "./bankAddMenu";
 import styles from "./QuestionBankPanel.module.scss";
 
-const P0_BANK_KINDS = new Set(
-  FINAL_BANK_KIND_FILTER_OPTIONS.map((option) => option.kind),
+/** Sort-by-type order follows the filter list (MC, MS, FR, Matching). */
+const KIND_RANK = new Map<BankKindFilterId, number>(
+  FINAL_BANK_KIND_FILTER_OPTIONS.map((option, index) => [option.id, index]),
 );
 
-const KIND_RANK: Record<QuestionItemKind, number> = {
-  multi: 0,
-  freeResponse: 1,
-  match: 2,
-  dragDrop: 3,
-  fillInBlank: 4,
-};
+function kindRank(question: QuestionItem): number {
+  const id = bankKindFilterId(question);
+  return id == null ? KIND_RANK.size : (KIND_RANK.get(id) ?? KIND_RANK.size);
+}
 
 /** Figma questionListItem shows two standard chips, then +N overflow. */
 const VISIBLE_STANDARD_CHIPS = 2;
@@ -80,7 +82,7 @@ export function QuestionBankPanel({
   );
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
   const [selectedStandardIds, setSelectedStandardIds] = useState<string[]>([]);
-  const [selectedKinds, setSelectedKinds] = useState<QuestionItemKind[]>([]);
+  const [selectedKinds, setSelectedKinds] = useState<BankKindFilterId[]>([]);
   const [hideAddedItems, setHideAddedItems] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [previewQuestion, setPreviewQuestion] = useState<QuestionItem | null>(
@@ -142,7 +144,8 @@ export function QuestionBankPanel({
         if (question.listedInBank === false) {
           return false;
         }
-        if (!P0_BANK_KINDS.has(question.item.kind)) {
+        const kindFilterId = bankKindFilterId(question);
+        if (kindFilterId == null) {
           return false;
         }
         if (question.item.kind === "multi" && question.item.content.surveyMode) {
@@ -158,7 +161,7 @@ export function QuestionBankPanel({
         ) {
           return false;
         }
-        if (kindSet.size > 0 && !kindSet.has(question.item.kind)) {
+        if (kindSet.size > 0 && !kindSet.has(kindFilterId)) {
           return false;
         }
         if (hideAddedItems && resolvedQuestionIds.includes(question.bankId)) {
@@ -176,8 +179,7 @@ export function QuestionBankPanel({
       if (sort === "newest") return right.updatedAt - left.updatedAt;
       if (sort === "oldest") return left.updatedAt - right.updatedAt;
       if (sort === "kind") {
-        const kindDelta =
-          KIND_RANK[left.item.kind] - KIND_RANK[right.item.kind];
+        const kindDelta = kindRank(left) - kindRank(right);
         if (kindDelta !== 0) return kindDelta;
       }
       return left.title.localeCompare(right.title);
@@ -281,6 +283,7 @@ export function QuestionBankPanel({
               onHideAddedItemsChange={setHideAddedItems}
               isDirty={isDirty}
               onReset={handleResetFilters}
+              onDone={() => setFilterOpen(false)}
             />
           }
           aria-label="Filter questions"

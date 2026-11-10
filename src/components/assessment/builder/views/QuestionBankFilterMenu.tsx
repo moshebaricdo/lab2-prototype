@@ -7,12 +7,12 @@ import {
   TextInput,
 } from "@moshebari/cads-react";
 import { FaIcon, type FaIconName } from "@moshebari/cads-react/icons";
-import type {
-  AssessmentCourseBank,
-  QuestionItemKind,
-} from "../../../../types/assessmentBuilder";
+import type { AssessmentCourseBank } from "../../../../types/assessmentBuilder";
 import { type TaxonomyOption } from "../../../../lib/assessmentBuilder";
-import { FINAL_BANK_KIND_FILTER_OPTIONS } from "./questionKindMeta";
+import {
+  FINAL_BANK_KIND_FILTER_OPTIONS,
+  type BankKindFilterId,
+} from "./questionKindMeta";
 import { StandardsTypeaheadPanel } from "./StandardsTypeahead";
 import styles from "./QuestionBankFilterMenu.module.scss";
 
@@ -34,12 +34,14 @@ interface QuestionBankFilterMenuProps {
   standardIds: string[];
   standardOptions: TaxonomyOption[];
   onStandardIdsChange: (ids: string[]) => void;
-  kindIds: QuestionItemKind[];
-  onKindIdsChange: (kindIds: QuestionItemKind[]) => void;
+  kindIds: BankKindFilterId[];
+  onKindIdsChange: (kindIds: BankKindFilterId[]) => void;
   hideAddedItems: boolean;
   onHideAddedItemsChange: (hide: boolean) => void;
   isDirty: boolean;
   onReset: () => void;
+  /** Closes the popover. Filters already apply live, so this only dismisses. */
+  onDone: () => void;
 }
 
 const SORT_OPTIONS: Array<{ value: BankSort; label: string }> = [
@@ -51,7 +53,7 @@ const SORT_OPTIONS: Array<{ value: BankSort; label: string }> = [
 ];
 
 const KIND_OPTIONS = FINAL_BANK_KIND_FILTER_OPTIONS.map((option) => ({
-  value: option.kind,
+  value: option.id,
   label: option.label,
 }));
 
@@ -224,6 +226,7 @@ export function QuestionBankFilterMenu({
   onHideAddedItemsChange,
   isDirty,
   onReset,
+  onDone,
 }: QuestionBankFilterMenuProps) {
   const [view, setView] = useState<FilterView>("main");
   const [query, setQuery] = useState("");
@@ -491,7 +494,7 @@ export function QuestionBankFilterMenu({
             options={KIND_OPTIONS}
             value={kindIds}
             onChange={(value) =>
-              onKindIdsChange(asStringArray(value) as QuestionItemKind[])
+              onKindIdsChange(asStringArray(value) as BankKindFilterId[])
             }
             placeholder="All"
             size="extraSmall"
@@ -538,7 +541,7 @@ export function QuestionBankFilterMenu({
         </div>
       </div>
 
-      <div className={styles.actionRow}>
+      <div className={styles.menuActionRow}>
         <Button
           variant="text"
           color="secondary"
@@ -547,6 +550,14 @@ export function QuestionBankFilterMenu({
           onClick={onReset}
         >
           Clear filters
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          size="extraSmall"
+          onClick={onDone}
+        >
+          Done
         </Button>
       </div>
     </div>

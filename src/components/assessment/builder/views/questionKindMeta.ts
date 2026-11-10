@@ -76,12 +76,40 @@ export const FINAL_CREATE_QUESTION_OPTIONS: Array<
   { kind: "match", ...QUESTION_KIND_META.match },
 ];
 
-/** Bank type filter — Figma Question Type Chip set (MC / FR / Matching). */
+/**
+ * Bank type filter buckets. Multiple choice and multiple select are listed
+ * separately, matching the add menu and result-row tags, even though both
+ * are `kind: "multi"` under the hood.
+ */
+export type BankKindFilterId =
+  | "multiSingle"
+  | "multiMultiple"
+  | "freeResponse"
+  | "match";
+
 export const FINAL_BANK_KIND_FILTER_OPTIONS: Array<
-  QuestionKindMeta & { kind: QuestionItemKind }
-> = BANK_KIND_FILTER_OPTIONS.filter(
-  (option) =>
-    option.kind === "multi" ||
-    option.kind === "freeResponse" ||
-    option.kind === "match",
-);
+  QuestionKindMeta & { id: BankKindFilterId }
+> = [
+  { id: "multiSingle", ...MULTI_SELECTION_META.single },
+  { id: "multiMultiple", ...MULTI_SELECTION_META.multiple },
+  { id: "freeResponse", ...QUESTION_KIND_META.freeResponse },
+  { id: "match", ...QUESTION_KIND_META.match },
+];
+
+/** Which bank filter bucket a question falls in; null when not offered. */
+export function bankKindFilterId(
+  question: QuestionItem,
+): BankKindFilterId | null {
+  switch (question.item.kind) {
+    case "multi":
+      return question.item.content.selectionMode === "multiple"
+        ? "multiMultiple"
+        : "multiSingle";
+    case "freeResponse":
+      return "freeResponse";
+    case "match":
+      return "match";
+    default:
+      return null;
+  }
+}
