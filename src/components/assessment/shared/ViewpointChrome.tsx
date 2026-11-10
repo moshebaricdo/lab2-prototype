@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
+import type { DomainTag } from "../../../types/assessmentBuilder";
 import { Alert, Button, Tag } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import type { QuestionOutcomeTag as QuestionOutcomeTagKind } from "../../../lib/assessmentBuilder";
@@ -48,22 +49,125 @@ export function QuestionOutcomeTag({ kind }: { kind: QuestionOutcomeTagKind }) {
 interface AnswerNotesBlockProps {
   /** Student-facing answer explanation (RevealConfig.explanation). Free response puts the teacher exemplar here. */
   explanation?: string;
+  /**
+   * Standards the question is tagged with. Shown in results when the quiz
+   * breaks scores down by standard. Appended to the explanation card, or in
+   * a card of their own when the explanation is hidden.
+   */
+  standards?: DomainTag[];
+}
+
+/** One standard: name and code; expands to framework › category, wording, skills. */
+function StandardDisclosure({ tag }: { tag: DomainTag }) {
+  const [open, setOpen] = useState(false);
+  const detailsId = useId();
+  const hasDetails = Boolean(
+    tag.framework || tag.category || tag.description || tag.skills?.length,
+  );
+  const name = (
+    <span className={styles.standardName}>
+      <span className={styles.standardLabel}>{tag.label}</span>
+      {tag.code ? (
+        <>
+          <span className={styles.standardDot} aria-hidden="true" />
+          <span className={styles.standardCode}>{tag.code}</span>
+        </>
+      ) : null}
+    </span>
+  );
+  if (!hasDetails) return <li className={styles.standard}>{name}</li>;
+  return (
+    <li className={styles.standard}>
+      <button
+        type="button"
+        className={styles.standardToggle}
+        aria-expanded={open}
+        aria-controls={detailsId}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <FaIcon
+          name="chevron-right"
+          className={[styles.standardChevron, open ? styles.standardChevronOpen : ""].join(" ")}
+          fontSize="var(--text-body-sm, 12px)"
+        />
+        {name}
+      </button>
+      {open ? (
+        <div id={detailsId} className={styles.standardDetails}>
+          {tag.framework || tag.category ? (
+            <p className={styles.standardPath}>
+              {[
+                tag.framework?.label,
+                tag.category
+                  ? [tag.category.code, tag.category.label].filter(Boolean).join(" · ")
+                  : null,
+              ]
+                .filter(Boolean)
+                .join("  ›  ")}
+            </p>
+          ) : null}
+          {tag.description ? (
+            <p className={styles.standardDescription}>{tag.description}</p>
+          ) : null}
+          {tag.skills?.length ? (
+            <ul className={styles.standardSkills}>
+              {tag.skills.map((skill) => (
+                <li key={skill}>{skill}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+function StandardsList({ standards }: { standards: DomainTag[] }) {
+  return (
+    <ul className={styles.standardList}>
+      {standards.map((tag) => (
+        <StandardDisclosure key={tag.id} tag={tag} />
+      ))}
+    </ul>
+  );
 }
 
 /** Figma `answerExplanation` cards — success. Teacher-only guidance is quiz-level, not per question. */
-export function AnswerNotesBlock({ explanation }: AnswerNotesBlockProps) {
+export function AnswerNotesBlock({
+  explanation,
+  standards,
+}: AnswerNotesBlockProps) {
   const trimmedExplanation = explanation?.trim();
-  if (!trimmedExplanation) return null;
+  const hasStandards = Boolean(standards?.length);
+  if (!trimmedExplanation && !hasStandards) return null;
+  const standardsLabel = standards?.length === 1 ? "Standard" : "Standards";
   return (
     <div className={styles.notes}>
-      <article className={[styles.card, styles.cardExplanation].join(" ")}>
-        <header className={styles.cardHeader}>
-          <p className={styles.cardLabel}>Answer explanation</p>
-        </header>
-        <div className={styles.cardBody}>
-          <p className={styles.cardText}>{trimmedExplanation}</p>
-        </div>
-      </article>
+      {trimmedExplanation ? (
+        <article className={[styles.card, styles.cardExplanation].join(" ")}>
+          <header className={styles.cardHeader}>
+            <p className={styles.cardLabel}>Answer explanation</p>
+          </header>
+          <div className={styles.cardBody}>
+            <p className={styles.cardText}>{trimmedExplanation}</p>
+          </div>
+          {hasStandards ? (
+            <section className={styles.cardStandards} aria-label={standardsLabel}>
+              <p className={styles.cardSubLabel}>{standardsLabel}</p>
+              <StandardsList standards={standards!} />
+            </section>
+          ) : null}
+        </article>
+      ) : hasStandards ? (
+        <article className={[styles.card, styles.cardStandardsOnly].join(" ")}>
+          <header className={styles.cardHeader}>
+            <p className={styles.cardLabel}>{standardsLabel}</p>
+          </header>
+          <div className={styles.cardBody}>
+            <StandardsList standards={standards!} />
+          </div>
+        </article>
+      ) : null}
     </div>
   );
 }

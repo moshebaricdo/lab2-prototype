@@ -29,6 +29,7 @@ Living snapshot of **product decisions** and **prototype state** for this workst
 | [`/levels/quiz-teacher`](/levels/quiz-teacher) · [`-as-student`](/levels/quiz-teacher-as-student) · [`-response`](/levels/quiz-teacher-response) · [`-response-submitted`](/levels/quiz-teacher-response-submitted) | Teacher quiz viewpoints on the 12-question exam, including an in-progress response and a completed submission. |
 | [`/levels/assessment-builder-new`](/levels/assessment-builder-new) | Kept exploration — blank legacy outline. Listed under Experiments on `/levels`. |
 | [`/levels/assessment-builder-seeded`](/levels/assessment-builder-seeded) | Kept exploration — six-question legacy quiz. Listed under Experiments on `/levels`. |
+| [`/experiments/quiz-score-by-standard`](/experiments/quiz-score-by-standard) | **Open exploration.** Score-by-standard layouts on the results card: A meter rows, B table (**chosen, default**), C stat tiles. Figma: row 6 of [Several questions: Teacher-facing](https://www.figma.com/design/M7xfogAObPmbyZ1vTz0258/Modernizing-Assessments?node-id=484-4126). Four scenarios: student, teacher, six standards, one standard. Live quizzes take `?byStandard=bars\|table\|tiles`. |
 
 Legacy multi / FR / match / levelgroup routes remain as rendering references.
 
@@ -42,10 +43,10 @@ Quiz is a lab2 `Level`. Four **purposes** seed settings but do not lock them:
 
 | purpose | Seeds (v1) |
 |---|---|
-| `check_for_understanding` | intro off, no timer, retries on (unlimited), require-correct on, correctness on, reveal off, tutor off |
-| `practice` | intro off, retries on (unlimited), require-correct off, correctness on, reveal off, tutor on, layout scroll |
-| `exam` | intro off, retries off (require-correct hidden), correctness off, reveal hidden, tutor off |
-| `exam_simulation` | intro on, retries on (unlimited), require-correct off, correctness off, tutor off |
+| `check_for_understanding` | intro off, no timer, retries on (unlimited), require-correct on, correctness on, reveal off, by-standard off, tutor off |
+| `practice` | intro off, retries on (unlimited), require-correct off, correctness on, reveal off, by-standard off, tutor on, layout scroll |
+| `exam` | intro off, retries off (require-correct hidden), correctness off, reveal hidden, by-standard on, tutor off |
+| `exam_simulation` | intro on, retries on (unlimited), require-correct off, correctness off, by-standard on, tutor off |
 
 Create = four purpose cards. Edit = Purpose dropdown. Dirty helper: *These settings differ from a typical [Purpose]. Purpose is unchanged.*
 
@@ -63,7 +64,7 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 - Header **Save** saves the whole quiz and stays in the builder. It is off, with a tooltip naming what to fix, while a new question is unsaved, a question has open edits, the quiz is empty, a page is empty, or nothing changed since the last save. A live quiz asks first (**Save changes to a live quiz?**). Success and failure are top-center toasts; the failure toast has **Try again**, and the dev panel can fail the next save. Leaving with unsaved changes asks first, and **Leave and discard** puts the outline back to the last save.
 - Removing a saved one-off that no other quiz uses asks first (**Delete this question?**) and has no Undo. Other removals, and removing the intro, show a toast with Undo.
 - Bank: hover eye (Close Icon Button chrome, “preview” tooltip) opens Preview / Details / Usage. Filters default to **All**. Filter popover includes **Hide added items from results** (drops questions already on this quiz). Multi-page quizzes use an add-to-page menu. Adds stay collapsed. After add (or closing preview), the result remounts so eye / plus / already-added tooltips do not stick. `listedInBank: false` hidden.
-- Configuration: purpose chooser or dropdown; Content / Rules / Feedback / AI Tutor. Rules include **Shuffle question order** (within each page) and **Shuffle answer options** (multiple choice and matching); on by default for Exam and Exam simulation. Rules nest **Require a correct answer to continue** under Allow multiple attempts (same wrap as Max attempts). When settings differ from the purpose defaults, a **Reset to defaults** control sits beside Purpose.
+- Configuration: purpose chooser or dropdown; Content / Rules / Feedback / AI Tutor. Rules include **Shuffle question order** (within each page) and **Shuffle answer options** (multiple choice and matching); on by default for Exam and Exam simulation. Rules nest **Require a correct answer to continue** under Allow multiple attempts (same wrap as Max attempts). Feedback adds **Show score by standard** under Show correctness (its own row, not nested). When settings differ from the purpose defaults, a **Reset to defaults** control sits beside Purpose.
 
 ---
 
@@ -92,10 +93,16 @@ Newest first. Log **decisions and model changes**, not polish.
 ### 2026-11-09
 
 - Standards follow the prod model: **framework → category → standard**. `DomainTag` gains optional `framework`, `category`, `description` (full framework wording) and `skills`. A framework is course-level, so a quiz never mixes two. AI-901's categories are its two skill areas (1 · Identify AI concepts and capabilities, 2 · Implement AI solutions by using Microsoft Foundry).
+- The **Score by standard** table groups standards under a category subtotal row. A category counts each question once, even when it carries two standards in that category. The framework name sits under the heading. Bars and tiles stay flat.
+- **Per-question standards** in results: each question's standards appear on the Answer explanation card, collapsed to name and code. Expanding shows framework › category, the full standard wording and its skills. When the explanation is hidden, they get a neutral "Standard(s)" card. Same visibility as the table: on only with Show score by standard, results only (never during the attempt), and for students only when correctness is shown.
 
 ### 2026-11-06
 
 - The AI Foundations course is renamed **Building AI Systems** (id still `aif-cert`), and its bank is aligned to **Microsoft AI-901 (Azure AI Fundamentals)**, the first use case for this tooling. Its seven standards are AI-901's skill groups ([skills measured as of Apr 15, 2026](https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901)), coded `AI-901 1.1`–`2.4` with labels shortened from Microsoft's wording. Units: 1 · Responsible AI and models (1.1–1.2), 2 · AI workloads (1.3), 3 · Building with Microsoft Foundry (2.1–2.4). All 16 bank questions were rewritten for AI-901 content. Bank IDs, question types, and answer keys are unchanged, so seeded responses still score the same (Maya: 7 of 10). The seeded exam is now **AI-901 Practice Exam** and covers all seven standards. Saved drafts still titled "Unit 3 Assessment: AI in Society" reset to the new seed. Not yet aligned: the Web Development bank and the `/levels/quiz-demo/*` editable quizzes (untagged, about overfitting and dataset roles).
+- ACE asks for results by domain. Domains are **standards** in this model, so there is no new tag type. Quiz setting `showScoreByStandard` (**Show score by standard**, Feedback card) adds a **Score by standard** block under the stats row on the results card. Seeds: on for Exam and Exam simulation, off for Check for understanding and Practice. Legacy drafts with no purpose: on for exam mode.
+- Who sees it: teachers whenever the setting is on, including when Show correctness is off. Students only when Show correctness is also on, because with correctness off there is no score at all. The config helper text says which case applies.
+- Counting matches the overall tally: free response is left out, and a question counts as correct only when fully correct. A question with several standards counts toward each, so the rows can add up to more than the total; a footnote says so. Graded questions with no standard get their own **Untagged questions** row, always last, with no code. It replaced a footnote. Rows sort by standard code (outline order, AI-901 1.1 → 2.4), falling back to name, so shuffled quizzes list them in the same order for every student.
+- Layout: the table. Stat tiles fight the card's full-bleed rows and the meters read as decoration. Open: whether to hide the block when one standard covers every question, whether students see standard codes, and whether the bank needs a standards-coverage check so ACE quizzes don't ship with untagged questions.
 
 ### 2026-11-03
 

@@ -47,6 +47,7 @@ export {
   resolvedFeedback,
   resolvedRequireCorrectToContinue,
   resolvedShowIntro,
+  resolvedShowScoreByStandard,
   settingsDifferFromPurpose,
 } from "./quizPurpose";
 export {
@@ -119,6 +120,7 @@ export {
 } from "./taxonomy";
 export {
   aggregateDomainScores,
+  scoreByStandard,
   scoreQuestionResponse,
 } from "./scoring";
 export {

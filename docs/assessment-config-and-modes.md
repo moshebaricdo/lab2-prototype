@@ -79,7 +79,8 @@ Pass thresholds are author choices, not mode defaults, so they are described her
 | **Pass / mastery threshold** | Optional assessment-level passing bar set by the author. |
 | **Reveal correct answers** | Whether learners see the correct answer, and **when**: never, after each question, or after submitting. Assessment-wide, never per question. |
 | **Show explanations** | Whether the "why" explanation accompanies a revealed answer. |
-| **Show score** | Whether learners see a final score after submission. This can be separate from answer reveal, especially for multi-attempt assessments where learners may see a score without seeing exact correct answers. Domain-level results may still inform internal analysis or assessment balancing, but are not assumed to be learner-facing. |
+| **Show score** | Whether learners see a final score after submission. This can be separate from answer reveal, especially for multi-attempt assessments where learners may see a score without seeing exact correct answers. |
+| **Show score by standard** | Whether results also break the score down by standard (ACE's "domain"). Teachers see it whenever it is on; learners only when the score itself is shown. Counts follow the overall score: graded questions only, and a question with several standards counts toward each. |
 
 ---
 

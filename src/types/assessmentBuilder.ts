@@ -370,6 +370,12 @@ export interface AssessmentArtifact {
   /** Config toggle. Intro copy still lives on `intro`. */
   showIntroScreen?: boolean;
   feedback?: QuizFeedbackConfig;
+  /**
+   * Results add a score per standard under the overall tally. Teachers see
+   * it whenever it is on; students only when `feedback.showCorrectness` is
+   * on (no correctness, no score). Missing → purpose seed.
+   */
+  showScoreByStandard?: boolean;
   /** Prototype stand-in for script_levels this quiz is placed in. */
   unitPlacements?: QuizUnitPlacement[];
   /**
@@ -407,6 +413,47 @@ export interface DomainScoreSummary {
   domainLabel: string;
   earned: number;
   possible: number;
+}
+
+/**
+ * One row of the results breakdown. Counts match the overall tally: graded
+ * questions only (free response excluded), all-or-nothing per question.
+ * A question tagged with several standards counts toward each.
+ */
+export interface StandardScoreRow {
+  tag: DomainTag;
+  correct: number;
+  graded: number;
+  /** 0–100, rounded. */
+  percent: number;
+}
+
+/**
+ * Category subtotal. Counts each question once, even when it carries several
+ * standards in the same category.
+ */
+export interface StandardCategoryScore {
+  category: StandardCategory;
+  correct: number;
+  graded: number;
+  percent: number;
+}
+
+export interface StandardScoreBreakdown {
+  rows: StandardScoreRow[];
+  /** Category subtotals in outline order; empty when tags have no category. */
+  categories: StandardCategoryScore[];
+  /** The framework the tags belong to, when they name one. */
+  framework?: StandardFramework;
+  /**
+   * Graded questions with no standard tag. Results show them as an
+   * "Untagged questions" row, always last.
+   */
+  untaggedGraded: number;
+  /** How many of the untagged graded questions were fully correct. */
+  untaggedCorrect: number;
+  /** Any graded question carries more than one standard. */
+  hasMultiTagged: boolean;
 }
 
 export interface AssessmentCourseBank {

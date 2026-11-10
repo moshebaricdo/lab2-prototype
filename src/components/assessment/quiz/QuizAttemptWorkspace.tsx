@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Dialog, Pagination, SegmentedButton } from "@moshebari/cads-react";
 import { FaIcon } from "@moshebari/cads-react/icons";
 import { Lab2Shell } from "../../lab2/Lab2Shell";
@@ -38,6 +38,7 @@ import {
   resolvedQuizTitle,
   resolvedRequireCorrectToContinue,
   resolvedShowIntro,
+  resolvedShowScoreByStandard,
   primaryQuizPageLabel,
   questionOutcomeTag,
   quizActionHasArrow,
@@ -45,6 +46,7 @@ import {
   responseWasSkipped,
   studentIncorrectFooterLayout,
   saveQuizAttemptSnapshot,
+  scoreByStandard,
   scoreQuestionResponse,
   shouldSuppressRevealDuringAttempt,
   appendStoredQuizAttempt,
@@ -62,6 +64,11 @@ import {
   StudentResponsesRow,
   ViewpointBanner,
 } from "../shared";
+import {
+  isStandardBreakdownVariant,
+  StandardScoreBreakdown,
+  type StandardBreakdownVariant,
+} from "./StandardScoreBreakdown";
 import styles from "./QuizAttemptWorkspace.module.scss";
 
 export type QuizViewpoint = "teacher" | "teacherAsStudent" | "studentResponse";
@@ -124,6 +131,11 @@ interface QuizAttemptWorkspaceProps {
   headerActions?: ReactNode;
   /** Replaces the header Username button. Editable quizzes use this to switch viewpoint. */
   accountMenu?: AccountMenuConfig;
+  /**
+   * Layout of the score-by-standard block on results. A `?byStandard=`
+   * query param (bars | table | tiles) overrides it for live comparison.
+   */
+  standardBreakdownVariant?: StandardBreakdownVariant;
   /** Shown when the quiz has no questions and the intro is off. */
   emptyState?: {
     title: string;
@@ -322,6 +334,7 @@ export function QuizAttemptWorkspace({
   resumable = false,
   headerActions,
   accountMenu,
+  standardBreakdownVariant,
   emptyState,
 }: QuizAttemptWorkspaceProps) {
   const levelName =
@@ -798,6 +811,26 @@ export function QuizAttemptWorkspace({
     return { graded, correct, hasFr, percent };
   }, [steps, resolvedQuestions, state]);
 
+  const showByStandard = resolvedShowScoreByStandard(artifact);
+  const standardBreakdown = useMemo(() => {
+    if (!showByStandard || phase !== "results") return null;
+    return scoreByStandard(
+      steps.flatMap((block, index) => {
+        const question = resolvedQuestions[index];
+        return question
+          ? [{ question, response: responseFromBlock(block, state) }]
+          : [];
+      }),
+    );
+  }, [showByStandard, phase, steps, resolvedQuestions, state]);
+  const [searchParams] = useSearchParams();
+  const byStandardParam = searchParams.get("byStandard");
+  const breakdownVariant: StandardBreakdownVariant = isStandardBreakdownVariant(
+    byStandardParam,
+  )
+    ? byStandardParam
+    : (standardBreakdownVariant ?? "table");
+
   const finishAttempt = () => {
     if (resumable) clearQuizAttemptSnapshot(artifact.id);
     recordStudentAttempt(attemptNumber);
@@ -1167,6 +1200,13 @@ export function QuizAttemptWorkspace({
       feedback.revealAnswerExplanation &&
       !suppressReveal;
     const response = question ? responseFromBlock(block, state) : null;
+    // Same rule as the results table: teachers always; students once results
+    // show correctness. Never during the attempt, where a tag can hint.
+    const questionStandards =
+      question && showByStandard && phase === "results" &&
+      (isTeacherViewer || isResponseReview || feedback.showCorrectness)
+        ? question.tags ?? []
+        : [];
     const scored =
       question && response ? scoreQuestionResponse(question, response) : null;
     const outcomeKind =
@@ -1217,12 +1257,17 @@ export function QuizAttemptWorkspace({
           }
           afterBody={
             question &&
-            (isTeacherViewer || isResponseReview || revealDuringResults) ? (
+            (isTeacherViewer ||
+              isResponseReview ||
+              revealDuringResults ||
+              questionStandards.length > 0) ? (
               <AnswerNotesBlock
                 {...answerNotesForQuestion(question, {
-                  includeExplanation: true,
+                  includeExplanation:
+                    isTeacherViewer || isResponseReview || revealDuringResults,
                   isTeacherView: isTeacherViewer || isResponseReview,
                 })}
+                standards={questionStandards}
               />
             ) : null
           }
@@ -1519,6 +1564,12 @@ export function QuizAttemptWorkspace({
                   </div>
                 </div>
               </div>
+              {standardBreakdown ? (
+                <StandardScoreBreakdown
+                  breakdown={standardBreakdown}
+                  variant={breakdownVariant}
+                />
+              ) : null}
               {resultsCardFooter}
             </article>
             )}

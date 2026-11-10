@@ -5,6 +5,10 @@ import type {
   QuestionResponse,
   ScoringOutcome,
   ScoringResult,
+  StandardCategoryScore,
+  StandardFramework,
+  StandardScoreBreakdown,
+  StandardScoreRow,
 } from "../../types/assessmentBuilder";
 
 function arraysEqualAsSets(a: string[], b: string[]): boolean {
@@ -123,4 +127,87 @@ export function aggregateDomainScores(
   }
 
   return Array.from(map.values());
+}
+
+function toPercent(correct: number, graded: number): number {
+  return graded === 0 ? 0 : Math.round((correct / graded) * 100);
+}
+
+/**
+ * Results breakdown by standard. Same rules as the overall tally on the
+ * results card: free response and other ungraded items are left out, and a
+ * question is correct only when fully correct. Rows sort by standard code
+ * (else name) so every student's results list them in the same order, even
+ * when questions are shuffled. Untagged questions are tallied separately.
+ */
+export function scoreByStandard(
+  entries: Array<{ question: QuestionItem; response: QuestionResponse }>,
+): StandardScoreBreakdown {
+  const rows = new Map<string, StandardScoreRow>();
+  const categories = new Map<string, StandardCategoryScore>();
+  let framework: StandardFramework | undefined;
+  let untaggedGraded = 0;
+  let untaggedCorrect = 0;
+  let hasMultiTagged = false;
+
+  for (const { question, response } of entries) {
+    if (question.item.kind === "freeResponse") continue;
+    const scored = scoreQuestionResponse(question, response);
+    if (scored.outcome === "ungraded") continue;
+    const correct = scored.outcome === "correct";
+    const tags = question.tags ?? [];
+    if (tags.length === 0) {
+      untaggedGraded += 1;
+      if (correct) untaggedCorrect += 1;
+      continue;
+    }
+    if (tags.length > 1) hasMultiTagged = true;
+    const seenCategories = new Set<string>();
+    for (const tag of tags) {
+      framework ??= tag.framework;
+      if (tag.category && !seenCategories.has(tag.category.id)) {
+        seenCategories.add(tag.category.id);
+        const cat = categories.get(tag.category.id) ?? {
+          category: tag.category,
+          correct: 0,
+          graded: 0,
+          percent: 0,
+        };
+        cat.graded += 1;
+        if (correct) cat.correct += 1;
+        categories.set(tag.category.id, cat);
+      }
+      const row = rows.get(tag.id) ?? { tag, correct: 0, graded: 0, percent: 0 };
+      row.graded += 1;
+      if (correct) row.correct += 1;
+      rows.set(tag.id, row);
+    }
+  }
+
+  return {
+    rows: Array.from(rows.values())
+      .map((row) => ({
+        ...row,
+        percent: toPercent(row.correct, row.graded),
+      }))
+      // Stable across shuffles: outline order by code (AI-901 1.1 → 2.4), else by label.
+      .sort((a, b) =>
+        a.tag.code && b.tag.code
+          ? a.tag.code.localeCompare(b.tag.code, undefined, { numeric: true })
+          : a.tag.label.localeCompare(b.tag.label),
+      ),
+    categories: Array.from(categories.values())
+      .map((cat) => ({ ...cat, percent: toPercent(cat.correct, cat.graded) }))
+      .sort((a, b) =>
+        (a.category.code ?? a.category.label).localeCompare(
+          b.category.code ?? b.category.label,
+          undefined,
+          { numeric: true },
+        ),
+      ),
+    framework,
+    untaggedGraded,
+    untaggedCorrect,
+    hasMultiTagged,
+  };
 }

@@ -141,6 +141,10 @@ const QuizPageCollapseVariantsPage = lazyPage(
   () => import("./pages/assessment-builder/QuizPageCollapseVariantsPage"),
   "QuizPageCollapseVariantsPage",
 );
+const QuizScoreByStandardVariantsPage = lazyPage(
+  () => import("./pages/assessment-builder/QuizScoreByStandardVariantsPage"),
+  "QuizScoreByStandardVariantsPage",
+);
 const QuizIntroVariantsPage = lazyPage(
   () => import("./pages/assessment-builder/QuizIntroVariantsPage"),
   "QuizIntroVariantsPage",
@@ -530,6 +534,10 @@ export default function App() {
         <Route
           path="/experiments/quiz-intro"
           element={<QuizIntroVariantsPage />}
+        />
+        <Route
+          path="/experiments/quiz-score-by-standard"
+          element={<QuizScoreByStandardVariantsPage />}
         />
         <Route path="/levels/aichatlab" element={<AiChatLabLevelPage />} />
         <Route

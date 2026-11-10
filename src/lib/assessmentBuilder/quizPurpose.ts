@@ -52,6 +52,8 @@ export interface QuizPurposeSeed {
   requireCorrectAnswerToContinue: boolean;
   showCorrectness: boolean;
   revealAnswerExplanation: boolean;
+  /** Results break the score down by standard. */
+  showScoreByStandard: boolean;
   tutorEnabled: boolean;
   layout: AssessmentArtifact["layout"];
   /** Exams shuffle so neighbors see a different order. */
@@ -70,6 +72,7 @@ export function purposeSeeds(purpose: QuizPurpose): QuizPurposeSeed {
         requireCorrectAnswerToContinue: true,
         showCorrectness: true,
         revealAnswerExplanation: false,
+        showScoreByStandard: false,
         tutorEnabled: false,
         layout: "stepped",
         shuffleQuestions: false,
@@ -84,6 +87,7 @@ export function purposeSeeds(purpose: QuizPurpose): QuizPurposeSeed {
         requireCorrectAnswerToContinue: false,
         showCorrectness: true,
         revealAnswerExplanation: false,
+        showScoreByStandard: false,
         tutorEnabled: true,
         layout: "scroll",
         shuffleQuestions: false,
@@ -98,6 +102,7 @@ export function purposeSeeds(purpose: QuizPurpose): QuizPurposeSeed {
         requireCorrectAnswerToContinue: false,
         showCorrectness: false,
         revealAnswerExplanation: false,
+        showScoreByStandard: true,
         tutorEnabled: false,
         layout: "stepped",
         shuffleQuestions: true,
@@ -112,6 +117,7 @@ export function purposeSeeds(purpose: QuizPurpose): QuizPurposeSeed {
         requireCorrectAnswerToContinue: false,
         showCorrectness: false,
         revealAnswerExplanation: false,
+        showScoreByStandard: true,
         tutorEnabled: false,
         layout: "stepped",
         shuffleQuestions: true,
@@ -176,6 +182,7 @@ function applySeed(
       showCorrectness: seed.showCorrectness,
       revealAnswerExplanation: seed.revealAnswerExplanation,
     },
+    showScoreByStandard: seed.showScoreByStandard,
     tutor: {
       enabled: seed.tutorEnabled,
       explainWrongAnswers: seed.showCorrectness,
@@ -203,6 +210,7 @@ export function settingsDifferFromPurpose(
   const requireCorrect = artifact.requireCorrectAnswerToContinue === true;
   const correctness = artifact.feedback?.showCorrectness === true;
   const reveal = artifact.feedback?.revealAnswerExplanation === true;
+  const byStandard = resolvedShowScoreByStandard(artifact);
   const tutor = artifact.tutor.enabled;
   const shuffleQuestions = artifact.shuffle?.shuffleQuestions === true;
   const shuffleOptions = artifact.shuffle?.shuffleOptions === true;
@@ -216,6 +224,7 @@ export function settingsDifferFromPurpose(
       : false) ||
     correctness !== seed.showCorrectness ||
     reveal !== seed.revealAnswerExplanation ||
+    byStandard !== seed.showScoreByStandard ||
     tutor !== seed.tutorEnabled ||
     shuffleQuestions !== seed.shuffleQuestions ||
     shuffleOptions !== seed.shuffleOptions
@@ -238,6 +247,15 @@ export function resolvedFeedback(artifact: AssessmentArtifact): {
     showCorrectness: artifact.mode !== "exam",
     revealAnswerExplanation: false,
   };
+}
+
+/** Score per standard on results. Legacy drafts without a purpose: exams only. */
+export function resolvedShowScoreByStandard(
+  artifact: AssessmentArtifact,
+): boolean {
+  if (artifact.showScoreByStandard != null) return artifact.showScoreByStandard;
+  if (artifact.purpose) return purposeSeeds(artifact.purpose).showScoreByStandard;
+  return artifact.mode === "exam";
 }
 
 export function resolvedAllowRetries(artifact: AssessmentArtifact): boolean {

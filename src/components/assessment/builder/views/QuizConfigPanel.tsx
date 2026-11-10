@@ -8,6 +8,7 @@ import {
   quizPurposeLabel,
   QUIZ_PURPOSE_CARDS,
   QUIZ_PURPOSE_DROPDOWN_OPTIONS,
+  resolvedShowScoreByStandard,
   settingsDifferFromPurpose,
 } from "../../../../lib/assessmentBuilder";
 import styles from "./QuizConfigPanel.module.scss";
@@ -89,6 +90,7 @@ export function QuizConfigPanel({
   const retriesOn = artifact.allowMultipleAttempts === true;
   const requireCorrect = artifact.requireCorrectAnswerToContinue === true;
   const showCorrectness = artifact.feedback?.showCorrectness === true;
+  const showByStandard = resolvedShowScoreByStandard(artifact);
 
   const pickPurpose = (next: QuizPurpose) => {
     if (!purpose) {
@@ -350,6 +352,23 @@ export function QuizConfigPanel({
               />
             </div>
           ) : null}
+        </CardRow>
+        <CardRow>
+          <ToggleRow
+            label="Show score by standard"
+            helper={
+              showCorrectness
+                ? "Results list a score for each standard tagged on this quiz’s questions."
+                : "Teachers only. Students see scores when Show correctness is on."
+            }
+            checked={showByStandard}
+            onChange={(checked) =>
+              onUpdateArtifact((current) => ({
+                ...current,
+                showScoreByStandard: checked,
+              }))
+            }
+          />
         </CardRow>
       </ConfigCard>
 

@@ -351,6 +351,10 @@ export const assessmentBuilderExperimentLinks: LevelProgressLink[] = [
     name: "Intro screen variants",
     path: "/experiments/quiz-intro",
   },
+  {
+    name: "Score by standard variants",
+    path: "/experiments/quiz-score-by-standard",
+  },
 ];
 
 export const levelGroupLevelLinks: LevelProgressLink[] = assessmentSetLevelLinks;

@@ -1,0 +1,252 @@
+@use "../../../styles/_mixins.scss" as *;
+
+/* Sits inside the results summary card, under the stats row. */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 24px 24px;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+}
+
+.heading {
+  margin: 0;
+  @include type-label-1;
+  color: var(--text-neutral-primary);
+}
+
+.name {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nameLabel {
+  @include type-body-2-semibold;
+  color: var(--text-neutral-primary);
+}
+
+/* ---- bars ---- */
+
+.barList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.barTop {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.barScore {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: baseline;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.barPercent {
+  @include type-body-2-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.barCount {
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+/* Brand fill on a neutral track: a level, not a pass/fail judgment. */
+.meter {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--background-neutral-tertiary);
+}
+
+.meterFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--background-brand-primary);
+}
+
+/* ---- table ---- */
+
+/* Bordered box with a tinted header, like the bank list tables. */
+.tableWrap {
+  overflow: hidden;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-sm);
+  background: var(--background-neutral-primary);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  @include type-body-3-regular;
+  color: var(--text-neutral-primary);
+
+  th,
+  td {
+    height: 48px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-neutral-primary);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  th:first-child,
+  td:first-child {
+    padding-left: 12px;
+  }
+
+  th:last-child,
+  td:last-child {
+    padding-right: 12px;
+  }
+
+  thead th {
+    height: 40px;
+    @include type-overline-2;
+    color: var(--text-neutral-quaternary);
+    text-transform: uppercase;
+    background: var(--background-neutral-secondary);
+  }
+
+  tbody:last-child tr:last-child th,
+  tbody:last-child tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody th {
+    font-weight: inherit;
+  }
+}
+
+/* Name, dot, code on one line; long names wrap rather than truncate. */
+.tableName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 6px;
+  padding-right: 16px;
+}
+
+.tableNameLabel {
+  @include type-body-3-semibold;
+}
+
+.tableDot {
+  width: 4px;
+  height: 4px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--background-neutral-quinary, #b7bcc2);
+}
+
+/* Category subtotal row (framework → category → standard). */
+.categoryRow th,
+.categoryRow td {
+  background: var(--background-neutral-secondary);
+}
+
+.categoryCode {
+  @include type-body-3-semibold;
+  color: var(--text-neutral-quaternary);
+}
+
+/* Standards under a category indent past the category code. */
+.table .nestedRow th:first-child {
+  padding-left: 32px;
+}
+
+.tableCode {
+  color: var(--text-neutral-quaternary);
+}
+
+/* Figma columns: Correct is 100 wide plus the 16 gap; Score is 55 (+ row padding). */
+.correctCol {
+  width: 116px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.scoreCol {
+  width: 55px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tableScore {
+  @include type-body-3-semibold;
+}
+
+/* ---- tiles ---- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border-neutral-primary);
+  border-radius: var(--shape-md, 8px);
+  background: var(--background-neutral-secondary);
+
+  p {
+    margin: 0;
+  }
+}
+
+.tileValue {
+  @include type-heading-h4-bold;
+  color: var(--text-brand-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.tileLabel {
+  @include type-body-3-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.tileHelper {
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+/* ---- footnotes (under the heading) ---- */
+
+.note {
+  margin: 0;
+  @include type-body-3-regular;
+  color: var(--text-neutral-tertiary);
+}
