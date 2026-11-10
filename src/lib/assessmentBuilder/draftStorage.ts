@@ -64,7 +64,9 @@ function hydrateDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
     if (draft.id === mockP0ExamAssessment.id) {
       if (
         draft.purpose == null ||
-        draft.title === "AI Foundations Certification Exam"
+        draft.title === "AI Foundations Certification Exam" ||
+        // Pre-AI-901 seed: reset so the outline, intro, and placement match the new bank.
+        draft.title === "Unit 3 Assessment: AI in Society"
       ) {
         changed = true;
         return structuredClone(mockP0ExamAssessment);
@@ -100,6 +102,18 @@ function hydrateDrafts(drafts: AssessmentArtifact[]): AssessmentArtifact[] {
     if (updated.lessonName === "AI Foundations" || updated.lessonName === "AIF Practice Exam") {
       changed = true;
       updated = { ...updated, lessonName: mockP0ExamAssessment.lessonName };
+    }
+    // Course renamed AI Foundations → Building AI Systems.
+    if (
+      updated.placement?.kind === "attached" &&
+      updated.placement.courseLabel === "AI Foundations"
+    ) {
+      changed = true;
+      updated = {
+        ...updated,
+        placement: structuredClone(mockP0ExamAssessment.placement),
+        unitPlacements: structuredClone(mockP0ExamAssessment.unitPlacements),
+      };
     }
     if (updated.levelId == null && mockP0ExamAssessment.levelId != null) {
       changed = true;

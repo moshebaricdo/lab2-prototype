@@ -162,6 +162,8 @@ If the tag sits on their choice: **That’s correct** / **That’s not correct**
 
 FR has no correct/incorrect chrome. Teacher-facing suggested answer in legacy FR is `encrypted_solution`, rendered through the generic “For Teachers Only” box. Exemplar is a Lab2 coding-lab concept; FR does not use it.
 
+**Decision (2026-11-09):** “For teachers only” is quiz-level, not per question. It uses prod’s existing For teachers only markdown in levelbuilder and shows in the resource panel. Question cards show only the **Answer explanation** card; on teacher viewpoints the prototype puts the FR **Exemplar response** field in that card.
+
 **Partial credit:** none at the question level.
 
 - Multi (including two-correct `multi2`): all-or-nothing. One right + one wrong = not correct. Too few selected is a client gate, not “incorrect.”

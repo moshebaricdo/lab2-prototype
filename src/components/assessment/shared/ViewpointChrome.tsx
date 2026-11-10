@@ -46,45 +46,24 @@ export function QuestionOutcomeTag({ kind }: { kind: QuestionOutcomeTagKind }) {
 }
 
 interface AnswerNotesBlockProps {
-  /** Student-facing answer explanation (RevealConfig.explanation). Hidden for free response. */
+  /** Student-facing answer explanation (RevealConfig.explanation). Free response puts the teacher exemplar here. */
   explanation?: string;
-  /**
-   * Teacher-only card (`For teachers only`). Free response puts the exemplar
-   * here; matching / multi use `teacherNote`.
-   */
-  teacherNote?: string;
 }
 
-/** Figma `answerExplanation` cards — success (student) and info (teachers only). */
-export function AnswerNotesBlock({
-  explanation,
-  teacherNote,
-}: AnswerNotesBlockProps) {
+/** Figma `answerExplanation` cards — success. Teacher-only guidance is quiz-level, not per question. */
+export function AnswerNotesBlock({ explanation }: AnswerNotesBlockProps) {
   const trimmedExplanation = explanation?.trim();
-  const trimmedNote = teacherNote?.trim();
-  if (!trimmedExplanation && !trimmedNote) return null;
+  if (!trimmedExplanation) return null;
   return (
     <div className={styles.notes}>
-      {trimmedExplanation ? (
-        <article className={[styles.card, styles.cardExplanation].join(" ")}>
-          <header className={styles.cardHeader}>
-            <p className={styles.cardLabel}>Answer explanation</p>
-          </header>
-          <div className={styles.cardBody}>
-            <p className={styles.cardText}>{trimmedExplanation}</p>
-          </div>
-        </article>
-      ) : null}
-      {trimmedNote ? (
-        <article className={[styles.card, styles.cardTeacher].join(" ")}>
-          <header className={styles.cardHeader}>
-            <p className={styles.cardLabel}>For teachers only</p>
-          </header>
-          <div className={styles.cardBody}>
-            <p className={styles.cardText}>{trimmedNote}</p>
-          </div>
-        </article>
-      ) : null}
+      <article className={[styles.card, styles.cardExplanation].join(" ")}>
+        <header className={styles.cardHeader}>
+          <p className={styles.cardLabel}>Answer explanation</p>
+        </header>
+        <div className={styles.cardBody}>
+          <p className={styles.cardText}>{trimmedExplanation}</p>
+        </div>
+      </article>
     </div>
   );
 }

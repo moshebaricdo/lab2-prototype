@@ -1221,7 +1221,7 @@ export function QuizAttemptWorkspace({
               <AnswerNotesBlock
                 {...answerNotesForQuestion(question, {
                   includeExplanation: true,
-                  includeTeacherNote: isTeacherViewer || isResponseReview,
+                  isTeacherView: isTeacherViewer || isResponseReview,
                 })}
               />
             ) : null

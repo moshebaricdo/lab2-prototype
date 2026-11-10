@@ -2,7 +2,7 @@
 
 Living snapshot of **product decisions** and **prototype state** for this workstream. Specs and implementation details live in the linked docs; this file is the turn-by-turn source of truth for what is in, out, and still open.
 
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-09
 
 **How to maintain:** update this file in the same turn as substantive product or architecture changes (scope, modes, tagging, schema, routes, builder UX model). Skip for visual polish, copy nits, and bugfixes that do not change the model.
 
@@ -13,7 +13,7 @@ Living snapshot of **product decisions** and **prototype state** for this workst
 | Route | Role |
 |-------|------|
 | [`/levels/assessment-builder-p0-draft`](/levels/assessment-builder-p0-draft) | **Final quiz builder.** Blank quiz. No title, lesson name, level id, purpose, or questions. First header bubble. |
-| [`/levels/assessment-builder-p0`](/levels/assessment-builder-p0) | **Final quiz builder.** Pre-populated demo quiz: Unit 3 Assessment: AI in Society (12 questions, 4 pages), attached, Live in 2 units. Second header bubble. |
+| [`/levels/assessment-builder-p0`](/levels/assessment-builder-p0) | **Final quiz builder.** Pre-populated demo quiz: AI-901 Practice Exam (12 questions, 4 pages), attached, Live in 2 units. Second header bubble. |
 | [`/levels/quiz-demo/multi`](/levels/quiz-demo/multi) · [`multi-select`](/levels/quiz-demo/multi-select) · [`free-response`](/levels/quiz-demo/free-response) · [`matching`](/levels/quiz-demo/matching) | Editable student quizzes. One question each, check-for-understanding settings. Header **Edit** opens that quiz in the builder. The account button switches Student, Teacher, Student submission, and Submission in progress. A completed submission with retries lists each try in Attempt history (Attempt N, newest first, with the time beside the name). Submits made while viewing as Student replace that sample and show up in the panel as they happen. |
 | [`/levels/quiz-demo/blank`](/levels/quiz-demo/blank/edit) | Blank quiz. Index opens the builder; **Back to quiz** opens the student quiz at [`/levels/quiz-demo/blank`](/levels/quiz-demo/blank). |
 | [`/levels/cfu-multi`](/levels/cfu-multi) · [`-retry`](/levels/cfu-multi-retry) · [`-continue`](/levels/cfu-multi-continue) · [`-reveal`](/levels/cfu-multi-reveal) · [`-capped`](/levels/cfu-multi-capped) | Student CFU radio: no-retry (S4), must-correct (S5), can-continue (S6), reveal after submit, capped attempts (S9). |
@@ -88,6 +88,14 @@ Scoring: multi (including two-correct) and match are all-or-nothing. No student 
 ## Changelog
 
 Newest first. Log **decisions and model changes**, not polish.
+
+### 2026-11-09
+
+- Standards follow the prod model: **framework → category → standard**. `DomainTag` gains optional `framework`, `category`, `description` (full framework wording) and `skills`. A framework is course-level, so a quiz never mixes two. AI-901's categories are its two skill areas (1 · Identify AI concepts and capabilities, 2 · Implement AI solutions by using Microsoft Foundry).
+
+### 2026-11-06
+
+- The AI Foundations course is renamed **Building AI Systems** (id still `aif-cert`), and its bank is aligned to **Microsoft AI-901 (Azure AI Fundamentals)**, the first use case for this tooling. Its seven standards are AI-901's skill groups ([skills measured as of Apr 15, 2026](https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901)), coded `AI-901 1.1`–`2.4` with labels shortened from Microsoft's wording. Units: 1 · Responsible AI and models (1.1–1.2), 2 · AI workloads (1.3), 3 · Building with Microsoft Foundry (2.1–2.4). All 16 bank questions were rewritten for AI-901 content. Bank IDs, question types, and answer keys are unchanged, so seeded responses still score the same (Maya: 7 of 10). The seeded exam is now **AI-901 Practice Exam** and covers all seven standards. Saved drafts still titled "Unit 3 Assessment: AI in Society" reset to the new seed. Not yet aligned: the Web Development bank and the `/levels/quiz-demo/*` editable quizzes (untagged, about overfitting and dataset roles).
 
 ### 2026-11-03
 

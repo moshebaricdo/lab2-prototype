@@ -255,7 +255,7 @@ export function CfuQuestionWorkspace({
     <AnswerNotesBlock
       {...answerNotesForQuestion(question, {
         includeExplanation: revealActive,
-        includeTeacherNote: isTeacher || isStudentResponse,
+        isTeacherView: isTeacher || isStudentResponse,
       })}
     />
   ) : null;

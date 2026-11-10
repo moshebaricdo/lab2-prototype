@@ -39,7 +39,7 @@ function ensureQuizExamResumeSnapshot(artifactId: string) {
       },
       freeText: {
         [flowBlockId("q-aif-fr-1", 5)]:
-          "Overfitting is when a model memorizes training examples and then fails on new data. A validation set can help catch it.",
+          "A multimodal model, because it has to look at the photos. A low temperature keeps the answers consistent.",
       },
       matchAssignments: {
         [flowBlockId("q-aif-match-1", 1)]: {

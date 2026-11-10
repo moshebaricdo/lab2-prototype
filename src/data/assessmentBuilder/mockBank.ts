@@ -5,29 +5,165 @@ import type {
   QuestionItem,
   QuestionUsageRow,
   QuestionVersionRow,
+  StandardCategory,
+  StandardFramework,
 } from "../../types/assessmentBuilder";
 
+/**
+ * AI-901 (Microsoft Azure AI Fundamentals) skills measured, as of Apr 15, 2026.
+ * Framework → category (skill area) → standard (functional group), matching
+ * the prod standards model. Labels are shortened from Microsoft's wording so
+ * they fit results tables; `description` and `skills` keep the exact wording.
+ */
+const AI901: StandardFramework = {
+  id: "ai-901",
+  shortLabel: "AI-901",
+  label: "Microsoft Azure AI Fundamentals (AI-901)",
+};
+const AI901_CONCEPTS: StandardCategory = {
+  id: "ai901-cat-concepts",
+  code: "1",
+  label: "Identify AI concepts and capabilities",
+};
+const AI901_FOUNDRY: StandardCategory = {
+  id: "ai901-cat-foundry",
+  code: "2",
+  label: "Implement AI solutions by using Microsoft Foundry",
+};
+
 const AIF_CONCEPTS: DomainTag[] = [
-  { id: "domain-ml", label: "Machine Learning Fundamentals", code: "HS-AI-ML-04" },
-  { id: "domain-ethics", label: "AI Ethics & Safety", code: "3B-AP-08" },
-  { id: "domain-data", label: "Data & Features", code: "HS-AI-DAT-02" },
+  {
+    id: "ai901-responsible",
+    label: "Responsible AI principles",
+    code: "AI-901 1.1",
+    framework: AI901,
+    category: AI901_CONCEPTS,
+    description: "Describe principles of responsible AI",
+    skills: [
+      "Describe considerations for fairness in an AI solution",
+      "Describe considerations for reliability and safety in an AI solution",
+      "Describe considerations for privacy and security in an AI solution",
+      "Describe considerations for inclusiveness in an AI solution",
+      "Describe considerations for transparency in an AI solution",
+      "Describe considerations for accountability in an AI solution",
+    ],
+  },
+  {
+    id: "ai901-models",
+    label: "AI models and configuration",
+    code: "AI-901 1.2",
+    framework: AI901,
+    category: AI901_CONCEPTS,
+    description: "Identify AI model components and configurations",
+    skills: [
+      "Describe how generative AI models work",
+      "Identify an appropriate AI model, based on capabilities",
+      "Identify appropriate model deployment options and configuration parameters",
+    ],
+  },
+  {
+    id: "ai901-workloads",
+    label: "AI workloads",
+    code: "AI-901 1.3",
+    framework: AI901,
+    category: AI901_CONCEPTS,
+    description: "Identify AI workloads",
+    skills: [
+      "Identify scenarios for common AI workloads, including generative and agentic AI, text analysis, speech, computer vision, and information extraction",
+      "Describe common text analysis techniques, including keyword extraction, entity detection, sentiment analysis, and summarization",
+      "Identify features and capabilities of speech recognition and speech synthesis",
+      "Identify features and capabilities of computer vision and image-generation models",
+      "Identify techniques to extract information from text, images, audio, and videos",
+    ],
+  },
+  {
+    id: "ai901-genai-agents",
+    label: "Generative AI apps and agents",
+    code: "AI-901 2.1",
+    framework: AI901,
+    category: AI901_FOUNDRY,
+    description: "Implement generative AI apps and agents by using Foundry",
+    skills: [
+      "Create effective system and user prompts for generative AI models",
+      "Deploy a model and interact with it in the Foundry portal",
+      "Create a lightweight chat client application by using the Foundry SDK",
+      "Create and test a single-agent solution in the Foundry portal",
+      "Create a lightweight client application for an agent",
+    ],
+  },
+  {
+    id: "ai901-text-speech",
+    label: "Text and speech solutions",
+    code: "AI-901 2.2",
+    framework: AI901,
+    category: AI901_FOUNDRY,
+    description: "Implement AI solutions for text and speech by using Foundry",
+    skills: [
+      "Build a lightweight application that includes text analysis",
+      "Respond to spoken prompts by using a deployed multimodal model",
+      "Build a lightweight application by using Azure Speech in Foundry Tools",
+    ],
+  },
+  {
+    id: "ai901-vision",
+    label: "Vision and image generation",
+    code: "AI-901 2.3",
+    framework: AI901,
+    category: AI901_FOUNDRY,
+    description:
+      "Implement AI solutions with computer vision and image-generation capabilities by using Foundry",
+    skills: [
+      "Interpret visual input in prompts by using a deployed multimodal model",
+      "Create new visual outputs by using generative models",
+      "Build a lightweight application that includes vision capabilities",
+    ],
+  },
+  {
+    id: "ai901-extraction",
+    label: "Information extraction",
+    code: "AI-901 2.4",
+    framework: AI901,
+    category: AI901_FOUNDRY,
+    description: "Implement AI solutions for information extraction by using Foundry",
+    skills: [
+      "Extract information from documents and forms by using Azure Content Understanding in Foundry Tools",
+      "Extract information from images by using Content Understanding",
+      "Extract information from audio and video by using Content Understanding",
+      "Build a lightweight application with information extraction capabilities by using Content Understanding",
+    ],
+  },
 ];
+
+const [
+  STD_RESPONSIBLE,
+  STD_MODELS,
+  STD_WORKLOADS,
+  STD_GENAI_AGENTS,
+  STD_TEXT_SPEECH,
+  STD_VISION,
+  STD_EXTRACTION,
+] = AIF_CONCEPTS;
 
 const AIF_UNITS: CourseUnit[] = [
   {
-    id: "aif-unit-supervised",
-    label: "Unit 1 · Supervised Learning",
-    conceptIds: ["domain-ml", "domain-data"],
+    id: "aif-unit-concepts",
+    label: "Unit 1 · Responsible AI and models",
+    conceptIds: [STD_RESPONSIBLE.id, STD_MODELS.id],
   },
   {
-    id: "aif-unit-responsible",
-    label: "Unit 2 · Responsible AI",
-    conceptIds: ["domain-ethics"],
+    id: "aif-unit-workloads",
+    label: "Unit 2 · AI workloads",
+    conceptIds: [STD_WORKLOADS.id],
   },
   {
-    id: "aif-unit-models",
-    label: "Unit 3 · Models in Practice",
-    conceptIds: ["domain-ml", "domain-data"],
+    id: "aif-unit-foundry",
+    label: "Unit 3 · Building with Microsoft Foundry",
+    conceptIds: [
+      STD_GENAI_AGENTS.id,
+      STD_TEXT_SPEECH.id,
+      STD_VISION.id,
+      STD_EXTRACTION.id,
+    ],
   },
 ];
 
@@ -50,26 +186,26 @@ const WEB_UNITS: CourseUnit[] = [
 ];
 
 const EXAM_QUIZ: QuestionUsageRow = {
-  quizTitle: "Unit 3 Assessment: AI in Society",
-  courseUnit: "AI Foundations · Unit 3",
+  quizTitle: "AI-901 Practice Exam",
+  courseUnit: "Building AI Systems · Unit 3",
   status: "live",
 };
 
 const PRACTICE_QUIZ: QuestionUsageRow = {
   quizTitle: "Unit 3 practice",
-  courseUnit: "AI Foundations · Unit 3",
+  courseUnit: "Building AI Systems · Unit 3",
   status: "unpublished",
 };
 
 const SEEDED_QUIZ: QuestionUsageRow = {
-  quizTitle: "AI Foundations practice quiz",
-  courseUnit: "AI Foundations · Unit 1",
+  quizTitle: "Building AI Systems practice quiz",
+  courseUnit: "Building AI Systems · Unit 1",
   status: "unpublished",
 };
 
 const CFU_ACCOUNTABILITY: QuestionUsageRow = {
-  quizTitle: "Unit 2 CFU · Accountability",
-  courseUnit: "AI Foundations · Unit 2",
+  quizTitle: "Unit 1 CFU · Accountability",
+  courseUnit: "Building AI Systems · Unit 1",
   status: "unpublished",
 };
 
@@ -150,9 +286,9 @@ function bankIdentity({
 export const mockMultiBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-1",
   courseId: "aif-cert",
-  title: "Loss function purpose",
-  unitId: "aif-unit-supervised",
-  tags: [AIF_CONCEPTS[0]],
+  title: "Temperature setting",
+  unitId: "aif-unit-concepts",
+  tags: [STD_MODELS],
   difficulty: "intermediate",
   ...bankIdentity({
     numericId: 1842,
@@ -172,7 +308,7 @@ export const mockMultiBankQuestion: QuestionItem = {
       {
         label: "Version 1",
         id: 1611,
-        usedIn: "Unit 3 Assessment: AI in Society (2025)",
+        usedIn: "AI-900 Practice Exam (2025)",
         lastEdited: "Aug 12, 2026",
       },
     ],
@@ -181,40 +317,42 @@ export const mockMultiBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "A loss function quantifies prediction error so training can minimize it.",
+      "Temperature controls randomness. A low value makes the model pick the most likely tokens, so answers are more focused and repeatable.",
   },
-  teacherNote:
-    "Students often pick the shuffling distractor — revisit the fit/evaluate split if that happens.",
   updatedAt: Date.now(),
   item: {
     kind: "multi",
     content: {
-      prompt: "What is the loss function doing?",
+      prompt: "What does lowering the temperature do?",
       description: [
-        "A supervised model compares each prediction to a known label, then uses that comparison to update weights. In code the comparison often looks like this:",
+        "A student app sends chat requests to a model deployed in Microsoft Foundry:",
         "",
         "```python",
-        "loss = (prediction - label) ** 2",
+        "response = client.chat.completions.create(",
+        '    model="tutor-deployment",',
+        "    messages=messages,",
+        "    temperature=0.2,",
+        ")",
         "```",
         "",
-        "What is the primary purpose of that `loss` value during training?",
+        "The team lowered `temperature` from 1.0 to 0.2. What effect should they expect?",
       ].join("\n"),
       answers: [
         {
           id: "a",
-          text: "Quantify how far the model's predictions are from the correct labels.",
+          text: "Responses become more focused and consistent from one request to the next.",
         },
         {
           id: "b",
-          text: "Randomly shuffle the training data at the start of each epoch.",
+          text: "Responses are cut off after a shorter maximum length.",
         },
         {
           id: "c",
-          text: "Convert categorical labels into one-hot encoded vectors.",
+          text: "The model switches to a smaller, cheaper version of itself.",
         },
         {
           id: "d",
-          text: "Store the trained weights after training finishes.",
+          text: "The model stops using the system message.",
         },
       ],
       correctAnswerId: "a",
@@ -226,8 +364,8 @@ export const mockMultiSelectBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-2",
   courseId: "aif-cert",
   title: "Responsible AI practices",
-  unitId: "aif-unit-responsible",
-  tags: [AIF_CONCEPTS[1]],
+  unitId: "aif-unit-concepts",
+  tags: [STD_RESPONSIBLE],
   difficulty: "beginner",
   ...bankIdentity({
     numericId: 1843,
@@ -236,23 +374,22 @@ export const mockMultiSelectBankQuestion: QuestionItem = {
   }),
   reveal: {
     enabled: true,
-    explanation: "Bias audits and documentation support accountable AI systems.",
+    explanation:
+      "Testing with assistive technology supports inclusiveness, stating limits supports transparency, and a named owner supports accountability. Hiding the AI breaks transparency.",
   },
-  teacherNote:
-    "Pairs with the Unit 3 accountability discussion; accept any three of the four safe practices.",
   updatedAt: Date.now(),
   item: {
     kind: "multi",
     content: {
       prompt:
-        "Which practices help reduce harm from a deployed AI system? Select all that apply.",
+        "A city is launching a chatbot for its benefits office. Which practices follow Microsoft’s responsible AI principles? Select all that apply.",
       selectionMode: "multiple",
       correctAnswerIds: ["a", "c", "d"],
       answers: [
-        { id: "a", text: "Audit training data for representation gaps." },
-        { id: "b", text: "Hide model limitations from users." },
-        { id: "c", text: "Document known failure modes." },
-        { id: "d", text: "Test edge cases before launch." },
+        { id: "a", text: "Test the chatbot with people who use screen readers." },
+        { id: "b", text: "Don’t mention that residents are talking to an AI." },
+        { id: "c", text: "Tell residents what the chatbot can’t help with." },
+        { id: "d", text: "Name a team that reviews complaints and can turn it off." },
       ],
     },
   },
@@ -261,9 +398,9 @@ export const mockMultiSelectBankQuestion: QuestionItem = {
 export const mockCodeRefBankQuestion: QuestionItem = {
   bankId: "q-aif-code-1",
   courseId: "aif-cert",
-  title: "Trace classifier output",
-  unitId: "aif-unit-models",
-  tags: [AIF_CONCEPTS[0], AIF_CONCEPTS[2]],
+  title: "Trace a chat client",
+  unitId: "aif-unit-foundry",
+  tags: [STD_GENAI_AGENTS],
   difficulty: "advanced",
   ...bankIdentity({
     numericId: 1844,
@@ -272,36 +409,39 @@ export const mockCodeRefBankQuestion: QuestionItem = {
   }),
   reveal: {
     enabled: true,
-    explanation: "The weighted sum is positive, so predict returns 1.",
+    explanation:
+      "One system message, plus a user and an assistant message for each call: 1 + 2 + 2 = 5. Keeping the history is what lets the model answer the follow-up.",
   },
-  teacherNote:
-    "Walk the arithmetic on the board if several students answer 0: 0.8·2.0 − 0.3·1.5 − 0.5 = 0.65.",
   updatedAt: Date.now(),
   item: {
     kind: "multi",
     content: {
       prompt: "What does this program print?",
       description: [
-        "Trace the classifier below, then choose the value of `print`.",
+        "This chat client talks to a model deployed in Microsoft Foundry. Trace it, then choose what `print` shows.",
         "",
         "```python",
-        "def predict(features, weights, bias):",
-        "    total = bias",
-        "    for i in range(len(features)):",
-        "        total += features[i] * weights[i]",
-        "    return 1 if total >= 0 else 0",
+        'messages = [{"role": "system", "content": "Answer in one word."}]',
         "",
-        "features = [0.8, 0.3]",
-        "weights = [2.0, -1.5]",
-        "bias = -0.5",
-        "print(predict(features, weights, bias))",
+        "def ask(question):",
+        '    messages.append({"role": "user", "content": question})',
+        "    reply = client.chat.completions.create(",
+        "        model=DEPLOYMENT, messages=messages",
+        "    )",
+        "    answer = reply.choices[0].message.content",
+        '    messages.append({"role": "assistant", "content": answer})',
+        "    return answer",
+        "",
+        'ask("Capital of France?")',
+        'ask("And of Spain?")',
+        "print(len(messages))",
         "```",
       ].join("\n"),
       answers: [
-        { id: "a", text: "0" },
-        { id: "b", text: "1" },
-        { id: "c", text: "-1" },
-        { id: "d", text: "Error" },
+        { id: "a", text: "3" },
+        { id: "b", text: "5" },
+        { id: "c", text: "4" },
+        { id: "d", text: "2" },
       ],
       correctAnswerId: "b",
     },
@@ -311,9 +451,9 @@ export const mockCodeRefBankQuestion: QuestionItem = {
 export const mockFreeResponseBankQuestion: QuestionItem = {
   bankId: "q-aif-fr-1",
   courseId: "aif-cert",
-  title: "Explain overfitting",
-  unitId: "aif-unit-supervised",
-  tags: [AIF_CONCEPTS[0]],
+  title: "Choose a model for the task",
+  unitId: "aif-unit-concepts",
+  tags: [STD_MODELS],
   difficulty: "beginner",
   ...bankIdentity({
     numericId: 1845,
@@ -323,26 +463,24 @@ export const mockFreeResponseBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Strong training performance with poor generalization indicates overfitting.",
+      "Photos need a model that accepts image input. A low temperature keeps factual answers consistent.",
   },
-  teacherNote:
-    "Grade with the rubric: definition plus one mitigation. Memorization language alone is not enough.",
   updatedAt: Date.now(),
   item: {
     kind: "freeResponse",
     content: {
       prompt:
-        "In your own words, explain what overfitting means and name one strategy to reduce it.",
-      placeholder: "Overfitting happens when… One way to reduce it is…",
+        "A science teacher wants an app that answers questions about photos of lab equipment. What kind of model should they deploy, and what is one setting you would choose? Explain why.",
+      placeholder: "I would deploy… because… I would set…",
       allowFileUpload: true,
       minCharacters: 60,
       revealAnswerEnabled: true,
       teacherAnswer: {
         exemplar:
-          "Overfitting happens when a model memorizes training noise and fails on new data. Hold out a validation set and stop training when validation performance stops improving.",
+          "A multimodal model that accepts images, because a text-only model can’t see the photo. I would set a low temperature so answers about the equipment stay factual and consistent.",
         rubricCriteria: [
-          "Defines overfitting as poor generalization.",
-          "Names a reasonable mitigation strategy.",
+          "Chooses a model whose capabilities fit the task (accepts image input).",
+          "Names a deployment option or parameter and explains the choice.",
         ],
       },
     },
@@ -352,9 +490,9 @@ export const mockFreeResponseBankQuestion: QuestionItem = {
 export const mockMatchBankQuestion: QuestionItem = {
   bankId: "q-aif-match-1",
   courseId: "aif-cert",
-  title: "ML dataset roles",
-  unitId: "aif-unit-supervised",
-  tags: [AIF_CONCEPTS[2]],
+  title: "Text analysis techniques",
+  unitId: "aif-unit-workloads",
+  tags: [STD_WORKLOADS],
   difficulty: "intermediate",
   ...bankIdentity({
     numericId: 1846,
@@ -364,36 +502,34 @@ export const mockMatchBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Training fits the model, validation compares design choices, and the test set is held out for a final check.",
+      "Sentiment analysis judges opinion, entity detection finds named people, places, and dates, and summarization condenses long text.",
   },
-  teacherNote:
-    "Validation vs test is the usual mix-up; the “comparing design choices” wording is the tell.",
   updatedAt: Date.now(),
   item: {
     kind: "match",
     content: {
-      prompt: "Match each dataset role",
+      prompt: "Match each text analysis technique",
       description:
-        "A typical supervised workflow splits labeled examples into three roles before anyone reports accuracy.\n\nMatch each role to its purpose.",
+        "A news app runs several text analysis techniques on the articles and reviews it collects.\n\nMatch each technique to the job it does.",
       terms: [
-        { id: "t1", text: "Training set" },
-        { id: "t2", text: "Validation set" },
-        { id: "t3", text: "Test set" },
+        { id: "t1", text: "Sentiment analysis" },
+        { id: "t2", text: "Entity detection" },
+        { id: "t3", text: "Summarization" },
       ],
       prompts: [
         {
           id: "p1",
-          text: "Examples used to fit model parameters.",
+          text: "Decide whether a product review is positive or negative.",
           correctTermId: "t1",
         },
         {
           id: "p2",
-          text: "Held-out examples for comparing design choices.",
+          text: "Find the people, places, and dates an article mentions.",
           correctTermId: "t2",
         },
         {
           id: "p3",
-          text: "Unseen examples for final evaluation.",
+          text: "Condense a long report into a short paragraph.",
           correctTermId: "t3",
         },
       ],
@@ -406,8 +542,8 @@ export const mockSurveyBankQuestion: QuestionItem = {
   bankId: "q-aif-survey-1",
   courseId: "aif-cert",
   title: "Course confidence survey",
-  unitId: "aif-unit-responsible",
-  tags: [AIF_CONCEPTS[1]],
+  unitId: "aif-unit-foundry",
+  tags: [STD_GENAI_AGENTS],
   difficulty: "beginner",
   listedInBank: false,
   ...bankIdentity({
@@ -420,7 +556,7 @@ export const mockSurveyBankQuestion: QuestionItem = {
   item: {
     kind: "multi",
     content: {
-      prompt: "How confident do you feel explaining model bias to a teammate?",
+      prompt: "How confident do you feel deploying a model in the Foundry portal?",
       surveyMode: true,
       answers: [
         { id: "a", text: "Very confident" },
@@ -435,9 +571,9 @@ export const mockSurveyBankQuestion: QuestionItem = {
 export const mockFillInBlankBankQuestion: QuestionItem = {
   bankId: "q-aif-fib-1",
   courseId: "aif-cert",
-  title: "Feature vs label",
-  unitId: "aif-unit-supervised",
-  tags: [AIF_CONCEPTS[2]],
+  title: "Speech recognition vs synthesis",
+  unitId: "aif-unit-workloads",
+  tags: [STD_WORKLOADS],
   points: 1,
   listedInBank: false,
   ...bankIdentity({
@@ -448,30 +584,30 @@ export const mockFillInBlankBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Features are the input measurements; the label is the value the model is trained to predict.",
+      "Speech recognition turns audio into text; speech synthesis turns text into audio.",
   },
   updatedAt: Date.now(),
   item: {
     kind: "fillInBlank",
     content: {
-      prompt: "Complete the sentence about supervised learning data.",
+      prompt: "Complete the sentence about speech capabilities.",
       segments: [
-        { type: "text", text: "In a labeled dataset, each example has input " },
+        { type: "text", text: "Speech " },
         { type: "blank", blankId: "blank-1" },
-        { type: "text", text: " and a target " },
+        { type: "text", text: " turns spoken audio into text, and speech " },
         { type: "blank", blankId: "blank-2" },
-        { type: "text", text: "." },
+        { type: "text", text: " turns text into spoken audio." },
       ],
       blanks: [
         {
           id: "blank-1",
-          placeholder: "inputs",
-          acceptedAnswers: ["features", "feature values", "predictors"],
+          placeholder: "audio → text",
+          acceptedAnswers: ["recognition", "to text", "-to-text"],
         },
         {
           id: "blank-2",
-          placeholder: "output",
-          acceptedAnswers: ["label", "labels", "target", "targets"],
+          placeholder: "text → audio",
+          acceptedAnswers: ["synthesis"],
         },
       ],
     },
@@ -482,9 +618,9 @@ export const mockFillInBlankBankQuestion: QuestionItem = {
 export const mockParsonsBankQuestion: QuestionItem = {
   bankId: "q-aif-parsons-1",
   courseId: "aif-cert",
-  title: "Training loop order",
-  unitId: "aif-unit-models",
-  tags: [AIF_CONCEPTS[0]],
+  title: "Text analysis app steps",
+  unitId: "aif-unit-foundry",
+  tags: [STD_TEXT_SPEECH],
   points: 2,
   listedInBank: false,
   ...bankIdentity({
@@ -495,18 +631,18 @@ export const mockParsonsBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Compute predictions, measure loss, then update weights from that error.",
+      "Connect a client first, send the text, then read the result from the response.",
   },
   updatedAt: Date.now(),
   item: {
     kind: "dragDrop",
     content: {
-      prompt: "Arrange the steps of one training iteration in the correct order.",
+      prompt: "Arrange the steps of a small sentiment analysis app in the correct order.",
       mode: "parsons",
       blocks: [
-        { id: "b1", text: "Compute predictions from current weights" },
-        { id: "b2", text: "Calculate loss against the true labels" },
-        { id: "b3", text: "Update weights to reduce the loss" },
+        { id: "b1", text: "Create a client with the resource endpoint and key" },
+        { id: "b2", text: "Send the review text for sentiment analysis" },
+        { id: "b3", text: "Read the sentiment label and confidence scores" },
       ],
       correctOrder: ["b1", "b2", "b3"],
     },
@@ -516,9 +652,9 @@ export const mockParsonsBankQuestion: QuestionItem = {
 export const mockBiasVarianceBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-4",
   courseId: "aif-cert",
-  title: "High variance symptom",
-  unitId: "aif-unit-supervised",
-  tags: [AIF_CONCEPTS[0]],
+  title: "How language models generate text",
+  unitId: "aif-unit-concepts",
+  tags: [STD_MODELS],
   points: 1,
   ...bankIdentity({
     numericId: 1850,
@@ -528,31 +664,29 @@ export const mockBiasVarianceBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "High variance means the model is sensitive to the training sample and generalizes poorly.",
+      "A generative language model predicts the next token from everything so far, adds it, and repeats until the response is done.",
   },
-  teacherNote:
-    "Contrast with option B (high bias) when reviewing — both low is underfitting, not variance.",
   updatedAt: Date.now(),
   item: {
     kind: "multi",
     content: {
-      prompt: "Which outcome most strongly suggests a model has high variance?",
+      prompt: "How does a generative language model write a response?",
       answers: [
         {
           id: "a",
-          text: "Training accuracy is high, but accuracy on new data is much lower.",
+          text: "It predicts a likely next token, one at a time, based on the text so far.",
         },
         {
           id: "b",
-          text: "Training and test accuracy are both low.",
+          text: "It looks up a stored answer that matches the question.",
         },
         {
           id: "c",
-          text: "The model uses fewer features than the dataset provides.",
+          text: "It copies the closest web page it saw during training.",
         },
         {
           id: "d",
-          text: "Training takes fewer epochs than expected.",
+          text: "It runs a rule a developer wrote for each topic.",
         },
       ],
       correctAnswerId: "a",
@@ -563,9 +697,9 @@ export const mockBiasVarianceBankQuestion: QuestionItem = {
 export const mockFairnessBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-3",
   courseId: "aif-cert",
-  title: "Fairness evaluation",
-  unitId: "aif-unit-responsible",
-  tags: [AIF_CONCEPTS[1]],
+  title: "Extract data from forms",
+  unitId: "aif-unit-foundry",
+  tags: [STD_EXTRACTION],
   points: 1,
   ...bankIdentity({
     numericId: 1851,
@@ -575,33 +709,31 @@ export const mockFairnessBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Comparing error rates across groups is a common fairness check; overall accuracy can hide disparities.",
+      "Azure Content Understanding extracts fields from documents and forms into structured data.",
   },
-  teacherNote:
-    "Ties into the hiring-model case study from Lesson 10 — reference the group error-rate table there.",
   updatedAt: Date.now(),
   item: {
     kind: "multi",
     content: {
-      prompt: "A 92% accurate hiring model",
+      prompt: "Thousands of paper intake forms",
       description:
-        "A screening model is 92% accurate on the held-out set. The team is ready to ship.\n\nWhat is the best next fairness check before they deploy?",
+        "A clinic has scanned thousands of paper intake forms. Staff want each patient’s name, date of birth, and allergies in a spreadsheet.\n\nWhich approach fits best?",
       answers: [
         {
           id: "a",
-          text: "Compare false-positive and false-negative rates across applicant groups.",
+          text: "Use Azure Content Understanding to extract those fields from the scans.",
         },
         {
           id: "b",
-          text: "Increase the training set size until overall accuracy reaches 99%.",
+          text: "Use speech recognition on recordings of staff reading each form aloud.",
         },
         {
           id: "c",
-          text: "Remove the model card so applicants cannot inspect the system.",
+          text: "Use an image-generation model to create a clean copy of each form.",
         },
         {
           id: "d",
-          text: "Switch from a neural net to a linear model without measuring group error.",
+          text: "Run sentiment analysis on each form.",
         },
       ],
       correctAnswerId: "a",
@@ -612,9 +744,9 @@ export const mockFairnessBankQuestion: QuestionItem = {
 export const mockTwoCorrectBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-two",
   courseId: "aif-cert",
-  title: "Two correct accountability checks",
-  unitId: "aif-unit-responsible",
-  tags: [AIF_CONCEPTS[1]],
+  title: "Two accountability checks",
+  unitId: "aif-unit-concepts",
+  tags: [STD_RESPONSIBLE],
   ...bankIdentity({
     numericId: 1904,
     questionKey: "c21a9e44-0d18-4f7b-a6c3-11b8d2e01904",
@@ -625,25 +757,23 @@ export const mockTwoCorrectBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Documentation and group error checks are both required. Overall accuracy alone can hide harm.",
+      "Accountability means people own the system’s outcomes: a named owner, and a way for affected people to get a human review.",
   },
-  teacherNote:
-    "Requires exactly two selections; students who pick only the model card are halfway there.",
   updatedAt: Date.now(),
   item: {
     kind: "multi",
     content: {
       prompt:
-        "Which two actions are required before deploying a hiring model?",
+        "Which two actions show accountability for a deployed AI system?",
       selectionMode: "multiple",
       correctAnswerIds: ["a", "c"],
       requiredSelectionCount: 2,
       maxSelectionCount: 2,
       answers: [
-        { id: "a", text: "Compare error rates across applicant groups." },
+        { id: "a", text: "Name a team responsible for the system’s decisions." },
         { id: "b", text: "Publish overall accuracy and stop there." },
-        { id: "c", text: "Document known failure modes in a model card." },
-        { id: "d", text: "Hide the training data sources from reviewers." },
+        { id: "c", text: "Let people report a problem and get a human review." },
+        { id: "d", text: "Let the model vendor decide how the system is used." },
       ],
     },
   },
@@ -652,9 +782,9 @@ export const mockTwoCorrectBankQuestion: QuestionItem = {
 export const mockFacialRecognitionBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-facial",
   courseId: "aif-cert",
-  title: "Facial recognition risk",
-  unitId: "aif-unit-models",
-  tags: [AIF_CONCEPTS[1]],
+  title: "Visual input in prompts",
+  unitId: "aif-unit-foundry",
+  tags: [STD_VISION],
   ...bankIdentity({
     numericId: 1910,
     lastEditedLabel: "Sep 5, 2026",
@@ -664,33 +794,31 @@ export const mockFacialRecognitionBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Uneven accuracy across groups is a documented risk of facial recognition in public settings.",
+      "A multimodal model accepts images alongside text, so it can read the photo and follow the instruction in the same prompt.",
   },
-  teacherNote:
-    "Good discussion starter for the civic-tech debate; ask for a real deployment example.",
   updatedAt: Date.now(),
   item: {
     kind: "multi",
     content: {
-      prompt: "Should the city pause?",
+      prompt: "Turn a whiteboard photo into notes",
       description:
-        "A city proposes cameras that match faces in parks and transit hubs to a watch list.\n\nWhat is the strongest reason to pause the rollout?",
+        "A student sends a deployed model a photo of a whiteboard with the prompt “Turn these notes into a bulleted list.” The model replies with an accurate list.\n\nWhat made this possible?",
       answers: [
         {
           id: "a",
-          text: "The system is likely to misidentify some groups more often than others.",
+          text: "The model is multimodal, so it reads the image and the text instruction together.",
         },
         {
           id: "b",
-          text: "Cameras cannot store images without a larger hard drive.",
+          text: "The model converted the image to audio, then transcribed it.",
         },
         {
           id: "c",
-          text: "Facial recognition only works indoors.",
+          text: "An image-generation model drew a new picture of the notes.",
         },
         {
           id: "d",
-          text: "The model cannot be updated after the first install.",
+          text: "The photo was sent as training data, so the model learned the notes.",
         },
       ],
       correctAnswerId: "a",
@@ -701,9 +829,9 @@ export const mockFacialRecognitionBankQuestion: QuestionItem = {
 export const mockTradeoffBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-tradeoff",
   courseId: "aif-cert",
-  title: "Accuracy vs privacy tradeoff",
-  unitId: "aif-unit-models",
-  tags: [AIF_CONCEPTS[1], AIF_CONCEPTS[2]],
+  title: "Synthetic voice disclosure",
+  unitId: "aif-unit-foundry",
+  tags: [STD_RESPONSIBLE, STD_TEXT_SPEECH],
   ...bankIdentity({
     numericId: 1911,
     lastEditedLabel: "Sep 5, 2026",
@@ -713,32 +841,30 @@ export const mockTradeoffBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Collecting more personal data can raise accuracy while increasing privacy harm. The tradeoff should be explicit.",
+      "Callers should know when they are hearing a synthetic voice. That is transparency, and it matters most when the voice sounds human.",
   },
-  teacherNote:
-    "Accept privacy, consent, or data-minimization phrasings when discussing — the point is naming a human cost.",
   updatedAt: Date.now(),
   item: {
     kind: "multi",
     content: {
       prompt:
-        "A team can raise model accuracy by collecting more personal data. What tradeoff should they name first?",
+        "A bank uses Azure Speech to give its phone line a synthetic voice that sounds like a real employee. What should the team address first?",
       answers: [
         {
           id: "a",
-          text: "Privacy risk for the people whose data is collected.",
+          text: "Tell callers they are hearing a synthetic voice.",
         },
         {
           id: "b",
-          text: "Whether the programming language is popular enough.",
+          text: "Pick the voice with the fastest speaking rate.",
         },
         {
           id: "c",
-          text: "How many GPUs the office currently owns.",
+          text: "Switch to the largest language model available.",
         },
         {
           id: "d",
-          text: "Whether the logo uses the brand color.",
+          text: "Save call recordings in a different audio format.",
         },
       ],
       correctAnswerId: "a",
@@ -749,9 +875,9 @@ export const mockTradeoffBankQuestion: QuestionItem = {
 export const mockHumanInTheLoopBankQuestion: QuestionItem = {
   bankId: "q-aif-fr-human-loop",
   courseId: "aif-cert",
-  title: "Human in the loop",
-  unitId: "aif-unit-models",
-  tags: [AIF_CONCEPTS[1]],
+  title: "Human approval for agents",
+  unitId: "aif-unit-foundry",
+  tags: [STD_RESPONSIBLE],
   ...bankIdentity({
     numericId: 1912,
     lastEditedLabel: "Sep 4, 2026",
@@ -761,24 +887,22 @@ export const mockHumanInTheLoopBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "A human review step is most useful when the cost of an automated error is high.",
+      "Actions that are costly or hard to undo should wait for a person to approve them, so someone stays accountable for the outcome.",
   },
-  teacherNote:
-    "Look for a high-stakes example plus a why; medical, lending, and justice examples all work.",
   updatedAt: Date.now(),
   item: {
     kind: "freeResponse",
     content: {
-      prompt: "When is automation not enough?",
+      prompt: "When should an agent wait for a person?",
       description:
-        "Some automated decisions are cheap to reverse. Others change someone’s housing, credit, or medical care.\n\nGive one example of a decision that should keep a human in the loop, and say why automation alone is not enough.",
-      placeholder: "A human should review… because…",
+        "An agent built in Foundry can answer questions and take actions for customers, such as changing an order or issuing a refund.\n\nGive one action that should need a person’s approval, and explain why the agent shouldn’t do it alone.",
+      placeholder: "A person should approve… because…",
       allowFileUpload: true,
       minCharacters: 40,
       revealAnswerEnabled: true,
       teacherAnswer: {
         exemplar:
-          "A loan denial should be reviewed by a person because an automated error can block someone’s housing or education, and the applicant deserves a path to appeal.",
+          "A large refund should need a person’s approval, because a mistake costs real money and is hard to reverse, and someone needs to be accountable for the decision.",
       },
     },
   },
@@ -787,9 +911,9 @@ export const mockHumanInTheLoopBankQuestion: QuestionItem = {
 export const mockFeatureLabelBankQuestion: QuestionItem = {
   bankId: "q-aif-multi-features",
   courseId: "aif-cert",
-  title: "Feature vs label",
-  unitId: "aif-unit-supervised",
-  tags: [AIF_CONCEPTS[2]],
+  title: "System and user prompts",
+  unitId: "aif-unit-foundry",
+  tags: [STD_GENAI_AGENTS],
   points: 1,
   ...bankIdentity({
     numericId: 1916,
@@ -800,44 +924,41 @@ export const mockFeatureLabelBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Features are the input measurements; the label is the value the model is trained to predict.",
+      "The system message sets behavior and limits for the whole conversation; the user message is the request to answer.",
   },
-  teacherNote:
-    "Vocabulary check — quick verbal recap of features vs labels clears most wrong answers here.",
   updatedAt: Date.now(),
   item: {
     kind: "multi",
     content: {
-      prompt: "Name the pieces of this row",
+      prompt: "Name the two messages",
       description: [
-        "Each training example is a row the model can see, plus a target it is trying to predict:",
+        "A chat app sends these messages to a deployed model:",
         "",
         "```python",
-        "example = {",
-        '    "hours_studied": 6,',
-        '    "practice_tests": 2,',
-        '    "passed_exam": True,',
-        "}",
+        "messages = [",
+        '    {"role": "system", "content": "You tutor 9th grade biology. Answer in two sentences or fewer."},',
+        '    {"role": "user", "content": "Why do leaves change color in the fall?"},',
+        "]",
         "```",
         "",
-        "Which values are features, and which is the label?",
+        "Which statement describes them correctly?",
       ].join("\n"),
       answers: [
         {
           id: "a",
-          text: "`hours_studied` and `practice_tests` are features; `passed_exam` is the label.",
+          text: "The system message sets how the model behaves; the user message is the question to answer.",
         },
         {
           id: "b",
-          text: "`passed_exam` is a feature; the hours and tests are labels.",
+          text: "The system message is the question; the user message is the answer to copy.",
         },
         {
           id: "c",
-          text: "All three fields are labels.",
+          text: "Both messages permanently retrain the model.",
         },
         {
           id: "d",
-          text: "All three fields are features.",
+          text: "The system message is shown to the user; the user message is hidden.",
         },
       ],
       correctAnswerId: "a",
@@ -848,9 +969,9 @@ export const mockFeatureLabelBankQuestion: QuestionItem = {
 export const mockTrainingLoopBankQuestion: QuestionItem = {
   bankId: "q-aif-match-training",
   courseId: "aif-cert",
-  title: "Training loop order",
-  unitId: "aif-unit-models",
-  tags: [AIF_CONCEPTS[0]],
+  title: "Agent setup order",
+  unitId: "aif-unit-foundry",
+  tags: [STD_GENAI_AGENTS],
   points: 2,
   ...bankIdentity({
     numericId: 1922,
@@ -861,29 +982,15 @@ export const mockTrainingLoopBankQuestion: QuestionItem = {
   reveal: {
     enabled: true,
     explanation:
-      "Compute predictions, measure loss, then update weights from that error.",
+      "An agent needs a deployed model first. Then you create the agent with its instructions, and test it in the playground before building a client app.",
   },
-  teacherNote:
-    "If the order flips, re-run the training-loop animation from Lesson 8 before retrying.",
   updatedAt: Date.now(),
   item: {
     kind: "match",
     content: {
-      prompt: "Order the steps in this loop",
-      description: [
-        "Here is one pass over a batch:",
-        "",
-        "```python",
-        "for batch in loader:",
-        "    predictions = model(batch.x)",
-        "    loss = criterion(predictions, batch.y)",
-        "    optimizer.zero_grad()",
-        "    loss.backward()",
-        "    optimizer.step()",
-        "```",
-        "",
-        "Match each step to its place in one training iteration. Ignore `zero_grad` — it only resets gradients before the update.",
-      ].join("\n"),
+      prompt: "Order the agent setup steps",
+      description:
+        "You are building a single-agent solution in the Foundry portal that answers questions about a school’s course catalog.\n\nMatch each step to its place in the setup.",
       terms: [
         { id: "t1", text: "First" },
         { id: "t2", text: "Second" },
@@ -892,17 +999,17 @@ export const mockTrainingLoopBankQuestion: QuestionItem = {
       prompts: [
         {
           id: "p1",
-          text: "Compute predictions from current weights",
+          text: "Deploy a model for the agent to use",
           correctTermId: "t1",
         },
         {
           id: "p2",
-          text: "Calculate loss against the true labels",
+          text: "Create the agent and write its instructions",
           correctTermId: "t2",
         },
         {
           id: "p3",
-          text: "Update weights to reduce the loss",
+          text: "Test the agent in the playground",
           correctTermId: "t3",
         },
       ],
@@ -912,7 +1019,7 @@ export const mockTrainingLoopBankQuestion: QuestionItem = {
 
 export const mockAifCourseBank: AssessmentCourseBank = {
   courseId: "aif-cert",
-  courseName: "AI Foundations",
+  courseName: "Building AI Systems",
   domains: AIF_CONCEPTS,
   units: AIF_UNITS,
   questions: [

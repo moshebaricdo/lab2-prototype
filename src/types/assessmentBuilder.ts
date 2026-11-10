@@ -5,11 +5,37 @@ import type { DragDropBucket, DragDropCategorizationItem, DragDropItem } from ".
 import type { FillInBlankDefinition, FillInBlankSegment } from "../data/assessment/fillInBlank";
 
 /** Concept, domain, or standard tag attached to a bank question. */
+/**
+ * Prod standards model: framework → category → standard. A framework is
+ * course-level (CSTA, AI-901), so one quiz never mixes frameworks.
+ */
+export interface StandardFramework {
+  id: string;
+  /** Short name, e.g. `AI-901`. */
+  shortLabel: string;
+  /** Full name, e.g. `Microsoft Azure AI Fundamentals (AI-901)`. */
+  label: string;
+}
+
+/** Middle layer of a framework, e.g. CSTA `PRO - Programming` or an AI-901 skill area. */
+export interface StandardCategory {
+  id: string;
+  /** Short code, e.g. `PRO` or `1`. */
+  code?: string;
+  label: string;
+}
+
 export interface DomainTag {
   id: string;
   label: string;
-  /** Compact standard code shown on bank chips (e.g. `3B-AP-08`). */
+  /** Compact standard code shown on bank chips (e.g. `AI-901 1.1`). */
   code?: string;
+  framework?: StandardFramework;
+  category?: StandardCategory;
+  /** Full standard wording from the framework (labels may be shortened). */
+  description?: string;
+  /** Skills the standard covers, as listed by the framework. */
+  skills?: string[];
 }
 
 /**
@@ -183,8 +209,6 @@ export interface QuestionItem {
   /** @deprecated P0 dropped difficulty; ignored by the P0 builder. */
   difficulty?: QuestionDifficulty;
   reveal: RevealConfig;
-  /** Teacher-only note shown on teacher viewpoints; students never see it. */
-  teacherNote?: string;
   codePanel?: CodePanelConfig;
   /** Point value when scored in a graded assessment. Defaults to 1. */
   points?: number;

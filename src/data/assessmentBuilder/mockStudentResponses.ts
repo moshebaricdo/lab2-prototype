@@ -25,7 +25,7 @@ export const mockCfuStudentResponses: Record<
   "two-correct": { multiSelectedIds: ["a", "b"] },
   "free-response": {
     freeText:
-      "Overfitting is when the model does great on the training examples but much worse on new ones. I would hold out a test set and compare the scores to catch it.",
+      "A multimodal model, because it has to look at the photos. A low temperature keeps the answers consistent.",
   },
   // p1 right, p2/p3 swapped.
   matching: { matchAssignments: { p1: "t1", p2: "t3", p3: "t2" } },
@@ -69,7 +69,7 @@ export const mockQuizStudentResponse: MockQuizStudentResponse = {
     },
     freeText: {
       "q-aif-fr-1":
-        "Overfitting means the model memorized the training set, so training accuracy looks great while new data does badly. Keeping a held-out validation set and stopping early would reduce it.",
+        "I’d deploy a multimodal model that can take images, since a text-only model can’t see the photo. I’d keep the temperature low so the answers about the equipment stay accurate and don’t change each time.",
     },
     match: {
       "q-aif-match-1": { p1: "t1", p2: "t3", p3: "t2" },
@@ -101,9 +101,9 @@ export const mockQuizStudentResponseSubmitted: MockQuizStudentResponse = {
     },
     freeText: {
       "q-aif-fr-1":
-        "Overfitting means the model memorized the training set, so training accuracy looks great while new data does badly. Keeping a held-out validation set and stopping early would reduce it.",
+        "I’d deploy a multimodal model that can take images, since a text-only model can’t see the photo. I’d keep the temperature low so the answers about the equipment stay accurate and don’t change each time.",
       "q-aif-fr-human-loop":
-        "A human should review the model’s call when a wrong decision is costly — for example a loan denial or a medical flag — because an automated miss there is hard to undo.",
+        "Issuing a big refund should need a person to approve it, because if the agent gets it wrong the money is hard to get back and someone has to be responsible for the call.",
     },
     match: {
       "q-aif-match-1": { p1: "t1", p2: "t3", p3: "t2" },
@@ -146,7 +146,7 @@ export function buildResumeAttemptSnapshot(
       },
       freeText: {
         [blockId("q-aif-fr-1")]:
-          "Overfitting happens when a model latches onto noise in the training data, so it scores high in training and low on anything new. Using a validation set to stop training early helps.",
+          "A model that accepts image input, because the questions are about photos. I would set a low temperature so the answers stay factual and consistent.",
       },
       matchAssignments: {
         [blockId("q-aif-match-1")]: { p1: "t1", p2: "t2", p3: "t3" },

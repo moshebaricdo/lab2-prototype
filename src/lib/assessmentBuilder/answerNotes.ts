@@ -2,27 +2,27 @@ import type { QuestionItem } from "../../types/assessmentBuilder";
 
 export interface AnswerNotesContent {
   explanation?: string;
-  teacherNote?: string;
 }
 
 /**
- * P0 note cards follow the Question Types mocks:
- * - Free response shows the teacher exemplar only (no answer-explanation card).
- * - Matching (and multi) can show the explanation and the teacher-only note.
+ * Per-question notes are the answer explanation card only. Teacher-only
+ * guidance lives at the quiz level (levelbuilder's "For teachers only"
+ * markdown, shown in the resource panel), not on each question.
+ * - Free response: the exemplar fills the explanation card, teacher viewpoints only.
+ * - Multi / matching: the explanation shows wherever the key is revealed.
  */
 export function answerNotesForQuestion(
   question: QuestionItem,
   options: {
     includeExplanation: boolean;
-    includeTeacherNote: boolean;
+    /** Teacher viewpoint or student-response review. Gates the FR exemplar. */
+    isTeacherView: boolean;
   },
 ): AnswerNotesContent {
   if (question.item.kind === "freeResponse") {
-    const exemplar =
-      question.item.content.teacherAnswer?.exemplar?.trim() ||
-      question.teacherNote?.trim();
+    const exemplar = question.item.content.teacherAnswer?.exemplar?.trim();
     return {
-      teacherNote: options.includeTeacherNote ? exemplar : undefined,
+      explanation: options.isTeacherView ? exemplar : undefined,
     };
   }
 
@@ -30,6 +30,5 @@ export function answerNotesForQuestion(
     explanation: options.includeExplanation
       ? question.reveal.explanation
       : undefined,
-    teacherNote: options.includeTeacherNote ? question.teacherNote : undefined,
   };
 }

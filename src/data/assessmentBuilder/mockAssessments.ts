@@ -9,7 +9,7 @@ export const mockBlankAssessment: AssessmentArtifact = {
   id: "draft-new",
   courseId: "aif-cert",
   title: "New assessment",
-  lessonName: "AI Foundations",
+  lessonName: "Building AI Systems",
   mode: "quiz",
   layout: "stepped",
   metadata: {
@@ -25,14 +25,14 @@ export const mockBlankAssessment: AssessmentArtifact = {
 export const mockSeededAssessment: AssessmentArtifact = {
   id: "draft-seeded",
   courseId: "aif-cert",
-  title: "AI Foundations practice quiz",
-  lessonName: "AI Foundations",
+  title: "Building AI Systems practice quiz",
+  lessonName: "Building AI Systems",
   mode: "quiz",
   layout: "stepped",
   metadata: {
     ...SHARED_METADATA,
     levelPosition: 2,
-    assessmentName: "AI Foundations practice quiz",
+    assessmentName: "Building AI Systems practice quiz",
   },
   questionRefs: [
     { type: "bank", bankId: "q-aif-multi-1" },
@@ -60,18 +60,21 @@ export const mockSeededAssessment: AssessmentArtifact = {
   updatedAt: Date.now(),
 };
 
-/** Final quiz builder seed: 12 questions over 4 pages, attached and live. */
+/**
+ * Final quiz builder seed: 12 questions over 4 pages, attached and live.
+ * Covers all seven AI-901 skill groups (see the Building AI Systems bank).
+ */
 export const mockP0ExamAssessment: AssessmentArtifact = {
   id: "draft-p0",
   courseId: "aif-cert",
-  title: "Unit 3 Assessment: AI in Society",
+  title: "AI-901 Practice Exam",
   lessonName: "Lesson 12",
   levelId: 48213,
   placement: {
     kind: "attached",
     courseId: "aif-cert",
-    courseLabel: "AI Foundations",
-    unitId: "aif-unit-models",
+    courseLabel: "Building AI Systems",
+    unitId: "aif-unit-foundry",
     unitLabel: "Unit 3",
   },
   purpose: "exam",
@@ -80,7 +83,7 @@ export const mockP0ExamAssessment: AssessmentArtifact = {
   metadata: {
     ...SHARED_METADATA,
     levelPosition: 3,
-    assessmentName: "Unit 3 Assessment: AI in Society",
+    assessmentName: "AI-901 Practice Exam",
   },
   questionRefs: [
     { type: "bank", bankId: "q-aif-multi-1" },
@@ -141,7 +144,7 @@ export const mockP0ExamAssessment: AssessmentArtifact = {
   },
   tutor: { enabled: false },
   intro: {
-    overviewContent: `This assessment covers bias, accountability, training data, and applied AI systems.
+    overviewContent: `This practice exam follows the AI-901 skills outline: responsible AI, models and workloads, and building solutions with Microsoft Foundry.
 
 You have 45 minutes and one attempt. The AI Tutor is not available.
 
@@ -151,20 +154,20 @@ When you are ready, begin.`,
   },
   unitPlacements: [
     {
-      unitName: "Unit 3: AI in Society",
-      courseName: "AI Foundations",
+      unitName: "Unit 3: Building with Microsoft Foundry",
+      courseName: "Building AI Systems",
       lessonName: "12",
       publishedState: "stable",
     },
     {
-      unitName: "Unit 3: AI in Society",
-      courseName: "AI Foundations (Global)",
+      unitName: "Unit 3: Building with Microsoft Foundry",
+      courseName: "Building AI Systems (Global)",
       lessonName: "12",
       publishedState: "stable",
     },
     {
       unitName: "Unit 3 Pilot",
-      courseName: "AI Foundations",
+      courseName: "Building AI Systems",
       lessonName: "12",
       publishedState: "pilot",
     },
@@ -184,7 +187,7 @@ export const mockQuizExamRetriesAssessment: AssessmentArtifact = {
   },
   intro: {
     ...mockP0ExamAssessment.intro!,
-    overviewContent: `This assessment covers bias, accountability, training data, and applied AI systems.
+    overviewContent: `This practice exam follows the AI-901 skills outline: responsible AI, models and workloads, and building solutions with Microsoft Foundry.
 
 You have 45 minutes per attempt and up to three attempts. The AI Tutor is not available.
 
@@ -217,7 +220,7 @@ export const mockQuizExamResumeAssessment: AssessmentArtifact = {
   },
   intro: {
     ...mockP0ExamAssessment.intro!,
-    overviewContent: `This assessment covers bias, accountability, training data, and applied AI systems.
+    overviewContent: `This practice exam follows the AI-901 skills outline: responsible AI, models and workloads, and building solutions with Microsoft Foundry.
 
 You have 45 minutes per attempt and up to three attempts. The AI Tutor is not available.
 
@@ -235,8 +238,8 @@ export const mockQuizPracticeAssessment: AssessmentArtifact = {
   placement: {
     kind: "attached",
     courseId: "aif-cert",
-    courseLabel: "AI Foundations",
-    unitId: "aif-unit-models",
+    courseLabel: "Building AI Systems",
+    unitId: "aif-unit-foundry",
     unitLabel: "Unit 3",
   },
   purpose: "practice",
@@ -267,7 +270,7 @@ export const mockQuizPracticeAssessment: AssessmentArtifact = {
   allowMultipleAttempts: true,
   requireCorrectAnswerToContinue: false,
   intro: {
-    overviewContent: `This practice covers bias, accountability, and matching key terms.
+    overviewContent: `This practice covers model settings, choosing a model, and text analysis techniques.
 
 You can try as many times as you want. The AI Tutor is available.
 
@@ -282,7 +285,7 @@ When you are ready, begin.`,
   unitPlacements: [
     {
       unitName: "Unit 3 · 2025",
-      courseName: "AI Foundations",
+      courseName: "Building AI Systems",
       lessonName: "Lesson 12",
       publishedState: "in_development",
     },
