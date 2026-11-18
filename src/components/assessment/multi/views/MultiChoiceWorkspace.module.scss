@@ -105,7 +105,8 @@
   margin-top: 0;
 
   > .answerOption {
-    align-items: center;
+    /* Keep the radio and letter on the first line when the option wraps. */
+    align-items: flex-start;
     gap: 4px;
     margin-top: 0;
     min-height: 46px;
