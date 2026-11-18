@@ -320,6 +320,11 @@ function DataHeader({
           (upload) => upload.dataset.id === lab.config.dataset.id,
         )
       : undefined;
+  const showTestLegend =
+    !inIntro && lab.dataView === "table" && lab.testRowIndexes.length > 0;
+  // Header entry is hidden for now. The modal, metadata editing, and the
+  // intro / chooser story surfaces stay wired.
+  const showAboutDataButton = false;
 
   return (
     <div className={styles.dataHeader}>
@@ -331,23 +336,44 @@ function DataHeader({
             <span className={styles.setMeta}>
               {`${lab.rows.length} rows`}
             </span>
-            <Tooltip
-              title="About this data"
-              placement="bottom"
-              open={storyOpen ? false : undefined}
-            >
-              <Button
-                variant="text"
-                color="tertiary"
-                size="extraSmall"
-                iconOnly
-                startIconName="circle-info"
-                aria-label="About this data"
-                aria-haspopup="dialog"
-                className={styles.aboutButton}
-                onClick={() => setStoryOpen(true)}
-              />
-            </Tooltip>
+            {showTestLegend ? (
+              <>
+                <span className={styles.setDot} aria-hidden />
+                <span className={styles.testLegend}>
+                  <FaIcon
+                    name="border-left"
+                    size="xs"
+                    className={styles.testMarkIcon}
+                  />
+                  <span className={styles.testLegendLabel}>Test rows</span>
+                  <IconTooltip
+                    title="These rows will be set aside for testing your model."
+                    size="extraSmall"
+                    color="tertiary"
+                    placement="bottom"
+                  />
+                </span>
+              </>
+            ) : null}
+            {showAboutDataButton ? (
+              <Tooltip
+                title="About this data"
+                placement="bottom"
+                open={storyOpen ? false : undefined}
+              >
+                <Button
+                  variant="text"
+                  color="tertiary"
+                  size="extraSmall"
+                  iconOnly
+                  startIconName="circle-info"
+                  aria-label="About this data"
+                  aria-haspopup="dialog"
+                  className={styles.aboutButton}
+                  onClick={() => setStoryOpen(true)}
+                />
+              </Tooltip>
+            ) : null}
             <DatasetStoryModal
               dataset={lab.config.dataset}
               open={storyOpen}
@@ -786,6 +812,7 @@ const DECK_PEEK = 2;
 
 function DataCards({ lab }: { lab: AiLabController }) {
   const rows = lab.rows;
+  const testRows = new Set(lab.testRowIndexes);
   const filteredIndexes = lab.filteredRowIndexes;
   const total = filteredIndexes.length;
   const rowIndex = Math.min(Math.max(0, lab.cardIndex), Math.max(0, total - 1));
@@ -863,6 +890,7 @@ function DataCards({ lab }: { lab: AiLabController }) {
                     ) : (
                       <DatasetRowCard
                         isCurrent={depth === 0}
+                        isTestRow={testRows.has(datasetRow)}
                         rowNumber={datasetRow + 1}
                         row={row}
                         columns={lab.config.dataset.columns}
@@ -931,6 +959,7 @@ function PagerButton({
 
 const DatasetRowCard = memo(function DatasetRowCard({
   isCurrent,
+  isTestRow,
   rowNumber,
   row,
   columns,
@@ -939,6 +968,7 @@ const DatasetRowCard = memo(function DatasetRowCard({
   titleColumnId,
 }: {
   isCurrent: boolean;
+  isTestRow: boolean;
   rowNumber: number;
   row: AiLabDataRow;
   columns: AiLabColumn[];
@@ -999,7 +1029,18 @@ const DatasetRowCard = memo(function DatasetRowCard({
       aria-roledescription="slide"
     >
       <h3 id={titleId} className={styles.cardTitle}>
-        {heading}
+        <span className={styles.cardTitleText}>{heading}</span>
+        {isTestRow ? (
+          <span className={styles.cardTestMark}>
+            Test row
+            <IconTooltip
+              title="This row will be set aside for testing your model."
+              size="extraSmall"
+              color="tertiary"
+              placement="bottom"
+            />
+          </span>
+        ) : null}
       </h3>
       <div className={styles.cardList}>
         <dl

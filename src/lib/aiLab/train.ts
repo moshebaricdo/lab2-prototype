@@ -50,6 +50,59 @@ export function holdoutIndexes(
 }
 
 /**
+ * Holdout the next `train()` will use. A guided level with a locked k
+ * trains on the whole sheet (`0`) unless it sets `holdoutCount` itself.
+ */
+export function effectiveHoldoutCount(
+  holdoutCount: number | undefined,
+  defaultKnnK: number | undefined,
+): number | undefined {
+  return holdoutCount ?? (defaultKnnK != null ? 0 : undefined);
+}
+
+/**
+ * Rows the sheet marks, and the next train reserves.
+ * A random reserve uses the set drawn once for this session
+ * (`randomTestRowIndexes`). Without that draw there is nothing to mark.
+ */
+export function previewTestRowIndexes(
+  rowCount: number,
+  options: {
+    holdoutCount?: number;
+    defaultKnnK?: number;
+    randomizeTestData?: boolean;
+    /** The session's random draw. Ignored unless `randomizeTestData` is on. */
+    randomTestRowIndexes?: number[];
+  } = {},
+): number[] {
+  if (options.randomizeTestData) {
+    return (options.randomTestRowIndexes ?? []).filter(
+      (index) => index >= 0 && index < rowCount,
+    );
+  }
+  return holdoutIndexes(
+    rowCount,
+    effectiveHoldoutCount(options.holdoutCount, options.defaultKnnK),
+  );
+}
+
+/** One random reserve for a session. A new session draws again. */
+export function drawRandomTestRows(
+  rowCount: number,
+  options: {
+    holdoutCount?: number;
+    defaultKnnK?: number;
+  } = {},
+  random: () => number = Math.random,
+): number[] {
+  return randomHoldoutIndexes(
+    rowCount,
+    effectiveHoldoutCount(options.holdoutCount, options.defaultKnnK),
+    random,
+  );
+}
+
+/**
  * Production's random reserve (\`randomizeTestData\`), as its
  * \`reserveRowIndices\`: the same count as the end split, each row drawn with
  * \`getRandomInt(rowCount)\` (any row, the last included) until that many

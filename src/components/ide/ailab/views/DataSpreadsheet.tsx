@@ -272,6 +272,10 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
       ? titleColumnId
       : undefined;
   const rows = lab.rows;
+  const testRows = useMemo(
+    () => new Set(lab.testRowIndexes),
+    [lab.testRowIndexes],
+  );
   const readOnly = lab.config.allowDataEdit === false;
   /** Drives `--index-col-ch` so the row # column fits the longest index. */
   const indexColCh = Math.max(1, String(rows.length).length);
@@ -557,6 +561,7 @@ export function DataSpreadsheet({ lab }: DataSpreadsheetProps) {
         rowIndex={rowIndex}
         visualIndex={visualIndex}
         row={rows[rowIndex]}
+        isTestRow={testRows.has(rowIndex)}
         columns={columns}
         idColumnId={idColumnId}
         selectedColumnId={lab.selectedColumnId}
@@ -746,6 +751,8 @@ interface SheetRowProps {
   /** Position in the current view. Matches `rowIndex` until the sheet is sorted. */
   visualIndex: number;
   row: AiLabDataRow;
+  /** This row is reserved for the next train. */
+  isTestRow: boolean;
   columns: AiLabColumn[];
   idColumnId: string | undefined;
   selectedColumnId: string | undefined;
@@ -770,6 +777,7 @@ const SheetRow = memo(function SheetRow({
   rowIndex,
   visualIndex,
   row,
+  isTestRow,
   columns,
   idColumnId,
   selectedColumnId,
@@ -789,7 +797,14 @@ const SheetRow = memo(function SheetRow({
   const rowSelected = activeColumnId !== undefined;
   return (
     <tr aria-rowindex={visualIndex + 2}>
-      <td className={`${styles.td} ${styles.tdIndex}`}>{rowIndex + 1}</td>
+      <td
+        className={`${styles.td} ${styles.tdIndex}${isTestRow ? ` ${styles.tdTest}` : ""}`}
+      >
+        {rowIndex + 1}
+        {isTestRow ? (
+          <span className={styles.visuallyHidden}>, test row</span>
+        ) : null}
+      </td>
       {columns.map((column) => {
         const isActive = activeColumnId === column.id;
         const isColumn = selectedColumnId === column.id;

@@ -174,9 +174,10 @@
 .dataHeader {
   display: flex;
   flex-shrink: 0;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 4px 8px;
   min-height: 40px;
   padding: 4px 8px 4px 8px;
   border-bottom: 1px solid var(--border-neutral-primary);
@@ -185,7 +186,8 @@
 
 .setName {
   display: flex;
-  min-width: 0;
+  flex: 1 1 320px;
+  min-width: min(100%, 280px);
   align-items: center;
   gap: 8px;
 }
@@ -223,10 +225,28 @@
 
 .setMeta {
   @include type-body-4-regular;
+  flex-shrink: 0;
   overflow: hidden;
   color: var(--text-neutral-quaternary);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.testLegend {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.testMarkIcon {
+  flex-shrink: 0;
+  color: var(--background-neutral-septenary);
+}
+
+.testLegendLabel {
+  @include type-body-4-regular;
+  color: var(--text-neutral-primary);
 }
 
 .viewType {
@@ -234,6 +254,7 @@
   flex-shrink: 0;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
 /* Train rail */
@@ -562,10 +583,30 @@ $deck-top: 24px;
 
 .cardTitle {
   @include type-body-1-semibold;
+  display: flex;
   flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
   margin: 0;
   padding: 0 20px;
   color: var(--text-neutral-primary);
+}
+
+.cardTitleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardTestMark {
+  @include type-body-3-regular;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--text-neutral-secondary);
 }
 
 .cardList {
@@ -831,6 +872,25 @@ tbody tr:hover .tdIndex {
   color: var(--text-neutral-tertiary);
   background: var(--background-neutral-secondary);
   backface-visibility: hidden;
+}
+
+/* Reserved test rows. Septenary, not another hue: the sheet already tints
+   the label and the features. The bar covers the row rule so neighbors
+   read as one mark. */
+.tdTest {
+  overflow: visible;
+
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    bottom: -1px;
+    left: 0;
+    width: 3px;
+    background: var(--background-neutral-septenary);
+    pointer-events: none;
+  }
 }
 
 /* Row id (card title): pinned against the index. The header matches the index

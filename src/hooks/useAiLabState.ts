@@ -9,6 +9,9 @@ import {
   initialDatasetId,
   labelNotice,
   resolveDataset,
+  drawRandomTestRows,
+  effectiveHoldoutCount,
+  previewTestRowIndexes,
   trainModel,
   appendTrainingRun,
   trainingRunLoadBlock,
@@ -66,6 +69,12 @@ export interface AiLabState {
   /** `config.introActivity` finished (or absent); the sheet may open. */
   introComplete: boolean;
   rows: AiLabDataRow[];
+  /**
+   * Random test rows for this session. Empty unless `randomizeTestData` is
+   * on. Drawn in `initialState` and again when the dataset changes; trains
+   * reuse it instead of drawing a new set.
+   */
+  randomTestRowIndexes: number[];
   savedModels: AiLabSavedModel[];
 }
 
@@ -126,6 +135,14 @@ function cardLayoutFor(
     : defaultCardLayout(rowCount);
 }
 
+function randomRowsFor(config: AiLabLevelConfig, rowCount: number): number[] {
+  if (!config.randomizeTestData) return [];
+  return drawRandomTestRows(rowCount, {
+    holdoutCount: config.holdoutCount,
+    defaultKnnK: config.defaultKnnK,
+  });
+}
+
 function initialState(config: AiLabLevelConfig): AiLabState {
   const datasetId = initialDatasetId(config);
   const dataset = resolveDataset(config, datasetId);
@@ -144,6 +161,8 @@ function initialState(config: AiLabLevelConfig): AiLabState {
       ? config.presetFeatures
       : config.pretrained?.selectedFeatures ?? []
   ).filter((id) => id !== labelColumn);
+  const rows = dataset ? initialRows(dataset.rows) : [];
+  const randomTestRowIndexes = randomRowsFor(config, rows.length);
   const model =
     config.pretrained && selectedAlgorithm && dataset
       ? trainModel({
@@ -155,6 +174,9 @@ function initialState(config: AiLabLevelConfig): AiLabState {
           knnK: config.defaultKnnK,
           holdoutCount: config.holdoutCount,
           randomizeTestData: config.randomizeTestData,
+          holdoutRowIndexes: config.randomizeTestData
+            ? randomTestRowIndexes
+            : undefined,
         })
       : undefined;
 
@@ -182,7 +204,8 @@ function initialState(config: AiLabLevelConfig): AiLabState {
     scales: [],
     trainingSetupOpen: Boolean(config.trainAsOverlay && config.pretrained),
     introComplete: !config.introActivity,
-    rows: dataset ? initialRows(dataset.rows) : [],
+    rows,
+    randomTestRowIndexes,
     savedModels: [],
   };
 }
@@ -343,6 +366,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
           activeRunId: undefined,
           testValues: emptyTestValues([]),
           testRowIndex: undefined,
+          randomTestRowIndexes: randomRowsFor(config, dataset.rows.length),
           section:
             current.section === "test" ? setupSection(config) : current.section,
           trainingSetupOpen: false,
@@ -603,10 +627,16 @@ export function useAiLabState(config: AiLabLevelConfig) {
         labelColumn: current.labelColumn,
         selectedFeatures: current.selectedFeatures,
         knnK: config.defaultKnnK != null ? current.knnK : undefined,
-        holdoutCount:
-          config.holdoutCount ??
-          (config.defaultKnnK != null ? 0 : undefined),
+        holdoutCount: effectiveHoldoutCount(
+          config.holdoutCount,
+          config.defaultKnnK,
+        ),
         randomizeTestData: config.randomizeTestData,
+        holdoutRowIndexes: config.randomizeTestData
+          ? current.randomTestRowIndexes.filter(
+              (index) => index < current.rows.length,
+            )
+          : undefined,
       });
       const trainingRuns = appendTrainingRun(current.trainingRuns, model);
       return {
@@ -799,6 +829,22 @@ export function useAiLabState(config: AiLabLevelConfig) {
     () => applyScales(state.rows, state.scales),
     [state.rows, state.scales],
   );
+  const testRowIndexes = useMemo(
+    () =>
+      previewTestRowIndexes(viewRows.length, {
+        holdoutCount: config.holdoutCount,
+        defaultKnnK: config.defaultKnnK,
+        randomizeTestData: config.randomizeTestData,
+        randomTestRowIndexes: state.randomTestRowIndexes,
+      }),
+    [
+      viewRows.length,
+      config.holdoutCount,
+      config.defaultKnnK,
+      config.randomizeTestData,
+      state.randomTestRowIndexes,
+    ],
+  );
   const viewColumns = useMemo(
     () => columnsWithScales(resolvedConfig.dataset.columns, state.scales),
     [resolvedConfig.dataset.columns, state.scales],
@@ -968,6 +1014,7 @@ export function useAiLabState(config: AiLabLevelConfig) {
     columnFilter: activeColumnFilter,
     filteredRowIndexes,
     rows: viewRows,
+    testRowIndexes,
     config: viewConfig,
     availableDatasets,
     completeIntro,

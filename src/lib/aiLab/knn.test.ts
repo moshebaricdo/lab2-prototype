@@ -11,6 +11,8 @@ import { nodeVisits, rowsByNode } from "./decisionTree";
 import {
   holdoutIndexes,
   isPredictionCorrect,
+  drawRandomTestRows,
+  previewTestRowIndexes,
   randomHoldoutIndexes,
   trainModel,
 } from "./train";
@@ -64,6 +66,25 @@ describe("holdoutIndexes", () => {
 
   it("returns no holdout when count is 0", () => {
     expect(holdoutIndexes(100, 0)).toEqual([]);
+  });
+
+  it("previews the rows the next train will set aside", () => {
+    expect(previewTestRowIndexes(101)).toEqual(holdoutIndexes(101));
+    expect(previewTestRowIndexes(101, { holdoutCount: 4 })).toEqual(
+      holdoutIndexes(101, 4),
+    );
+    expect(previewTestRowIndexes(101, { holdoutCount: 0 })).toEqual([]);
+    expect(previewTestRowIndexes(101, { defaultKnnK: 3 })).toEqual([]);
+    expect(previewTestRowIndexes(101, { holdoutCount: 4, defaultKnnK: 3 })).toEqual(
+      holdoutIndexes(101, 4),
+    );
+    expect(previewTestRowIndexes(101, { randomizeTestData: true })).toEqual([]);
+    expect(
+      previewTestRowIndexes(101, {
+        randomizeTestData: true,
+        randomTestRowIndexes: [1, 4, 200],
+      }),
+    ).toEqual([1, 4]);
   });
 
   it("draws the same count at random, any row included, as production does", () => {
@@ -193,6 +214,8 @@ describe("trainModel decision tree", () => {
     for (let index = 0; index < 20; index += 1) {
       rows.push(row(index < 10 ? 0 : 10, 0, index < 10 ? "A" : "B"));
     }
+    const drawn = drawRandomTestRows(rows.length, {}, () => 0.2);
+    expect(drawn).toEqual(randomHoldoutIndexes(rows.length, undefined, () => 0.2));
     const model = trainModel({
       algorithm: "decisionTree",
       rows,
@@ -200,10 +223,11 @@ describe("trainModel decision tree", () => {
       labelColumn: "label",
       selectedFeatures: ["x"],
       randomizeTestData: true,
+      holdoutRowIndexes: drawn,
     });
-    expect(model.holdoutRowIndexes).toHaveLength(2);
+    expect(model.holdoutRowIndexes).toEqual(drawn);
     expect(model.holdoutResults.map((result) => result.rowIndex)).toEqual(
-      model.holdoutRowIndexes,
+      drawn,
     );
   });
 });
