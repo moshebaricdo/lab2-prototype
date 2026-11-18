@@ -291,9 +291,10 @@ export interface AiLabShownTest {
 export type AiLabTestLayout = "dock" | "canvas";
 
 /**
- * Training modal playback: walk the rows through the tree (default), open
- * on the sheet splitting into training and test rows first (`split`), or
- * grow the finished tree.
+ * Training modal playback: split the rows into training and test rows,
+ * sort the training rows into the tree, and test it (`split`, default);
+ * walk the rows through the tree and quiz a few (`rows`, older); or grow
+ * the finished tree (`tree`).
  */
 export type AiLabTrainingAnimation = "tree" | "rows" | "split";
 
@@ -404,21 +405,17 @@ export interface AiLabLevelConfig {
    */
   trainingModal?: boolean;
   /**
-   * What the training modal plays. `rows` (default) is the sort and quiz
-   * (`TrainingTableRow`): every row is a dot sorted into piles by the
-   * tree's questions (Training), then a few rows from the sheet trace down
-   * the tree and get guessed (Testing) before the score. `split` opens on
-   * the Data Set sheet: it sets its test rows aside into a tray, the
-   * training rows become the root pile, and Testing quizzes the rows the
-   * tree never saw. `tree` is the fallback that grows the finished tree
+   * What the training modal plays. `split` (default) is split, sort, test
+   * (`TrainingSplitModal`): the rows bloom into a cluster and part into
+   * training and test rows, the training rows sort into the tree pile by
+   * pile, and the test rows the tree never saw are run through it one at
+   * a time, then the rest together, before the score. `rows` is the older
+   * sort and quiz (`TrainingTableRow`): every row is a dot sorted into
+   * piles by the tree's questions, then a few rows trace down the tree
+   * and get guessed. `tree` is the fallback that grows the finished tree
    * depth by depth. Dev panel knob.
    */
   trainingAnimation?: AiLabTrainingAnimation;
-  /**
-   * Open the training modal on an empty stage instead of the walk. The
-   * footer is already **Continue** and **Back to dataset**. Upload level.
-   */
-  skipTrainingWalk?: boolean;
   /**
    * Testing diagram node click. `modal` (default) keeps every node a compact
    * pill, counts matching and other rows on each leaf, and opens a modal

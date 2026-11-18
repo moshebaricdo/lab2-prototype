@@ -11,27 +11,14 @@
   box-shadow: var(--shadow-lg);
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  height: 72px;
-  padding: 0 24px;
-  border-bottom: 1px solid var(--border-neutral-primary);
-}
-
-.title {
-  @include type-heading-h3-semibold;
-  margin: 0;
-  color: var(--text-neutral-primary);
-}
-
-/* One bar from start to finish, above the canvas: done steps get a check,
-   the current one spins, the rest wait (a dashed ring). */
+/* The modal's header: one bar from start to finish, above the canvas.
+   Done steps get a check, the current one spins, the rest wait (a dashed
+   ring). There is no title over it: the steps say what is happening. */
 .progress {
   display: flex;
   align-items: center;
   gap: 20px;
-  height: 56px;
+  height: 64px;
   margin: 0;
   padding: 0 24px;
   border-bottom: 1px solid var(--border-neutral-primary);
@@ -92,9 +79,22 @@
   }
 }
 
-/* Canvas plus key row: one surface (the keys sit inside it in Figma). */
+/* The story in words, for a screen reader; the canvas itself is hidden from it. */
+.narration {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Canvas plus key row: one surface (the keys sit inside it in Figma).
+   Clipped, so the test pile and the test panel leave and enter at its edge. */
 .field {
   position: relative;
+  overflow: hidden;
   background: var(--background-neutral-secondary);
 }
 
@@ -124,6 +124,22 @@
   position: absolute;
   inset: 0;
   z-index: 2;
+  pointer-events: none;
+}
+
+/* The test rows' dots: over the test panel, which they leave for the tree. */
+.overlayTop {
+  z-index: 4;
+}
+
+/* The test panel's head as a window on the pile: at rest the pile sits
+   in it; zoomed in on a row, the close-up fills it edge to edge, cut off
+   at the panel's sides and the rule below. The caption steps aside while
+   rows are walked. */
+.slot {
+  position: absolute;
+  z-index: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
@@ -177,9 +193,16 @@
   white-space: nowrap;
 }
 
+/* Narrowed by the test panel: the legend gives way, fading out at its end. */
+.keyClipped {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+
 .keyItem {
   @include type-body-4-regular;
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 4px;
   height: 18px;
@@ -234,56 +257,86 @@
   color: var(--text-selected-primary);
 }
 
-/* The answer on a link ("yes", "≤ 3.5"), as the lab tree's compact edge label. */
-.branch {
-  @include type-body-4-semibold;
+/* The answer on a link ("yes", "≤ 3.5"), on the stub into its child. Plain
+   words, lighter than a node; the canvas color behind them breaks the
+   line so they read as part of the link. The words dim with the tree,
+   never the patch behind them, so the line never shows through. */
+.answer {
+  @include type-body-4-regular;
   position: absolute;
   max-width: 132px;
-  padding: 1px 10px;
+  padding: 0 5px;
   overflow: hidden;
-  border-radius: var(--shape-round);
   background: var(--background-neutral-secondary);
-  color: var(--text-neutral-primary);
+  color: var(--text-neutral-secondary);
+  line-height: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transform-origin: 50% 100%;
   /* Lighting along a test row's path eases on and off rather than snapping. */
-  transition:
-    background-color 0.2s,
-    border-color 0.2s,
-    color 0.2s;
+  transition: color 0.2s;
 }
 
-.branchLit {
-  background: var(--background-selected-primary);
-  color: var(--text-selected-primary);
+.answerText {
+  display: inline;
 }
 
-/* The row under test's card (Figma: AI Lab 2, 6345:22954): its name, its
-   values, its label and the AI's prediction; then, in place, the results. */
-.rowCard {
+.answerLit {
+  color: var(--border-selected-primary);
+}
+
+/* The test panel (Figma: AI Lab 2, 6345:22954, grown from a card into a
+   panel): flush with the modal's right edge, canvas and key row tall. Top
+   down: the test rows' cluster and its caption, the row under test, and
+   at the end the results in their place. */
+.panel {
   position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
   box-sizing: border-box;
-  overflow: hidden;
-  border: 1px solid var(--border-neutral-primary);
-  border-radius: var(--shape-md, 8px);
+  border-left: 1px solid var(--border-neutral-primary);
   background: var(--background-neutral-primary);
+  will-change: transform;
 }
 
-.rowCardBody,
-.resultBody {
+/* Over the pile's slot, so a close-up bleeds off under the words. */
+.panelTesting {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Room for the cluster (drawn in the overlay), then its caption. Its
+   height is set by the stage, which places the row under test below it. */
+.panelHead {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+}
+
+.panelBody {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-top: 1px solid var(--border-neutral-primary);
+}
+
+.panelRow {
   position: absolute;
   inset: 0 0 auto;
 }
 
 .rowTitle {
-  @include type-body-4-semibold;
-  box-sizing: border-box;
-  height: 27px;
+  @include type-body-3-semibold;
   margin: 0;
-  padding: 4px 8px;
+  padding: 12px 16px 4px;
   overflow: hidden;
-  border-bottom: 1px solid var(--border-neutral-primary);
   color: var(--text-neutral-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -293,18 +346,22 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 6px 10px;
+  padding: 4px 16px 10px;
 }
 
 .rowLine {
   @include type-body-4-regular;
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 18px;
+  gap: 12px;
+  min-height: 18px;
   margin: 0;
   color: var(--text-neutral-primary);
   white-space: nowrap;
+}
+
+.rowMore {
+  color: var(--text-neutral-tertiary);
 }
 
 /* The real label, then what the AI predicts: right or wrong reads from
@@ -313,57 +370,119 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 4px 8px;
+  margin: 0 16px;
+  padding: 10px 0 0;
   border-top: 1px solid var(--border-neutral-primary);
 }
 
 .rowKey {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
+  color: var(--text-neutral-secondary);
   text-overflow: ellipsis;
 }
 
+/* A value keeps its width, up to most of the line; its name gives way first. */
 .rowValue {
-  @include type-body-4-semibold;
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 4px;
-}
-
-/* Footer: key and label both give way, in proportion, when they don't fit. */
-.rowFooter .rowKey {
-  flex: 0 1 auto;
-}
-
-.rowFooter .rowValue {
-  flex: 0 1 auto;
+  gap: 5px;
   min-width: 0;
-  margin-left: auto;
+  max-width: 72%;
+  overflow: hidden;
+  color: var(--text-neutral-primary);
+}
+
+/* A value in both weights, one over the other: regular until the tree
+   asks about it, bold from then on. It is as wide as its bold form. */
+.rowWeighed {
+  display: inline-grid;
+  justify-items: end;
+  min-width: 0;
 }
 
 .rowText {
+  grid-area: 1 / 1;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* The results card: accuracy on every test row, and the count. */
-.resultBody {
-  padding: 6px 10px;
+.rowBold {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* The rows not walked: tested together, said in the row's place. */
+.panelRest {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px 0;
+  color: var(--text-neutral-secondary);
+  text-align: center;
+}
+
+.restText {
+  @include type-body-3-regular;
+  margin: 0;
+  color: var(--text-neutral-primary);
+}
+
+.restCount {
+  @include type-body-4-regular;
+  margin: -6px 0 0;
+  color: var(--text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The results: accuracy on every test row, and the count behind it. */
+.panelResults {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The accuracy, in the testing view's head: the same height, so the rule
+   under it sits where the rule under the cluster did. */
+.resultHead {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  justify-content: center;
+  gap: 2px;
+  box-sizing: border-box;
+  padding: 0 16px;
+}
+
+.resultLabel {
+  @include type-body-3-semibold;
+  margin: 0;
+  color: var(--text-neutral-secondary);
 }
 
 .resultValue {
-  @include type-body-3-semibold;
+  @include type-heading-h2-semibold;
   margin: 0;
   color: var(--text-neutral-primary);
-  white-space: nowrap;
+}
+
+/* Under an edge-to-edge rule (as the row's section is): the sentence the model was built from. */
+.resultBody {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border-neutral-primary);
 }
 
 .resultDetail {
-  @include type-body-4-regular;
-  margin: 0;
+  @include type-body-3-regular;
+  margin: 4px 0 0;
   color: var(--text-neutral-primary);
-  white-space: nowrap;
 }
 
 /* A settled pile's prediction, under it. */
@@ -378,13 +497,26 @@
   transform-origin: 50% 0;
 }
 
-.statement {
+/* The action row, as the lab's modal footer (CADS Modal): the two actions
+   at the right, restart and pause pinned to the left. */
+.actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: 56px;
-  padding: 0 24px;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+  box-sizing: border-box;
+  padding: 18px 20px 18px 24px;
   border-top: 1px solid var(--border-neutral-primary);
 }
 
+.playback {
+  display: flex;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.actionLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

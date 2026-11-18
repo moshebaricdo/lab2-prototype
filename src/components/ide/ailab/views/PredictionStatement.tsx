@@ -24,6 +24,11 @@ interface PredictionStatementProps {
    * Testing strip. Off by default so the Train rail still wraps.
    */
   fit?: boolean;
+  /**
+   * Each label ("Predict", "based on") on a line of its own, with its
+   * Tags wrapping underneath: for a narrow column.
+   */
+  stacked?: boolean;
   className?: string;
 }
 
@@ -39,6 +44,7 @@ export function PredictionStatement({
   features,
   size = "small",
   fit = false,
+  stacked = false,
   className,
 }: PredictionStatementProps) {
   const labelName = labelColumn
@@ -65,6 +71,7 @@ export function PredictionStatement({
         styles.root,
         size === "large" ? styles.rootLarge : "",
         fit ? styles.rootFit : "",
+        stacked ? styles.rootStacked : "",
         className ?? "",
       ]
         .filter(Boolean)

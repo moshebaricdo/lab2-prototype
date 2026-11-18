@@ -153,7 +153,6 @@ export const aiLabUploadConfig: AiLabLevelConfig = {
   hideCardLayoutToggle: true,
   hideTestViewToggle: true,
   trainingModal: true,
-  skipTrainingWalk: true,
   autoPlayTrace: true,
   testLayout: "canvas",
 };

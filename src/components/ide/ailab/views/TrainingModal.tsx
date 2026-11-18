@@ -12,13 +12,11 @@ import {
   listNames,
   type TrainingBodyProps,
 } from "./TrainingModalShell";
-import { FaIcon } from "@moshebari/cads-react/icons";
-import { PredictionStatement } from "./PredictionStatement";
-import { TABLE_ROW_SHELL, TrainingTableRow } from "./TreeTableRow";
+import { TrainingSplitModal } from "./split/TrainingSplitModal";
+import { TrainingTableRow } from "./TreeTableRow";
 import { TreeGrowth, treeScore, useGrowthLayout } from "./viz/TreeGrowth";
 import { prefersReducedMotion } from "./viz/useStepPlayback";
 import styles from "./TrainingModal.module.scss";
-import { formatAccuracyWhole } from "./ResultsModal";
 
 /** Time each node takes to land while the tree grows. */
 const NODE_MS = 650;
@@ -38,11 +36,12 @@ interface TrainingModalProps {
 
 /**
  * The training step for a decision tree. Opens right after Train model;
- * what plays is the level's `trainingAnimation`: sort and quiz (default —
- * `TrainingTableRow`: rows as dots sorted into piles, then a few test rows
- * rise in from the sheet and get guessed), the same opened by the sheet
- * splitting into training and test rows (`split`), or the tree growing
- * top-down (`tree`, kept as a fallback). Replay training reopens it.
+ * what plays is the level's `trainingAnimation`: split, sort, test
+ * (default, `split` — `TrainingSplitModal`: the data parts into training
+ * and test rows, the training rows sort into the tree, the test rows are
+ * run through it), the older sort and quiz (`rows` — `TrainingTableRow`),
+ * or the tree growing top-down (`tree`, kept as a fallback). Replay
+ * training reopens it.
  */
 export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps) {
   const model = lab.model;
@@ -62,9 +61,6 @@ export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps
     canTest: !lab.config.hideTestTab && lab.canVisit("test"),
   };
   const key = `${model.labelColumn}|${model.selectedFeatures.join(",")}|${lab.rows.length}`;
-  if (lab.config.skipTrainingWalk) {
-    return <TrainingQuietModal key={key} {...shared} accuracy={model.accuracy} />;
-  }
   if (lab.config.trainingAnimation === "tree") {
     const tolerance =
       columnType(columns, model.labelColumn) === "numerical"
@@ -72,73 +68,17 @@ export function TrainingModal({ lab, open, onClose, onTest }: TrainingModalProps
         : 0;
     return <TreeGrowthBody key={key} {...shared} tolerance={tolerance} />;
   }
-  return (
-    <TrainingTableRow
-      key={key}
-      {...shared}
-      rows={lab.rows}
-      results={model.holdoutResults}
-      holdoutRowIndexes={model.holdoutRowIndexes}
-      titleColumn={lab.config.cardTitleColumn}
-      story={lab.config.trainingAnimation === "split" ? "split" : "sort"}
-    />
-  );
-}
-
-/**
- * Upload level: the same training modal, already finished, with an empty
- * stage where the walk would play. Continue and Back to dataset are immediate.
- */
-function TrainingQuietModal({
-  open,
-  onClose,
-  onTest,
-  columns,
-  labelColumn,
-  features,
-  canTest,
-  accuracy,
-}: TrainingBodyProps & { accuracy: number }) {
-  const percent = formatAccuracyWhole(accuracy);
-  return (
-    <TrainingModalShell
-      {...TABLE_ROW_SHELL}
-      open={open}
-      title="Training your model"
-      onClose={onClose}
-      onTest={onTest}
-      columns={columns}
-      labelColumn={labelColumn}
-      features={features}
-      canTest={canTest}
-      done
-      onSkip={() => {}}
-    >
-      <div className={styles.quiet}>
-        <div className={styles.quietCanvas}>
-          <div className={styles.quietCard}>
-            <span className={styles.quietIcon} aria-hidden>
-              <FaIcon name="empty-set" className={styles.quietGlyph} />
-            </span>
-            <h2 className={styles.quietTitle}>Model trained and tested</h2>
-            <p className={styles.quietText}>
-              Your model is ready. This is just a placeholder for the training and testing animation.
-            </p>
-          </div>
-        </div>
-        <div className={styles.quietStatement}>
-          <PredictionStatement
-            columns={columns}
-            labelColumn={labelColumn}
-            features={features}
-            size="large"
-            fit
-          />
-          <span className={styles.quietAccuracy}>{percent} Accuracy</span>
-        </div>
-      </div>
-    </TrainingModalShell>
-  );
+  const walkProps = {
+    ...shared,
+    rows: lab.rows,
+    results: model.holdoutResults,
+    holdoutRowIndexes: model.holdoutRowIndexes,
+    titleColumn: lab.config.cardTitleColumn,
+  };
+  if (lab.config.trainingAnimation === "rows") {
+    return <TrainingTableRow key={key} {...walkProps} story="sort" />;
+  }
+  return <TrainingSplitModal key={key} {...walkProps} />;
 }
 
 /**

@@ -87,3 +87,24 @@
   justify-content: center;
   padding: 24px 24px 460px;
 }
+
+/* `?frames=`: stills of the story, side by side. */
+.frames {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px;
+  background: var(--background-neutral-tertiary);
+  zoom: var(--frames-zoom, 0.5);
+}
+
+.frame {
+  width: 800px;
+  margin: 0;
+}
+
+.frameTime {
+  @include type-body-2-semibold;
+  padding: 0 0 8px 4px;
+  color: var(--text-neutral-secondary);
+}

@@ -1,12 +1,17 @@
 /**
  * The split intro's bloom, simulated once and recorded so a timeline can
- * scrub it: grey dots spawn at the cluster's center one after another
- * (center out), each with a random outward kick, spring toward their own
- * sunflower spot, and bump off the dots already there. Each kick aims at
- * the dot's own spot (with some spread), so dots fan out rather than cross
- * the cluster and jam. Collisions fade out once every dot is in, leaving
- * the springs to carry each dot the last of the way, so it comes to rest
- * on its spot with no snap; the spots are the later beats' start.
+ * scrub it. The cluster grows from its middle the way a sunflower head
+ * does: each new dot appears at the center and every dot already out is
+ * pushed one place further along its own ray. So at every moment the dots
+ * out so far are aiming at a complete, evenly packed disc, and the last
+ * disc is the final cluster: there is no separate "arrange" step to snap
+ * into. The dots that end on the rim are the first out; the center fills
+ * last.
+ *
+ * Each dot follows its moving place on a spring, leaves the center with a
+ * small outward kick, and bumps off its neighbors, which is where the
+ * jostle comes from. Once the last dot is out the places stop moving and
+ * the springs carry every dot the last of the way.
  *
  * Coordinates are relative to the cluster's center, in px.
  */
@@ -15,51 +20,55 @@
 export const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 
 export interface BloomPhysics {
-  /** Spring pulling each dot to its spot (1/s²). */
+  /** Spring pulling each dot to its place (1/s²). */
   spring: number;
   /** Damping on that spring (1/s); a little under critical gives some give. */
   damping: number;
   /** How hard dots bounce off each other (0 dead, 1 elastic). */
   restitution: number;
-  /** Outward kick a dot spawns with, px/s (low and high end). */
+  /** Outward kick a dot leaves the center with, px/s (low and high end). */
   kickMin: number;
   kickMax: number;
-  /** Seconds over which the dots spawn, center first. */
+  /** Seconds over which the dots come out, rim dots first. */
   spawnWindow: number;
-  /** Seconds a dot takes to pop up to full size after it spawns. */
+  /** Seconds a dot takes to pop up to full size once it is out. */
   popIn: number;
-  /** How far a kick may stray from the line to the dot's spot, in degrees. */
+  /** How far a kick may stray from the dot's own ray, in degrees. */
   aimSpread: number;
-  /** Seconds after the last spawn that collisions take to fade out. */
+  /** Seconds collisions take to fade once the last dot is out and full size. */
   collisionFade: number;
 }
 
 export const DEFAULT_BLOOM_PHYSICS: BloomPhysics = {
-  spring: 75,
-  damping: 10,
-  restitution: 0.55,
-  kickMin: 90,
-  kickMax: 220,
-  spawnWindow: 0.55,
-  popIn: 0.16,
-  aimSpread: 50,
-  collisionFade: 0.7,
+  spring: 90,
+  damping: 13,
+  restitution: 0.4,
+  kickMin: 20,
+  kickMax: 90,
+  spawnWindow: 0.8,
+  popIn: 0.18,
+  aimSpread: 70,
+  collisionFade: 0.3,
 };
 
 /** Recording rate and the cap on how long the settle may run. */
 const FPS = 60;
 const SUBSTEPS = 4;
 const SETTLE_MAX = 3;
+/** Share of an overlap undone per substep: soft, so a spring can always win through. */
+const PUSH = 0.8;
 /** At rest: every dot this close to its spot (px) and this slow (px/s). */
-const REST_DISTANCE = 0.25;
-const REST_SPEED = 3;
+const REST_DISTANCE = 0.2;
+const REST_SPEED = 2;
 /** Any distance left at the cap is blended away over this many frames, never snapped. */
-const BLEND_FRAMES = 12;
+const BLEND_FRAMES = 24;
+/** At rest, the last fraction of a pixel still eases in over a few frames. */
+const REST_FRAMES = 6;
 
 export interface BloomRecording {
-  /** Simulated seconds from the first spawn to rest. */
+  /** Simulated seconds from the first dot out to rest. */
   seconds: number;
-  /** One frame per 1/60 s: `[x, y, scale]` per dot (scale 0 before it spawns). */
+  /** One frame per 1/60 s: `[x, y, scale]` per dot (scale 0 before it is out). */
   frames: Float32Array[];
 }
 
@@ -77,12 +86,12 @@ export function recordBloom(
   physics: BloomPhysics = DEFAULT_BLOOM_PHYSICS,
 ): BloomRecording {
   const n = count;
-  const tx = new Float64Array(n);
-  const ty = new Float64Array(n);
+  /* Each dot's own ray: the angle of its final spot. */
+  const cos = new Float64Array(n);
+  const sin = new Float64Array(n);
   for (let i = 0; i < n; i += 1) {
-    const s = sunflower(i, pitch);
-    tx[i] = s.x;
-    ty[i] = s.y;
+    cos[i] = Math.cos(i * GOLDEN);
+    sin[i] = Math.sin(i * GOLDEN);
   }
   const px = new Float64Array(n);
   const py = new Float64Array(n);
@@ -90,18 +99,42 @@ export function recordBloom(
   const vy = new Float64Array(n);
   const born = new Float64Array(n).fill(-1);
   const random = seeded(n * 7919 + 17);
-  const spawnAt = (i: number) => (i / Math.max(1, n)) * physics.spawnWindow;
-  const minD = dot * 1.02;
+  const spawnWindow = Math.max(0.01, physics.spawnWindow);
+  const popIn = Math.max(0.01, physics.popIn);
+  /* Dots bump at a dot's width, or a little under the tightest gap in
+     the final cluster if that is closer: at rest nothing is touching, so
+     no dot is held off its spot. */
+  let tightest = Infinity;
+  for (let i = 0; i < n; i += 1) {
+    const ri = pitch * Math.sqrt(i + 0.5);
+    for (let j = i + 1; j < n; j += 1) {
+      const rj = pitch * Math.sqrt(j + 0.5);
+      tightest = Math.min(
+        tightest,
+        Math.hypot(rj * cos[j]! - ri * cos[i]!, rj * sin[j]! - ri * sin[i]!),
+      );
+    }
+  }
+  const minD = Math.min(dot * 1.02, tightest * 0.96);
   const minD2 = minD * minD;
   const frames: Float32Array[] = [];
   const dt = 1 / FPS / SUBSTEPS;
   let t = 0;
-  let live = 0;
+  /* Dots out so far: the last `out` indexes (the rim's dots come first). */
+  let out = 0;
+
+  /**
+   * Dot `i`'s place when `grown` dots' worth of the cluster is out: `i`
+   * is that disc's rank `i - (n - grown)`, on its own ray. At `grown = n`
+   * this is its final spot.
+   */
+  const placeRadius = (i: number, grown: number) =>
+    pitch * Math.sqrt(Math.max(0, i - (n - grown) + 0.5));
 
   const record = () => {
     const frame = new Float32Array(n * 3);
     for (let i = 0; i < n; i += 1) {
-      const age = born[i]! < 0 ? -1 : (t - born[i]!) / Math.max(0.01, physics.popIn);
+      const age = born[i]! < 0 ? -1 : (t - born[i]!) / popIn;
       frame[i * 3] = px[i]!;
       frame[i * 3 + 1] = py[i]!;
       frame[i * 3 + 2] = age < 0 ? 0 : age >= 1 ? 1 : easeOutBack(age);
@@ -110,45 +143,55 @@ export function recordBloom(
   };
 
   const settled = () => {
-    if (live < n) return false;
+    if (out < n) return false;
     for (let i = 0; i < n; i += 1) {
       if (Math.hypot(vx[i]!, vy[i]!) > REST_SPEED) return false;
-      if (Math.hypot(tx[i]! - px[i]!, ty[i]! - py[i]!) > REST_DISTANCE) return false;
+      const r = placeRadius(i, n);
+      if (Math.hypot(r * cos[i]! - px[i]!, r * sin[i]! - py[i]!) > REST_DISTANCE) return false;
     }
     return true;
   };
 
   record();
-  while (!(settled() && t >= physics.spawnWindow + physics.popIn) && t < physics.spawnWindow + SETTLE_MAX) {
+  while (!(settled() && t >= spawnWindow + popIn) && t < spawnWindow + SETTLE_MAX) {
     for (let sub = 0; sub < SUBSTEPS; sub += 1) {
       t += dt;
-      while (live < n && spawnAt(live) <= t) {
-        /* Toward its own spot, give or take the spread. */
-        const home = Math.atan2(ty[live]!, tx[live]!);
-        const angle = home + (random() - 0.5) * ((physics.aimSpread * Math.PI) / 180);
-        const speed = physics.kickMin + random() * Math.max(0, physics.kickMax - physics.kickMin);
-        px[live] = Math.cos(angle) * 0.5;
-        py[live] = Math.sin(angle) * 0.5;
-        vx[live] = Math.cos(angle) * speed;
-        vy[live] = Math.sin(angle) * speed;
-        born[live] = t;
-        live += 1;
+      /* Quick out of the middle, easing to a stop as the last dots come out. */
+      const u = Math.min(1, t / spawnWindow);
+      const grown = n * (1 - (1 - u) * (1 - u));
+      while (out < n && n - 1 - out + 0.5 > n - grown) {
+        /* Out at the center, kicked along its own ray, give or take the spread. */
+        const i = n - 1 - out;
+        const angle = i * GOLDEN + (random() - 0.5) * ((physics.aimSpread * Math.PI) / 180);
+        /* The further out a dot ends, the harder its kick: the middle's
+           dots, out last, have nowhere to go and come out still. */
+        const reach = Math.sqrt((i + 0.5) / n);
+        const speed =
+          (physics.kickMin + random() * Math.max(0, physics.kickMax - physics.kickMin)) * reach;
+        px[i] = Math.cos(angle) * 0.5;
+        py[i] = Math.sin(angle) * 0.5;
+        vx[i] = Math.cos(angle) * speed;
+        vy[i] = Math.sin(angle) * speed;
+        born[i] = t;
+        out += 1;
       }
-      for (let i = 0; i < live; i += 1) {
-        vx[i] += (physics.spring * (tx[i]! - px[i]!) - physics.damping * vx[i]!) * dt;
-        vy[i] += (physics.spring * (ty[i]! - py[i]!) - physics.damping * vy[i]!) * dt;
+      for (let i = n - out; i < n; i += 1) {
+        const r = placeRadius(i, grown);
+        vx[i] += (physics.spring * (r * cos[i]! - px[i]!) - physics.damping * vx[i]!) * dt;
+        vy[i] += (physics.spring * (r * sin[i]! - py[i]!) - physics.damping * vy[i]!) * dt;
         px[i] += vx[i]! * dt;
         py[i] += vy[i]! * dt;
       }
       /* Push overlapping pairs apart and trade their closing speed, less
-         and less once every dot is in. */
-      const fadeFrom = physics.spawnWindow + physics.popIn;
+         and less once every dot is out. The places never overlap, so this
+         only acts on dots that are ahead of or behind their place. */
+      const fadeFrom = spawnWindow + popIn;
       const contact =
         physics.collisionFade <= 0
           ? t < fadeFrom ? 1 : 0
           : 1 - Math.min(1, Math.max(0, (t - fadeFrom) / physics.collisionFade));
-      for (let i = 0; contact > 0 && i < live; i += 1) {
-        for (let j = i + 1; j < live; j += 1) {
+      for (let i = n - out; contact > 0 && i < n; i += 1) {
+        for (let j = i + 1; j < n; j += 1) {
           const dx = px[j]! - px[i]!;
           const dy = py[j]! - py[i]!;
           const d2 = dx * dx + dy * dy;
@@ -156,14 +199,20 @@ export function recordBloom(
           const d = Math.sqrt(d2) || 0.01;
           const nx = d2 === 0 ? 1 : dx / d;
           const ny = d2 === 0 ? 0 : dy / d;
-          const push = ((minD - d) / 2) * contact;
+          /* A dot still popping in is small: it pushes in proportion. */
+          const young = Math.min(
+            1,
+            (t - born[i]!) / popIn,
+            (t - born[j]!) / popIn,
+          );
+          const push = ((minD - d) / 2) * PUSH * contact * young;
           px[i] -= nx * push;
           py[i] -= ny * push;
           px[j] += nx * push;
           py[j] += ny * push;
           const closing = (vx[j]! - vx[i]!) * nx + (vy[j]! - vy[i]!) * ny;
           if (closing < 0) {
-            const impulse = ((-(1 + physics.restitution) * closing) / 2) * contact;
+            const impulse = ((-(1 + physics.restitution) * closing) / 2) * contact * young;
             vx[i] -= impulse * nx;
             vy[i] -= impulse * ny;
             vx[j] += impulse * nx;
@@ -174,18 +223,19 @@ export function recordBloom(
     }
     record();
   }
-  /* Rest exactly on the spots: blend whatever is left over a few frames
-     (sub-pixel when it settled in time), never a jump. */
+  /* Rest exactly on the spots: ease away whatever is left (sub-pixel when
+     it settled in time), never a jump. */
   const leftX = Float64Array.from(px);
   const leftY = Float64Array.from(py);
-  const blend = settled() ? 1 : BLEND_FRAMES;
+  const blend = settled() ? REST_FRAMES : BLEND_FRAMES;
   for (let frame = 1; frame <= blend; frame += 1) {
     const u = frame / blend;
     const eased = u * u * (3 - 2 * u);
     t += 1 / FPS;
     for (let i = 0; i < n; i += 1) {
-      px[i] = leftX[i]! + (tx[i]! - leftX[i]!) * eased;
-      py[i] = leftY[i]! + (ty[i]! - leftY[i]!) * eased;
+      const r = placeRadius(i, n);
+      px[i] = leftX[i]! + (r * cos[i]! - leftX[i]!) * eased;
+      py[i] = leftY[i]! + (r * sin[i]! - leftY[i]!) * eased;
     }
     record();
   }

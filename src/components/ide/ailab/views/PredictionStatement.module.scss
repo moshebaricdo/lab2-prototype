@@ -29,6 +29,16 @@
   flex-shrink: 0;
 }
 
+/* Stacked: a label takes a whole line, so its Tags start under it; the
+   second label keeps a little air from the Tags above. */
+.rootStacked .word {
+  flex-basis: 100%;
+}
+
+.rootStacked .word ~ .word {
+  margin-top: 8px;
+}
+
 /* One-line feature run (`StatementFeatureTags`): fills what's left of the
    row and clips; the "+N" Tag stands in for whatever doesn't fit. */
 .features {
