@@ -6,6 +6,7 @@ import {
   mockQuizExamRetriesAssessment,
   mockQuizPracticeAssessment,
 } from "../../data/assessmentBuilder/mockAssessments";
+import { mockCstaMsExamAssessment } from "../../data/assessmentBuilder/mockCstaExam";
 import {
   mockQuizStudentResponse,
   mockQuizStudentResponseSubmitted,
@@ -97,6 +98,18 @@ export function QuizExamPage() {
       bankQuestions={bankQuestions()}
       levelLinks={quizTakingLevelLinks}
       currentLevelPath="/levels/quiz-exam"
+    />
+  );
+}
+
+/** CSTA 2026 benchmark: inline questions, so it needs no course bank. */
+export function QuizCstaExamPage() {
+  return (
+    <QuizAttemptWorkspace
+      artifact={mockCstaMsExamAssessment}
+      bankQuestions={new Map()}
+      levelLinks={quizTakingLevelLinks}
+      currentLevelPath="/levels/quiz-csta-exam"
     />
   );
 }

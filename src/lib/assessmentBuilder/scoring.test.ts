@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mockAifCourseBank } from "../../data/assessmentBuilder/mockBank";
+import { mockCstaMsExamAssessment } from "../../data/assessmentBuilder/mockCstaExam";
 import { mockP0ExamAssessment } from "../../data/assessmentBuilder/mockAssessments";
 import { mockQuizStudentResponseSubmitted } from "../../data/assessmentBuilder/mockStudentResponses";
 import type { QuestionItem, QuestionResponse } from "../../types/assessmentBuilder";
@@ -80,5 +81,43 @@ describe("scoreByStandard", () => {
     expect(breakdown.categories.map((c) => c.category.id)).toEqual(["c1", "c2"]);
     expect(breakdown.categories[1].graded).toBe(1);
     expect(breakdown.rows.filter((r) => r.tag.category?.id === "c2")).toHaveLength(2);
+  });
+
+  it("rolls nested categories up to the top level, in outline position order", () => {
+    const [mc] = demoEntries().filter((e) => e.question.item.kind === "multi");
+    const alg = { id: "alg", code: "ALG", label: "Algorithms and Design", position: 1 };
+    const pro = { id: "pro", code: "PRO", label: "Programming", position: 2 };
+    const dat = { id: "dat", code: "DAT", label: "Data and Analysis", position: 3 };
+    const ml = { id: "ml", code: "ML", label: "Machine Learning", parent: alg };
+    const tr = { id: "tr", code: "TR", label: "Testing and Refining", parent: pro };
+    const dc = { id: "dc", code: "DC", label: "Data Collection", parent: dat };
+    const tag = (code: string, category: typeof ml, position: number) => ({
+      id: code, code, label: code, category, position,
+    });
+    const breakdown = scoreByStandard(
+      [
+        tag("MS-DAT-DC-21", dc, 21),
+        tag("MS-PRO-TR-19", tr, 19),
+        tag("MS-ALG-ML-06", ml, 6),
+      ].map((t) => ({ ...mc, question: { ...mc.question, bankId: t.id, tags: [t] } })),
+    );
+    expect(breakdown.categories.map((c) => c.category.id)).toEqual(["alg", "pro", "dat"]);
+    expect(breakdown.rows.map((r) => r.tag.code)).toEqual([
+      "MS-ALG-ML-06",
+      "MS-PRO-TR-19",
+      "MS-DAT-DC-21",
+    ]);
+  });
+
+  it("rolls the CSTA benchmark up to all five concepts in outline order", () => {
+    const entries = mockCstaMsExamAssessment.questionRefs.flatMap((ref) =>
+      ref.type === "inline" ? [{ question: ref.item, response: { bankId: ref.item.bankId } }] : [],
+    );
+    const breakdown = scoreByStandard(entries);
+    expect(breakdown.categories.map((c) => c.category.code)).toEqual([
+      "ALG", "PRO", "DAT", "SYS", "SOC",
+    ]);
+    expect(breakdown.rows).toHaveLength(22);
+    expect(breakdown.hasMultiTagged).toBe(true);
   });
 });

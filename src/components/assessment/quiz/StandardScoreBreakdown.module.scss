@@ -144,7 +144,7 @@
   }
 }
 
-/* Name, dot, code on one line; long names wrap rather than truncate. */
+/* Category code and label on one line; long labels wrap rather than truncate. */
 .tableName {
   display: inline-flex;
   flex-wrap: wrap;
@@ -157,12 +157,79 @@
   @include type-body-3-semibold;
 }
 
-.tableDot {
-  width: 4px;
-  height: 4px;
+
+/* Code line first, name under it: codes are short and steady, names run any length. */
+.tableStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 16px 2px 0;
+}
+
+.tableCodeLine {
+  @include type-body-3-semibold;
+  color: var(--text-neutral-primary);
+}
+
+.tableNameLine {
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
+}
+
+.tableBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Sits above the table's top-right corner. */
+.tableToolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -8px;
+}
+
+/* Whole category label is the disclosure target. */
+.categoryToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    border-radius: var(--shape-xs, 4px);
+    outline: 2px solid var(--border-brand-primary, currentColor);
+    outline-offset: 2px;
+  }
+}
+
+.chevron {
+  display: inline-flex;
   flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--background-neutral-quinary, #b7bcc2);
+  color: var(--text-neutral-tertiary);
+  transition: transform 120ms ease;
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+.categoryCount {
+  @include type-body-4-regular;
+  color: var(--text-neutral-tertiary);
 }
 
 /* Category subtotal row (framework → category → standard). */
@@ -176,14 +243,11 @@
   color: var(--text-neutral-quaternary);
 }
 
-/* Standards under a category indent past the category code. */
+/* Standards under a category line up with the category text, past the chevron. */
 .table .nestedRow th:first-child {
-  padding-left: 32px;
+  padding-left: 36px;
 }
 
-.tableCode {
-  color: var(--text-neutral-quaternary);
-}
 
 /* Figma columns: Correct is 100 wide plus the 16 gap; Score is 55 (+ row padding). */
 .correctCol {

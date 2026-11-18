@@ -258,6 +258,7 @@ const QuizPracticePage = lazyPage(QuizPages, "QuizPracticePage");
 const QuizExamRetriesPage = lazyPage(QuizPages, "QuizExamRetriesPage");
 const QuizExamFinalPage = lazyPage(QuizPages, "QuizExamFinalPage");
 const QuizExamPage = lazyPage(QuizPages, "QuizExamPage");
+const QuizCstaExamPage = lazyPage(QuizPages, "QuizCstaExamPage");
 const QuizExamResumePage = lazyPage(QuizPages, "QuizExamResumePage");
 const QuizTeacherPage = lazyPage(QuizPages, "QuizTeacherPage");
 const QuizTeacherAsStudentPage = lazyPage(QuizPages, "QuizTeacherAsStudentPage");
@@ -943,6 +944,7 @@ export default function App() {
         />
         <Route path="/levels/quiz-exam-final" element={<QuizExamFinalPage />} />
         <Route path="/levels/quiz-exam" element={<QuizExamPage />} />
+        <Route path="/levels/quiz-csta-exam" element={<QuizCstaExamPage />} />
         <Route
           path="/levels/quiz-exam-resume"
           element={<QuizExamResumePage />}

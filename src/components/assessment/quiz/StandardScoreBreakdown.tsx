@@ -1,4 +1,7 @@
-import { Tag } from "@moshebari/cads-react";
+import { useState } from "react";
+import { Button, Tag } from "@moshebari/cads-react";
+import { FaIcon } from "@moshebari/cads-react/icons";
+import { rootCategory } from "../../../lib/assessmentBuilder/scoring";
 import type { StandardScoreBreakdown as Breakdown } from "../../../types/assessmentBuilder";
 import styles from "./StandardScoreBreakdown.module.scss";
 
@@ -59,7 +62,7 @@ interface TableGroup {
 }
 
 /**
- * Table body groups: one per category (subtotal row, then its standards),
+ * Table body groups: one per top-level category (subtotal row, then its standards),
  * then any standards without a category, then the untagged row.
  */
 function tableGroups(breakdown: Breakdown, rows: Row[]): TableGroup[] {
@@ -67,14 +70,38 @@ function tableGroups(breakdown: Breakdown, rows: Row[]): TableGroup[] {
   const groups: TableGroup[] = breakdown.categories.map((category) => ({
     key: category.category.id,
     category,
-    rows: rows.filter((row) => row.tag.category?.id === category.category.id),
+    rows: rows.filter(
+      (row) => rootCategory(row.tag.category)?.id === category.category.id,
+    ),
   }));
   const rest = rows.filter(
     (row) =>
-      !breakdown.categories.some((c) => c.category.id === row.tag.category?.id),
+      !breakdown.categories.some(
+        (c) => c.category.id === rootCategory(row.tag.category)?.id,
+      ),
   );
   if (rest.length > 0) groups.push({ key: "rest", rows: rest });
   return groups;
+}
+
+/**
+ * At or under this many standard rows every category starts open (a full
+ * AI-901 exam is 7). Past it, categories start collapsed to their subtotals
+ * so a big exam reads as a short summary first.
+ */
+export const AUTO_EXPAND_STANDARD_LIMIT = 8;
+
+/** Code first (short, scannable), name under it (wraps at any length). */
+function TableStandardName({ tag }: { tag: Row["tag"] }) {
+  if (!tag.code) {
+    return <span className={styles.tableCodeLine}>{tag.label}</span>;
+  }
+  return (
+    <span className={styles.tableStack}>
+      <span className={styles.tableCodeLine}>{tag.code}</span>
+      <span className={styles.tableNameLine}>{tag.label}</span>
+    </span>
+  );
 }
 
 function Meter({ percent, label }: { percent: number; label: string }) {
@@ -148,71 +175,7 @@ export function StandardScoreBreakdown({
       ) : null}
 
       {variant === "table" ? (
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th scope="col">Standard</th>
-                <th scope="col" className={styles.correctCol}>
-                  Correct
-                </th>
-                <th scope="col" className={styles.scoreCol}>
-                  Score
-                </th>
-              </tr>
-            </thead>
-            {tableGroups(breakdown, rows).map((group) => (
-              <tbody key={group.key}>
-                {group.category ? (
-                  <tr className={styles.categoryRow}>
-                    <th scope="rowgroup">
-                      <span className={styles.tableName}>
-                        {group.category.category.code ? (
-                          <span className={styles.categoryCode}>
-                            {group.category.category.code}
-                          </span>
-                        ) : null}
-                        <span className={styles.tableNameLabel}>
-                          {group.category.category.label}
-                        </span>
-                      </span>
-                    </th>
-                    <td className={styles.correctCol}>
-                      {group.category.correct} of {group.category.graded}
-                    </td>
-                    <td className={`${styles.scoreCol} ${styles.tableScore}`}>
-                      {group.category.percent}%
-                    </td>
-                  </tr>
-                ) : null}
-                {group.rows.map((row) => (
-                  <tr
-                    key={row.tag.id}
-                    className={group.category ? styles.nestedRow : undefined}
-                  >
-                    <th scope="row">
-                      <span className={styles.tableName}>
-                        <span className={styles.tableNameLabel}>{row.tag.label}</span>
-                        {row.tag.code ? (
-                          <>
-                            <span className={styles.tableDot} aria-hidden="true" />
-                            <span className={styles.tableCode}>{row.tag.code}</span>
-                          </>
-                        ) : null}
-                      </span>
-                    </th>
-                    <td className={styles.correctCol}>
-                      {row.correct} of {row.graded}
-                    </td>
-                    <td className={`${styles.scoreCol} ${styles.tableScore}`}>
-                      {row.percent}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            ))}
-          </table>
-        </div>
+        <BreakdownTable breakdown={breakdown} rows={rows} />
       ) : null}
 
       {variant === "tiles" ? (
@@ -231,5 +194,125 @@ export function StandardScoreBreakdown({
       ) : null}
 
     </section>
+  );
+}
+
+function BreakdownTable({ breakdown, rows }: { breakdown: Breakdown; rows: Row[] }) {
+  const groups = tableGroups(breakdown, rows);
+  const categoryIds = breakdown.categories.map((c) => c.category.id);
+  const [openIds, setOpenIds] = useState<Set<string>>(
+    () =>
+      new Set(
+        breakdown.rows.length <= AUTO_EXPAND_STANDARD_LIMIT ? categoryIds : [],
+      ),
+  );
+  const allOpen = categoryIds.every((id) => openIds.has(id));
+
+  const toggle = (id: string) =>
+    setOpenIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  return (
+    <div className={styles.tableBlock}>
+      {categoryIds.length > 1 ? (
+        <div className={styles.tableToolbar}>
+          <Button
+            variant="text"
+            color="secondary"
+            size="extraSmall"
+            startIconName={allOpen ? "chevrons-up" : "chevrons-down"}
+            onClick={() => setOpenIds(new Set(allOpen ? [] : categoryIds))}
+          >
+            {allOpen ? "Collapse all" : "Expand all"}
+          </Button>
+        </div>
+      ) : null}
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th scope="col">Standard</th>
+              <th scope="col" className={styles.correctCol}>
+                Correct
+              </th>
+              <th scope="col" className={styles.scoreCol}>
+                Score
+              </th>
+            </tr>
+          </thead>
+          {groups.map((group) => {
+            const category = group.category;
+            const open = !category || openIds.has(category.category.id);
+            return (
+              <tbody key={group.key}>
+                {category ? (
+                  <tr className={styles.categoryRow}>
+                    <th scope="rowgroup">
+                      <button
+                        type="button"
+                        className={styles.categoryToggle}
+                        aria-expanded={open}
+                        onClick={() => toggle(category.category.id)}
+                      >
+                        <span
+                          className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}
+                          aria-hidden="true"
+                        >
+                          <FaIcon name="chevron-right" size="small" />
+                        </span>
+                        <span className={styles.tableName}>
+                          {category.category.code ? (
+                            <span className={styles.categoryCode}>
+                              {category.category.code}
+                            </span>
+                          ) : null}
+                          <span className={styles.tableNameLabel}>
+                            {category.category.label}
+                          </span>
+                          {!open ? (
+                            <span className={styles.categoryCount}>
+                              {group.rows.length}{" "}
+                              {group.rows.length === 1 ? "standard" : "standards"}
+                            </span>
+                          ) : null}
+                        </span>
+                      </button>
+                    </th>
+                    <td className={styles.correctCol}>
+                      {category.correct} of {category.graded}
+                    </td>
+                    <td className={`${styles.scoreCol} ${styles.tableScore}`}>
+                      {category.percent}%
+                    </td>
+                  </tr>
+                ) : null}
+                {open
+                  ? group.rows.map((row) => (
+                      <tr
+                        key={row.tag.id}
+                        className={category ? styles.nestedRow : undefined}
+                      >
+                        <th scope="row">
+                          <TableStandardName tag={row.tag} />
+                        </th>
+                        <td className={styles.correctCol}>
+                          {row.correct} of {row.graded}
+                        </td>
+                        <td className={`${styles.scoreCol} ${styles.tableScore}`}>
+                          {row.percent}%
+                        </td>
+                      </tr>
+                    ))
+                  : null}
+              </tbody>
+            );
+          })}
+        </table>
+      </div>
+    </div>
   );
 }

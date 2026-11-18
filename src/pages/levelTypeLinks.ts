@@ -282,6 +282,7 @@ export const quizTakingLevelLinks: LevelProgressLink[] = [
   { name: "Exam: final attempt", path: "/levels/quiz-exam-final" },
   { name: "Exam: no reveal", path: "/levels/quiz-exam" },
   { name: "Exam: resume in progress", path: "/levels/quiz-exam-resume" },
+  { name: "Exam: CSTA 2026 benchmark", path: "/levels/quiz-csta-exam" },
 ];
 
 export const quizTeacherLevelLinks: LevelProgressLink[] = [

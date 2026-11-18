@@ -5,6 +5,7 @@ import type {
   QuestionResponse,
   ScoringOutcome,
   ScoringResult,
+  StandardCategory,
   StandardCategoryScore,
   StandardFramework,
   StandardScoreBreakdown,
@@ -133,12 +134,34 @@ function toPercent(correct: number, graded: number): number {
   return graded === 0 ? 0 : Math.round((correct / graded) * 100);
 }
 
+/** Walks up to the top-level category (CSTA `TR` → `PRO`). */
+export function rootCategory(
+  category: StandardCategory | undefined,
+): StandardCategory | undefined {
+  let current = category;
+  while (current?.parent) current = current.parent;
+  return current;
+}
+
+/** Outline position when both sides have one, else natural code/label order. */
+function compareOutline(
+  a: { position?: number; code?: string; label: string },
+  b: { position?: number; code?: string; label: string },
+): number {
+  if (a.position != null && b.position != null) return a.position - b.position;
+  return (a.code ?? a.label).localeCompare(b.code ?? b.label, undefined, {
+    numeric: true,
+  });
+}
+
 /**
  * Results breakdown by standard. Same rules as the overall tally on the
  * results card: free response and other ungraded items are left out, and a
  * question is correct only when fully correct. Rows sort by standard code
  * (else name) so every student's results list them in the same order, even
- * when questions are shuffled. Untagged questions are tallied separately.
+ * when questions are shuffled. Category subtotals roll up to the top-level
+ * category, so CSTA 2026 groups by concept and the subconcept shows in the
+ * code. Untagged questions are tallied separately.
  */
 export function scoreByStandard(
   entries: Array<{ question: QuestionItem; response: QuestionResponse }>,
@@ -165,17 +188,18 @@ export function scoreByStandard(
     const seenCategories = new Set<string>();
     for (const tag of tags) {
       framework ??= tag.framework;
-      if (tag.category && !seenCategories.has(tag.category.id)) {
-        seenCategories.add(tag.category.id);
-        const cat = categories.get(tag.category.id) ?? {
-          category: tag.category,
+      const root = rootCategory(tag.category);
+      if (root && !seenCategories.has(root.id)) {
+        seenCategories.add(root.id);
+        const cat = categories.get(root.id) ?? {
+          category: root,
           correct: 0,
           graded: 0,
           percent: 0,
         };
         cat.graded += 1;
         if (correct) cat.correct += 1;
-        categories.set(tag.category.id, cat);
+        categories.set(root.id, cat);
       }
       const row = rows.get(tag.id) ?? { tag, correct: 0, graded: 0, percent: 0 };
       row.graded += 1;
@@ -190,21 +214,11 @@ export function scoreByStandard(
         ...row,
         percent: toPercent(row.correct, row.graded),
       }))
-      // Stable across shuffles: outline order by code (AI-901 1.1 → 2.4), else by label.
-      .sort((a, b) =>
-        a.tag.code && b.tag.code
-          ? a.tag.code.localeCompare(b.tag.code, undefined, { numeric: true })
-          : a.tag.label.localeCompare(b.tag.label),
-      ),
+      // Stable across shuffles: outline order (AI-901 1.1 → 2.4, CSTA by seed order).
+      .sort((a, b) => compareOutline(a.tag, b.tag)),
     categories: Array.from(categories.values())
       .map((cat) => ({ ...cat, percent: toPercent(cat.correct, cat.graded) }))
-      .sort((a, b) =>
-        (a.category.code ?? a.category.label).localeCompare(
-          b.category.code ?? b.category.label,
-          undefined,
-          { numeric: true },
-        ),
-      ),
+      .sort((a, b) => compareOutline(a.category, b.category)),
     framework,
     untaggedGraded,
     untaggedCorrect,

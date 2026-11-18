@@ -120,6 +120,7 @@ export {
 } from "./taxonomy";
 export {
   aggregateDomainScores,
+  rootCategory,
   scoreByStandard,
   scoreQuestionResponse,
 } from "./scoring";

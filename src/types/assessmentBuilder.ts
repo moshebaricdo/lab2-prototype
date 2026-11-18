@@ -17,12 +17,23 @@ export interface StandardFramework {
   label: string;
 }
 
-/** Middle layer of a framework, e.g. CSTA `PRO - Programming` or an AI-901 skill area. */
+/**
+ * Middle layer of a framework, e.g. an AI-901 skill area or a CSTA 2026
+ * subconcept. Prod categories can nest (`parent_category_id`): a CSTA 2026
+ * standard points at its subconcept (`TR` Testing and Refining), which
+ * points at its concept (`PRO` Programming). AI-901 is one level.
+ */
 export interface StandardCategory {
   id: string;
-  /** Short code, e.g. `PRO` or `1`. */
+  /** Short code, e.g. `PRO`, `TR`, or `1`. */
   code?: string;
   label: string;
+  parent?: StandardCategory;
+  /**
+   * Outline order within the framework. Prod seeds in CSV order, so seed
+   * order is outline order (CSTA: ALG, PRO, DAT, SYS, SOC). Falls back to code.
+   */
+  position?: number;
 }
 
 export interface DomainTag {
@@ -32,6 +43,8 @@ export interface DomainTag {
   code?: string;
   framework?: StandardFramework;
   category?: StandardCategory;
+  /** Outline order within the framework; falls back to `code`. */
+  position?: number;
   /** Full standard wording from the framework (labels may be shortened). */
   description?: string;
   /** Skills the standard covers, as listed by the framework. */
@@ -441,7 +454,10 @@ export interface StandardCategoryScore {
 
 export interface StandardScoreBreakdown {
   rows: StandardScoreRow[];
-  /** Category subtotals in outline order; empty when tags have no category. */
+  /**
+   * Subtotals per top-level category (CSTA concept, AI-901 skill area) in
+   * outline order; empty when tags have no category.
+   */
   categories: StandardCategoryScore[];
   /** The framework the tags belong to, when they name one. */
   framework?: StandardFramework;

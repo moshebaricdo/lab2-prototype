@@ -152,6 +152,9 @@ const REVIEW_ORDER_OPTIONS = [
   { value: "student", label: "Student’s order" },
   { value: "original", label: "Original order" },
 ];
+
+/** Results must move this far before the back-to-top tab slides in. */
+const BACK_TO_TOP_DISTANCE = 400;
 type ConfirmKind =
   | "submit"
   | "submit-from-results"
@@ -465,6 +468,7 @@ export function QuizAttemptWorkspace({
   const [persistedWrongIds, setPersistedWrongIds] = useState<string[]>([]);
   const [persistedCorrectIds, setPersistedCorrectIds] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [backToTopVisible, setBackToTopVisible] = useState(false);
 
   const lastAttempt =
     !retriesAllowed ||
@@ -711,6 +715,30 @@ export function QuizAttemptWorkspace({
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
   }, [phase, page]);
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node || phase !== "results") {
+      setBackToTopVisible(false);
+      return;
+    }
+    const onScroll = () => {
+      const next = node.scrollTop >= BACK_TO_TOP_DISTANCE;
+      setBackToTopVisible((current) => (current === next ? current : next));
+    };
+    onScroll();
+    node.addEventListener("scroll", onScroll, { passive: true });
+    return () => node.removeEventListener("scroll", onScroll);
+  }, [phase]);
+
+  const scrollResultsToTop = () => {
+    const node = scrollRef.current;
+    if (!node) return;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    node.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+  };
 
   useEffect(() => {
     if (phase !== "attempt" || secondsRemaining == null) return;
@@ -1599,6 +1627,29 @@ export function QuizAttemptWorkspace({
           </>
         ) : null}
       </div>
+
+      {phase === "results" ? (
+        <div
+          className={[
+            styles.backToTop,
+            backToTopVisible ? styles.backToTopVisible : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          aria-hidden={backToTopVisible ? undefined : true}
+        >
+          <Button
+            variant="text"
+            color="secondary"
+            size="extraSmall"
+            startIconName="circle-chevron-up"
+            tabIndex={backToTopVisible ? 0 : -1}
+            onClick={scrollResultsToTop}
+          >
+            Back to top
+          </Button>
+        </div>
+      ) : null}
 
       {isSingleQuestionAttempt && !isTeacherViewer ? (
         <StudentQuestionCardFooter

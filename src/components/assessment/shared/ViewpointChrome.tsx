@@ -57,22 +57,43 @@ interface AnswerNotesBlockProps {
   standards?: DomainTag[];
 }
 
-/** One standard: name and code; expands to framework › category, wording, skills. */
+/** Root-first category chain: CSTA `MS-ALG-PS-02` → [ALG, PS]. */
+function categoryPath(category: DomainTag["category"]) {
+  const chain: NonNullable<DomainTag["category"]>[] = [];
+  for (let current = category; current; current = current.parent) {
+    chain.unshift(current);
+  }
+  return chain;
+}
+
+/**
+ * One standard: code first, name under it (same as the results table).
+ * Expands to the framework › concept › subconcept path, the full wording when
+ * the name is a shortened label (AI-901), and the listed skills. CSTA names
+ * are already the full statement, so the wording isn't repeated.
+ */
 function StandardDisclosure({ tag }: { tag: DomainTag }) {
   const [open, setOpen] = useState(false);
   const detailsId = useId();
-  const hasDetails = Boolean(
-    tag.framework || tag.category || tag.description || tag.skills?.length,
-  );
-  const name = (
+  const path = [
+    tag.framework?.label,
+    ...categoryPath(tag.category).map((c) =>
+      [c.code, c.label].filter(Boolean).join(" · "),
+    ),
+  ].filter(Boolean);
+  const wording =
+    tag.description && tag.description.trim() !== tag.label.trim()
+      ? tag.description
+      : undefined;
+  const hasDetails = Boolean(path.length || wording || tag.skills?.length);
+  const name = tag.code ? (
     <span className={styles.standardName}>
+      <span className={styles.standardCode}>{tag.code}</span>
       <span className={styles.standardLabel}>{tag.label}</span>
-      {tag.code ? (
-        <>
-          <span className={styles.standardDot} aria-hidden="true" />
-          <span className={styles.standardCode}>{tag.code}</span>
-        </>
-      ) : null}
+    </span>
+  ) : (
+    <span className={styles.standardName}>
+      <span className={styles.standardCode}>{tag.label}</span>
     </span>
   );
   if (!hasDetails) return <li className={styles.standard}>{name}</li>;
@@ -94,20 +115,11 @@ function StandardDisclosure({ tag }: { tag: DomainTag }) {
       </button>
       {open ? (
         <div id={detailsId} className={styles.standardDetails}>
-          {tag.framework || tag.category ? (
-            <p className={styles.standardPath}>
-              {[
-                tag.framework?.label,
-                tag.category
-                  ? [tag.category.code, tag.category.label].filter(Boolean).join(" · ")
-                  : null,
-              ]
-                .filter(Boolean)
-                .join("  ›  ")}
-            </p>
+          {path.length ? (
+            <p className={styles.standardPath}>{path.join("  ›  ")}</p>
           ) : null}
-          {tag.description ? (
-            <p className={styles.standardDescription}>{tag.description}</p>
+          {wording ? (
+            <p className={styles.standardDescription}>{wording}</p>
           ) : null}
           {tag.skills?.length ? (
             <ul className={styles.standardSkills}>
